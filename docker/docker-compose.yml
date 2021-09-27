@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:6-alpine
+    volumes: 
+      - "redis_conf:/usr/local/etc/redis"
+
+  database:
+    image: postgres:13-alpine
+    environment: 
+      POSTGRES_DB: "taranis-ng"
+      POSTGRES_USER: "taranis-ng"
+      POSTGRES_PASSWORD: "supersecret"
+    volumes: 
+      - "database_data:/var/lib/postgresql/data"
+
+  core:
+    depends_on: 
+      - "redis"
+      - "database"
+    build:
+      context: ..
+      dockerfile: ./src/Dockerfile.core
+    environment: 
+      REDIS_URL: "redis"
+      DB_URL: "database"
+      DB_DATABASE: "taranis-ng"
+      DB_USER: "taranis-ng"
+      DB_PASSWORD: "supersecret"
+    ports: 
+      - "5000:5000"
+
+  bots:
+    depends_on:
+      - "core"
+    build:
+      context: ..
+      dockerfile: ./src/Dockerfile.bots
+    
+  collectors:
+    depends_on: 
+      - "core"
+    build:
+      context: ..
+      dockerfile: ./src/Dockerfile.collectors
+    
+  presenters:
+    depends_on: 
+      - "core"
+    build:
+      context: ..
+      dockerfile: ./src/Dockerfile.presenters
+    
+  publishers:
+    depends_on: 
+      - "core"
+    build:
+      context: ..
+      dockerfile: ./src/Dockerfile.publishers
+    
+  gui:
+    depends_on: 
+      - "core"
+    build:
+      context: ..
+      dockerfile: ./src/Dockerfile.gui
+    ports: 
+      - "8080:80"
+
+volumes:
+  redis_conf:
+  database_data:
