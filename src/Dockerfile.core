@@ -1,4 +1,4 @@
-FROM python:3.7-alpine3.8
+FROM python:3.7-alpine3.14
 
 WORKDIR /app/
 
@@ -18,11 +18,13 @@ COPY ./src/common/requirements.txt /app/taranis-ng-common/requirements.txt
 
 # install dependencies
 RUN \
-    apk add --no-cache postgresql-libs libpq && \
-    apk add --no-cache --virtual .build-deps gcc g++ make musl-dev python3-dev libffi-dev postgresql-dev && \
+    apk add --no-cache postgresql-libs libpq glib firefox-esr=78.13.0-r0 && \
+    apk add --no-cache --virtual .build-deps gcc g++ make glib-dev musl-dev python3-dev libffi-dev postgresql-dev && \
     pip install --no-cache-dir -r /app/taranis-ng-core/requirements.txt && \
     pip install --no-cache-dir -r /app/taranis-ng-common/requirements.txt && \
     apk --purge del .build-deps
+
+ADD https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz /usr/bin/
 
 COPY ./src/core/. /app/taranis-ng-core
 COPY ./src/common/. /app/taranis-ng-common
