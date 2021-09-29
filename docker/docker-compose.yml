@@ -28,6 +28,9 @@ services:
       DB_DATABASE: "taranis-ng"
       DB_USER: "taranis-ng"
       DB_PASSWORD: "supersecret"
+      JWT_SECRET_KEY: "supersecret"
+      OPENID_LOGOUT_URL: ""
+      WORKERS_PER_CORE: "1"
     ports: 
       - "5000:5000"
 
@@ -44,6 +47,13 @@ services:
     build:
       context: ..
       dockerfile: ./src/Dockerfile.collectors
+    environment:
+      FLASK_RUN_PORT: 5000
+      TARANIS_NG_CORE_URL: "http://core"
+      API_KEY: "supersecret"
+      WORKERS_PER_CORE: "1"
+    ports:
+      - "5001:5000"
     
   presenters:
     depends_on: 
@@ -51,6 +61,13 @@ services:
     build:
       context: ..
       dockerfile: ./src/Dockerfile.presenters
+    environment:
+      FLASK_RUN_PORT: 5000
+      TARANIS_NG_CORE_URL: "http://core"
+      API_KEY: "supersecret"
+      WORKERS_PER_CORE: "1"
+    ports:
+      - "5002:5000"
     
   publishers:
     depends_on: 
@@ -58,6 +75,13 @@ services:
     build:
       context: ..
       dockerfile: ./src/Dockerfile.publishers
+    environment:
+      FLASK_RUN_PORT: 5000
+      TARANIS_NG_CORE_URL: "http://core"
+      API_KEY: "supersecret"
+      WORKERS_PER_CORE: "1"
+    ports:
+      - "5003:5000"
     
   gui:
     depends_on: 
@@ -67,6 +91,9 @@ services:
       dockerfile: ./src/Dockerfile.gui
     ports: 
       - "8080:80"
+    environment:
+      NGINX_WORKERS: "4"
+      NGINX_CONNECTIONS: "16"
 
 volumes:
   redis_conf:

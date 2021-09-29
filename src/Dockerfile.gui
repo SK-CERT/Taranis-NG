@@ -10,6 +10,7 @@ RUN npm run build
 FROM nginx:stable-alpine as production-stage
 
 COPY ./src/gui/extras/30-envsubst-on-javascript.sh /docker-entrypoint.d/
+COPY ./src/gui/extras/40-connection-tuning.sh /docker-entrypoint.d/
 RUN chmod +x /docker-entrypoint.d/*.sh
 
 ENV NGINX_WORKERS 16
