@@ -23,7 +23,7 @@ services:
       context: ..
       dockerfile: ./src/Dockerfile.core
     environment: 
-      REDIS_URL: "redis"
+      REDIS_URL: "redis://redis"
       DB_URL: "database"
       DB_DATABASE: "taranis-ng"
       DB_USER: "taranis-ng"
@@ -32,7 +32,7 @@ services:
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
     ports: 
-      - "5000:5000"
+      - "5000:80"
 
   # bots:
   #   depends_on:
@@ -42,7 +42,7 @@ services:
   #     dockerfile: ./src/Dockerfile.bots
   #   environment:
   #     API_KEY: "supersecret"
-  #     TARANIS_NG_CORE_URL: "http://core"
+  #     TARANIS_NG_CORE_URL: "http://core/api"
   #     WORKERS_PER_CORE: "1"
     
   collectors:
@@ -53,11 +53,11 @@ services:
       dockerfile: ./src/Dockerfile.collectors
     environment:
       FLASK_RUN_PORT: 5000
-      TARANIS_NG_CORE_URL: "http://core"
+      TARANIS_NG_CORE_URL: "http://core/api"
       API_KEY: "supersecret"
       WORKERS_PER_CORE: "1"
     ports:
-      - "5001:5000"
+      - "5001:80"
     
   presenters:
     depends_on: 
@@ -67,11 +67,11 @@ services:
       dockerfile: ./src/Dockerfile.presenters
     environment:
       FLASK_RUN_PORT: 5000
-      TARANIS_NG_CORE_URL: "http://core"
+      TARANIS_NG_CORE_URL: "http://core/api"
       API_KEY: "supersecret"
       WORKERS_PER_CORE: "1"
     ports:
-      - "5002:5000"
+      - "5002:80"
     
   publishers:
     depends_on: 
@@ -81,11 +81,11 @@ services:
       dockerfile: ./src/Dockerfile.publishers
     environment:
       FLASK_RUN_PORT: 5000
-      TARANIS_NG_CORE_URL: "http://core"
+      TARANIS_NG_CORE_URL: "http://core/api"
       API_KEY: "supersecret"
       WORKERS_PER_CORE: "1"
     ports:
-      - "5003:5000"
+      - "5003:80"
     
   gui:
     depends_on: 
@@ -98,6 +98,10 @@ services:
     environment:
       NGINX_WORKERS: "4"
       NGINX_CONNECTIONS: "16"
+      VUE_APP_TARANIS_NG_CORE_API: "http://localhost:5000/api"
+      VUE_APP_TARANIS_NG_CORE_SSE: "http://localhost:5000/sse"
+      VUE_APP_TARANIS_NG_URL: http://localhost:8080
+      VUE_APP_TARANIS_NG_LOCALE: en
 
 volumes:
   redis_conf:
