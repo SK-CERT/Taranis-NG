@@ -34,12 +34,16 @@ services:
     ports: 
       - "5000:5000"
 
-  bots:
-    depends_on:
-      - "core"
-    build:
-      context: ..
-      dockerfile: ./src/Dockerfile.bots
+  # bots:
+  #   depends_on:
+  #     - "core"
+  #   build:
+  #     context: ..
+  #     dockerfile: ./src/Dockerfile.bots
+  #   environment:
+  #     API_KEY: "supersecret"
+  #     TARANIS_NG_CORE_URL: "http://core"
+  #     WORKERS_PER_CORE: "1"
     
   collectors:
     depends_on: 

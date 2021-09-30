@@ -2,6 +2,15 @@ FROM python:3.7-alpine3.14
 
 WORKDIR /app/
 
+# install numpy, blis, pandas - save tons of time when re-building the image
+RUN \
+    apk add --no-cache --virtual .build-deps gcc g++ make musl-dev python3-dev libxslt-dev libxml2-dev libffi-dev postgresql-dev && \
+    pip install numpy==1.18.3 && \
+    pip install blis==0.7.4 && \
+    pip install pandas==1.0.3 && \
+    pip install spacy==3.1.3 && \
+    apk --purge del .build-deps
+
 COPY ./docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
