@@ -14,28 +14,33 @@ This folder also contains support files for the creation of the Docker container
 To build the Docker images individually, you need to clone this repository.
 
 ```bash
-git clone https://gitlab.com/sk-cert/taranis-ng
+git clone https://github.com/SK-CERT/Taranis-NG.git
 ```
 
 Afterwards go to the cloned repository and launch the `docker build` command for the specific container image, like so:
 
 ```bash
 cd taranis-ng
-docker build -t taranis-ng-core . -f ./src/Dockerfile.core
+docker build -t taranis-ng-bots . -f ./docker/Dockerfile.bots
+docker build -t taranis-ng-collectors . -f ./docker/Dockerfile.collectors
+docker build -t taranis-ng-core . -f ./docker/Dockerfile.core
+docker build -t taranis-ng-gui . -f ./docker/Dockerfile.gui
+docker build -t taranis-ng-presenters . -f ./docker/Dockerfile.presenters
+docker build -t taranis-ng-publishers . -f ./docker/Dockerfile.publishers
 ```
 
 There are several Dockerfiles and each of them builds a different component of the system. These Dockerfiles exist:
 
-- [Dockerfile.bots](../src/Dockerfile.bots)
-- [Dockerfile.collectors](../src/Dockerfile.collectors)
-- [Dockerfile.core](../src/Dockerfile.core)
-- [Dockerfile.gui](../src/Dockerfile.gui)
-- [Dockerfile.presenters](../src/Dockerfile.presenters)
-- [Dockerfile.publishers](../src/Dockerfile.publishers)
+- [Dockerfile.bots](Dockerfile.bots)
+- [Dockerfile.collectors](Dockerfile.collectors)
+- [Dockerfile.core](Dockerfile.core)
+- [Dockerfile.gui](Dockerfile.gui)
+- [Dockerfile.presenters](Dockerfile.presenters)
+- [Dockerfile.publishers](Dockerfile.publishers)
 
 ## Run using the example [docker-compose.yml](docker-compose.yml) file
 
 ```bash
-cd taranis-ng/docker
-docker-compose up --build
+cd taranis-ng
+docker-compose -f docker/docker-compose.yml up --build
 ```

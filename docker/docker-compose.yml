@@ -20,8 +20,8 @@ services:
       - "redis"
       - "database"
     build:
-      context: ..
-      dockerfile: ./src/Dockerfile.core
+      context: .
+      dockerfile: ./docker/Dockerfile.core
     environment: 
       REDIS_URL: "redis://redis"
       DB_URL: "database"
@@ -38,8 +38,8 @@ services:
   #   depends_on:
   #     - "core"
   #   build:
-  #     context: ..
-  #     dockerfile: ./src/Dockerfile.bots
+  #     context: .
+  #     dockerfile: ./docker/Dockerfile.bots
   #   environment:
   #     API_KEY: "supersecret"
   #     TARANIS_NG_CORE_URL: "http://core/api"
@@ -49,8 +49,8 @@ services:
     depends_on: 
       - "core"
     build:
-      context: ..
-      dockerfile: ./src/Dockerfile.collectors
+      context: .
+      dockerfile: ./docker/Dockerfile.collectors
     environment:
       FLASK_RUN_PORT: 5000
       TARANIS_NG_CORE_URL: "http://core/api"
@@ -63,8 +63,8 @@ services:
     depends_on: 
       - "core"
     build:
-      context: ..
-      dockerfile: ./src/Dockerfile.presenters
+      context: .
+      dockerfile: ./docker/Dockerfile.presenters
     environment:
       FLASK_RUN_PORT: 5000
       TARANIS_NG_CORE_URL: "http://core/api"
@@ -77,8 +77,8 @@ services:
     depends_on: 
       - "core"
     build:
-      context: ..
-      dockerfile: ./src/Dockerfile.publishers
+      context: .
+      dockerfile: ./docker/Dockerfile.publishers
     environment:
       FLASK_RUN_PORT: 5000
       TARANIS_NG_CORE_URL: "http://core/api"
@@ -91,8 +91,8 @@ services:
     depends_on: 
       - "core"
     build:
-      context: ..
-      dockerfile: ./src/Dockerfile.gui
+      context: .
+      dockerfile: ./docker/Dockerfile.gui
     ports: 
       - "8080:80"
     environment:
