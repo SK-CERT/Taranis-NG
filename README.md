@@ -23,6 +23,9 @@ Taranis crawls various **data sources** such as web sites or tweets to gather un
 |           | misp                 | create MISP event                     |
 |           | twitter              | create tweet                          |
 |           | wordpress            | publish to [WordPress](https://wordpress.org/) |
+| Bot       | analyst              | extract attributes from text by regular expressions |
+|           | grouping             | group similar items in the news feed  |
+|           | wordlist\_updater    | update word lists used for matching   |
 
 Taranis NG was developed by [SK-CERT](https://www.sk-cert.sk/) with a help from wide CSIRT community, and is released under terms of the [European Union Public Licence](https://eupl.eu/1.2/en/).
 
