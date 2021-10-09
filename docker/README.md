@@ -20,7 +20,7 @@ git clone https://github.com/SK-CERT/Taranis-NG.git
 Afterwards go to the cloned repository and launch the `docker build` command for the specific container image, like so:
 
 ```bash
-cd taranis-ng
+cd Taranis-NG
 docker build -t taranis-ng-bots . -f ./docker/Dockerfile.bots
 docker build -t taranis-ng-collectors . -f ./docker/Dockerfile.collectors
 docker build -t taranis-ng-core . -f ./docker/Dockerfile.core
@@ -41,6 +41,6 @@ There are several Dockerfiles and each of them builds a different component of t
 ## Run using the example [docker-compose.yml](docker-compose.yml) file
 
 ```bash
-cd taranis-ng
+cd Taranis-NG
 docker-compose -f docker/docker-compose.yml up --build
 ```
