@@ -1,6 +1,6 @@
 # TaranisNG
 
-Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and organisations. It allows team-to-team collaboration, and contains a user portal for simple self asset management.
+Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and organisations. It allows osint gathering, analysis and reporting; team-to-team collaboration; and contains a user portal for simple self asset management.
 
 Taranis crawls various **data sources** such as web sites or tweets to gather unstructured **news items**. These are processed by analysts to create structured **report items**, which are used to create **products** such as PDF files, which are finally **published**.
 
