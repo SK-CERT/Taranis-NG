@@ -1,15 +1,40 @@
-# TaranisNG Docker images
+# Taranis NG Docker images
 
-TaranisNG also supports deployment in Docker containers. This repository also contains an example [docker-compose.yml](docker-compose.yml) file which runs the whole application in one stack.
+Taranis NG supports deployment in Docker containers. This repository also contains an example [docker-compose.yml](docker-compose.yml) file which runs the whole application in one stack.
 
-This folder also contains support files for the creation of the Docker containers. These include start and pre-start scripts, the application entrypoint and the gunicorn configuration file.
+This folder contains additional support files for the creation of the Docker containers. These include start and pre-start scripts, the application entrypoint and the gunicorn configuration file.
 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/)
 - (Optional) [Visual Studio Code](https://code.visualstudio.com/) - for development
 
-## Build
+## Quickly build and run using [docker-compose.yml](docker-compose.yml)
+
+To build and deploy the Docker images using docker-compose, you need to clone this repository:
+
+```bash
+git clone https://github.com/SK-CERT/Taranis-NG.git
+cd Taranis-NG
+```
+
+Optionally, modify the `docker/docker-compose.yml` file to your liking.
+
+Finally, run the containers with:
+
+```bash
+# either run empty instance
+docker-compose --build -f docker/docker-compose.yml up
+
+# or automatically populate with sample data
+docker-compose --build -f docker/docker-compose.yml -f docker/docker-sample-data.yml up
+```
+
+Voila, Taranis NG is up and running. Visit your instance by navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web browser. If you have imported the sample data, the default credentials are `user` / `user` and `admin` / `admin`.
+
+## Advanced methods
+
+### Individually build the containers
 
 To build the Docker images individually, you need to clone this repository.
 
@@ -38,9 +63,3 @@ There are several Dockerfiles and each of them builds a different component of t
 - [Dockerfile.presenters](Dockerfile.presenters)
 - [Dockerfile.publishers](Dockerfile.publishers)
 
-## Run using the example [docker-compose.yml](docker-compose.yml) file
-
-```bash
-cd Taranis-NG
-docker-compose -f docker/docker-compose.yml up --build
-```
