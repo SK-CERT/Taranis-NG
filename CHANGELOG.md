@@ -14,4 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merged multiple TaranisNG repositories into one for easier understanding and management of the project
 
 
-[1.0.0]: https://gitlab.com/sk-cert/taranis-ng/-/tags/v1.0.0
+[1.0.0]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v1.0.0
