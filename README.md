@@ -4,25 +4,29 @@ Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and organisat
 
 Taranis crawls various **data sources** such as web sites or tweets to gather unstructured **news items**. These are processed by analysts to create structured **report items**, which are used to create **products** such as PDF files, which are finally **published**.
 
-| Type      | Name                 | Description                   |
-| :-------- | :------------------- | :---------------------------- |
-| COLLECTOR | web                  | crawl web sites               |
-| COLLECTOR | twitter              | receive tweets                |
-| COLLECTOR | email                | read e-mails                  |
-| COLLECTOR | atom                 | read atom feeds               |
-| COLLECTOR | rss                  | read RSS feeds                |
-| COLLECTOR | slack                | read slack messages           |
-| COLLECTOR | manual entry         | enter news item manually      |
-| COLLECTOR | scheduled tasks      | populate feed automatically   |
-| PUBLISHER | email                | send e-mail                   |
-| PUBLISHER | ftp                  | upload to FTP                 |
-| PUBLISHER | misp                 | create MISP event             |
-| PUBLISHER | twitter              | create tweet                  |
-| PUBLISHER | wordpress            | publish to WordPress          |
+| Type      | Name                 | Description                           |
+| :-------- | :------------------- | :------------------------------------ |
+| Collector | web                  | crawl web sites                       |
+|           | twitter              | receive tweets                        |
+|           | email                | read e-mails                          |
+|           | atom                 | read atom feeds                       |
+|           | rss                  | read RSS feeds                        |
+|           | slack                | read [Slack](https://slack.com/) messages |
+|           | manual entry         | enter news item manually              |
+|           | scheduled tasks      | populate feed automatically           |
+| Presenter | pdf                  | create a PDF file                     |
+|           | text                 | create plain text from template       |
+|           | html                 | create HTML from template             |
+|           | misp                 | create [MISP](https://misp-project.org/) event JSON |
+| Publisher | email                | send e-mail                           |
+|           | ftp                  | upload to FTP                         |
+|           | misp                 | create MISP event                     |
+|           | twitter              | create tweet                          |
+|           | wordpress            | publish to [WordPress](https://wordpress.org/) |
 
 Taranis NG was developed by [SK-CERT](https://www.sk-cert.sk/) with a help from wide CSIRT community, and is released under terms of the [European Union Public Licence](https://eupl.eu/1.2/en/).
 
-Resources: [CHANGELOG](CHANGELOG.md)
+Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 
 ## Directory structure
 
