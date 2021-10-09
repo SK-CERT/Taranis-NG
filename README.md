@@ -30,13 +30,13 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 
 ## Directory structure
 
-- `src/` - TaranisNG source files
+- src/ - TaranisNG source code:
   - [Core](src/core/) is the REST API, the central component of Taranis NG
   - [GUI](src/gui/) is the web user interface
   - [Collectors](src/collectors/) retrieve OSINT information from various sources (such as web, twitter, email, atom, rss, slack, and more) and create **news items**.
   - [Presenters](src/presenters/) convert **report items** to **products** such as PDF.
   - [Publishers](src/publishers/) upload the **products** to external places such as e-mail, a WordPress web site, etc.
   - [Bots](src/bots/) are used for automated data processing. Think of them as robotic analysts.
-  - [src/common](src/common/) is a shared directory for core, publishers, collectors, presenters.
-- `ansible/` - Playbooks, roles, files and inventory to support easy deployment through Ansible
-- `docker/` - Support files for Docker image creation and example docker-compose file
+  - [Common](src/common/) is a shared directory for core, publishers, collectors, presenters.
+- [ansible/](ansible/) - Playbooks, roles, files and inventory to support easy deployment through Ansible
+- [docker/](docker/) - Support files for Docker image creation and example docker-compose file
