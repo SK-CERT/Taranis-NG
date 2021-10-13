@@ -31,16 +31,20 @@ class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
 
 
 class ReportItemAttribute:
-    def __init__(self, id, value, attribute_group_item_id, attribute_group_item_title, created, last_updated, version,
-                 current):
+    def __init__(self, id, value, binary_mime_type, binary_size, binary_description, attribute_group_item_id,
+                 attribute_group_item_title, created, last_updated, version, current, user):
         self.id = id
         self.value = value
         self.created = created
         self.last_updated = last_updated
         self.version = version
         self.current = current
+        self.binary_mime_type = binary_mime_type
+        self.binary_size = binary_size
+        self.binary_description = binary_description
         self.attribute_group_item_id = attribute_group_item_id
         self.attribute_group_item_title = attribute_group_item_title
+        self.user = user
 
 
 class ReportItemBaseSchema(Schema):
@@ -58,7 +62,7 @@ class ReportItemBaseSchema(Schema):
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):
-    remote_user = fields.Str()
+    remote_user = fields.Str(allow_none=True)
     attributes = fields.Nested(ReportItemAttributeSchema, many=True)
 
 
@@ -66,7 +70,7 @@ class ReportItemSchema(ReportItemBaseSchema):
     news_item_aggregates = fields.Nested(NewsItemAggregateSchema, many=True)
     remote_report_items = fields.Nested(RemoteReportItemSchema, many=True)
     attributes = fields.Nested(ReportItemAttributeSchema, many=True)
-    remote_user = fields.Str()
+    remote_user = fields.Str(allow_none=True)
 
     @post_load
     def make(self, data, **kwargs):
@@ -87,12 +91,12 @@ class ReportItemRemoteSchema(Schema):
 
 
 class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, PresentationSchema):
-    remote_user = fields.Str()
+    remote_user = fields.Str(allow_none=True)
 
 
 class ReportItem:
     def __init__(self, id, uuid, title, title_prefix, created, last_updated, completed, report_item_type_id,
-                 news_item_aggregates, remote_report_items, attributes):
+                 news_item_aggregates, remote_report_items, attributes, remote_user):
         self.id = id
         self.uuid = uuid
         self.title = title
@@ -104,6 +108,7 @@ class ReportItem:
         self.news_item_aggregates = news_item_aggregates
         self.attributes = attributes
         self.remote_report_items = remote_report_items
+        self.remote_user = remote_user
 
 
 class ReportItemIdSchema(Schema):

@@ -2,6 +2,7 @@ import pdfkit
 import jinja2
 import os
 import datetime
+import tempfile
 from base64 import b64encode
 from presenters.base_presenter import BasePresenter
 from taranisng.schema.parameter import Parameter, ParameterType
@@ -28,9 +29,10 @@ class PDFPresenter(BasePresenter):
     def generate(self, presenter_input):
 
         try:
-            temporary_directory = 'tmp/'
+            temporary_directory = tempfile.gettempdir() + "/"
             output_body_html = temporary_directory + 'pdf_body.html'
-            output_pdf = temporary_directory + 'pdf_report__' + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M") + '.pdf'
+            output_pdf = temporary_directory + 'pdf_report__' + datetime.datetime.now().strftime(
+                "%d-%m-%Y_%H:%M") + '.pdf'
 
             pdf_header_template = presenter_input.parameter_values_map['HEADER_TEMPLATE_PATH']
             pdf_footer_template = presenter_input.parameter_values_map['FOOTER_TEMPLATE_PATH']

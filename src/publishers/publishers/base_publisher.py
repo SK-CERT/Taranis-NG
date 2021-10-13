@@ -16,9 +16,7 @@ class BasePublisher:
         pass
 
     def print_exception(self, error):
-        publisher_info = BasePublisher.get_info(self)
-        print('Publisher ID: ' + publisher_info['id'])
-        print('Publisher name: ' + publisher_info['name'])
+        print('Publisher name: ' + self.name)
         if str(error).startswith('b'):
             print('ERROR: ' + str(error)[2:-1])
         else:

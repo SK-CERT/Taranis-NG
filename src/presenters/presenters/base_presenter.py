@@ -13,9 +13,7 @@ class BasePresenter:
         return info_schema.dump(self)
 
     def print_exception(self, error):
-        presenter_info = BasePresenter.get_info(self)
-        print('Presenter ID: ' + presenter_info['id'])
-        print('Presenter name: ' + presenter_info['name'])
+        print('Presenter name: ' + self.name)
         if str(error).startswith('b'):
             print('ERROR: ' + str(error)[2:-1])
         else:
