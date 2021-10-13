@@ -98,23 +98,7 @@ class NewsItemAggregate(Resource):
     @auth_required('ASSESS_UPDATE')
     def put(self, aggregate_id):
         user = auth_manager.get_user_from_jwt()
-        if request.json['type'] == 'delete':
-            response, code = news_item.NewsItemAggregate.delete(aggregate_id, user)
-            sse_manager.news_items_updated()
-        else:
-            response, osint_source_ids, code = news_item.NewsItemAggregate.update(aggregate_id, request.json, user)
-            sse_manager.news_items_updated()
-            if len(osint_source_ids) > 0:
-                sse_manager.remote_access_news_items_updated(osint_source_ids)
-        return response, code
-
-
-class GroupAction(Resource):
-
-    @auth_required('ASSESS_UPDATE')
-    def put(self, aggregate_id):
-        user = auth_manager.get_user_from_jwt()
-        response, osint_source_ids, code = news_item.NewsItemAggregate.group_action(request.json, user)
+        response, osint_source_ids, code = news_item.NewsItemAggregate.update(aggregate_id, request.json, user)
         sse_manager.news_items_updated()
         if len(osint_source_ids) > 0:
             sse_manager.remote_access_news_items_updated(osint_source_ids)
@@ -123,9 +107,26 @@ class GroupAction(Resource):
     @auth_required('ASSESS_DELETE')
     def delete(self, aggregate_id):
         user = auth_manager.get_user_from_jwt()
-        response, code = news_item.NewsItemAggregate.group_action_delete(request.json, user)
+        response, code = news_item.NewsItemAggregate.delete(aggregate_id, user)
         sse_manager.news_items_updated()
         return response, code
+
+
+class GroupAction(Resource):
+
+    @auth_required('ASSESS_UPDATE')
+    def put(self):
+        user = auth_manager.get_user_from_jwt()
+        if request.json['type'] == 'delete':
+            response, code = news_item.NewsItemAggregate.group_action_delete(request.json, user)
+            sse_manager.news_items_updated()
+            return response, code
+        else:
+            response, osint_source_ids, code = news_item.NewsItemAggregate.group_action(request.json, user)
+            sse_manager.news_items_updated()
+            if len(osint_source_ids) > 0:
+                sse_manager.remote_access_news_items_updated(osint_source_ids)
+            return response, code
 
 
 class DownloadAttachment(Resource):

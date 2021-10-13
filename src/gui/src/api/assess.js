@@ -35,7 +35,7 @@ export function readNewsItemAggregate(group_id, aggregate_id) {
 }
 
 export function deleteNewsItemAggregate(group_id, aggregate_id) {
-    return ApiService.delete('/assess/news-item-aggregates/' + aggregate_id, {group_id: group_id, delete: true})
+    return ApiService.delete('/assess/news-item-aggregates/' + aggregate_id)
 }
 
 export function importantNewsItemAggregate(group_id, aggregate_id) {
@@ -71,7 +71,7 @@ export function readNewsItem(group_id, news_item_id) {
 }
 
 export function deleteNewsItem(group_id, news_item_id) {
-    return ApiService.delete('/assess/news-items/' + news_item_id, {group_id: group_id, delete: true})
+    return ApiService.delete('/assess/news-items/' + news_item_id)
 }
 
 export function importantNewsItem(group_id, news_item_id) {
