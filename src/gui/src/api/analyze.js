@@ -100,5 +100,5 @@ export function getAttributeEnums(filter) {
 }
 
 export function removeAttachment(data) {
-    return ApiService.post(`/analyze/attribute/removeattachment/` + data.report_item_id, data, false)
+    return ApiService.delete(`/analyze/report-items/` + data.report_item_id + '/file-attributes/' + data.attribute_id)
 }

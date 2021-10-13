@@ -142,7 +142,7 @@ export default {
             url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                     : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/report_items',
+                    + '/analyze/report-items',
             thumbnailWidth: 64,
             thumbnailHeight: 96,
             previewTemplate: getTemplate(),
@@ -158,7 +158,7 @@ export default {
                     url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                             ? "$VUE_APP_TARANIS_NG_CORE_API"
                             : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/report_items',
+                    + '/analyze/report-items/' + this.report_item_id + '/file-attributes',
                             thumbnailWidth: 64,
                             thumbnailHeight: 96,
                             previewTemplate: getTemplate(),
@@ -166,8 +166,20 @@ export default {
                             autoProcessQueue: false,
                             clickable: false
                 }
+            } else {
+                return {
+                    url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
+                            ? "$VUE_APP_TARANIS_NG_CORE_API"
+                            : process.env.VUE_APP_TARANIS_NG_CORE_API)
+                        + '/analyze/report-items/' + this.report_item_id + '/file-attributes',
+                    thumbnailWidth: 64,
+                    thumbnailHeight: 96,
+                    previewTemplate: getTemplate(),
+                    addRemoveLinks: false,
+                    autoProcessQueue: false,
+                    clickable: true
+                }
             }
-            return this.dropzoneOptions
         }
     },
     methods: {
@@ -300,8 +312,8 @@ export default {
             let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                     : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/attribute/download/'
-                    + value.id + "?jwt=" + this.$store.getters.getJWT;
+                    + '/analyze/report-items/' + this.report_item_id + '/file-attributes/'
+                    + value.id + "/file?jwt=" + this.$store.getters.getJWT;
             this.$refs.myVueDropzone.manuallyAddFile(file, url);
         },
         removeFile(file_id) {
@@ -328,8 +340,8 @@ export default {
                 let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                         ? "$VUE_APP_TARANIS_NG_CORE_API"
                         : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                        + '/analyze/attribute/download/'
-                        + this.values[i].id + "?jwt=" + this.$store.getters.getJWT;
+                        + '/analyze/report-items/' + this.report_item_id + '/file-attributes/'
+                        + this.values[i].id + "/file?jwt=" + this.$store.getters.getJWT;
                 this.$refs.myVueDropzone.manuallyAddFile(file, url);
             }
         }
@@ -367,8 +379,8 @@ export default {
                         this.download_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                                 ? "$VUE_APP_TARANIS_NG_CORE_API"
                                 : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                                + '/analyze/attribute/download/'
-                                + this.selected_attachment.id + "?jwt=" + this.$store.getters.getJWT;
+                                + '/analyze/report-items/' + this.report_item_id + '/file-attributes/'
+                                + this.selected_attachment.id + "/file?jwt=" + this.$store.getters.getJWT;
                         this.detailDialog = true;
                         break;
                     }
@@ -381,7 +393,7 @@ export default {
                 this.$refs.myVueDropzone.setOption('url', ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                         ? "$VUE_APP_TARANIS_NG_CORE_API"
                         : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                        + '/analyze/attribute/addattachment/' + data.report_item_id)
+                        + '/analyze/report-items/' + data.report_item_id + '/file-attributes')
 
                 if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
                     this.$root.$emit('attachments-uploaded', {});
@@ -395,7 +407,7 @@ export default {
             this.$refs.myVueDropzone.setOption('url', ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                     : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/attribute/addattachment/' + this.report_item_id)
+                    + '/analyze/report-items/' + this.report_item_id + '/file-attributes')
         }
 
         this.initDropzone()
