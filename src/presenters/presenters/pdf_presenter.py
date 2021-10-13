@@ -64,6 +64,7 @@ class PDFPresenter(BasePresenter):
                     ('Accept-Encoding', 'gzip')
                 ],
                 'no-outline': None,
+                'enable-local-file-access': None
             }
 
             pdfkit.from_file(input=output_body_html, output_path=output_pdf, options=options)
