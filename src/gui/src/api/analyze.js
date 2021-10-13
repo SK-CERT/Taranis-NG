@@ -10,7 +10,9 @@ export function getAllReportItems(filter_data) {
     filter += "&incompleted=" + encodeURIComponent(filter_data.filter.incompleted)
     filter += "&range=" + encodeURIComponent(filter_data.filter.range)
     filter += "&sort=" + encodeURIComponent(filter_data.filter.sort)
-    filter += "&group=" + encodeURIComponent(filter_data.group)
+    if (filter_data.group !== null) {
+        filter += "&group=" + encodeURIComponent(filter_data.group)
+    }
     filter += "&offset=" + encodeURIComponent(filter_data.offset)
     filter += "&limit=" + encodeURIComponent(filter_data.limit)
 

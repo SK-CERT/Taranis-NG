@@ -206,12 +206,20 @@ export default {
                                 )
                             }
 
-                            createProduct(this.product).then((response) => {
+                            if (this.product.id !== -1) {
+                                updateProduct(this.product).then(() => {
 
-                                this.$validator.reset();
-                                this.product.id = response.data
-                                publishProduct(this.product.id, this.publisher_presets[i].id)
-                            })
+                                    this.$validator.reset();
+                                    publishProduct(this.product.id, this.publisher_presets[i].id)
+                                })
+                            } else {
+                                createProduct(this.product).then((response) => {
+
+                                    this.$validator.reset();
+                                    this.product.id = response.data
+                                    publishProduct(this.product.id, this.publisher_presets[i].id)
+                                })
+                            }
 
                         } else {
 
@@ -250,12 +258,22 @@ export default {
                         )
                     }
 
-                    createProduct(this.product).then((response) => {
+                    if (this.product.id !== -1) {
+                        updateProduct(this.product).then(() => {
 
-                        this.$validator.reset();
-                        this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + response.data + "/overview?jwt=" + this.$store.getters.getJWT
-                        this.$refs.previewBtn.$el.click()
-                    })
+                            this.$validator.reset();
+                            this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + this.product.id + "/overview?jwt=" + this.$store.getters.getJWT
+                            this.$refs.previewBtn.$el.click()
+                        })
+                    } else {
+                        createProduct(this.product).then((response) => {
+
+                            this.product.id = response.data
+                            this.$validator.reset();
+                            this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + response.data + "/overview?jwt=" + this.$store.getters.getJWT
+                            this.$refs.previewBtn.$el.click()
+                        })
+                    }
 
                 } else {
 
@@ -283,7 +301,7 @@ export default {
                         )
                     }
 
-                    if (this.edit) {
+                    if (this.product.id !== -1) {
                         updateProduct(this.product).then(() => {
 
                             this.$validator.reset();
