@@ -273,19 +273,19 @@ export function deletePresentersNode(node) {
 }
 
 export function getAllPublishersNodes(filter) {
-    return ApiService.get('/config/publishers/nodes?search=' + filter.search)
+    return ApiService.get('/config/publishers-nodes?search=' + filter.search)
 }
 
 export function createNewPublishersNode(node) {
-    return ApiService.post('/config/publishers/nodes/add', node)
+    return ApiService.post('/config/publishers-nodes', node)
 }
 
 export function updatePublishersNode(node) {
-    return ApiService.put('/config/publishers/node/' + node.id, node)
+    return ApiService.put('/config/publishers-nodes/' + node.id, node)
 }
 
 export function deletePublishersNode(node) {
-    return ApiService.delete('/config/publishers/node/' + node.id)
+    return ApiService.delete('/config/publishers-nodes/' + node.id)
 }
 
 export function getAllPublisherPresets(filter) {

@@ -596,11 +596,11 @@ def initialize(api):
     api.add_resource(WordList, "/api/v1/config/word-lists/<int:word_list_id>")
 
     api.add_resource(CollectorsNodes, "/api/v1/config/collectors-nodes")
-    api.add_resource(CollectorsNode, "/api/v1/config/collectors-nodes/<int:node_id>")
+    api.add_resource(CollectorsNode, "/api/v1/config/collectors-nodes/<string:node_id>")
     api.add_resource(OSINTSources, "/api/v1/config/osint-sources")
-    api.add_resource(OSINTSource, "/api/v1/config/osint-sources/<int:source_id>")
+    api.add_resource(OSINTSource, "/api/v1/config/osint-sources/<string:source_id>")
     api.add_resource(OSINTSourceGroups, "/api/v1/config/osint-source-groups")
-    api.add_resource(OSINTSourceGroup, "/api/v1/config/osint-source-groups/<int:group_id>")
+    api.add_resource(OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>")
 
     api.add_resource(RemoteAccesses, "/api/v1/config/remote-accesses")
     api.add_resource(RemoteAccess, "/api/v1/config/remote-accesses/<int:remote_access_id>")
@@ -610,19 +610,19 @@ def initialize(api):
     api.add_resource(RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
 
     api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes")
-    api.add_resource(PresentersNode, "/api/v1/config/presenters-nodes/<int:node_id>")
+    api.add_resource(PresentersNode, "/api/v1/config/presenters-nodes/<string:node_id>")
 
     api.add_resource(PublisherNodes, "/api/v1/config/publishers-nodes")
-    api.add_resource(PublishersNode, "/api/v1/config/publishers-nodes/<int:node_id>")
+    api.add_resource(PublishersNode, "/api/v1/config/publishers-nodes/<string:node_id>")
 
     api.add_resource(PublisherPresets, "/api/v1/config/publishers-presets")
-    api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<int:preset_id>")
+    api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>")
 
     api.add_resource(BotNodes, "/api/v1/config/bots-nodes")
-    api.add_resource(BotsNode, "/api/v1/config/bots-nodes/<int:node_id>")
+    api.add_resource(BotsNode, "/api/v1/config/bots-nodes/<string:node_id>")
 
     api.add_resource(BotPresets, "/api/v1/config/bots-presets")
-    api.add_resource(BotPreset, "/api/v1/config/bots-presets/<int:preset_id>")
+    api.add_resource(BotPreset, "/api/v1/config/bots-presets/<string:preset_id>")
 
     Permission.add("CONFIG_ACCESS", "Configuration access", "Access to Configuration module")
 
