@@ -75,8 +75,8 @@
 </template>
 
 <script>
-    import {createNewBotsNode} from "@/api/bots";
-    import {updateBotsNode} from "@/api/bots";
+    import {createNewBotsNode} from "@/api/config";
+    import {updateBotsNode} from "@/api/config";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
 

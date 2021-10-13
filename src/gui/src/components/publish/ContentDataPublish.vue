@@ -41,7 +41,7 @@
             data_loaded: false,
             filter: {
                 search: "",
-                limit: "ALL",
+                range: "ALL",
                 sort: "DATE_DESC"
             }
         }),

@@ -28,7 +28,7 @@
                     color="primary"
                     mandatory
             >
-                <v-chip v-for="day in days" :key="day.filter" small class="px-0 mr-1"  @click="filterLimit(day.filter)">
+                <v-chip v-for="day in days" :key="day.filter" small class="px-0 mr-1"  @click="filterRange(day.filter)">
                     <span class="px-3">{{$t(day.title)}}</span>
                 </v-chip>
             </v-chip-group>
@@ -88,7 +88,7 @@
             ],
             filter: {
                 search: "",
-                limit: "ALL",
+                range: "ALL",
                 sort: "DATE_DESC"
             },
             timeout: null
@@ -100,8 +100,8 @@
                 this.$root.$emit('update-products-filter', this.filter);
             },
 
-            filterLimit(limit) {
-                this.filter.limit = limit;
+            filterRange(range) {
+                this.filter.range = range;
                 this.$root.$emit('update-products-filter', this.filter);
             },
 

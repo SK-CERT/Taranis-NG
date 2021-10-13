@@ -1,5 +1,5 @@
 from auth.base_authenticator import BaseAuthenticator
-from managers import audit_manager
+from managers import log_manager
 
 users = {"user": "user", "user2" : "user", "admin": "admin", "customer": "customer"}
 
@@ -14,6 +14,6 @@ class TestAuthenticator(BaseAuthenticator):
             if users[credentials["username"]] == credentials["password"]:
                 return BaseAuthenticator.generate_jwt(credentials["username"])
 
-        audit_manager.store_auth_error_activity("Authentication failed with credentials: " + str(credentials))
+        log_manager.store_auth_error_activity("Authentication failed with credentials: " + str(credentials))
 
         return BaseAuthenticator.generate_error()

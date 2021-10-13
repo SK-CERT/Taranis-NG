@@ -187,11 +187,11 @@
         },
         methods: {
             enumSelected(data) {
-                this.edited_cpe.value = data.value
+                this.edited_cpe.value = data.value;
             },
 
             editAllowed() {
-                return this.checkPermission(Permissions.MY_ASSETS_CREATE)
+                return this.checkPermission(Permissions.MY_ASSETS_CREATE);
             },
             close() {
                 this.dialog = false;
@@ -203,12 +203,12 @@
 
             save() {
                 if (this.edited_index > -1) {
-                    Object.assign(this.cpes[this.edited_index], this.edited_cpe)
+                    Object.assign(this.cpes[this.edited_index], this.edited_cpe);
                 } else {
-                    this.cpes.push(this.edited_cpe)
+                    this.cpes.push(this.edited_cpe);
                 }
                 this.selected_cpe = null;
-                this.close()
+                this.close();
             },
 
             importCSV() {

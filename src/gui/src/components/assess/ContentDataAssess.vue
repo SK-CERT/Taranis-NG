@@ -74,7 +74,7 @@
             news_items_data_loaded: false,
             news_items_filter: {
                 search: "",
-                limit: "ALL",
+                range: "ALL",
                 read: false,
                 important: false,
                 relevant: false,

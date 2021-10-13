@@ -26,7 +26,7 @@
     import NewBotPreset from "@/components/config/bot_presets/NewBotPreset";
     import ToolbarFilter from "../../components/common/ToolbarFilter";
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteBotPreset} from "@/api/bots";
+    import {deleteBotPreset} from "@/api/config";
 
     export default {
         name: "BotPresets",

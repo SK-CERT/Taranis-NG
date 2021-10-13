@@ -26,7 +26,7 @@
     import NewOSINTSourceGroup from "../../components/config/osint_sources/NewOSINTSourceGroup";
     import ToolbarFilter from "../../components/common/ToolbarFilter";
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteOSINTSourceGroup} from "@/api/collectors";
+    import {deleteOSINTSourceGroup} from "@/api/config";
 
     export default {
         name: "OSINTSourceGroups",

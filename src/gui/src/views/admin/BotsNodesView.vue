@@ -26,7 +26,7 @@
     import NewBotsNode from "@/components/config/bots_nodes/NewBotsNode";
     import ToolbarFilter from "../../components/common/ToolbarFilter"
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteBotsNode} from "@/api/bots";
+    import {deleteBotsNode} from "@/api/config";
 
     export default {
         name: "BotsNodes",

@@ -18,7 +18,7 @@ class NewAssetCpeSchema(AssetCpeSchema):
 
 class AssetCpe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(1024))
+    value = db.Column(db.String())
 
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'))
     asset = db.relationship("Asset")
@@ -37,9 +37,9 @@ class NewAssetSchema(AssetSchema):
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    serial = db.Column(db.String(256))
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    serial = db.Column(db.String())
+    description = db.Column(db.String())
 
     asset_group_id = db.Column(db.String, db.ForeignKey('asset_group.id'))
     asset_group = db.relationship("AssetGroup")
@@ -125,7 +125,7 @@ class Asset(db.Model):
             self.vulnerabilities.append(vulnerability)
 
     @classmethod
-    def solve_vulnerability(cls, user, asset_id, report_item_id, solved):
+    def solve_vulnerability(cls, user, group_id, asset_id, report_item_id, solved):
         asset = cls.query.get(asset_id)
         if AssetGroup.access_allowed(user, asset.asset_group_id):
             for vulnerability in asset.vulnerabilities:
@@ -172,16 +172,17 @@ class Asset(db.Model):
             return {'total_count': count, 'items': items}
 
     @classmethod
-    def add(cls, user, data):
+    def add(cls, user, group_id, data):
         schema = NewAssetSchema()
         asset = schema.load(data)
-        if AssetGroup.access_allowed(user, asset.asset_group_id):
+        asset.asset_group_id = group_id
+        if AssetGroup.access_allowed(user, group_id):
             db.session.add(asset)
             asset.update_vulnerabilities()
             db.session.commit()
 
     @classmethod
-    def update(cls, user, asset_id, data):
+    def update(cls, user, group_id, asset_id, data):
         asset = cls.query.get(asset_id)
         if AssetGroup.access_allowed(user, asset.asset_group_id):
             schema = NewAssetSchema()
@@ -194,7 +195,7 @@ class Asset(db.Model):
             db.session.commit()
 
     @classmethod
-    def delete(cls, user, id):
+    def delete(cls, user, group_id, id):
         asset = cls.query.get(id)
         if AssetGroup.access_allowed(user, asset.asset_group_id):
             db.session.delete(asset)
@@ -231,8 +232,8 @@ class NewAssetGroupGroupSchema(AssetGroupSchema):
 
 class AssetGroup(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     templates = db.relationship("NotificationTemplate", secondary="asset_group_notification_template")
 

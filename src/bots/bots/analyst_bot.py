@@ -1,6 +1,6 @@
 from bots.base_bot import BaseBot
 from taranisng.schema.parameter import Parameter, ParameterType
-from taranisng.schema.news_item import NewsItemData, NewsItemAttribute
+from taranisng.schema import news_item
 from remote.core_api import CoreApi
 import re
 
@@ -35,58 +35,44 @@ class AnalystBot(BaseBot):
             attr_name = attr_name.split(',')
 
             bots_params = dict(zip(attr_name, regexp))
-
-            news_items_data = CoreApi.get_news_items_data()
             limit = BaseBot.history(interval)
+            news_items_data = CoreApi.get_news_items_data(limit)
 
-            for key, value in bots_params.items():
+            if news_items_data:
 
                 for item in news_items_data:
 
-                    collected = item['collected']
-                    news_item_data_id = item['id']
+                    news_item_id = item['id']
+                    title = item['title']
+                    preview = item['review']
+                    content = item['content']
 
-                    # TODO change condition to bigger then...
-                    if collected < str(limit):
-                        title = item['title']
-                        preview = item['review']
-                        content = item['content']
+                    analyzed_text = ''.join([title, preview, content]).split()
+                    analyzed_text = [item.replace('.', '') if item.endswith('.') else item
+                                     for item in analyzed_text]
+                    analyzed_text = [item.replace(',', '') if item.endswith(',') else item
+                                     for item in analyzed_text]
 
-                        analyzed_text = ''.join([title, preview, content]).split()
-                        analyzed_text = [item.replace('.', '') if item.endswith('.') else item
-                                         for item in analyzed_text]
-                        analyzed_text = [item.replace(',', '') if item.endswith(',') else item
-                                         for item in analyzed_text]
+                    for element in analyzed_text:
 
-                        for element in analyzed_text:
+                        attributes = []
+
+                        for key, value in bots_params.items():
+
                             finding = re.search("(" + value + ")", element)
                             if finding:
                                 found_value = finding.group(1)
 
-                                data = {
-                                    'id': item['id'],
-                                    'hash': item['hash'],
-                                    'title': item['title'],
-                                    'review': item['review'],
-                                    'source': item['source'],
-                                    'link': item['link'],
-                                    'published': item['published'],
-                                    'author': item['author'],
-                                    'collected': item['collected'],
-                                    'content': item['content'],
-                                    'osint_source_id': item['osint_source_id'],
-                                    'attributes': [
-                                        {
-                                            'key': key,
-                                            'value': found_value,
-                                            'binary_mime_type': '',
-                                            'binary_value': ''
-                                        }
-                                    ]
-                                }
+                                value = found_value
+                                binary_mime_type = ''
+                                binary_value = ''
 
-                                # print(data)
-                                BaseBot.update(news_item_data_id, data)
+                                news_attribute = news_item.NewsItemAttribute(key, value, binary_mime_type, binary_value)
+
+                                attributes.append(news_attribute)
+
+                                news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
+                                CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
 
         except Exception as error:
             BaseBot.print_exception(preset, error)

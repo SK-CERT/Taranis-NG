@@ -12,9 +12,9 @@ class NewParameterSchema(parameter.ParameterSchema):
 
 class Parameter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(64), nullable=False)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    key = db.Column(db.String(), nullable=False)
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
     type = db.Column(db.Enum(parameter.ParameterType))
 
     def __init__(self, id, key, name, description, type):

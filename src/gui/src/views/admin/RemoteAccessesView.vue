@@ -26,7 +26,7 @@
     import NewRemoteAccess from "@/components/config/remote/NewRemoteAccess";
     import ToolbarFilter from "../../components/common/ToolbarFilter";
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteRemoteAccess} from "@/api/remote";
+    import {deleteRemoteAccess} from "@/api/config";
 
     export default {
         name: "RemoteAccesses",

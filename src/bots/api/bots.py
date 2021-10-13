@@ -11,4 +11,4 @@ class Bots(Resource):
 
 
 def initialize(api):
-    api.add_resource(Bots, "/api/bots")
+    api.add_resource(Bots, "/api/v1/bots")

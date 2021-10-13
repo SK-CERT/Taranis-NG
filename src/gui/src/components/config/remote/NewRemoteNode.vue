@@ -145,9 +145,9 @@
 
 <script>
     import AuthMixin from "../../../services/auth/auth_mixin";
-    import {createNewRemoteNode} from "@/api/remote";
-    import {updateRemoteNode} from "@/api/remote";
-    import {connectRemoteNode} from "@/api/remote";
+    import {createNewRemoteNode} from "@/api/config";
+    import {updateRemoteNode} from "@/api/config";
+    import {connectRemoteNode} from "@/api/config";
     import Permissions from "@/services/auth/permissions";
 
     export default {

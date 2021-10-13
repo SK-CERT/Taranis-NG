@@ -75,8 +75,8 @@
 </template>
 
 <script>
-    import {createNewPublishersNode} from "@/api/publishers";
-    import {updatePublishersNode} from "@/api/publishers";
+    import {createNewPublishersNode} from "@/api/config";
+    import {updatePublishersNode} from "@/api/config";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
 

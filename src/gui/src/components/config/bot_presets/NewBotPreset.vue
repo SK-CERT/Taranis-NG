@@ -74,8 +74,8 @@
 </template>
 
 <script>
-    import {createNewBotPreset} from "@/api/bots";
-    import {updateBotPreset} from "@/api/bots";
+    import {createNewBotPreset} from "@/api/config";
+    import {updateBotPreset} from "@/api/config";
     import FormParameters from "../../common/FormParameters";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";

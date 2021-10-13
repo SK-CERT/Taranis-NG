@@ -1,5 +1,6 @@
-import requests
 import os
+
+import requests
 
 
 class CoreApi:
@@ -10,9 +11,9 @@ class CoreApi:
     @classmethod
     def get_osint_sources(cls, collector_type):
         try:
-            response = requests.post(cls.api_url + '/api/collectors/sources', json={'api_key': cls.api_key,
-                                                                                'collector_type': collector_type},
-                                 headers=cls.headers)
+            response = requests.post(cls.api_url + '/api/v1/collectors/osint-sources', json={'api_key': cls.api_key,
+                                                                                  'collector_type': collector_type},
+                                     headers=cls.headers)
             return response.json(), response.status_code
         except:
             return None, 400
@@ -20,8 +21,8 @@ class CoreApi:
     @classmethod
     def add_news_items(cls, news_items):
         try:
-            response = requests.post(cls.api_url + '/api/assess/newsitems/add', json=news_items,
-                                 headers=cls.headers)
+            response = requests.post(cls.api_url + '/api/v1/collectors/news-items', json=news_items,
+                                     headers=cls.headers)
             return response.status_code
         except:
             return 400

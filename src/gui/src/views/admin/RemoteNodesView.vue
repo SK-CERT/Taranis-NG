@@ -26,7 +26,7 @@
     import NewRemoteNode from "@/components/config/remote/NewRemoteNode";
     import ToolbarFilter from "../../components/common/ToolbarFilter";
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteRemoteNode} from "@/api/remote";
+    import {deleteRemoteNode} from "@/api/config";
 
     export default {
         name: "RemoteNodes",

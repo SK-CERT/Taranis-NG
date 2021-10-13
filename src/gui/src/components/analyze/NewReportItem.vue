@@ -21,7 +21,53 @@
                         </v-btn>
                         <v-toolbar-title v-if="!edit">{{ $t('report_item.add_new') }}</v-toolbar-title>
                         <v-toolbar-title v-if="edit">{{ $t('report_item.edit') }}</v-toolbar-title>
+
                         <v-spacer></v-spacer>
+
+                        <!--DiALOG iMPORT CSV-->
+                        <v-dialog v-model="dialog_csv" max-width="500px">
+                            <template v-if="!edit" v-slot:activator="{ on }">
+                                <v-btn v-on="on" text :disabled="!selected_type">
+                                    <v-icon left>mdi-upload</v-icon>
+                                    <span>{{$t('report_item.import_csv')}}</span>
+                                </v-btn>
+                            </template>
+                            <v-card>
+                                <v-card-title>
+                                    <span class="headline">{{$t('report_item.import_from_csv')}}</span>
+                                </v-card-title>
+
+                                <v-row class="ma-6">
+                                    <VueCsvImport v-model="csv" :map-fields="csv_struct" autoMatchFields autoMatchIgnoreCase>
+
+                                        <template slot="hasHeaders" slot-scope="{headers, toggle}">
+                                            <label style="display: none;">
+                                                <input type="checkbox" id="hasHeaders" checked="checked" :value="headers" @change="toggle">
+                                                Headers?
+                                            </label>
+                                        </template>
+
+                                        <template slot="next" slot-scope="{load}">
+                                            <button class="load" @click.prevent="load">{{$t('asset.load_csv_file')}}</button>
+                                        </template>
+
+                                    </VueCsvImport>
+
+                                </v-row>
+
+                                <v-card-actions>
+                                    <v-spacer></v-spacer>
+                                    <v-checkbox style="display: none;" v-model="csv_delete_exist_list" :label="$t('report_item.delete_existing_codes')"></v-checkbox>
+                                    <v-spacer></v-spacer>
+                                    <v-btn color="primary" dark @click="importCSV">
+                                        {{$t('asset.import')}}
+                                    </v-btn>
+                                    <v-btn color="primary" text @click="closeCSV">
+                                        {{$t('asset.cancel')}}
+                                    </v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </v-dialog>
                         <v-switch :disabled="!canModify"
                                   style="padding-top:25px"
                                   v-model="report_item.completed"
@@ -32,6 +78,8 @@
                             <v-icon left>mdi-content-save</v-icon>
                             <span>{{ $t('report_item.save') }}</span>
                         </v-btn>
+
+
                     </v-toolbar>
 
                     <v-form @submit.prevent="add" id="form" ref="form">
@@ -90,6 +138,7 @@
                             </v-card-text>
                         </v-card>
 
+                        <!--ATTRiBUTES-->
                         <div style="padding:16px" class="div-wrapper cs_attribute_expa">
                             <!--GROUP-->
                             <v-expansion-panels class="groups mb-1"
@@ -124,30 +173,6 @@
                                                 </v-expansion-panel-content>
                                             </v-expansion-panel>
                                         </v-expansion-panels>
-
-                                        <!-- TYPES CARD -->
-                                        <!--<template>
-                                            <v-card v-for="attribute_item in attribute_group.attribute_group_items"
-                                                    :key="attribute_item.id"
-                                                    class="item-panel mb-4 attribute-card"
-
-                                            >
-                                                <v-card-title class="pa-1 pl-3 attribute-title body-2">
-                                                    <span>{{ attribute_item.attribute_group_item.title }}</span>
-                                                </v-card-title>
-
-                                                <v-card-content class="px-8">
-                                                    <AttributeContainer
-                                                            :attribute_item="attribute_item" :edit="edit"
-                                                            :modify="modify"
-                                                            :report_item_id="report_item.id"
-                                                    />
-                                                </v-card-content>
-
-
-                                            </v-card>
-                                        </template>-->
-
 
                                     </v-expansion-panel-content>
                                 </v-expansion-panel>
@@ -245,6 +270,30 @@
     border-radius: 0 4px 0 0 !important;
 }
 
+.vue-csv-uploader button.load {
+    margin: 10px;
+    margin-left: 0;
+    padding: 4px 10px 4px 10px;
+    background-color: #4092dd;
+    border-radius: 4px;
+    color: white;
+}
+
+.vue-csv-uploader-part-two table {
+    width: 400px;
+}
+
+.vue-csv-uploader-part-two table thead {
+    text-align: left;
+}
+
+.vue-csv-uploader-part-two table select {
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
 </style>
 
 <script>
@@ -262,15 +311,29 @@ import AttributeContainer from "@/components/common/attribute/AttributeContainer
 import NewsItemSelector from "@/components/analyze/NewsItemSelector";
 import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
 
+import VueCsvImport from '@/components/common/ImportCSV'
+
 export default {
     name: "NewReportItem",
     props: {
         add_button: Boolean,
         analyze_selector: Boolean,
-        collections: Array
+        collections: Array,
+        csv_codes: Array
     },
-    components: {NewsItemSelector, AttributeContainer, RemoteReportItemSelector},
+    components: {NewsItemSelector, AttributeContainer, RemoteReportItemSelector, VueCsvImport},
     data: () => ({
+        csv: null,
+        csv_delete_exist_list: false,
+        csv_preview: true,
+        csv_data: null,
+        csv_struct: null,
+        headers: [
+            {text: 'Value', value: 'value', align: 'left', sortable: true},
+            {text: 'Actions', value: 'action', align: 'right', sortable: false},
+        ],
+        dialog: false,
+        dialog_csv: false,
         expand_panel_groups: [],
         expand_group_items: [],
         visible: false,
@@ -358,6 +421,8 @@ export default {
                 this.attribute_groups.push(group)
                 this.expand_group_items.push({values: Array.from(Array(group.attribute_group_items.length).keys())});
             }
+
+            this.csv_struct = this.findAttributeType();
         },
 
         cancel() {
@@ -710,9 +775,95 @@ export default {
         expand_groups() {
             return this.expand_panel_groups = Array.from(Array(this.attribute_groups.length).keys());
         },
-        expand_items() {
-            return this.expand_group_items;
-        }
+
+        findAttributeType() {
+            let groups = this.selected_type.attribute_groups;
+            let available = [];
+
+            for( let i=0; i<groups.length; i++) {
+                let group = groups[i];
+
+                for( let j=0; j<group.attribute_group_items.length; j++) {
+                    available.push(group.attribute_group_items[j].title.replace(" ", "_"));
+                }
+            }
+            return available;
+        },
+        importCSV() {
+            let csv_lines = this.csv.length;
+            let sorted_csv = new Array();
+
+            for( let c=0; c<this.csv_struct.length; c++) {
+                sorted_csv.push([]);
+                for( let d=1; d<csv_lines; d++) {
+                    sorted_csv[c].push( this.csv[d][this.csv_struct[c]] );
+                }
+            }
+
+            let count = 0;
+            for( let i=0; i<this.attribute_groups.length; i++) {
+                for (let j=0; j<this.attribute_groups[i].attribute_group_items.length; j++) {
+
+                    this.attribute_groups[i].attribute_group_items[j].values = [];
+                    for( let k=0; k<csv_lines-1; k++) {
+                        if(sorted_csv[count][k] != "") {
+                            this.attribute_groups[i].attribute_group_items[j].values.push({ "id": -1, "index": k, "value": sorted_csv[count][k], "user": null });
+                        }
+                    }
+                    count++;
+                }
+            }
+
+            this.dialog_csv = false;
+            this.csv = null;
+            this.csv_delete_exist_list = false;
+            this.$root.$emit('reset-csv-dialog');
+
+        },
+        _importCSV() {
+
+            if (this.csv_delete_exist_list) {
+                this.$emit('update-cpes', this.csv);
+            } else {
+
+                let attribute = this.findAttributeType(this.csv[0].value);
+                let codes = attribute.attribut_group_items;
+
+                let arrayWithDuplicates = codes.concat(this.csv);
+
+                let removeDuplicates = function (originalArray, prop) {
+                    let newArray = [];
+                    let lookupObject = {};
+
+                    for (var i in originalArray) {
+                        lookupObject[originalArray[i][prop]] = originalArray[i];
+                    }
+
+                    for (i in lookupObject) {
+                        newArray.push(lookupObject[i]);
+                    }
+
+                    return newArray;
+                }
+
+                let uniqueArray = removeDuplicates(arrayWithDuplicates, "value");
+                //this.$emit('update-cpes', uniqueArray);
+                window.console.debug(uniqueArray);
+            }
+
+            this.dialog_csv = false;
+            this.csv = null;
+            this.csv_delete_exist_list = false;
+            this.$root.$emit('reset-csv-dialog');
+        },
+
+        closeCSV() {
+            //window.console.debug(this.csv);
+            this.dialog_csv = false;
+            this.csv = null;
+            this.csv_delete_exist_list = false;
+            this.$root.$emit('reset-csv-dialog');
+        },
     },
     mixins: [AuthMixin],
     mounted() {

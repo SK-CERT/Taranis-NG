@@ -15,8 +15,8 @@ class NewOrganizationSchema(OrganizationSchema):
 
 class Organization(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     address_id = db.Column(db.Integer, db.ForeignKey('address.id'))
     address = db.relationship("Address", cascade="all")

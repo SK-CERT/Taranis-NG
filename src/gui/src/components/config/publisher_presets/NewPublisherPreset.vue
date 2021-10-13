@@ -80,8 +80,8 @@
 </template>
 
 <script>
-    import {createNewPublisherPreset} from "@/api/publishers";
-    import {updatePublisherPreset} from "@/api/publishers";
+    import {createNewPublisherPreset} from "@/api/config";
+    import {updatePublisherPreset} from "@/api/config";
     import FormParameters from "../../common/FormParameters";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";

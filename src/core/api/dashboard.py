@@ -24,4 +24,4 @@ class Dashboard(Resource):
 
 
 def initialize(api):
-    api.add_resource(Dashboard, "/api/dashboard")
+    api.add_resource(Dashboard, "/api/v1/dashboard-data")

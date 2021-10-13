@@ -11,4 +11,4 @@ class Collectors(Resource):
 
 
 def initialize(api):
-    api.add_resource(Collectors, "/api/collectors")
+    api.add_resource(Collectors, "/api/v1/collectors")

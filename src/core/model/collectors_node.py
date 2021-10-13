@@ -14,11 +14,11 @@ class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
 class CollectorsNode(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    name = db.Column(db.String(128), unique=True, nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), unique=True, nullable=False)
+    description = db.Column(db.String())
 
-    api_url = db.Column(db.String(512), nullable=False)
-    api_key = db.Column(db.String(128), nullable=False)
+    api_url = db.Column(db.String(), nullable=False)
+    api_key = db.Column(db.String(), nullable=False)
 
     collectors = db.relationship('Collector', back_populates="node", cascade="all")
 

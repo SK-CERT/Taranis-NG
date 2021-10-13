@@ -54,7 +54,7 @@
             data_loaded: false,
             filter: {
                 search: "",
-                limit: "ALL",
+                range: "ALL",
                 completed: false,
                 incompleted: false,
                 sort: "DATE_DESC"

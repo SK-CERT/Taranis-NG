@@ -1,6 +1,5 @@
 from managers.db_manager import db
 from marshmallow import post_load, fields
-from taranisng.schema import tag_cloud
 from taranisng.schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, \
     NewsItemSchema, NewsItemRemoteSchema
 from model.osint_source import OSINTSourceGroup
@@ -31,14 +30,14 @@ class NewNewsItemDataSchema(NewsItemDataSchema):
 
 class NewsItemData(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    hash = db.Column(db.String(1024))
+    hash = db.Column(db.String())
 
-    title = db.Column(db.String(256))
+    title = db.Column(db.String())
     review = db.Column(db.String())
     author = db.Column(db.String())
-    source = db.Column(db.String(256))
+    source = db.Column(db.String())
     link = db.Column(db.String())
-    language = db.Column(db.String(2))
+    language = db.Column(db.String())
     content = db.Column(db.String())
 
     collected = db.Column(db.DateTime)
@@ -111,42 +110,30 @@ class NewsItemData(db.Model):
             return ""
 
     @classmethod
-    def attribute_value_identical(cls, value):
-        return db.session.query(db.exists().where(NewsItemData.attributes.attriibute.value == value)).scalar()
+    def get_all_news_items_data(cls, limit):
+        limit = datetime.strptime(limit, '%d.%m.%Y - %H:%M')
+        limit = datetime.strftime(limit, '%Y-%m-%d - %H:%M')
 
-    @classmethod
-    def get_all_news_items_data(cls):
-        news_items_data = cls.query.all()
+        news_items_data = cls.query.filter(cls.collected > limit).all()
         news_items_data_schema = NewsItemDataSchema(many=True)
         return news_items_data_schema.dump(news_items_data)
 
     @classmethod
-    def update_news_item_data(cls, news_item_data_id, data):
-        schema = NewNewsItemDataSchema()
-        updated_news_item_data = schema.load(data)
-        news_item_data = cls.query.get(news_item_data_id)
-        news_item_data.id = updated_news_item_data.id
-        news_item_data.hash = updated_news_item_data.hash
-        news_item_data.title = updated_news_item_data.title
-        news_item_data.review = updated_news_item_data.review
-        news_item_data.source = updated_news_item_data.source
-        news_item_data.link = updated_news_item_data.link
-        news_item_data.published = updated_news_item_data.published
-        news_item_data.author = updated_news_item_data.author
-        news_item_data.collected = updated_news_item_data.collected
-        news_item_data.content = updated_news_item_data.content
-        news_item_data.osint_source_id = updated_news_item_data.osint_source_id
+    def attribute_value_identical(cls, id, value):
+        return NewsItemAttribute.query.join(NewsItemDataNewsItemAttribute).join(NewsItemData).\
+            filter(NewsItemData.id == id).filter(NewsItemAttribute.value == value).scalar()
 
-        for attribute in news_item_data.attributes:
-            if not NewsItemData.attribute_value_identical(attribute.value):
-                for updated_attribute in updated_news_item_data.attributes:
-                    attribute.id = updated_attribute.id
-                    attribute.key = updated_attribute.key
-                    attribute.value = updated_attribute.value
-                    attribute.binary_mime_type = updated_attribute.binary_mime_type
-                    attribute.binary_value = updated_attribute.binary_value
+    @classmethod
+    def update_news_item_attributes(cls, news_item_id, attributes):
+        news_item = cls.query.filter_by(id=news_item_id).first()
 
-        db.session.commit()
+        attributes_schema = NewNewsItemAttributeSchema(many=True)
+        attributes = attributes_schema.load(attributes)
+
+        for attribute in attributes:
+            if not cls.attribute_value_identical(news_item_id, attribute.value):
+                news_item.attributes.append(attribute)
+                db.session.commit()
 
     @classmethod
     def get_for_sync(cls, last_synced, osint_sources):
@@ -387,8 +374,8 @@ class NewsItemVote(db.Model):
 
 class NewsItemAggregate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(128))
-    description = db.Column(db.String(1024))
+    title = db.Column(db.String())
+    description = db.Column(db.String())
 
     created = db.Column(db.DateTime)
 
@@ -399,7 +386,7 @@ class NewsItemAggregate(db.Model):
     dislikes = db.Column(db.Integer, default=0)
     relevance = db.Column(db.Integer, default=0)
 
-    comments = db.Column(db.String(4096), default="")
+    comments = db.Column(db.String(), default="")
 
     osint_source_group_id = db.Column(db.String, db.ForeignKey('osint_source_group.id'))
 
@@ -448,17 +435,17 @@ class NewsItemAggregate(db.Model):
             query = query.join(ReportItemNewsItemAggregate,
                                NewsItemAggregate.id == ReportItemNewsItemAggregate.news_item_aggregate_id)
 
-        if 'limit' in filter and filter['limit'] != 'ALL':
+        if 'range' in filter and filter['range'] != 'ALL':
             date_limit = datetime.now()
-            if filter['limit'] == 'TODAY':
+            if filter['range'] == 'TODAY':
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            if filter['limit'] == 'WEEK':
+            if filter['range'] == 'WEEK':
                 date_limit = date_limit.replace(day=date_limit.day - date_limit.weekday(), hour=0, minute=0,
                                                 second=0,
                                                 microsecond=0)
 
-            if filter['limit'] == 'MONTH':
+            if filter['range'] == 'MONTH':
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
             query = query.filter(NewsItemAggregate.created >= date_limit)
@@ -825,14 +812,14 @@ class NewsItemAggregate(db.Model):
                     new_aggregate.created = aggregate.created
 
                 for news_item in aggregate.news_items[:]:
-                    if NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                    if user is None or NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
                         new_aggregate.news_items.append(news_item)
                         aggregate.news_items.remove(news_item)
 
                 processed_aggregates.add(aggregate)
             else:
                 news_item = NewsItem.find(item['id'])
-                if NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                if user is None or NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
                     aggregate = NewsItemAggregate.find(news_item.news_item_aggregate_id)
                     group_id = aggregate.osint_source_group_id
                     if new_aggregate.title is None:
@@ -928,6 +915,16 @@ class NewsItemAggregate(db.Model):
                 if news_item.read is False:
                     aggregate.read = False
 
+    @classmethod
+    def get_news_items_aggregate(cls, source_group, limit):
+        limit = datetime.strptime(limit['limit'], '%d.%m.%Y - %H:%M')
+
+        # TODO: Change condition in query to >
+        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit).\
+            all()
+        news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
+        return news_item_aggregate_schema.dumps(news_item_aggregates)
+
 
 class NewsItemAggregateSearchIndex(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -969,17 +966,17 @@ class NewsItemAggregateSearchIndex(db.Model):
 
 class NewsItemAttribute(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(128), nullable=False)
-    value = db.Column(db.String(2048), nullable=False)
-    binary_mime_type = db.Column(db.String(256))
+    key = db.Column(db.String(), nullable=False)
+    value = db.Column(db.String(), nullable=False)
+    binary_mime_type = db.Column(db.String())
     binary_data = orm.deferred(db.Column(db.LargeBinary))
     created = db.Column(db.DateTime, default=datetime.now)
 
     remote_node_id = db.Column(db.Integer, db.ForeignKey('remote_node.id'), nullable=True)
     remote_user = db.Column(db.String())
 
-    def __init__(self, id, key, value, binary_mime_type, binary_value):
-        self.id = id
+    def __init__(self, key, value, binary_mime_type, binary_value):
+        # self.id = id
         self.key = key
         self.value = value
         self.binary_mime_type = binary_mime_type

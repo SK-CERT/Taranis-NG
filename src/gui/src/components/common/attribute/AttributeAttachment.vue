@@ -6,7 +6,7 @@
                 v-on:vdropzone-file-added="fileAdded"
                 v-on:vdropzone-sending="sendingEvent"
                 v-on:vdropzone-success="uploadSuccess"
-                :options="dropzoneOptions"
+                :options="getOptions"
                 :include-styling="false"
                 :useCustomSlot="true"
         >
@@ -142,7 +142,7 @@ export default {
             url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                     : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/attribute/addattachment/',
+                    + '/analyze/report_items',
             thumbnailWidth: 64,
             thumbnailHeight: 96,
             previewTemplate: getTemplate(),
@@ -151,6 +151,25 @@ export default {
             clickable: true
         }
     }),
+    computed: {
+        getOptions() {
+            if (this.read_only) {
+                return {
+                    url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
+                            ? "$VUE_APP_TARANIS_NG_CORE_API"
+                            : process.env.VUE_APP_TARANIS_NG_CORE_API)
+                    + '/analyze/report_items',
+                            thumbnailWidth: 64,
+                            thumbnailHeight: 96,
+                            previewTemplate: getTemplate(),
+                            addRemoveLinks: false,
+                            autoProcessQueue: false,
+                            clickable: false
+                }
+            }
+            return this.dropzoneOptions
+        }
+    },
     methods: {
         sendingEvent(file, xhr, formData) {
             xhr.setRequestHeader("Authorization", "Bearer " + localStorage.ACCESS_TOKEN)
@@ -377,10 +396,6 @@ export default {
                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                     : process.env.VUE_APP_TARANIS_NG_CORE_API)
                     + '/analyze/attribute/addattachment/' + this.report_item_id)
-        }
-
-        if (this.read_only) {
-            this.$refs.myVueDropzone.setOption('clickable', false)
         }
 
         this.initDropzone()

@@ -21,7 +21,7 @@ class NewProductTypeSchema(ProductTypeSchema):
 class ProductType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64), unique=True, nullable=False)
-    description = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.String(), nullable=False)
 
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 

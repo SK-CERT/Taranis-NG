@@ -24,11 +24,11 @@ class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
 
 class ReportItemAttribute(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(256), nullable=False)
-    binary_mime_type = db.Column(db.String(256))
+    value = db.Column(db.String(), nullable=False)
+    binary_mime_type = db.Column(db.String())
     binary_data = orm.deferred(db.Column(db.LargeBinary))
     binary_size = db.Column(db.Integer)
-    binary_description = db.Column(db.String(1024))
+    binary_description = db.Column(db.String())
     created = db.Column(db.DateTime, default=datetime.now)
     last_updated = db.Column(db.DateTime, default=datetime.now)
 
@@ -83,8 +83,8 @@ class ReportItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(64))
 
-    title = db.Column(db.String(128))
-    title_prefix = db.Column(db.String(64))
+    title = db.Column(db.String())
+    title_prefix = db.Column(db.String())
 
     created = db.Column(db.DateTime, default=datetime.now)
     last_updated = db.Column(db.DateTime, default=datetime.now)
@@ -226,16 +226,16 @@ class ReportItem(db.Model):
         if 'incompleted' in filter and filter['incompleted'] is True:
             query = query.filter(ReportItem.completed == False)
 
-        if 'limit' in filter and filter['limit'] != 'ALL':
+        if 'range' in filter and filter['range'] != 'ALL':
             date_limit = datetime.now()
-            if filter['limit'] == 'TODAY':
+            if filter['range'] == 'TODAY':
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            if filter['limit'] == 'WEEK':
+            if filter['range'] == 'WEEK':
                 date_limit = date_limit.replace(day=date_limit.day - date_limit.weekday(), hour=0, minute=0, second=0,
                                                 microsecond=0)
 
-            if filter['limit'] == 'MONTH':
+            if filter['range'] == 'MONTH':
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
             query = query.filter(ReportItem.created >= date_limit)
@@ -567,7 +567,7 @@ class ReportItem(db.Model):
 
 class ReportItemCpe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(1024))
+    value = db.Column(db.String())
 
     report_item_id = db.Column(db.Integer, db.ForeignKey('report_item.id'))
     report_item = db.relationship("ReportItem")

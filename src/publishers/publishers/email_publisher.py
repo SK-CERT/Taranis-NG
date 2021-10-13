@@ -45,7 +45,10 @@ class EMAILPublisher(BasePublisher):
 
         file = 'file_' + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M") + '.pdf'
 
-        data = publisher_input.data[:]
+        if publisher_input.data is not None:
+            data = publisher_input.data[:]
+        else:
+            data = None
 
         def get_attachment(file_name):
             msg_attachment = Message()
@@ -112,7 +115,10 @@ class EMAILPublisher(BasePublisher):
             server.starttls()
             server.login(email_user, email_password)
 
-            recipients = email_recipients.split(',')
+            if publisher_input.recipients is not None:
+                recipients = publisher_input.recipients
+            else:
+                recipients = email_recipients.split(',')
 
             if email_encryption.lower() == 'yes':
                 for recipient in recipients:
@@ -123,13 +129,23 @@ class EMAILPublisher(BasePublisher):
                 email_msg = MIMEMultipart()
                 email_msg['From'] = email_user
                 email_msg['To'] = email_recipients
-                email_msg['Subject'] = email_subject
 
-                body = email_message
-                attachment = get_attachment(file)
+                if publisher_input.message_title is not None:
+                    email_msg['Subject'] = publisher_input.message_title
+                else:
+                    email_msg['Subject'] = email_subject
+
+                if publisher_input.message_body is not None:
+                    body = publisher_input.message_body
+                else:
+                    body = email_message
 
                 email_msg.attach(MIMEText(body + 2 * "\n", 'plain'))
-                email_msg.attach(attachment)
+
+                if data is not None:
+                    attachment = get_attachment(file)
+                    email_msg.attach(attachment)
+
                 text = email_msg.as_string()
 
                 server.sendmail(email_user, recipients, text)

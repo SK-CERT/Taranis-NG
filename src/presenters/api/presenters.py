@@ -1,5 +1,6 @@
-from flask_restful import Resource
 from flask import request
+from flask_restful import Resource
+
 from managers import presenters_manager
 from managers.auth_manager import api_key_required
 
@@ -16,4 +17,4 @@ class Presenters(Resource):
 
 
 def initialize(api):
-    api.add_resource(Presenters, "/api/presenters")
+    api.add_resource(Presenters, "/api/v1/presenters")

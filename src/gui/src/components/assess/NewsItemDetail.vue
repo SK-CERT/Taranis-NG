@@ -98,7 +98,8 @@
 
                         </v-tab-item>
                         <v-tab-item value="tab-2" class="pa-5">
-                            <NewsItemAttribute v-for="attribute in news_item.attributes" :key="attribute.id" />
+                            <NewsItemAttribute v-for="attribute in news_item.attributes" :key="attribute.id"
+                            :attribute="attribute" :news_item_data="this.news_item.news_item_data"/>
                         </v-tab-item>
 
                     </v-tabs>

@@ -526,7 +526,7 @@
 
             deleteItem(item) {
                 if (this.edit === true) {
-                    deleteAttributeEnum(item.id).then(() => {
+                    deleteAttributeEnum(this.attribute.id, item.id).then(() => {
                         this.updateAttributeEnums()
                     })
                 } else {

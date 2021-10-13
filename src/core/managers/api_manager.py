@@ -1,4 +1,5 @@
 from flask_restful import Api
+
 from api import *
 
 
@@ -12,8 +13,6 @@ def initialize(app):
     config.initialize(api)
     analyze.initialize(api)
     publish.initialize(api)
-    presenters.initialize(api)
-    publishers.initialize(api)
     user.initialize(api)
     assets.initialize(api)
     bots.initialize(api)

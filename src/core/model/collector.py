@@ -15,10 +15,10 @@ class NewCollectorSchema(CollectorSchema):
 
 class Collector(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
-    type = db.Column(db.String(64), nullable=False)
+    type = db.Column(db.String(), nullable=False)
 
     parameters = db.relationship('Parameter', secondary='collector_parameter')
 

@@ -23,28 +23,28 @@ class RemoteApi:
 
     def get_news_items(self):
         try:
-            response = requests.get(self.api_url + "/sync/newsitems", headers=self.headers)
+            response = requests.get(self.api_url + "/sync-news-items", headers=self.headers)
             return response.json(), response.status_code
         except requests.exceptions.ConnectionError:
             return {}, 503
 
     def confirm_news_items_sync(self, data):
         try:
-            response = requests.put(self.api_url + "/sync/newsitems", headers=self.headers, json=data)
+            response = requests.put(self.api_url + "/sync-news-items", headers=self.headers, json=data)
             return response.status_code
         except requests.exceptions.ConnectionError:
             return {}, 503
 
     def get_report_items(self):
         try:
-            response = requests.get(self.api_url + "/sync/reportitems", headers=self.headers)
+            response = requests.get(self.api_url + "/sync-report-items", headers=self.headers)
             return response.json(), response.status_code
         except requests.exceptions.ConnectionError:
             return {}, 503
 
     def confirm_report_items_sync(self, data):
         try:
-            response = requests.put(self.api_url + "/sync/reportitems", headers=self.headers, json=data)
+            response = requests.put(self.api_url + "/sync-report-items", headers=self.headers, json=data)
             return response.status_code
         except requests.exceptions.ConnectionError:
             return {}, 503

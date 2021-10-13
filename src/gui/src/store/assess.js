@@ -1,10 +1,11 @@
-import {getNewsItemsByGroup} from "@/api/assess";
+import {getManualOSINTSources, getNewsItemsByGroup} from "@/api/assess";
 
 const state = {
     newsitems: {total_count: 0, items: []},
     multi_select: false,
     selection: [],
-    current_group_id: ""
+    current_group_id: "",
+    manual_osint_sources: []
 };
 
 const actions = {
@@ -31,7 +32,15 @@ const actions = {
 
     changeCurrentGroup(context, data) {
         context.commit('setCurrentGroup', data);
-    }
+    },
+
+    getManualOSINTSources(context) {
+
+        return getManualOSINTSources()
+            .then(response => {
+                context.commit('setManualOSINTSources', response.data);
+            })
+    },
 };
 
 const mutations = {
@@ -61,6 +70,10 @@ const mutations = {
     setCurrentGroup(state, group_id) {
         state.current_group_id = group_id
     },
+
+    setManualOSINTSources(state, new_manual_osint_sources) {
+        state.manual_osint_sources = new_manual_osint_sources
+    }
 };
 
 const getters = {
@@ -79,6 +92,10 @@ const getters = {
 
     getCurrentGroup(state) {
         return state.current_group_id
+    },
+
+    getManualOSINTSources(state) {
+        return state.manual_osint_sources
     }
 };
 

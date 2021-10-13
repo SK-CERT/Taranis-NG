@@ -13,10 +13,10 @@ class NewAddressSchema(AddressSchema):
 class Address(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    street = db.Column(db.String(64))
-    city = db.Column(db.String(64))
-    zip = db.Column(db.String(16))
-    country = db.Column(db.String(54))
+    street = db.Column(db.String())
+    city = db.Column(db.String())
+    zip = db.Column(db.String())
+    country = db.Column(db.String())
 
     def __init__(self, street, city, zip, country):
         self.street = street

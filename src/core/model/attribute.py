@@ -1,9 +1,11 @@
+import os
+from xml.etree.ElementTree import iterparse
+
+from sqlalchemy import orm, func, or_
+
+from managers import log_manager
 from managers.db_manager import db
 from taranisng.schema.attribute import *
-from marshmallow import fields, post_load
-from sqlalchemy import orm, func, or_
-from xml.etree.ElementTree import iterparse
-import os
 
 
 class NewAttributeEnumSchema(AttributeEnumSchema):
@@ -16,8 +18,8 @@ class NewAttributeEnumSchema(AttributeEnumSchema):
 class AttributeEnum(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     index = db.Column(db.Integer)
-    value = db.Column(db.String(256), nullable=False)
-    description = db.Column(db.String)
+    value = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
     imported = db.Column(db.Boolean, default=False)
 
     attribute_id = db.Column(db.Integer, db.ForeignKey('attribute.id'))
@@ -98,11 +100,11 @@ class AttributeEnum(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, attribute_id, data):
+    def update(cls, enum_id, data):
         attribute_enums_schema = NewAttributeEnumSchema(many=True)
         attribute_enums = attribute_enums_schema.load(data)
         for attribute_enum in attribute_enums:
-            original_attribute_enum = cls.query.get(attribute_enum.id)
+            original_attribute_enum = cls.query.get(enum_id)
             original_attribute_enum.value = attribute_enum.value
             original_attribute_enum.description = attribute_enum.description
             original_attribute_enum.imported = False
@@ -125,13 +127,13 @@ class NewAttributeSchema(AttributeBaseSchema):
 
 class Attribute(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
     type = db.Column(db.Enum(AttributeType))
-    default_value = db.Column(db.String(128))
+    default_value = db.Column(db.String())
 
     validator = db.Column(db.Enum(AttributeValidator))
-    validator_parameter = db.Column(db.String(128))
+    validator_parameter = db.Column(db.String())
 
     def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
         self.name = name
@@ -283,11 +285,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        print("Processed CVE items: " + str(item_count))
+                        log_manager.debug_log("Processed CVE items: " + str(item_count))
                         block_item_count = 0
                         db.session.commit()
 
-        print("Processed CVE items: " + str(item_count))
+        log_manager.debug_log("Processed CVE items: " + str(item_count))
         db.session.commit()
 
     @classmethod
@@ -313,11 +315,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        print("Processed CPE items: " + str(item_count))
+                        log_manager.debug_log("Processed CPE items: " + str(item_count))
                         block_item_count = 0
                         db.session.commit()
 
-        print("Processed CPE items: " + str(item_count))
+        log_manager.debug_log("Processed CPE items: " + str(item_count))
         db.session.commit()
 
     @classmethod

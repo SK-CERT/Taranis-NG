@@ -1,15 +1,17 @@
-from managers.db_manager import db
 from datetime import *
-from taranisng.schema.product import ProductPresentationSchema, ProductSchemaBase
+
+import sqlalchemy
+from marshmallow import fields
 from marshmallow import post_load
 from sqlalchemy import orm, func, or_, and_
-from marshmallow import fields
-from taranisng.schema.report_item import ReportItemIdSchema
-from model.report_item import ReportItem
-from model.acl_entry import ACLEntry
-from taranisng.schema.acl_entry import ItemType
 from sqlalchemy.sql.expression import cast
-import sqlalchemy
+
+from managers.db_manager import db
+from model.acl_entry import ACLEntry
+from model.report_item import ReportItem
+from taranisng.schema.acl_entry import ItemType
+from taranisng.schema.product import ProductPresentationSchema, ProductSchemaBase
+from taranisng.schema.report_item import ReportItemIdSchema
 
 
 class NewProductSchema(ProductSchemaBase):
@@ -22,8 +24,8 @@ class NewProductSchema(ProductSchemaBase):
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    title = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     created = db.Column(db.DateTime, default=datetime.now)
 
@@ -88,16 +90,16 @@ class Product(db.Model):
                 or_(func.lower(Product.title).like(search_string),
                     func.lower(Product.description).like(search_string)))
 
-        if 'limit' in filter and filter['limit'] != 'ALL':
+        if 'range' in filter and filter['range'] != 'ALL':
             date_limit = datetime.now()
-            if filter['limit'] == 'TODAY':
+            if filter['range'] == 'TODAY':
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            if filter['limit'] == 'WEEK':
+            if filter['range'] == 'WEEK':
                 date_limit = date_limit.replace(day=date_limit.day - date_limit.weekday(), hour=0, minute=0, second=0,
                                                 microsecond=0)
 
-            if filter['limit'] == 'MONTH':
+            if filter['range'] == 'MONTH':
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
             query = query.filter(Product.created >= date_limit)
@@ -135,16 +137,25 @@ class Product(db.Model):
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
 
-        if product.id is not None:
-            original_product = cls.query.get(product.id)
-            product.created = original_product.created
-            Product.delete(original_product.id)
-
         product.user_id = user_id
         db.session.add(product)
         db.session.commit()
 
         return product
+
+    @classmethod
+    def update_product(cls, product_id, product_data):
+        product_schema = NewProductSchema()
+        product = product_schema.load(product_data)
+
+        original_product = Product.find(product_id)
+        original_product.title = product.title
+        original_product.description = product.description
+        original_product.product_type_id = product.product_type_id
+        original_product.report_items = []
+        original_product.report_items.extend(product.report_items)
+
+        db.session.commit()
 
     @classmethod
     def delete(cls, id):

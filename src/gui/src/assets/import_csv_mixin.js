@@ -4,7 +4,7 @@ var ImportCSVMixin = {
     methods: {
         readCVEData(data) {
             let parse = this.csvStringToArray(data, true)
-            window.console.debug(data, parse );
+            //window.console.debug(data, parse );
         },
 
         csvStringToArray (strData, header) {

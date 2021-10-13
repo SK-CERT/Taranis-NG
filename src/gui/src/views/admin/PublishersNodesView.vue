@@ -26,7 +26,7 @@
     import NewPublishersNode from "@/components/config/publishers_nodes/NewPublishersNode";
     import ToolbarFilter from "../../components/common/ToolbarFilter"
     import ContentData from "../../components/common/content/ContentData"
-    import {deletePublishersNode} from "@/api/publishers";
+    import {deletePublishersNode} from "@/api/config";
 
     export default {
         name: "PublishersNodes",

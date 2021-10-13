@@ -75,8 +75,8 @@
 </template>
 
 <script>
-    import {createNewPresentersNode} from "@/api/presenters";
-    import {updatePresentersNode} from "@/api/presenters";
+    import {createNewPresentersNode} from "@/api/config";
+    import {updatePresentersNode} from "@/api/config";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
 

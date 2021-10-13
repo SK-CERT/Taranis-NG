@@ -26,7 +26,7 @@
     import NewCollectorsNode from "../../components/config/collectors_nodes/NewCollectorsNode"
     import ToolbarFilter from "../../components/common/ToolbarFilter"
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteCollectorsNode} from "@/api/collectors";
+    import {deleteCollectorsNode} from "@/api/config";
 
     export default {
         name: "CollectorsNodes",

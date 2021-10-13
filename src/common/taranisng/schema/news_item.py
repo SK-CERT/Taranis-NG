@@ -15,8 +15,8 @@ class NewsItemAttributeSchema(NewsItemAttributeBaseSchema):
 
 class NewsItemAttribute:
 
-    def __init__(self, id, key, value, binary_mime_type, binary_value):
-        self.id = id
+    def __init__(self, key, value, binary_mime_type, binary_value):
+        # self.id = id
         self.key = key
         self.value = value
         self.binary_mime_type = binary_mime_type
@@ -94,7 +94,7 @@ class NewsItemBaseSchema(Schema):
     important = fields.Bool()
     me_like = fields.Bool()
     me_dislike = fields.Bool()
-    news_item_data = fields.Nested(NewsItemDataBaseSchema)
+    news_item_data = fields.Nested(NewsItemDataSchema)
 
 
 class NewsItemPresentationSchema(NewsItemBaseSchema, ACLEntryStatusSchema):

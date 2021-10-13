@@ -55,7 +55,7 @@ Vue.use(VeeValidate, {
     i18n,
 });
 
-ApiService.init((typeof(process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API);
+ApiService.init(process.env.VUE_APP_TARANIS_NG_CORE_API);
 
 if (localStorage.ACCESS_TOKEN) {
     store.dispatch('setToken', (localStorage.ACCESS_TOKEN)).then()

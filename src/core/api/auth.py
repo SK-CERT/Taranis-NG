@@ -43,5 +43,5 @@ class Logout(Resource):
 
 
 def initialize(api):
-    api.add_resource(Login, "/api/auth/login")
-    api.add_resource(Logout, "/api/auth/logout")
+    api.add_resource(Login, "/api/v1/auth/login")
+    api.add_resource(Logout, "/api/v1/auth/logout")

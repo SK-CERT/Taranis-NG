@@ -26,7 +26,7 @@
     import NewPresentersNode from "@/components/config/presenters_nodes/NewPresentersNode";
     import ToolbarFilter from "../../components/common/ToolbarFilter"
     import ContentData from "../../components/common/content/ContentData"
-    import {deletePresentersNode} from "@/api/presenters";
+    import {deletePresentersNode} from "@/api/config";
 
     export default {
         name: "PresentersNodes",

@@ -1,61 +1,61 @@
 import ApiService from "@/services/api_service";
 
 export function getAllAssetGroups(filter) {
-    return ApiService.get('/assets/groups?search=' + filter.search)
+    return ApiService.get('/my-assets/asset-groups?search=' + filter.search)
 }
 
 export function createNewAssetGroup(group) {
-    return ApiService.post('/assets/group/add', group)
+    return ApiService.post('/my-assets/asset-groups', group)
 }
 
 export function updateAssetGroup(group) {
-    return ApiService.put('/assets/group/' + group.id, group)
+    return ApiService.put('/my-assets/asset-groups/' + group.id, group)
 }
 
 export function deleteAssetGroup(group) {
-    return ApiService.delete('/assets/group/' + group.id)
+    return ApiService.delete('/my-assets/asset-groups/' + group.id)
 }
 
 export function getAllNotificationTemplates(filter) {
-    return ApiService.get('/assets/templates?search=' + filter.search)
+    return ApiService.get('/my-assets/notification-templates?search=' + filter.search)
 }
 
 export function createNewNotificationTemplate(template) {
-    return ApiService.post('/assets/template/add', template)
+    return ApiService.post('/my-assets/notification-templates', template)
 }
 
 export function updateNotificationTemplate(template) {
-    return ApiService.put('/assets/template/' + template.id, template)
+    return ApiService.put('/my-assets/notification-templates/' + template.id, template)
 }
 
 export function deleteNotificationTemplate(template) {
-    return ApiService.delete('/assets/template/' + template.id)
+    return ApiService.delete('/my-assets/notification-templates/' + template.id)
 }
 
 export function getAllAssets(data) {
-    return ApiService.get('/assets/' + data.group_id + '?search=' + data.filter.search + "&sort=" + data.filter.sort + "&vulnerable=" + data.filter.vulnerable)
+    return ApiService.get('/my-assets/asset-groups/' + data.group_id + '/assets?search=' + data.filter.search + "&sort=" + data.filter.sort + "&vulnerable=" + data.filter.vulnerable)
 }
 
 export function createNewAsset(asset) {
-    return ApiService.post('/asset/add', asset)
+    return ApiService.post('/my-assets/asset-groups/' + asset.asset_group_id + '/assets', asset)
 }
 
 export function solveVulnerability(data) {
-    return ApiService.post('/asset/vulnerability', data)
+    return ApiService.post('/my-assets/asset-groups/' + data.group_id + '/assets/' + data.asset_id + '/vulnerabilities/' + data.report_item_id, data)
 }
 
 export function updateAsset(asset) {
-    return ApiService.put('/asset/' + asset.id, asset)
+    return ApiService.put('/my-assets/asset-groups/' + asset.asset_group_id + '/assets/' + asset.id, asset)
 }
 
 export function deleteAsset(asset) {
-    return ApiService.delete('/asset/' + asset.id)
+    return ApiService.delete('/my-assets/asset-groups/' + asset.asset_group_id + '/assets/' + asset.id)
 }
 
 export function findAttributeCPE() {
-    return ApiService.get('/assets/attribute/cpe')
+    return ApiService.get('/my-assets/attributes/cpe')
 }
 
 export function getCPEAttributeEnums(filter) {
-    return ApiService.get('/assets/attribute/cpe/enums?search=' + filter.search + '&offset=' + filter.offset + '&limit=' + filter.limit)
+    return ApiService.get('/my-assets/attributes/cpe/enums?search=' + filter.search + '&offset=' + filter.offset + '&limit=' + filter.limit)
 }

@@ -24,8 +24,8 @@ class NewOSINTSourceSchema(OSINTSourceSchema):
 
 class OSINTSource(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     collector_id = db.Column(db.String, db.ForeignKey('collector.id'))
     collector = db.relationship("Collector", back_populates="sources")
@@ -158,8 +158,8 @@ class NewOSINTSourceGroupSchema(OSINTSourceGroupSchema):
 
 class OSINTSourceGroup(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     osint_sources = db.relationship('OSINTSource', secondary='osint_source_group_osint_source')
 

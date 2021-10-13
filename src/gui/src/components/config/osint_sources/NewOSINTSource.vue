@@ -95,8 +95,8 @@
 </template>
 
 <script>
-    import {createNewOSINTSource} from "@/api/collectors";
-    import {updateOSINTSource} from "@/api/collectors";
+    import {createNewOSINTSource} from "@/api/config";
+    import {updateOSINTSource} from "@/api/config";
     import FormParameters from "../../common/FormParameters";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";

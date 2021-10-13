@@ -17,8 +17,8 @@ class NewBotPresetSchema(BotPresetSchema):
 
 class BotPreset(db.Model):
     id = db.Column(db.String(64), primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     bot_id = db.Column(db.String, db.ForeignKey('bot.id'))
     bot = db.relationship("Bot", back_populates="presets")

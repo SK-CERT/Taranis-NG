@@ -2,7 +2,6 @@ from taranisng.schema import bot, bot_preset
 from remote.core_api import CoreApi
 from managers import time_manager
 from taranisng.schema.parameter import Parameter, ParameterType
-from taranisng.schema import news_item
 import datetime
 
 
@@ -61,11 +60,6 @@ class BaseBot:
                 limit = limit.strftime("%d.%m.%Y - %H:%M")
 
         return limit
-
-    @staticmethod
-    def update(news_item_data_id, data):
-        news_item_data_schema = news_item.NewsItemDataSchema()
-        CoreApi.update_news_item_data(news_item_data_id, news_item_data_schema.dump(data))
 
     def initialize(self):
         response, code = CoreApi.get_bots_presets(self.type)

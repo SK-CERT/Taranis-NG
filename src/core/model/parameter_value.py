@@ -12,7 +12,7 @@ class NewParameterValueSchema(ParameterValueSchema):
 
 class ParameterValue(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(256), nullable=False)
+    value = db.Column(db.String(), nullable=False)
 
     parameter_id = db.Column(db.Integer, db.ForeignKey('parameter.id'))
     parameter = db.relationship("Parameter")

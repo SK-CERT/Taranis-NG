@@ -107,8 +107,8 @@
 
 <script>
     import AuthMixin from "../../../services/auth/auth_mixin";
-    import {createNewOSINTSourceGroup} from "@/api/collectors";
-    import {updateOSINTSourceGroup} from "@/api/collectors";
+    import {createNewOSINTSourceGroup} from "@/api/config";
+    import {updateOSINTSourceGroup} from "@/api/config";
     import Permissions from "@/services/auth/permissions";
 
     export default {

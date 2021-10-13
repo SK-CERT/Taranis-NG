@@ -20,8 +20,8 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
 
 class AttributeGroupItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(128))
-    description = db.Column(db.String(1024))
+    title = db.Column(db.String())
+    description = db.Column(db.String())
 
     index = db.Column(db.Integer)
     min_occurence = db.Column(db.Integer)
@@ -63,11 +63,11 @@ class NewAttributeGroupSchema(AttributeGroupBaseSchema):
 
 class AttributeGroup(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(128))
-    description = db.Column(db.String(1024))
+    title = db.Column(db.String())
+    description = db.Column(db.String())
 
     section = db.Column(db.Integer)
-    section_title = db.Column(db.String(128))
+    section_title = db.Column(db.String())
     index = db.Column(db.Integer)
 
     report_item_type_id = db.Column(db.Integer, db.ForeignKey('report_item_type.id'))
@@ -140,8 +140,8 @@ class NewReportItemTypeSchema(ReportItemTypeBaseSchema):
 
 class ReportItemType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(128))
-    description = db.Column(db.String(1024))
+    title = db.Column(db.String())
+    description = db.Column(db.String())
 
     attribute_groups = db.relationship('AttributeGroup', back_populates="report_item_type",
                                        cascade="all, delete-orphan")
@@ -227,7 +227,7 @@ class ReportItemType(db.Model):
         for updated_attribute_group in updated_report_type.attribute_groups:
             found = False
             for attribute_group in report_type.attribute_groups:
-                if updated_attribute_group.id == attribute_group.id:
+                if updated_attribute_group.id is not None and updated_attribute_group.id == attribute_group.id:
                     attribute_group.update(updated_attribute_group)
                     found = True
                     break

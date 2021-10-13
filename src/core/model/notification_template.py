@@ -14,8 +14,8 @@ class NewEmailRecipientSchema(EmailRecipientSchema):
 
 class EmailRecipient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(128), nullable=False)
-    name = db.Column(db.String(1024))
+    email = db.Column(db.String(), nullable=False)
+    name = db.Column(db.String())
 
     notification_template_id = db.Column(db.Integer, db.ForeignKey('notification_template.id'))
 
@@ -34,10 +34,10 @@ class NewNotificationTemplateSchema(NotificationTemplateSchema):
 
 class NotificationTemplate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
-    message_title = db.Column(db.String(1024))
-    message_body = db.Column(db.String(4096))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
+    message_title = db.Column(db.String())
+    message_body = db.Column(db.String())
 
     recipients = db.relationship("EmailRecipient", cascade="all, delete-orphan")
 

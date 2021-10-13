@@ -75,8 +75,8 @@
 </template>
 
 <script>
-    import {createNewCollectorsNode} from "@/api/collectors";
-    import {updateCollectorsNode} from "@/api/collectors";
+    import {createNewCollectorsNode} from "@/api/config";
+    import {updateCollectorsNode} from "@/api/config";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
 

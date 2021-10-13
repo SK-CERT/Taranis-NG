@@ -23,7 +23,7 @@ class NewUserSchema(UserSchemaBase):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(), nullable=False)
 
     organizations = db.relationship("Organization", secondary="user_organization")
 

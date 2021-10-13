@@ -26,7 +26,7 @@
     import NewPublisherPreset from "@/components/config/publisher_presets/NewPublisherPreset";
     import ToolbarFilter from "../../components/common/ToolbarFilter";
     import ContentData from "../../components/common/content/ContentData"
-    import {deletePublisherPreset} from "@/api/publishers";
+    import {deletePublisherPreset} from "@/api/config";
 
     export default {
         name: "PublisherPresets",

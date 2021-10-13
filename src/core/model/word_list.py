@@ -34,8 +34,8 @@ class NewWordListSchema(WordListSchema):
 
 class WordList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
     use_for_stop_words = db.Column(db.Boolean, default=False)
 
     categories = db.relationship("WordListCategory", cascade="all, delete-orphan")
@@ -125,11 +125,21 @@ class WordList(db.Model):
         db.session.delete(word_list)
         db.session.commit()
 
+    @classmethod
+    def add_word_list_category(cls, id, category):
+        word_list = cls.find(id)
+
+        category_schema = NewWordListCategorySchema()
+        category = category_schema.load(category)
+
+        word_list.categories.append(category)
+        db.session.commit()
+
 
 class WordListCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     word_list_id = db.Column(db.Integer, db.ForeignKey('word_list.id'))
 
@@ -144,14 +154,47 @@ class WordListCategory(db.Model):
     def sort(category):
         return category.name
 
+    @classmethod
+    def find(cls, id, name):
+        return cls.query.filter_by(word_list_id=id).filter_by(name=name).scalar()
+
+    @classmethod
+    def get_categories(cls, id):
+        categories = cls.query.filter_by(word_list_id=id).all()
+        word_list_categories_schema = NewWordListCategorySchema(many=True)
+        return word_list_categories_schema.dump(categories)
+
 
 class WordListEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    value = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     word_list_category_id = db.Column(db.Integer, db.ForeignKey('word_list_category.id'))
 
     def __init__(self, value, description):
         self.value = value
         self.description = description
+
+    @classmethod
+    def identical(cls, value, word_list_category_id):
+        return db.session.query(db.exists().where(WordListEntry.value == value).
+                                where(WordListEntry.word_list_category_id == word_list_category_id)).scalar()
+
+    @classmethod
+    def delete_entries(cls, id, name):
+        word_list_category = WordListCategory.find(id, name)
+        cls.query.filter_by(word_list_category_id=word_list_category.id).delete()
+        db.session.commit()
+
+    @classmethod
+    def update_word_list_entries(cls, id, name, entries):
+        word_list_category = WordListCategory.find(id, name)
+
+        entries_schema = NewWordListEntrySchema(many=True)
+        entries = entries_schema.load(entries)
+
+        for entry in entries:
+            if not WordListEntry.identical(entry.value, word_list_category.id):
+                word_list_category.entries.append(entry)
+                db.session.commit()

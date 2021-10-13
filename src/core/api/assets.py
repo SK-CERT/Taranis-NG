@@ -1,18 +1,12 @@
-from flask_restful import Resource
 from flask import request
-from managers.auth_manager import auth_required
+from flask_restful import Resource
+
 from managers import auth_manager
+from managers.auth_manager import auth_required
 from model import asset, notification_template
-from model.permission import Permission
 from model import attribute
+from model.permission import Permission
 from taranisng.schema.attribute import AttributeType
-
-
-class AddAssetGroup(Resource):
-
-    @auth_required('MY_ASSETS_CONFIG')
-    def post(self):
-        return '', asset.AssetGroup.add(auth_manager.get_user_from_jwt(), request.json)
 
 
 class AssetGroups(Resource):
@@ -24,23 +18,20 @@ class AssetGroups(Resource):
             search = request.args['search']
         return asset.AssetGroup.get_all_json(auth_manager.get_user_from_jwt(), search)
 
+    @auth_required('MY_ASSETS_CONFIG')
+    def post(self):
+        return '', asset.AssetGroup.add(auth_manager.get_user_from_jwt(), request.json)
+
 
 class AssetGroup(Resource):
 
     @auth_required('MY_ASSETS_CONFIG')
-    def put(self, id):
-        asset.AssetGroup.update(auth_manager.get_user_from_jwt(), id, request.json)
+    def put(self, group_id):
+        asset.AssetGroup.update(auth_manager.get_user_from_jwt(), group_id, request.json)
 
     @auth_required('MY_ASSETS_CONFIG')
-    def delete(self, id):
-        return asset.AssetGroup.delete(auth_manager.get_user_from_jwt(), id)
-
-
-class AddNotificationTemplate(Resource):
-
-    @auth_required('MY_ASSETS_CONFIG')
-    def post(self):
-        return '', notification_template.NotificationTemplate.add(auth_manager.get_user_from_jwt(), request.json)
+    def delete(self, group_id):
+        return asset.AssetGroup.delete(auth_manager.get_user_from_jwt(), group_id)
 
 
 class NotificationTemplates(Resource):
@@ -52,29 +43,26 @@ class NotificationTemplates(Resource):
             search = request.args['search']
         return notification_template.NotificationTemplate.get_all_json(auth_manager.get_user_from_jwt(), search)
 
+    @auth_required('MY_ASSETS_CONFIG')
+    def post(self):
+        return '', notification_template.NotificationTemplate.add(auth_manager.get_user_from_jwt(), request.json)
+
 
 class NotificationTemplate(Resource):
 
     @auth_required('MY_ASSETS_CONFIG')
-    def put(self, id):
-        notification_template.NotificationTemplate.update(auth_manager.get_user_from_jwt(), id, request.json)
+    def put(self, template_id):
+        notification_template.NotificationTemplate.update(auth_manager.get_user_from_jwt(), template_id, request.json)
 
     @auth_required('MY_ASSETS_CONFIG')
-    def delete(self, id):
-        return notification_template.NotificationTemplate.delete(auth_manager.get_user_from_jwt(), id)
-
-
-class AddAsset(Resource):
-
-    @auth_required('MY_ASSETS_CREATE')
-    def post(self):
-        return '', asset.Asset.add(auth_manager.get_user_from_jwt(), request.json)
+    def delete(self, template_id):
+        return notification_template.NotificationTemplate.delete(auth_manager.get_user_from_jwt(), template_id)
 
 
 class Assets(Resource):
 
     @auth_required('MY_ASSETS_ACCESS')
-    def get(self, id):
+    def get(self, group_id):
         search = None
         sort = None
         vulnerable = None
@@ -84,26 +72,30 @@ class Assets(Resource):
             sort = request.args['sort']
         if 'vulnerable' in request.args and request.args['vulnerable']:
             vulnerable = request.args['vulnerable']
-        return asset.Asset.get_all_json(auth_manager.get_user_from_jwt(), id, search, sort, vulnerable)
+        return asset.Asset.get_all_json(auth_manager.get_user_from_jwt(), group_id, search, sort, vulnerable)
+
+    @auth_required('MY_ASSETS_CREATE')
+    def post(self, group_id):
+        return '', asset.Asset.add(auth_manager.get_user_from_jwt(), group_id, request.json)
 
 
 class Asset(Resource):
 
     @auth_required('MY_ASSETS_CREATE')
-    def put(self, id):
-        asset.Asset.update(auth_manager.get_user_from_jwt(), id, request.json)
+    def put(self, group_id, asset_id):
+        asset.Asset.update(auth_manager.get_user_from_jwt(), group_id, asset_id, request.json)
 
     @auth_required('MY_ASSETS_CREATE')
-    def delete(self, id):
-        return asset.Asset.delete(auth_manager.get_user_from_jwt(), id)
+    def delete(self, group_id, asset_id):
+        return asset.Asset.delete(auth_manager.get_user_from_jwt(), group_id, asset_id)
 
 
 class AssetVulnerability(Resource):
 
     @auth_required('MY_ASSETS_CREATE')
-    def post(self):
-        return asset.Asset.solve_vulnerability(auth_manager.get_user_from_jwt(), request.json['asset_id'],
-                                               request.json['report_item_id'], request.json['solved'])
+    def put(self, group_id, asset_id, vulnerability_id):
+        return asset.Asset.solve_vulnerability(auth_manager.get_user_from_jwt(), group_id, asset_id,
+                                               vulnerability_id, request.json['solved'])
 
 
 class GetAttributeCPE(Resource):
@@ -132,22 +124,20 @@ class AttributeCPEEnums(Resource):
 
 
 def initialize(api):
-    api.add_resource(AssetGroups, "/api/assets/groups")
-    api.add_resource(AddAssetGroup, "/api/assets/group/add")
-    api.add_resource(AssetGroup, "/api/assets/group/<id>")
+    api.add_resource(AssetGroups, "/api/v1/my-assets/asset-groups")
+    api.add_resource(AssetGroup, "/api/v1/my-assets/asset-groups/<int:group_id>")
 
-    api.add_resource(NotificationTemplates, "/api/assets/templates")
-    api.add_resource(AddNotificationTemplate, "/api/assets/template/add")
-    api.add_resource(NotificationTemplate, "/api/assets/template/<id>")
+    api.add_resource(NotificationTemplates, "/api/v1/my-assets/asset-notification-templates")
+    api.add_resource(NotificationTemplate, "/api/v1/my-assets/asset-notification-templates/<int:template_id>")
 
-    api.add_resource(Assets, "/api/assets/<id>")
-    api.add_resource(AddAsset, "/api/asset/add")
-    api.add_resource(Asset, "/api/asset/<id>")
+    api.add_resource(Assets, "/api/v1/my-assets/asset-groups/<int:group_id>/assets")
+    api.add_resource(Asset, "/api/v1/my-assets/asset-groups/<int:group_id>/assets/<int:asset_id>")
 
-    api.add_resource(AssetVulnerability, "/api/asset/vulnerability")
+    api.add_resource(AssetVulnerability,
+                     "/api/v1/my-assets/asset-groups/<int:group_id>/assets/<int:asset_id>/vulnerabilities/<int:vulnerability_id>")
 
-    api.add_resource(GetAttributeCPE, "/api/assets/attribute/cpe")
-    api.add_resource(AttributeCPEEnums, "/api/assets/attribute/cpe/enums")
+    api.add_resource(GetAttributeCPE, "/api/v1/my-assets/attributes/cpe")
+    api.add_resource(AttributeCPEEnums, "/api/v1/my-assets/attributes/cpe/enums")
 
     Permission.add("MY_ASSETS_ACCESS", "My Assets access", "Access to My Assets module")
     Permission.add("MY_ASSETS_CREATE", "My Assets create", "Creation of products in My Assets module")

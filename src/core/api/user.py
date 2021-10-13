@@ -44,7 +44,7 @@ class UserPublisherPresets(Resource):
 
 
 def initialize(api):
-    api.add_resource(UserProfile, "/api/user/profile")
-    api.add_resource(UserWordLists, "/api/user/wordlists")
-    api.add_resource(UserProductTypes, "/api/user/producttypes")
-    api.add_resource(UserPublisherPresets, "/api/user/publishers/presets")
+    api.add_resource(UserProfile, "/api/v1/users/my-profile")
+    api.add_resource(UserWordLists, "/api/v1/users/my-word-lists")
+    api.add_resource(UserProductTypes, "/api/v1/users/my-product-types")
+    api.add_resource(UserPublisherPresets, "/api/v1/users/my-publisher-presets")

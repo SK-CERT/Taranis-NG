@@ -6,32 +6,43 @@ from datetime import datetime
 from managers import time_manager
 from managers import remote_manager
 from model.remote import RemoteAccess
+import os
+
+
+def use_sse():
+    return os.getenv("REDIS_URL") is not None
 
 
 def news_items_updated():
-    sse.publish({}, type='news-items-updated')
+    if use_sse():
+        sse.publish({}, type='news-items-updated')
 
 
 def report_items_updated():
-    sse.publish({}, type='report-items-updated')
+    if use_sse():
+        sse.publish({}, type='report-items-updated')
 
 
 def report_item_updated(data):
-    sse.publish(data, type='report-item-updated')
+    if use_sse():
+        sse.publish(data, type='report-item-updated')
 
 
 def remote_access_disconnect(data):
-    sse.publish(data, type='remote_access_disconnect', channel='remote')
+    if use_sse():
+        sse.publish(data, type='remote_access_disconnect', channel='remote')
 
 
 def remote_access_news_items_updated(osint_source_ids):
-    remote_access_event_ids = RemoteAccess.get_relevant_for_news_items(osint_source_ids)
-    sse.publish(remote_access_event_ids, type='remote_access_news_items_updated', channel='remote')
+    if use_sse():
+        remote_access_event_ids = RemoteAccess.get_relevant_for_news_items(osint_source_ids)
+        sse.publish(remote_access_event_ids, type='remote_access_news_items_updated', channel='remote')
 
 
 def remote_access_report_items_updated(report_item_type_id):
-    remote_access_event_ids = RemoteAccess.get_relevant_for_report_item(report_item_type_id)
-    sse.publish(remote_access_event_ids, type='remote_access_report_items_updated', channel='remote')
+    if use_sse():
+        remote_access_event_ids = RemoteAccess.get_relevant_for_report_item(report_item_type_id)
+        sse.publish(remote_access_event_ids, type='remote_access_report_items_updated', channel='remote')
 
 
 report_item_locks = {}

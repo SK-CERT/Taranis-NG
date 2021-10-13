@@ -21,12 +21,12 @@ class NewRemoteAccessSchema(RemoteAccessSchema):
 
 class RemoteAccess(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     enabled = db.Column(db.Boolean)
     connected = db.Column(db.Boolean, default=False)
-    access_key = db.Column(db.String(128), unique=True)
+    access_key = db.Column(db.String(), unique=True)
 
     osint_sources = db.relationship('OSINTSource', secondary='remote_access_osint_source')
     report_item_types = db.relationship('ReportItemType', secondary='remote_access_report_item_type')
@@ -211,13 +211,13 @@ class NewRemoteNodeSchema(RemoteNodeSchema):
 
 class RemoteNode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    description = db.Column(db.String(1024))
+    name = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String())
 
     enabled = db.Column(db.Boolean)
-    remote_url = db.Column(db.String(1024))
-    events_url = db.Column(db.String(1024))
-    access_key = db.Column(db.String(128))
+    remote_url = db.Column(db.String())
+    events_url = db.Column(db.String())
+    access_key = db.Column(db.String())
 
     sync_news_items = db.Column(db.Boolean)
     osint_source_group_id = db.Column(db.String, db.ForeignKey('osint_source_group.id'))

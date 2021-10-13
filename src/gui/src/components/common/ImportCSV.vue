@@ -68,8 +68,6 @@
     </div>
 </template>
 
-
-
 <script>
     import { drop, every, forEach, get, isArray, map, set } from 'lodash';
     import axios from 'axios';
@@ -305,7 +303,7 @@
                     }
                 }
             },
-            sample(newVal, oldVal) {
+            sample(newVal) {
                 if(this.autoMatchFields){
                     if(newVal !== null){
                         this.fieldsToMap.forEach(field => {
@@ -323,7 +321,7 @@
                         });
                     }
                 }
-                window.console.debug(oldVal);
+                //window.console.debug(oldVal);
             }
         },
         computed: {

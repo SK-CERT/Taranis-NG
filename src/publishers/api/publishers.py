@@ -16,4 +16,4 @@ class Publishers(Resource):
 
 
 def initialize(api):
-    api.add_resource(Publishers, "/api/publishers")
+    api.add_resource(Publishers, "/api/v1/publishers")

@@ -5,8 +5,8 @@ from sqlalchemy import func, or_
 
 class Permission(db.Model):
     id = db.Column(db.String, primary_key=True)
-    name = db.Column(db.String(64), unique=True, nullable=False)
-    description = db.Column(db.String(128))
+    name = db.Column(db.String(), unique=True, nullable=False)
+    description = db.Column(db.String())
 
     roles = db.relationship('Role', secondary='role_permission')
 
