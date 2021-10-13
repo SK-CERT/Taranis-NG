@@ -248,7 +248,7 @@ def initialize(api):
     api.add_resource(ReportItems, "/api/v1/analyze/report-items")
     api.add_resource(ReportItem, "/api/v1/analyze/report-items/<int:report_item_id>")
     api.add_resource(ReportItemData, "/api/v1/analyze/report-items/<int:report_item_id>/data")
-    api.add_resource(ReportItemLocks, "/api/v1/analyze/report-items/field-locks")
+    api.add_resource(ReportItemLocks, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks")
     api.add_resource(ReportItemLock,
                      "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<int:field_id>/lock")
     api.add_resource(ReportItemUnlock,

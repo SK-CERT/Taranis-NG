@@ -76,7 +76,7 @@ export function updateReportItem(report_item_id, data) {
 }
 
 export function getReportItemLocks(report_item_id) {
-    return ApiService.get('/analyze/report-items/' + report_item_id + 'locks/')
+    return ApiService.get('/analyze/report-items/' + report_item_id + '/field-locks')
 }
 
 export function lockReportItem(report_item_id, data) {
