@@ -125,7 +125,7 @@
                 this.selected_node = null
                 this.selected_presenter = null
                 this.product.id = -1
-                this.product.name = ""
+                this.product.title = ""
                 this.product.description = ""
                 this.product.presenter_id = ""
                 this.values = []
@@ -207,7 +207,7 @@
                 this.show_error = false;
 
                 this.product.id = data.id
-                this.product.name = data.name
+                this.product.title = data.title
                 this.product.description = data.description
                 this.product.presenter_id = data.presenter_id
 
