@@ -38,6 +38,7 @@ class NewsItemsByGroup(Resource):
 
     @auth_required('ASSESS_ACCESS', ACLCheck.OSINT_SOURCE_GROUP_ACCESS)
     def get(self, group_id):
+        user = auth_manager.get_user_from_jwt()
 
         try:
             filter = {}
