@@ -75,11 +75,11 @@ def check_acl(item_id, acl_check, user):
     if not allowed:
         if check_access:
             log_manager.store_user_auth_error_activity(user,
-                                                         "Unauthorized access attempt to " + item_type + ": " + item_id)
+                                                       "Unauthorized access attempt to " + item_type + ": " + item_id)
         else:
             log_manager.store_user_auth_error_activity(user,
-                                                         "Unauthorized modification attempt to " + item_type
-                                                         + ": " + item_id)
+                                                       "Unauthorized modification attempt to " + item_type
+                                                       + ": " + item_id)
 
     return allowed
 
@@ -91,6 +91,17 @@ def no_auth(fn):
         return fn(*args, **kwargs)
 
     return wrapper
+
+
+def get_id_name_by_acl(acl):
+    if "NEWS_ITEM" in acl.name:
+        return "item_id"
+    elif "REPORT_ITEM" in acl.name:
+        return "report_item_id"
+    elif "OSINT_SOURCE_GROUP" in acl.name:
+        return "group_id"
+    elif "PRODUCT" in acl.name:
+        return "product_id"
 
 
 def auth_required(permissions, *acl_args):
@@ -124,7 +135,7 @@ def auth_required(permissions, *acl_args):
             if permissions_set.intersection(set(claims['permissions'])):
                 access_allowed = True
                 if len(acl_args) > 0:
-                    access_allowed = check_acl(kwargs['id'], acl_args[0], user)
+                    access_allowed = check_acl(kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user)
 
                 if access_allowed is True:
                     log_manager.store_user_activity(user, str(permissions), str(request.json))
@@ -133,7 +144,7 @@ def auth_required(permissions, *acl_args):
                     return {'error': 'not authorized'}, 401
             else:
                 log_manager.store_user_auth_error_activity(user,
-                                                             "Insufficient permissions in JWT for identity: " + identity)
+                                                           "Insufficient permissions in JWT for identity: " + identity)
                 return {'error': 'not authorized'}, 401
 
         return wrapper
@@ -151,8 +162,8 @@ def api_key_required(fn):
                     return fn(*args, **kwargs)
                 else:
                     log_manager.store_auth_error_activity("Incorrect api key: "
-                                                            + auth_header.replace('Bearer ',
-                                                                                  '') + " for external access")
+                                                          + auth_header.replace('Bearer ',
+                                                                                '') + " for external access")
             else:
                 log_manager.store_auth_error_activity("Missing Authorization Bearer for external access")
         else:
@@ -173,8 +184,8 @@ def access_key_required(fn):
                     return fn(*args, **kwargs)
                 else:
                     log_manager.store_auth_error_activity("Incorrect access key: "
-                                                            + auth_header.replace('Bearer ',
-                                                                                  '') + " for remote access")
+                                                          + auth_header.replace('Bearer ',
+                                                                                '') + " for remote access")
             else:
                 log_manager.store_auth_error_activity("Missing Authorization Bearer for remote access")
         else:

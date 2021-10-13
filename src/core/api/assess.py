@@ -36,12 +36,8 @@ class AddNewsItem(Resource):
 
 class NewsItemsByGroup(Resource):
 
-    @auth_required('ASSESS_ACCESS')
+    @auth_required('ASSESS_ACCESS', ACLCheck.OSINT_SOURCE_GROUP_ACCESS)
     def get(self, group_id):
-
-        user = auth_manager.get_user_from_jwt()
-        if auth_manager.check_acl(group_id, ACLCheck.OSINT_SOURCE_GROUP_ACCESS, user) is False:
-            return "", 401
 
         try:
             filter = {}
