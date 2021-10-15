@@ -105,7 +105,7 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 
 | Environment variable        | Description | Example |
 |-----------------------------|-------------|----------|
-| `TARANIS_NG_CORE_URL`       | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api` |
+| `TARANIS_NG_CORE_URL`       | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
 | `API_KEY`                   | Shared API key. | `cuBG/4H9lGTeo47F9X6DUg` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
 
@@ -113,7 +113,7 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 
 | Environment variable          | Description | Example |
 |-------------------------------|-------------|----------|
-| `VUE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api` |
+| `VUE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
 | `VUE_APP_TARANIS_NG_CORE_SSE` | URL of the Taranis NG SSE endpoint. | `http://127.0.0.1:8080/sse` |
 | `VUE_APP_TARANIS_NG_URL`      | URL of the Taranis NG frontend. | `http://127.0.0.1` |
 | `VUE_APP_TARANIS_NG_LOCALE`   | Application locale. | `en` |
