@@ -11,8 +11,7 @@ class CoreApi:
     @classmethod
     def get_osint_sources(cls, collector_type):
         try:
-            response = requests.post(cls.api_url + '/api/v1/collectors/osint-sources', json={'api_key': cls.api_key,
-                                                                                  'collector_type': collector_type},
+            response = requests.get(cls.api_url + '/api/v1/collectors/osint-sources?api_key=' + cls.api_key + '&collector_type=' + collector_type,
                                      headers=cls.headers)
             return response.json(), response.status_code
         except:

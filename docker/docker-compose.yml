@@ -22,6 +22,7 @@ services:
       - "redis"
       - "database"
     restart: always
+    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-core:latest
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.core
@@ -43,6 +44,7 @@ services:
   # bots:
   #   depends_on:
   #     - "core"
+  #   image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-bots:latest
   #   build:
   #     context: ..
   #     dockerfile: ./docker/Dockerfile.bots
@@ -55,11 +57,12 @@ services:
     depends_on:
       - "core"
     restart: always
+    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-collectors:latest
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.collectors
     environment:
-      TARANIS_NG_CORE_URL: "http://core/api/v1"
+      TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "supersecret"
       WORKERS_PER_CORE: "1"
     ports:
@@ -69,11 +72,12 @@ services:
     depends_on:
       - "core"
     restart: always
+    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-presenters:latest
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.presenters
     environment:
-      TARANIS_NG_CORE_URL: "http://core/api/v1"
+      TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "supersecret"
       WORKERS_PER_CORE: "1"
     ports:
@@ -83,11 +87,12 @@ services:
     depends_on:
       - "core"
     restart: always
+    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-publishers:latest
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.publishers
     environment:
-      TARANIS_NG_CORE_URL: "http://core/api/v1"
+      TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "supersecret"
       WORKERS_PER_CORE: "1"
     ports:
@@ -97,6 +102,7 @@ services:
     depends_on:
       - "core"
     restart: always
+    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-gui:latest
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.gui
