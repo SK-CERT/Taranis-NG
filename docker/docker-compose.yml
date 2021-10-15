@@ -106,7 +106,7 @@ services:
     environment:
       NGINX_WORKERS: "4"
       NGINX_CONNECTIONS: "16"
-      VUE_APP_TARANIS_NG_CORE_API: "http://localhost:5000/api"
+      VUE_APP_TARANIS_NG_CORE_API: "http://localhost:5000/api/v1"
       VUE_APP_TARANIS_NG_CORE_SSE: "http://localhost:5000/sse"
       VUE_APP_TARANIS_NG_URL: http://localhost:8080
       VUE_APP_TARANIS_NG_LOCALE: en
