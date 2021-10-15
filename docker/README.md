@@ -105,7 +105,6 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 
 | Environment variable        | Description | Example |
 |-----------------------------|-------------|----------|
-| `FLASK_RUN_PORT`            | TCP port on which to listen for HTTP traffic. | `5000` |
 | `TARANIS_NG_CORE_URL`       | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api` |
 | `API_KEY`                   | Shared API key. | `cuBG/4H9lGTeo47F9X6DUg` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |

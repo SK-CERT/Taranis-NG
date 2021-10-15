@@ -154,28 +154,28 @@ def run(db):
     user.organizations.append(organization)
     db.session.add(user)
 
-    param1 = Parameter(None, "FEED_URL", "Feed URL", "Full url for RSS feed", ParameterType.STRING)
-    param2 = Parameter(None, "REFRESH_INTERVAL", "Refresh Interval", "How often is this collector queried for new data",
-                    ParameterType.NUMBER)
-    param3 = Parameter(None, "USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING)
+#     param1 = Parameter(None, "FEED_URL", "Feed URL", "Full url for RSS feed", ParameterType.STRING)
+#     param2 = Parameter(None, "REFRESH_INTERVAL", "Refresh Interval", "How often is this collector queried for new data",
+#                     ParameterType.NUMBER)
+#     param3 = Parameter(None, "USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING)
 
-    collector_rss = Collector("RSS Collector", "Collector for gathering data from RSS feeds", "RSS_COLLECTOR",
-                            [param1, param2, param3])
+#     collector_rss = Collector("RSS Collector", "Collector for gathering data from RSS feeds", "RSS_COLLECTOR",
+#                             [param1, param2, param3])
 
-    collectors_node = CollectorsNode(None, "Node A", "First collectors node", "http://127.0.0.1:5001", "12345", [])
-    collectors_node.collectors.append(collector_rss)
-    db.session.add(collectors_node)
+#     collectors_node = CollectorsNode(None, "Node A", "First collectors node", "http://127.0.0.1:5001", "12345", [])
+#     collectors_node.collectors.append(collector_rss)
+#     db.session.add(collectors_node)
 
-    value1 = ParameterValue("https://ics-cert.us-cert.gov/alerts/alerts.xml", param1)
-    value1.parameter = param1
-    value2 = ParameterValue("60", param2)
-    value2.parameter = param2
-    value3 = ParameterValue("Firefox: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:76.0) Gecko/20100101 Firefox/76.0",
-                            param3)
-    value3.parameter = param3
+#     value1 = ParameterValue("https://ics-cert.us-cert.gov/alerts/alerts.xml", param1)
+#     value1.parameter = param1
+#     value2 = ParameterValue("60", param2)
+#     value2.parameter = param2
+#     value3 = ParameterValue("Firefox: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:76.0) Gecko/20100101 Firefox/76.0",
+#                             param3)
+#     value3.parameter = param3
 
-    rss_source = OSINTSource(None, "RSS Feed", "Test RSS feed", collector_rss.id, [value1, value2, value3], [])
-    db.session.add(rss_source)
+#     rss_source = OSINTSource(None, "RSS Feed", "Test RSS feed", collector_rss.id, [value1, value2, value3], [])
+#     db.session.add(rss_source)
 
     attr_string = Attribute(None, "Text", "Simple text box", AttributeType.STRING, None, None, None, [])
     Attribute.create_attribute(attr_string)
@@ -242,10 +242,10 @@ def run(db):
 
     db.session.commit()
 
-    group = OSINTSourceGroup(None, "RSS Feeds", "Desc", [])
-    group.osint_sources = OSINTSource.get_all()
-    db.session.add(group)
-    db.session.commit()
+#     group = OSINTSourceGroup(None, "RSS Feeds", "Desc", [])
+#     group.osint_sources = OSINTSource.get_all()
+#     db.session.add(group)
+#     db.session.commit()
 
     '''
     MISP Report
