@@ -2,27 +2,37 @@ version: "3.9"
 
 services:
   redis:
-    image: redis:6-alpine
-    restart: always
+    image: "redis:${REDIS_TAG}"
+    restart: unless-stopped
     volumes:
       - "redis_conf:/usr/local/etc/redis"
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
 
   database:
-    image: postgres:13-alpine
-    restart: always
+    image: "postgres:${POSTGRES_TAG}"
+    restart: unless-stopped
     environment:
       POSTGRES_DB: "taranis-ng"
       POSTGRES_USER: "taranis-ng"
-      POSTGRES_PASSWORD: "supersecret"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
       - "database_data:/var/lib/postgresql/data"
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
 
   core:
     depends_on: 
       - "redis"
       - "database"
-    restart: always
-    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-core:latest
+    restart: unless-stopped
+    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-core:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.core
@@ -31,8 +41,8 @@ services:
       DB_URL: "database"
       DB_DATABASE: "taranis-ng"
       DB_USER: "taranis-ng"
-      DB_PASSWORD: "supersecret"
-      JWT_SECRET_KEY: "supersecret"
+      DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      JWT_SECRET_KEY: "${JWT_SECRET_KEY}"
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
       TARANIS_NG_SAMPLE_DATA: "true"
@@ -40,60 +50,80 @@ services:
       - "5000:80"
     volumes:
       - "core_data:/data"
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
 
   # bots:
   #   depends_on:
   #     - "core"
-  #   image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-bots:latest
+  #   image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-bots:${TARANIS_NG_TAG}"
   #   build:
   #     context: ..
   #     dockerfile: ./docker/Dockerfile.bots
   #   environment:
-  #     API_KEY: "supersecret"
+  #     API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
   #     TARANIS_NG_CORE_URL: "http://core/api/v1"
   #     WORKERS_PER_CORE: "1"
+  #  logging:
+  #      driver: "json-file"
+  #      options:
+  #          max-size: "200k"
+  #          max-file: "10"
     
   collectors:
     depends_on:
       - "core"
-    restart: always
-    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-collectors:latest
+    restart: unless-stopped
+    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-collectors:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.collectors
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      API_KEY: "supersecret"
+      API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
     ports:
       - "5001:80"
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
     
   presenters:
     depends_on:
       - "core"
-    restart: always
-    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-presenters:latest
+    restart: unless-stopped
+    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-presenters:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.presenters
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      API_KEY: "supersecret"
+      API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
     ports:
       - "5002:80"
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
     
   publishers:
     depends_on:
       - "core"
-    restart: always
-    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-publishers:latest
+    restart: unless-stopped
+    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-publishers:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.publishers
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      API_KEY: "supersecret"
+      API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
     ports:
       - "5003:80"
@@ -101,8 +131,8 @@ services:
   gui:
     depends_on:
       - "core"
-    restart: always
-    # image: registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-gui:latest
+    restart: unless-stopped
+    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-gui:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.gui
@@ -115,6 +145,11 @@ services:
       VUE_APP_TARANIS_NG_CORE_SSE: "http://localhost:5000/sse"
       VUE_APP_TARANIS_NG_URL: http://localhost:8080
       VUE_APP_TARANIS_NG_LOCALE: en
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
 
 volumes:
   redis_conf:

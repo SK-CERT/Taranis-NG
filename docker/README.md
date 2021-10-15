@@ -7,40 +7,44 @@ This folder contains additional support files for the creation of the Docker con
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/)
-- (Optional) [Vim](https://www.vim.org/) - for configuration and development
+- (Optional) [Vim](https://www.vim.org/) or other text editor - for configuration and development
 
 ## Quickly build and run Taranis NG using [docker-compose](docker-compose.yml)
 
-Firstly, you need to clone this repository:
+_First_, you need to clone this repository:
 
 ```bash
 git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
 ```
 
-*<u>Optionally:</u> you may modify the `docker/docker-compose.yml` file to your liking. More information on container configuration can be found [here](#configuration).*
+_Then_, using your favourite text editor, please change the default passwords in `docker/.env` file. You can only skip this step when deploying a non-production testing environment.
 
-<br />
+```bash
+vim docker/.env
+```
 
-Finally, run the containers with:
+*_Optionally:_ you may modify other settings in the `docker/.env` and `docker/docker-compose.yml` files to your liking.  More information on container configuration can be found [here](#configuration).*
+
+_Finally_, build and run the containers with:
 
 ```bash
 docker-compose -f docker/docker-compose.yml up --build
 ```
 
-Voila, Taranis NG is up and running. Visit your instance by navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web browser.
+**Voila, Taranis NG is up and running. Visit your instance by navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web browser**.
 
-<br />
+<hr />
 
 To import the [sample data](../src/core/scripts/sample_data.py) and create basic user accounts, set the environment variable `TARANIS_NG_SAMPLE_DATA` for the core container to `true`, or import sample data using the [management script](#management-script-how-to) (from another terminal):
 
 ```bash
-docker exec -it docker_core_1 python manage.py sample-data
+docker exec -it taranis-ng_core_1 python manage.py sample-data
 ```
 
-*<u>Note:</u> the container name `docker_core_1` was automatically generated when running the example [docker-compose.yml](docker-compose.yml) file without any changes. To get the exact container name for the core component of your instance, use `docker ps`.*
+*<u>Note:</u> the container name `taranis-ng_core_1` was automatically generated when running the example [docker-compose.yml](docker-compose.yml) file without any changes. To get the exact container name for the core component of your instance, use `docker ps`.*
 
-<br />
+<hr />
 
 **The default credentials are `user` / `user` and `admin` / `admin`.**
 
