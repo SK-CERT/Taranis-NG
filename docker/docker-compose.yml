@@ -37,6 +37,8 @@ services:
       TARANIS_NG_SAMPLE_DATA: "true"
     ports: 
       - "5000:80"
+    volumes:
+      - "core_data:/data"
 
   # bots:
   #   depends_on:
@@ -114,3 +116,4 @@ services:
 volumes:
   redis_conf:
   database_data:
+  core_data:
