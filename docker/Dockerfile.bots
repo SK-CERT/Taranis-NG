@@ -2,17 +2,6 @@ FROM python:3.7-alpine3.14
 
 WORKDIR /app/
 
-COPY ./docker/start.sh /start.sh
-RUN chmod +x /start.sh
-
-COPY ./docker/prestart.sh /app/prestart.sh
-RUN chmod +x /app/prestart.sh
-
-COPY ./docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
-
 COPY ./src/bots/requirements.txt /app/taranis-ng-bots/requirements.txt
 COPY ./src/common/requirements.txt /app/taranis-ng-common/requirements.txt
 
@@ -26,6 +15,17 @@ RUN \
 
 COPY ./src/bots/. /app/taranis-ng-bots
 COPY ./src/common/. /app/taranis-ng-common
+
+COPY ./docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
+COPY ./docker/prestart.sh /app/prestart.sh
+RUN chmod +x /app/prestart.sh
+
+COPY ./docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
 EXPOSE 80
 

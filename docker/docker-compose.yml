@@ -3,24 +3,27 @@ version: "3.9"
 services:
   redis:
     image: redis:6-alpine
-    volumes: 
+    restart: always
+    volumes:
       - "redis_conf:/usr/local/etc/redis"
 
   database:
     image: postgres:13-alpine
-    environment: 
+    restart: always
+    environment:
       POSTGRES_DB: "taranis-ng"
       POSTGRES_USER: "taranis-ng"
       POSTGRES_PASSWORD: "supersecret"
-    volumes: 
+    volumes:
       - "database_data:/var/lib/postgresql/data"
 
   core:
     depends_on: 
       - "redis"
       - "database"
+    restart: always
     build:
-      context: .
+      context: ..
       dockerfile: ./docker/Dockerfile.core
     environment: 
       REDIS_URL: "redis://redis"
@@ -31,6 +34,7 @@ services:
       JWT_SECRET_KEY: "supersecret"
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
+      TARANIS_NG_SAMPLE_DATA: "true"
     ports: 
       - "5000:80"
 
@@ -38,7 +42,7 @@ services:
   #   depends_on:
   #     - "core"
   #   build:
-  #     context: .
+  #     context: ..
   #     dockerfile: ./docker/Dockerfile.bots
   #   environment:
   #     API_KEY: "supersecret"
@@ -46,10 +50,11 @@ services:
   #     WORKERS_PER_CORE: "1"
     
   collectors:
-    depends_on: 
+    depends_on:
       - "core"
+    restart: always
     build:
-      context: .
+      context: ..
       dockerfile: ./docker/Dockerfile.collectors
     environment:
       FLASK_RUN_PORT: 5000
@@ -60,10 +65,11 @@ services:
       - "5001:80"
     
   presenters:
-    depends_on: 
+    depends_on:
       - "core"
+    restart: always
     build:
-      context: .
+      context: ..
       dockerfile: ./docker/Dockerfile.presenters
     environment:
       FLASK_RUN_PORT: 5000
@@ -74,10 +80,11 @@ services:
       - "5002:80"
     
   publishers:
-    depends_on: 
+    depends_on:
       - "core"
+    restart: always
     build:
-      context: .
+      context: ..
       dockerfile: ./docker/Dockerfile.publishers
     environment:
       FLASK_RUN_PORT: 5000
@@ -88,10 +95,11 @@ services:
       - "5003:80"
     
   gui:
-    depends_on: 
+    depends_on:
       - "core"
+    restart: always
     build:
-      context: .
+      context: ..
       dockerfile: ./docker/Dockerfile.gui
     ports: 
       - "8080:80"
