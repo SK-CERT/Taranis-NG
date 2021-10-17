@@ -14,6 +14,19 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=DB_USER, pw=DB_PASSWORD,
                                                                                     url=DB_URL, db=DB_DATABASE)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    if "DB_POOL_SIZE" in os.environ:
+        DB_POOL_SIZE = os.getenv("DB_POOL_SIZE")
+        DB_POOL_RECYCLE = os.getenv("DB_POOL_RECYCLE")
+        DB_POOL_TIMEOUT = os.getenv("DB_POOL_TIMEOUT")
+
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_size': int(DB_POOL_SIZE),
+            'pool_recycle': int(DB_POOL_RECYCLE),
+            'pool_pre_ping': False,
+            'pool_timeout': int(DB_POOL_TIMEOUT)
+        }
+
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     JWT_IDENTITY_CLAIM = 'sub'
     JWT_ACCESS_TOKEN_EXPIRES = 14400

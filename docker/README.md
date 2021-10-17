@@ -91,6 +91,10 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 
 #### `core`
 
+DB_POOL_SIZE: 100
+      DB_POOL_RECYCLE: 300
+      DB_TIMEOUT: 5
+
 | Environment variable        | Description | Example |
 |-----------------------------|-------------|----------|
 | `REDIS_URL`                 | Redis database URL. Used for SSE events. | `redis://redis` |
@@ -98,12 +102,17 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 | `DB_DATABASE`               | PostgreSQL database name. | `taranis-ng` |
 | `DB_USER`                   | PostgreSQL database user. | `taranis-ng-admin` |
 | `DB_PASSWORD`               | PostgreSQL database password. | `supersecret` |
+| `DB_POOL_SIZE`              | SQLAlchemy QueuePool number of active connections to the database. | `100` |
+| `DB_POOL_RECYCLE`           | SQLAlchemy QueuePool maximum connection age. | `300` |
+| `DB_POOL_TIMEOUT`           | SQLAlchemy QueuePool connection timeout. | `5` |
 | `JWT_SECRET_KEY`            | JWT token secret key. | `J6flTliJ076zWg` |
 | `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/auth/realms/master/protocol/openid-connect/logout` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
 | `TARANIS_NG_SAMPLE_DATA`    | To install sample data, set to `"true"`.<br /> When this option is enabled, the user account specified in the variables below won't be automatically created. | `false` |
 | `TARANIS_NG_ADMIN_USERNAME`     | To automatically create a full-priviledge role and an administrator account, set to some username, like `"admin"`. | `john.doe` |
 | `TARANIS_NG_ADMIN_PASSWORD` | Set a password for the automatically created user account. If no password is specified, one will be generated. | `password1` |
+
+Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/pooling.html) to maintain multiple active connections to the database server. Connection pooling is required when your deployment serves hundreds of customers from one instance. To enable connection pooling, set the `DB_POOL_SIZE`, `DB_POOL_RECYCLE`, and `DB_POOL_TIMEOUT` environment variables.
 
 #### `bots`, `collectors`, `presenters`, `publishers`
 
