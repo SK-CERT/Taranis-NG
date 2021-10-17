@@ -44,7 +44,7 @@ EXPOSE 80
 ENV PYTHONPATH=/app
 ENV MODULE_NAME taranis-ng-collectors.run
 ENV VARIABLE_NAME app
-ENV GUNICORN_CMD_ARGS --timeout 120
+ENV GUNICORN_CMD_ARGS --timeout 120 --preload
 ENV WORKERS_PER_CORE 8
 
 ENTRYPOINT ["/entrypoint.sh"]
