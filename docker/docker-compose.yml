@@ -32,7 +32,7 @@ services:
       - "redis"
       - "database"
     restart: unless-stopped
-    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-core:${TARANIS_NG_TAG}"
+    image: "skcert/taranis-ng-core:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.core
@@ -63,7 +63,7 @@ services:
   # bots:
   #   depends_on:
   #     - "core"
-  #   image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-bots:${TARANIS_NG_TAG}"
+  #   image: "skcert/taranis-ng-bots:${TARANIS_NG_TAG}"
   #   build:
   #     context: ..
   #     dockerfile: ./docker/Dockerfile.bots
@@ -81,7 +81,7 @@ services:
     depends_on:
       - "core"
     restart: unless-stopped
-    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-collectors:${TARANIS_NG_TAG}"
+    image: "skcert/taranis-ng-collectors:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.collectors
@@ -101,7 +101,7 @@ services:
     depends_on:
       - "core"
     restart: unless-stopped
-    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-presenters:${TARANIS_NG_TAG}"
+    image: "skcert/taranis-ng-presenters:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.presenters
@@ -121,7 +121,7 @@ services:
     depends_on:
       - "core"
     restart: unless-stopped
-    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-publishers:${TARANIS_NG_TAG}"
+    image: "skcert/taranis-ng-publishers:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.publishers
@@ -136,7 +136,7 @@ services:
     depends_on:
       - "core"
     restart: unless-stopped
-    # image: "registry.gitlab.com/sk-cert/taranis-ng/taranis-ng-gui:${TARANIS_NG_TAG}"
+    image: "skcert/taranis-ng-gui:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.gui
