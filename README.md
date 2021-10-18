@@ -1,8 +1,13 @@
 # TaranisNG
 
-Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and organisations. It allows osint gathering, analysis and reporting; team-to-team collaboration; and contains a user portal for simple self asset management.
+Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and
+organisations. It allows osint gathering, analysis and reporting; team-to-team
+collaboration; and contains a user portal for simple self asset management.
 
-Taranis crawls various **data sources** such as web sites or tweets to gather unstructured **news items**. These are processed by analysts to create structured **report items**, which are used to create **products** such as PDF files, which are finally **published**.
+Taranis crawls various **data sources** such as web sites or tweets to gather
+unstructured **news items**. These are processed by analysts to create
+structured **report items**, which are used to create **products** such as PDF
+files, which are finally **published**.
 
 | Type      | Name                 | Description                           |
 | :-------- | :------------------- | :------------------------------------ |
@@ -27,6 +32,18 @@ Taranis crawls various **data sources** such as web sites or tweets to gather un
 |           | grouping             | group similar items in the news feed  |
 |           | wordlist\_updater    | update word lists used for matching   |
 
+This is just a taste of its features:
+
+- crawl the raw data using various collectors, perhaps located in different environments.
+- process even those javascript-generated web pages with advanced data extraction techniques
+- create different analyses with completely customizable report item types
+- generate many different products with help of product templates
+- easily publish to different channels
+- time is money: collaborate with other teams by sharing interesting data. Each partnership can be configured and customized.
+- split the work responsibilities any way you like, or have multiple teams process partially overlaping data using advanced role and permission system
+- use wordlists for filtering and highlighting
+- publish the self-service asset management portal to your constituency and allow them to set various notification profiles for those times when a vulnerability hits their product.
+
 Taranis NG was developed by [SK-CERT](https://www.sk-cert.sk/) with a help from wide CSIRT community, and is released under terms of the [European Union Public Licence](https://eupl.eu/1.2/en/).
 
 Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
@@ -48,6 +65,59 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 - [ansible/](ansible/) - Playbooks, roles, files and inventory to support easy deployment through Ansible
 - [docker/](docker/) - Support files for Docker image creation and example docker-compose file
 
-## Getting started
+## Getting started with Docker installation
 
 Currently, the best way to deploy is via Docker. For more information, see [docker/README.md](docker/README.md).
+
+When your Taranis NG instance is up and running, visit your instance by
+navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web
+browser. **The default credentials are `user` / `user` and `admin` / `admin`.**
+
+### Connecting to collectors, presenters, and publishers
+
+After installation, you have to connect the core application with collectors,
+presenters, and publishers. There is no limit to how many of these you have.
+The default docker installation deploys one instance of each for you automatically.
+
+Adding a collector node: Log in as an `admin`, then navigate to Configuration
+-> Collectors nodes. Click `Add new`. Enter any name and description. For URL,
+enter `http://collectors/` and for key, enter `supersecret` (or whatever
+password you chose during the installation). Click `Save`.
+
+Adding a presenter node: repeat the process at Configuration -> Presenters
+nodes. Fill in the fields. For URL, enter `http://presenters/`. Don't forget to
+set the password.
+
+Adding a publisher node: repeat the process at Configuration -> Publishers
+nodes. Fill in the fields. For URL, enter `http://publishers/`. Don't forget to
+set the password.
+
+### Altering the roles (optional)
+
+If you don't wish to use separate accounts for user and admin, or have other
+ideas about how the responsibilities should be split, visit Configuration ->
+Roles. Edit the roles to your liking, for example by adding the executive
+permissions to the Admin role. If you change the roles to yourself, don't
+forget to log out and log back in.
+
+### Adding sources to collect
+
+Visit Configuration -> OSINT Sources. Click `Add new`. Select the collectors
+node that you just created and then you should be able to see all the
+collectors it has registered. Pick one (for instance the RSS collector), and
+you will be able to enter all the necessary details. Finally, click `Save`.
+
+In a few minutes, you should see freshly collected data in the Assess menu,
+which is normally available to the account user / user.
+
+### Splitting the sources into groups, and revisiting the permissions (optional)
+
+Visit Configuration -> OSINT Source Groups to customize the groups, in which
+the results are being presented. Click `Add new`, then put the various
+sources you've created into different groups.
+
+If you want to restrict the access, go to Configuration -> ACLs, and create
+a new ACL by clicking `Add new`. You can pick any particular item type
+(Collector, Delegation, OSINT Source, OSINT Source Group, Product Type,
+Report Item) and then grant *see*, *access*, or *modify* access types
+to everyone, selected users, or selected roles.
