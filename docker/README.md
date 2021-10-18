@@ -26,10 +26,17 @@ vim docker/.env
 
 *_Optionally:_ you may modify other settings in the `docker/.env` and `docker/docker-compose.yml` files to your liking.  More information on container configuration can be found [here](#configuration).*
 
-_Finally_, build and run the containers with:
+_Finally_, either build and run the containers with:
 
 ```bash
 docker-compose -f docker/docker-compose.yml up --build
+```
+
+or just deploy the ready-made images on Docker hub with:
+
+```bash
+docker-compose -f docker/docker-compose.yml pull
+docker-compose -f docker/docker-compose.yml up --no-build
 ```
 
 **Voila, Taranis NG is up and running. Visit your instance by navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web browser**.

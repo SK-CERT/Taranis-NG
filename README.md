@@ -47,3 +47,7 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
   - [Common](src/common/) is a shared directory for core, publishers, collectors, presenters.
 - [ansible/](ansible/) - Playbooks, roles, files and inventory to support easy deployment through Ansible
 - [docker/](docker/) - Support files for Docker image creation and example docker-compose file
+
+## Getting started
+
+Currently, the best way to deploy is via Docker. For more information, see [docker/README.md](docker/README.md).
