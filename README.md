@@ -48,10 +48,6 @@ Taranis NG was developed by [SK-CERT](https://www.sk-cert.sk/) with a help from 
 
 Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 
-## Block diagram
-
-<img src="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/doc/taranis-ng-block-diagram.png?sanitize=true&raw=true" />
-
 ## Directory structure
 
 - src/ - TaranisNG source code:
@@ -64,6 +60,10 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
   - [Common](src/common/) is a shared directory for core, publishers, collectors, presenters.
 - [ansible/](ansible/) - Playbooks, roles, files and inventory to support easy deployment through Ansible
 - [docker/](docker/) - Support files for Docker image creation and example docker-compose file
+
+## Architecture
+
+<img src="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/doc/taranis-ng-block-diagram.png?sanitize=true&raw=true" />
 
 ## Getting started with Docker installation
 
