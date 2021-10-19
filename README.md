@@ -125,7 +125,7 @@ access types to everyone, selected users, or selected roles.
 ### Uploading the CPE and CVE dictionaries
 
 In order to simplify the process of writing advisories, you can have CPE
-dictionary preloaded in Taranis NG.
+dictionary and a current list of CVEs preloaded in Taranis NG.
 
 1. Download the official CPE dictionary from
 [nvd.nist.gov/products/cpe](https://nvd.nist.gov/products/cpe) in gz format.
@@ -136,7 +136,9 @@ gzcat ~/Documents/official-cpe-dictionary_v2.3.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cpe
 ```
 
-3. Download the official CVE list from [cve.mitre.org/data/downloads/](https://cve.mitre.org/data/downloads/index.html) in xml.gz format
+3. Download the official CVE list from
+[cve.mitre.org/data/downloads/](https://cve.mitre.org/data/downloads/index.html)
+in xml.gz format.
 
 4. Upload the dictionary to the proper path, and import into the database
 ```bash
