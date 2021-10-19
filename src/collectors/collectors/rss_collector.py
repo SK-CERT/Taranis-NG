@@ -50,6 +50,10 @@ class RSSCollector(BaseCollector):
 
             for feed_entry in feed['entries']:
 
+                for key in ['author', 'published', 'title', 'description', 'link']:
+                    if not feed_entry.has_key(key):
+                        feed_entry[key] = ''
+
                 limit = BaseCollector.history(interval)
                 published = feed_entry['published']
                 published = parse(published, tzinfos=BaseCollector.timezone_info())
