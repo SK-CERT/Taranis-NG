@@ -26,7 +26,7 @@ vim docker/.env
 
 *_Optionally:_ you may modify other settings in the `docker/.env` and `docker/docker-compose.yml` files to your liking.  More information on container configuration can be found [here](#configuration).*
 
-_Finally_, either deploy the ready-made images on Docker hub with:
+_Finally_, either deploy the ready-made images from Docker hub with:
 
 ```bash
 docker-compose -f docker/docker-compose.yml pull
