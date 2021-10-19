@@ -44,7 +44,13 @@ This is just a taste of its features:
 - use wordlists for filtering and highlighting
 - publish the self-service asset management portal to your constituency and allow them to set various notification profiles for those times when a vulnerability hits their product.
 
-Taranis NG was developed by [SK-CERT](https://www.sk-cert.sk/) with a help from wide CSIRT community, and is released under terms of the [European Union Public Licence](https://eupl.eu/1.2/en/).
+Hardware requirements: make sure to have at least 2 GB of RAM and 5 GB of disk
+storage available for running, 20 GB of disk storage if you want to build the
+project from scratch.
+
+Taranis NG was developed by [SK-CERT](https://www.sk-cert.sk/) with a help from
+wide CSIRT community, and is released under terms of the [European Union Public
+Licence](https://eupl.eu/1.2/en/).
 
 Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 
