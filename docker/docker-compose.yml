@@ -114,6 +114,8 @@ services:
       WORKERS_PER_CORE: "1"
     ports:
       - "5002:80"
+    volumes:
+      - "presenters_templates:/app/taranis-ng-presenters/templates"
     logging:
         driver: "json-file"
         options:
@@ -162,3 +164,4 @@ volumes:
   redis_conf:
   database_data:
   core_data:
+  presenters_templates:

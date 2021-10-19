@@ -13,9 +13,6 @@ RUN \
     pip install --no-cache-dir -r /app/taranis-ng-common/requirements.txt && \
     apk --purge del .build-deps
 
-COPY ./src/presenters/. /app/taranis-ng-presenters
-COPY ./src/common/. /app/taranis-ng-common
-
 COPY ./docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
@@ -27,6 +24,9 @@ RUN chmod +x /entrypoint.sh
 
 COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
+COPY ./src/common/. /app/taranis-ng-common
+COPY ./src/presenters/. /app/taranis-ng-presenters
+
 EXPOSE 80
 
 # setup environment variables
@@ -35,6 +35,8 @@ ENV MODULE_NAME taranis-ng-presenters.run
 ENV VARIABLE_NAME app
 ENV GUNICORN_CMD_ARGS --timeout 120 --preload
 ENV WORKERS_PER_CORE 8
+
+VOLUME ["/app/taranis-ng-presenters/templates"]
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]
