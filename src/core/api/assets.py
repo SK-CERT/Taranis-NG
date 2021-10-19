@@ -130,11 +130,11 @@ def initialize(api):
     api.add_resource(NotificationTemplates, "/api/v1/my-assets/asset-notification-templates")
     api.add_resource(NotificationTemplate, "/api/v1/my-assets/asset-notification-templates/<int:template_id>")
 
-    api.add_resource(Assets, "/api/v1/my-assets/asset-groups/<int:group_id>/assets")
-    api.add_resource(Asset, "/api/v1/my-assets/asset-groups/<int:group_id>/assets/<int:asset_id>")
+    api.add_resource(Assets, "/api/v1/my-assets/asset-groups/<string:group_id>/assets")
+    api.add_resource(Asset, "/api/v1/my-assets/asset-groups/<string:group_id>/assets/<int:asset_id>")
 
     api.add_resource(AssetVulnerability,
-                     "/api/v1/my-assets/asset-groups/<int:group_id>/assets/<int:asset_id>/vulnerabilities/<int:vulnerability_id>")
+                     "/api/v1/my-assets/asset-groups/<string:group_id>/assets/<int:asset_id>/vulnerabilities/<int:vulnerability_id>")
 
     api.add_resource(GetAttributeCPE, "/api/v1/my-assets/attributes/cpe")
     api.add_resource(AttributeCPEEnums, "/api/v1/my-assets/attributes/cpe/enums")
