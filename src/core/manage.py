@@ -1,4 +1,4 @@
-from os import abort, path, chdir
+from os import abort, path, chdir, getenv, read
 import sys
 import socket
 import time
@@ -200,6 +200,58 @@ class Role(Command):
                 app.logger.critical("Role id or name not specified!")
                 abort()
 
+# dictionary management
+class DictionaryManagement(Command):
+
+    option_list = (
+        Option('--upload-cve', dest='opt_cve', action='store_true'),
+        Option('--upload-cpe', dest='opt_cpe', action='store_true'),
+    )
+
+    def run(self, opt_cve, opt_cpe):
+        from model import attribute
+
+        if (opt_cve):
+            cve_update_file = getenv('CVE_UPDATE_FILE')
+            if cve_update_file is None:
+                app.logger.critical("CVE_UPDATE_FILE is undefined")
+                abort()
+
+            self.upload_to(cve_update_file)
+            try:
+                attribute.Attribute.load_dictionaries('cve')
+            except:
+                app.logger.critical("File structure was not recognized!")
+                abort()
+
+        if (opt_cpe):
+            cpe_update_file = getenv('CPE_UPDATE_FILE')
+            if cpe_update_file is None:
+                app.logger.critical("CPE_UPDATE_FILE is undefined")
+                abort()
+
+            self.upload_to(cpe_update_file)
+            try:
+                attribute.Attribute.load_dictionaries('cpe')
+            except:
+                app.logger.critical("File structure was not recognized!")
+                abort()
+
+        app.logger.error("Dictionary was uploaded.")
+        exit()
+
+    def upload_to(self, filename):
+        try:
+            with open(filename, 'wb') as out_file:
+                while True:
+                    chunk = read(0, 131072)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+        except:
+            app.logger.critical("Upload failed!")
+            abort()
+
 class SampleData(Command):
     def run(self):
         app.logger.error("Installing sample data...")
@@ -214,6 +266,7 @@ class SampleData(Command):
 
 manager.add_command('account', Account)
 manager.add_command('role', Role)
+manager.add_command('dictionary', DictionaryManagement)
 manager.add_command('sample-data', SampleData)
 
 if __name__ == '__main__':

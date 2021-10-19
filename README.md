@@ -121,3 +121,25 @@ a new ACL by clicking `Add new`. You can pick any particular item type
 (Collector, Delegation, OSINT Source, OSINT Source Group, Product Type, Report
 Item, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
 access types to everyone, selected users, or selected roles.
+
+### Uploading the CPE and CVE dictionaries
+
+In order to simplify the process of writing advisories, you can have CPE
+dictionary preloaded in Taranis NG.
+
+1. Download the official CPE dictionary from
+[nvd.nist.gov/products/cpe](https://nvd.nist.gov/products/cpe) in gz format.
+
+2. Upload the dictionary to the proper path, and import into the database
+```bash
+gzcat ~/Documents/official-cpe-dictionary_v2.3.xml.gz | \
+    docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cpe
+```
+
+3. Download the official CVE list from [cve.mitre.org/data/downloads/](https://cve.mitre.org/data/downloads/index.html) in xml.gz format
+
+4. Upload the dictionary to the proper path, and import into the database
+```bash
+gzcat official-cpe-dictionary_v2.3.xml.gz | \
+    docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
+```

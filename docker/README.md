@@ -157,6 +157,7 @@ Currently, you may manage the following:
 | `sample-data` | Install sample data with basic configuration.<br />*This is for show-case and testing purposes only.* | N/A |
 | `account`     | (WIP) List, create, edit and delete user accounts. | `--list`, `-l` : list all user accounts<br /> `--create`, `-c` : create a new user account<br /> `--edit`, `-e` : edit an existing user account<br /> `--delete`, `-d` : delete a user account<br /> `--username` : specify the username<br /> `--name` : specify the user's name<br /> `--password` : specify the user's password<br /> `--roles` : specify a list of roles, divided by a comma (`,`), that the user belongs to |
 | `role`     | (WIP) List, create, edit and delete user roles. | `--list`, `-l` : list all roles<br /> `--filter`, `-f` : filter roles by their name or description<br /> `--create`, `-c` : create a new role<br /> `--edit`, `-e` : edit an existing role<br /> `--delete`, `-d` : delete a role<br /> `--id` : specify the role id (in combination with `--edit` or `--delete`)<br /> `--name` : specify the role name<br /> `--description` : specify the role description (default is `""`)<br /> `--permissions` : specify a list of permissions, divided with a comma (`,`), that the role would allow |
+| `dictionary`     | Update CPE and CVE dictionaries. | `--upload-cpe` : upload the CPE dictionary (expected on STDIN in XML format) to the path indicated by `CPE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cve` : upload the CVE dictionary (expected on STDIN in XML format) to the path indicated by `CVE_UPDATE_FILE`, and update the database from that file |
 
 
 #### Example usage
@@ -225,4 +226,22 @@ Command output:
 
 ```
 User 'test_user' created.
+```
+
+##### Upload a CPE dictionary
+
+```bash
+gzcat official-cpe-dictionary_v2.3.xml.gz | python manage.py dictionary --upload-cpe
+```
+
+Command output:
+
+```
+Processed CPE items: 1000
+Processed CPE items: 2000
+...
+...
+Processed CPE items: 789000
+Processed CPE items: 789704
+Dictionary was uploaded.
 ```
