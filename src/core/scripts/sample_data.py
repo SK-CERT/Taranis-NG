@@ -135,11 +135,6 @@ def run(db):
     admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_DELETE'))
     
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_DELETE'))
-    
     admin_role.permissions.append(Permission.find('ASSESS_ACCESS'))
     admin_role.permissions.append(Permission.find('ASSESS_CREATE'))
     admin_role.permissions.append(Permission.find('ASSESS_UPDATE'))
@@ -148,15 +143,6 @@ def run(db):
     admin_role.permissions.append(Permission.find('MY_ASSETS_ACCESS'))
     admin_role.permissions.append(Permission.find('MY_ASSETS_CREATE'))
     admin_role.permissions.append(Permission.find('MY_ASSETS_CONFIG'))
-    
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_DELETE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_DELETE'))
     
     admin_role.permissions.append(Permission.find('ANALYZE_ACCESS'))
     admin_role.permissions.append(Permission.find('ANALYZE_CREATE'))
