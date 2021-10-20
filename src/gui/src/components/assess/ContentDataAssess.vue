@@ -160,7 +160,7 @@
                     }
                 }).then(() => {
                     this.news_items_data = this.news_items_data.concat(this.$store.getters.getNewsItems.items);
-                    this.$emit('new-data-loaded', this.news_items_data.length);
+                    this.$emit('new-data-loaded', this.$store.getters.getNewsItems.total_count);
                     setTimeout( () => {
                         this.$emit('card-items-reindex');
                     },200);
