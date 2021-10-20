@@ -46,97 +46,128 @@ def run(db):
     db.session.commit()
 
     admin_role = Role(None, 'Admin', 'Test admin role', [])
-    admin_role.permissions.append(Permission.find("CONFIG_ACCESS"))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_ACCESS'))
 
     admin_role.permissions.append(Permission.find('CONFIG_ORGANIZATION_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_ORGANIZATION_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_ORGANIZATION_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_ORGANIZATION_DELETE'))
-
+    
     admin_role.permissions.append(Permission.find('CONFIG_USER_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_USER_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_USER_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_USER_DELETE'))
-
+    
     admin_role.permissions.append(Permission.find('CONFIG_ROLE_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_ROLE_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_ROLE_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_ROLE_DELETE'))
-
+    
     admin_role.permissions.append(Permission.find('CONFIG_ACL_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_ACL_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_ACL_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_ACL_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_DELETE'))
-
+    
     admin_role.permissions.append(Permission.find('CONFIG_PRODUCT_TYPE_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_PRODUCT_TYPE_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_PRODUCT_TYPE_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_PRODUCT_TYPE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_DELETE'))
-
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_ACCESS'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_CREATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_UPDATE'))
-    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_DELETE'))
-
+    
+    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_ATTRIBUTE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_REPORT_TYPE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_WORD_LIST_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_COLLECTORS_NODE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_DELETE'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_OSINT_SOURCE_GROUP_DELETE'))
+    
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_ACCESS_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_ACCESS_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_ACCESS_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_ACCESS_DELETE'))
-
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_NODE_ACCESS'))
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_NODE_CREATE'))
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_NODE_UPDATE'))
     admin_role.permissions.append(Permission.find('CONFIG_REMOTE_NODE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_DELETE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOTS_NODE_DELETE'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_BOT_PRESET_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PRESENTERS_NODE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('ASSESS_ACCESS'))
+    admin_role.permissions.append(Permission.find('ASSESS_CREATE'))
+    admin_role.permissions.append(Permission.find('ASSESS_UPDATE'))
+    admin_role.permissions.append(Permission.find('ASSESS_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('MY_ASSETS_ACCESS'))
+    admin_role.permissions.append(Permission.find('MY_ASSETS_CREATE'))
+    admin_role.permissions.append(Permission.find('MY_ASSETS_CONFIG'))
+    
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHERS_NODE_DELETE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_ACCESS'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_CREATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_UPDATE'))
+    admin_role.permissions.append(Permission.find('CONFIG_PUBLISHER_PRESET_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('ANALYZE_ACCESS'))
+    admin_role.permissions.append(Permission.find('ANALYZE_CREATE'))
+    admin_role.permissions.append(Permission.find('ANALYZE_UPDATE'))
+    admin_role.permissions.append(Permission.find('ANALYZE_DELETE'))
+    
+    admin_role.permissions.append(Permission.find('PUBLISH_ACCESS'))
+    admin_role.permissions.append(Permission.find('PUBLISH_CREATE'))
+    admin_role.permissions.append(Permission.find('PUBLISH_UPDATE'))
+    admin_role.permissions.append(Permission.find('PUBLISH_DELETE'))
+    admin_role.permissions.append(Permission.find('PUBLISH_PRODUCT'))
 
     db.session.add(admin_role)
 
