@@ -98,10 +98,6 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 
 #### `core`
 
-DB_POOL_SIZE: 100
-      DB_POOL_RECYCLE: 300
-      DB_TIMEOUT: 5
-
 | Environment variable        | Description | Example |
 |-----------------------------|-------------|----------|
 | `REDIS_URL`                 | Redis database URL. Used for SSE events. | `redis://redis` |
