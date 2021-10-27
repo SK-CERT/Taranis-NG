@@ -220,10 +220,10 @@ class ReportItem(db.Model):
                 func.lower(ReportItem.title).like(search_string),
                 func.lower(ReportItem.title_prefix).like(search_string)))
 
-        if 'completed' in filter and filter['completed'] is True:
+        if 'completed' in filter and filter['completed'].lower() == "true":
             query = query.filter(ReportItem.completed == True)
 
-        if 'incompleted' in filter and filter['incompleted'] is True:
+        if 'incompleted' in filter and filter['incompleted'].lower() == "true":
             query = query.filter(ReportItem.completed == False)
 
         if 'range' in filter and filter['range'] != 'ALL':
