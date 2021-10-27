@@ -422,16 +422,16 @@ class NewsItemAggregate(db.Model):
                                NewsItemAggregate.id == NewsItemAggregateSearchIndex.news_item_aggregate_id).filter(
                 NewsItemAggregateSearchIndex.data.like(search_string))
 
-        if 'read' in filter and filter['read'] is True:
+        if 'read' in filter and filter['read'].lower() == "true":
             query = query.filter(NewsItemAggregate.read == False)
 
-        if 'important' in filter and filter['important'] is True:
+        if 'important' in filter and filter['important'].lower() == "true":
             query = query.filter(NewsItemAggregate.important == True)
 
-        if 'relevant' in filter and filter['relevant'] is True:
+        if 'relevant' in filter and filter['relevant'].lower() == "true":
             query = query.filter(NewsItemAggregate.likes > 0)
 
-        if 'in_analyze' in filter and filter['in_analyze'] is True:
+        if 'in_analyze' in filter and filter['in_analyze'].lower() == "true":
             query = query.join(ReportItemNewsItemAggregate,
                                NewsItemAggregate.id == ReportItemNewsItemAggregate.news_item_aggregate_id)
 
