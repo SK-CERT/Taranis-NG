@@ -26,7 +26,7 @@ export default {
     props: {
         del_button: null,
         val_index: null,
-        occurence: null,
+        occurrence: null,
         values: null
     },
     data: () => ({
@@ -34,7 +34,7 @@ export default {
     }),
     computed: {
         delButtonVisible() {
-            return this.itemHover && !(this.occurence >= this.values.length);
+            return this.itemHover && !(this.occurrence >= this.values.length);
         },
 
         modifiedTooltip() {

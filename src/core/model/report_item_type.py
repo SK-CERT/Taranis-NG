@@ -24,8 +24,8 @@ class AttributeGroupItem(db.Model):
     description = db.Column(db.String())
 
     index = db.Column(db.Integer)
-    min_occurence = db.Column(db.Integer)
-    max_occurence = db.Column(db.Integer)
+    min_occurrence = db.Column(db.Integer)
+    max_occurrence = db.Column(db.Integer)
 
     attribute_group_id = db.Column(db.Integer, db.ForeignKey('attribute_group.id'))
     attribute_group = db.relationship("AttributeGroup")
@@ -33,15 +33,15 @@ class AttributeGroupItem(db.Model):
     attribute_id = db.Column(db.Integer, db.ForeignKey('attribute.id'))
     attribute = db.relationship("Attribute")
 
-    def __init__(self, id, title, description, index, min_occurence, max_occurence, attribute_id):
+    def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute_id):
         if id is not None and id != -1:
             self.id = id
 
         self.title = title
         self.description = description
         self.index = index
-        self.min_occurence = min_occurence
-        self.max_occurence = max_occurence
+        self.min_occurrence = min_occurrence
+        self.max_occurrence = max_occurrence
         self.attribute_id = attribute_id
 
     @classmethod
@@ -109,8 +109,8 @@ class AttributeGroup(db.Model):
                     attribute_group_item.title = updated_attribute_group_item.title
                     attribute_group_item.description = updated_attribute_group_item.description
                     attribute_group_item.index = updated_attribute_group_item.index
-                    attribute_group_item.min_occurence = updated_attribute_group_item.min_occurence
-                    attribute_group_item.max_occurence = updated_attribute_group_item.max_occurence
+                    attribute_group_item.min_occurrence = updated_attribute_group_item.min_occurrence
+                    attribute_group_item.max_occurrence = updated_attribute_group_item.max_occurrence
                     attribute_group_item.attribute_id = updated_attribute_group_item.attribute_id
                     found = True
                     break
