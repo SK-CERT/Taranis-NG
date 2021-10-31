@@ -41,6 +41,9 @@ docker-compose -f docker/docker-compose.yml up --build
 
 **Voila, Taranis NG is up and running. Visit your instance by navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web browser**.
 
+Your Taranis NG instance now needs to be configured.
+Continue [here](../README.md#connecting-to-collectors-presenters-and-publishers).
+
 <hr />
 
 To import the [sample data](../src/core/scripts/sample_data.py) and create basic user accounts, set the environment variable `TARANIS_NG_SAMPLE_DATA` for the core container to `true`, or import sample data using the [management script](#management-script-how-to) (from another terminal):
