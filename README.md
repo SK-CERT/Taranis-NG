@@ -40,7 +40,7 @@ This is just a taste of its features:
 - generate many different products with help of product templates
 - easily publish to different channels
 - time is money: collaborate with other teams by sharing interesting data. Each partnership can be configured and customized.
-- split the work responsibilities any way you like, or have multiple teams process partially overlaping data using advanced role and permission system
+- split the work responsibilities any way you like, or have multiple teams process partially overlapping data using advanced role and permission system
 - use wordlists for filtering and highlighting
 - publish the self-service asset management portal to your constituency and allow them to set various notification profiles for those times when a vulnerability hits their product.
 

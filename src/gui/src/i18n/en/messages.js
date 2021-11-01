@@ -418,8 +418,8 @@ const messages_en = {
         attribute: "attribute",
         attributes: "Attributes",
         new_attribute: "New Attribute",
-        min_occurence: "Min Occurence",
-        max_occurence: "Max Occurence",
+        min_occurrence: "Min Occurrence",
+        max_occurrence: "Max Occurrence",
         total_count: "Attributes count: ",
         import: "Import",
         load_csv_file: "Load CSV File",
@@ -496,7 +496,7 @@ const messages_en = {
         reasonable: "Reasonable",
         confirmed: "Confirmed",
 
-        validator: "Invalid or Uncomplete Vector String"
+        validator: "Invalid or Incomplete Vector String"
 
     },
 
