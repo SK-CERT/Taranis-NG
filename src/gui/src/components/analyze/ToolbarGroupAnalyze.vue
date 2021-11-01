@@ -9,7 +9,7 @@
             <v-btn v-if="canCreateProduct" class="ml-1" small icon :disabled="!multi_select" @click.stop="analyze" data-btn="analyze">
                 <v-icon small color="white">mdi-file-outline</v-icon>
             </v-btn>
-            <v-btn v-if="canDelete" class="ml-1" small icon :disabled="!multi_select" @click.stop="action('DELETE')" data-btn="delete">
+            <v-btn v-if="canDelete" class="ml-1" small icon :disabled="!multi_select" @click.stop="action('DELETE')" data-btn="delete" :title="'Delete items'">
                 <v-icon small color="white">mdi-delete</v-icon>
             </v-btn>
         </v-row>
