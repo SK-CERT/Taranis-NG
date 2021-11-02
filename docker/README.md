@@ -106,7 +106,7 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 | `REDIS_URL`                 | Redis database URL. Used for SSE events. | `redis://redis` |
 | `DB_URL`                    | PostgreSQL database URL. | `127.0.0.1` |
 | `DB_DATABASE`               | PostgreSQL database name. | `taranis-ng` |
-| `DB_USER`                   | PostgreSQL database user. | `taranis-ng-admin` |
+| `DB_USER`                   | PostgreSQL database user. | `taranis-ng` |
 | `DB_PASSWORD`               | PostgreSQL database password. | `supersecret` |
 | `DB_POOL_SIZE`              | SQLAlchemy QueuePool number of active connections to the database. | `100` |
 | `DB_POOL_RECYCLE`           | SQLAlchemy QueuePool maximum connection age. | `300` |
