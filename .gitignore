@@ -1,6 +1,10 @@
-.DS_Store
 /venv/
 /.idea/
-src/gui/node_modules/
-.*.swp
 
+src/gui/node_modules/
+src/gui/dist/
+src/core/__pycache__/
+
+.DS_Store
+.*.swp
+.~
