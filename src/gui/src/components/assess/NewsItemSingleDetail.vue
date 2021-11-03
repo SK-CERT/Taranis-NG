@@ -116,9 +116,6 @@
                                             <span>{{ news_item.news_items[0].news_item_data.link }}</span>
                                         </a>
                                     </v-row>
-                                    <v-row>
-                                        <span>{{ news_item.news_items[0].news_item_data.source }}</span>
-                                    </v-row>
                                 </v-container>
 
 
