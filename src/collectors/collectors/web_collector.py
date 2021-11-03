@@ -143,7 +143,7 @@ class WebCollector(BaseCollector):
             return driver
 
         def get_prefix_and_selector(element_selector):
-            selector_split = element_selector.split(':')
+            selector_split = element_selector.split(':', 1)
             prefix = selector_split[0].strip()
             selector = selector_split[1].lstrip()
             return prefix, selector
