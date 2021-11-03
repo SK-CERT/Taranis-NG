@@ -69,7 +69,7 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 
 ## Architecture
 
-<img src="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/doc/taranis-ng-block-diagram.png?sanitize=true&raw=true" />
+<img src="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/doc/static/img/taranis-ng-block-diagram.png?sanitize=true&raw=true" />
 
 ## Getting started with Docker installation
 
