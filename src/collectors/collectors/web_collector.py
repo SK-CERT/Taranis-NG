@@ -335,12 +335,12 @@ class WebCollector(BaseCollector):
                                                         new_published_selector).text
 
                             if published:
-                                # TODO: Delete IF statement for Dnes and Vcera, it is just for testing and root.cz web
-                                if published == 'Dnes':
+                                # TODO: make these configurable
+                                if published.lower() in [ 'today', 'dnes']:
                                     published = datetime.datetime.today()
                                     published = published.strftime("%d-%m-%Y")
                                     published = parse(published, dayfirst=True)
-                                elif published == 'Včera':
+                                elif published.lower() in [ 'yesterday', 'včera']:
                                     published = datetime.datetime.today() - datetime.timedelta(days=1)
                                     published = published.strftime("%d-%m-%Y")
                                     published = parse(published, dayfirst=True)
