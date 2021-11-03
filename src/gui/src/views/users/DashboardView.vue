@@ -50,37 +50,6 @@
                         >
 
                             <v-card-text class="pt-0">
-                                <div class="title mb-2">Notifications</div>
-                                <!--<div class="subheading grey&#45;&#45;text">Number of pending analyses per hour</div>-->
-                                <v-divider class="my-2"></v-divider>
-
-                                <v-icon class="mr-2" color="green">
-                                    mdi-coffee-outline
-                                </v-icon>
-                                <span class="caption grey--text">Planned Server shutdown for 2 hours on <b>1.7.2020</b></span>
-                                <v-divider inset ></v-divider>
-
-                                <v-icon class="mr-2" color="blue">
-                                    mdi-update
-                                </v-icon>
-                                <span class="caption grey--text">Collectors restart every <b>24 hours</b> on midnight</span>
-                                <v-divider inset ></v-divider>
-
-                                <v-icon class="mr-2">
-                                    mdi-crosshairs-question
-                                </v-icon>
-                                <span class="caption grey--text">New QA section added to internal <b>Slack</b> channel</span>
-                            </v-card-text>
-                        </v-card>
-                    </template>
-
-                    <template>
-                        <v-card
-                                class="mt-4 mx-auto"
-                                max-width="100%"
-                        >
-
-                            <v-card-text class="pt-0">
                                 <div class="title mb-2">Publish</div>
                                 <!--<div class="subheading grey&#45;&#45;text">Number of pending analyses per hour</div>-->
                                 <v-divider class="my-2"></v-divider>
