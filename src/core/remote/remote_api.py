@@ -5,6 +5,8 @@ class RemoteApi:
 
     def __init__(self, api_url, access_key):
         self.api_url = api_url
+        if self.api_url.endswith("/"):
+            self.api_url = self.api_url[:-1]
         self.access_key = access_key
         self.headers = {'Authorization': 'Bearer ' + self.access_key}
 
