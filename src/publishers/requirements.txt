@@ -45,7 +45,7 @@ python-socketio==4.6.0
 pytz==2019.3
 redis==3.5.3
 requests==2.26.0
-rsa==4.0
+rsa==4.7.2
 schedule==0.6.0
 six==1.13.0
 soupsieve==1.9.5
