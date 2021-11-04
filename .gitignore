@@ -1,5 +1,5 @@
-/venv/
-/.idea/
+**/venv/
+**/.idea/
 
 src/gui/node_modules/
 src/gui/dist/
@@ -8,3 +8,21 @@ src/core/__pycache__/
 .DS_Store
 .*.swp
 .~
+
+node_modules
+/dist
+
+.env.local
+.env.*.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
