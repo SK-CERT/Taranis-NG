@@ -1,9 +1,13 @@
-from taranisng.schema import collector, osint_source, news_item
-from remote.core_api import CoreApi
-from managers import time_manager
-from taranisng.schema.parameter import Parameter, ParameterType
 import datetime
+import hashlib
+import uuid
+
 from dateutil import tz
+
+from managers import time_manager
+from remote.core_api import CoreApi
+from taranisng.schema import collector, osint_source, news_item
+from taranisng.schema.parameter import Parameter, ParameterType
 
 
 class BaseCollector:
@@ -161,7 +165,37 @@ class BaseCollector:
             return news_items
 
     @staticmethod
+    def sanitize_news_items(news_items, source):
+        for item in news_items:
+            if item.id is None:
+                item.id = uuid.uuid4()
+            if item.title is None:
+                item.title = ''
+            if item.review is None:
+                item.review = ''
+            if item.source is None:
+                item.source = ''
+            if item.link is None:
+                item.link = ''
+            if item.author is None:
+                item.author = ''
+            if item.content is None:
+                item.content = ''
+            if item.published is None:
+                item.published = datetime.datetime.now()
+            if item.collected is None:
+                item.collected = datetime.datetime.now()
+            if item.hash is None:
+                for_hash = item.author + item.title + item.link
+                item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
+            if item.osint_source_id is None:
+                item.osint_source_id = source.id
+            if item.attributes is None:
+                item.attributes = []
+
+    @staticmethod
     def publish(news_items, source):
+        BaseCollector.sanitize_news_items(news_items, source)
         filtered_news_items = BaseCollector.filter_by_word_list(news_items, source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
