@@ -9,7 +9,7 @@ Click==7.0
 dnspython==1.16.0
 eventlet==0.25.2
 Flask==1.1.1
-Flask-Cors==3.0.8
+Flask-Cors==3.0.10
 Flask-JWT-Extended==3.24.1
 Flask-Migrate==2.5.2
 flask-oidc==1.4.0
