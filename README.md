@@ -138,7 +138,7 @@ dictionary and a current list of CVEs preloaded in Taranis NG.
 
 2. Upload the dictionary to the proper path, and import into the database
 ```bash
-gzcat ~/Documents/official-cpe-dictionary_v2.3.xml.gz | \
+gzcat official-cpe-dictionary_v2.3.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cpe
 ```
 
@@ -148,6 +148,6 @@ in xml.gz format.
 
 4. Upload the dictionary to the proper path, and import into the database
 ```bash
-gzcat official-cpe-dictionary_v2.3.xml.gz | \
+gzcat allitems.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
 ```
