@@ -51,7 +51,7 @@ srsly==2.4.1
 thinc==8.0.10
 tqdm==4.45.0
 tweepy==3.8.0
-urllib3==1.25.7
+urllib3==1.26.7
 vaderSentiment==3.3.1
 wasabi==0.8.2
 webencodings==0.5.1
