@@ -1,13 +1,15 @@
 import datetime
 import hashlib
 import uuid
+
 import feedparser
 import requests
 from bs4 import BeautifulSoup
-from .base_collector import BaseCollector
+from dateutil.parser import parse
+
 from taranisng.schema.news_item import NewsItemData
 from taranisng.schema.parameter import Parameter, ParameterType
-from dateutil.parser import parse
+from .base_collector import BaseCollector
 
 
 class RSSCollector(BaseCollector):
@@ -29,18 +31,18 @@ class RSSCollector(BaseCollector):
         user_agent = source.parameter_values['USER_AGENT']
         interval = source.parameter_values['REFRESH_INTERVAL']
 
+        proxies = {}
         if 'PROXY_SERVER' in source.parameter_values:
             proxy_server = source.parameter_values['PROXY_SERVER']
-        else:
-            proxy_server = ''
-
-        proxies = {
-            'http': 'socks5://' + proxy_server,
-            'https': 'socks5://' + proxy_server
-        }
+            if proxy_server.startswith('https://'):
+                proxies['https'] = proxy_server
+            elif proxy_server.startswith('http://'):
+                proxies['http'] = proxy_server
+            else:
+                proxies['http'] = 'http://' + proxy_server
 
         try:
-            if proxy_server:
+            if proxies:
                 rss_xml = requests.get(feed_url, headers={'User-Agent': user_agent}, proxies=proxies)
                 feed = feedparser.parse(rss_xml.text)
             else:
@@ -61,7 +63,7 @@ class RSSCollector(BaseCollector):
                 # if published > limit: TODO: uncomment after testing, we need some initial data now
                 link_for_article = feed_entry['link']
 
-                if proxy_server:
+                if proxies:
                     page = requests.get(link_for_article, headers={'User-Agent': user_agent}, proxies=proxies)
                 else:
                     page = requests.get(link_for_article, headers={'User-Agent': user_agent})

@@ -1,21 +1,23 @@
+import os
+from enum import Enum, auto
 from functools import wraps
-from auth.test_authenticator import TestAuthenticator
-from auth.openid_authenticator import OpenIDAuthenticator
-from flask_jwt_extended import JWTManager, get_jwt_claims, get_jwt_identity, verify_jwt_in_request, get_raw_jwt
-from flask_jwt_extended.exceptions import JWTExtendedException
+
 import jwt
 from flask import request
-from model.collectors_node import CollectorsNode
-from model.user import User
-from model.permission import Permission
-from model.osint_source import OSINTSourceGroup
-import os
+from flask_jwt_extended import JWTManager, get_jwt_claims, get_jwt_identity, verify_jwt_in_request, get_raw_jwt
+from flask_jwt_extended.exceptions import JWTExtendedException
+
+from auth.openid_authenticator import OpenIDAuthenticator
+from auth.test_authenticator import TestAuthenticator
 from managers import log_manager
-from enum import Enum, auto
-from model.report_item import ReportItem
-from model.product_type import ProductType
+from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
+from model.osint_source import OSINTSourceGroup
+from model.permission import Permission
+from model.product_type import ProductType
 from model.remote import RemoteAccess
+from model.report_item import ReportItem
+from model.user import User
 
 authenticators = [TestAuthenticator(), OpenIDAuthenticator()]
 current_authenticator = 0
@@ -27,6 +29,10 @@ def get_required_credentials():
 
 def authenticate(credentials):
     return authenticators[current_authenticator].authenticate(credentials)
+
+
+def refresh(user):
+    return authenticators[current_authenticator].refresh(user)
 
 
 def logout():
@@ -192,6 +198,32 @@ def access_key_required(fn):
             log_manager.store_auth_error_activity("Missing Authorization header for remote access")
 
         return {'error': 'not authorized'}, 401
+
+    return wrapper
+
+
+def jwt_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+
+        try:
+            verify_jwt_in_request()
+        except JWTExtendedException:
+            log_manager.store_auth_error_activity("Missing JWT")
+            return {'error': 'authorization required'}, 401
+
+        identity = get_jwt_identity()
+        if not identity:
+            log_manager.store_auth_error_activity("Missing identity in JWT: " + get_raw_jwt())
+            return {'error': 'authorization failed'}, 401
+
+        user = User.find(identity)
+        if user is None:
+            log_manager.store_auth_error_activity("Unknown identity: " + identity)
+            return {'error': 'authorization failed'}, 401
+
+        log_manager.store_user_activity(user, "API_ACCESS", "Access permitted")
+        return fn(*args, **kwargs)
 
     return wrapper
 
