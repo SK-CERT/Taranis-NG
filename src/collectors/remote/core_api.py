@@ -1,6 +1,10 @@
 import os
-
 import requests
+import urllib
+import logging
+
+logger = logging.getLogger('gunicorn.error')
+logger.level = logging.DEBUG
 
 
 class CoreApi:
@@ -12,11 +16,22 @@ class CoreApi:
 
     @classmethod
     def get_osint_sources(cls, collector_type):
+        id = ''
         try:
-            response = requests.get(cls.api_url + '/api/v1/collectors/osint-sources?api_key=' + cls.api_key + '&collector_type=' + collector_type,
+            with open('/app/storage/id.txt', 'r') as file:
+                id = file.read().strip()
+                logger.debug("Got id: {}".format(id))
+        except Exception as ex:
+            logger.debug(ex)
+            pass
+
+        try:
+            logger.debug(cls.api_url + '/api/v1/collectors/' + urllib.parse.quote(id) + '/osint-sources?api_key=' + urllib.parse.quote(cls.api_key) + '&collector_type=' + urllib.parse.quote(collector_type))
+            response = requests.get(cls.api_url + '/api/v1/collectors/' + urllib.parse.quote(id) + '/osint-sources?api_key=' + urllib.parse.quote(cls.api_key) + '&collector_type=' + urllib.parse.quote(collector_type),
                                      headers=cls.headers)
             return response.json(), response.status_code
-        except:
+        except Exception as ex:
+            logger.debug(ex)
             return None, 400
 
     @classmethod

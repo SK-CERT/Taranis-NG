@@ -1,4 +1,5 @@
 from flask_restful import Resource
+from flask import request
 
 from managers import collectors_manager
 from managers.auth_manager import api_key_required
@@ -7,8 +8,10 @@ from managers.auth_manager import api_key_required
 class Collectors(Resource):
 
     @api_key_required
-    def get(self):
-        return collectors_manager.get_registered_collectors_info()
+    def post(self):
+        if 'id' in request.json:
+            return collectors_manager.get_registered_collectors_info(request.json['id'])
+        return '', 400
 
 
 class Collector(Resource):

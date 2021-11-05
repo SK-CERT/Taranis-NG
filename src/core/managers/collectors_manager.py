@@ -7,7 +7,7 @@ from taranisng.schema import collectors_node
 
 def add_collectors_node(data):
     node = collectors_node.CollectorsNode.create(data)
-    collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info()
+    collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
     if status_code == 200:
         collectors = Collector.create_all(collectors_info)
         CollectorsNode.add_new(data, collectors)
@@ -17,7 +17,7 @@ def add_collectors_node(data):
 
 def update_collectors_node(node_id, data):
     node = collectors_node.CollectorsNode.create(data)
-    collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info()
+    collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
     if status_code == 200:
         collectors = Collector.create_all(collectors_info)
         CollectorsNode.update(node_id, data, collectors)

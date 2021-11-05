@@ -49,7 +49,10 @@ def refresh_collector(collector_type):
         return 403
 
 
-def get_registered_collectors_info():
+def get_registered_collectors_info(id):
+    with open('/app/storage/id.txt', 'w') as file:
+        file.write(id)
+
     collectors_info = []
     for key in collectors:
         collectors_info.append(collectors[key].get_info())

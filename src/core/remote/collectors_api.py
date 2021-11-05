@@ -10,8 +10,10 @@ class CollectorsApi:
         self.api_key = api_key
         self.headers = {'Authorization': 'Bearer ' + self.api_key}
 
-    def get_collectors_info(self):
-        response = requests.get(self.api_url + "/api/v1/collectors", headers=self.headers)
+    def get_collectors_info(self, id):
+        response = requests.post(self.api_url + "/api/v1/collectors", headers=self.headers, json={
+            'id': id
+        })
         return response.json(), response.status_code
 
     def refresh_collector(self, collector_type):

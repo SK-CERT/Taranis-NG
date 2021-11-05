@@ -62,6 +62,10 @@ class CollectorsNode(db.Model):
         return query.order_by(db.asc(CollectorsNode.name)).all(), query.count()
 
     @classmethod
+    def get_by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
     def get_all_json(cls, search):
         nodes, count = cls.get(search)
         node_schema = CollectorsNodePresentationSchema(many=True)
@@ -104,4 +108,9 @@ class CollectorsNode(db.Model):
                 raise Exception("Collectors has mapped sources")
 
         db.session.delete(node)
+        db.session.commit()
+
+    def updateLastSeen(self):
+        self.last_seen = datetime.now()
+        db.session.add(self)
         db.session.commit()
