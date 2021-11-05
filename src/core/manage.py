@@ -2,7 +2,6 @@ from os import abort, path, chdir, getenv, read
 import sys
 import socket
 import time
-from model.user import User
 
 chdir('/app/taranis-ng-core/')
 sys.path.append(path.abspath('.'))
@@ -259,7 +258,7 @@ class SampleData(Command):
             from scripts import permissions
             from scripts import sample_data
 
-            data, count = User.get(None, None)
+            data, count = user.User.get(None, None)
             if count:
                 app.logger.error("Sample data already installed.")
                 sys.exit()
