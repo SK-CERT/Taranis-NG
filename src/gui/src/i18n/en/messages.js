@@ -1,6 +1,10 @@
 const messages_en = {
 
     validations: {
+        messages: {
+            _default: 'Please fill in required field'
+        },
+
         custom: {
             username: {
                 required: "Please fill in your username"

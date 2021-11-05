@@ -6,13 +6,13 @@
                 <v-text-field v-if="ui === 'text'"
 
                               :label="parameter.name"
-                              name="value0"
+                              :name="'parameter' + index"
                               type="text"
                               v-model="values[index]"
                               v-validate="'required'"
-                              data-vv-name="parameter"
+                              :data-vv-name="'parameter' + index"
                               :disabled="disabled"
-                              :error-messages="errors.collect('parameter')"
+                              :error-messages="errors.collect('parameter' + index)"
                 />
 
                 <v-combobox v-else-if="ui === 'combobox'"
