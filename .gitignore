@@ -4,6 +4,7 @@
 src/gui/node_modules/
 src/gui/dist/
 src/core/__pycache__/
+src/core/migrations/versions/__pycache__/
 
 .DS_Store
 .*.swp
