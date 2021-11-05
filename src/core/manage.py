@@ -2,6 +2,7 @@ from os import abort, path, chdir, getenv, read
 import sys
 import socket
 import time
+from model.user import User
 
 chdir('/app/taranis-ng-core/')
 sys.path.append(path.abspath('.'))
@@ -254,10 +255,16 @@ class DictionaryManagement(Command):
 
 class SampleData(Command):
     def run(self):
-        app.logger.error("Installing sample data...")
         with app.app_context():
             from scripts import permissions
             from scripts import sample_data
+
+            data, count = User.get(None, None)
+            if count:
+                app.logger.error("Sample data already installed.")
+                sys.exit()
+
+            app.logger.error("Installing sample data...")
             permissions.run(db_manager.db)
             sample_data.run(db_manager.db)
             app.logger.error("Sample data installed.")
