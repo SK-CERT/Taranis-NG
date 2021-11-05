@@ -13,7 +13,7 @@ from taranisng.schema.acl_entry import ItemType
 from taranisng.schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
     OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema
 from taranisng.schema.word_list import WordListIdSchema
-import datetime
+from datetime import datetime
 
 
 class NewOSINTSourceSchema(OSINTSourceSchema):

@@ -3,7 +3,7 @@ from marshmallow import post_load
 import uuid
 from taranisng.schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
 from sqlalchemy import orm, or_, func
-import datetime
+from datetime import datetime
 
 class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
