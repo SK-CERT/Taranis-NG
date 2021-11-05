@@ -1,16 +1,18 @@
-from managers.db_manager import db
+import uuid
+
 from marshmallow import post_load, fields
+from sqlalchemy import orm, func, or_, and_
+
+from managers.db_manager import db
+from model.acl_entry import ACLEntry
+from model.collector import Collector
+from model.collectors_node import CollectorsNode
+from model.parameter_value import NewParameterValueSchema
+from model.word_list import WordList
+from taranisng.schema.acl_entry import ItemType
 from taranisng.schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
     OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema
-from model.parameter_value import NewParameterValueSchema
-from model.collectors_node import CollectorsNode
-from model.collector import Collector
-from model.word_list import WordList
 from taranisng.schema.word_list import WordListIdSchema
-import uuid
-from sqlalchemy import orm, func, or_, and_
-from model.acl_entry import ACLEntry
-from taranisng.schema.acl_entry import ItemType
 
 
 class NewOSINTSourceSchema(OSINTSourceSchema):
@@ -114,6 +116,7 @@ class OSINTSource(db.Model):
         osint_source = new_osint_source_schema.load(data)
         db.session.add(osint_source)
         db.session.commit()
+        return osint_source
 
     @classmethod
     def delete(cls, osint_source_id):
@@ -136,6 +139,7 @@ class OSINTSource(db.Model):
 
         osint_source.word_lists = updated_osint_source.word_lists
         db.session.commit()
+        return osint_source
 
 
 class OSINTSourceParameterValue(db.Model):

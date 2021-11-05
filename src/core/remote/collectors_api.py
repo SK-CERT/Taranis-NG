@@ -13,3 +13,7 @@ class CollectorsApi:
     def get_collectors_info(self):
         response = requests.get(self.api_url + "/api/v1/collectors", headers=self.headers)
         return response.json(), response.status_code
+
+    def refresh_collector(self, collector_type):
+        response = requests.put(self.api_url + "/api/v1/collectors/" + collector_type, headers=self.headers)
+        return response.status_code

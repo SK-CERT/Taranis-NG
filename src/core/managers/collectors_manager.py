@@ -1,5 +1,5 @@
-from model.collectors_node import CollectorsNode
 from model.collector import Collector
+from model.collectors_node import CollectorsNode
 from model.osint_source import OSINTSource
 from remote.collectors_api import CollectorsApi
 from taranisng.schema import collectors_node
@@ -26,4 +26,21 @@ def update_collectors_node(node_id, data):
 
 
 def add_osint_source(data):
-    OSINTSource.add_new(data)
+    osint_source = OSINTSource.add_new(data)
+    refresh_collector(osint_source.collector)
+
+
+def update_osint_source(osint_source_id, data):
+    osint_source = OSINTSource.update(osint_source_id, data)
+    refresh_collector(osint_source.collector)
+
+
+def delete_osint_source(osint_source_id):
+    osint_source = OSINTSource.find(osint_source_id)
+    collector = osint_source.collector
+    OSINTSource.delete(osint_source_id)
+    refresh_collector(collector)
+
+
+def refresh_collector(collector):
+    return CollectorsApi(collector.node.api_url, collector.node.api_key).refresh_collector(collector.type)

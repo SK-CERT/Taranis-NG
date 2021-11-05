@@ -200,6 +200,12 @@ class BaseCollector:
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
+    def refresh(self):
+        for source in self.osint_sources:
+            time_manager.cancel_job(source.scheduler_job)
+        self.osint_sources = []
+        self.initialize()
+
     def initialize(self):
         response, code = CoreApi.get_osint_sources(self.type)
         if code == 200 and response is not None:
@@ -212,24 +218,24 @@ class BaseCollector:
 
                 if interval != '':
                     if interval[0].isdigit() and ':' in interval:
-                        time_manager.schedule_job_every_day(interval, self.collect, source)
+                        source.scheduler_job = time_manager.schedule_job_every_day(interval, self.collect, source)
                     elif interval[0].isalpha():
                         interval = interval.split(',')
                         day = interval[0].strip()
                         at = interval[1].strip()
                         if day == 'Monday':
-                            time_manager.schedule_job_on_monday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_monday(at, self.collect, source)
                         elif day == 'Tuesday':
-                            time_manager.schedule_job_on_tuesday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_tuesday(at, self.collect, source)
                         elif day == 'Wednesday':
-                            time_manager.schedule_job_on_wednesday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_wednesday(at, self.collect, source)
                         elif day == 'Thursday':
-                            time_manager.schedule_job_on_thursday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_thursday(at, self.collect, source)
                         elif day == 'Friday':
-                            time_manager.schedule_job_on_friday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_friday(at, self.collect, source)
                         elif day == 'Saturday':
-                            time_manager.schedule_job_on_saturday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_saturday(at, self.collect, source)
                         else:
-                            time_manager.schedule_job_on_sunday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.collect, source)
                     else:
-                        time_manager.schedule_job_minutes(int(interval), self.collect, source)
+                        source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
