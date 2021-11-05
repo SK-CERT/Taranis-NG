@@ -13,6 +13,7 @@ from taranisng.schema.acl_entry import ItemType
 from taranisng.schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
     OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema
 from taranisng.schema.word_list import WordListIdSchema
+import datetime
 
 
 class NewOSINTSourceSchema(OSINTSourceSchema):
@@ -36,6 +37,13 @@ class OSINTSource(db.Model):
                                        cascade="all")
 
     word_lists = db.relationship('WordList', secondary='osint_source_word_list')
+
+    modified = db.Column(db.DateTime, default=datetime.now)
+    last_collected = db.Column(db.DateTime, default=None)
+    last_attempted = db.Column(db.DateTime, default=None)
+    state = db.Column(db.SmallInteger, default=0)
+    last_error_message = db.Column(db.String, default=None)
+    screenshot = db.Column(db.LargeBinary, default=None)
 
     def __init__(self, id, name, description, collector_id, parameter_values, word_lists):
         self.id = str(uuid.uuid4())

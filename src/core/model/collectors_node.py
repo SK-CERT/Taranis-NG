@@ -3,7 +3,7 @@ from marshmallow import post_load
 import uuid
 from taranisng.schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
 from sqlalchemy import orm, or_, func
-
+import datetime
 
 class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
@@ -19,6 +19,9 @@ class CollectorsNode(db.Model):
 
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String(), nullable=False)
+
+    created = db.Column(db.DateTime, default=datetime.now)
+    last_seen = db.Column(db.DateTime, default=None)
 
     collectors = db.relationship('Collector', back_populates="node", cascade="all")
 
