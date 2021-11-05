@@ -1,6 +1,8 @@
 import datetime
 import hashlib
 import uuid
+import threading
+import time
 
 from dateutil import tz
 
@@ -201,24 +203,33 @@ class BaseCollector:
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
     def refresh(self):
+        # cancel all existing jobs
         for source in self.osint_sources:
             time_manager.cancel_job(source.scheduler_job)
         self.osint_sources = []
-        self.initialize()
 
-    def initialize(self):
+        # get new node configuration
         response, code = CoreApi.get_osint_sources(self.type)
-        if code == 200 and response is not None:
-            source_schema = osint_source.OSINTSourceSchemaBase(many=True)
-            self.osint_sources = source_schema.load(response)
 
-            for source in self.osint_sources:
-                self.collect(source)
-                interval = source.parameter_values["REFRESH_INTERVAL"]
+        try:
+            # if configuration was successfully received
+            if code == 200 and response is not None:
+                source_schema = osint_source.OSINTSourceSchemaBase(many=True)
+                self.osint_sources = source_schema.load(response)
 
-                if interval != '':
+                # start collection
+                for source in self.osint_sources:
+                    self.collect(source)
+                    interval = source.parameter_values["REFRESH_INTERVAL"]
+
+                    # do not schedule if no interval is set
+                    if interval == '':
+                        continue
+
+                    # run task every day at XY
                     if interval[0].isdigit() and ':' in interval:
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.collect, source)
+                    # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(',')
                         day = interval[0].strip()
@@ -235,7 +246,20 @@ class BaseCollector:
                             source.scheduler_job = time_manager.schedule_job_on_friday(at, self.collect, source)
                         elif day == 'Saturday':
                             source.scheduler_job = time_manager.schedule_job_on_saturday(at, self.collect, source)
-                        else:
+                        elif day == 'Sunday':
                             source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.collect, source)
+                    # run task every XY minutes
                     else:
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
+            else:
+                # TODO: send update to core with the error message
+                pass
+        except:
+            pass
+
+        time.sleep(60)
+        
+
+    def initialize(self):
+        # check config and run collector jobs
+        self.config_checker_thread = threading.Thread(target=self.refresh)
