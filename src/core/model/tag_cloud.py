@@ -24,6 +24,7 @@ class TagCloud(db.Model):
     collected = db.Column(db.Date)
 
     def __init__(self, word, word_quantity, collected):
+        self.id = None
         self.word = word
         self.word_quantity = word_quantity
         self.collected = collected

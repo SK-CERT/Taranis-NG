@@ -36,6 +36,8 @@ class AttributeGroupItem(db.Model):
     def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute_id):
         if id is not None and id != -1:
             self.id = id
+        else:
+            self.id = None
 
         self.title = title
         self.description = description
@@ -79,6 +81,8 @@ class AttributeGroup(db.Model):
     def __init__(self, id, title, description, section, section_title, index, attribute_group_items):
         if id is not None and id != -1:
             self.id = id
+        else:
+            self.id = None
 
         self.title = title
         self.description = description
@@ -147,6 +151,7 @@ class ReportItemType(db.Model):
                                        cascade="all, delete-orphan")
 
     def __init__(self, id, title, description, attribute_groups):
+        self.id = None
         self.title = title
         self.description = description
         self.attribute_groups = attribute_groups

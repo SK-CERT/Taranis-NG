@@ -344,6 +344,7 @@ class NewsItemVote(db.Model):
     remote_user = db.Column(db.String())
 
     def __init__(self, news_item_id, user_id):
+        self.id = None
         self.news_item_id = news_item_id
         self.user_id = user_id
         self.like = False
@@ -977,6 +978,7 @@ class NewsItemAttribute(db.Model):
 
     def __init__(self, key, value, binary_mime_type, binary_value):
         # self.id = id
+        self.id = None
         self.key = key
         self.value = value
         self.binary_mime_type = binary_mime_type
