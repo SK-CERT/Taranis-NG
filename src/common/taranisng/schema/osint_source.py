@@ -13,12 +13,6 @@ class OSINTSourceSchemaBase(Schema):
     name = fields.Str()
     parameter_values = fields.List(fields.Nested(ParameterValueSchema))
     word_lists = fields.List(fields.Nested(WordListSchema))
-    modified = fields.DateTime('%d.%m.%Y - %H:%M:%s', allow_none = True)
-    last_collected = fields.DateTime('%d.%m.%Y - %H:%M:%s', allow_none = True)
-    last_attempted = fields.DateTime('%d.%m.%Y - %H:%M:%s', allow_none = True)
-    state = fields.Int(missing=0, allow_none = True)
-    last_error_message = fields.Str(allow_none = True)
-    screenshot = fields.Raw(allow_none = True)
 
     @post_load
     def make_osint_source(self, data, **kwargs):
@@ -55,7 +49,7 @@ class OSINTSourceId:
 
 class OSINTSource:
 
-    def __init__(self, id, name, parameter_values, word_lists, modified, last_collected, last_attempted, state, last_error_message, screenshot):
+    def __init__(self, id, name, parameter_values, word_lists):
         self.id = id
         self.name = name
 
@@ -64,12 +58,6 @@ class OSINTSource:
             self.parameter_values.update({parameter_value.parameter.key: parameter_value.value})
 
         self.word_lists = word_lists
-        self.modified = modified
-        self.last_collected = last_collected
-        self.last_attempted = last_attempted
-        self.state = state
-        self.last_error_message = last_error_message
-        self.screenshot = screenshot
 
 class OSINTSourceGroupSchema(Schema):
     id = fields.Str()
