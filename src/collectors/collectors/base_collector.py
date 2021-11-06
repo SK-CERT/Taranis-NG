@@ -4,10 +4,12 @@ import uuid
 import threading
 import time
 import logging
+import bleach
+import re
 
 from dateutil import tz
 
-from managers import time_manager
+from managers import time_manager, log_manager
 from remote.core_api import CoreApi
 from taranisng.schema import collector, osint_source, news_item
 from taranisng.schema.parameter import Parameter, ParameterType
@@ -172,6 +174,16 @@ class BaseCollector:
             return news_items
 
     @staticmethod
+    def presanitize_html(html):
+        # these re.sub are not security sensitive ; bleach is supposed to fix the remaining stuff
+        html = re.sub(r'(?i)<head[^>/]*>.*?</head[^>/]*>', '', html, re.DOTALL)
+        html = re.sub(r'(?i)<script[^>/]*>.*?</script[^>/]*>', '', html, re.DOTALL)
+        html = re.sub(r'(?i)<style[^>/]*>.*?</style[^>/]*>', '', html, re.DOTALL)
+
+        clean = bleach.clean(html, tags=['p','b','i','b','u','pre'], strip=True)
+        return clean
+
+    @staticmethod
     def sanitize_news_items(news_items, source):
         for item in news_items:
             if item.id is None:
@@ -190,8 +202,12 @@ class BaseCollector:
                 item.content = ''
             if item.published is None:
                 item.published = datetime.datetime.now()
+            else:
+                item.published = presanitize_html(item.published) # TODO: replace with dateparser
             if item.collected is None:
                 item.collected = datetime.datetime.now()
+            else:
+                item.collected = presanitize_html(item.collected) # TODO: replace with dateparser
             if item.hash is None:
                 for_hash = item.author + item.title + item.link
                 item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
@@ -199,6 +215,12 @@ class BaseCollector:
                 item.osint_source_id = source.id
             if item.attributes is None:
                 item.attributes = []
+            item.title = presanitize_html(item.title)
+            item.review = presanitize_html(item.review)
+            item.content = presanitize_html(item.content)
+            item.author = presanitize_html(item.author)
+            item.source = presanitize_html(item.source) # TODO: replace with link sanitizer
+            item.link = presanitize_html(item.link) # TODO: replace with link sanitizer
 
     @staticmethod
     def publish(news_items, source):

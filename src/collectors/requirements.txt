@@ -3,6 +3,7 @@ aniso8601==8.0.0
 async-timeout==3.0.1
 attrs==19.3.0
 beautifulsoup4==4.8.1
+bleach==4.1.0
 blis==0.7.4
 catalogue==2.0.6
 certifi==2019.11.28
