@@ -2,11 +2,12 @@
 
 Taranis NG supports deployment in Docker containers. This repository also contains an example [docker-compose.yml](docker-compose.yml) file which runs the whole application in one stack.
 
-This folder contains additional support files for the creation of the Docker containers. These include start and pre-start scripts, the application entrypoint and the [gunicorn](https://gunicorn.org/) configuration file.
+This folder contains additional support files for the creation of the Docker containers. These include start and pre-start scripts, the application entrypoint, and the [gunicorn](https://gunicorn.org/) configuration file.
 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/)
+- [Docker-compose](https://docs.docker.com/compose/install/) >= 1.27.0
 - (Optional) [Vim](https://www.vim.org/) or other text editor - for configuration and development
 
 ## Quickly build and run Taranis NG using [docker-compose](docker-compose.yml)
@@ -18,7 +19,7 @@ git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
 ```
 
-_Then_, using your favourite text editor, please change the default passwords in `docker/.env` file. You can only skip this step when deploying a non-production testing environment.
+_Then_, using your favorite text editor, please change the default passwords in `docker/.env` file. You can only skip this step when deploying a non-production testing environment.
 
 ```bash
 vim docker/.env
@@ -141,7 +142,7 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 
 ### Management script how-to
 
-Taranis NG core container comes with a simple management script that may be used to setup and configure the instance without manual interaction with the database.
+Taranis NG core container comes with a simple management script that may be used to set up and configure the instance without manual interaction with the database.
 
 To run the management script, launch a shell inside of the docker container for the core component with this command:
 
