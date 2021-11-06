@@ -60,18 +60,17 @@ services:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
 
-      traefik.http.middlewares.redirect-to-443.redirectscheme.scheme: "https"
-      traefik.http.middlewares.redirect-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
-
-      traefik.http.routers.taranis-api-80.entrypoints: "web"
-      traefik.http.routers.taranis-api-80.rule: "PathPrefix(`/api/`)"
-      traefik.http.routers.taranis-api-80.middlewares: "redirect-to-443"
-
       traefik.http.routers.taranis-api-443.entrypoints: "websecure"
       traefik.http.routers.taranis-api-443.rule: "PathPrefix(`/api/`)"
       traefik.http.routers.taranis-api-443.tls: "true"
       traefik.http.routers.taranis-api-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-api-443.service: "taranis-api"
+
+      traefik.http.routers.taranis-sse-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-sse-443.rule: "PathPrefix(`/sse/`)"
+      traefik.http.routers.taranis-sse-443.tls: "true"
+      traefik.http.routers.taranis-sse-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-sse-443.service: "taranis-api"
 
     volumes:
       - "core_data:/data"
