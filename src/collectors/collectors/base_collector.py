@@ -3,21 +3,16 @@ import hashlib
 import uuid
 import threading
 import time
-import logging
 import bleach
 import re
 
 from dateutil import tz
 
-from managers import time_manager, log_manager
+from managers import time_manager
 from remote.core_api import CoreApi
 from taranisng.schema import collector, osint_source, news_item
 from taranisng.schema.parameter import Parameter, ParameterType
-
-logger = logging.getLogger('gunicorn.error')
-logger.level = logging.INFO
-# logger.level = logging.DEBUG
-
+from taranisng.managers.log_manager import log_debug, log_info
 
 class BaseCollector:
     type = "BASE_COLLECTOR"
@@ -43,12 +38,12 @@ class BaseCollector:
 
     @staticmethod
     def print_exception(source, error):
-        print('OSINTSource ID: ' + source.id)
-        print('OSINTSource name: ' + source.name)
+        log_info('OSINTSource ID: ' + source.id)
+        log_info('OSINTSource name: ' + source.name)
         if str(error).startswith('b'):
-            print('ERROR: ' + str(error)[2:-1])
+            log_info('ERROR: ' + str(error)[2:-1])
         else:
-            print('ERROR: ' + str(error))
+            log_info('ERROR: ' + str(error))
 
     @staticmethod
     def timezone_info():
@@ -231,7 +226,7 @@ class BaseCollector:
 
     def refresh(self):
         while True:
-            logger.debug("thread is running")
+            log_debug("thread is running")
             # cancel all existing jobs
             # TODO: cannot cancel jobs that are running and are scheduled for further in time than 60 seconds
             # updating of the configuration needs to be done more gracefully
@@ -242,12 +237,12 @@ class BaseCollector:
                     pass
             self.osint_sources = []
 
-            logger.debug("stopped all running scheduled jobs")
+            log_debug("stopped all running scheduled jobs")
 
             # get new node configuration
             response, code = CoreApi.get_osint_sources(self.type)
 
-            logger.debug("HTTP {}: Got the following reply: {}".format(code, response))
+            log_debug("HTTP {}: Got the following reply: {}".format(code, response))
 
             try:
                 # if configuration was successfully received
@@ -255,20 +250,20 @@ class BaseCollector:
                     source_schema = osint_source.OSINTSourceSchemaBase(many=True)
                     self.osint_sources = source_schema.load(response)
 
-                    logger.debug("{} data loaded".format(len(self.osint_sources)))
+                    log_debug("{} data loaded".format(len(self.osint_sources)))
 
                     # start collection
                     for source in self.osint_sources:
-                        logger.debug("run collection")
+                        log_debug("run collection")
                         self.collect(source)
-                        logger.debug("collection finished")
+                        log_debug("collection finished")
                         interval = source.parameter_values["REFRESH_INTERVAL"]
 
                         # do not schedule if no interval is set
                         if interval == '':
                             continue
 
-                        logger.debug("scheduling.....")
+                        log_debug("scheduling.....")
 
                         # run task every day at XY
                         if interval[0].isdigit() and ':' in interval:
@@ -294,24 +289,24 @@ class BaseCollector:
                                 source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.collect, source)
                         # run task every XY minutes
                         else:
-                            logger.debug("scheduling for {}".format(int(interval)))
+                            log_debug("scheduling for {}".format(int(interval)))
                             source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
                 else:
                     # TODO: send update to core with the error message
                     pass
             except Exception as ex:
-                logger.debug(ex)
+                log_debug(ex)
                 pass
 
-            logger.debug("going to sleep for 60s")
+            log_debug("going to sleep for 60s")
             time.sleep(60)
-            logger.debug("unsleep")
+            log_debug("unsleep")
 
 
     def initialize(self):
-        logger.debug("im in init")
+        log_debug("im in init")
         # check config and run collector jobs
         self.config_checker_thread = threading.Thread(target=self.refresh)
         self.config_checker_thread.daemon = True
         self.config_checker_thread.start()
-        logger.debug("i finished init")
+        log_debug("i finished init")
