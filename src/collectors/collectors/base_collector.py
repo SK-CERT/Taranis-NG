@@ -171,6 +171,7 @@ class BaseCollector:
     @staticmethod
     def presanitize_html(html):
         # these re.sub are not security sensitive ; bleach is supposed to fix the remaining stuff
+        html = re.sub(r'(?i)(&nbsp;|\xa0)', ' ', html, re.DOTALL)
         html = re.sub(r'(?i)<head[^>/]*>.*?</head[^>/]*>', '', html, re.DOTALL)
         html = re.sub(r'(?i)<script[^>/]*>.*?</script[^>/]*>', '', html, re.DOTALL)
         html = re.sub(r'(?i)<style[^>/]*>.*?</style[^>/]*>', '', html, re.DOTALL)
