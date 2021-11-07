@@ -198,11 +198,11 @@ class BaseCollector:
             if item.published is None:
                 item.published = datetime.datetime.now()
             else:
-                item.published = presanitize_html(item.published) # TODO: replace with dateparser
+                item.published = BaseCollector.presanitize_html(item.published) # TODO: replace with dateparser
             if item.collected is None:
                 item.collected = datetime.datetime.now()
             else:
-                item.collected = presanitize_html(item.collected) # TODO: replace with dateparser
+                item.collected = BaseCollector.presanitize_html(item.collected) # TODO: replace with dateparser
             if item.hash is None:
                 for_hash = item.author + item.title + item.link
                 item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
@@ -210,12 +210,12 @@ class BaseCollector:
                 item.osint_source_id = source.id
             if item.attributes is None:
                 item.attributes = []
-            item.title = presanitize_html(item.title)
-            item.review = presanitize_html(item.review)
-            item.content = presanitize_html(item.content)
-            item.author = presanitize_html(item.author)
-            item.source = presanitize_html(item.source) # TODO: replace with link sanitizer
-            item.link = presanitize_html(item.link) # TODO: replace with link sanitizer
+            item.title = BaseCollector.presanitize_html(item.title)
+            item.review = BaseCollector.presanitize_html(item.review)
+            item.content = BaseCollector.presanitize_html(item.content)
+            item.author = BaseCollector.presanitize_html(item.author)
+            item.source = BaseCollector.presanitize_html(item.source) # TODO: replace with link sanitizer
+            item.link = BaseCollector.presanitize_html(item.link) # TODO: replace with link sanitizer
 
     @staticmethod
     def publish(news_items, source):
