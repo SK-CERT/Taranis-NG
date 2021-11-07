@@ -17,7 +17,7 @@ import os
 import socket
 from urllib.parse import urlparse
 from urllib.error import HTTPError, URLError
-from dateutil.parser import parse
+import dateparser
 import requests
 import base64
 import re
@@ -335,17 +335,7 @@ class WebCollector(BaseCollector):
                                                         new_published_selector).text
 
                             if published:
-                                # TODO: make these configurable
-                                if published.lower() in [ 'today', 'dnes']:
-                                    published = datetime.datetime.today()
-                                    published = published.strftime("%d-%m-%Y")
-                                    published = parse(published, dayfirst=True)
-                                elif published.lower() in [ 'yesterday', 'včera']:
-                                    published = datetime.datetime.today() - datetime.timedelta(days=1)
-                                    published = published.strftime("%d-%m-%Y")
-                                    published = parse(published, dayfirst=True)
-                                else:
-                                    published = parse(published, dayfirst=True)
+                                published = dateparser.parse(published, settings={'DATE_ORDER': 'DMY'})
 
                                 if published > limit:
                                     title, description, author, link = collect_data(item)

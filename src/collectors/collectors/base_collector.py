@@ -197,12 +197,8 @@ class BaseCollector:
                 item.content = ''
             if item.published is None:
                 item.published = datetime.datetime.now()
-            else:
-                item.published = BaseCollector.presanitize_html(item.published) # TODO: replace with dateparser
             if item.collected is None:
                 item.collected = datetime.datetime.now()
-            else:
-                item.collected = BaseCollector.presanitize_html(item.collected) # TODO: replace with dateparser
             if item.hash is None:
                 for_hash = item.author + item.title + item.link
                 item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
