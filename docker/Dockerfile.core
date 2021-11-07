@@ -10,7 +10,7 @@ RUN \
     apk add --no-cache \
     postgresql-libs \
     libpq \
-    glib
+    curl
 
 COPY ./src/core/requirements.txt /app/taranis-ng-core/requirements.txt
 COPY ./src/common/requirements.txt /app/taranis-ng-common/requirements.txt
@@ -56,6 +56,8 @@ ENV GUNICORN_CMD_ARGS --timeout 120 --preload
 ENV WORKERS_PER_CORE 8
 
 VOLUME ["/data"]
+
+HEALTHCHECK --interval=60s --timeout=3s --retries=5 CMD curl --fail http://localhost/api/v1/isalive || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]
