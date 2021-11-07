@@ -27,7 +27,7 @@ itsdangerous==1.1.0
 Jinja2==2.10.3
 Mako==1.1.0
 MarkupSafe==1.1.1
-marshmallow==3.3.0
+marshmallow==3.5.0
 marshmallow-enum==1.5.1
 monotonic==1.5
 multidict==4.7.5
