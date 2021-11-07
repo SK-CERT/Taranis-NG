@@ -11,7 +11,7 @@ RUN \
     postgresql-libs \
     libpq \
     glib \
-    firefox-esr=78.13.0-r0 \
+    firefox \
     unzip \
     libexif \
     udev \
