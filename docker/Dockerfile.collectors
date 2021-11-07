@@ -11,7 +11,23 @@ RUN \
     postgresql-libs \
     libpq \
     glib \
-    firefox-esr=78.13.0-r0
+    firefox-esr=78.13.0-r0 \
+    unzip \
+    libexif \
+    udev \
+    chromium \
+    chromium-chromedriver \
+    xvfb \
+    dbus-x11 \
+    ttf-freefont && \
+    apk add --no-cache --virtual .build-deps \
+    wget \
+    tar && \
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz -O /tmp/geckodriver.tar.gz && \
+    cd /usr/local/bin/ && \
+    tar -xzf /tmp/geckodriver.tar.gz && \
+    rm -f /tmp/geckodriver.tar.gz && \
+    apk --purge del .build-deps
 
 COPY ./src/collectors/requirements.txt /app/taranis-ng-collectors/requirements.txt
 COPY ./src/common/requirements.txt /app/taranis-ng-common/requirements.txt
@@ -31,8 +47,6 @@ RUN \
     pip install --no-cache-dir -r /app/taranis-ng-collectors/requirements.txt && \
     pip install --no-cache-dir -r /app/taranis-ng-common/requirements.txt && \
     apk --purge del .build-deps
-
-ADD https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz /usr/local/bin/
 
 COPY ./docker/start.sh /start.sh
 RUN chmod +x /start.sh
