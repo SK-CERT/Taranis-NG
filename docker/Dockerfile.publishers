@@ -5,12 +5,6 @@ WORKDIR /app/
 # upgrade pip
 RUN python -m pip install --upgrade pip
 
-# install common packages
-RUN \
-    apk add --no-cache \
-    postgresql-libs \
-    libpq
-
 COPY ./src/publishers/requirements.txt /app/taranis-ng-publishers/requirements.txt
 COPY ./src/common/requirements.txt /app/taranis-ng-common/requirements.txt
 
@@ -23,7 +17,6 @@ RUN \
     musl-dev \
     python3-dev \
     libffi-dev \
-    postgresql-dev \
     rust && \
     pip install --no-cache-dir -r /app/taranis-ng-publishers/requirements.txt && \
     pip install --no-cache-dir -r /app/taranis-ng-common/requirements.txt && \

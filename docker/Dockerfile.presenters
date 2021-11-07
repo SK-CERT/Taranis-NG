@@ -8,8 +8,6 @@ RUN python -m pip install --upgrade pip
 # install common packages
 RUN \
     apk add --no-cache \
-    postgresql-libs \
-    libpq \
     libpng \
     libjpeg \
     wkhtmltopdf
@@ -86,8 +84,7 @@ RUN \
     make \
     musl-dev \
     python3-dev \
-    libffi-dev \
-    postgresql-dev && \
+    libffi-dev && \
     pip install --no-cache-dir -r /app/taranis-ng-presenters/requirements.txt && \
     pip install --no-cache-dir -r /app/taranis-ng-common/requirements.txt && \
     apk --purge del .build-deps

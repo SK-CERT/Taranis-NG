@@ -5,12 +5,6 @@ WORKDIR /app/
 # upgrade pip
 RUN python -m pip install --upgrade pip
 
-# install common packages
-RUN \
-    apk add --no-cache \
-    postgresql-libs \
-    libpq
-
 COPY ./src/bots/requirements.txt /app/taranis-ng-bots/requirements.txt
 COPY ./src/common/requirements.txt /app/taranis-ng-common/requirements.txt
 
@@ -22,8 +16,7 @@ RUN \
     make \
     musl-dev \
     python3-dev \
-    libffi-dev \
-    postgresql-dev && \
+    libffi-dev && \
     pip install --no-cache-dir -r /app/taranis-ng-bots/requirements.txt && \
     pip install --no-cache-dir -r /app/taranis-ng-common/requirements.txt && \
     apk --purge del .build-deps
