@@ -14,6 +14,8 @@ from taranisng.schema import collector, osint_source, news_item
 from taranisng.schema.parameter import Parameter, ParameterType
 from taranisng.managers.log_manager import log_debug, log_info
 
+import traceback
+
 class BaseCollector:
     type = "BASE_COLLECTOR"
     name = "Base Collector"
@@ -292,11 +294,11 @@ class BaseCollector:
                     # TODO: send update to core with the error message
                     pass
             except Exception as ex:
-                log_debug(ex)
+                log_debug(traceback.format_exc())
                 pass
 
-            log_debug("going to sleep for 60s")
-            time.sleep(60)
+            log_debug("going to sleep for 600s")
+            time.sleep(600)
             log_debug("unsleep")
 
 
