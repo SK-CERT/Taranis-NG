@@ -68,7 +68,7 @@ services:
       traefik.http.routers.taranis-api-443.service: "taranis-api"
 
       traefik.http.routers.taranis-sse-443.entrypoints: "websecure"
-      traefik.http.routers.taranis-sse-443.rule: "PathPrefix(`/sse/`)"
+      traefik.http.routers.taranis-sse-443.rule: "PathPrefix(`/sse`)"
       traefik.http.routers.taranis-sse-443.tls: "true"
       traefik.http.routers.taranis-sse-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-sse-443.service: "taranis-api"
