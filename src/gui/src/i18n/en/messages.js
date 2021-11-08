@@ -309,7 +309,10 @@ const messages_en = {
         successful_edit: "Product type was successfully updated",
         removed: "Product type was successfully removed",
         removed_error: "Product type is in use and could not be deleted",
-        total_count: "Product types count: "
+        total_count: "Product types count: ",
+        help: "Template parameters description",
+        close: "Close",
+        choose_report_type: "Choose report type to show its parameters description"
     },
 
     presenters_node: {
