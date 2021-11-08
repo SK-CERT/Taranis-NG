@@ -36,7 +36,7 @@ class NewWordListSchema(WordListSchema):
 class WordList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
-    description = db.Column(db.String())
+    description = db.Column(db.String(), nullable=False)
     use_for_stop_words = db.Column(db.Boolean, default=False)
 
     categories = db.relationship("WordListCategory", cascade="all, delete-orphan")
@@ -44,7 +44,10 @@ class WordList(db.Model):
     def __init__(self, id, name, description, categories, use_for_stop_words):
         self.id = None
         self.name = name
-        self.description = description
+        if description is None:
+            self.description = ''
+        else:
+            self.description = description
         self.categories = categories
         self.use_for_stop_words = use_for_stop_words
         self.title = ""
@@ -141,7 +144,7 @@ class WordList(db.Model):
 class WordListCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
-    description = db.Column(db.String())
+    description = db.Column(db.String(), nullable=False)
 
     word_list_id = db.Column(db.Integer, db.ForeignKey('word_list.id'))
 
@@ -150,7 +153,10 @@ class WordListCategory(db.Model):
     def __init__(self, name, description, entries):
         self.id = None
         self.name = name
-        self.description = description
+        if description is None:
+            self.description = ''
+        else:
+            self.description = description
         self.entries = entries
 
     @staticmethod
@@ -171,14 +177,17 @@ class WordListCategory(db.Model):
 class WordListEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.String(), nullable=False)
-    description = db.Column(db.String())
+    description = db.Column(db.String(), nullable=False)
 
     word_list_category_id = db.Column(db.Integer, db.ForeignKey('word_list_category.id'))
 
     def __init__(self, value, description):
         self.id = None
         self.value = value
-        self.description = description
+        if description is None:
+            self.description = ''
+        else:
+            self.description = description
 
     @classmethod
     def identical(cls, value, word_list_category_id):
