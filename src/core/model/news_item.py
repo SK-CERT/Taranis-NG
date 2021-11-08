@@ -795,6 +795,7 @@ class NewsItemAggregate(db.Model):
 
             cls.update_aggregates(processed_aggregates)
             db.session.commit()
+            return '', 200
         else:
             return 'aggregate_in_use', 500
 
