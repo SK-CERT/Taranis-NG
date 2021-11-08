@@ -44,7 +44,7 @@
 
             >
                 <v-chip small class="px-0 mr-1" @click="filterSort('ALPHABETICAL')">
-                    <v-icon class="pl-2" small center>mdi-sort-alphabetical-ascending</v-icon>
+                    <v-icon class="pl-2" small center>mdi-sort-alphabetical-ascending-variant</v-icon>
                     <v-icon class="pr-2" small center>mdi-sort-ascending</v-icon>
                 </v-chip>
                 <v-chip small class="px-0 mr-1" @click="filterSort('VULNERABILITY')">

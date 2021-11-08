@@ -51,7 +51,7 @@
             buttons: [
                 {
                     title: 'main_menu.dashboard',
-                    icon: 'mdi-poll-box',
+                    icon: 'mdi-chart-box',
                     permission: 'ASSESS_ACCESS',
                     route: '/dashboard',
                     show: true

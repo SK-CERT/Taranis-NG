@@ -1,4 +1,6 @@
-import Vue from 'vue'
+import 'material-design-icons-iconfont/dist/material-design-icons.css';
+import '@mdi/font/css/materialdesignicons.css';
+import Vue from 'vue';
 import Vuetify from 'vuetify/lib';
 //import colors from 'vuetify/lib/util/colors'
 import App from './App.vue'
@@ -29,16 +31,20 @@ Vue.use(Vuetify, {
     }
 });
 
+Vue.use(Vuetify, {
+  iconfont: 'md'
+});
+
+Vue.use(Vuetify, {
+  iconfont: 'mdi'
+});
+
 Vue.use(CKEditor);
 
 const vuetify = new Vuetify({
-
     theme: {
         dark: false,
         themes: Themes['taranisDefault']
-    },
-    icons: {
-        iconfont: 'mdi',
     },
 });
 
