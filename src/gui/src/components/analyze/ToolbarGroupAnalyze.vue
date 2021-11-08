@@ -20,7 +20,7 @@
 
 <script>
 import AuthMixin from "../../services/auth/auth_mixin";
-import {groupAction} from "@/api/assess";
+import {deleteReportItem} from "@/api/analyze";
 import Permissions from "@/services/auth/permissions";
 
 export default {
@@ -69,17 +69,19 @@ export default {
                     'id': selection[i].id
                 })
             }
-            if (items.length > 0) {
-                groupAction({'group': this.getGroupId(), 'action': type, 'items': items}).then(() => {
-                    this.multiSelect()
-                }).catch((error) => {
-                    this.$root.$emit('notification',
-                        {
-                            type: 'error',
-                            loc: 'error.' + error.response.data
-                        }
-                    )
-                });
+            if (type === 'DELETE') {
+                for (let i = 0; i < items.length; i++) {
+                    deleteReportItem(items[i]).then(() => {
+                        this.multiSelect()
+                    }).catch((error) => {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'error',
+                                loc: 'error.' + error.response.data
+                            }
+                        )
+                    });
+                }
             }
         },
 
