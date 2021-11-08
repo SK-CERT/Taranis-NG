@@ -23,6 +23,7 @@ PyJWT==1.7.1
 python-dateutil==2.8.1
 python-dotenv==0.10.3
 python-editor==1.0.4
+python-keycloak==0.23.0
 pytz==2019.3
 requests==2.26.0
 schedule==0.6.0

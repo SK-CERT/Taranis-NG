@@ -21,5 +21,6 @@ class OpenIDAuthenticator(BaseAuthenticator):
         return BaseAuthenticator.generate_error()
 
     @staticmethod
-    def logout():
+    def logout(token):
+        BaseAuthenticator.logout(token)
         oidc.logout()
