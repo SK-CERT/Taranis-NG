@@ -23,6 +23,10 @@ const messages_en = {
             },
             parameter: {
                 required: "Required field"
+            },
+            password_check: {
+                required: "Password is required",
+                confirmed: "Passwords are not identical"
             }
         },
     },
@@ -156,7 +160,9 @@ const messages_en = {
         organizations: "Organizations",
         roles: "Roles",
         permissions: "Permissions",
-        total_count: "Users count: "
+        total_count: "Users count: ",
+        password: "Password",
+        password_check: "Retype Password"
     },
 
     collectors_node: {

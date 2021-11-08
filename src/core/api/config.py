@@ -1,9 +1,10 @@
 from flask import request
 from flask_restful import Resource
 
-from managers import auth_manager, sse_manager, remote_manager, presenters_manager, publishers_manager, bots_manager
+from managers import auth_manager, sse_manager, remote_manager, presenters_manager, publishers_manager, bots_manager, \
+    external_auth_manager, log_manager
 from managers import collectors_manager
-from managers.auth_manager import auth_required
+from managers.auth_manager import auth_required, get_user_from_jwt
 from model import acl_entry, remote, presenters_node, publisher_preset, publishers_node, bots_node, bot_preset
 from model import attribute
 from model import collectors_node
@@ -236,6 +237,13 @@ class Users(Resource):
 
     @auth_required('CONFIG_USER_CREATE')
     def post(self):
+        try:
+            external_auth_manager.create_user(request.json)
+        except Exception as ex:
+            log_manager.debug_log(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create user in external auth system")
+            return "", 400
+
         user.User.add_new(request.json)
 
 
@@ -243,11 +251,31 @@ class User(Resource):
 
     @auth_required('CONFIG_USER_UPDATE')
     def put(self, user_id):
+        original_user = user.User.find_by_id(user_id)
+        original_username = original_user.username
+
+        try:
+            external_auth_manager.update_user(request.json, original_username)
+        except Exception as ex:
+            log_manager.debug_log(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update user in external auth system")
+            return "", 400
+
         user.User.update(user_id, request.json)
 
     @auth_required('CONFIG_USER_DELETE')
     def delete(self, user_id):
-        return user.User.delete(user_id)
+        original_user = user.User.find_by_id(user_id)
+        original_username = original_user.username
+
+        user.User.delete(user_id)
+
+        try:
+            external_auth_manager.delete_user(original_username)
+        except Exception as ex:
+            log_manager.debug_log(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete user in external auth system")
+            return "", 400
 
 
 class ExternalUsers(Resource):
