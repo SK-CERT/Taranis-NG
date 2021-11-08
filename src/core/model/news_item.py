@@ -738,6 +738,7 @@ class NewsItemAggregate(db.Model):
                     news_items.add(news_item)
                     processed_aggregates.add(aggregate)
 
+            news_items = list(news_items)
             for news_item in news_items[:]:
                 if not NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
                     news_items.remove(news_item)
