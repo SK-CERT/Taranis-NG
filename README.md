@@ -151,3 +151,22 @@ in xml.gz format.
 gzcat allitems.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
 ```
+
+## Learn more...
+
+This project was inspired by [Taranis3](https://github.com/NCSC-NL/taranis3),
+a great tool made by NCSC-NL. It aims to become a next generation of this
+category of tools. The project was made in collaboration with a wide
+group of European CSIRT teams who are developers and users of Taranis3,
+and would not be possible without their valuable input especially
+during the requirements collection phase. The architecture and design
+of new Taranis NG was a collective brain child of this community.
+
+Before the new developer and user documentation becomes available, we invite you
+to have a look at the
+[Taranis NG - original requirements.pdf](https://github.com/SK-CERT/Taranis-NG/blob/main/doc/static/Taranis%20NG%20-%20original%20requirements.pdf)
+for detailed description of the features of the first release, its internal
+architecture, and general design goals of the project.
+
+Please note that the version available today may already contain new features
+and changes, which are not documented in the requirements PDF.
