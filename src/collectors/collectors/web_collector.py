@@ -7,9 +7,12 @@ import copy
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, InvalidSessionIdException
+
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, InvalidSessionIdException
 
 from urllib.parse import urlparse
 from urllib.error import HTTPError, URLError
@@ -162,7 +165,7 @@ class WebCollector(BaseCollector):
     def __wait_for_new_tab(browser, timeout, current_tab):
         yield
         WebDriverWait(browser, timeout).until(
-            lambda browser: len(handles_before) != 1
+            lambda browser: len(browser.window_handles) != 1
         )
         for tab in browser.window_handles:
             if tab != current_tab:
@@ -170,8 +173,7 @@ class WebCollector(BaseCollector):
                 return
 
 
-    @staticmethod
-    def __close_other_tabs(browser, handle_to_keep, fallback_url):
+    def __close_other_tabs(self, browser, handle_to_keep, fallback_url):
         try:
             handles_to_close = copy.copy(browser.window_handles)
             for handle_to_close in handles_to_close:
@@ -399,8 +401,8 @@ class WebCollector(BaseCollector):
 
         elif self.interpret_as == "directory":
             log_manager.log_collector_activity('web', self.source.id, 'Searching for html files in {}'.format(self.web_url))
-            for file in os.listdir(self.web_url):
-                if file.lower().endswith('.html'):
+            for file_name in os.listdir(self.web_url):
+                if file_name.lower().endswith('.html'):
                     html_file = 'file://' + self.web_url + '/' + file_name
                     result, message = self.__browse_title_page(html_file)
 
