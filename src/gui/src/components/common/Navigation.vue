@@ -22,9 +22,6 @@
 
         </v-list>
 
-        <v-btn justify-end text exact icon color="white">
-            <v-icon>mdi-cog</v-icon>
-        </v-btn>
     </v-layout>
 
 </template>
