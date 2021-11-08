@@ -3,7 +3,6 @@ import hashlib
 import uuid
 
 import feedparser
-import urllib
 from urllib.request import ProxyHandler
 import requests
 from bs4 import BeautifulSoup
