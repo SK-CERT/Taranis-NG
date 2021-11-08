@@ -76,7 +76,7 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 Currently, the best way to deploy is via Docker. For more information, see [docker/README.md](docker/README.md).
 
 When your Taranis NG instance is up and running, visit your instance by
-navigating to [http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web
+navigating to [https://localhost:4433](https://localhost:4433/) using your web
 browser. **The default credentials are `user` / `user` and `admin` / `admin`.**
 
 ### Connecting to collectors, presenters, and publishers
