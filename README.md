@@ -1,4 +1,4 @@
-# TaranisNG
+# Taranis NG
 
 Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and
 organisations. It allows osint gathering, analysis and reporting; team-to-team
@@ -56,7 +56,7 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
 
 ## Directory structure
 
-- src/ - TaranisNG source code:
+- src/ - Taranis NG source code:
   - [Core](src/core/) is the REST API, the central component of Taranis NG
   - [GUI](src/gui/) is the web user interface
   - [Collectors](src/collectors/) retrieve OSINT information from various sources (such as web, twitter, email, atom, rss, slack, and more) and create **news items**.
