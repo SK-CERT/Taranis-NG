@@ -24,7 +24,7 @@ class BasePresenter:
         attribute_map = dict()
         for attribute_group in presenter_input.report_type.attribute_groups:
             for attribute_group_item in attribute_group.attribute_group_items:
-                attribute_map[attribute_group_item.id] = attribute_group_item.title
+                attribute_map[attribute_group_item.id] = attribute_group_item.title.lower().replace(" ", "_")
 
         report_data_map = list()
         for report in presenter_input.reports:
