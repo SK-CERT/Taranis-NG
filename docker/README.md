@@ -45,6 +45,8 @@ docker-compose -f docker/docker-compose.yml up --build
 Your Taranis NG instance now needs to be configured.
 Continue [here](../README.md#connecting-to-collectors-presenters-and-publishers).
 
+**The default credentials are `user` / `user` and `admin` / `admin`.**
+
 <hr />
 
 To import the [sample data](../src/core/scripts/sample_data.py) and create basic user accounts, set the environment variable `TARANIS_NG_SAMPLE_DATA` for the core container to `true`, or import sample data using the [management script](#management-script-how-to) (from another terminal):
@@ -54,10 +56,6 @@ docker exec -it taranis-ng_core_1 python manage.py sample-data
 ```
 
 *<u>Note:</u> the container name `taranis-ng_core_1` was automatically generated when running the example [docker-compose.yml](docker-compose.yml) file without any changes. To get the exact container name for the core component of your instance, use `docker ps`.*
-
-<hr />
-
-**The default credentials are `user` / `user` and `admin` / `admin`.**
 
 ## Advanced build methods
 
