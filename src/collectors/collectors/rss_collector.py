@@ -4,8 +4,7 @@ import uuid
 import traceback
 
 import feedparser
-from urllib.request import ProxyHandler
-import requests
+import urllib.request
 from bs4 import BeautifulSoup
 import dateparser
 
@@ -55,8 +54,7 @@ class RSSCollector(BaseCollector):
 
         try:
             if proxies:
-                proxy = ProxyHandler(proxies)
-                feed = feedparser.parse(feed_url, handlers = [proxy])
+                feed = feedparser.parse(feed_url, handlers = [urllib.request.ProxyHandler(proxies)])
             else:
                 feed = feedparser.parse(feed_url)
 
@@ -76,11 +74,11 @@ class RSSCollector(BaseCollector):
                 link_for_article = feed_entry['link']
 
                 if proxies:
-                    page = requests.get(link_for_article, headers=user_agent_headers, proxies=proxies)
-                else:
-                    page = requests.get(link_for_article, headers=user_agent_headers)
+                    urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler(proxies)))
 
-                html_content = page.text
+                with urllib.request.urlopen(urllib.request.Request(link_for_article, headers=user_agent_headers)) as response:
+                    html_content = response.read()
+
                 soup = BeautifulSoup(html_content, features='html.parser')
 
                 content = ''

@@ -17,8 +17,17 @@ class CoreApi:
 
     @classmethod
     def get_osint_sources(cls, collector_type):
+        id = ''
+        config_file = os.getenv('COLLECTOR_CONFIG_FILE')
         try:
-            response = requests.get(cls.api_url + '/api/v1/collectors/osint-sources?api_key=' + urllib.parse.quote(cls.api_key) + '&collector_type=' + urllib.parse.quote(collector_type),
+            with open(config_file, 'r') as file:
+                id = file.read().strip()
+        except Exception as ex:
+            logger.debug(ex)
+            return 'Cannot read collector config file.', 0
+
+        try:
+            response = requests.get(cls.api_url + '/api/v1/collectors/' + urllib.parse.quote(id) + '/osint-sources?api_key=' + urllib.parse.quote(cls.api_key) + '&collector_type=' + urllib.parse.quote(collector_type),
                                      headers=cls.headers)
             return response.json(), response.status_code
         except Exception as ex:
