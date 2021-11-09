@@ -152,7 +152,7 @@ gzcat allitems.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
 ```
 
-### About...
+# About...
 
 This project was inspired by [Taranis3](https://github.com/NCSC-NL/taranis3),
 a great tool made by NCSC-NL. It aims to become a next generation of this
