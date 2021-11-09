@@ -152,7 +152,7 @@ gzcat allitems.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
 ```
 
-## Learn more...
+## About...
 
 This project was inspired by [Taranis3](https://github.com/NCSC-NL/taranis3),
 a great tool made by NCSC-NL. It aims to become a next generation of this
@@ -160,7 +160,15 @@ category of tools. The project was made in collaboration with a wide
 group of European CSIRT teams who are developers and users of Taranis3,
 and would not be possible without their valuable input especially
 during the requirements collection phase. The architecture and design
-of new Taranis NG was a collective brain child of this community.
+of new Taranis NG is a collective brain child of this community.
+
+This project has been co-funded by European Regional Development Fund as part of [Operational Programme Integrated Infrastructure (OPII)](https://www.opii.gov.sk/opii-en/titulka-en).
+
+Further development has been co-funded by “Connecting Europe Facility – Cybersecurity Digital Service Infrastructure Maintenance and Evolution of Core Service Platform Cooperation Mechanism for CSIRTs – MeliCERTes Facility” (SMART 2018/1024).
+
+Further development is being co-funded by European Commission through the Connecting Europe Facility action entitled "Joint Threat Analysis Network", action number 2020-EU-IA-0260.
+
+# Learn more...
 
 Before the new developer and user documentation becomes available, we invite you
 to have a look at the
