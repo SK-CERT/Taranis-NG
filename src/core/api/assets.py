@@ -125,7 +125,7 @@ class AttributeCPEEnums(Resource):
 
 def initialize(api):
     api.add_resource(AssetGroups, "/api/v1/my-assets/asset-groups")
-    api.add_resource(AssetGroup, "/api/v1/my-assets/asset-groups/<int:group_id>")
+    api.add_resource(AssetGroup, "/api/v1/my-assets/asset-groups/<string:group_id>")
 
     api.add_resource(NotificationTemplates, "/api/v1/my-assets/asset-notification-templates")
     api.add_resource(NotificationTemplate, "/api/v1/my-assets/asset-notification-templates/<int:template_id>")
