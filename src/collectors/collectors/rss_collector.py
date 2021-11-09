@@ -29,6 +29,7 @@ class RSSCollector(BaseCollector):
     news_items = []
 
     def collect(self, source):
+        log_debug("{} collection started...".format(self.type))
 
         feed_url = source.parameter_values['FEED_URL']
         interval = source.parameter_values['REFRESH_INTERVAL']
@@ -104,3 +105,5 @@ class RSSCollector(BaseCollector):
         except Exception as error:
             BaseCollector.print_exception(source, error)
             log_debug(traceback.format_exc())
+
+        log_debug("{} collection finished.".format(self.type))
