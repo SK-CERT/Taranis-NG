@@ -3,6 +3,7 @@ import hashlib
 import uuid
 import bleach
 import re
+import time
 
 from dateutil import tz
 
@@ -220,6 +221,7 @@ class BaseCollector:
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
     def refresh(self):
+        time.sleep(30)
         log_info("Core API requested a refresh of osint sources for {}...".format(self.type))
 
         # cancel all existing jobs
