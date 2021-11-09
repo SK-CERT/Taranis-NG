@@ -3,7 +3,7 @@ from flask_restful import Resource, reqparse
 
 from managers import sse_manager
 from managers.auth_manager import api_key_required
-from model import osint_source, news_item
+from model import osint_source, news_item, collectors_node
 
 
 class OSINTSourcesForCollectors(Resource):
@@ -15,13 +15,13 @@ class OSINTSourcesForCollectors(Resource):
         parser.add_argument("collector_type")
         parameters = parser.parse_args()
 
-        collector = osint_source.CollectorsNode.get_by_id(collector_id)
-        if not collector:
+        node = collectors_node.CollectorsNode.get_by_id(collector_id)
+        if not node:
             return '', 404
 
-        collector.updateLastSeen()
+        node.updateLastSeen()
 
-        return osint_source.OSINTSource.get_all_for_collector_json(parameters)
+        return osint_source.OSINTSource.get_all_for_collector_json(node, parameters.collector_type)
 
 
 class AddNewsItems(Resource):

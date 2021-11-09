@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from marshmallow import post_load, fields
 from sqlalchemy import orm, func, or_, and_
@@ -6,14 +7,12 @@ from sqlalchemy import orm, func, or_, and_
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
 from model.collector import Collector
-from model.collectors_node import CollectorsNode
 from model.parameter_value import NewParameterValueSchema
 from model.word_list import WordList
 from taranisng.schema.acl_entry import ItemType
 from taranisng.schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
     OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema
 from taranisng.schema.word_list import WordListIdSchema
-from datetime import datetime
 
 
 class NewOSINTSourceSchema(OSINTSourceSchema):
@@ -110,13 +109,11 @@ class OSINTSource(db.Model):
         return sources_schema.dump(sources)
 
     @classmethod
-    def get_all_for_collector_json(cls, parameters):
-        node = CollectorsNode.get_by_api_key(parameters.api_key)
-        if node is not None:
-            for collector in node.collectors:
-                if collector.type == parameters.collector_type:
-                    sources_schema = OSINTSourceSchema(many=True)
-                    return sources_schema.dump(collector.sources)
+    def get_all_for_collector_json(cls, collector_node, collector_type):
+        for collector in collector_node.collectors:
+            if collector.type == collector_type:
+                sources_schema = OSINTSourceSchema(many=True)
+                return sources_schema.dump(collector.sources)
 
     @classmethod
     def add_new(cls, data):
