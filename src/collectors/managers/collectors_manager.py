@@ -1,3 +1,4 @@
+import os
 import threading
 
 from collectors.atom_collector import AtomCollector
@@ -50,7 +51,8 @@ def refresh_collector(collector_type):
 
 
 def get_registered_collectors_info(id):
-    with open('/app/storage/id.txt', 'w') as file:
+    config_file = os.getenv('COLLECTOR_CONFIG_FILE')
+    with open(config_file, 'w') as file:
         file.write(id)
 
     collectors_info = []
