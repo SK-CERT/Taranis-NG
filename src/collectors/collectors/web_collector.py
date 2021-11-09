@@ -127,6 +127,21 @@ class WebCollector(BaseCollector):
         return element
 
     @staticmethod
+    def __find_element_text_by(driver, element_selector, return_none = False):
+        if return_none:
+            failure_retval = None
+        else:
+            failure_retval = ''
+
+        try:
+            ret = WebCollector.__safe_find_element_by(driver, element_selector)
+            if not ret:
+                return failure_retval
+            return ret.text
+        except NoSuchElementException as e:
+            return failure_retval
+
+    @staticmethod
     def __find_elements_by(driver, element_selector):
         """extracts list of elements from the headless browser by selector"""
 
@@ -149,10 +164,14 @@ class WebCollector(BaseCollector):
         return elements
 
     @staticmethod
-    def __element_text(element):
-        if element:
-            return element.text
-        return ''
+    def __safe_find_elements_by(driver, element_selector):
+        try:
+            ret = WebCollector.__find_elements_by(driver, element_selector)
+            if not ret:
+                return None
+            return ret
+        except NoSuchElementException as e:
+            return None
 
     @staticmethod
     def __smart_truncate(content, length=500, suffix='...'):
@@ -486,9 +505,9 @@ class WebCollector(BaseCollector):
 
         processed_articles, failed_articles = 0, 0
 
-        article_items = self.__find_elements_by(browser, self.selectors['single_article_link'])
+        article_items = self.__safe_find_elements_by(browser, self.selectors['single_article_link'])
         if article_items is None:
-            log_manager.log_collector_activity('web', self.source.id, 'Incorrect selector for article items')
+            log_manager.log_collector_activity('web', self.source.id, 'Invalid page or incorrect selector for article items')
             return 0, 0
 
         index_url_just_before_click = browser.current_url
@@ -551,14 +570,14 @@ class WebCollector(BaseCollector):
 
         log_manager.log_collector_activity('web', self.source.id, 'Processing article page: {}'.format(current_url))
 
-        title = self.__element_text(self.__find_element_by(browser, self.selectors['title']))
+        title = self.__find_element_text_by(browser, self.selectors['title'])
 
-        article_full_text = self.__element_text(self.__find_element_by(browser, self.selectors['article_full_text']))
+        article_full_text = self.__find_element_text_by(browser, self.selectors['article_full_text'])
         if self.word_limit > 0:
             article_full_text = ' '.join(re.compile(r'\s+').split(article_full_text)[:self.word_limit])
 
         if self.selectors['article_description']:
-            article_description = self.__element_text(self.__find_element_by(browser, self.selectors['article_description']))
+            article_description = self.__find_element_text_by(browser, self.selectors['article_description'])
         else:
             article_description = ''
         if self.word_limit > 0:
@@ -566,14 +585,14 @@ class WebCollector(BaseCollector):
         if not article_description:
             article_description = self.__smart_truncate(article_full_text)
 
-        published_str = self.__element_text(self.__find_element_by(browser, self.selectors['published']))
+        published_str = self.__find_element_text_by(browser, self.selectors['published'])
         if not published_str:
             published_str = 'today'
         published = dateparser.parse(published_str, settings={'DATE_ORDER': 'DMY'})
 
         link = current_url
 
-        author = self.__element_text(self.__find_element_by(browser, self.selectors['author']))
+        author = self.__find_element_text_by(browser, self.selectors['author'])
 
         for_hash = author + title + article_description
         news_item = NewsItemData(
@@ -590,7 +609,7 @@ class WebCollector(BaseCollector):
         )
 
         if self.selectors['additional_id']:
-            value = self.__element_text(self.__find_element_by(browser, self.selectors['additional_id']))
+            value = self.__find_element_text_by(browser, self.selectors['additional_id'])
             if value:
                 key = 'Additional_ID'
                 binary_mime_type = ''
