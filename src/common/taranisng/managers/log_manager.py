@@ -2,6 +2,7 @@ import os
 import socket
 import logging
 import logging.handlers
+import traceback
 
 # setup Flask logger
 gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -28,6 +29,19 @@ def log_debug(message):
     gunicorn_logger.debug(formatted_message)
     if sys_logger:
         sys_logger.debug(formatted_message)
+
+# send a debug message
+def log_debug_trace(message = None):
+    formatted_message1 = "[{}] {}".format(module_id,message)
+    formatted_message2 = "[{}] {}".format(module_id,traceback.format_exc())
+
+    if message:
+        gunicorn_logger.debug(formatted_message1)
+    gunicorn_logger.debug(formatted_message2)
+    if sys_logger:
+        if message:
+            sys_logger.debug(formatted_message1)
+        sys_logger.debug(formatted_message2)
 
 # send an info message
 def log_info(message):
@@ -62,6 +76,9 @@ elif "SYSLOG_ADDRESS" in os.environ:
         sys_logger = None
         log_debug("Unable to connect to syslog server!")
         log_debug(ex)
+
+def log_system_activity(module, message):
+    log_info("[{}] {}".format(module, message))
 
 def log_collector_activity(collector_type, collector, message):
     log_text = "COLLECTOR {}/{}: {}".format(

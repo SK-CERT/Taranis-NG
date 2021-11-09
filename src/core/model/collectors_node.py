@@ -2,8 +2,10 @@ from managers.db_manager import db
 from marshmallow import post_load
 import uuid
 from taranisng.schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
+from taranisng.managers.log_manager import log_debug, log_debug_trace
 from sqlalchemy import orm, or_, func
 from datetime import datetime
+from dateutil.parser import parse
 
 class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
@@ -69,7 +71,22 @@ class CollectorsNode(db.Model):
     def get_all_json(cls, search):
         nodes, count = cls.get(search)
         node_schema = CollectorsNodePresentationSchema(many=True)
-        return {'total_count': count, 'items': node_schema.dump(nodes)}
+        items = node_schema.dump(nodes)
+
+        for i in range(len(items)):
+            # calculate collector status
+            #   green (last ping in time) < 60s
+            #   orange (last ping late) < 300s
+            #   red (no ping in a long time) > 300s
+            try:
+                time_inactive = (datetime.now() - max(nodes[i].created, nodes[i].last_seen))
+                items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"
+            except Exception as ex:
+                log_debug_trace("Cannot update collector status.")
+                # if never collected before
+                items[i]["status"] = "red"
+
+        return {'total_count': count, 'items': items}
 
     @classmethod
     def add_new(cls, node_data, collectors):

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from marshmallow import post_load, fields
 from sqlalchemy import orm, func, or_, and_
+from sqlalchemy.types import JSON
 
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
@@ -42,7 +43,7 @@ class OSINTSource(db.Model):
     last_attempted = db.Column(db.DateTime, default=None)
     state = db.Column(db.SmallInteger, default=0)
     last_error_message = db.Column(db.String, default=None)
-    screenshot = db.Column(db.LargeBinary, default=None)
+    last_data = db.Column(JSON, default=None)
 
     def __init__(self, id, name, description, collector_id, parameter_values, word_lists):
         self.id = str(uuid.uuid4())
@@ -97,6 +98,10 @@ class OSINTSource(db.Model):
         return query.order_by(db.desc(OSINTSource.name)).all(), query.count()
 
     @classmethod
+    def get_by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
     def get_all_json(cls, search):
         sources, count = cls.get(search)
         sources_schema = OSINTSourcePresentationSchema(many=True)
@@ -145,6 +150,18 @@ class OSINTSource(db.Model):
         osint_source.word_lists = updated_osint_source.word_lists
         db.session.commit()
         return osint_source
+
+    def update_status(self, status_schema):
+        # if not collected, do not change last collected timestamp
+        if status_schema.last_collected:
+            self.last_collected = status_schema.last_collected
+
+        # if not attempted, do not change last collected timestamp
+        if status_schema.last_attempted:
+            self.last_attempted = status_schema.last_attempted
+
+        self.last_error_message = status_schema.last_error_message
+        self.last_data = status_schema.last_data
 
 
 class OSINTSourceParameterValue(db.Model):

@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 
 from collectors.atom_collector import AtomCollector
 from collectors.email_collector import EmailCollector
@@ -9,11 +10,27 @@ from collectors.scheduled_tasks_collector import ScheduledTasksCollector
 from collectors.slack_collector import SlackCollector
 from collectors.twitter_collector import TwitterCollector
 from collectors.web_collector import WebCollector
+from taranisng.managers.log_manager import log_debug, log_system_activity
+from remote.core_api import CoreApi
 
 collectors = {}
+status_report_thread = None
 
+def reportStatus():
+    while True:
+        log_debug("[{}] Sending status update...".format(__name__))
+        response, code = CoreApi.update_collector_status()
+        log_debug("[{}] Core responded with: HTTP {}, {}".format(__name__, code, response))
+        time.sleep(55)
 
 def initialize():
+    log_system_activity(__name__, "Initializing collector...")
+
+    # inform core that this collector node is alive
+    status_report_thread = threading.Thread(target=reportStatus)
+    status_report_thread.daemon = True
+    status_report_thread.start()
+
     register_collector(RSSCollector())
     register_collector(WebCollector())
     register_collector(TwitterCollector())
@@ -23,6 +40,7 @@ def initialize():
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
 
+    log_system_activity(__name__, "Collector initialized.")
 
 def register_collector(collector):
     collectors[collector.type] = collector

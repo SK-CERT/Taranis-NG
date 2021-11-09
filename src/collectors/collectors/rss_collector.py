@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import uuid
+import traceback
 
 import feedparser
 from urllib.request import ProxyHandler
@@ -10,6 +11,7 @@ import dateparser
 
 from taranisng.schema.news_item import NewsItemData
 from taranisng.schema.parameter import Parameter, ParameterType
+from taranisng.managers.log_manager import log_debug
 from .base_collector import BaseCollector
 
 
@@ -103,3 +105,4 @@ class RSSCollector(BaseCollector):
 
         except Exception as error:
             BaseCollector.print_exception(source, error)
+            log_debug(traceback.format_exc())

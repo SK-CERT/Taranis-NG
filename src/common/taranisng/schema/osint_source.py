@@ -18,6 +18,14 @@ class OSINTSourceSchemaBase(Schema):
     def make_osint_source(self, data, **kwargs):
         return OSINTSource(**data)
 
+class OSINTSourceUpdateStatusSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    last_collected = fields.DateTime('%d.%m.%Y - %H:%M:%s')
+    last_attempted = fields.DateTime('%d.%m.%Y - %H:%M:%s')
+    last_error_message = fields.Str()
+    last_data = fields.Raw()
 
 class OSINTSourceSchema(OSINTSourceSchemaBase):
     id = fields.Str()
