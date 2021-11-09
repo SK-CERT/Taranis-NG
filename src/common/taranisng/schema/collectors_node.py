@@ -22,13 +22,14 @@ class CollectorsNodePresentationSchema(CollectorsNodeSchema, PresentationSchema)
 
 class CollectorsNode:
 
-    def __init__(self, id, name, description, api_url, api_key, collectors):
+    def __init__(self, id, name, description, api_url, api_key, collectors, status):
         self.id = id
         self.name = name
         self.description = description
         self.api_url = api_url
         self.api_key = api_key
         self.collectors = collectors
+        self.status = status
 
     @classmethod
     def create(cls, data):
