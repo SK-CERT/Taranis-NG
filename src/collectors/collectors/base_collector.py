@@ -225,12 +225,12 @@ class BaseCollector:
         # cancel all existing jobs
         # TODO: cannot cancel jobs that are running and are scheduled for further in time than 60 seconds
         # updating of the configuration needs to be done more gracefully
-        # for source in self.osint_sources:
-        #     try:
-        #         time_manager.cancel_job(source.scheduler_job)
-        #     except:
-        #         pass
-        # self.osint_sources = []
+        for source in self.osint_sources:
+            try:
+                time_manager.cancel_job(source.scheduler_job)
+            except:
+                pass
+        self.osint_sources = []
 
         # get new node configuration
         response, code = CoreApi.get_osint_sources(self.type)
