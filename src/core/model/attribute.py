@@ -156,12 +156,12 @@ class Attribute(db.Model):
         self.subtitle = self.description
 
         switcher = {
-            AttributeType.STRING: "mdi-textbox",
+            AttributeType.STRING: "mdi-form-textbox",
             AttributeType.NUMBER: "mdi-numeric",
             AttributeType.BOOLEAN: "mdi-checkbox-marked-outline",
             AttributeType.RADIO: "mdi-radiobox-marked",
             AttributeType.ENUM: "mdi-format-list-bulleted-type",
-            AttributeType.TEXT: "mdi-textarea",
+            AttributeType.TEXT: "mdi-form-textarea",
             AttributeType.RICH_TEXT: "mdi-format-font",
             AttributeType.DATE: "mdi-calendar-blank-outline",
             AttributeType.TIME: "clock-outline",
