@@ -96,7 +96,7 @@
                                             :key="attribute_group.id">
                                         <v-card-title>{{ attribute_group.title }}</v-card-title>
                                         <v-card-text>
-                                        {&perc; for report_item in data &perc;}
+                                        {{ '{{' }} for report_item in data {{ '}}' }}
                                         </v-card-text>
                                         <v-card-text v-for="attribute_item in attribute_group.attribute_group_items"
                                                      :key="attribute_item.id">
