@@ -10,7 +10,7 @@ import dateparser
 
 from taranisng.schema.news_item import NewsItemData
 from taranisng.schema.parameter import Parameter, ParameterType
-from taranisng.managers.log_manager import log_debug
+from taranisng.managers import log_manager
 from .base_collector import BaseCollector
 
 
@@ -29,10 +29,11 @@ class RSSCollector(BaseCollector):
     news_items = []
 
     def collect(self, source):
-        log_debug("{} collection started...".format(self.type))
 
         feed_url = source.parameter_values['FEED_URL']
         interval = source.parameter_values['REFRESH_INTERVAL']
+
+        log_manager.log_collector_activity('rss', source.id, 'Starting collector for url: {}'.format(feed_url))
 
         user_agent = source.parameter_values['USER_AGENT']
         if user_agent:
@@ -59,6 +60,8 @@ class RSSCollector(BaseCollector):
             else:
                 feed = feedparser.parse(feed_url)
 
+            log_manager.log_collector_activity('rss', source.id, 'RSS returned feed with {} entries'.format(len(feed['entries'])))
+
             news_items = []
 
             for feed_entry in feed['entries']:
@@ -73,12 +76,18 @@ class RSSCollector(BaseCollector):
 
                 # if published > limit: TODO: uncomment after testing, we need some initial data now
                 link_for_article = feed_entry['link']
+                log_manager.log_collector_activity('rss', source.id, 'Processing entry [{}]'.format(link_for_article))
 
-                if proxies:
-                    urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler(proxies)))
+                # FIXME FIXME FIXME: return back when able. Totally breaks urllib
+#                if proxies:
+#                    urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler(proxies)))
 
-                with urllib.request.urlopen(urllib.request.Request(link_for_article, headers=user_agent_headers)) as response:
-                    html_content = response.read()
+                html_content = ''
+                request = urllib.request.Request(link_for_article)
+                request.add_header('User-Agent', user_agent)
+
+                with urllib.request.urlopen(request) as response:
+                   html_content = response.read()
 
                 soup = BeautifulSoup(html_content, features='html.parser')
 
@@ -103,7 +112,8 @@ class RSSCollector(BaseCollector):
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
+            log_manager.log_collector_activity('rss', source.id, 'RSS collection exceptionally failed')
             BaseCollector.print_exception(source, error)
-            log_debug(traceback.format_exc())
+            log_manager.log_debug(traceback.format_exc())
 
-        log_debug("{} collection finished.".format(self.type))
+        log_manager.log_debug("{} collection finished.".format(self.type))

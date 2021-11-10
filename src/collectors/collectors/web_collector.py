@@ -134,7 +134,7 @@ class WebCollector(BaseCollector):
             failure_retval = ''
 
         try:
-            ret = WebCollector.__safe_find_element_by(driver, element_selector)
+            ret = WebCollector.__find_element_by(driver, element_selector)
             if not ret:
                 return failure_retval
             return ret.text
