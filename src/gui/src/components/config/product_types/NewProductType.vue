@@ -96,7 +96,7 @@
                                             :key="attribute_group.id">
                                         <v-card-title>{{ attribute_group.title }}</v-card-title>
                                         <v-card-text>
-                                        {% raw %}{{ for report_item in data }}{% endraw %}
+                                        {{ '{' }}% for report_item in data %{{ '}' }}
                                         </v-card-text>
                                         <v-card-text v-for="attribute_item in attribute_group.attribute_group_items"
                                                      :key="attribute_item.id">
@@ -105,7 +105,7 @@
                                                 v-html="attributeUsage(attribute_item)"></span></span>
                                         </v-card-text>
                                         <v-card-text>
-                                        {% raw %}{{ endfor }}{% endraw %}
+                                        {{ '{' }}% endfor %{{ '}' }}
                                         </v-card-text>
                                     </v-card>
                                 </div>
