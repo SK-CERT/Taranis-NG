@@ -95,11 +95,17 @@
                                             v-for="attribute_group in selected_type.attribute_groups"
                                             :key="attribute_group.id">
                                         <v-card-title>{{ attribute_group.title }}</v-card-title>
+                                        <v-card-text>
+                                        {&perc; for report_item in data &perc;}
+                                        </v-card-text>
                                         <v-card-text v-for="attribute_item in attribute_group.attribute_group_items"
                                                      :key="attribute_item.id">
                                             <span><strong>{{ attribute_item.title }}</strong>: <span class="pl-3 pr-3 pt-1 pb-1"
                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
                                                 v-html="attributeUsage(attribute_item)"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                        {&perc; endfor &perc;}
                                         </v-card-text>
                                     </v-card>
                                 </div>
@@ -171,9 +177,9 @@ export default {
         attributeUsage(attribute_item) {
             let variable = attribute_item.title.toLowerCase().replaceAll(" ", "_")
             if (attribute_item.max_occurrence > 1) {
-                return "{% <span style=\"color: #be6d7c\">for</span> item <span style=\"color: #be6d7c\">in</span> <span style=\"color: #6d9abe\">" + variable + "</span> %}{{ item }}{% <span style=\"color: #be6d7c\">endfor</span> %}"
+                return "{% <span style=\"color: #be6d7c\">for</span> entry <span style=\"color: #be6d7c\">in</span> <span style=\"color: #6d9abe\">report_item." + variable + "</span> %}{{ entry | e }}{% <span style=\"color: #be6d7c\">endfor</span> %}"
             } else {
-                return "{{ <span style=\"color: #6d9abe\">" + variable + "</span> }}"
+                return "{{ <span style=\"color: #6d9abe\">report_item." + variable + " | e</span> }}"
             }
         },
 
