@@ -1,6 +1,6 @@
 {% for report_item in data %}
-CONFIDENTIALITY: {% if report_item['confidentiality'][0] == 'UNRESTRICTED' %}Unrestricted{% endif %}{% if report_item['confidentiality'][0] == 'CLASSIFIED' %}Classified{% endif %}{% if report_item['confidentiality'][0] == 'CONFIDENTIAL' %}Confidential{% endif %}{% if report_item['confidentiality'][0] == 'SECRET' %}Secret{% endif %}{% if report_item['confidentiality'][0] == 'TOP SECRET' %}Top Secret{% endif %}
-TLP: {% if report_item['tlp'][0] == 'WHITE' %}cTLP:white{% endif %}{% if report_item['tlp'][0] == 'GREEN' %}TLP:green{% endif %}{% if report_item['tlp'][0] == 'AMBER' %}TLP:amber{% endif %}{% if report_item['tlp'][0] == 'RED' %}TLP:red{% endif %}
+CONFIDENTIALITY: {{ report_item['confidentiality'][0] }}
+TLP: {{ report_item['tlp'][0] }}
 CVSS VECTOR: {% if report_item['cvss'] %}{{ report_item['cvss'][0]|e }}{% endif %}
 DESCRIPTION: {% if report_item['description'] %}{{ report_item['description'][0]|e }}{% endif %}
 EXPOSURE DATE: {% if report_item['exposure_date'] %}{{ report_item['exposure_date'][0] }}{% endif %}
@@ -8,7 +8,7 @@ UPDATE DATE: {% if report_item['update_date'] %}{{ report_item['update_date'][0]
 CVE: {% if report_item['cve'] %}{{ report_item['cve'][0]|e }}{% endif %}
 IMPACT: {% if report_item['impact'] %}{{ report_item['impact'][0]|e }}{% endif %}
 IOC: {% if report_item['ioc'] %}{{ report_item['ioc'][0]|e }}{% endif %}
-{% for item in report_item['affected_systems'] %}AFFECTED SYSTEMS: {{ item|e }}{% endif %}
+{% for item in report_item['affected_systems'] %}AFFECTED SYSTEMS: {{ item|e }}{% endfor %}
 RECOMMENDATIONS: {% if report_item['recommendations'] %}{{ report_item['recommendations'][0]|e }}{% endif %}
 LINKS: {% if report_item['links']|length > 1 %}{{ report_item['links'][0]|e|length }}{% endif %}
 {% endfor %}
