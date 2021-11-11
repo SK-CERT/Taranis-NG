@@ -78,15 +78,17 @@ class RSSCollector(BaseCollector):
                 link_for_article = feed_entry['link']
                 log_manager.log_collector_activity('rss', source.id, 'Processing entry [{}]'.format(link_for_article))
 
-                # FIXME FIXME FIXME: return back when able. Totally breaks urllib
-#                if proxies:
-#                    urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler(proxies)))
+                # set up proxy for the crawling
+                opener = urllib.request.urlopen
+                if proxies:
+                    opener = urllib.request.build_opener(urllib.request.ProxyHandler(proxies)).open
+                    
 
                 html_content = ''
                 request = urllib.request.Request(link_for_article)
                 request.add_header('User-Agent', user_agent)
 
-                with urllib.request.urlopen(request) as response:
+                with opener(request) as response:
                    html_content = response.read()
 
                 soup = BeautifulSoup(html_content, features='html.parser')
