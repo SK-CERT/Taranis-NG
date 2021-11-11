@@ -9,6 +9,10 @@ unstructured **news items**. These are processed by analysts to create
 structured **report items**, which are used to create **products** such as PDF
 files, which are finally **published**.
 
+Taranis supports **team-to-team collaboration**, and includes a light weight
+**self service asset management** which automatically links to the advisories
+that mention vulnerabilities in the software.
+
 | Type      | Name                 | Description                           |
 | :-------- | :------------------- | :------------------------------------ |
 | Collector | web                  | crawl web sites                       |
