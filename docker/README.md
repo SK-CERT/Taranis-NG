@@ -74,7 +74,7 @@ docker-compose -f docker/docker-compose.yml up --build
 ```
 
 **Voila, Taranis NG is up and running. Visit your instance by navigating to
-[http://127.0.0.1:8080/](http://127.0.0.1:8080/) using your web browser**.
+[https://localhost:4443/](https://localhost:4443/) using your web browser**.
 
 Your Taranis NG instance now needs to be configured.  Continue
 [here](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
