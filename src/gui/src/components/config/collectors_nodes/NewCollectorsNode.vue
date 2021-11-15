@@ -93,7 +93,8 @@
                 description: "",
                 api_url: "",
                 api_key: "",
-                collectors: []
+                collectors: [],
+                status: 0
             }
         }),
         mixins: [AuthMixin],

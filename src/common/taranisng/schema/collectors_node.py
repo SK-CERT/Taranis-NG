@@ -10,6 +10,7 @@ class CollectorsNodeSchema(Schema):
     api_url = fields.Str()
     api_key = fields.Str()
     collectors = fields.List(fields.Nested(CollectorSchema))
+    status = fields.Int()
 
     @post_load
     def make_collectors_node(self, data, **kwargs):
