@@ -194,6 +194,7 @@ Currently, you may manage the following:
 | `sample-data` | Install sample data with basic configuration.<br />*This is for show-case and testing purposes only.* | N/A |
 | `account`     | (WIP) List, create, edit and delete user accounts. | `--list`, `-l` : list all user accounts<br /> `--create`, `-c` : create a new user account<br /> `--edit`, `-e` : edit an existing user account<br /> `--delete`, `-d` : delete a user account<br /> `--username` : specify the username<br /> `--name` : specify the user's name<br /> `--password` : specify the user's password<br /> `--roles` : specify a list of roles, divided by a comma (`,`), that the user belongs to |
 | `role`     | (WIP) List, create, edit and delete user roles. | `--list`, `-l` : list all roles<br /> `--filter`, `-f` : filter roles by their name or description<br /> `--create`, `-c` : create a new role<br /> `--edit`, `-e` : edit an existing role<br /> `--delete`, `-d` : delete a role<br /> `--id` : specify the role id (in combination with `--edit` or `--delete`)<br /> `--name` : specify the role name<br /> `--description` : specify the role description (default is `""`)<br /> `--permissions` : specify a list of permissions, divided with a comma (`,`), that the role would allow |
+| `collector`     | (WIP) List, create, edit, delete and update collector nodes. | `--list`, `-l` : list all collector nodes<br /> `--create`, `-c` : create a new node<br /> `--edit`, `-e` : edit an existing node<br /> `--delete`, `-d` : delete a node<br /> `--update`, `-u` : re-initialize collector node<br /> `--all`, `-a` : update all collector nodes (in combination with `--update`)<br /> `--show-api-key` : show API key in plaintext (in combination with `--list`)<br /> `--id` : specify the node id (in combination with `--edit`, `--delete` or `--update`)<br /> `--name` : specify the node name<br /> `--description` : specify the collector description (default is `""`)<br /> `--api-url` : specify the collector node API url<br /> `--api-key` : specify the collector node API key |
 | `dictionary`     | Update CPE and CVE dictionaries. | `--upload-cpe` : upload the CPE dictionary (expected on STDIN in XML format) to the path indicated by `CPE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cve` : upload the CVE dictionary (expected on STDIN in XML format) to the path indicated by `CVE_UPDATE_FILE`, and update the database from that file |
 
 
@@ -246,6 +247,40 @@ Id: 3
 	Name: Custom role 1
 	Description: Custom role with analysis and assessment access
 	Permissions: ['ANALYZE_ACCESS', 'ANALYZE_CREATE', 'ANALYZE_UPDATE', 'ANALYZE_DELETE', 'ASSESS_ACCESS', 'ASSESS_CREATE', 'ASSESS_UPDATE', 'ASSESS_DELETE', 'MY_ASSETS_ACCESS', 'MY_ASSETS_CREATE', 'MY_ASSETS_CONFIG']
+```
+
+##### Create a new collector node
+
+```bash
+python manage.py collector \
+    --create \
+    --name "Docker collector" \
+    --description "A simple collector hosted in a Docker container" \
+    --api-url "http://collector.example.com" \
+    --api-key "supersecret"
+```
+
+Command output:
+
+```
+Collector node 'Docker collector' with id 1 created.
+```
+
+##### Re-initialize a collector node
+
+```bash
+python manage.py collector \
+    --update \
+    --name "Docker"
+```
+
+Command output:
+
+```
+Collector node 1 updated.
+Collector node 2 updated.
+Unable to update collector node 3.
+    Response: [401] ""
 ```
 
 ##### Create a new user account
