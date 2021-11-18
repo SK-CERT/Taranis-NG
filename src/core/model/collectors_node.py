@@ -11,7 +11,7 @@ class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
     @post_load
     def make_collectors_node(self, data, **kwargs):
-        return CollectorsNode(**data)
+        return CollectorsNode(id=data['id'], name=data['name'], description=data['description'], api_url=data['api_url'], api_key=data['api_key'], collectors=data['collectors'])
 
 
 class CollectorsNode(db.Model):
