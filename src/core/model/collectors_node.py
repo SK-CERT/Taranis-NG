@@ -23,7 +23,7 @@ class CollectorsNode(db.Model):
     api_key = db.Column(db.String(), nullable=False)
 
     created = db.Column(db.DateTime, default=datetime.now)
-    last_seen = db.Column(db.DateTime, default=None)
+    last_seen = db.Column(db.DateTime, default=datetime.now)
 
     collectors = db.relationship('Collector', back_populates="node", cascade="all")
 
