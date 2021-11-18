@@ -11,7 +11,7 @@ class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
     @post_load
     def make_collectors_node(self, data, **kwargs):
-        return CollectorsNode(id=data['id'], name=data['name'], description=data['description'], api_url=data['api_url'], api_key=data['api_key'], collectors=data['collectors'])
+        return CollectorsNode(name=data['name'], description=data['description'], api_url=data['api_url'], api_key=data['api_key'])
 
 
 class CollectorsNode(db.Model):
@@ -27,7 +27,7 @@ class CollectorsNode(db.Model):
 
     collectors = db.relationship('Collector', back_populates="node", cascade="all")
 
-    def __init__(self, id, name, description, api_url, api_key, collectors):
+    def __init__(self, name, description, api_url, api_key):
         self.id = str(uuid.uuid4())
         self.name = name
         self.description = description

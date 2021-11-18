@@ -88,13 +88,10 @@
             show_validation_error: false,
             show_error: false,
             node: {
-                id: "",
                 name: "",
                 description: "",
                 api_url: "",
-                api_key: "",
-                collectors: [],
-                status: 0
+                api_key: ""
             }
         }),
         mixins: [AuthMixin],

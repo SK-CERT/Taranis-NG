@@ -182,7 +182,7 @@ def main(db):
 #     collector_rss = Collector("RSS Collector", "Collector for gathering data from RSS feeds", "RSS_COLLECTOR",
 #                             [param1, param2, param3])
 
-#     collectors_node = CollectorsNode(None, "Node A", "First collectors node", "http://127.0.0.1:5001", "12345", [])
+#     collectors_node = CollectorsNode("Node A", "First collectors node", "http://127.0.0.1:5001", "12345")
 #     collectors_node.collectors.append(collector_rss)
 #     db.session.add(collectors_node)
 
