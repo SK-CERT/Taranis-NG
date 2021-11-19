@@ -44,9 +44,9 @@ COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 COPY ./src/core/. /app/core
 COPY ./src/common/. /app/common
 
-RUN ls -s /app/core/manage.py /app/manage.py && \
+RUN ln -s /app/core/manage.py /app/manage.py && \
     chmod +x /app/core/manage.py && \
-    ls -s /app/core/db_migration.py /app/db_migration.py && \
+    ln -s /app/core/db_migration.py /app/db_migration.py && \
     chmod +x /app/core/db_migration.py
 
 EXPOSE 80
