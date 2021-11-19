@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 
 import paramiko
 
-from publishers.base_publisher import BasePublisher
+from .base_publisher import BasePublisher
 from taranisng.schema.parameter import Parameter, ParameterType
 
 

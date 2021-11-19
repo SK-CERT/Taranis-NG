@@ -1,5 +1,5 @@
 import os
-
+import json
 import requests
 
 
@@ -17,7 +17,7 @@ class CoreApi:
                                                                                       'bot_type': bot_type},
                                      headers=cls.headers)
             return response.json(), response.status_code
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError):
             return {}, 503
 
     @classmethod

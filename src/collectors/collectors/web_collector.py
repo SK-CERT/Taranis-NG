@@ -7,23 +7,20 @@ import copy
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, InvalidSessionIdException
+from selenium.common.exceptions import NoSuchElementException
 
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 from urllib.parse import urlparse
-from urllib.error import HTTPError, URLError
 
 import os
 import dateparser
-import base64
 import re
 from taranisng.managers import log_manager
 
-from collectors.base_collector import BaseCollector
+from .base_collector import BaseCollector
 from taranisng.schema.news_item import NewsItemData, NewsItemAttribute
 from taranisng.schema.parameter import Parameter, ParameterType
 

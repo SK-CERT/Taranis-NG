@@ -3,7 +3,7 @@ from base64 import b64encode
 
 import jinja2
 
-from presenters.base_presenter import BasePresenter
+from .base_presenter import BasePresenter
 from taranisng.schema.parameter import Parameter, ParameterType
 
 

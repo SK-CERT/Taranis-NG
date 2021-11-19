@@ -6,7 +6,7 @@ import poplib
 from email import policy
 import email.header
 import email.utils
-from collectors.base_collector import BaseCollector
+from .base_collector import BaseCollector
 from taranisng.schema.news_item import NewsItemData, NewsItemAttribute
 from taranisng.schema.parameter import Parameter, ParameterType
 import socket

@@ -1,6 +1,6 @@
-from bots.grouping_bot import GroupingBot
-from bots.analyst_bot import AnalystBot
-from bots.wordlist_updater_bot import WordlistUpdaterBot
+from bots.bots.grouping_bot import GroupingBot
+from bots.bots.analyst_bot import AnalystBot
+from bots.bots.wordlist_updater_bot import WordlistUpdaterBot
 
 bots = {}
 

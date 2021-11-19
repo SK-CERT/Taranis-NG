@@ -4,7 +4,7 @@ from datetime import datetime
 
 import requests
 
-from publishers.base_publisher import BasePublisher
+from .base_publisher import BasePublisher
 from taranisng.schema.parameter import Parameter, ParameterType
 
 

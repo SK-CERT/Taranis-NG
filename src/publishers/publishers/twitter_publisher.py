@@ -2,7 +2,7 @@ from base64 import b64decode
 
 import tweepy
 
-from publishers.base_publisher import BasePublisher
+from .base_publisher import BasePublisher
 from taranisng.schema.parameter import Parameter, ParameterType
 
 

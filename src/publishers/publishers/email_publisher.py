@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 
 import gnupg
 
-from publishers.base_publisher import BasePublisher
+from .base_publisher import BasePublisher
 from taranisng.schema.parameter import Parameter, ParameterType
 
 
