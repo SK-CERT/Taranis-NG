@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
 from os import path, chdir
 import sys
 import os
+from pathlib import Path
 
-chdir(path.dirname(path.abspath(__file__)))
-sys.path.append(path.abspath('.'))
-sys.path.append(path.abspath('../taranis-ng-common'))
+chdir(path.dirname(Path(__file__).resolve()))
+sys.path.append(path.abspath('./'))
+sys.path.append(path.abspath('../common'))
 
 from app import create_app
 

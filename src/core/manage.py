@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
+
 from os import abort, path, chdir, getenv, read
 import sys
 import socket
 import time
+from pathlib import Path
 
-chdir(path.dirname(path.abspath(__file__)))
-sys.path.append(path.abspath('.'))
-sys.path.append(path.abspath('../taranis-ng-common'))
+chdir(path.dirname(Path(__file__).resolve()))
+sys.path.append(path.abspath('./'))
+sys.path.append(path.abspath('../common'))
 
 import logging
 from flask import Flask
@@ -299,6 +302,7 @@ class CollectorManagement(Command):
                     abort()
 
             for node in nodes:
+                # refresh collector node id
                 collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
                 if status_code == 200:
                     print('Collector node {} updated.'.format(node.id))
