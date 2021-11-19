@@ -3,7 +3,7 @@ import sys
 import socket
 import time
 
-chdir('/app/taranis-ng-core/')
+chdir(path.dirname(path.abspath(__file__)))
 sys.path.append(path.abspath('.'))
 sys.path.append(path.abspath('../taranis-ng-common'))
 
