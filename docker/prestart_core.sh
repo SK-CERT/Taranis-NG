@@ -3,16 +3,16 @@
 echo "Running inside /app/prestart.sh..."
 
 echo "Running migrations..."
-db_migration.py db upgrade head
+/app/db_migration.py db upgrade head
 echo "Done."
 
 if [[ -n "$TARANIS_NG_SAMPLE_DATA" ]]; then
 
-    manage.py sample-data
+    /app/manage.py sample-data
 
 elif [[ -n "$TARANIS_NG_ADMIN_USERNAME" && -n "$TARANIS_NG_ADMIN_PASSWORD" ]]; then
 
-    manage.py role \
+    /app/manage.py role \
         --create \
         --name "Admin role" \
         --description "Administrator role with full privileges" \
@@ -56,6 +56,6 @@ elif [[ -n "$TARANIS_NG_ADMIN_USERNAME" && -n "$TARANIS_NG_ADMIN_PASSWORD" ]]; t
 
     ROLE_ID=$(python manage.py role --list --filter "Admin role" | grep -i id | awk '{print $2}')
 
-    manage.py account --create --username "$TARANIS_NG_ADMIN_USERNAME" --password "$TARANIS_PASSWORD" --roles $ROLE_ID
+    /app/manage.py account --create --username "$TARANIS_NG_ADMIN_USERNAME" --password "$TARANIS_PASSWORD" --roles $ROLE_ID
 
 fi
