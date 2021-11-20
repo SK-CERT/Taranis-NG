@@ -1,6 +1,6 @@
 from managers.db_manager import db
 from marshmallow import post_load, fields
-from taranisng.schema.parameter_value import ParameterValueSchema
+from schema.parameter_value import ParameterValueSchema
 
 
 class NewParameterValueSchema(ParameterValueSchema):

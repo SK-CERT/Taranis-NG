@@ -1,6 +1,6 @@
 from managers.db_manager import db
 from marshmallow import post_load, fields
-from taranisng.schema.bot_preset import BotPresetSchema, BotPresetPresentationSchema
+from schema.bot_preset import BotPresetSchema, BotPresetPresentationSchema
 from model.bots_node import BotsNode
 from model.parameter_value import NewParameterValueSchema
 import uuid

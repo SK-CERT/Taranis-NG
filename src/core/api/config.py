@@ -16,7 +16,7 @@ from model import role
 from model import user
 from model import word_list
 from model.permission import Permission
-from taranisng.schema.role import PermissionSchema
+from schema.role import PermissionSchema
 
 
 class DictionariesReload(Resource):

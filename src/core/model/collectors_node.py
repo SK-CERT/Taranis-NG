@@ -1,11 +1,10 @@
 from managers.db_manager import db
 from marshmallow import post_load
 import uuid
-from taranisng.schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
-from taranisng.managers.log_manager import log_debug, log_debug_trace
+from schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
+from managers.log_manager import log_debug_trace
 from sqlalchemy import orm, or_, func
 from datetime import datetime
-from dateutil.parser import parse
 
 class NewCollectorsNodeSchema(CollectorsNodeSchema):
 

@@ -1,6 +1,6 @@
 from managers.db_manager import db
 from marshmallow import post_load
-from taranisng.schema.address import AddressSchema
+from schema.address import AddressSchema
 
 
 class NewAddressSchema(AddressSchema):

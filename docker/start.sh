@@ -12,4 +12,4 @@ else
 fi
 
 # Start Gunicorn
-LD_PRELOAD=/lib/libssl.so.1.1 exec gunicorn -k gevent -c "$GUNICORN_CONF" "$APP_MODULE"
+exec gunicorn -k gevent -c "$GUNICORN_CONF" "$APP_MODULE"

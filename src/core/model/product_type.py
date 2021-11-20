@@ -1,11 +1,11 @@
 from managers.db_manager import db
 import datetime
 from marshmallow import post_load, fields
-from taranisng.schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
+from schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
 from model.parameter_value import NewParameterValueSchema
 from sqlalchemy import func, or_, orm, and_
 from model.acl_entry import ACLEntry
-from taranisng.schema.acl_entry import ItemType
+from schema.acl_entry import ItemType
 import sqlalchemy
 from sqlalchemy.sql.expression import cast
 

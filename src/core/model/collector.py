@@ -1,7 +1,7 @@
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.parameter import NewParameterSchema
-from taranisng.schema.collector import CollectorSchema
+from schema.collector import CollectorSchema
 import uuid
 
 

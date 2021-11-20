@@ -12,8 +12,7 @@ RUN \
     libpq \
     curl
 
-COPY ./src/core/requirements.txt /app/core/requirements.txt
-COPY ./src/common/requirements.txt /app/common/requirements.txt
+COPY ./src/core/requirements.txt /app/requirements.txt
 
 # install dependencies
 RUN \
@@ -26,8 +25,7 @@ RUN \
     python3-dev \
     libffi-dev \
     postgresql-dev && \
-    pip install --no-cache-dir -r /app/core/requirements.txt && \
-    pip install --no-cache-dir -r /app/common/requirements.txt && \
+    pip install --no-cache-dir -r /app/requirements.txt && \
     apk --purge del .build-deps
 
 COPY ./docker/start.sh /start.sh
@@ -41,19 +39,16 @@ RUN chmod +x /entrypoint.sh
 
 COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
-COPY ./src/core/. /app/core
-COPY ./src/common/. /app/common
+COPY ./src/core/. /app/
 
-RUN ln -s /app/core/manage.py /app/manage.py && \
-    chmod +x /app/core/manage.py && \
-    ln -s /app/core/db_migration.py /app/db_migration.py && \
-    chmod +x /app/core/db_migration.py
+RUN chmod +x /app/manage.py && \
+    chmod +x /app/db_migration.py
 
 EXPOSE 80
 
 # setup environment variables
 ENV PYTHONPATH=/app
-ENV MODULE_NAME core.run
+ENV MODULE_NAME run
 ENV VARIABLE_NAME app
 ENV GUNICORN_CMD_ARGS --timeout 120 --preload
 ENV WORKERS_PER_CORE 8

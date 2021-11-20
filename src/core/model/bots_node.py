@@ -1,7 +1,7 @@
 from managers.db_manager import db
 from marshmallow import post_load
 import uuid
-from taranisng.schema.bots_node import BotsNodeSchema, BotsNodePresentationSchema
+from schema.bots_node import BotsNodeSchema, BotsNodePresentationSchema
 from sqlalchemy import func, or_, orm
 
 

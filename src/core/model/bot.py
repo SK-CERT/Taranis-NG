@@ -1,7 +1,7 @@
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.parameter import NewParameterSchema
-from taranisng.schema.bot import BotSchema
+from schema.bot import BotSchema
 import uuid
 
 

@@ -1,6 +1,6 @@
 from managers.db_manager import db
 from marshmallow import post_load, fields
-from taranisng.schema.publisher_preset import PublisherPresetSchema, PublisherPresetPresentationSchema
+from schema.publisher_preset import PublisherPresetSchema, PublisherPresetPresentationSchema
 from model.parameter_value import NewParameterValueSchema
 from model.publishers_node import PublishersNode
 import uuid

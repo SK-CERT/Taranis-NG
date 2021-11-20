@@ -1,8 +1,7 @@
 from managers.db_manager import db
 from sqlalchemy import orm, func, or_
 from marshmallow import post_load, fields
-from taranisng.schema.notification_template import NotificationTemplatePresentationSchema, NotificationTemplateSchema, \
-    EmailRecipientSchema
+from schema.notification_template import NotificationTemplatePresentationSchema, NotificationTemplateSchema, EmailRecipientSchema
 
 
 class NewEmailRecipientSchema(EmailRecipientSchema):

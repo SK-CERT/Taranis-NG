@@ -1,10 +1,12 @@
-from managers.db_manager import db
-from taranisng.schema.asset import *
-from taranisng.schema.user import UserIdSchema
-from taranisng.schema.notification_template import NotificationTemplateIdSchema
-from model.report_item import ReportItem
 import uuid
+from marshmallow import fields, post_load
 from sqlalchemy import orm, func, or_, text
+
+from managers.db_manager import db
+from schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
+from schema.user import UserIdSchema
+from schema.notification_template import NotificationTemplateIdSchema
+from model.report_item import ReportItem
 from model.user import User
 from model.notification_template import NotificationTemplate
 

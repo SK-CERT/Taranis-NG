@@ -1,13 +1,12 @@
 from managers.db_manager import db
 from marshmallow import post_load, fields
-from taranisng.schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, \
-    NewsItemSchema, NewsItemRemoteSchema
+from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, NewsItemRemoteSchema
 from model.osint_source import OSINTSourceGroup
 from model.tag_cloud import TagCloud
 from datetime import *
 import base64
 from model.acl_entry import ACLEntry
-from taranisng.schema.acl_entry import ItemType
+from schema.acl_entry import ItemType
 from sqlalchemy import orm, and_, or_, func
 from model.osint_source import OSINTSource
 import uuid

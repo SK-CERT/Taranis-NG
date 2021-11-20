@@ -1,7 +1,7 @@
 from managers.db_manager import db
 from model.permission import Permission
 from marshmallow import fields, post_load
-from taranisng.schema.role import RoleSchemaBase, RoleSchema, PermissionIdSchema, RolePresentationSchema
+from schema.role import RoleSchemaBase, PermissionIdSchema, RolePresentationSchema
 from sqlalchemy import func, or_, orm
 
 

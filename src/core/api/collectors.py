@@ -6,8 +6,8 @@ from managers import sse_manager
 from managers.auth_manager import api_key_required
 
 from model import osint_source, collectors_node, news_item
-from taranisng.schema.osint_source import OSINTSourceUpdateStatusSchema
-from taranisng.managers.log_manager import log_debug
+from schema.osint_source import OSINTSourceUpdateStatusSchema
+from managers.log_manager import log_debug
 
 
 class OSINTSourcesForCollectors(Resource):

@@ -1,7 +1,7 @@
 from managers.db_manager import db
 from marshmallow import post_load
 import uuid
-from taranisng.schema.presenters_node import PresentersNodeSchema, PresentersNodePresentationSchema
+from schema.presenters_node import PresentersNodeSchema, PresentersNodePresentationSchema
 from sqlalchemy import func, or_, orm
 
 

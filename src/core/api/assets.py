@@ -6,7 +6,7 @@ from managers.auth_manager import auth_required
 from model import asset, notification_template
 from model import attribute
 from model.permission import Permission
-from taranisng.schema.attribute import AttributeType
+from schema.attribute import AttributeType
 
 
 class AssetGroups(Resource):

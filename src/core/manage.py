@@ -1,15 +1,8 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python
 
-from os import abort, path, chdir, getenv, read
-import sys
+from os import abort, getenv, read
 import socket
 import time
-from pathlib import Path
-
-chdir(path.dirname(Path(__file__).resolve()))
-sys.path.append(path.abspath('./'))
-sys.path.append(path.abspath('../common'))
-
 import logging
 from flask import Flask
 from flask_script import Manager,Command
