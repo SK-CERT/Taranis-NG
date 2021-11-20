@@ -1,20 +1,12 @@
 from flask import request
 from flask_restful import Resource
 
-from managers import auth_manager, sse_manager, remote_manager, presenters_manager, publishers_manager, bots_manager, \
-    external_auth_manager, log_manager
-from managers import collectors_manager
+from managers import auth_manager, sse_manager, remote_manager, presenters_manager, \
+    publishers_manager, bots_manager, external_auth_manager, log_manager, collectors_manager
 from managers.auth_manager import auth_required, get_user_from_jwt
-from model import acl_entry, remote, presenters_node, publisher_preset, publishers_node, bots_node, bot_preset
-from model import attribute
-from model import collectors_node
-from model import organization
-from model import osint_source
-from model import product_type
-from model import report_item_type
-from model import role
-from model import user
-from model import word_list
+from model import acl_entry, remote, presenters_node, publisher_preset, publishers_node, \
+    bots_node, bot_preset, attribute, collectors_node, organization, osint_source, product_type, \
+    report_item_type, role, user, word_list
 from model.permission import Permission
 from schema.role import PermissionSchema
 

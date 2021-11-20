@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-
 from marshmallow import post_load, fields
 from sqlalchemy import orm, func, or_, and_
 from sqlalchemy.types import JSON

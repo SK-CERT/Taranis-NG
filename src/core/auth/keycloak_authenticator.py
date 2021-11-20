@@ -1,12 +1,11 @@
 from os import environ
-
 import jwt
 from flask_restful import request
 from requests import post
 from requests.auth import HTTPBasicAuth
 
-from auth.base_authenticator import BaseAuthenticator
 from managers import log_manager
+from auth.base_authenticator import BaseAuthenticator
 
 
 class KeycloakAuthenticator(BaseAuthenticator):

@@ -1,10 +1,11 @@
-from managers.db_manager import db
 from marshmallow import post_load
-import uuid
-from schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
-from managers.log_manager import log_debug_trace
 from sqlalchemy import orm, or_, func
+import uuid
 from datetime import datetime
+
+from managers.db_manager import db
+from managers.log_manager import log_debug_trace
+from schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
 
 class NewCollectorsNodeSchema(CollectorsNodeSchema):
 

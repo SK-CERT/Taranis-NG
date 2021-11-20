@@ -1,5 +1,4 @@
 import os
-
 from keycloak import KeycloakAdmin
 
 

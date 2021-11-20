@@ -3,8 +3,7 @@ from flask_restful import Resource
 
 from managers import auth_manager
 from managers.auth_manager import auth_required
-from model import asset, notification_template
-from model import attribute
+from model import asset, notification_template, attribute
 from model.permission import Permission
 from schema.attribute import AttributeType
 

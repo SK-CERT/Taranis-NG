@@ -4,11 +4,11 @@ from marshmallow import post_load, fields
 from sqlalchemy import orm, func, or_, and_
 
 from managers.db_manager import db
+from model.osint_source import OSINTSource
+from model.report_item_type import ReportItemType
 from schema.osint_source import OSINTSourceIdSchema
 from schema.remote import RemoteAccessSchema, RemoteAccessPresentationSchema, RemoteNodeSchema, RemoteNodePresentationSchema
 from schema.report_item_type import ReportItemTypeIdSchema
-from model.osint_source import OSINTSource
-from model.report_item_type import ReportItemType
 
 
 class NewRemoteAccessSchema(RemoteAccessSchema):

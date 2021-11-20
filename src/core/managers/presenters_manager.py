@@ -1,8 +1,8 @@
 from model.presenters_node import PresentersNode
 from model.presenter import Presenter
+from model.product import Product
 from remote.presenters_api import PresentersApi
 from schema.presenters_node import PresentersNode as PresentersNodeSchema
-from model.product import Product
 from schema.presenter import PresenterInput, PresenterInputSchema
 
 

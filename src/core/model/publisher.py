@@ -1,8 +1,9 @@
-from managers.db_manager import db
 from marshmallow import fields, post_load
+import uuid
+
+from managers.db_manager import db
 from model.parameter import NewParameterSchema
 from schema.publisher import PublisherSchema
-import uuid
 
 
 class NewPublisherSchema(PublisherSchema):

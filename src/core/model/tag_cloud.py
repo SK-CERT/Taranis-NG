@@ -1,6 +1,5 @@
 import datetime
 import re
-
 from marshmallow import post_load
 from sqlalchemy import func
 from sqlalchemy.sql import label

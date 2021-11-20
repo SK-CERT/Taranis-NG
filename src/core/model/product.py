@@ -1,5 +1,4 @@
-from datetime import *
-
+from datetime import datetime
 import sqlalchemy
 from marshmallow import fields
 from marshmallow import post_load

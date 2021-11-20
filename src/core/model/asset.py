@@ -3,12 +3,12 @@ from marshmallow import fields, post_load
 from sqlalchemy import orm, func, or_, text
 
 from managers.db_manager import db
-from schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
-from schema.user import UserIdSchema
-from schema.notification_template import NotificationTemplateIdSchema
 from model.report_item import ReportItem
 from model.user import User
 from model.notification_template import NotificationTemplate
+from schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
+from schema.user import UserIdSchema
+from schema.notification_template import NotificationTemplateIdSchema
 
 
 class NewAssetCpeSchema(AssetCpeSchema):

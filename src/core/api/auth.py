@@ -1,5 +1,4 @@
 import urllib
-
 from flask import redirect, make_response
 from flask_restful import Resource, reqparse, request, ResponseBase
 

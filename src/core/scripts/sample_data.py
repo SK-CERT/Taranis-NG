@@ -1,3 +1,7 @@
+import sys
+from sqlalchemy.exc import IntegrityError
+
+from managers import db_manager
 from model.role import Role
 from model.permission import Permission
 from model.user import User
@@ -8,14 +12,10 @@ from model.collector import Collector
 from model.parameter import Parameter
 from model.parameter_value import ParameterValue
 from model.attribute import Attribute, AttributeEnum
-from schema.attribute import AttributeType
-from schema.parameter import ParameterType
 from model.report_item_type import ReportItemType, AttributeGroup, AttributeGroupItem
 from model.osint_source import OSINTSource, OSINTSourceGroup
-from managers import db_manager
-import sys
-
-from sqlalchemy.exc import IntegrityError
+from schema.attribute import AttributeType
+from schema.parameter import ParameterType
 
 
 def main(db):

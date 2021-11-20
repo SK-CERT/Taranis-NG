@@ -2,16 +2,15 @@ import os
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
-
 import jwt
 from flask import request
 from flask_jwt_extended import JWTManager, get_jwt_claims, get_jwt_identity, verify_jwt_in_request, get_raw_jwt
 from flask_jwt_extended.exceptions import JWTExtendedException
 
+from managers import log_manager, time_manager
 from auth.keycloak_authenticator import KeycloakAuthenticator
 from auth.openid_authenticator import OpenIDAuthenticator
 from auth.test_authenticator import TestAuthenticator
-from managers import log_manager, time_manager
 from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup

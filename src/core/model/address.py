@@ -1,5 +1,6 @@
-from managers.db_manager import db
 from marshmallow import post_load
+
+from managers.db_manager import db
 from schema.address import AddressSchema
 
 

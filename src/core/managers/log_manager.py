@@ -4,7 +4,6 @@ import re
 import socket
 from logging import getLogger
 import traceback
-
 from flask import request
 
 from managers.db_manager import db

@@ -1,5 +1,6 @@
-from auth.base_authenticator import BaseAuthenticator
 from flask_oidc import OpenIDConnect
+
+from auth.base_authenticator import BaseAuthenticator
 
 oidc = OpenIDConnect()
 

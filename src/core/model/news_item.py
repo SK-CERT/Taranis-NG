@@ -1,15 +1,15 @@
-from managers.db_manager import db
 from marshmallow import post_load, fields
-from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, NewsItemRemoteSchema
-from model.osint_source import OSINTSourceGroup
-from model.tag_cloud import TagCloud
-from datetime import *
+from sqlalchemy import orm, and_, or_, func
+from datetime import datetime
 import base64
+import uuid
+
+from managers.db_manager import db
+from model.osint_source import OSINTSourceGroup, OSINTSource
+from model.tag_cloud import TagCloud
 from model.acl_entry import ACLEntry
 from schema.acl_entry import ItemType
-from sqlalchemy import orm, and_, or_, func
-from model.osint_source import OSINTSource
-import uuid
+from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, NewsItemRemoteSchema
 
 
 class NewNewsItemAttributeSchema(NewsItemAttributeSchema):
