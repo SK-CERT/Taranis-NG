@@ -309,6 +309,8 @@ class WebCollector(BaseCollector):
     def __get_headless_driver_chrome(self):
         """Initializes and returns Chrome driver"""
 
+        chrome_driver_executable = os.environ.get('SELENIUM_CHROME_DRIVER_PATH', '/usr/local/bin/chromedriver')
+
         chrome_options = ChromeOptions()
         chrome_options.page_load_strategy = 'normal' # .get() returns on document ready
         chrome_options.add_argument("--headless")
@@ -319,7 +321,7 @@ class WebCollector(BaseCollector):
         if self.tor_service.lower() == 'yes':
             socks_proxy = "socks5://127.0.0.1:9050"
             chrome_options.add_argument('--proxy-server={}'.format(socks_proxy))
-            driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', options=chrome_options)
+            driver = webdriver.Chrome(executable_path=chrome_driver_executable, options=chrome_options)
         elif self.proxy:
             webdriver.DesiredCapabilities.CHROME['proxy'] = {
                 "proxyType": "MANUAL",
@@ -327,13 +329,15 @@ class WebCollector(BaseCollector):
                 "ftpProxy": self.proxy,
                 "sslProxy": self.proxy
             }
-            driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', options=chrome_options)
+            driver = webdriver.Chrome(executable_path=chrome_driver_executable, options=chrome_options)
         else:
-            driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', options=chrome_options)
+            driver = webdriver.Chrome(executable_path=chrome_driver_executable, options=chrome_options)
         return driver
 
     def __get_headless_driver_firefox(self):
         """Initializes and returns Firefox driver"""
+
+        firefox_driver_executable = os.environ.get('SELENIUM_FIREFOX_DRIVER_PATH', '/usr/local/bin/geckodriver')
 
         firefox_options = FirefoxOptions()
         firefox_options.page_load_strategy = 'normal' # .get() returns on document ready
@@ -347,7 +351,7 @@ class WebCollector(BaseCollector):
             profile.set_preference('network.proxy.type', 1)
             profile.set_preference('network.proxy.socks', '127.0.0.1')
             profile.set_preference('network.proxy.socks_port', 9050)
-            driver = webdriver.Firefox(profile, executable_path='/usr/local/bin/geckodriver',
+            driver = webdriver.Firefox(profile, executable_path=firefox_driver_executable,
                                        options=firefox_options)
         elif self.proxy:
             firefox_capabilities = webdriver.DesiredCapabilities.FIREFOX
@@ -358,10 +362,10 @@ class WebCollector(BaseCollector):
                 "ftpProxy": self.proxy,
                 "sslProxy": self.proxy
             }
-            driver = webdriver.Firefox(executable_path='/usr/local/bin/geckodriver', options=firefox_options,
+            driver = webdriver.Firefox(executable_path=firefox_driver_executable, options=firefox_options,
                                        capabilities=firefox_capabilities)
         else:
-            driver = webdriver.Firefox(executable_path='/usr/local/bin/geckodriver', options=firefox_options)
+            driver = webdriver.Firefox(executable_path=firefox_driver_executable, options=firefox_options)
         return driver
 
     def __get_headless_driver(self):
