@@ -2,12 +2,11 @@ import datetime
 import os
 import tempfile
 from base64 import b64encode
-
 import jinja2
 import pdfkit
 
 from .base_presenter import BasePresenter
-from taranisng.schema.parameter import Parameter, ParameterType
+from schema.parameter import Parameter, ParameterType
 
 
 class PDFPresenter(BasePresenter):

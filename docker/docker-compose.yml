@@ -141,7 +141,7 @@ services:
     ports:
       - "5002:80"
     volumes:
-      - "presenters_templates:/app/taranis-ng-presenters/templates"
+      - "presenters_templates:/app/templates"
     logging:
       driver: "json-file"
       options:

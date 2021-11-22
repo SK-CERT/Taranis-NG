@@ -1,4 +1,4 @@
-from taranisng.schema.presenter import PresenterSchema
+from schema.presenter import PresenterSchema
 
 
 class BasePresenter:

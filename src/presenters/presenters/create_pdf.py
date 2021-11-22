@@ -3,7 +3,6 @@ import pdfkit
 import jinja2
 import os
 import glob
-# import datetime
 from flask import send_file
 from base64 import b64encode
 import json
