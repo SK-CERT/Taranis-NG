@@ -4,11 +4,10 @@ from email.message import Message
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 import gnupg
 
 from .base_publisher import BasePublisher
-from taranisng.schema.parameter import Parameter, ParameterType
+from schema.parameter import Parameter, ParameterType
 
 
 class EMAILPublisher(BasePublisher):

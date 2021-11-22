@@ -67,7 +67,6 @@ Resources: [CHANGELOG](CHANGELOG.md), [LICENSE](LICENSE.md).
   - [Presenters](src/presenters/) convert **report items** to **products** such as PDF.
   - [Publishers](src/publishers/) upload the **products** to external places such as e-mail, a WordPress web site, etc.
   - [Bots](src/bots/) are used for automated data processing. Think of them as robotic analysts.
-  - [Common](src/common/) is a shared directory for core, publishers, collectors, presenters.
 - [ansible/](ansible/) - Playbooks, roles, files and inventory to support easy deployment through Ansible
 - [docker/](docker/) - Support files for Docker image creation and example docker-compose file
 

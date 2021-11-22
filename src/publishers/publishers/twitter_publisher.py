@@ -1,9 +1,8 @@
 from base64 import b64decode
-
 import tweepy
 
 from .base_publisher import BasePublisher
-from taranisng.schema.parameter import Parameter, ParameterType
+from schema.parameter import Parameter, ParameterType
 
 
 class TWITTERPublisher(BasePublisher):

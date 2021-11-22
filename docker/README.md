@@ -184,7 +184,7 @@ Taranis NG core container comes with a simple management script that may be used
 To run the management script, launch a shell inside of the docker container for the core component with this command:
 
 ```bash
-docker exec -it [CONTAINER] python manage.py [COMMAND] [PARAMETERS]
+docker exec -it [CONTAINER] manage.py [COMMAND] [PARAMETERS]
 ```
 
 Currently, you may manage the following:
@@ -203,7 +203,7 @@ Currently, you may manage the following:
 ##### Install sample data
 
 ```bash
-python manage.py sample-data
+manage.py sample-data
 ```
 
 Command output:
@@ -217,7 +217,7 @@ Sample data installed.
 ##### Create a new role with a set of permissions
 
 ```bash
-python manage.py role \
+manage.py role \
     --create \
     --name "Custom role 1" \
     --description "Custom role with analysis and assessment access" \
@@ -235,7 +235,7 @@ Role 'Custom role 1' with id 3 created.
 ##### Role filter
 
 ```bash
-python manage.py role \
+manage.py role \
     --list \
     --filter "Custom role 1"
 ```
@@ -252,7 +252,7 @@ Id: 3
 ##### Create a new collector node
 
 ```bash
-python manage.py collector \
+manage.py collector \
     --create \
     --name "Docker collector" \
     --description "A simple collector hosted in a Docker container" \
@@ -269,7 +269,7 @@ Collector node 'Docker collector' with id 1 created.
 ##### Re-initialize a collector node
 
 ```bash
-python manage.py collector \
+manage.py collector \
     --update \
     --name "Docker"
 ```
@@ -286,7 +286,7 @@ Unable to update collector node 3.
 ##### Create a new user account
 
 ```bash
-python manage.py account \
+manage.py account \
     --create \
     --name "John Doe" \
     --username "test_user" \
@@ -303,7 +303,7 @@ User 'test_user' created.
 ##### Upload a CPE dictionary
 
 ```bash
-gzcat official-cpe-dictionary_v2.3.xml.gz | python manage.py dictionary --upload-cpe
+gzcat official-cpe-dictionary_v2.3.xml.gz | manage.py dictionary --upload-cpe
 ```
 
 Command output:

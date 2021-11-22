@@ -1,9 +1,9 @@
-from publishers.publishers.ftp_publisher import FTPPublisher
-from publishers.publishers.email_publisher import EMAILPublisher
-from publishers.publishers.twitter_publisher import TWITTERPublisher
-from publishers.publishers.wordpress_publisher import WORDPRESSPublisher
-from publishers.publishers.misp_publisher import MISPPublisher
-from taranisng.schema.publisher import PublisherInputSchema
+from publishers.ftp_publisher import FTPPublisher
+from publishers.email_publisher import EMAILPublisher
+from publishers.twitter_publisher import TWITTERPublisher
+from publishers.wordpress_publisher import WORDPRESSPublisher
+from publishers.misp_publisher import MISPPublisher
+from schema.publisher import PublisherInputSchema
 
 publishers = {}
 

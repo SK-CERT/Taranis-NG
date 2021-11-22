@@ -1,11 +1,10 @@
 import base64
 from base64 import b64decode
 from datetime import datetime
-
 import requests
 
 from .base_publisher import BasePublisher
-from taranisng.schema.parameter import Parameter, ParameterType
+from schema.parameter import Parameter, ParameterType
 
 
 class WORDPRESSPublisher(BasePublisher):
