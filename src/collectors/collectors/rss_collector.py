@@ -4,17 +4,16 @@ import uuid
 import traceback
 import re
 import socks
-
 import feedparser
 import urllib.request
 from sockshandler import SocksiPyHandler
 from bs4 import BeautifulSoup
 import dateparser
 
-from taranisng.schema.news_item import NewsItemData
-from taranisng.schema.parameter import Parameter, ParameterType
-from taranisng.managers import log_manager
 from .base_collector import BaseCollector
+from managers import log_manager
+from schema.news_item import NewsItemData
+from schema.parameter import Parameter, ParameterType
 
 
 class RSSCollector(BaseCollector):

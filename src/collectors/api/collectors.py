@@ -3,7 +3,7 @@ from flask import request
 
 from managers import collectors_manager
 from managers.auth_manager import api_key_required
-from taranisng.managers.log_manager import log_debug
+from managers.log_manager import log_debug
 
 
 class Collectors(Resource):

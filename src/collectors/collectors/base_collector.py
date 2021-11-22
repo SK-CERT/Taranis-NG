@@ -4,14 +4,13 @@ import uuid
 import bleach
 import re
 import time
-
 from dateutil import tz
 
 from managers import time_manager
+from managers.log_manager import log_debug, log_info, log_debug_trace
 from remote.core_api import CoreApi
-from taranisng.schema import collector, osint_source, news_item
-from taranisng.schema.parameter import Parameter, ParameterType
-from taranisng.managers.log_manager import log_debug, log_info, log_debug_trace
+from schema import collector, osint_source, news_item
+from schema.parameter import Parameter, ParameterType
 
 class BaseCollector:
     type = "BASE_COLLECTOR"

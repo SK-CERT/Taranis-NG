@@ -2,15 +2,15 @@ import os
 import threading
 import time
 
-from collectors.collectors.atom_collector import AtomCollector
-from collectors.collectors.email_collector import EmailCollector
-from collectors.collectors.manual_collector import ManualCollector
-from collectors.collectors.rss_collector import RSSCollector
-from collectors.collectors.scheduled_tasks_collector import ScheduledTasksCollector
-from collectors.collectors.slack_collector import SlackCollector
-from collectors.collectors.twitter_collector import TwitterCollector
-from collectors.collectors.web_collector import WebCollector
-from taranisng.managers.log_manager import log_debug, log_system_activity
+from managers.log_manager import log_debug, log_system_activity
+from collectors.atom_collector import AtomCollector
+from collectors.email_collector import EmailCollector
+from collectors.manual_collector import ManualCollector
+from collectors.rss_collector import RSSCollector
+from collectors.scheduled_tasks_collector import ScheduledTasksCollector
+from collectors.slack_collector import SlackCollector
+from collectors.twitter_collector import TwitterCollector
+from collectors.web_collector import WebCollector
 from remote.core_api import CoreApi
 
 collectors = {}

@@ -9,20 +9,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
-
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-
 from urllib.parse import urlparse
-
 import os
 import dateparser
 import re
-from taranisng.managers import log_manager
 
 from .base_collector import BaseCollector
-from taranisng.schema.news_item import NewsItemData, NewsItemAttribute
-from taranisng.schema.parameter import Parameter, ParameterType
+from managers import log_manager
+from schema.news_item import NewsItemData, NewsItemAttribute
+from schema.parameter import Parameter, ParameterType
 
 import traceback
 

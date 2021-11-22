@@ -1,7 +1,6 @@
 import logging
 import os
 import urllib
-
 import requests
 
 logger = logging.getLogger('gunicorn.error')

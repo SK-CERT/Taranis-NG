@@ -3,10 +3,11 @@ import hashlib
 import uuid
 import time
 from slackclient import SlackClient
-from .base_collector import BaseCollector
-from taranisng.schema.news_item import NewsItemData
-from taranisng.schema.parameter import Parameter, ParameterType
 import socket
+
+from .base_collector import BaseCollector
+from schema.news_item import NewsItemData
+from schema.parameter import Parameter, ParameterType
 
 
 class SlackCollector(BaseCollector):

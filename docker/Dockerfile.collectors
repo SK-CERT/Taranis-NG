@@ -26,8 +26,7 @@ RUN \
     rm -f /tmp/geckodriver.tar.gz && \
     apk --purge del .build-deps
 
-COPY ./src/collectors/requirements.txt /app/collectors/requirements.txt
-COPY ./src/common/requirements.txt /app/common/requirements.txt
+COPY ./src/collectors/requirements.txt /app/requirements.txt
 
 # install dependencies
 RUN \
@@ -40,8 +39,7 @@ RUN \
     libxslt-dev \
     libxml2-dev \
     libffi-dev && \
-    pip install --no-cache-dir -r /app/collectors/requirements.txt && \
-    pip install --no-cache-dir -r /app/common/requirements.txt && \
+    pip install --no-cache-dir -r /app/requirements.txt && \
     apk --purge del .build-deps
 
 COPY ./docker/start.sh /start.sh
@@ -55,14 +53,13 @@ RUN chmod +x /entrypoint.sh
 
 COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
-COPY ./src/collectors/. /app/collectors
-COPY ./src/common/. /app/common
+COPY ./src/collectors/. /app/
 
 EXPOSE 80
 
 # setup environment variables
 ENV PYTHONPATH=/app
-ENV MODULE_NAME collectors.run
+ENV MODULE_NAME run
 ENV VARIABLE_NAME app
 ENV GUNICORN_CMD_ARGS --timeout 120 --preload
 ENV WORKERS_PER_CORE 8
