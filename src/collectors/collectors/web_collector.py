@@ -10,6 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from urllib.parse import urlparse
@@ -54,6 +55,9 @@ class WebCollector(BaseCollector):
 
         # web page parsing options
 
+        ## removing popups
+        Parameter(0, "POPUP_REMOVAL_SELECTOR", "SELECTOR at TITLE PAGE: Popup removal",
+                  "OPTIONAL: For sites with popups, this is a selector of the clickable element (button or a link) for the popup removal button",ParameterType.STRING),
         ## navigating the list of articles page by page
         Parameter(0, "NEXT_BUTTON_SELECTOR", "SELECTOR at TITLE PAGE: Next page",
                   "OPTIONAL: For sites with pagination, this is a selector of the clickable element (button or a link) for the 'next page'", ParameterType.STRING),
@@ -97,6 +101,29 @@ class WebCollector(BaseCollector):
         prefix = selector_split[0].strip().lower()
         selector = selector_split[1].lstrip()
         return prefix, selector
+
+    # get element locator
+    @staticmethod
+    def __get_element_locator(element_selector):
+        """extracts single element from the headless browser by selector"""
+
+        prefix, selector = WebCollector.__get_prefix_and_selector(element_selector)
+
+        locator = None
+        if prefix == 'id':
+            locator = (By.ID, selector)
+        if prefix == 'name':
+            locator = (By.NAME, selector)
+        elif prefix == 'xpath':
+            locator = (By.XPATH, selector)
+        elif prefix in [ 'tag_name', 'tag' ]:
+            locator = (By.TAG_NAME, selector)
+        elif prefix in [ 'class_name', 'class' ]:
+            locator = (By.CLASS_NAME, selector)
+        elif prefix in [ 'css_selector', 'css' ]:
+            locator = (By.CSS_SELECTOR, selector)
+
+        return locator
 
     # extract element from the headless browser by selector
     @staticmethod
@@ -273,6 +300,7 @@ class WebCollector(BaseCollector):
 
         self.selectors = {}
 
+        self.selectors['popup'] = self.source.parameter_values['POPUP_REMOVAL_SELECTOR']
         self.selectors['next_page'] = self.source.parameter_values['NEXT_BUTTON_SELECTOR']
         self.selectors['load_more'] = self.source.parameter_values['LOAD_MORE_BUTTON_SELECTOR']
         self.selectors['single_article_link'] = self.source.parameter_values['SINGLE_ARTICLE_LINK_SELECTOR']
@@ -441,6 +469,12 @@ class WebCollector(BaseCollector):
             self.__dispose_of_headless_driver(browser)
             return False, 'Error obtaining title page', 0, 0
 
+        # if there is a popup selector, click on it!
+        if self.selectors['popup']:
+            popup = WebDriverWait(browser, 10).until(EC.presence_of_element_located(self.__get_element_locator(self.selectors['popup'])))
+            if popup:
+                popup.click()
+
         # if there is a "load more" selector, click on it!
         page = 1
         while self.selectors['load_more'] and page < self.pagination_limit:
@@ -449,7 +483,7 @@ class WebCollector(BaseCollector):
                 # TODO: check for None
                 browser.execute_script("arguments[0].scrollIntoView(true);", load_more)
                 load_more.click()
-                WebDriverWait(browser, 30).until(EC.staleness_of(load_more))
+                time.sleep(5)
             except:
                 break
             page += 1
