@@ -479,11 +479,23 @@ class WebCollector(BaseCollector):
         page = 1
         while self.selectors['load_more'] and page < self.pagination_limit:
             try:
-                load_more = self.__find_element_by(browser, self.selectors['load_more'])
+                load_more = WebDriverWait(browser, 5).until(
+                    EC.element_to_be_clickable(self.__get_element_locator(self.selectors['load_more'])))
                 # TODO: check for None
-                browser.execute_script("arguments[0].scrollIntoView(true);", load_more)
-                load_more.click()
-                time.sleep(5)
+
+                try:
+                    action = ActionChains(browser)
+                    action.move_to_element(load_more)
+                    load_more.click()
+                except:
+                    browser.execute_script("arguments[0].scrollIntoView(true);", load_more)
+                    load_more.click()
+
+                try:
+                    WebDriverWait(browser, 5).until(EC.staleness_of(load_more))
+                except:
+                    pass
+
             except:
                 break
             page += 1
