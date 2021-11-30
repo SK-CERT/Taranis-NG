@@ -6,11 +6,11 @@ echo "Running migrations..."
 /app/db_migration.py db upgrade head
 echo "Done."
 
-if [[ -n "$TARANIS_NG_SAMPLE_DATA" ]]; then
+if [ -n "$TARANIS_NG_SAMPLE_DATA" ]; then
 
     /app/manage.py sample-data
 
-elif [[ -n "$TARANIS_NG_ADMIN_USERNAME" && -n "$TARANIS_NG_ADMIN_PASSWORD" ]]; then
+elif [ -n "$TARANIS_NG_ADMIN_USERNAME" ] && [ -n "$TARANIS_NG_ADMIN_PASSWORD" ]; then
 
     /app/manage.py role \
         --create \
@@ -54,8 +54,8 @@ elif [[ -n "$TARANIS_NG_ADMIN_USERNAME" && -n "$TARANIS_NG_ADMIN_PASSWORD" ]]; t
         CONFIG_PUBLISHER_PRESET_ACCESS, CONFIG_PUBLISHER_PRESET_CREATE, \
         CONFIG_PUBLISHER_PRESET_UPDATE, CONFIG_PUBLISHER_PRESET_DELETE" || true
 
-    ROLE_ID=$(/app/manage.py role --list --filter "Admin role" | grep -i id | awk '{print $2}')
+    ROLE_ID="$(/app/manage.py role --list --filter "Admin role" | grep -i id | awk '{print $2}')"
 
-    /app/manage.py account --create --username "$TARANIS_NG_ADMIN_USERNAME" --password "$TARANIS_PASSWORD" --roles $ROLE_ID
+    /app/manage.py account --create --username "$TARANIS_NG_ADMIN_USERNAME" --password "$TARANIS_PASSWORD" --roles "$ROLE_ID"
 
 fi
