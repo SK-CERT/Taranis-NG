@@ -229,7 +229,7 @@ class BaseCollector:
         for source in self.osint_sources:
             try:
                 time_manager.cancel_job(source.scheduler_job)
-            except:
+            except Exception:
                 pass
         self.osint_sources = []
 

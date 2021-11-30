@@ -37,14 +37,14 @@ class KeycloakAuthenticator(BaseAuthenticator):
         try:
             # get json data from response
             data = response.json()
-        except:
+        except Exception:
             log_manager.store_auth_error_activity("Keycloak returned an unexpected response.")
             return {'error': 'Internal server error'}, 500
 
         try:
             # decode token to get user data
             data = jwt.decode(data['access_token'], verify=False)
-        except:
+        except Exception:
             log_manager.store_auth_error_activity("Keycloak returned invalid access_token.")
             return {'error': 'Internal server error'}, 500
 
