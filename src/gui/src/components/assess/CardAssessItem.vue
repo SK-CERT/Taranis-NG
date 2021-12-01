@@ -185,6 +185,7 @@
             itemClicked(data) {
                 if (this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true) {
                     this.$emit('show-item-detail', data);
+                    this.stateChange();
                 }
             },
             selectionChanged() {
@@ -193,6 +194,11 @@
                 } else {
                     this.$store.dispatch("deselect", {'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item})
                 }
+            },
+            stateChange() {
+                this.$root.$emit('change-state','SHOW_ITEM');
+                this.$root.$emit('check-focus',this.$el.dataset.id);
+                this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
             },
             getGroupId() {
                 if (window.location.pathname.includes("/group/")) {

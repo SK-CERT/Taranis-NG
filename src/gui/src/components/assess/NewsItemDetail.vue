@@ -163,6 +163,7 @@
             },
             close() {
                 this.visible = false;
+                this.$root.$emit('change-state', 'DEFAULT');
                 this.$root.$emit('first-dialog', '');
             },
             openUrlToNewTab: function (url) {

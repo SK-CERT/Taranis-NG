@@ -74,7 +74,7 @@
             }
         },
         mounted() {
-            window.console.debug(this.card.tag);
+            //window.console.debug(this.card.tag);
         }
     }
 </script>

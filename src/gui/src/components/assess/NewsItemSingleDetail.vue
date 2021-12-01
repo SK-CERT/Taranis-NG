@@ -250,6 +250,7 @@ export default {
                     this.news_item.comments = this.editorData
                 });
             }
+            this.$root.$emit('change-state', 'DEFAULT');
             this.$root.$emit('first-dialog', '');
         },
         openUrlToNewTab: function (url) {

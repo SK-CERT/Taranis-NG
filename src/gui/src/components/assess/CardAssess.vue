@@ -259,12 +259,17 @@
         },
         methods: {
             showItemDetail(data) {
-                this.$emit('show-item-detail', data)
+                this.$emit('show-item-detail', data);
+
+                this.stateChange('SHOW_ITEM');
             },
             openCard() {
                 this.opened = !this.opened;
-                this.$emit('aggregate-open', {'id':this.card.id, 'opened': this.opened});
+
+                this.$emit('i', {'id':this.card.id, 'opened': this.opened});
                 this.$emit('card-items-reindex');
+                this.$root.$emit('key-remap');
+
             },
             selectionChanged() {
                 if (this.selected === true) {
@@ -287,7 +292,15 @@
                         'id': this.$parent.selfID
                     });
                 }
+                this.stateChange('SHOW_ITEM');
             },
+
+            stateChange(_state) {
+                this.$root.$emit('change-state',_state);
+                this.$root.$emit('check-focus',this.$el.dataset.id);
+                this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
+            },
+
             getGroupId() {
                 if (window.location.pathname.includes("/group/")) {
                     let i = window.location.pathname.indexOf("/group/");
@@ -314,7 +327,9 @@
                         break;
 
                     case "new":
+                        //window.console.debug("CLICK NEW");
                         this.$root.$emit('new-report', [this.card]);
+                        //this.stateChange('NEW_PRODUCT');
                         //this.$root.$emit('mouse-click-analyze');
                         break;
 
@@ -436,6 +451,7 @@
         },
         beforeDestroy() {
             this.$root.$off('multi-select-off', this.multiSelectOff);
+            this.$root.$off('check-focus');
         }
     }
 </script>

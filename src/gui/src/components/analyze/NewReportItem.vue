@@ -427,7 +427,8 @@ export default {
 
         cancel() {
             setTimeout(() => {
-                this.$root.$emit('mouse-click-close');
+                //this.$root.$emit('mouse-click-close');
+                this.$root.$emit('change-state', 'DEFAULT');
                 this.$validator.reset();
                 this.visible = false;
                 this.$root.$emit('first-dialog', '');
@@ -820,45 +821,8 @@ export default {
             this.$root.$emit('reset-csv-dialog');
 
         },
-        _importCSV() {
-
-            if (this.csv_delete_exist_list) {
-                this.$emit('update-cpes', this.csv);
-            } else {
-
-                let attribute = this.findAttributeType(this.csv[0].value);
-                let codes = attribute.attribut_group_items;
-
-                let arrayWithDuplicates = codes.concat(this.csv);
-
-                let removeDuplicates = function (originalArray, prop) {
-                    let newArray = [];
-                    let lookupObject = {};
-
-                    for (var i in originalArray) {
-                        lookupObject[originalArray[i][prop]] = originalArray[i];
-                    }
-
-                    for (i in lookupObject) {
-                        newArray.push(lookupObject[i]);
-                    }
-
-                    return newArray;
-                }
-
-                let uniqueArray = removeDuplicates(arrayWithDuplicates, "value");
-                //this.$emit('update-cpes', uniqueArray);
-                window.console.debug(uniqueArray);
-            }
-
-            this.dialog_csv = false;
-            this.csv = null;
-            this.csv_delete_exist_list = false;
-            this.$root.$emit('reset-csv-dialog');
-        },
 
         closeCSV() {
-            //window.console.debug(this.csv);
             this.dialog_csv = false;
             this.csv = null;
             this.csv_delete_exist_list = false;

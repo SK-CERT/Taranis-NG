@@ -1,15 +1,17 @@
-from marshmallow import post_load, fields
-from sqlalchemy import orm, and_, or_, func
-from datetime import datetime
 import base64
 import uuid
+from datetime import datetime
+
+from marshmallow import post_load, fields
+from sqlalchemy import orm, and_, or_, func
 
 from managers.db_manager import db
+from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSourceGroup, OSINTSource
 from model.tag_cloud import TagCloud
-from model.acl_entry import ACLEntry
 from schema.acl_entry import ItemType
-from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, NewsItemRemoteSchema
+from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, \
+    NewsItemRemoteSchema
 
 
 class NewNewsItemAttributeSchema(NewsItemAttributeSchema):
@@ -119,7 +121,7 @@ class NewsItemData(db.Model):
 
     @classmethod
     def attribute_value_identical(cls, id, value):
-        return NewsItemAttribute.query.join(NewsItemDataNewsItemAttribute).join(NewsItemData).\
+        return NewsItemAttribute.query.join(NewsItemDataNewsItemAttribute).join(NewsItemData). \
             filter(NewsItemData.id == id).filter(NewsItemAttribute.value == value).scalar()
 
     @classmethod
@@ -200,6 +202,14 @@ class NewsItem(db.Model):
             total_relevance += int(row[0])
 
         return total_relevance
+
+    @classmethod
+    def get_all_by_group_and_source_query(cls, group_id, source_id, time_limit):
+        query = cls.query.join(NewsItemData, NewsItemData.id == NewsItem.news_item_data_id)
+        query = query.filter(NewsItemData.osint_source_id == source_id, NewsItemData.collected >= time_limit)
+        query = query.join(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
+        query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
+        return query
 
     @classmethod
     def allowed_with_acl(cls, news_item_id, user, see, access, modify):
@@ -922,7 +932,7 @@ class NewsItemAggregate(db.Model):
         limit = datetime.strptime(limit['limit'], '%d.%m.%Y - %H:%M')
 
         # TODO: Change condition in query to >
-        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit).\
+        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit). \
             all()
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         return news_item_aggregate_schema.dumps(news_item_aggregates)

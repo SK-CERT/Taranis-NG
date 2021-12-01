@@ -12,7 +12,6 @@
         </v-content>
 
         <Notification v-if="isAuthenticated()"/>
-
     </v-app>
 </template>
 
@@ -63,7 +62,7 @@ export default {
         }
     },
     updated() {
-        this.$root.$emit('app-updated')
+        this.$root.$emit('app-updated');
     },
     mounted() {
         if (this.$cookies.isKey('jwt')) {
@@ -107,6 +106,7 @@ export default {
         this.$root.$on('logged-in', () => {
             this.connectSSE()
         });
+
     }
 };
 </script>

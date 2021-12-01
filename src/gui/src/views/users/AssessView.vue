@@ -92,11 +92,9 @@
                 if(this.dialog_stack <= 0) {
                     this.isItemOpen = false;
                     this.dialog_stack = 0;
-                    //window.console.debug("Keys available now!");
                 } else {
                     this.isItemOpen = true;
                 }
-                //window.console.debug("Key OFF:",this.dialog_stack);
             }
         },
         watch: {
@@ -121,9 +119,14 @@
         },
         created() {
             document.addEventListener("keydown", this.keyAction, false);
+            const element = document.querySelector("card-item");
+            element.addEventListener('click', this.targetClick, false);
         },
         beforeDestroy() {
             document.removeEventListener("keydown", this.keyAction);
+            const element = document.querySelector("card-item");
+            element.removeEventListener('click');
+            this.$root.$off('first-dialog');
             this.$root.$off('clear-cards');
         }
     };

@@ -390,11 +390,11 @@ class OSINTSourceGroup(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_UPDATE')
     def put(self, group_id):
-        osint_source.OSINTSourceGroup.update(group_id, request.json)
+        return osint_source.OSINTSourceGroup.update(group_id, request.json)
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_DELETE')
     def delete(self, group_id):
-        osint_source.OSINTSourceGroup.delete(group_id)
+        return osint_source.OSINTSourceGroup.delete(group_id)
 
 
 class RemoteAccesses(Resource):
