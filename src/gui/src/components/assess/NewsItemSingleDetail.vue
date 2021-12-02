@@ -15,7 +15,7 @@
                             <v-btn v-if="canDelete" small icon @click.stop="cardItemToolbar('delete')" :title="$t('assess.tooltip.delete_item')">
                                 <v-icon small color="accent">mdi-delete</v-icon>
                             </v-btn>
-                            <a v-if="canAccess" :href="news_item.news_items[0].news_item_data.link" target="_blank" :title="$t('assess.tooltip.open_source')">
+                            <a v-if="canAccess" :href="news_item.news_items[0].news_item_data.link" rel="noreferrer" target="_blank" :title="$t('assess.tooltip.open_source')">
                                 <v-btn small icon>
                                     <v-icon small color="accent">mdi-open-in-app</v-icon>
                                 </v-btn>
@@ -112,7 +112,7 @@
                                 <!-- LINKS -->
                                 <v-container fluid>
                                     <v-row>
-                                        <a :href="news_item.news_items[0].news_item_data.link" target="_blank">
+                                        <a :href="news_item.news_items[0].news_item_data.link" target="_blank" rel="noreferrer">
                                             <span>{{ news_item.news_items[0].news_item_data.link }}</span>
                                         </a>
                                     </v-row>
