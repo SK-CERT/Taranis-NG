@@ -14,13 +14,13 @@
                     <v-toolbar-title v-if="!edit">{{ $t('osint_source.add_new') }}</v-toolbar-title>
                     <v-toolbar-title v-if="edit">{{ $t('osint_source.edit') }}</v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-btn v-if="canUpdate" text type="submit" form="form">
+                    <v-btn v-if="canUpdate" text type="submit" form="form_osint_source">
                         <v-icon left>mdi-content-save</v-icon>
                         <span>{{ $t('osint_source.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
-                <v-form @submit.prevent="add" id="form" ref="form">
+                <v-form @submit.prevent="add" id="form_osint_source" ref="form">
                     <v-card>
                         <v-card-text>
                             <span v-if="edit">ID: {{ source.id }}</span>
@@ -63,7 +63,7 @@
 
                             <v-spacer class="mt-8"/>
 
-                            <v-data-table :disabled="!canUpdate"
+                            <v-data-table v-if="selected_collector" :disabled="!canUpdate"
                                           v-model="selected_osint_source_groups"
                                           :headers="headers_groups"
                                           :items="getOSINTSourceGroups"
@@ -75,8 +75,11 @@
                             >
                                 <template v-slot:top>
                                     <v-toolbar flat color="white">
-                                        <v-toolbar-title>{{ $t('osint_source.osint_source_groups') }}
+                                        <v-toolbar-title>
+                                            {{ $t('osint_source.osint_source_groups') }}
                                         </v-toolbar-title>
+                                        <v-spacer/>
+                                        <AddGroup></AddGroup>
                                     </v-toolbar>
                                 </template>
 
@@ -118,11 +121,13 @@ import {createNewOSINTSource, updateOSINTSource} from "@/api/config";
 import FormParameters from "../../common/FormParameters";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
+import AddGroup from "@/components/config/osint_sources/NewOSINTSourceGroup";
 
 export default {
     name: "NewOSINTSource",
     components: {
         FormParameters,
+        AddGroup
     },
     data: () => ({
         headers_groups: [

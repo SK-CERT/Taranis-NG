@@ -373,7 +373,7 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'new_product':
-                            this.keyboard_state = 'NEW_PRODUCT';
+                            //this.keyboard_state = 'NEW_PRODUCT';
                             this.card.analyze.click();
                             this.isItemOpen = true;
                             break;

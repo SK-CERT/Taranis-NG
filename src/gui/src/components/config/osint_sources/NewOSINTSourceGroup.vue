@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-btn v-if="canCreate" depressed small color="white--text ma-2 mt-3 mr-5" @click="addGroup">
+        <v-btn v-if="canCreate" depressed small color="primary white--text ma-2 mt-3 mr-5" @click="addGroup">
             <v-icon left>mdi-plus-circle-outline</v-icon>
             <span class="subtitle-2">{{ $t('osint_source_group.add') }}</span>
         </v-btn>
@@ -16,13 +16,13 @@
                         <v-toolbar-title v-if="!edit">{{ $t('osint_source_group.add_new') }}</v-toolbar-title>
                         <v-toolbar-title v-if="edit">{{ $t('osint_source_group.edit') }}</v-toolbar-title>
                         <v-spacer></v-spacer>
-                        <v-btn v-if="canUpdate" text dark type="submit" form="form">
+                        <v-btn v-if="canUpdate" text dark type="submit" form="form_osint_group">
                             <v-icon left>mdi-content-save</v-icon>
                             <span>{{ $t('osint_source_group.save') }}</span>
                         </v-btn>
                     </v-toolbar>
 
-                    <v-form @submit.prevent="add" id="form" ref="form">
+                    <v-form @submit.prevent="add" id="form_osint_group" ref="form">
                         <v-card>
                             <v-card-text>
 
