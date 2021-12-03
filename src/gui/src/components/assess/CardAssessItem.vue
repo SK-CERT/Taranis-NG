@@ -88,7 +88,7 @@
                                     </v-btn>
 
                                     <v-btn v-if="canAccess" icon @click.stop="cardItemToolbar('link')" data-btn="link" :title="$t('assess.tooltip.open_source')">
-                                        <a class="alink" :href="news_item.news_item_data.link" target="_blank">
+                                        <a class="alink" :href="news_item.news_item_data.link" target="_blank" rel="noreferer">
                                             <v-icon color="accent">mdi-open-in-app</v-icon>
                                         </a>
                                     </v-btn>
