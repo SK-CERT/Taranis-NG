@@ -195,7 +195,10 @@
             },
 
             news_items_updated() {
-                this.updateData(false, true);
+                // only update items when not in selection mode
+                if (! this.multiSelectActive) {
+                    this.updateData(false, true);
+                }
             },
 
             aggregateOpen(folder) {
