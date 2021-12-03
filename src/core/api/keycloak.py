@@ -57,7 +57,7 @@ class Keycloak(Resource):
 
             response = Response(resp.content, resp.status_code, headers)
             return response
-        except:
+        except Exception:
             return {'error': 'Internal server error'}, 500
 
     def get(self, path):

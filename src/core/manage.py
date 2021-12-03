@@ -32,7 +32,7 @@ while True:
 
 # user account management
 class AccountManagement(Command):
-    
+
     option_list = (
         Option('--list', '-l', dest='opt_list', action='store_true'),
         Option('--create', '-c', dest='opt_create', action='store_true'),
@@ -61,11 +61,11 @@ class AccountManagement(Command):
             if (not opt_username or not opt_password or not opt_roles):
                 app.logger.critical("Username, password or role not specified!")
                 abort()
-            
+
             if user.User.find(opt_username):
                 app.logger.critical("User already exists!")
                 abort()
-            
+
             opt_roles = opt_roles.split(',')
             roles = []
 
@@ -73,17 +73,17 @@ class AccountManagement(Command):
                 r = None
                 try:
                     r = role.Role.find(int(ro))
-                except:
+                except Exception:
                     r = role.Role.find_by_name(ro)
-                
+
                 if not r:
                     app.logger.critical("The specified role '{}' does not exist!".format(ro))
                     abort()
-                
+
                 roles.append(r)
 
             # create user in the appropriate authenticator
-            
+
 
         if (opt_edit):
             if (not opt_username):
@@ -105,17 +105,17 @@ class AccountManagement(Command):
                     r = None
                     try:
                         r = role.Role.find(int(ro))
-                    except:
+                    except Exception:
                         r = role.Role.find_by_name(ro)
-                    
+
                     if not r:
                         app.logger.critical("The specified role '{}' does not exist!".format(ro))
                         abort()
-                    
+
                     roles.append(r)
 
             # update the user
-                
+
         if (opt_delete):
             if (not opt_username):
                 app.logger.critical("Username not specified!")
@@ -129,7 +129,7 @@ class AccountManagement(Command):
 
 # role management
 class RoleManagement(Command):
-    
+
     option_list = (
         Option('--list', '-l', dest='opt_list', action='store_true'),
         Option('--create', '-c', dest='opt_create', action='store_true'),
@@ -152,7 +152,7 @@ class RoleManagement(Command):
                 roles = role.Role.get(opt_filter)[0]
             else:
                 roles = role.Role.get_all()
-            
+
             for ro in roles:
                 perms = []
                 for p in ro.permissions:
@@ -199,7 +199,7 @@ class RoleManagement(Command):
 
 # collector management
 class CollectorManagement(Command):
-    
+
     option_list = (
         Option('--list', '-l', dest='opt_list', action='store_true'),
         Option('--create', '-c', dest='opt_create', action='store_true'),
@@ -218,7 +218,7 @@ class CollectorManagement(Command):
     def run(self, opt_list, opt_create, opt_edit, opt_delete, opt_update, opt_all, opt_show_api_key, opt_id, opt_name, opt_description, opt_api_url, opt_api_key):
         if (opt_list):
             collector_nodes = collectors_node.CollectorsNode.get_all()
-            
+
             for node in collector_nodes:
                 capabilities = []
                 sources = []
@@ -245,7 +245,7 @@ class CollectorManagement(Command):
             }
 
             collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info("")
-            
+
             if status_code != 200:
                 print('Cannot create a new collector node!')
                 print('Response from collector: {}'.format(collectors_info))
@@ -276,7 +276,7 @@ class CollectorManagement(Command):
                 app.logger.critical("Collector node id or name not specified!")
                 app.logger.critical("If you want to update all collectors, pass the --all parameter.")
                 abort()
-            
+
             nodes = None
             if opt_id:
                 nodes = [ collectors_node.CollectorsNode.get_by_id(opt_id) ]
@@ -301,7 +301,7 @@ class CollectorManagement(Command):
                     print('Collector node {} updated.'.format(node.id))
                 else:
                     print('Unable to update collector node {}.\n\tResponse: [{}] {}.'.format(node.id, status_code, collectors_info))
-            
+
 
 # dictionary management
 class DictionaryManagement(Command):
@@ -323,7 +323,7 @@ class DictionaryManagement(Command):
             self.upload_to(cve_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cve')
-            except:
+            except Exception:
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
@@ -336,7 +336,7 @@ class DictionaryManagement(Command):
             self.upload_to(cpe_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cpe')
-            except:
+            except Exception:
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
@@ -351,7 +351,7 @@ class DictionaryManagement(Command):
                     if not chunk:
                         break
                     out_file.write(chunk)
-        except:
+        except Exception:
             app.logger.critical("Upload failed!")
             abort()
 
@@ -371,7 +371,7 @@ class SampleData(Command):
             sample_data.run(db_manager.db)
             app.logger.error("Sample data installed.")
         exit()
-        
+
 
 manager.add_command('account', AccountManagement)
 manager.add_command('role', RoleManagement)
