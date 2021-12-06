@@ -75,7 +75,7 @@ class OSINTSource(db.Model):
 
     @classmethod
     def get_all(cls):
-        return cls.query.order_by(db.desc(OSINTSource.name)).all()
+        return cls.query.order_by(db.asc(OSINTSource.name)).all()
 
     @classmethod
     def get_all_manual(cls, user):
@@ -89,7 +89,7 @@ class OSINTSource(db.Model):
 
         query = ACLEntry.apply_query(query, user, False, True, False)
 
-        return query.order_by(db.desc(OSINTSource.name)).all()
+        return query.order_by(db.asc(OSINTSource.name)).all()
 
     @classmethod
     def get(cls, search):
@@ -102,7 +102,7 @@ class OSINTSource(db.Model):
                 func.lower(OSINTSource.description).like(search_string),
                 func.lower(Collector.type).like(search_string)))
 
-        return query.order_by(db.desc(OSINTSource.name)).all(), query.count()
+        return query.order_by(db.asc(OSINTSource.name)).all(), query.count()
 
     @classmethod
     def get_by_id(cls, id):
@@ -189,12 +189,7 @@ class OSINTSource(db.Model):
 
         db.session.commit()
 
-        # if default_group is not None:
-        #     time_limit = datetime.now() - timedelta(days=7)
-        #     news_items_query = NewsItem.get_all_by_group_and_source_query(default_group.id, osint_source_id, time_limit)
-        #     for news_item in news_items_query:
-
-        return osint_source
+        return osint_source, default_group
 
     def update_status(self, status_schema):
         # if not collected, do not change last collected timestamp
@@ -342,10 +337,21 @@ class OSINTSourceGroup(db.Model):
             osint_source_group.name = updated_osint_source_group.name
             osint_source_group.description = updated_osint_source_group.description
             osint_source_group.osint_sources = updated_osint_source_group.osint_sources
+
+            sources_in_default_group = set()
+            for source in osint_source_group.osint_sources:
+                current_groups = OSINTSourceGroup.get_for_osint_source(source.id)
+                for current_group in current_groups:
+                    if current_group.default:
+                        current_group.osint_sources.remove(source)
+                        sources_in_default_group.add(source)
+                        break
+
             db.session.commit()
-            return "", 200
+
+            return sources_in_default_group, "", 200
         else:
-            return {'message': 'could_not_modify_default_group'}, 400
+            return None, {'message': 'could_not_modify_default_group'}, 400
 
 
 class OSINTSourceGroupOSINTSource(db.Model):
