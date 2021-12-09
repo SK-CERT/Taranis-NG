@@ -22,7 +22,8 @@ const state = {
         {character: 'g', alias: 'group', icon: 'mdi-group'},
         {character: 'u', alias: 'ungroup', icon: 'mdi-ungroup'},
         {character: 'n', alias: 'new_product', icon: 'mdi-file-outline'},
-        {character: 'a', alias: 'aggregate_open', icon: 'mdi-arrow-right-drop-circle'}
+        {character: 'a', alias: 'aggregate_open', icon: 'mdi-arrow-right-drop-circle'},
+        {character: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app'},
     ],
     spellcheck: true,
     dark_theme: false,

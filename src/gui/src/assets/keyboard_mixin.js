@@ -83,12 +83,12 @@ const keyboardMixin = targetId => ({
             card.show = this.card_items[this.pos].querySelector(".card");
             card.id = this.card_items[this.pos].dataset.id;
             card.close = document.querySelector("[data-dialog='" + dialog + "-detail'] [data-btn='close']");
-            //card.close = document.querySelector(".v-dialog--active [data-btn='close']");
+            // Link is always extracted from the news item newdial button, does not work for opening all selected items, but also with opened items
+            card.link = this.card_items[this.pos].querySelector(".newdial button[data-btn='link'] a");
 
             // Speed Dial Toolbar
             card.group = temp.querySelector(which + "[data-btn='group']");
             card.ungroup = temp.querySelector(which + "[data-btn='ungroup']");
-            card.link = temp.querySelector(which + "[data-btn='link']");
             card.analyze = temp.querySelector(which + "[data-btn='new']");
             card.read = temp.querySelector(which + "[data-btn='read']");
             card.important = temp.querySelector(which + "[data-btn='important']");
@@ -233,6 +233,14 @@ const keyboardMixin = targetId => ({
                             this.card.analyze.click();
                             this.isItemOpen = true;
                             break;
+
+                        case 'open_item_source':
+                            console.log('this.card.link:', this.card.link) //eslint-disable-line
+                            // opening all selected news items' sources is not yet supprted
+                            if (! this.multiSelectActive) {
+                                this.card.link.click()
+                            }
+                            break;
                     }
                 } else if(this.state === 'SHOW_ITEM') {
                     switch (keyAlias) {
@@ -276,6 +284,11 @@ const keyboardMixin = targetId => ({
                         case 'new_product':
                             this.card.analyze.click();
                             this.isItemOpen = true;
+                            break;
+
+                        case 'open_item_source':
+                            console.log('this.card.link:', this.card.link) //eslint-disable-line
+                            this.card.link.click()
                             break;
 
                         default:
