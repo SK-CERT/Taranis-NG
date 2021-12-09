@@ -56,7 +56,7 @@ class WebCollector(BaseCollector):
         # web page parsing options
 
         ## removing popups
-        Parameter(0, "POPUP_REMOVAL_SELECTOR", "SELECTOR at TITLE PAGE: Popup removal",
+        Parameter(0, "POPUP_CLOSE_SELECTOR", "SELECTOR at TITLE PAGE: Popup removal",
                   "OPTIONAL: For sites with popups, this is a selector of the clickable element (button or a link) for the popup removal button",ParameterType.STRING),
         ## navigating the list of articles page by page
         Parameter(0, "NEXT_BUTTON_SELECTOR", "SELECTOR at TITLE PAGE: Next page",
@@ -300,7 +300,7 @@ class WebCollector(BaseCollector):
 
         self.selectors = {}
 
-        self.selectors['popup'] = self.source.parameter_values['POPUP_REMOVAL_SELECTOR']
+        self.selectors['popup_close'] = self.source.parameter_values['POPUP_CLOSE_SELECTOR']
         self.selectors['next_page'] = self.source.parameter_values['NEXT_BUTTON_SELECTOR']
         self.selectors['load_more'] = self.source.parameter_values['LOAD_MORE_BUTTON_SELECTOR']
         self.selectors['single_article_link'] = self.source.parameter_values['SINGLE_ARTICLE_LINK_SELECTOR']
@@ -470,8 +470,8 @@ class WebCollector(BaseCollector):
             return False, 'Error obtaining title page', 0, 0
 
         # if there is a popup selector, click on it!
-        if self.selectors['popup']:
-            popup = WebDriverWait(browser, 10).until(EC.presence_of_element_located(self.__get_element_locator(self.selectors['popup'])))
+        if self.selectors['popup_close']:
+            popup = WebDriverWait(browser, 10).until(EC.presence_of_element_located(self.__get_element_locator(self.selectors['popup_close'])))
             if popup:
                 popup.click()
 
