@@ -120,11 +120,13 @@ const keyboardMixin = targetId => ({
                 let keyAlias = '';
 
                 for (let i = 0; i < this.shortcuts.length; i++) {
-                    if (this.shortcuts[i].key_code == press.keyCode) {
+                    // ignore all presses with Ctrl or Alt key, they have a different meaning
+                    if (! ( press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
                         keyAlias = this.shortcuts[i].alias;
                         if (keyAlias == 'collection_up' || keyAlias == 'collection_down') {
                             press.preventDefault();
                         }
+                        break;
                     }
                 }
 
