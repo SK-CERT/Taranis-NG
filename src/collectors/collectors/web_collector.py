@@ -225,13 +225,13 @@ class WebCollector(BaseCollector):
                 if len(browser.window_handles) == 1:
                     break
             browser.switch_to.window(handle_to_keep)
-        except:
+        except Exception:
             log_manager.log_collector_activity('web', self.source.id, 'Browser tab restoration failed, reloading the title page')
             try:
                 # last resort - at least try to reopen the original page
                 browser.get(fallback_url)
                 return True
-            except:
+            except Exception:
                 return False
         return (browser.current_window_handle == handle_to_keep)
 
@@ -293,7 +293,7 @@ class WebCollector(BaseCollector):
 
         try:
             self.pagination_limit = int(self.source.parameter_values['PAGINATION_LIMIT'])
-        except:
+        except Exception:
             self.pagination_limit = 1
         if self.pagination_limit <= 0:
             self.pagination_limit = 1
@@ -317,7 +317,7 @@ class WebCollector(BaseCollector):
             self.word_limit = int(self.source.parameter_values['WORD_LIMIT'])
             if self.word_limit < 0:
                 self.word_limit = 0
-        except:
+        except Exception:
             self.word_limit = 0
 
         self.web_driver_type = self.source.parameter_values['WEBDRIVER']
@@ -404,22 +404,22 @@ class WebCollector(BaseCollector):
                 browser = self.__get_headless_driver_chrome()
             browser.implicitly_wait(15) # how long to wait for elements when selector doesn't match
             return browser
-        except:
+        except Exception:
             return None
 
     def __dispose_of_headless_driver(self, driver):
         """Destroys the headless browser driver, and its browser"""
         try:
             driver.close()
-        except:
+        except Exception:
             pass
         try:
             driver.quit()
-        except:
+        except Exception:
             pass
         try:
             driver.dispose()
-        except:
+        except Exception:
             pass
 
     def __run_tor(self):
@@ -464,7 +464,7 @@ class WebCollector(BaseCollector):
         try:
             browser.get(index_url)
             log_manager.log_collector_activity('web', self.source.id, 'Title page obtained')
-        except:
+        except Exception:
             log_manager.log_collector_activity('web', self.source.id, 'Error obtaining title page')
             self.__dispose_of_headless_driver(browser)
             return False, 'Error obtaining title page', 0, 0
@@ -487,16 +487,16 @@ class WebCollector(BaseCollector):
                     action = ActionChains(browser)
                     action.move_to_element(load_more)
                     load_more.click()
-                except:
+                except Exception:
                     browser.execute_script("arguments[0].scrollIntoView(true);", load_more)
                     load_more.click()
 
                 try:
                     WebDriverWait(browser, 5).until(EC.staleness_of(load_more))
-                except:
+                except Exception:
                     pass
 
-            except:
+            except Exception:
                 break
             page += 1
 
@@ -513,7 +513,7 @@ class WebCollector(BaseCollector):
                 if not self.__close_other_tabs(browser, title_page_handle, fallback_url = index_url):
                     log_manager.log_collector_activity('web', self.source.id, 'Error during page crawl (after-crawl clean up)')
                     break
-            except:
+            except Exception:
                 log_manager.log_collector_activity('web', self.source.id, 'Error during page crawl (exception)')
                 log_manager.log_debug(traceback.format_exc())
                 break
@@ -532,7 +532,7 @@ class WebCollector(BaseCollector):
                     .move_to_element(next_page) \
                     .click(next_page) \
                     .perform()
-            except:
+            except Exception:
                 log_manager.log_collector_activity('web', self.source.id, 'This was the last page')
                 break
 
@@ -558,7 +558,7 @@ class WebCollector(BaseCollector):
             try:
                 href = item.get_attribute('href')
                 log_manager.log_collector_activity('web', self.source.id, 'Visiting article at {}'.format(href))
-            except:
+            except Exception:
                 href = ''
                 log_manager.log_collector_activity('web', self.source.id, 'Visiting article with no link'.format(href))
             click_method = 1 # TODO: some day, make this user-configurable with tri-state enum
@@ -588,7 +588,7 @@ class WebCollector(BaseCollector):
                     self.news_items.append(news_item)
                 else:
                     log_manager.log_collector_activity('web', self.source.id, 'Failed to parse an article')
-            except:
+            except Exception:
                 success = False
                 log_manager.log_collector_activity('web', self.source.id, 'Failed to parse an article (exception)')
                 log_manager.log_debug(traceback.format_exc())

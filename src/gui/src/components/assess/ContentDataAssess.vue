@@ -108,14 +108,17 @@
             },
 
             showSingleAggregateDetail(news_item) {
+                this.$root.$emit('change-state','SHOW_ITEM');
                 this.$refs.newsItemSingleDetail.open(news_item)
             },
 
             showAggregateDetail(news_item) {
+                this.$root.$emit('change-state','SHOW_ITEM');
                 this.$refs.newsItemAggregateDetail.open(news_item)
             },
 
             showItemDetail(news_item) {
+                this.$root.$emit('change-state','SHOW_ITEM');
                 this.$refs.newsItemDetail.open(news_item)
             },
 
@@ -189,11 +192,13 @@
 
             checkFocus(pos) {
                 this.$root.$emit('check-focus', pos);
-                //window.console.debug("check-focus:", pos);
             },
 
             news_items_updated() {
-                this.updateData(false, true);
+                // only update items when not in selection mode
+                if (! this.multiSelectActive) {
+                    this.updateData(false, true);
+                }
             },
 
             aggregateOpen(folder) {
@@ -208,7 +213,6 @@
 
             forceReindex() {
                 this.$emit('card-items-reindex');
-                //window.console.debug("forceReindex");
             }
         },
 
@@ -244,7 +248,6 @@
 
         mounted() {
             this.$root.$on('news-items-updated', this.news_items_updated);
-
             this.$root.$on('force-reindex', this.forceReindex);
         },
 

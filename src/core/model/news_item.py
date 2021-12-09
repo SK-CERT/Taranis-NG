@@ -1,15 +1,17 @@
-from marshmallow import post_load, fields
-from sqlalchemy import orm, and_, or_, func
-from datetime import datetime
 import base64
 import uuid
+from datetime import datetime, timedelta
+
+from marshmallow import post_load, fields
+from sqlalchemy import orm, and_, or_, func
 
 from managers.db_manager import db
+from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSourceGroup, OSINTSource
 from model.tag_cloud import TagCloud
-from model.acl_entry import ACLEntry
 from schema.acl_entry import ItemType
-from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, NewsItemRemoteSchema
+from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, \
+    NewsItemRemoteSchema
 
 
 class NewNewsItemAttributeSchema(NewsItemAttributeSchema):
@@ -119,7 +121,7 @@ class NewsItemData(db.Model):
 
     @classmethod
     def attribute_value_identical(cls, id, value):
-        return NewsItemAttribute.query.join(NewsItemDataNewsItemAttribute).join(NewsItemData).\
+        return NewsItemAttribute.query.join(NewsItemDataNewsItemAttribute).join(NewsItemData). \
             filter(NewsItemData.id == id).filter(NewsItemAttribute.value == value).scalar()
 
     @classmethod
@@ -200,6 +202,14 @@ class NewsItem(db.Model):
             total_relevance += int(row[0])
 
         return total_relevance
+
+    @classmethod
+    def get_all_by_group_and_source_query(cls, group_id, source_id, time_limit):
+        query = cls.query.join(NewsItemData, NewsItemData.id == NewsItem.news_item_data_id)
+        query = query.filter(NewsItemData.osint_source_id == source_id, NewsItemData.collected >= time_limit)
+        query = query.join(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
+        query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
+        return query
 
     @classmethod
     def allowed_with_acl(cls, news_item_id, user, see, access, modify):
@@ -569,6 +579,20 @@ class NewsItemAggregate(db.Model):
         return {news_item_data.osint_source_id}
 
     @classmethod
+    def reassign_to_new_groups(cls, osint_source_id, default_group_id):
+        time_limit = datetime.now() - timedelta(days=7)
+        news_items_query = NewsItem.get_all_by_group_and_source_query(default_group_id, osint_source_id, time_limit)
+        for news_item in news_items_query:
+            news_item_data = news_item.news_item_data
+            aggregate = NewsItemAggregate.find(news_item.news_item_aggregate_id)
+            aggregate.news_items.remove(news_item)
+            NewsItemVote.delete_all(news_item.id)
+            db.session.delete(news_item)
+            NewsItemAggregate.update_status(aggregate.id)
+            cls.create_new_for_all_groups(news_item_data)
+            db.session.commit()
+
+    @classmethod
     def add_remote_news_items(cls, news_items_data_list, remote_node, osint_source_group_id):
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
@@ -922,7 +946,7 @@ class NewsItemAggregate(db.Model):
         limit = datetime.strptime(limit['limit'], '%d.%m.%Y - %H:%M')
 
         # TODO: Change condition in query to >
-        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit).\
+        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit). \
             all()
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         return news_item_aggregate_schema.dumps(news_item_aggregates)

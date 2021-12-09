@@ -172,6 +172,7 @@
                         this.news_item.description = this.description
                     });
                 }
+                this.$root.$emit('change-state', 'DEFAULT');
 
                 this.$root.$emit('first-dialog','');
             },

@@ -202,7 +202,8 @@ const messages_en = {
         removed_error: "OSINT source is in use and could not be deleted",
         word_lists: "Word Lists",
         type: "Type",
-        total_count: "OSINT Sources count: "
+        total_count: "OSINT Sources count: ",
+        osint_source_groups: "OSINT Source Groups"
     },
 
     osint_source_group: {
@@ -221,7 +222,9 @@ const messages_en = {
         removed_error: "OSINT source group is in use and could not be deleted",
         title: "Title",
         osint_sources: "OSINT Sources",
-        total_count: "OSINT source groups count: "
+        total_count: "OSINT source groups count: ",
+        default_group: "Uncategorized",
+        default_group_description: "Default group for uncategorized OSINT sources"
     },
 
     role: {

@@ -45,7 +45,7 @@ class SlackCollector(BaseCollector):
                 s.connect(proxy)
                 s.send(str.encode(connection))
                 s.recv(4096)
-            except:
+            except Exception:
                 print('OSINTSource ID: ' + source.id)
                 print('OSINTSource name: ' + source.name)
                 print('Proxy connection failed')

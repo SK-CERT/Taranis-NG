@@ -160,7 +160,7 @@ gzcat allitems.xml.gz | \
 1. Visit Configuration -> Word Lists. Click `Add new`.
 2. Fill in the name and description, check `Use as stop word list`.
 3. Add a new category and name it.
-4. Either enter the words directly, or use the `Import from CSV` button. You can use the file [doc/static/en\_complete.csv](./doc/static/en_complete.csv) as a starting point.
+4. Either enter the words directly, or use the `Import from CSV` button. You can use the file [doc/static/en\_complete.csv](./doc/static/en_complete.csv) as a starting point. Stop lists for other languages can be found [here](https://www.maxqda.de/hilfe-mx20-dictio/stopp-listen).
 
 # About...
 
