@@ -123,9 +123,6 @@ const keyboardMixin = targetId => ({
                     // ignore all presses with Ctrl or Alt key, they have a different meaning
                     if (! ( press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
                         keyAlias = this.shortcuts[i].alias;
-                        if (keyAlias == 'collection_up' || keyAlias == 'collection_down') {
-                            press.preventDefault();
-                        }
                         break;
                     }
                 }
@@ -140,6 +137,7 @@ const keyboardMixin = targetId => ({
                 } else if(this.state === 'DEFAULT') {
                     switch (keyAlias) {
                         case 'collection_up':
+                            press.preventDefault();
                             if (this.pos == 0) {
                                 // pass
                             } else {
@@ -152,6 +150,7 @@ const keyboardMixin = targetId => ({
                             }
                             break;
                         case 'collection_down':
+                            press.preventDefault();
                             if (this.pos == this.card_items.length - 1) {
                                 // pass
                             } else {
