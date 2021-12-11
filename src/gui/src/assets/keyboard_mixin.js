@@ -116,17 +116,16 @@ const keyboardMixin = targetId => ({
             //let dialog = document.querySelectorAll(".v-dialog--active").length ? true : false;
             //window.console.debug("keyAction", press);
 
-            if ( !this.isSomeFocused() ) {
-                let keyAlias = '';
-
-                for (let i = 0; i < this.shortcuts.length; i++) {
-                    // ignore all presses with Ctrl or Alt key, they have a different meaning
-                    if (! ( press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
-                        keyAlias = this.shortcuts[i].alias;
-                        break;
-                    }
+            let keyAlias = '';
+            for (let i = 0; i < this.shortcuts.length; i++) {
+                // ignore all presses with Ctrl or Alt key, they have a different meaning
+                if (! ( press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
+                    keyAlias = this.shortcuts[i].alias;
+                    break;
                 }
+            }
 
+            if ( !this.isSomeFocused() ) {
                 if (!this.focus) {
                     this.focus = true;
                     this.$refs.contentData.checkFocus(this.pos);
