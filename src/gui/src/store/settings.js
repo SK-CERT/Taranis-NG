@@ -24,6 +24,7 @@ const state = {
         {character: 'n', alias: 'new_product', icon: 'mdi-file-outline'},
         {character: 'a', alias: 'aggregate_open', icon: 'mdi-arrow-right-drop-circle'},
         {character: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app'},
+        {key_code: 191, key: 'Slash', alias: 'open_search', icon: 'mdi-card-search'},
     ],
     spellcheck: true,
     dark_theme: false,

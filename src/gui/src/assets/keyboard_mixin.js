@@ -115,6 +115,8 @@ const keyboardMixin = targetId => ({
         keyAction(press) {
             //let dialog = document.querySelectorAll(".v-dialog--active").length ? true : false;
             //window.console.debug("keyAction", press);
+            // define here, as it's not allowed in the case-switch
+            let search_field = document.getElementById('search')
 
             let keyAlias = '';
             for (let i = 0; i < this.shortcuts.length; i++) {
@@ -239,6 +241,11 @@ const keyboardMixin = targetId => ({
                                 this.card.link.click()
                             }
                             break;
+
+                        case 'open_search':
+                            press.preventDefault();
+                            search_field.focus()
+                            break;
                     }
                 } else if(this.state === 'SHOW_ITEM') {
                     switch (keyAlias) {
@@ -305,6 +312,23 @@ const keyboardMixin = targetId => ({
                     }
                 }
                 this.scrollPos();
+
+            // some item is in focus
+            } else {
+                if(this.state === 'DEFAULT' && keyAlias === 'close_item') {
+                    // Pressing Esc in the search field first clears the search and then removes the focus
+                    if(document.activeElement == search_field) {
+                        if (search_field.value === '') {
+                            // clear the focus
+                            search_field.blur()
+                        } else {
+                            // reset the search value if there is some
+                            search_field.value = ''
+                            // trigger an input event to apply the value to the search function
+                            search_field.dispatchEvent(new Event("input"))
+                        }
+                    }
+                }
             }
 
             //window.console.debug(this.pos, this.isItemOpen, this.isSomeFocused(), this.focus);

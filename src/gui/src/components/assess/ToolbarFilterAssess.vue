@@ -7,7 +7,8 @@
             <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
                 <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="filter.search"
                               :placeholder="$t('toolbar_filter.search')"
-                              v-on:keyup="filterSearch" />
+                              v-on:keyup="filterSearch"
+                              id="search" />
             </v-col>
             <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
                 <slot name="addbutton"></slot>
