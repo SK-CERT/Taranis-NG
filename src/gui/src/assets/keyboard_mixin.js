@@ -249,6 +249,16 @@ const keyboardMixin = targetId => ({
                     }
                 } else if(this.state === 'SHOW_ITEM') {
                     switch (keyAlias) {
+                        // scroll the dialog instead of the window behind
+                        case 'collection_up':
+                            press.preventDefault();
+                            document.querySelector('.v-dialog--active').scrollBy(0, -100);
+                            break;
+                        case 'collection_down':
+                            press.preventDefault();
+                            document.querySelector('.v-dialog--active').scrollBy(0, 100);
+                            break;
+
                         case 'close_item':
                             if(document.activeElement.className !== 'ql-editor') {
                                 this.isItemOpen = false;
