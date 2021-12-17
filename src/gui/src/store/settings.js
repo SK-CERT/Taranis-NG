@@ -12,6 +12,8 @@ const state = {
         {character: 'j', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
         {key_code: 13, key: 'Enter', alias: 'show_item', icon: 'mdi-text-box'},
         {key_code: 27, key: 'Escape', alias: 'close_item', icon: 'mdi-close-circle-outline'},
+        {key_code: 35, key: 'End', alias: 'end'},
+        {key_code: 36, key: 'Home', alias: 'home'},
         // news item actions
         {character: 'r', alias: 'read_item', icon: 'mdi-eye'},
         {character: 'i', alias: 'important_item', icon: 'mdi-star'},

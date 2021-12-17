@@ -162,6 +162,22 @@ const keyboardMixin = targetId => ({
                                 },150);
                             }
                             break;
+                        case 'end':
+                            press.preventDefault()
+                            this.pos = this.card_items.length - 1
+                            this.$refs.contentData.checkFocus(this.pos);
+                            setTimeout(()=>{
+                                this.keyRemaper();
+                            },150);
+                            break;
+                        case 'home':
+                            press.preventDefault()
+                            this.pos = 0;
+                            this.$refs.contentData.checkFocus(this.pos);
+                            setTimeout(()=>{
+                                this.keyRemaper();
+                            },150);
+                            break;
                         case 'show_item':
                             if (!this.isItemOpen) {
                                 //this.keyboard_state = 'SHOW_ITEM';
