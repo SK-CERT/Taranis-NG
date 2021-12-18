@@ -112,6 +112,14 @@ const keyboardMixin = targetId => ({
             return false;
         },
 
+        setNewsItem(newPosition) {
+            if (newPosition !== undefined) this.pos = newPosition;
+            this.$refs.contentData.checkFocus(this.pos);
+            setTimeout(()=>{
+                this.keyRemaper();
+            },150);
+        },
+
         keyAction(press) {
             //let dialog = document.querySelectorAll(".v-dialog--active").length ? true : false;
             //window.console.debug("keyAction", press);
@@ -130,10 +138,7 @@ const keyboardMixin = targetId => ({
             if ( !this.isSomeFocused() ) {
                 if (!this.focus) {
                     this.focus = true;
-                    this.$refs.contentData.checkFocus(this.pos);
-                    setTimeout(()=>{
-                        this.keyRemaper();
-                    },150);
+                    this.setNewsItem();
 
                 } else if(this.state === 'DEFAULT') {
                     switch (keyAlias) {
@@ -142,12 +147,7 @@ const keyboardMixin = targetId => ({
                             if (this.pos == 0) {
                                 // pass
                             } else {
-                                this.pos--;
-                                this.$refs.contentData.checkFocus(this.pos);
-                                setTimeout(()=>{
-                                    this.keyRemaper();
-                                },150);
-
+                                this.setNewsItem(this.pos-1);
                             }
                             break;
                         case 'collection_down':
@@ -155,28 +155,16 @@ const keyboardMixin = targetId => ({
                             if (this.pos == this.card_items.length - 1) {
                                 // pass
                             } else {
-                                this.pos++;
-                                this.$refs.contentData.checkFocus(this.pos);
-                                setTimeout(()=>{
-                                    this.keyRemaper();
-                                },150);
+                                this.setNewsItem(this.pos+1);
                             }
                             break;
                         case 'end':
                             press.preventDefault()
-                            this.pos = this.card_items.length - 1
-                            this.$refs.contentData.checkFocus(this.pos);
-                            setTimeout(()=>{
-                                this.keyRemaper();
-                            },150);
+                            this.setNewsItem(this.card_items.length - 1);
                             break;
                         case 'home':
                             press.preventDefault()
-                            this.pos = 0;
-                            this.$refs.contentData.checkFocus(this.pos);
-                            setTimeout(()=>{
-                                this.keyRemaper();
-                            },150);
+                            this.setNewsItem(0);
                             break;
                         case 'show_item':
                             if (!this.isItemOpen) {
