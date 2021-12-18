@@ -206,10 +206,20 @@ const keyboardMixin = targetId => ({
 
                         case 'read_item':
                             this.card.read.click();
+                            if (this.multiSelectActive && this.$store.getters.getFilter.read) {
+                                let selection = this.$store.getters.getSelection
+                                // set focus to the next item to read instead of keeping the current position
+                                this.setNewsItem(this.pos - selection.length + 1)
+                            }
                             break;
 
                         case 'important_item':
                             this.card.important.click();
+                            if (this.multiSelectActive && this.$store.getters.getFilter.important) {
+                                let selection = this.$store.getters.getSelection
+                                // set focus to the next item to read instead of keeping the current position
+                                this.setNewsItem(this.pos - selection.length + 1)
+                            }
                             break;
 
                         case 'like_item':
@@ -218,10 +228,20 @@ const keyboardMixin = targetId => ({
 
                         case 'unlike_item':
                             this.card.unlike.click();
+                            if (this.multiSelectActive && this.$store.getters.getFilter.relevant) {
+                                let selection = this.$store.getters.getSelection
+                                // set focus to the next item to read instead of keeping the current position
+                                this.setNewsItem(this.pos - selection.length + 1)
+                            }
                             break;
 
                         case 'delete_item':
                             this.card.delete.click();
+                            if (this.multiSelectActive) {
+                                let selection = this.$store.getters.getSelection
+                                // set focus to the next item to read instead of keeping the current position
+                                this.setNewsItem(this.pos - selection.length + 1)
+                            }
                             break;
 
                         case 'group':
