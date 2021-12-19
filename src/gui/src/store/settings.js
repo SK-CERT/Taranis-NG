@@ -27,6 +27,7 @@ const state = {
         {character: 'a', alias: 'aggregate_open', icon: 'mdi-arrow-right-drop-circle'},
         {character: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app'},
         {key_code: 191, key: 'Slash', alias: 'open_search', icon: 'mdi-card-search'},
+        {character: 'R', alias: 'reload'},
         // filter actions
         {character: 'f', alias: 'enter_filter_mode'},
     ],

@@ -274,6 +274,11 @@ const keyboardMixin = targetId => ({
                         case 'enter_filter_mode':
                             this.keyboard_state = 'FILTER';
                             break;
+
+                        case 'reload':
+                            this.$root.$emit('news-items-updated')
+                            break;
+
                     }
                 } else if(this.state === 'SHOW_ITEM' && this.keyboard_state === 'SHOW_ITEM') {
                     switch (keyAlias) {
