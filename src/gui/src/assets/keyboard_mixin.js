@@ -140,7 +140,7 @@ const keyboardMixin = targetId => ({
                     this.focus = true;
                     this.setNewsItem();
 
-                } else if(this.state === 'DEFAULT') {
+                } else if(this.state === 'DEFAULT' && this.keyboard_state === 'DEFAULT') {
                     switch (keyAlias) {
                         case 'collection_up':
                             press.preventDefault();
@@ -270,8 +270,12 @@ const keyboardMixin = targetId => ({
                             press.preventDefault();
                             search_field.focus()
                             break;
+
+                        case 'enter_filter_mode':
+                            this.keyboard_state = 'FILTER';
+                            break;
                     }
-                } else if(this.state === 'SHOW_ITEM') {
+                } else if(this.state === 'SHOW_ITEM' && this.keyboard_state === 'SHOW_ITEM') {
                     switch (keyAlias) {
                         // scroll the dialog instead of the window behind
                         case 'collection_up':
@@ -333,7 +337,7 @@ const keyboardMixin = targetId => ({
                         default:
                             break;
                     }
-                } else if(this.state === 'NEW_PRODUCT') {
+                } else if(this.state === 'NEW_PRODUCT' && this.keyboard_state === 'DEFAULT') {
                     switch(keyAlias) {
                         case 'close_item':
                             if(document.activeElement.className !== 'ql-editor') {
@@ -342,6 +346,33 @@ const keyboardMixin = targetId => ({
                                 this.card.close.click();
                                 this.keyboard_state = 'DEFAULT';
                             }
+                            break;
+                    }
+                } else if (this.keyboard_state === 'FILTER') {
+                    switch(keyAlias) {
+                        case 'read_item':
+                            document.getElementById('button_filter_read').click();
+                            this.keyboard_state = 'DEFAULT';
+                            break;
+
+                        case 'important_item':
+                            document.getElementById('button_filter_important').click();
+                            this.keyboard_state = 'DEFAULT';
+                            break;
+
+                        case 'like_item':
+                            document.getElementById('button_filter_relevant').click();
+                            this.keyboard_state = 'DEFAULT';
+                            break;
+
+                        case 'new_report_item':
+                            document.getElementById('button_filter_analyze').click();
+                            this.keyboard_state = 'DEFAULT';
+                            break;
+
+                        case 'close_item':
+                            // exit mode
+                            this.keyboard_state = 'DEFAULT';
                             break;
                     }
                 }
