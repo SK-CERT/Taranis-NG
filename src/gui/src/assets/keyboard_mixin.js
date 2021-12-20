@@ -386,17 +386,10 @@ const keyboardMixin = targetId => ({
             // some item is in focus
             } else {
                 if(this.state === 'DEFAULT' && keyAlias === 'close_item') {
-                    // Pressing Esc in the search field first clears the search and then removes the focus
+                    // Pressing Esc in the search field removes the focus
                     if(document.activeElement == search_field) {
-                        if (search_field.value === '') {
-                            // clear the focus
-                            search_field.blur()
-                        } else {
-                            // reset the search value if there is some
-                            search_field.value = ''
-                            // trigger an input event to apply the value to the search function
-                            search_field.dispatchEvent(new Event("input"))
-                        }
+                        // clear the focus
+                        search_field.blur()
                     }
                 }
             }
