@@ -7,6 +7,7 @@ from managers.auth_manager import auth_required, get_user_from_jwt
 from model import acl_entry, remote, presenters_node, publisher_preset, publishers_node, \
     bots_node, bot_preset, attribute, collectors_node, organization, osint_source, product_type, \
     report_item_type, role, user, word_list
+from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from schema.role import PermissionSchema
 
@@ -365,7 +366,9 @@ class OSINTSource(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_UPDATE')
     def put(self, source_id):
-        collectors_manager.update_osint_source(source_id, request.json)
+        updated_osint_source, default_group = collectors_manager.update_osint_source(source_id, request.json)
+        if default_group is not None:
+            NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
 
     @auth_required('CONFIG_OSINT_SOURCE_DELETE')
     def delete(self, source_id):
@@ -390,7 +393,13 @@ class OSINTSourceGroup(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_UPDATE')
     def put(self, group_id):
-        return osint_source.OSINTSourceGroup.update(group_id, request.json)
+        sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(group_id, request.json)
+        if sources_in_default_group is not None:
+            default_group = osint_source.OSINTSourceGroup.get_default()
+            for source in sources_in_default_group:
+                NewsItemAggregate.reassign_to_new_groups(source.id, default_group.id)
+
+        return message, code
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_DELETE')
     def delete(self, group_id):

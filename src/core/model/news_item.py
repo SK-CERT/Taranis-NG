@@ -1,6 +1,6 @@
 import base64
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from marshmallow import post_load, fields
 from sqlalchemy import orm, and_, or_, func
@@ -577,6 +577,20 @@ class NewsItemAggregate(db.Model):
         db.session.commit()
 
         return {news_item_data.osint_source_id}
+
+    @classmethod
+    def reassign_to_new_groups(cls, osint_source_id, default_group_id):
+        time_limit = datetime.now() - timedelta(days=7)
+        news_items_query = NewsItem.get_all_by_group_and_source_query(default_group_id, osint_source_id, time_limit)
+        for news_item in news_items_query:
+            news_item_data = news_item.news_item_data
+            aggregate = NewsItemAggregate.find(news_item.news_item_aggregate_id)
+            aggregate.news_items.remove(news_item)
+            NewsItemVote.delete_all(news_item.id)
+            db.session.delete(news_item)
+            NewsItemAggregate.update_status(aggregate.id)
+            cls.create_new_for_all_groups(news_item_data)
+            db.session.commit()
 
     @classmethod
     def add_remote_news_items(cls, news_items_data_list, remote_node, osint_source_group_id):
