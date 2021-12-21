@@ -162,7 +162,7 @@ gzcat allitems.xml.gz | \
 3. Add a new category and name it.
 4. Either enter the words directly, or use the `Import from CSV` button. You can use the file [doc/static/en\_complete.csv](./doc/static/en_complete.csv) as a starting point. Stop lists for other languages can be found [here](https://www.maxqda.de/hilfe-mx20-dictio/stopp-listen).
 
-# About...
+## About...
 
 This project was inspired by [Taranis3](https://github.com/NCSC-NL/taranis3),
 a great tool made by NCSC-NL. It aims to become a next generation of this
@@ -178,7 +178,7 @@ Further development has been co-funded by “Connecting Europe Facility – Cybe
 
 Further development is being co-funded by European Commission through the Connecting Europe Facility action entitled "Joint Threat Analysis Network", action number 2020-EU-IA-0260.
 
-# Learn more...
+## Learn more...
 
 Before the new developer and user documentation becomes available, we invite you
 to have a look at the
