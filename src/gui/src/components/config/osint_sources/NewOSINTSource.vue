@@ -1,18 +1,21 @@
 <template>
-    <div>
-        <v-btn v-if="canCreate" depressed small color="white--text ma-2 mt-3 mr-5" @click="addSource">
-            <v-icon left>mdi-plus-circle-outline</v-icon>
-            <span class="subtitle-2">{{ $t('osint_source.add_btn') }}</span>
+    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
+        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="canCreate" @click="addSource">
+            <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
+            <span>{{ $t('osint_source.add_btn') }}</span>
         </v-btn>
-        <v-dialog v-model="visible" fullscreen hide-overlay transition="dialog-bottom-transition">
-            <v-card>
-
-                <v-toolbar dark color="primary">
-                    <v-btn icon dark @click="cancel">
-                        <v-icon>mdi-close-circle</v-icon>
+        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible">
+            <v-card v-bind="UI.DIALOG.BASEMENT">
+                <v-toolbar v-bind="UI.DIALOG.TOOLBAR">
+                    <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="cancel">
+                        <v-icon>{{ UI.ICON.CLOSE }}</v-icon>
                     </v-btn>
-                    <v-toolbar-title v-if="!edit">{{ $t('osint_source.add_new') }}</v-toolbar-title>
-                    <v-toolbar-title v-if="edit">{{ $t('osint_source.edit') }}</v-toolbar-title>
+
+                    <v-toolbar-title>
+                        <span v-if="!edit">{{ $t('osint_source.add_new') }}</span>
+                        <span v-else>{{ $t('osint_source.edit') }}</span>
+                    </v-toolbar-title>
+
                     <v-spacer></v-spacer>
                     <v-btn v-if="canUpdate" text type="submit" form="form_osint_source">
                         <v-icon left>mdi-content-save</v-icon>
@@ -20,24 +23,29 @@
                     </v-btn>
                 </v-toolbar>
 
-                <v-form @submit.prevent="add" id="form_osint_source" ref="form">
-                    <v-card>
-                        <v-card-text>
-                            <span v-if="edit">ID: {{ source.id }}</span>
-
+                <v-form @submit.prevent="add" id="form_osint_source" ref="form" class="px-4">
+                    <v-row no-gutters>
+                        <v-col cols="12" class="caption grey--text" v-if="edit">ID: {{ source.id }}</v-col>
+                        <v-col cols="12">
                             <v-combobox :disabled="edit"
                                         v-model="selected_node"
                                         :items="nodes"
                                         item-text="name"
                                         :label="$t('osint_source.node')"
-                            ></v-combobox>
+                            />
+                        </v-col>
+                        <v-col cols="12">
                             <v-combobox v-if="selected_node" :disabled="edit"
                                         v-model="selected_collector"
                                         :items="selected_node.collectors"
                                         item-text="name_with_id"
                                         :label="$t('osint_source.collector')"
-                            ></v-combobox>
+                            />
+                        </v-col>
+                    </v-row>
 
+                    <v-row no-gutters>
+                        <v-col cols="12">
                             <v-text-field v-if="selected_collector" :disabled="!canUpdate"
                                           :label="$t('osint_source.name')"
                                           name="name"
@@ -47,22 +55,30 @@
                                           data-vv-name="name"
                                           :error-messages="errors.collect('name')"
                                           :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
+                            />
+                        </v-col>
+                        <v-col cols="12">
                             <v-textarea v-if="selected_collector" :disabled="!canUpdate"
                                         :label="$t('osint_source.description')"
                                         name="description"
                                         v-model="source.description"
                                         :spellcheck="$store.state.settings.spellcheck"
-                            ></v-textarea>
+                            />
+                        </v-col>
+                    </v-row>
 
+                    <v-row no-gutters>
+                        <v-col cols="12">
                             <FormParameters v-if="selected_collector" :disabled="!canUpdate"
                                             ui="text"
                                             :sources="selected_collector.parameters"
                                             :values="values"
                             />
+                        </v-col>
+                    </v-row>
 
-                            <v-spacer class="mt-8"/>
-
+                    <v-row no-gutters>
+                        <v-col cols="12">
                             <v-data-table v-if="selected_collector" :disabled="!canUpdate"
                                           v-model="selected_osint_source_groups"
                                           :headers="headers_groups"
@@ -84,7 +100,8 @@
                                 </template>
 
                             </v-data-table>
-
+                        </v-col>
+                        <v-col cols="12" class="pt-2">
                             <v-data-table v-if="selected_collector" :disabled="!canUpdate"
                                           v-model="selected_word_lists"
                                           :headers="headers"
@@ -101,19 +118,23 @@
                                 </template>
 
                             </v-data-table>
-                        </v-card-text>
-                    </v-card>
-                </v-form>
-                <v-alert v-if="show_validation_error" dense type="error" text>
-                    {{ $t('osint_source.validation_error') }}
-                </v-alert>
-                <v-alert v-if="show_error" dense type="error" text>
-                    {{ $t('osint_source.error') }}
-                </v-alert>
+                        </v-col>
+                    </v-row>
 
+                    <v-row no-gutters class="pt-2">
+                        <v-col cols="12">
+                            <v-alert v-if="show_validation_error" dense type="error" text>
+                                {{ $t('osint_source.validation_error') }}
+                            </v-alert>
+                            <v-alert v-if="show_error" dense type="error" text>
+                                {{ $t('osint_source.error') }}
+                            </v-alert>
+                        </v-col>
+                    </v-row>
+                </v-form>
             </v-card>
         </v-dialog>
-    </div>
+    </v-row>
 </template>
 
 <script>

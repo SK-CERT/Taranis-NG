@@ -11,7 +11,7 @@
     <div>
 
         <table class="table table-bordered header_info" style="width: 100%">
-        {% for report_item in data %}
+        {% for report_item in data.report_items %}
 
             <tr class="table-row">
                 <td class="w25 py-0">
@@ -20,7 +20,7 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="low" name="low" {% if report_item['confidentiality'][0] == 'UNRESTRICTED' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="low" name="low" {% if report_item.attrs.confidentiality == 'UNRESTRICTED' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">Unrestricted</span>
                       </label>
@@ -29,7 +29,7 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="middle" name="middle" {% if report_item['confidentiality'][0] == 'CLASSIFIED' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="middle" name="middle" {% if report_item.attrs.confidentiality == 'CLASSIFIED' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">Classified</span>
                       </label>
@@ -38,7 +38,7 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="high" name="high" {% if report_item['confidentiality'][0] == 'CONFIDENTIAL' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="high" name="high" {% if report_item.attrs.confidentiality == 'CONFIDENTIAL' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">Confidential</span>
                       </label>
@@ -47,7 +47,7 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {% if report_item['confidentiality'][0] == 'SECRET' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {% if report_item.attrs.confidentiality == 'SECRET' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">Secret</span>
                       </label>
@@ -63,7 +63,7 @@
                 <td class="py-0" colspan="2">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="public" name="public" {% if report_item['tlp'][0] == 'WHITE' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="public" name="public" {% if report_item.attrs.tlp == 'WHITE' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">TLP:white</span>
                       </label>
@@ -72,7 +72,7 @@
                 <td class="py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="reserved" name="reserved" {% if report_item['tlp'][0] == 'GREEN' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="reserved" name="reserved" {% if report_item.attrs.tlp == 'GREEN' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">TLP:green</span>
                       </label>
@@ -81,7 +81,7 @@
                 <td class="py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="confidential" name="confidential" {% if report_item['tlp'][0] == 'AMBER' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="confidential" name="confidential" {% if report_item.attrs.tlp == 'AMBER' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">TLP:amber</span>
                       </label>
@@ -90,7 +90,7 @@
                 <td class="py-0">
                     <div class="mt-2">
                       <label class="checkbox-button">
-                        <input type="checkbox" class="checkbox-button__input" id="secret" name="secret" {% if report_item['tlp'][0] == 'RED' %}checked{% endif %}>
+                        <input type="checkbox" class="checkbox-button__input" id="secret" name="secret" {% if report_item.attrs.tlp == 'RED' %}checked{% endif %}>
                         <span class="checkbox-button__control"></span>
                         <span class="checkbox-button__label">TLP:red</span>
                       </label>
@@ -98,7 +98,7 @@
                 </td>
             </tr>
 	    <tr><td class="py-0" colspan="6">
-                    <div class="mt-2">CVSS vector: <span class="cvss">{{ report_item['cvss'][0]|e }} </span></div>
+                    <div class="mt-2">CVSS vector: <span class="cvss">{{ report_item.attrs.cvss|e }} </span></div>
 	    </td></tr>
         </table>
 
@@ -110,7 +110,7 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {{ report_item['description'][0]|e }}
+                    {{ report_item.attrs.description|e }}
                 </td>
             </tr>
         </table>
@@ -121,7 +121,7 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {{ report_item['exposure_date'][0] }}
+                    {{ report_item.attrs.exposure_date }}
                 </td>
             </tr>
         </table>
@@ -132,7 +132,7 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {{ report_item['update_date'][0] }}
+                    {{ report_item.attrs.update_date }}
                 </td>
             </tr>
         </table>
@@ -143,8 +143,8 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {% if report_item['cve'] %}
-		    {% for i in report_item.cve %}
+                    {% if report_item.attrs.cve %}
+		    {% for i in report_item.attrs.cve %}
 		    <div>{{ i|e }}</div>
 		    {% endfor %}
 		    {% endif %}
@@ -158,8 +158,8 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {% if report_item['impact'] %}
-		    {% for i in report_item.impact %}
+                    {% if report_item.attrs.impact %}
+		    {% for i in report_item.attrs.impact %}
 		    <div>{{ i|e }}</div>
 		    {% endfor %}
 		    {% endif %}
@@ -173,8 +173,8 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {% if report_item['ioc'] %}
-		    {% for i in report_item.ioc %}
+                    {% if report_item.attrs.ioc %}
+		    {% for i in report_item.attrs.ioc %}
 		    <div>{{ i|e }}</div>
 		    {% endfor %}
 		    {% endif %}
@@ -188,8 +188,8 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {% if report_item['affected_systems'] %}
-		    {% for i in report_item.affected_systems %}
+                    {% if report_item.attrs.affected_systems %}
+		    {% for i in report_item.attrs.affected_systems %}
 		    <div>{{ i|e }}</div>
 		    {% endfor %}
 		    {% endif %}
@@ -203,11 +203,7 @@
             </tr>
             <tr>
                 <td class="text-justify text_in_tab">
-                    {% if report_item.recommendations %}
-		    {% for i in report_item.recommendations %}
-		    <div>{{ i|e }}</div>
-		    {% endfor %}
-		    {% endif %}
+                    {{ report_item.attrs.recommendations }}
                 </td>
             </tr>
         </table>
@@ -219,8 +215,8 @@
             <tr>
                 <td class="text-justify text_in_tab">
                     <ul class="list-unstyled">
-			    {% if report_item.links %}
-			    {% for i in report_item.links %}
+			    {% if report_item.attrs.links %}
+			    {% for i in report_item.attrs.links %}
 			    <div>{{ i|e }}</div>
 			    {% endfor %}
 			    {% endif %}

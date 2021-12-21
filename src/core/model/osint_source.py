@@ -8,7 +8,7 @@ from sqlalchemy.types import JSON
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
 from model.collector import Collector
-from model.parameter_value import NewParameterValueSchema
+from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
 from schema.acl_entry import ItemType
 from schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
@@ -147,6 +147,24 @@ class OSINTSource(db.Model):
         db.session.commit()
 
         return osint_source
+
+    @classmethod
+    def import_new(cls, osint_source, collector):
+        parameter_values = []
+        for parameter_value in osint_source.parameter_values:
+            for parameter in collector.parameters:
+                if parameter.key == parameter_value.parameter.key:
+                    new_parameter_value = ParameterValue(parameter_value.value, parameter)
+                    parameter_values.append(new_parameter_value)
+                    break
+
+        news_osint_source = OSINTSource('', osint_source.name, osint_source.description, collector.id, parameter_values,
+                                        [], [])
+
+        db.session.add(news_osint_source)
+        default_group = OSINTSourceGroup.get_default()
+        default_group.osint_sources.append(news_osint_source)
+        db.session.commit()
 
     @classmethod
     def delete(cls, osint_source_id):

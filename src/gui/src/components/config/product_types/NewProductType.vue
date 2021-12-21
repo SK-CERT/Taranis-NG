@@ -1,19 +1,21 @@
 <template>
-    <div>
-        <v-btn v-if="canCreate" depressed small color="white--text ma-2 mt-3 mr-5" @click="addProduct">
-            <v-icon left>mdi-plus-circle-outline</v-icon>
-            <span class="subtitle-2">{{ $t('product_type.add_btn') }}</span>
+    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
+        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="canCreate" @click="addProduct">
+            <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
+            <span>{{ $t('product_type.add_btn') }}</span>
         </v-btn>
-        <v-dialog v-model="visible" fullscreen hide-overlay transition="dialog-bottom-transition">
-            <v-card>
-                <!--<v-card-title class="headline">{{$t('osint_source.add_new')}}</v-card-title>-->
-
-                <v-toolbar dark color="primary">
-                    <v-btn icon dark @click="cancel">
-                        <v-icon>mdi-close-circle</v-icon>
+        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible">
+            <v-card v-bind="UI.DIALOG.BASEMENT">
+                <v-toolbar v-bind="UI.DIALOG.TOOLBAR">
+                    <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="cancel">
+                        <v-icon>{{ UI.ICON.CLOSE }}</v-icon>
                     </v-btn>
-                    <v-toolbar-title v-if="!edit">{{ $t('product_type.add_new') }}</v-toolbar-title>
-                    <v-toolbar-title v-if="edit">{{ $t('product_type.edit') }}</v-toolbar-title>
+
+                    <v-toolbar-title>
+                        <span v-if="!edit">{{ $t('product_type.add_new') }}</span>
+                        <span v-else>{{ $t('product_type.edit') }}</span>
+                    </v-toolbar-title>
+
                     <v-spacer></v-spacer>
                     <v-btn v-if="canUpdate" text type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
@@ -21,59 +23,79 @@
                     </v-btn>
                 </v-toolbar>
 
-                <v-card-text>
-                    <v-form @submit.prevent="add" id="form" ref="form">
+                <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
+                    <v-row no-gutters>
+                        <v-col cols="12" class="caption grey--text" v-if="edit">ID: {{ product.id }}</v-col>
+                        <v-col cols="12">
+                            <v-combobox :disabled="edit"
+                                        v-model="selected_node"
+                                        :items="nodes"
+                                        item-text="name"
+                                        :label="$t('product_type.node')"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-combobox v-if="selected_node" :disabled="edit"
+                                        v-model="selected_presenter"
+                                        :items="selected_node.presenters"
+                                        item-text="name"
+                                        :label="$t('product_type.presenter')"
+                            />
+                        </v-col>
+                    </v-row>
 
-                        <span v-if="edit">ID: {{ product.id }}</span>
+                    <v-row no-gutters>
+                        <v-col cols="12">
+                            <v-text-field v-if="selected_presenter" :disabled="!canUpdate"
+                                          :label="$t('product_type.name')"
+                                          name="name"
+                                          type="text"
+                                          v-model="product.title"
+                                          v-validate="'required'"
+                                          data-vv-name="name"
+                                          :error-messages="errors.collect('name')"
+                                          :spellcheck="$store.state.settings.spellcheck"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-textarea v-if="selected_presenter" :disabled="!canUpdate"
+                                        :label="$t('product_type.description')"
+                                        name="description"
+                                        v-model="product.description"
+                                        :spellcheck="$store.state.settings.spellcheck"
+                            />
+                        </v-col>
+                    </v-row>
 
-                        <v-combobox :disabled="edit"
-                                    v-model="selected_node"
-                                    :items="nodes"
-                                    item-text="name"
-                                    :label="$t('product_type.node')"
-                        ></v-combobox>
-                        <v-combobox v-if="selected_node" :disabled="edit"
-                                    v-model="selected_presenter"
-                                    :items="selected_node.presenters"
-                                    item-text="name"
-                                    :label="$t('product_type.presenter')"
-                        ></v-combobox>
+                    <v-row no-gutters>
+                        <v-col cols="12">
+                            <FormParameters v-if="selected_presenter" :disabled="!canUpdate"
+                                            ui="text"
+                                            :sources="selected_presenter.parameters"
+                                            :values="values"
+                            />
+                        </v-col>
+                    </v-row>
 
+                    <v-row no-gutters class="pt-2">
+                        <v-col cols="12">
+                            <v-alert v-if="show_validation_error" dense type="error" text>
+                                {{ $t('product_type.validation_error') }}
+                            </v-alert>
+                            <v-alert v-if="show_error" dense type="error" text>
+                                {{ $t('product_type.error') }}
+                            </v-alert>
+                        </v-col>
+                    </v-row>
 
-                        <v-text-field v-if="selected_presenter" :disabled="!canUpdate"
-                                      :label="$t('product_type.name')"
-                                      name="name"
-                                      type="text"
-                                      v-model="product.title"
-                                      v-validate="'required'"
-                                      data-vv-name="name"
-                                      :error-messages="errors.collect('name')"
-                                      :spellcheck="$store.state.settings.spellcheck"
-                        ></v-text-field>
-                        <v-textarea v-if="selected_presenter" :disabled="!canUpdate"
-                                    :label="$t('product_type.description')"
-                                    name="description"
-                                    v-model="product.description"
-                                    :spellcheck="$store.state.settings.spellcheck"
-                        ></v-textarea>
-
-
-                        <FormParameters v-if="selected_presenter" :disabled="!canUpdate"
-                                        ui="text"
-                                        :sources="selected_presenter.parameters"
-                                        :values="values"
-                        />
-
-                    </v-form>
-
-                    <v-dialog v-model="help_dialog" fullscreen>
+                    <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="help_dialog">
                         <template v-slot:activator="{ on }">
                             <v-btn color="primary" dark class="mb-2" v-on="on">
-                                <v-icon left>mdi-help</v-icon>
+                                <v-icon left>{{ UI.ICON.HELP }}</v-icon>
                                 <span>{{ $t('product_type.help') }}</span>
                             </v-btn>
                         </template>
-                        <v-toolbar dark color="primary">
+                        <v-toolbar v-bind="UI.DIALOG.TOOLBAR">
                             <v-btn icon dark @click="closeHelpDialog">
                                 <v-icon>mdi-close-circle</v-icon>
                             </v-btn>
@@ -91,21 +113,136 @@
 
                             <v-card-text>
                                 <div v-if="selected_type !== null">
+                                    <v-card style="margin-bottom: 8px">
+                                        <v-card-title>{{ $t('product_type.report_items') }}</v-card-title>
+                                        <v-card-text>
+                                            {{ '{' }}% for report_item in data.report_items %{{ '}' }}
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.report_items_object.name')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsage('name')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.report_items_object.name_prefix')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsage('name_prefix')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.report_items_object.type')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsage('type')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            {{ '{' }}% endfor %{{ '}' }}
+                                        </v-card-text>
+                                    </v-card>
+
+                                    <v-card style="margin-bottom: 8px">
+                                        <v-card-title>{{ $t('product_type.news_items') }}</v-card-title>
+                                        <v-card-text>
+                                            {{ '{' }}% for report_item in data.report_items %{{ '}' }}
+                                        </v-card-text>
+                                        <v-card-text>
+                                            {{ '{' }}% for news_item in report_item.news_items %{{ '}' }}
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.title')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('title')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.review')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('review')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.content')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('content')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.author')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('author')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.source')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('source')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.link')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('link')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.published')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('published')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            <span><strong>{{
+                                                    $t('product_type.news_items_object.collected')
+                                                }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
+                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                v-html="variableUsageNewsItems('collected')"></span></span>
+                                        </v-card-text>
+                                        <v-card-text>
+                                            {{ '{' }}% endfor %{{ '}' }}
+                                        </v-card-text>
+                                        <v-card-text>
+                                            {{ '{' }}% endfor %{{ '}' }}
+                                        </v-card-text>
+                                    </v-card>
+
                                     <v-card style="margin-bottom: 8px"
                                             v-for="attribute_group in selected_type.attribute_groups"
                                             :key="attribute_group.id">
                                         <v-card-title>{{ attribute_group.title }}</v-card-title>
                                         <v-card-text>
-                                        {{ '{' }}% for report_item in data %{{ '}' }}
+                                            {{ '{' }}% for report_item in data.report_items %{{ '}' }}
                                         </v-card-text>
                                         <v-card-text v-for="attribute_item in attribute_group.attribute_group_items"
                                                      :key="attribute_item.id">
-                                            <span><strong>{{ attribute_item.title }}</strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                            <span><strong>{{ attribute_item.title }}</strong>: <span
+                                                class="pl-3 pr-3 pt-1 pb-1"
                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
                                                 v-html="attributeUsage(attribute_item)"></span></span>
                                         </v-card-text>
                                         <v-card-text>
-                                        {{ '{' }}% endfor %{{ '}' }}
+                                            {{ '{' }}% endfor %{{ '}' }}
                                         </v-card-text>
                                     </v-card>
                                 </div>
@@ -113,18 +250,10 @@
 
                         </v-card>
                     </v-dialog>
-
-                    <v-alert v-if="show_validation_error" dense type="error" text>
-                        {{ $t('product_type.validation_error') }}
-                    </v-alert>
-                    <v-alert v-if="show_error" dense type="error" text>
-                        {{ $t('product_type.error') }}
-                    </v-alert>
-                </v-card-text>
-
+                </v-form>
             </v-card>
         </v-dialog>
-    </div>
+    </v-row>
 </template>
 
 <script>
@@ -177,10 +306,18 @@ export default {
         attributeUsage(attribute_item) {
             let variable = attribute_item.title.toLowerCase().replaceAll(" ", "_")
             if (attribute_item.max_occurrence > 1) {
-                return "{% <span style=\"color: #be6d7c\">for</span> entry <span style=\"color: #be6d7c\">in</span> <span style=\"color: #6d9abe\">report_item." + variable + "</span> %}{{ entry | e }}{% <span style=\"color: #be6d7c\">endfor</span> %}"
+                return "{% <span style=\"color: #be6d7c\">for</span> entry <span style=\"color: #be6d7c\">in</span> <span style=\"color: #6d9abe\">report_item.attrs." + variable + "</span> %}{{ entry | e }}{% <span style=\"color: #be6d7c\">endfor</span> %}"
             } else {
-                return "{{ <span style=\"color: #6d9abe\">report_item." + variable + " | e</span> }}"
+                return "{{ <span style=\"color: #6d9abe\">report_item.attrs." + variable + " | e</span> }}"
             }
+        },
+
+        variableUsage(variable) {
+            return "{{ <span style=\"color: #6d9abe\">report_item." + variable + " | e</span> }}"
+        },
+
+        variableUsageNewsItems(variable) {
+            return "{{ <span style=\"color: #6d9abe\">news_item." + variable + " | e</span> }}"
         },
 
         addProduct() {

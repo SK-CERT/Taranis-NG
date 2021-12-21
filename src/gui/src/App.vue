@@ -7,9 +7,9 @@
             <router-view name="nav"></router-view>
         </v-navigation-drawer>
 
-        <v-content>
+        <v-main>
             <router-view/>
-        </v-content>
+        </v-main>
 
         <Notification v-if="isAuthenticated()"/>
     </v-app>
@@ -112,3 +112,4 @@ export default {
 </script>
 
 <style src="./assets/common.css"></style>
+<style src="./assets/centralize.css"></style>

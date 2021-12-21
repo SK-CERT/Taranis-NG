@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, post_load, EXCLUDE
 
-from schema.collector import CollectorSchema
-from schema.parameter_value import ParameterValueSchema
+from schema.collector import CollectorSchema, CollectorExportSchema
+from schema.parameter_value import ParameterValueSchema, ParameterValueExportSchema
 from schema.presentation import PresentationSchema
 from schema.word_list import WordListSchema
 
@@ -102,3 +102,39 @@ class OSINTSourceGroupSchema(OSINTSourceGroupSchemaBase):
 
 class OSINTSourceGroupPresentationSchema(OSINTSourceGroupSchema, PresentationSchema):
     pass
+
+
+class OSINTSourceExportSchema(Schema):
+    name = fields.Str()
+    description = fields.Str()
+    collector = fields.Nested(CollectorExportSchema)
+    parameter_values = fields.List(fields.Nested(ParameterValueExportSchema))
+
+    @post_load
+    def make(self, data, **kwargs):
+        return OSINTSourceExport(**data)
+
+
+class OSINTSourceExport:
+
+    def __init__(self, name, description, collector, parameter_values):
+        self.name = name
+        self.description = description
+        self.collector = collector
+        self.parameter_values = parameter_values
+
+
+class OSINTSourceExportRootSchema(Schema):
+    version = fields.Int()
+    data = fields.Nested(OSINTSourceExportSchema, many=True)
+
+    @post_load
+    def make(self, data, **kwargs):
+        return OSINTSourceExportRoot(**data)
+
+
+class OSINTSourceExportRoot:
+
+    def __init__(self, version, data):
+        self.version = version
+        self.data = data

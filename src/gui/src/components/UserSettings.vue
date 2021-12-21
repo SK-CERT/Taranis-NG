@@ -221,10 +221,3 @@
         }
     }
 </script>
-
-<style>
-    .row.text-center.shortcut {
-        width: calc(100% / 3 + 24px);
-        float: left;
-    }
-</style>

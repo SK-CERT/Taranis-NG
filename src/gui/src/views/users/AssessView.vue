@@ -27,12 +27,6 @@
 
 </template>
 
-<style>
-    .nri {
-        display: none;
-    }
-</style>
-
 <script>
     import ViewLayout from "@/components/layouts/ViewLayout";
     import NewReportItem from "@/components/analyze/NewReportItem";

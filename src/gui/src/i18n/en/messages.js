@@ -27,6 +27,12 @@ const messages_en = {
             password_check: {
                 required: "Password is required",
                 confirmed: "Passwords are not identical"
+            },
+            collector_node: {
+                required: "Select Collector Node"
+            },
+            file: {
+                required: "File required"
             }
         },
     },
@@ -203,7 +209,25 @@ const messages_en = {
         word_lists: "Word Lists",
         type: "Type",
         total_count: "OSINT Sources count: ",
-        osint_source_groups: "OSINT Source Groups"
+        osint_source_groups: "OSINT Source Groups",
+        tooltip: {
+            group_items: 'Group news items into aggregate',
+            ungroup_items: 'Ungroup news items from aggregate',
+            analyze_items: 'Create analysis report from news items',
+            read_items: 'Mark news items as read',
+            important_items: 'Mark news items as important',
+            like_items: 'Like news items',
+            dislike_items: 'Dislike news items',
+            delete_items: 'Delete news items',
+            select_all: "Select All",
+            unselect_all: "Unselect All"
+        },
+        notification: {
+            success: "Collectors successfully added"
+        },
+        dialog_import: "Import OSINT Sources",
+        import: "Import",
+        export: "Export"
     },
 
     osint_source_group: {
@@ -315,7 +339,24 @@ const messages_en = {
         total_count: "Product types count: ",
         help: "Template parameters description",
         close: "Close",
-        choose_report_type: "Choose report type to show its parameters description"
+        choose_report_type: "Choose report type to show its parameters description",
+        report_items: "Report Items",
+        report_items_object: {
+            name: "Name",
+            name_prefix: "Name Prefix",
+            type: "Report Item Type"
+        },
+        news_items: "News Items",
+        news_items_object: {
+            title: "Title",
+            review: "Review",
+            content: "Content",
+            author: "Author",
+            source: "Source",
+            link: "Link",
+            collected: "Collected Date",
+            published: "Published Date"
+        }
     },
 
     presenters_node: {
@@ -906,6 +947,7 @@ const messages_en = {
 
     asset: {
         add_new: "Add new asset",
+        add_group_info: "Please add an asset group",
         edit: "Edit asset",
         add: "Add New",
         cancel: "Cancel",
@@ -996,7 +1038,8 @@ const messages_en = {
     },
 
     error: {
-        aggregate_in_use: "Some of selected aggregates or news items are already assigned to a report item"
+        aggregate_in_use: "Some of selected aggregates or news items are already assigned to a report item",
+        server_error: "Unknown server error..."
     }
 };
 

@@ -1,17 +1,20 @@
-from marshmallow import post_load
-from sqlalchemy import orm, or_, func
 import uuid
 from datetime import datetime
+
+from marshmallow import post_load
+from sqlalchemy import orm, or_, func
 
 from managers.db_manager import db
 from managers.log_manager import log_debug_trace
 from schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
 
+
 class NewCollectorsNodeSchema(CollectorsNodeSchema):
 
     @post_load
     def make_collectors_node(self, data, **kwargs):
-        return CollectorsNode(name=data['name'], description=data['description'], api_url=data['api_url'], api_key=data['api_key'])
+        return CollectorsNode(name=data['name'], description=data['description'], api_url=data['api_url'],
+                              api_key=data['api_key'])
 
 
 class CollectorsNode(db.Model):
@@ -67,6 +70,13 @@ class CollectorsNode(db.Model):
     def get_by_id(cls, id):
         return cls.query.filter_by(id=id).first()
 
+    def find_collector_by_type(self, collector_type):
+        for collector in self.collectors:
+            if collector.type == collector_type:
+                return collector
+
+        return None
+
     @classmethod
     def get_all_json(cls, search):
         nodes, count = cls.get(search)
@@ -80,7 +90,8 @@ class CollectorsNode(db.Model):
             #   red (no ping in a long time) > 300s
             try:
                 time_inactive = (datetime.now() - max(nodes[i].created, nodes[i].last_seen))
-                items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"
+                items[i][
+                    "status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"
             except Exception as ex:
                 log_debug_trace("Cannot update collector status.")
                 # if never collected before

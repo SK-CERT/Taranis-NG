@@ -1,8 +1,8 @@
 <template>
 
     <v-container class="selector_assess" :id="selfID">
-        <component v-bind:is="cardLayout()" v-for="news_item in news_items_data" :card="news_item"
-                   :key="news_item.id" :analyze_selector="analyze_selector"
+        <component v-bind:is="cardLayout()" v-for="(news_item,i) in news_items_data" :card="news_item"
+                   :key="i" :analyze_selector="analyze_selector"
                    :preselected="preselected(news_item.id)"
                    :word_list_regex="regexWordList" :data_set="data_set"
                    @show-single-aggregate-detail="showSingleAggregateDetail(news_item)"
@@ -21,32 +21,6 @@
     </v-container>
 
 </template>
-
-<style>
-    html,
-    .v-dialog--active .cs-inside {
-        scroll-behavior: smooth;
-    }
-
-    .selector_assess .card-assess {
-        transition: background-color 1s;
-    }
-
-    .selector_assess .focus.new {
-        box-shadow: inset 0 0 0 3px #ffd556;
-        background-color: rgba(255, 213, 86, 0.3);
-    }
-
-    .selector_assess .focus.read {
-        box-shadow: inset 0 0 0 3px #33DD40;
-        background-color: rgba(0, 128, 0, 0.3);
-    }
-
-    .selector_assess .focus.important {
-        box-shadow: inset 0 0 0 3px red;
-        background-color: rgba(255, 0, 0, 0.3);
-    }
-</style>
 
 <script>
     import CardAssess from "./CardAssess";

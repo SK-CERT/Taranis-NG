@@ -1,4 +1,6 @@
-from flask import request
+import io
+
+from flask import request, send_file
 from flask_restful import Resource
 
 from managers import auth_manager, sse_manager, remote_manager, presenters_manager, \
@@ -375,6 +377,29 @@ class OSINTSource(Resource):
         collectors_manager.delete_osint_source(source_id)
 
 
+class OSINTSourcesExport(Resource):
+
+    @auth_required('CONFIG_OSINT_SOURCE_ACCESS')
+    def post(self):
+        data = collectors_manager.export_osint_sources(request.json)
+        return send_file(
+            io.BytesIO(data),
+            attachment_filename="osint_sources_export.json",
+            mimetype="application/json",
+            as_attachment=True
+        )
+
+
+class OSINTSourcesImport(Resource):
+
+    @auth_required('CONFIG_OSINT_SOURCE_CREATE')
+    def post(self):
+        file = request.files.get('file')
+        if file:
+            collectors_node_id = request.form['collectors_node_id']
+            collectors_manager.import_osint_sources(collectors_node_id, file)
+
+
 class OSINTSourceGroups(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_ACCESS')
@@ -628,6 +653,8 @@ def initialize(api):
     api.add_resource(CollectorsNode, "/api/v1/config/collectors-nodes/<string:node_id>")
     api.add_resource(OSINTSources, "/api/v1/config/osint-sources")
     api.add_resource(OSINTSource, "/api/v1/config/osint-sources/<string:source_id>")
+    api.add_resource(OSINTSourcesExport, "/api/v1/config/export-osint-sources")
+    api.add_resource(OSINTSourcesImport, "/api/v1/config/import-osint-sources")
     api.add_resource(OSINTSourceGroups, "/api/v1/config/osint-source-groups")
     api.add_resource(OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>")
 
