@@ -7,7 +7,7 @@
         <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
         <div v-for="btn in actions" :key="btn.action" :class="UI.CLASS.multiselect_buttons">
             <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR"
-                   v-if="btn.can" :disabled="btn.disabled" @click.stop="action(btn.action)" :data-btn="btn.like" :title="btn.title">
+                   v-if="btn.can" :disabled="btn.disabled" @click.stop="action(btn.action)" :data-btn="btn.data_btn" :title="btn.title">
                 <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR">{{ UI.ICON[btn.ui_icon] }}</v-icon>
             </v-btn>
         </div>

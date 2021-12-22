@@ -68,7 +68,7 @@ const keyboardMixin = targetId => ({
                 which = ".multiselect button";
                 temp = document.querySelector(".multiselect");
             } else {
-                which = ".newdial button";
+                which = ".v-card button";
                 temp = this.card_items[this.pos];
             }
 
