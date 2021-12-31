@@ -309,6 +309,12 @@ const keyboardMixin = targetId => ({
 
                         case 'enter_filter_mode':
                             this.keyboard_state = 'FILTER';
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'success',
+                                    loc: 'assess.shortcuts.enter_filter_mode'
+                                }
+                            )
                             break;
 
                         case 'reload':
