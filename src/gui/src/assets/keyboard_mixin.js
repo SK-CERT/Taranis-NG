@@ -113,7 +113,9 @@ const keyboardMixin = targetId => ({
         },
 
         setNewsItem(newPosition) {
+            if (newPosition < 0) newPosition = 0;
             if (newPosition !== undefined) this.pos = newPosition;
+            if (newPosition >= this.card_items.length) this.pos = this.card_items.length - 1
             this.$refs.contentData.checkFocus(this.pos);
             setTimeout(()=>{
                 this.keyRemaper();
@@ -183,6 +185,42 @@ const keyboardMixin = targetId => ({
                                 }, 150);
                             }
                             break;
+
+                        case 'source_group_up': {
+                            let groups = this.$store.getters.getOSINTSourceGroups.items;
+                            let active_group_element = document.querySelector('.v-list-item--active');
+                            let active_group_id = active_group_element.pathname.split('/')[3];
+                            let index;
+                            console.log(groups)// eslint-disable-line
+                            for (index = 0; index < groups.length; index++) {
+                                if (groups[index].id === active_group_id) {
+                                    break
+                                }
+                            }
+                            if (index > 0) {
+                                index -= 1;
+                            }
+                            this.$router.push('/assess/group/' + groups[index].id)
+                            break;
+                        }
+                        case 'source_group_down': {
+                            let groups = this.$store.getters.getOSINTSourceGroups.items;
+                            let active_group_element = document.querySelector('.v-list-item--active');
+                            let active_group_id = active_group_element.pathname.split('/')[3];
+                            let index;
+                            console.log(groups)// eslint-disable-line
+                            for (index = 0; index < groups.length; index++) {
+                                if (groups[index].id === active_group_id) {
+                                    break
+                                }
+                            }
+                            if (index < groups.length) {
+                                index += 1;
+                            }
+                            this.$router.push('/assess/group/' + groups[index].id)
+                            break;
+                        }
+
                         case 'selection':
                             if (!this.multiSelectActive) {
                                 this.card.multi_select.click();
@@ -273,6 +311,12 @@ const keyboardMixin = targetId => ({
 
                         case 'enter_filter_mode':
                             this.keyboard_state = 'FILTER';
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'success',
+                                    loc: 'assess.shortcuts.enter_filter_mode'
+                                }
+                            )
                             break;
 
                         case 'reload':
