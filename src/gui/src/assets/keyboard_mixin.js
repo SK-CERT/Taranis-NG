@@ -113,7 +113,9 @@ const keyboardMixin = targetId => ({
         },
 
         setNewsItem(newPosition) {
+            if (newPosition < 0) newPosition = 0;
             if (newPosition !== undefined) this.pos = newPosition;
+            if (newPosition >= this.card_items.length) this.pos = this.card_items.length - 1
             this.$refs.contentData.checkFocus(this.pos);
             setTimeout(()=>{
                 this.keyRemaper();
