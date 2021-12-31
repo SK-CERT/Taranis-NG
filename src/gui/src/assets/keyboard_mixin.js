@@ -183,6 +183,42 @@ const keyboardMixin = targetId => ({
                                 }, 150);
                             }
                             break;
+
+                        case 'source_group_up': {
+                            let groups = this.$store.getters.getOSINTSourceGroups.items;
+                            let active_group_element = document.querySelector('.v-list-item--active');
+                            let active_group_id = active_group_element.pathname.split('/')[3];
+                            let index;
+                            console.log(groups)// eslint-disable-line
+                            for (index = 0; index < groups.length; index++) {
+                                if (groups[index].id === active_group_id) {
+                                    break
+                                }
+                            }
+                            if (index > 0) {
+                                index -= 1;
+                            }
+                            this.$router.push('/assess/group/' + groups[index].id)
+                            break;
+                        }
+                        case 'source_group_down': {
+                            let groups = this.$store.getters.getOSINTSourceGroups.items;
+                            let active_group_element = document.querySelector('.v-list-item--active');
+                            let active_group_id = active_group_element.pathname.split('/')[3];
+                            let index;
+                            console.log(groups)// eslint-disable-line
+                            for (index = 0; index < groups.length; index++) {
+                                if (groups[index].id === active_group_id) {
+                                    break
+                                }
+                            }
+                            if (index < groups.length) {
+                                index += 1;
+                            }
+                            this.$router.push('/assess/group/' + groups[index].id)
+                            break;
+                        }
+
                         case 'selection':
                             if (!this.multiSelectActive) {
                                 this.card.multi_select.click();

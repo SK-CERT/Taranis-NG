@@ -3,6 +3,9 @@ import {updateProfile} from "@/api/user";
 
 const state = {
     hotkeys: [
+        // source group navigation
+        {character: 'K', alias: 'source_group_up', icon: 'mdi-arrow-up-bold-box-outline'},
+        {character: 'J', alias: 'source_group_down', icon: 'mdi-arrow-up-bold-box-outline'},
         // new item navigation
         {key_code: 38, key: 'ArrowUp', alias: 'collection_up', icon: 'mdi-arrow-up-bold-box-outline'},
         {key_code: 40, key: 'ArrowDown', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
