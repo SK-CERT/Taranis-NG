@@ -84,7 +84,7 @@ const keyboardMixin = targetId => ({
             card.id = this.card_items[this.pos].dataset.id;
             card.close = document.querySelector("[data-dialog='" + dialog + "-detail'] [data-btn='close']");
             // Link is always extracted from the news item newdial button, does not work for opening all selected items, but also with opened items
-            card.link = this.card_items[this.pos].querySelector(".newdial button[data-btn='link'] a");
+            card.link = this.card_items[this.pos].querySelector(".v-card button[data-btn='link'] a");
 
             // Speed Dial Toolbar
             card.group = temp.querySelector(which + "[data-btn='group']");
