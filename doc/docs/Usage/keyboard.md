@@ -18,7 +18,7 @@
 - `G`: Ungroup selected item(s)
 - `n`: Create **n**ew product from item
 - `a`: Expand/close **a**ggregated list item
-- `o`: **O**pen active news item source (in non-selection-mode only)
+- `o`: **O**pen active news item source (only the active news item, not all selected ones)
 - `R`: **R**eload news item list
 - `/`: Jump to search bar
 - `f`: Switch to Filter mode

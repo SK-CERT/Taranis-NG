@@ -83,8 +83,8 @@ const keyboardMixin = targetId => ({
             card.show = this.card_items[this.pos].querySelector(".card");
             card.id = this.card_items[this.pos].dataset.id;
             card.close = document.querySelector("[data-dialog='" + dialog + "-detail'] [data-btn='close']");
-            // Link is always extracted from the news item newdial button, does not work for opening all selected items, but also with opened items
-            card.link = this.card_items[this.pos].querySelector(".v-card button[data-btn='link'] a");
+            // In multi select mode the buttons are not availale in the list and SHOW_ITEM mode, extract the URL from the span element for the active element instead
+            card.link_url = this.card_items[this.pos].querySelector(".col-11 .info--text").textContent.trim();
 
             // Speed Dial Toolbar
             card.group = temp.querySelector(which + "[data-btn='group']");
@@ -297,11 +297,7 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'open_item_source':
-                            console.log('this.card.link:', this.card.link) //eslint-disable-line
-                            // opening all selected news items' sources is not yet supprted
-                            if (! this.multiSelectActive) {
-                                this.card.link.click()
-                            }
+                            window.open(this.card.link_url, undefined, "noreferrer");
                             break;
 
                         case 'open_search':
@@ -379,8 +375,7 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'open_item_source':
-                            console.log('this.card.link:', this.card.link) //eslint-disable-line
-                            this.card.link.click()
+                            window.open(this.card.link_url, undefined, "noreferrer");
                             break;
 
                         default:
