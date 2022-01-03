@@ -419,6 +419,14 @@ const keyboardMixin = targetId => ({
                             this.keyboard_state = 'DEFAULT';
                             break;
                     }
+                    if (this.keyboard_state = 'DEFAULT') {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'success',
+                                loc: 'assess.shortcuts.exit_filter_mode'
+                            }
+                        )
+                    }
                 }
                 this.scrollPos();
 

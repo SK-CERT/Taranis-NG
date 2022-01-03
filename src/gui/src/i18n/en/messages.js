@@ -822,7 +822,8 @@ const messages_en = {
             delete_item: 'Delete news item',
         },
         shortcuts: {
-            enter_filter_mode: 'Entered filter mode. Exit with Escape.',
+            enter_filter_mode: 'Entered shortcut mode "filter". Exit with Escape.',
+            exit_filter_mode: 'Back in filter mode "default".'
         },
     },
 
