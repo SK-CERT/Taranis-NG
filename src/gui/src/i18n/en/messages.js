@@ -823,7 +823,8 @@ const messages_en = {
         },
         shortcuts: {
             enter_filter_mode: 'Entered shortcut mode "filter". Exit with Escape.',
-            exit_filter_mode: 'Back in filter mode "default".'
+            enter_view_mode: 'Entered shortcut mode "view". Exit with Escape.',
+            default_mode: 'Back in shortcut mode "default".'
         },
     },
 

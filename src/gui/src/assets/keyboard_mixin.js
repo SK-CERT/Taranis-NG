@@ -11,7 +11,16 @@ const keyboardMixin = targetId => ({
         shortcuts: [],
         card: null,
         first_dialog: null,
-        keyboard_state: 'DEFAULT'
+        keyboard_state: 'DEFAULT',
+        view_href_map: [
+            {key: 'dashboard_view', href: '/dashboard'},
+            {key: 'global_configuration_view', href: '/config'},
+            {key: 'aggregate_open', href: '/assess'},
+            {key: 'analyze_view', href: '/analyze/local'},
+            {key: 'publish_view', href: '/publish'},
+            {key: 'my_assets_view', href: '/myassets'},
+            {key: 'configuration_view', href: '/config/external'},
+        ],
     }),
 
     computed: {
@@ -319,6 +328,16 @@ const keyboardMixin = targetId => ({
                             this.$root.$emit('news-items-updated')
                             break;
 
+                        case 'enter_view_mode':
+                            this.keyboard_state = 'VIEW';
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'success',
+                                    loc: 'assess.shortcuts.enter_view_mode'
+                                }
+                            )
+                            break;
+
                     }
                 } else if(this.state === 'SHOW_ITEM' && this.keyboard_state === 'SHOW_ITEM') {
                     switch (keyAlias) {
@@ -423,9 +442,29 @@ const keyboardMixin = targetId => ({
                         this.$root.$emit('notification',
                             {
                                 type: 'success',
-                                loc: 'assess.shortcuts.exit_filter_mode'
+                                loc: 'assess.shortcuts.default_mode'
                             }
                         )
+                    }
+                } else if (this.keyboard_state === 'VIEW') {
+                    for (let i = 0; i < this.view_href_map.length; i++) {
+                        if (this.view_href_map[i].key === keyAlias) {
+                            this.keyboard_state = 'DEFAULT';
+                            document.querySelector("a[href='" + this.view_href_map[i].href + "']").click();
+                            break;
+                        }
+                    }
+                    if (keyAlias === 'close_item') {
+                        // exit mode
+                        this.keyboard_state = 'DEFAULT';
+                    }
+                    if (this.keyboard_state === 'DEFAULT') {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'success',
+                                loc: 'assess.shortcuts.default_mode'
+                            }
+                        );
                     }
                 }
                 this.scrollPos();
