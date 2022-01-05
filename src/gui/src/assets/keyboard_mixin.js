@@ -93,7 +93,12 @@ const keyboardMixin = targetId => ({
             card.id = this.card_items[this.pos].dataset.id;
             card.close = document.querySelector("[data-dialog='" + dialog + "-detail'] [data-btn='close']");
             // In multi select mode the buttons are not availale in the list and SHOW_ITEM mode, extract the URL from the span element for the active element instead
-            card.link_url = this.card_items[this.pos].querySelector(".col-11 .info--text").textContent.trim();
+            let card_link = this.card_items[this.pos].querySelector(".col-11 .info--text");
+            if (card_link) {
+                card.link_url = card_link.textContent.trim();
+            } else {
+                card.link_url = undefined;
+            }
 
             // Speed Dial Toolbar
             card.group = temp.querySelector(which + "[data-btn='group']");
@@ -306,7 +311,9 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'open_item_source':
-                            window.open(this.card.link_url, undefined, "noreferrer");
+                            if (this.card.link_url) {
+                                window.open(this.card.link_url, undefined, "noreferrer");
+                            }
                             break;
 
                         case 'open_search':
@@ -394,7 +401,9 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'open_item_source':
-                            window.open(this.card.link_url, undefined, "noreferrer");
+                            if (this.card.link_url) {
+                                window.open(this.card.link_url, undefined, "noreferrer");
+                            }
                             break;
 
                         default:
