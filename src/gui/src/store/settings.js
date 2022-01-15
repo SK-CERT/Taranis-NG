@@ -3,6 +3,9 @@ import {updateProfile} from "@/api/user";
 
 const state = {
     hotkeys: [
+        // source group navigation
+        {character: 'K', alias: 'source_group_up', icon: 'mdi-arrow-up-bold-box-outline'},
+        {character: 'J', alias: 'source_group_down', icon: 'mdi-arrow-up-bold-box-outline'},
         // new item navigation
         {key_code: 38, key: 'ArrowUp', alias: 'collection_up', icon: 'mdi-arrow-up-bold-box-outline'},
         {key_code: 40, key: 'ArrowDown', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
@@ -10,6 +13,8 @@ const state = {
         {key_code: 39, key: 'ArrowRight', alias: 'show_item', icon: 'mdi-text-box'},
         {character: 'k', alias: 'collection_up', icon: 'mdi-arrow-up-bold-box-outline'},
         {character: 'j', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
+        {character: 'h', alias: 'close_item', icon: 'mdi-close-circle-outline'},
+        {character: 'l', alias: 'show_item', icon: 'mdi-text-box'},
         {key_code: 13, key: 'Enter', alias: 'show_item', icon: 'mdi-text-box'},
         {key_code: 27, key: 'Escape', alias: 'close_item', icon: 'mdi-close-circle-outline'},
         {key_code: 35, key: 'End', alias: 'end'},
@@ -17,12 +22,12 @@ const state = {
         // news item actions
         {character: 'r', alias: 'read_item', icon: 'mdi-eye'},
         {character: 'i', alias: 'important_item', icon: 'mdi-star'},
-        {character: 'l', alias: 'like_item', icon: 'mdi-thumb-up'},
-        {character: 'd', alias: 'unlike_item', icon: 'mdi-thumb-down'},
+        {character: 'u', alias: 'like_item', icon: 'mdi-thumb-up'},
+        {character: 'U', alias: 'unlike_item', icon: 'mdi-thumb-down'},
         {key_code: 46, key: 'Delete', alias: 'delete_item', icon: 'mdi-delete'},
         {character: 's', alias: 'selection', icon: 'mdi-checkbox-multiple-marked-outline'},
         {character: 'g', alias: 'group', icon: 'mdi-group'},
-        {character: 'u', alias: 'ungroup', icon: 'mdi-ungroup'},
+        {character: 'G', alias: 'ungroup', icon: 'mdi-ungroup'},
         {character: 'n', alias: 'new_product', icon: 'mdi-file-outline'},
         {character: 'a', alias: 'aggregate_open', icon: 'mdi-arrow-right-drop-circle'},
         {character: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app'},
