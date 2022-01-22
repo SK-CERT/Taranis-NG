@@ -16,12 +16,13 @@ services:
     image: "postgres:${POSTGRES_TAG}"
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "taranis-ng"
+      POSTGRES_MULTIPLE_DATABASES: "taranis-ng,keycloak"
       POSTGRES_USER: "taranis-ng"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
     volumes:
       - "database_data:/var/lib/postgresql/data"
+      - "./pg-init:/docker-entrypoint-initdb.d"
     logging:
       driver: "json-file"
       options:
@@ -208,6 +209,29 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+
+  keycloak:
+    image: "quay.io/keycloak/keycloak:${KEYCLOAK_TAG}"
+    restart: unless-stopped
+    depends_on:
+      - "database"
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: "${KEYCLOAK_PASSWORD}"
+      DB_VENDOR: POSTGRES
+      DB_ADDR: "database"
+      DB_SCHEMA: public
+      DB_DATABASE: "keycloak"
+      DB_USER: "taranis-ng"
+      DB_PASSWORD: "${POSTGRES_PASSWORD}"
+    ports:
+      - 8080:8080
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+ 
 
   traefik:
     depends_on:
