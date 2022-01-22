@@ -1,4 +1,4 @@
-from schema.publisher import PublisherSchema
+from publishers.schema.publisher import PublisherSchema
 
 
 class BasePublisher:
