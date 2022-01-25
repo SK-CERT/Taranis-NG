@@ -70,7 +70,7 @@ docker-compose -f docker/docker-compose.yml up --no-build
 or, alternatively, build and run the containers with:
 
 ```bash
-docker-compose -f docker/docker-compose.yml up --build
+TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml up --build
 ```
 
 **Voila, Taranis NG is up and running. Visit your instance by navigating to
