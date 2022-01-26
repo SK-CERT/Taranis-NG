@@ -32,7 +32,7 @@ services:
       - "redis"
       - "database"
     restart: unless-stopped
-    image: "skcert/taranis-ng-core:${TARANIS_NG_TAG}"
+    image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-core:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.core
@@ -52,11 +52,16 @@ services:
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
       TARANIS_NG_SAMPLE_DATA: "true"
+      TARANIS_NG_AUTHENTICATOR: "keycloak"
+
+      TARANIS_NG_KEYCLOAK_URL: "keycloak"
+      TARANIS_NG_KEYCLOAK_INTERNAL_URL: "http://keycloak/"
 
       CVE_UPDATE_FILE: "${CVE_UPDATE_FILE}"
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
 
       DEBUG: "true"
+      FLASK_ENV: "development"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
@@ -81,7 +86,7 @@ services:
     depends_on:
       core:
         condition: service_healthy
-    image: "skcert/taranis-ng-bots:${TARANIS_NG_TAG}"
+    image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-bots:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.bots
@@ -97,7 +102,7 @@ services:
       core:
         condition: service_healthy
     restart: unless-stopped
-    image: "skcert/taranis-ng-collectors:${TARANIS_NG_TAG}"
+    image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-collectors:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.collectors
@@ -117,7 +122,7 @@ services:
       core:
         condition: service_healthy
     restart: unless-stopped
-    image: "skcert/taranis-ng-presenters:${TARANIS_NG_TAG}"
+    image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-presenters:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.presenters
@@ -136,7 +141,7 @@ services:
       core:
         condition: service_healthy
     restart: unless-stopped
-    image: "skcert/taranis-ng-publishers:${TARANIS_NG_TAG}"
+    image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-publishers:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.publishers
@@ -152,7 +157,7 @@ services:
     depends_on:
       - "core"
     restart: unless-stopped
-    image: "skcert/taranis-ng-gui:${TARANIS_NG_TAG}"
+    image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-gui:${TARANIS_NG_TAG}"
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.gui
@@ -208,8 +213,15 @@ services:
       DB_DATABASE: "keycloak"
       DB_USER: "keycloak"
       DB_PASSWORD: "${POSTGRES_PASSWORD}"
-    ports:
-      - 8080:8080
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.keycloak.loadbalancer.server.port: "8080"
+
+      traefik.http.routers.keycloak.entrypoints: "websecure"
+      traefik.http.routers.keycloak.rule: "Host(`${KEYCLOAK_DOMAIN}`)"
+      traefik.http.routers.keycloak.tls: "true"
+      traefik.http.routers.keycloak.tls.domains[0].main: "${KEYCLOAK_DOMAIN}"
+      traefik.http.routers.keycloak.service: "keycloak"
     logging: *default-logging
 
   traefik:
@@ -232,6 +244,7 @@ services:
 volumes:
   redis_conf:
   database_data:
+  keycloak_database_data:
   core_data:
   presenters_templates:
   collector_storage:
