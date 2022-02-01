@@ -327,7 +327,7 @@ class DictionaryManagement(Command):
               self.upload_to(cve_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cve')
-                app.logger.info("CVE Dictionary updated.")
+                app.logger.info("CVE Dictionary updated")
             except Exception:
                 app.logger.critical("File structure was not recognized!")
                 abort()
@@ -345,7 +345,7 @@ class DictionaryManagement(Command):
               self.upload_to(cpe_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cpe')
-                app.logger.info("CPE Dictionary updated.")
+                app.logger.info("CPE Dictionary updated")
             except Exception:
                 app.logger.critical("File structure was not recognized!")
                 abort()
@@ -369,14 +369,15 @@ class DictionaryManagement(Command):
         import gzip
 
         try:
+          app.logger.debug("start download of {0}".format(url))
           r = requests.get(url, allow_redirects=True)
           content_type = r.headers.get('Content-Type')
           content_enc = r.headers.get('Content-Encoding')
           if content_type == 'application/x-gzip' or content_enc == 'x-gzip':
             content = gzip.decompress(r.content)
           else:
-            if content_type == 'application/xml':
-              app.logger.debug("{0} does not point to an XML content-typed file")
+            if content_type != 'application/xml':
+              app.logger.debug("{0} does not point to an XML content-typed file".format(url))
             content = r.content
           open(filename, 'wb').write(content)
         except Exception:
