@@ -410,5 +410,3 @@ manager.add_command('sample-data', SampleData)
 
 if __name__ == '__main__':
     manager.run()
-
-import logging
