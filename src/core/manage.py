@@ -313,34 +313,44 @@ class DictionaryManagement(Command):
 
     def run(self, opt_cve, opt_cpe):
         from model import attribute
+        import requests
 
         if (opt_cve):
             cve_update_file = getenv('CVE_UPDATE_FILE')
+            cve_update_url = getenv('CVE_UPDATE_URL')
             if cve_update_file is None:
                 app.logger.critical("CVE_UPDATE_FILE is undefined")
-                abort()
-
-            self.upload_to(cve_update_file)
+                abort() 
+            
+            if cve_update_url is not None:
+              self.download_update_file(cve_update_file, cve_update_url)
+            else:
+              self.upload_to(cve_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cve')
+                app.logger.info("CVE Dictionary updated.")
             except Exception:
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
         if (opt_cpe):
             cpe_update_file = getenv('CPE_UPDATE_FILE')
+            cpe_update_url = getenv('CPE_UPDATE_URL')
             if cpe_update_file is None:
                 app.logger.critical("CPE_UPDATE_FILE is undefined")
                 abort()
 
-            self.upload_to(cpe_update_file)
+            if cpe_update_url is not None:
+              self.download_update_file(cpe_update_file, cpe_update_url)
+            else:
+              self.upload_to(cpe_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cpe')
+                app.logger.info("CPE Dictionary updated.")
             except Exception:
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
-        app.logger.error("Dictionary was uploaded.")
         exit()
 
     def upload_to(self, filename):
@@ -353,6 +363,14 @@ class DictionaryManagement(Command):
                     out_file.write(chunk)
         except Exception:
             app.logger.critical("Upload failed!")
+            abort()
+
+    def download_update_file(self, filename, url):
+        try:
+          r = requests.get(url, allow_redirects=True)
+          open(filename, 'wb').write(r.content)
+        except Exception:
+            app.logger.critical("Download failed!")
             abort()
 
 class SampleData(Command):
@@ -381,3 +399,5 @@ manager.add_command('sample-data', SampleData)
 
 if __name__ == '__main__':
     manager.run()
+
+import logging
