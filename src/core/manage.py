@@ -313,7 +313,6 @@ class DictionaryManagement(Command):
 
     def run(self, opt_cve, opt_cpe):
         from model import attribute
-        import requests
 
         if (opt_cve):
             cve_update_file = getenv('CVE_UPDATE_FILE')
@@ -366,9 +365,20 @@ class DictionaryManagement(Command):
             abort()
 
     def download_update_file(self, filename, url):
+        import requests
+        import gzip
+
         try:
           r = requests.get(url, allow_redirects=True)
-          open(filename, 'wb').write(r.content)
+          content_type = r.headers.get('Content-Type')
+          content_enc = r.headers.get('Content-Encoding')
+          if content_type == 'application/x-gzip' or content_enc == 'x-gzip':
+            content = gzip.decompress(r.content)
+          else:
+            if content_type == 'application/xml':
+              app.logger.debug("{0} does not point to an XML content-typed file")
+            content = r.content
+          open(filename, 'wb').write(content)
         except Exception:
             app.logger.critical("Download failed!")
             abort()

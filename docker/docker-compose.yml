@@ -56,6 +56,8 @@ services:
 
       CVE_UPDATE_FILE: "${CVE_UPDATE_FILE}"
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
+      CVE_UPDATE_URL: "${CVE_UPDATE_URL}"
+      CPE_UPDATE_URL: "${CPE_UPDATE_URL}"
 
       DEBUG: "true"
     labels:
