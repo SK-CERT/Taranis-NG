@@ -307,8 +307,8 @@ class CollectorManagement(Command):
 class DictionaryManagement(Command):
 
     option_list = (
-        Option('--upload-cve', dest='opt_cve', action='store_true'),
-        Option('--upload-cpe', dest='opt_cpe', action='store_true'),
+        Option('--upload-cve', dest='opt_cve'),
+        Option('--upload-cpe', dest='opt_cpe'),
     )
 
     def run(self, opt_cve, opt_cpe):
@@ -316,7 +316,7 @@ class DictionaryManagement(Command):
 
         if (opt_cve):
             cve_update_file = getenv('CVE_UPDATE_FILE')
-            cve_update_url = getenv('CVE_UPDATE_URL')
+            cve_update_url = opt_cve
             if cve_update_file is None:
                 app.logger.critical("CVE_UPDATE_FILE is undefined")
                 abort() 
@@ -334,7 +334,7 @@ class DictionaryManagement(Command):
 
         if (opt_cpe):
             cpe_update_file = getenv('CPE_UPDATE_FILE')
-            cpe_update_url = getenv('CPE_UPDATE_URL')
+            cpe_update_url = opt_cpe
             if cpe_update_file is None:
                 app.logger.critical("CPE_UPDATE_FILE is undefined")
                 abort()
@@ -346,8 +346,9 @@ class DictionaryManagement(Command):
             try:
                 attribute.Attribute.load_dictionaries('cpe')
                 app.logger.info("CPE Dictionary updated")
-            except Exception:
-                app.logger.critical("File structure was not recognized!")
+            except Exception as e:
+                app.logger.exception("CPE File structure was not recognized")
+                app.logger.info(e, exc_info=True)
                 abort()
 
         exit()
