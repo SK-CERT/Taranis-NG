@@ -23,7 +23,7 @@ class AssetCpe(db.Model):
     value = db.Column(db.String())
 
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'))
-    asset = db.relationship("Asset", back_populates="assetcpe")
+    asset = db.relationship("Asset")
 
     def __init__(self, value):
         self.id = None
@@ -211,7 +211,7 @@ class AssetVulnerability(db.Model):
     solved = db.Column(db.Boolean, default=False)
 
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'))
-    asset = db.relationship("Asset", back_populates="assetvulnerability")
+    asset = db.relationship("Asset")
 
     report_item_id = db.Column(db.Integer, db.ForeignKey('report_item.id'))
     report_item = db.relationship("ReportItem")

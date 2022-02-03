@@ -15,8 +15,9 @@ from remote.collectors_api import CollectorsApi
 app = Flask(__name__)
 app.config.from_object('config.Config')
 manager = Manager(app=app)
-app.logger = logging.getLogger('gunicorn.error')
-app.logger.level = logging.INFO
+
+if getenv("DEBUG").lower() == "true":
+    app.logger.debug("Debug Mode: On")
 
 db_manager.initialize(app)
 
@@ -307,48 +308,48 @@ class CollectorManagement(Command):
 class DictionaryManagement(Command):
 
     option_list = (
-        Option('--upload-cve', dest='opt_cve'),
-        Option('--upload-cpe', dest='opt_cpe'),
+        Option('--upload-cve', dest='opt_cve', action='store_true'),
+        Option('--upload-cpe', dest='opt_cpe', action='store_true'),
+        Option('--upload-cve-url', dest='cve_url', required=False),
+        Option('--upload-cpe-url', dest='cpe_url', required=False),
     )
 
-    def run(self, opt_cve, opt_cpe):
+    def run(self, opt_cve, opt_cpe, cve_url, cpe_url):
         from model import attribute
 
-        if (opt_cve):
+        app.logger.debug("opt_cve: {} opt_cpe: {} cve_url: {} cpe_url: {}".format(opt_cve, opt_cpe, cve_url, cpe_url))
+        if opt_cve or (cve_url is not None):
             cve_update_file = getenv('CVE_UPDATE_FILE')
-            cve_update_url = opt_cve
             if cve_update_file is None:
                 app.logger.critical("CVE_UPDATE_FILE is undefined")
-                abort() 
+                abort()
             
-            if cve_update_url is not None:
-              self.download_update_file(cve_update_file, cve_update_url)
+            if cve_url is not None:
+                self.download_update_file(cve_update_file, cve_url)
             else:
-              self.upload_to(cve_update_file)
+                self.upload_to(cve_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cve')
                 app.logger.info("CVE Dictionary updated")
             except Exception:
-                app.logger.critical("File structure was not recognized!")
+                app.logger.exception("File structure was not recognized!")
                 abort()
 
-        if (opt_cpe):
+        if opt_cpe or (cpe_url is not None):
             cpe_update_file = getenv('CPE_UPDATE_FILE')
-            cpe_update_url = opt_cpe
             if cpe_update_file is None:
                 app.logger.critical("CPE_UPDATE_FILE is undefined")
                 abort()
 
-            if cpe_update_url is not None:
-              self.download_update_file(cpe_update_file, cpe_update_url)
+            if cpe_url is not None:
+                self.download_update_file(cpe_update_file, cpe_url)
             else:
-              self.upload_to(cpe_update_file)
+                self.upload_to(cpe_update_file)
             try:
                 attribute.Attribute.load_dictionaries('cpe')
                 app.logger.info("CPE Dictionary updated")
-            except Exception as e:
+            except Exception:
                 app.logger.exception("CPE File structure was not recognized")
-                app.logger.info(e, exc_info=True)
                 abort()
 
         exit()
@@ -362,7 +363,7 @@ class DictionaryManagement(Command):
                         break
                     out_file.write(chunk)
         except Exception:
-            app.logger.critical("Upload failed!")
+            app.logger.exception("Upload failed!")
             abort()
 
     def download_update_file(self, filename, url):
@@ -382,7 +383,7 @@ class DictionaryManagement(Command):
             content = r.content
           open(filename, 'wb').write(content)
         except Exception:
-            app.logger.critical("Download failed!")
+            app.logger.exception("Download failed!")
             abort()
 
 class SampleData(Command):

@@ -108,7 +108,7 @@ class ReportItem(db.Model):
 
     attributes = db.relationship('ReportItemAttribute', back_populates="report_item", cascade="all, delete-orphan")
 
-    report_item_cpes = db.relationship("ReportItemCpe", cascade="all, delete-orphan")
+    report_item_cpes = db.relationship("ReportItemCpe", cascade="all, delete-orphan", back_populates="report_item")
 
     def __init__(self, id, uuid, title, title_prefix, report_item_type_id, news_item_aggregates, remote_report_items,
                  attributes, completed):
