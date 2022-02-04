@@ -170,6 +170,8 @@ services:
       VUE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
       VUE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
       VUE_APP_TARANIS_NG_LOCALE: en
+      VUE_APP_TARANIS_NG_LOGIN_URL: http://${KEYCLOAK_DOMAIN}/api/auth/login
+      VUE_APP_TARANIS_NG_LOGOUT_URL: http://${KEYCLOAK_DOMAIN}/api/auth/logout
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-gui.loadbalancer.server.port: "80"
@@ -217,10 +219,8 @@ services:
       traefik.enable: "true"
       traefik.http.services.keycloak.loadbalancer.server.port: "8080"
 
-      traefik.http.routers.keycloak.entrypoints: "websecure"
+      traefik.http.routers.keycloak.entrypoints: "web"
       traefik.http.routers.keycloak.rule: "Host(`${KEYCLOAK_DOMAIN}`)"
-      traefik.http.routers.keycloak.tls: "true"
-      traefik.http.routers.keycloak.tls.domains[0].main: "${KEYCLOAK_DOMAIN}"
       traefik.http.routers.keycloak.service: "keycloak"
     logging: *default-logging
 
