@@ -136,6 +136,10 @@ const keyboardMixin = targetId => ({
                     break;
                 }
             }
+            if (document.activeElement == search_field && (keyAlias !== 'close_item' || press.keyCode !== 27)) {
+                // when search field is active, ignore all keypresses except Escape
+                return;
+            }
 
             if ( !this.isSomeFocused() ) {
                 if (!this.focus) {
