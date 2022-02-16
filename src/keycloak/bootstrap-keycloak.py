@@ -5,19 +5,19 @@ import click
 @click.argument('url', default='http://keycloak.local')
 @click.argument('user', default='admin')
 @click.argument('password', default='supersecret')
-@click.argument('admin-realm', default='master')
-@click.argument('realm', default='taranis')
+@click.argument('realm', default='master')
 @click.argument('verify', default=False)
-def main(url, user, password, admin_realm, realm, verify):
+def main(url, user, password, realm, verify):
     server_url = "{}/auth/".format(url)
     keycloak_admin = KeycloakAdmin(server_url=server_url,
                                username=user,
                                password=password,
-                               realm_name=admin_realm,
+                               realm_name=realm,
                                # client_secret_key="client-secret",
                                verify=verify)
 
-    print(keycloak_admin.create_realm(payload={"realm": realm}, skip_exists=True))
+    keycloak_admin.create_client(payload={"enabled": True, "clientId": "taranis"}, skip_exists=True)
+    print(keycloak_admin.get_clients())
 
 
 # Add user and set password

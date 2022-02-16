@@ -52,7 +52,7 @@ services:
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
       TARANIS_NG_SAMPLE_DATA: "true"
-      TARANIS_NG_AUTHENTICATOR: "keycloak"
+      TARANIS_NG_AUTHENTICATOR: "openid"
 
       TARANIS_NG_KEYCLOAK_URL: "keycloak"
       TARANIS_NG_KEYCLOAK_INTERNAL_URL: "http://keycloak/"
