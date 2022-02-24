@@ -3,10 +3,7 @@ from keycloak import KeycloakAdmin
 
 
 def keycloak_user_management_enabled():
-    if 'KEYCLOAK_USER_MANAGEMENT' in os.environ:
-        return os.getenv('KEYCLOAK_USER_MANAGEMENT').lower() == 'true'
-    else:
-        return False
+    return os.getenv("KEYCLOAK_USER_MANAGEMENT", "false").lower() == "true"
 
 
 def get_keycloak_admin():
@@ -15,7 +12,7 @@ def get_keycloak_admin():
                          password=os.getenv('KEYCLOAK_ADMIN_PASSWORD'),
                          realm_name=os.getenv('KEYCLOAK_REALM_NAME'),
                          client_secret_key=os.getenv('KEYCLOAK_CLIENT_SECRET_KEY'),
-                         verify=(os.getenv('KEYCLOAK_VERIFY').lower() == "true")
+                         verify=(os.getenv('KEYCLOAK_VERIFY', 'false').lower() == "true")
                          )
 
 
