@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+
 from keycloak import KeycloakAdmin
 import click
+import json
+import logging
 
 @click.command()
 @click.argument('url', default='http://keycloak.local')
@@ -13,22 +17,14 @@ def main(url, user, password, realm, verify):
                                username=user,
                                password=password,
                                realm_name=realm,
-                               # client_secret_key="client-secret",
                                verify=verify)
 
-    keycloak_admin.create_client(payload={"enabled": True, "clientId": "taranis"}, skip_exists=True)
-    print(keycloak_admin.get_clients())
-
-
-# Add user and set password
-    # new_user = keycloak_admin.create_user({"email": "example@example.com",
-    #                 "username": "example@example.com",
-    #                 "enabled": True,
-    #                 "firstName": "Example",
-    #                 "lastName": "Example",
-    #                 "credentials": [{"value": "secret","type": "password",}]})
-
-# Create a new Realm
+    keycloak_admin.create_client(payload={"enabled": True, "clientId": "taranis", "name": "Taranis"}, skip_exists=True)
+    taranis_user = keycloak_admin.create_user(payload={"username": "taranis", "enabled": True, "firstName": "Taranis", "credentials": [{"value": password,"type": "password"}]})
+    taranis_client = keycloak_admin.get_client_id(client_name="taranis")
+    client_secrets = keycloak_admin.generate_client_secrets(client_id=taranis_client)
+    with open('client_secrets.json', 'w') as outfile:
+      json.dump(client_secrets, outfile, indent=4)
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ build/
 
 # sensitive data not to be commited
 .env.local
+docker/.env
 .env.*.local
 *.pem
 *.key
