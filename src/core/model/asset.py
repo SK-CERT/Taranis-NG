@@ -211,7 +211,7 @@ class AssetVulnerability(db.Model):
     solved = db.Column(db.Boolean, default=False)
 
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'))
-    asset = db.relationship("Asset")
+    asset = db.relationship("Asset", back_populates='vulnerabilities')
 
     report_item_id = db.Column(db.Integer, db.ForeignKey('report_item.id'))
     report_item = db.relationship("ReportItem")
