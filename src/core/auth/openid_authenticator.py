@@ -1,27 +1,26 @@
-from flask_oidc import OpenIDConnect
-
 from auth.base_authenticator import BaseAuthenticator
+from authlib.integrations.flask_client import OAuth
 
-oidc = OpenIDConnect()
+oauth = OAuth()
 
 
 class OpenIDAuthenticator(BaseAuthenticator):
 
     @staticmethod
     def initialize(app):
-        oidc.init_app(app)
+        oauth.init_app(app)
 
-    @oidc.require_login
     def authenticate(self, credentials):
-        access_token = oidc.get_access_token()
-        valid = oidc.validate_token(access_token)
+        # oauth.twitter.authorize_redirect(redirect_uri)
+        # resp = oauth.github.get('user')
+        # user = resp.json()
+        user = 'admin'
 
         if valid is True:
-            return BaseAuthenticator.generate_jwt(oidc.user_getfield('preferred_username'))
+            return BaseAuthenticator.generate_jwt(user)
 
         return BaseAuthenticator.generate_error()
 
     @staticmethod
     def logout(token):
         BaseAuthenticator.logout(token)
-        oidc.logout()
