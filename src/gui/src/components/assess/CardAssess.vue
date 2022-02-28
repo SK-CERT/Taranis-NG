@@ -46,7 +46,7 @@
                                 <v-col v-bind="UI.CARD.COL.REVIEW">
                                     <div v-if="!compact_mode">
                                         <div v-if="word_list_regex" v-html="wordCheck(card.description)"></div>
-                                        <div v-else>{{ card.description }}</div>
+                                        <div v-else class="compact" >{{ card.description }}</div>
                                     </div>
                                 </v-col>
 
@@ -75,6 +75,10 @@
                                         <span class="caption font-weight-bold grey--text pl-1 pr-2">
                                             <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ card.dislikes }}
                                         </span>
+
+                                        <v-btn rounded color="primary" dark x-small>
+                                          Tag1
+                                        </v-btn>
 
                                         <v-btn v-if="card.in_reports_count > 0" depressed x-small
                                                color="orange lighten-2">
