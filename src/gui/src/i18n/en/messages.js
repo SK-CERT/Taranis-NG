@@ -56,6 +56,7 @@ const messages_en = {
         assess: "Assess",
         analyze: "Analyze",
         publish: "Publish",
+        administration: "Administration",
         config: "Configuration",
         dashboard: "Dashboard",
         my_assets: "My Assets"

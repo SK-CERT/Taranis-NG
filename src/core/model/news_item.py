@@ -40,6 +40,7 @@ class NewsItemData(db.Model):
     link = db.Column(db.String())
     language = db.Column(db.String())
     content = db.Column(db.String())
+    tags = db.Column(db.ARRAY(db.String()))
 
     collected = db.Column(db.DateTime)
     published = db.Column(db.String())
@@ -52,7 +53,7 @@ class NewsItemData(db.Model):
     remote_source = db.Column(db.String())
 
     def __init__(self, id, hash, title, review, source, link, published, author, collected, content, osint_source_id,
-                 attributes):
+                 attributes, tags):
         if id is None:
             self.id = str(uuid.uuid4())
         else:
@@ -67,6 +68,7 @@ class NewsItemData(db.Model):
         self.collected = collected
         self.content = content
         self.attributes = attributes
+        self.tags = tags
         self.osint_source_id = osint_source_id
 
     @classmethod
@@ -135,6 +137,14 @@ class NewsItemData(db.Model):
             if not cls.attribute_value_identical(news_item_id, attribute.value):
                 news_item.attributes.append(attribute)
                 db.session.commit()
+
+    @classmethod
+    def update_news_item_tags(cls, news_item_id, tags):
+        news_item = cls.query.filter_by(id=news_item_id).first()
+        print(tags)
+        for tag in tags:
+            news_item.tags.append(tag)
+            db.session.commit()
 
     @classmethod
     def get_for_sync(cls, last_synced, osint_sources):
@@ -506,10 +516,12 @@ class NewsItemAggregate(db.Model):
         items = news_item_aggregate_schema.dump(news_item_aggregates)
         for aggregate in items:
             for news_item in aggregate['news_items'][:]:
+                if news_item['tags'] is None:
+                  news_item['tags'] = ['CVE', 'Russie', 'Test']
                 if news_item['see'] is False:
                     aggregate['news_items'].remove(news_item)
 
-        return {'total_count': count, 'items': items}
+        return {'total_count': 0, 'items': items}
 
     @classmethod
     def create_new_for_all_groups(cls, news_item_data):
@@ -943,7 +955,10 @@ class NewsItemAggregate(db.Model):
 
     @classmethod
     def get_news_items_aggregate(cls, source_group, limit):
-        limit = datetime.strptime(limit['limit'], '%d.%m.%Y - %H:%M')
+        if limit is not None:
+            limit = datetime.strptime(limit['limit'], '%d.%m.%Y - %H:%M')
+        else:
+            limit = datetime.now() - timedelta(days=7)
 
         # TODO: Change condition in query to >
         news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit). \

@@ -38,8 +38,12 @@
 
                                 <!--TITLE-->
                                 <v-col v-bind="UI.CARD.COL.TITLE">
-                                    <div v-if="word_list_regex" v-html="wordCheck(card.title)"></div>
-                                    <div v-else>{{ card.title }}</div>
+                                    <div :title="itemLink" v-if="word_list_regex" v-html="wordCheck(card.title)">
+                                        <v-icon v-show="hover">mdi-open-in-new</v-icon>
+                                    </div>
+                                    <div :title="itemLink" v-else>{{ card.title }}
+                                        <v-icon v-show="hover">mdi-open-in-new</v-icon>
+                                    </div>
                                 </v-col>
 
                                 <!--REVIEW-->
@@ -63,22 +67,21 @@
                                             </v-btn>
                                         </template>
                                         <template v-else>
-                                            <span  class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
-                                                {{ itemLink }}
-                                            </span>
+                                            <v-btn depressed small color="primary" data-button="OpenCard" @click.stop="itemClicked(card)">
+                                                <v-icon v-if="opened" left>mdi-arrow-down-drop-circle</v-icon>
+                                                <v-icon v-if="!opened" left>mdi-arrow-right-drop-circle</v-icon>
+                                                <span>Open Card</span>
+                                            </v-btn>
                                         </template>
 
-                                        <span class="caption font-weight-bold grey--text pl-2 pr-1">
-                                            <v-icon color="grey" size="12">mdi-thumb-up</v-icon> {{ card.likes }}
-                                        </span>
-
-                                        <span class="caption font-weight-bold grey--text pl-1 pr-2">
-                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ card.dislikes }}
-                                        </span>
-
+                                        <v-btn v-for="tag in getTags" :key="tag" rounded color="primary" dark x-small>
+                                          {{ tag }}
+                                        </v-btn>
                                         <v-btn rounded color="primary" dark x-small>
                                           Tag1
                                         </v-btn>
+
+                                        
 
                                         <v-btn v-if="card.in_reports_count > 0" depressed x-small
                                                color="orange lighten-2">
@@ -119,15 +122,16 @@
                                                            data-btn="important">
                                                         <v-icon :color="buttonStatus(card.important)">mdi-star</v-icon>
                                                     </v-btn>
-                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')"
-                                                           data-btn="like" :title="$t('assess.tooltip.like_item')">
-                                                        <v-icon :color="buttonStatus(card.me_like)">mdi-thumb-up</v-icon>
+
+                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')" data-btn="like" :title="$t('assess.tooltip.like_item')">
+                                                        <v-badge bordered color="green" :content="card.likes" overlap left>
+                                                          <v-icon :color="buttonStatus(card.me_like)">mdi-thumb-up</v-icon>
+                                                        </v-badge>
                                                     </v-btn>
-                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')"
-                                                           :title="$t('assess.tooltip.dislike_item')"
-                                                           data-btn="unlike">
-                                                        <v-icon :color="buttonStatus(card.me_dislike)">mdi-thumb-down
-                                                        </v-icon>
+                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')" :title="$t('assess.tooltip.dislike_item')" data-btn="unlike">
+                                                        <v-badge bordered color="red" :content="card.dislikes" overlap>
+                                                          <v-icon :color="buttonStatus(card.me_dislike)">mdi-thumb-down</v-icon>
+                                                        </v-badge>
                                                     </v-btn>
                                                     <v-btn v-if="canDelete" icon @click.stop="cardItemToolbar('delete')"
                                                            :title="$t('assess.tooltip.delete_item')"
@@ -192,6 +196,12 @@ export default {
         opened: false,
         selected: false
     }),
+    filters: {
+        truncate: function(data,length){
+            const reqdString = data.split("").slice(0, length).join("");
+            return data.length > length ? reqdString + '...' : data;
+        }
+    },
     computed: {
         canAccess() {
             return this.checkPermission(Permissions.ASSESS_ACCESS)
@@ -227,6 +237,13 @@ export default {
                 return this.card.news_items[0].news_item_data.link
             } else {
                 return ""
+            }
+        },
+        getTags() {
+            if (this.card.news_items.length === 1) {
+                return this.card.news_items[0].news_item_data.tags
+            } else {
+                return ['Test']
             }
         },
         cardType() {
@@ -374,7 +391,7 @@ export default {
 
                 default:
                     this.toolbar = false;
-                    this.itemClicked(this.card);
+                    //this.itemClicked(this.card);
                     break;
             }
         },

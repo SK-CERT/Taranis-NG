@@ -37,10 +37,7 @@ class BaseBot:
     def print_exception(preset, error):
         print('Bot Preset ID: ' + preset.id)
         print('Bot Preset name: ' + preset.name)
-        if str(error).startswith('b'):
-            print('ERROR: ' + str(error)[2:-1])
-        else:
-            print('ERROR: ' + str(error))
+        print('ERROR: ' + str(error))
 
     @staticmethod
     def history(interval):

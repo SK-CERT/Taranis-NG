@@ -57,14 +57,6 @@
                                         <span v-if="canAccess" class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
                                             {{ news_item.news_item_data.link }}
                                         </span>
-
-                                        <span class="caption font-weight-bold grey--text pl-2 pr-1">
-                                            <v-icon color="grey" size="12">mdi-thumb-up</v-icon> {{ news_item.likes }}
-                                        </span>
-
-                                        <span class="caption font-weight-bold grey--text pl-1 pr-2">
-                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ news_item.dislikes }}
-                                        </span>
                                     </v-col>
 
                                     <!--HOVER TOOLBAR-->
@@ -91,11 +83,15 @@
                                                 </v-btn>
 
                                                 <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')" data-btn="like" :title="$t('assess.tooltip.like_item')">
-                                                    <v-icon :color="buttonStatus(news_item.me_like)">mdi-thumb-up</v-icon>
+                                                    <v-badge bordered color="green" :content="news_item.likes" overlap>
+                                                      <v-icon :color="buttonStatus(news_item.me_like)">mdi-thumb-up</v-icon>
+                                                    </v-badge>
                                                 </v-btn>
 
                                                 <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')" data-btn="unlike" :title="$t('assess.tooltip.dislike_item')">
-                                                    <v-icon :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
+                                                    <v-badge bordered color="red" :content="news_item.dislikes" overlap>
+                                                      <v-icon :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
+                                                    </v-badge>
                                                 </v-btn>
 
                                                 <v-btn v-if="canDelete" icon @click.stop="cardItemToolbar('delete')" data-btn="delete" :title="$t('assess.tooltip.delete_item')">

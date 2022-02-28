@@ -38,6 +38,15 @@ class CoreApi:
             return None, 400
 
     @classmethod
+    def update_news_item_tags(cls, id, attributes):
+        try:
+            response = requests.put(cls.api_url + '/api/v1/bots/news-item-data/' + id + '/tags', json=tags,
+                                    headers=cls.headers)
+            return response.status_code
+        except Exception:
+            return None, 400
+
+    @classmethod
     def delete_word_list_category_entries(cls, id, name):
         try:
             response = requests.delete(cls.api_url + '/api/v1/bots/word-list-categories/' + id + '/entries/' + name,
