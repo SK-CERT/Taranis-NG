@@ -47,7 +47,7 @@
                                 <v-col v-bind="UI.CARD.COL.REVIEW">
                                     <div v-if="!compact_mode">
                                         <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.review)"></div>
-                                        <div v-else>{{ news_item.news_item_data.review }}</div>
+                                        <div v-else v-html="highlight(news_item.news_item_data.review)"></div>
                                     </div>
                                 </v-col>
 
@@ -125,7 +125,8 @@
             news_item: Object,
             analyze_selector: Boolean,
             compact_mode: Boolean,
-            word_list_regex: String
+            word_list_regex: String,
+            filter: Object
         },
         mixins: [AuthMixin],
         data: () => ({
@@ -177,6 +178,23 @@
             },
         },
         methods: {
+            highlight(content) {
+              if(this.filter.search === "" && this.filter.tag === "") {
+                  return content;
+              }
+
+              let regex = this.filter.search;
+              if (this.filter.tag === "") {
+                if (regex.length > 0 ) {
+                  regex += "|";
+                }
+                regex += this.filter.tag;
+              }
+
+              return content.replace(new RegExp(regex, "gi"), match => {
+                  return '<mark>' + match + '</mark>';
+              });
+            },
             itemClicked(data) {
                 if (this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true) {
                     this.$emit('show-item-detail', data);

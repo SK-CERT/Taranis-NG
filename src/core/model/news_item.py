@@ -6,6 +6,7 @@ from marshmallow import post_load, fields
 from sqlalchemy import orm, and_, or_, func
 
 from managers.db_manager import db
+from managers import log_manager
 from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSourceGroup, OSINTSource
 from model.tag_cloud import TagCloud
@@ -40,7 +41,7 @@ class NewsItemData(db.Model):
     link = db.Column(db.String())
     language = db.Column(db.String())
     content = db.Column(db.String())
-    tags = db.Column(db.ARRAY(db.String()))
+    tags = db.Column(db.ARRAY(db.String()), nullable=True)
 
     collected = db.Column(db.DateTime)
     published = db.Column(db.String())
@@ -141,7 +142,6 @@ class NewsItemData(db.Model):
     @classmethod
     def update_news_item_tags(cls, news_item_id, tags):
         news_item = cls.query.filter_by(id=news_item_id).first()
-        print(tags)
         for tag in tags:
             news_item.tags.append(tag)
             db.session.commit()
@@ -497,6 +497,8 @@ class NewsItemAggregate(db.Model):
                 news_item.access = access
                 news_item.modify = modify
                 vote = NewsItemVote.find(news_item.id, user.id)
+                if news_item.news_item_data.tags is None:
+                    news_item.news_item_data.tags = ['CVE', 'Country', 'Test']
                 if vote is not None:
                     news_item.me_like = vote.like
                     news_item.me_dislike = vote.dislike
@@ -516,12 +518,10 @@ class NewsItemAggregate(db.Model):
         items = news_item_aggregate_schema.dump(news_item_aggregates)
         for aggregate in items:
             for news_item in aggregate['news_items'][:]:
-                if news_item['tags'] is None:
-                  news_item['tags'] = ['CVE', 'Russie', 'Test']
                 if news_item['see'] is False:
                     aggregate['news_items'].remove(news_item)
 
-        return {'total_count': 0, 'items': items}
+        return {'total_count': count, 'items': items}
 
     @classmethod
     def create_new_for_all_groups(cls, news_item_data):
@@ -997,6 +997,11 @@ class NewsItemAggregateSearchIndex(db.Model):
             data += " " + news_item.news_item_data.content
             data += " " + news_item.news_item_data.author
             data += " " + news_item.news_item_data.link
+
+            if news_item.news_item_data.tags is not None:
+              log_manager.log_debug(news_item.news_item_data.tags)
+              for tag in news_item.news_item_data.tags:
+                  data += " " + tag
 
             for attribute in news_item.news_item_data.attributes:
                 data += " " + attribute.value

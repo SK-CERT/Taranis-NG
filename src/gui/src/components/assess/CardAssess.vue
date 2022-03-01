@@ -42,16 +42,17 @@
                                         <v-icon v-show="hover">mdi-open-in-new</v-icon>
                                     </div>
                                     <div :title="itemLink" v-else>{{ card.title }}
-                                        <v-icon v-show="hover">mdi-open-in-new</v-icon>
+                                    <!-- <div :title="itemLink" v-else>{{ card.title | truncate(16) }} -->
+                                        <a class="alink" :href="card.news_items[0].news_item_data.link"
+                                            target="_blank" rel="noreferer">
+                                            <v-icon v-show="hover" color="accent">mdi-open-in-new</v-icon>
+                                        </a>
                                     </div>
                                 </v-col>
 
                                 <!--REVIEW-->
                                 <v-col v-bind="UI.CARD.COL.REVIEW">
-                                    <div v-if="!compact_mode">
-                                        <div v-if="word_list_regex" v-html="wordCheck(card.description)"></div>
-                                        <div v-else class="compact" >{{ card.description }}</div>
-                                    </div>
+                                  <div class="compact" v-once v-html="highlight(card.description)"></div>
                                 </v-col>
 
                                 <!--FOOTER-->
@@ -67,21 +68,16 @@
                                             </v-btn>
                                         </template>
                                         <template v-else>
-                                            <v-btn depressed small color="primary" data-button="OpenCard" @click.stop="itemClicked(card)">
+                                            <v-btn depressed small color="primary" data-button="OpenCard" @click.stop="openCard">
                                                 <v-icon v-if="opened" left>mdi-arrow-down-drop-circle</v-icon>
                                                 <v-icon v-if="!opened" left>mdi-arrow-right-drop-circle</v-icon>
                                                 <span>Open Card</span>
                                             </v-btn>
                                         </template>
 
-                                        <v-btn v-for="tag in getTags" :key="tag" rounded color="primary" dark x-small>
+                                        <v-btn v-for="tag in getTags" :key="tag" rounded color="primary" dark x-small @click.stop="filterTags(tag)">
                                           {{ tag }}
                                         </v-btn>
-                                        <v-btn rounded color="primary" dark x-small>
-                                          Tag1
-                                        </v-btn>
-
-                                        
 
                                         <v-btn v-if="card.in_reports_count > 0" depressed x-small
                                                color="orange lighten-2">
@@ -162,6 +158,7 @@
             <CardAssessItem v-for="news_item in card.news_items" :key="news_item.id" :news_item="news_item"
                             :analyze_selector="analyze_selector" :compact_mode="compact_mode"
                             :word_list_regex="word_list_regex"
+                            :filter="filter"
                             @show-item-detail="showItemDetail(news_item)"
             />
         </div>
@@ -187,14 +184,16 @@ export default {
         preselected: Boolean,
         word_list_regex: String,
         aggregate_opened: Boolean,
-        data_set: String
+        data_set: String,
+        filter: Object
     },
     mixins: [AuthMixin],
     components: {CardAssessItem},
     data: () => ({
         toolbar: false,
         opened: false,
-        selected: false
+        selected: false,
+        tag_filter: ""
     }),
     filters: {
         truncate: function(data,length){
@@ -271,6 +270,30 @@ export default {
         },
     },
     methods: {
+        highlight(content) {
+          if (this.word_list_regex) {
+            return this.wordCheck(content);
+          }
+          content = this.removeHtml(content);
+          if(this.filter.search === "" && this.tag_filter === "") {
+            return content;
+          }
+
+          let regex = this.filter.search;
+          if (regex === "") {
+            regex = this.tag_filter;
+          } else {
+            if (this.tag_filter !== "") {
+              regex += "|"+this.tag_filter;
+            }
+          }
+          return this.highlightReplace(content, regex);
+        },
+        highlightReplace(content,regex) {
+          return content.replace(new RegExp(regex, "gi"), match => {
+              return '<mark>' + match + '</mark>';
+          });
+        },
         showItemDetail(data) {
             this.$emit('show-item-detail', data);
 
@@ -290,6 +313,10 @@ export default {
             } else {
                 this.$store.dispatch("deselect", {'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card})
             }
+        },
+        filterTags(tag) {
+          this.tag_filter = tag;
+          this.$emit('update-news-items-filter', {'tag': tag});
         },
         itemClicked(data) {
             if (this.card.news_items.length === 1) {
@@ -430,6 +457,11 @@ export default {
             return text.replace(/[&<>"']/g, function (m) {
                 return map[m];
             });
+        },
+        removeHtml(html) {
+          var div = document.createElement("div");
+          div.innerHTML = html;
+          return div.textContent || div.innerText || "";
         },
         multiSelectOff() {
             this.selected = false

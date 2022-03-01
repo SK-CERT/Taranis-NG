@@ -795,7 +795,7 @@ const messages_en = {
                 MONTH: 'Show news items for the last month'
             },
             sort: {
-                time: {
+                date: {
                     ascending: 'Sort news items by collected date ascending',
                     descending: 'Sort news items by collected date descending'
                 },
