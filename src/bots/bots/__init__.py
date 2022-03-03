@@ -1,5 +1,5 @@
 __all__ = ['base_bot', 'grouping_bot', 'wordlist_updater_bot', 'analyst_bot', 'tagging_bot']
-from . import *
+from . import grouping_bot, wordlist_updater_bot, analyst_bot, tagging_bot
 
 bot_list = [
     analyst_bot.AnalystBot(),
