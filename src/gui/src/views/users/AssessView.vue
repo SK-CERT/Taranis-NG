@@ -119,12 +119,16 @@
         created() {
             document.addEventListener("keydown", this.keyAction, false);
             const element = document.querySelector("card-item");
-            element.addEventListener('click', this.targetClick, false);
+            if (element != null) {
+              element.addEventListener('click', this.targetClick, false);
+            }
         },
         beforeDestroy() {
             document.removeEventListener("keydown", this.keyAction);
             const element = document.querySelector("card-item");
-            element.removeEventListener('click');
+            if (element != null) {
+              element.removeEventListener('click');
+            }
             this.$root.$off('first-dialog');
             this.$root.$off('clear-cards');
         }
