@@ -16,26 +16,6 @@
           >
             <!--CONTENT-->
             <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
-              <v-row v-bind="UI.CARD.ROW.CONTENT">
-                <!--COLLECTED, PUBLISHED, SOURCE-->
-                <v-col v-bind="UI.CARD.COL.INFO">
-                    <div>
-                        {{ $t('card_item.collected') }}: <strong>{{ card.created }}</strong>
-                    </div>
-                </v-col>
-                <v-col v-bind="UI.CARD.COL.INFO">
-                    <div v-if="singleAggregate" align="center">
-                        {{ $t('card_item.published') }}:
-                        <strong>{{ card.news_items[0].news_item_data.published }}</strong>
-                    </div>
-                </v-col>
-                <v-col v-bind="UI.CARD.COL.INFO">
-                    <div v-if="singleAggregate" align="right">
-                        {{ $t('card_item.source') }}:
-                        <strong>{{ card.news_items[0].news_item_data.source }}</strong>
-                    </div>
-                </v-col>
-              </v-row>
               <v-row>
                 <v-col cols="8">
                 <!--TITLE-->
@@ -48,8 +28,21 @@
                 </v-card-text>
                 </v-col>
                 <!--FOOTER-->
-                <v-col cols="4" v-bind="UI.CARD.FOOTER">
-                  <v-card-actions :style="UI.STYLE.card_toolbar">
+                <v-col cols="4">
+                  <v-row>
+                    {{ $t('card_item.collected') }}: <strong>{{ card.created }}</strong>
+                  </v-row>
+                  <v-row>
+                    <div v-if="singleAggregate">
+                      {{ $t('card_item.published') }}: <strong>{{ card.news_items[0].news_item_data.published }}</strong>
+                    </div>
+                  </v-row>
+                  <v-row>
+                    <div v-if="singleAggregate" align="right">
+                      {{ $t('card_item.source') }}: <strong>{{ card.news_items[0].news_item_data.source }}</strong>
+                    </div>
+                  </v-row>
+                  <v-card-actions>
                     <v-row>
                       <template v-if="!singleAggregate">
                           <v-btn depressed small color="primary" data-button="aggregate" @click.stop="openCard">
@@ -70,68 +63,61 @@
                       <v-btn v-if="card.in_reports_count > 0" depressed x-small color="orange lighten-2">
                           {{ $t('card_item.in_analyze') }}
                       </v-btn>
-                    </v-row>
-                    <v-row v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar_strip_bottom">
-                        <v-col v-bind="UI.CARD.COL.TOOLS">
-                            <v-btn v-if="singleAggregate && canAccess" icon
-                                    @click.stop="cardItemToolbar('link')"
-                                    data-btn="link" :title="$t('assess.tooltip.open_source')">
-                                <a class="alink" :href="card.news_items[0].news_item_data.link"
-                                    target="_blank" rel="noreferer">
-                                    <v-icon color="accent">mdi-open-in-app</v-icon>
-                                </a>
-                            </v-btn>
-                            <v-btn v-if="!singleAggregate && canModify" icon
-                                    @click.stop="cardItemToolbar('ungroup')"
-                                    data-btn="ungroup"
-                                    :title="$t('assess.tooltip.ungroup_news_item')">
-                                <v-icon color="accent">mdi-ungroup</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canCreateReport" icon @click.stop="cardItemToolbar('new')"
-                                    :title="$t('assess.tooltip.analyze_item')"
-                                    data-btn="new">
-                                <v-icon color="accent">mdi-file-outline</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
-                                    data-btn="read" :title="$t('assess.tooltip.read_item')">
-                                <v-icon :color="buttonStatus(card.read)">mdi-eye</v-icon>
-                            </v-btn>
-                            <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('important')"
-                                    :title="$t('assess.tooltip.important_item')"
-                                    data-btn="important">
-                                <v-icon :color="buttonStatus(card.important)">mdi-star</v-icon>
-                            </v-btn>
+                        <v-btn v-if="singleAggregate && canAccess" icon
+                                @click.stop="cardItemToolbar('link')"
+                                data-btn="link" :title="$t('assess.tooltip.open_source')">
+                            <a class="alink" :href="card.news_items[0].news_item_data.link"
+                                target="_blank" rel="noreferer">
+                                <v-icon color="accent">mdi-open-in-app</v-icon>
+                            </a>
+                        </v-btn>
+                        <v-btn v-if="!singleAggregate && canModify" icon
+                                @click.stop="cardItemToolbar('ungroup')"
+                                data-btn="ungroup"
+                                :title="$t('assess.tooltip.ungroup_news_item')">
+                            <v-icon color="accent">mdi-ungroup</v-icon>
+                        </v-btn>
+                        <v-btn v-if="canCreateReport" icon @click.stop="cardItemToolbar('new')"
+                                :title="$t('assess.tooltip.analyze_item')"
+                                data-btn="new">
+                            <v-icon color="accent">mdi-file-outline</v-icon>
+                        </v-btn>
+                        <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
+                                data-btn="read" :title="$t('assess.tooltip.read_item')">
+                            <v-icon :color="buttonStatus(card.read)">mdi-eye</v-icon>
+                        </v-btn>
+                        <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('important')"
+                                :title="$t('assess.tooltip.important_item')"
+                                data-btn="important">
+                            <v-icon :color="buttonStatus(card.important)">mdi-star</v-icon>
+                        </v-btn>
 
-                            <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')" data-btn="like" :title="$t('assess.tooltip.like_item')">
-                                <v-badge bordered color="green" :content="card.likes" overlap left>
-                                  <v-icon :color="buttonStatus(card.me_like)">mdi-thumb-up</v-icon>
-                                </v-badge>
-                            </v-btn>
-                            <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')" :title="$t('assess.tooltip.dislike_item')" data-btn="unlike">
-                                <v-badge bordered color="red" :content="card.dislikes" overlap>
-                                  <v-icon :color="buttonStatus(card.me_dislike)">mdi-thumb-down</v-icon>
-                                </v-badge>
-                            </v-btn>
-                            <v-btn v-if="canDelete" icon @click.stop="cardItemToolbar('delete')"
-                                    :title="$t('assess.tooltip.delete_item')"
-                                    data-btn="delete">
-                                <v-icon color="accent">{{ UI.ICON.DELETE }}</v-icon>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                    <v-row v-if="analyze_selector && analyze_can_modify" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
-                      <v-col v-bind="UI.CARD.COL.TOOLS">
-                        <v-btn icon @click.stop="cardItemToolbar('remove')">
+                        <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')" data-btn="like" :title="$t('assess.tooltip.like_item')">
+                            <v-badge bordered color="green" :content="card.likes" overlap left>
+                              <v-icon :color="buttonStatus(card.me_like)">mdi-thumb-up</v-icon>
+                            </v-badge>
+                        </v-btn>
+                        <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')" :title="$t('assess.tooltip.dislike_item')" data-btn="unlike">
+                            <v-badge bordered color="red" :content="card.dislikes" overlap>
+                              <v-icon :color="buttonStatus(card.me_dislike)">mdi-thumb-down</v-icon>
+                            </v-badge>
+                        </v-btn>
+                        <v-btn v-if="canDelete" icon @click.stop="cardItemToolbar('delete')"
+                                :title="$t('assess.tooltip.delete_item')"
+                                data-btn="delete">
+                            <v-icon color="accent">{{ UI.ICON.DELETE }}</v-icon>
+                        </v-btn>
+                        <v-btn v-if="analyze_selector && analyze_can_modify" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar" icon @click.stop="cardItemToolbar('remove')">
                           <v-icon color="accent">mdi-minus-circle-outline</v-icon>
                         </v-btn>
-                      </v-col>
+  
                     </v-row>
+                    </v-card-actions>
                     <v-row>
-                      <v-btn v-for="tag in getTags" :key="tag" rounded color="primary" dark x-small @click.stop="filterTags(tag)">
-                        {{ tag }}
-                      </v-btn>
+                    <v-btn v-for="tag in getTags" :key="tag" rounded color="primary" dark x-small @click.stop="filterTags(tag)">
+                      {{ tag }}
+                    </v-btn>
                     </v-row>
-                  </v-card-actions>
                 </v-col>
               </v-row>
             </v-layout>

@@ -46,7 +46,8 @@ def initialize(app):
     else:
         current_authenticator = TestAuthenticator()
 
-    current_authenticator.initialize(app)
+    with app.app_context():
+        current_authenticator.initialize(app)
 
     time_manager.schedule_job_every_day("00:00", cleanup_token_blacklist, app)
 

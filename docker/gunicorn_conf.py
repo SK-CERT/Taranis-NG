@@ -12,7 +12,7 @@ bind_env = os.getenv("BIND", None)
 use_loglevel = os.getenv("LOG_LEVEL", "info")
 use_reload = False
 
-if os.getenv("DEBUG").lower() == "true":
+if os.getenv("DEBUG", "false").lower() == "true":
   use_loglevel = "debug"
   use_reload = True
 

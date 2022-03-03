@@ -12,14 +12,14 @@ import logging
 @click.argument('realm', default='master')
 @click.argument('verify', default=False)
 def main(url, user, password, realm, verify):
-    server_url = "{}/auth/".format(url)
-    keycloak_admin = KeycloakAdmin(server_url=server_url,
+    keycloak_admin = KeycloakAdmin(server_url=url,
                                username=user,
                                password=password,
                                realm_name=realm,
                                verify=verify)
 
     keycloak_admin.create_client(payload={"enabled": True, "clientId": "taranis", "name": "Taranis"}, skip_exists=True)
+    
     taranis_user = keycloak_admin.create_user(payload={"username": "taranis", "enabled": True, "firstName": "Taranis", "credentials": [{"value": password,"type": "password"}]})
     taranis_client = keycloak_admin.get_client_id(client_name="taranis")
     client_secrets = keycloak_admin.generate_client_secrets(client_id=taranis_client)
