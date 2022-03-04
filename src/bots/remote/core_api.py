@@ -38,7 +38,7 @@ class CoreApi:
             return None, 400
 
     @classmethod
-    def update_news_item_tags(cls, id, attributes):
+    def update_news_item_tags(cls, id, tags):
         try:
             response = requests.put(cls.api_url + '/api/v1/bots/news-item-data/' + id + '/tags', json=tags,
                                     headers=cls.headers)
