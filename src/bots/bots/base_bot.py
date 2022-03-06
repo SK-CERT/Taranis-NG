@@ -89,4 +89,5 @@ class BaseBot:
                         else:
                             time_manager.schedule_job_on_sunday(at, self.execute, preset)
                     else:
+                        log_manager.log_debug(f"SETTING INTERVAL: {interval} FOR: {self.name}")
                         time_manager.schedule_job_minutes(int(interval), self.execute, preset)

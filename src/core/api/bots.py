@@ -37,7 +37,7 @@ class NewsItemData(Resource):
             if 'limit' in request.args and request.args['limit']:
                 limit = request.args['limit']
         except Exception as ex:
-            log_manager.log_debug(ex)
+            log_manager.log_debug_trace(ex)
             return "", 400
 
         return news_item.NewsItemData.get_all_news_items_data(limit)
@@ -61,7 +61,10 @@ class GetNewsItemsAggregate(Resource):
 
     @api_key_required
     def get(self, group_id):
-        return news_item.NewsItemAggregate.get_news_items_aggregate(group_id, request.json)
+        import json
+        resp_str = news_item.NewsItemAggregate.get_news_items_aggregate(group_id, request.json)
+        resp = json.loads(resp_str)
+        return resp
 
 
 class Categories(Resource):
