@@ -45,7 +45,7 @@ class NewsItemData(db.Model):
     link = db.Column(db.String())
     language = db.Column(db.String())
     content = db.Column(db.String())
-    tags = db.Column(db.ARRAY(db.String()), nullable=True)
+    tags = db.Column(db.ARRAY(db.String()))
 
     collected = db.Column(db.DateTime)
     published = db.Column(db.String())
@@ -191,7 +191,6 @@ class NewsItemData(db.Model):
         query = query.filter(NewsItem.id == news_item_id)
         return query
 
-
     @classmethod
     def update_news_item_tags(cls, news_item_id, tags):
         try:
@@ -202,7 +201,6 @@ class NewsItemData(db.Model):
             db.session.commit()
         except Exception as e:
             log_manager.log_debug_trace(e)
-
 
     @classmethod
     def get_for_sync(cls, last_synced, osint_sources):
@@ -343,9 +341,9 @@ class NewsItem(db.Model):
                 db.session.query(
                     NewsItem.id,
                     func.count().filter(ACLEntry.id > 0).label("acls"),
-                    func.count().filter(ACLEntry.see == True).label("see"),
-                    func.count().filter(ACLEntry.access == True).label("access"),
-                    func.count().filter(ACLEntry.modify == True).label("modify"),
+                    func.count().filter(ACLEntry.see).label("see"),
+                    func.count().filter(ACLEntry.access).label("access"),
+                    func.count().filter(ACLEntry.modify).label("modify"),
                 )
                 .distinct()
                 .group_by(NewsItem.id)
@@ -578,10 +576,10 @@ class NewsItemAggregate(db.Model):
             ).filter(NewsItemAggregateSearchIndex.data.like(search_string))
 
         if "read" in filter and filter["read"].lower() == "true":
-            query = query.filter(NewsItemAggregate.read == False)
+            query = query.filter(NewsItemAggregate.read is False)
 
         if "important" in filter and filter["important"].lower() == "true":
-            query = query.filter(NewsItemAggregate.important == True)
+            query = query.filter(NewsItemAggregate.important is True)
 
         if "relevant" in filter and filter["relevant"].lower() == "true":
             query = query.filter(NewsItemAggregate.likes > 0)
@@ -653,8 +651,6 @@ class NewsItemAggregate(db.Model):
                 news_item.access = access
                 news_item.modify = modify
                 vote = NewsItemVote.find(news_item.id, user.id)
-                if news_item.news_item_data.tags is None:
-                    news_item.news_item_data.tags = ["CVE", "Country", "Test"]
                 if vote is not None:
                     news_item.me_like = vote.like
                     news_item.me_dislike = vote.dislike
@@ -1182,7 +1178,6 @@ class NewsItemAggregateSearchIndex(db.Model):
             data += " " + news_item.news_item_data.link
 
             if news_item.news_item_data.tags is not None:
-                log_manager.log_debug(news_item.news_item_data.tags)
                 for tag in news_item.news_item_data.tags:
                     data += " " + tag
 

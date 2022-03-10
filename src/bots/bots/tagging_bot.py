@@ -1,11 +1,9 @@
-import json
-import re
-
 from .base_bot import BaseBot
 from schema.parameter import Parameter, ParameterType
 from remote.core_api import CoreApi
 from managers import log_manager
 import datetime
+
 
 class TaggingBot(BaseBot):
     type = "TAGGING_BOT"
@@ -42,7 +40,7 @@ class TaggingBot(BaseBot):
 
             data, status = CoreApi.get_news_items_aggregate(source_group, limit)
             if status != 200:
-              return
+                return
 
             if data:
                 for aggregate in data:
@@ -59,16 +57,16 @@ class TaggingBot(BaseBot):
                                 else:
                                     findings[news_item["id"]] = {keyword}
                     for news_id, keyword in findings.items():
-                      log_manager.log_debug(f"news_id: {news_id}, keyword: {keyword}")
-                      CoreApi.update_news_item_tags(news_id, list(keyword))
+                        log_manager.log_debug(f"news_id: {news_id}, keyword: {keyword}")
+                        CoreApi.update_news_item_tags(news_id, list(keyword))
 
         except Exception as error:
             BaseBot.print_exception(preset, error)
 
     def execute_on_event(self, preset, event_type, data):
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]
-            keywords = preset.parameter_values["KEYWORDS"]
-
+            # source_group = preset.parameter_values["SOURCE_GROUP"]
+            # keywords = preset.parameter_values["KEYWORDS"]
+            pass
         except Exception as error:
             BaseBot.print_exception(preset, error)

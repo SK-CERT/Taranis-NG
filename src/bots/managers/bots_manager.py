@@ -5,7 +5,7 @@ bots_dict = {}
 
 def initialize():
     for bot in bots.bot_list:
-      register_bot(bot)
+        register_bot(bot)
 
 
 def register_bot(bot):
