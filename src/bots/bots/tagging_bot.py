@@ -35,7 +35,7 @@ class TaggingBot(BaseBot):
             keywords = preset.parameter_values["KEYWORDS"]
 
             limit = BaseBot.history(interval)
-            limit = datetime.datetime.now() - datetime.timedelta(weeks=5)
+            limit = datetime.datetime.now() - datetime.timedelta(weeks=12)
             log_manager.log_debug(f"LIMIT: {limit}")
 
             data, status = CoreApi.get_news_items_aggregate(source_group, limit)
@@ -47,9 +47,10 @@ class TaggingBot(BaseBot):
                     findings = {}
                     for news_item in aggregate["news_items"]:
                         content = news_item["news_item_data"]["content"]
+                        existing_tags = news_item["news_item_data"]["tags"]
 
                         for keyword in keywords.split(","):
-                            if keyword in content:
+                            if keyword in content and keyword not in existing_tags:
                                 if news_item["id"] in findings:
                                     findings[news_item["id"]] = findings[
                                         news_item["id"]
