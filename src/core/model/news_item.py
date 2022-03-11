@@ -1132,7 +1132,7 @@ class NewsItemAggregate(db.Model):
         if limit is not None:
             limit = datetime.strptime(limit["limit"], "%d.%m.%Y - %H:%M")
         else:
-            limit = datetime.now() - timedelta(week=8)
+            limit = datetime.now() - timedelta(weeks=8)
 
         # TODO: Change condition in query to >
         news_item_aggregates = (

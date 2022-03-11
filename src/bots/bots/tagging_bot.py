@@ -32,11 +32,12 @@ class TaggingBot(BaseBot):
         try:
             source_group = preset.parameter_values["SOURCE_GROUP"]
             interval = preset.parameter_values["REFRESH_INTERVAL"]
-            keywords = preset.parameter_values["KEYWORDS"]
+            keywords = preset.parameter_values["KEYWORDS"].split(",")
 
             limit = BaseBot.history(interval)
             limit = datetime.datetime.now() - datetime.timedelta(weeks=12)
             log_manager.log_debug(f"LIMIT: {limit}")
+            log_manager.log_debug(f"KEYWORDKS: {keywords}")
 
             data, status = CoreApi.get_news_items_aggregate(source_group, limit)
             if status != 200:
@@ -47,9 +48,9 @@ class TaggingBot(BaseBot):
                     findings = {}
                     for news_item in aggregate["news_items"]:
                         content = news_item["news_item_data"]["content"]
-                        existing_tags = news_item["news_item_data"]["tags"]
+                        existing_tags = news_item["news_item_data"]["tags"] if news_item["news_item_data"]["tags"] is not None else []
 
-                        for keyword in keywords.split(","):
+                        for keyword in keywords:
                             if keyword in content and keyword not in existing_tags:
                                 if news_item["id"] in findings:
                                     findings[news_item["id"]] = findings[
@@ -59,6 +60,8 @@ class TaggingBot(BaseBot):
                                     findings[news_item["id"]] = {keyword}
                     for news_id, keyword in findings.items():
                         log_manager.log_debug(f"news_id: {news_id}, keyword: {keyword}")
+                        if keyword is None:
+                            continue
                         CoreApi.update_news_item_tags(news_id, list(keyword))
 
         except Exception as error:
