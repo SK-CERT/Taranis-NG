@@ -24,6 +24,12 @@ if os.getenv("DEBUG", "false").lower() == "true":
     gunicorn_logger.setLevel(logging.DEBUG)
     sys_logger.setLevel(logging.DEBUG)
 
+# send a debug message
+def log_exception(message=""):
+    formatted_message = "[{}] {}".format(module_id,message)
+    gunicorn_logger.exception(formatted_message)
+    if sys_logger:
+        sys_logger.exception(formatted_message)
 
 # send a debug message
 def log_debug(message):

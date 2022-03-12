@@ -51,8 +51,8 @@ class ReportItems(Resource):
             limit = 50
             if 'limit' in request.args and request.args['limit']:
                 limit = min(int(request.args['limit']), 200)
-        except Exception as ex:
-            log_manager.log_debug(ex)
+        except Exception:
+            log_manager.log_exception("Get Report Items failed")
             return "", 400
 
         return report_item.ReportItem.get_json(group, filter, offset, limit, auth_manager.get_user_from_jwt())
@@ -118,8 +118,8 @@ class ReportItemData(Resource):
                 data['aggregate_ids'] = request.args['aggregate_ids'].split('--')
             if 'remote_report_item_ids' in request.args and request.args['remote_report_item_ids']:
                 data['remote_report_item_ids'] = request.args['remote_report_item_ids'].split('--')
-        except Exception as ex:
-            log_manager.log_debug(ex)
+        except Exception:
+            log_manager.log_exception("Failed to GET ReportItemData")
             return "", 400
 
         user = auth_manager.get_user_from_jwt()
