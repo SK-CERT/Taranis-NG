@@ -60,6 +60,7 @@ export default {
         if (a.last_updated < b.last_updated) {
           return -1
         } else if (a.last_updated > b.last_updated) {
+          // FIXME(mw): Is this needed? This is identical to the default case below
           return 1
         } else {
           return 1

@@ -203,11 +203,7 @@ export default {
       }
     },
     cardFocus () {
-      if (this.$el.querySelector('.card .layout').classList.contains('focus')) {
-        return true
-      } else {
-        return false
-      }
+      return this.$el.querySelector('.card .layout').classList.contains('focus')
     },
     cardStatus () {
       if (this.card.important) {
