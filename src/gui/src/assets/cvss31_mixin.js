@@ -10,7 +10,7 @@ const Cvss31Mixin = ({
         }
     }, */
   mounted () {
-    var CVSS31 = {}
+    const CVSS31 = {}
     this.clc = CVSS31
 
     CVSS31.CVSSVersionIdentifier = 'CVSS:3.1'
@@ -88,7 +88,7 @@ const Cvss31Mixin = ({
       { name: 'critical', bottom: 9, top: 10 }
     ]
     CVSS31.calculateCVSSFromMetrics = function (AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability) {
-      var badMetrics = []
+      const badMetrics = []
       if (typeof AttackVector === 'undefined' || AttackVector === '') {
         badMetrics.push('AV')
       }
@@ -121,30 +121,30 @@ const Cvss31Mixin = ({
         }
       }
 
-      var AV = AttackVector
-      var AC = AttackComplexity
-      var PR = PrivilegesRequired
-      var UI = UserInteraction
-      var S = Scope
-      var C = Confidentiality
-      var I = Integrity
-      var A = Availability
-      var E = ExploitCodeMaturity || 'X'
-      var RL = RemediationLevel || 'X'
-      var RC = ReportConfidence || 'X'
-      var CR = ConfidentialityRequirement || 'X'
-      var IR = IntegrityRequirement || 'X'
-      var AR = AvailabilityRequirement || 'X'
-      var MAV = ModifiedAttackVector || 'X'
-      var MAC = ModifiedAttackComplexity || 'X'
-      var MPR = ModifiedPrivilegesRequired || 'X'
-      var MUI = ModifiedUserInteraction || 'X'
-      var MS = ModifiedScope || 'X'
-      var MC = ModifiedConfidentiality || 'X'
-      var MI = ModifiedIntegrity || 'X'
-      var MA = ModifiedAvailability || 'X'
+      const AV = AttackVector
+      const AC = AttackComplexity
+      const PR = PrivilegesRequired
+      const UI = UserInteraction
+      const S = Scope
+      const C = Confidentiality
+      const I = Integrity
+      const A = Availability
+      const E = ExploitCodeMaturity || 'X'
+      const RL = RemediationLevel || 'X'
+      const RC = ReportConfidence || 'X'
+      const CR = ConfidentialityRequirement || 'X'
+      const IR = IntegrityRequirement || 'X'
+      const AR = AvailabilityRequirement || 'X'
+      const MAV = ModifiedAttackVector || 'X'
+      const MAC = ModifiedAttackComplexity || 'X'
+      const MPR = ModifiedPrivilegesRequired || 'X'
+      const MUI = ModifiedUserInteraction || 'X'
+      const MS = ModifiedScope || 'X'
+      const MC = ModifiedConfidentiality || 'X'
+      const MI = ModifiedIntegrity || 'X'
+      const MA = ModifiedAvailability || 'X'
 
-      var remapMetrics = [];
+      const remapMetrics = [];
       (!CVSS31.Weight.AV.hasOwnProperty(AV) ? badMetrics.push('AV') : remapMetrics.push(AV));
       (!CVSS31.Weight.AC.hasOwnProperty(AC) ? badMetrics.push('AC') : remapMetrics.push(AC));
       (!CVSS31.Weight.PR.U.hasOwnProperty(PR) ? badMetrics.push('PR') : remapMetrics.push(PR));
@@ -246,117 +246,97 @@ const Cvss31Mixin = ({
         }
       }
 
-      var metricWeightAV = CVSS31.Weight.AV[AV]
-      var metricWeightAC = CVSS31.Weight.AC[AC]
-      var metricWeightPR = CVSS31.Weight.PR[S][PR]
-      var metricWeightUI = CVSS31.Weight.UI[UI]
-      var metricWeightS = CVSS31.Weight.S[S]
-      var metricWeightC = CVSS31.Weight.CIA[C]
-      var metricWeightI = CVSS31.Weight.CIA[I]
-      var metricWeightA = CVSS31.Weight.CIA[A]
-      var metricWeightE = CVSS31.Weight.E[E]
-      var metricWeightRL = CVSS31.Weight.RL[RL]
-      var metricWeightRC = CVSS31.Weight.RC[RC]
-      var metricWeightCR = CVSS31.Weight.CIAR[CR]
-      var metricWeightIR = CVSS31.Weight.CIAR[IR]
-      var metricWeightAR = CVSS31.Weight.CIAR[AR]
-      var metricWeightMAV = CVSS31.Weight.AV[MAV !== 'X' ? MAV : AV]
-      var metricWeightMAC = CVSS31.Weight.AC[MAC !== 'X' ? MAC : AC]
-      var metricWeightMPR = CVSS31.Weight.PR[MS !== 'X' ? MS : S][MPR !== 'X' ? MPR : PR]
-      var metricWeightMUI = CVSS31.Weight.UI[MUI !== 'X' ? MUI : UI]
-      var metricWeightMS = CVSS31.Weight.S[MS !== 'X' ? MS : S]
-      var metricWeightMC = CVSS31.Weight.CIA[MC !== 'X' ? MC : C]
-      var metricWeightMI = CVSS31.Weight.CIA[MI !== 'X' ? MI : I]
-      var metricWeightMA = CVSS31.Weight.CIA[MA !== 'X' ? MA : A]
-      var iss
-      var impact
-      var exploitability
-      var baseScore
+      const metricWeightAV = CVSS31.Weight.AV[AV]
+      const metricWeightAC = CVSS31.Weight.AC[AC]
+      const metricWeightPR = CVSS31.Weight.PR[S][PR]
+      const metricWeightUI = CVSS31.Weight.UI[UI]
+      const metricWeightS = CVSS31.Weight.S[S]
+      const metricWeightC = CVSS31.Weight.CIA[C]
+      const metricWeightI = CVSS31.Weight.CIA[I]
+      const metricWeightA = CVSS31.Weight.CIA[A]
+      const metricWeightE = CVSS31.Weight.E[E]
+      const metricWeightRL = CVSS31.Weight.RL[RL]
+      const metricWeightRC = CVSS31.Weight.RC[RC]
+      const metricWeightCR = CVSS31.Weight.CIAR[CR]
+      const metricWeightIR = CVSS31.Weight.CIAR[IR]
+      const metricWeightAR = CVSS31.Weight.CIAR[AR]
+      const metricWeightMAV = CVSS31.Weight.AV[MAV !== 'X' ? MAV : AV]
+      const metricWeightMAC = CVSS31.Weight.AC[MAC !== 'X' ? MAC : AC]
+      const metricWeightMPR = CVSS31.Weight.PR[MS !== 'X' ? MS : S][MPR !== 'X' ? MPR : PR]
+      const metricWeightMUI = CVSS31.Weight.UI[MUI !== 'X' ? MUI : UI]
+      const metricWeightMS = CVSS31.Weight.S[MS !== 'X' ? MS : S]
+      const metricWeightMC = CVSS31.Weight.CIA[MC !== 'X' ? MC : C]
+      const metricWeightMI = CVSS31.Weight.CIA[MI !== 'X' ? MI : I]
+      const metricWeightMA = CVSS31.Weight.CIA[MA !== 'X' ? MA : A]
+      let baseScore
+      const iss = (1 - ((1 - metricWeightC) * (1 - metricWeightI) * (1 - metricWeightA)))
+      const impact = S === 'U' ? metricWeightS * iss : metricWeightS * (iss - 0.029) - 3.25 * Math.pow(iss - 0.02, 15);
 
-      iss = (1 - ((1 - metricWeightC) * (1 - metricWeightI) * (1 - metricWeightA)))
-      if (S === 'U') {
-        impact = metricWeightS * iss
-      } else {
-        impact = metricWeightS * (iss - 0.029) - 3.25 * Math.pow(iss - 0.02, 15)
-      }
-
-      exploitability = CVSS31.exploitabilityCoefficient * metricWeightAV * metricWeightAC * metricWeightPR * metricWeightUI
+      const exploitability = CVSS31.exploitabilityCoefficient * metricWeightAV * metricWeightAC * metricWeightPR * metricWeightUI
       if (impact <= 0) {
         baseScore = 0
+      } else if (S === 'U') {
+        baseScore = CVSS31.roundUp1(Math.min((exploitability + impact), 10))
       } else {
-        if (S === 'U') {
-          baseScore = CVSS31.roundUp1(Math.min((exploitability + impact), 10))
-        } else {
-          baseScore = CVSS31.roundUp1(Math.min(CVSS31.scopeCoefficient * (exploitability + impact), 10))
-        }
+        baseScore = CVSS31.roundUp1(Math.min(CVSS31.scopeCoefficient * (exploitability + impact), 10))
       }
 
-      var temporalScore = CVSS31.roundUp1(baseScore * metricWeightE * metricWeightRL * metricWeightRC)
-      var miss
-      var modifiedImpact
-      var envScore
-      var modifiedExploitability
+      const temporalScore = CVSS31.roundUp1(baseScore * metricWeightE * metricWeightRL * metricWeightRC)
+      const miss = Math.min(1 - ((1 - metricWeightMC * metricWeightCR) * (1 - metricWeightMI * metricWeightIR) * (1 - metricWeightMA * metricWeightAR)), 0.915)
+      const modifiedImpact = MS === 'U' || (MS === 'X' && S === 'U') ? metricWeightMS * miss : metricWeightMS * (miss - 0.029) - 3.25 * Math.pow(miss * 0.9731 - 0.02, 13)
+      const modifiedExploitability = CVSS31.exploitabilityCoefficient * metricWeightMAV * metricWeightMAC * metricWeightMPR * metricWeightMUI
+      let envScore
 
-      miss = Math.min(1 - ((1 - metricWeightMC * metricWeightCR) * (1 - metricWeightMI * metricWeightIR) * (1 - metricWeightMA * metricWeightAR)), 0.915)
-      if (MS === 'U' || (MS === 'X' && S === 'U')) {
-        modifiedImpact = metricWeightMS * miss
-      } else {
-        modifiedImpact = metricWeightMS * (miss - 0.029) - 3.25 * Math.pow(miss * 0.9731 - 0.02, 13)
-      }
-
-      modifiedExploitability = CVSS31.exploitabilityCoefficient * metricWeightMAV * metricWeightMAC * metricWeightMPR * metricWeightMUI
       if (modifiedImpact <= 0) {
         envScore = 0
+      } else if (MS === 'U' || (MS === 'X' && S === 'U')) {
+        envScore = CVSS31.roundUp1(CVSS31.roundUp1(Math.min((modifiedImpact + modifiedExploitability), 10)) * metricWeightE * metricWeightRL * metricWeightRC)
       } else {
-        if (MS === 'U' || (MS === 'X' && S === 'U')) {
-          envScore = CVSS31.roundUp1(CVSS31.roundUp1(Math.min((modifiedImpact + modifiedExploitability), 10)) * metricWeightE * metricWeightRL * metricWeightRC)
-        } else {
-          envScore = CVSS31.roundUp1(CVSS31.roundUp1(Math.min(CVSS31.scopeCoefficient * (modifiedImpact + modifiedExploitability), 10)) * metricWeightE * metricWeightRL * metricWeightRC)
-        }
+        envScore = CVSS31.roundUp1(CVSS31.roundUp1(Math.min(CVSS31.scopeCoefficient * (modifiedImpact + modifiedExploitability), 10)) * metricWeightE * metricWeightRL * metricWeightRC)
       }
 
-      var vectorString = CVSS31.CVSSVersionIdentifier + '/AV:' + AV + '/AC:' + AC + '/PR:' + PR + '/UI:' + UI + '/S:' + S + '/C:' + C + '/I:' + I + '/A:' + A
+      let vectorString = `${CVSS31.CVSSVersionIdentifier}/AV:${AV}/AC:${AC}/PR:${PR}/UI:${UI}/S:${S}/C:${C}/I:${I}/A:${A}`
       if (E !== 'X') {
-        vectorString = vectorString + '/E:' + E
+        vectorString += `/E:${E}`
       }
       if (RL !== 'X') {
-        vectorString = vectorString + '/RL:' + RL
+        vectorString += `/RL:${RL}`
       }
       if (RC !== 'X') {
-        vectorString = vectorString + '/RC:' + RC
+        vectorString += `/RC:${RC}`
       }
       if (CR !== 'X') {
-        vectorString = vectorString + '/CR:' + CR
+        vectorString += `/CR:${CR}`
       }
       if (IR !== 'X') {
-        vectorString = vectorString + '/IR:' + IR
+        vectorString += `/IR:${IR}`
       }
       if (AR !== 'X') {
-        vectorString = vectorString + '/AR:' + AR
+        vectorString += `/AR:${AR}`
       }
       if (MAV !== 'X') {
-        vectorString = vectorString + '/MAV:' + MAV
+        vectorString += `/MAV:${MAV}`
       }
       if (MAC !== 'X') {
-        vectorString = vectorString + '/MAC:' + MAC
+        vectorString += `/MAC:${MAC}`
       }
       if (MPR !== 'X') {
-        vectorString = vectorString + '/MPR:' + MPR
+        vectorString += `/MPR:${MPR}`
       }
       if (MUI !== 'X') {
-        vectorString = vectorString + '/MUI:' + MUI
+        vectorString += `/MUI:${MUI}`
       }
       if (MS !== 'X') {
-        vectorString = vectorString + '/MS:' + MS
+        vectorString += `/MS:${MS}`
       }
       if (MC !== 'X') {
-        vectorString = vectorString + '/MC:' + MC
+        vectorString += `/MC:${MC}`
       }
       if (MI !== 'X') {
-        vectorString = vectorString + '/MI:' + MI
+        vectorString += `/MI:${MI}`
       }
       if (MA !== 'X') {
-        vectorString = vectorString + '/MA:' + MA
+        vectorString += `/MA:${MA}`
       }
 
       return {
@@ -401,7 +381,7 @@ const Cvss31Mixin = ({
       }
     }
     CVSS31.calculateCVSSFromVector = function (vectorString) {
-      var metricValues = {
+      const metricValues = {
         AV: undefined,
         AC: undefined,
         PR: undefined,
@@ -425,17 +405,17 @@ const Cvss31Mixin = ({
         MI: undefined,
         MA: undefined
       }
-      var badMetrics = []
+      const badMetrics = [];
       if (!CVSS31.vectorStringRegex_31.test(vectorString)) {
         return {
           success: false,
           errorType: 'MalformedVectorString'
         }
       }
-      var metricNameValue = vectorString.substring(CVSS31.CVSSVersionIdentifier.length).split('/')
-      for (var i in metricNameValue) {
+      const metricNameValue = vectorString.substring(CVSS31.CVSSVersionIdentifier.length).split('/')
+      for (const i in metricNameValue) {
         if (metricNameValue.hasOwnProperty(i)) {
-          var singleMetric = metricNameValue[i].split(':')
+          const singleMetric = metricNameValue[i].split(':')
           if (typeof metricValues[singleMetric[0]] === 'undefined') {
             metricValues[singleMetric[0]] = singleMetric[1]
           } else {
@@ -454,20 +434,16 @@ const Cvss31Mixin = ({
       return CVSS31.calculateCVSSFromMetrics(metricValues.AV, metricValues.AC, metricValues.PR, metricValues.UI, metricValues.S, metricValues.C, metricValues.I, metricValues.A, metricValues.E, metricValues.RL, metricValues.RC, metricValues.CR, metricValues.IR, metricValues.AR, metricValues.MAV, metricValues.MAC, metricValues.MPR, metricValues.MUI, metricValues.MS, metricValues.MC, metricValues.MI, metricValues.MA)
     }
     CVSS31.roundUp1 = function Roundup (input) {
-      var int_input = Math.round(input * 100000)
-      if (int_input % 10000 === 0) {
-        return int_input / 100000
-      } else {
-        return (Math.floor(int_input / 10000) + 1) / 10
-      }
+      const int_input = Math.round(input * 100000)
+      return int_input % 10000 === 0 ? int_input / 100000 : (Math.floor(int_input / 10000) + 1) / 10
     }
     CVSS31.severityRating = function (score) {
-      var severityRatingLength = CVSS31.severityRatings.length
-      var validatedScore = Number(score)
+      const severityRatingLength = CVSS31.severityRatings.length;
+      const validatedScore = Number(score);
       if (isNaN(validatedScore)) {
         return validatedScore
       }
-      for (var i = 0; i < severityRatingLength; i++) {
+      for (let i = 0; i < severityRatingLength; i++) {
         if (score >= CVSS31.severityRatings[i].bottom && score <= CVSS31.severityRatings[i].top) {
           return CVSS31.severityRatings[i].name
         }
@@ -537,47 +513,47 @@ const Cvss31Mixin = ({
       }
     }
     CVSS31.generateXMLFromMetrics = function (AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability) {
-      var xmlTemplate = '<?xml version="1.0" encoding="UTF-8"?>\n<cvssv3.1 xmlns="https://www.first.org/cvss/cvss-v3.1.xsd"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="https://www.first.org/cvss/cvss-v3.1.xsd https://www.first.org/cvss/cvss-v3.1.xsd"\n  >\n\n  <base_metrics>\n    <attack-vector>__AttackVector__</attack-vector>\n    <attack-complexity>__AttackComplexity__</attack-complexity>\n    <privileges-required>__PrivilegesRequired__</privileges-required>\n    <user-interaction>__UserInteraction__</user-interaction>\n    <scope>__Scope__</scope>\n    <confidentiality-impact>__Confidentiality__</confidentiality-impact>\n    <integrity-impact>__Integrity__</integrity-impact>\n    <availability-impact>__Availability__</availability-impact>\n    <base-score>__BaseScore__</base-score>\n    <base-severity>__BaseSeverityRating__</base-severity>\n  </base_metrics>\n\n  <temporal_metrics>\n    <exploit-code-maturity>__ExploitCodeMaturity__</exploit-code-maturity>\n    <remediation-level>__RemediationLevel__</remediation-level>\n    <report-confidence>__ReportConfidence__</report-confidence>\n    <temporal-score>__TemporalScore__</temporal-score>\n    <temporal-severity>__TemporalSeverityRating__</temporal-severity>\n  </temporal_metrics>\n\n  <environmental_metrics>\n    <confidentiality-requirement>__ConfidentialityRequirement__</confidentiality-requirement>\n    <integrity-requirement>__IntegrityRequirement__</integrity-requirement>\n    <availability-requirement>__AvailabilityRequirement__</availability-requirement>\n    <modified-attack-vector>__ModifiedAttackVector__</modified-attack-vector>\n    <modified-attack-complexity>__ModifiedAttackComplexity__</modified-attack-complexity>\n    <modified-privileges-required>__ModifiedPrivilegesRequired__</modified-privileges-required>\n    <modified-user-interaction>__ModifiedUserInteraction__</modified-user-interaction>\n    <modified-scope>__ModifiedScope__</modified-scope>\n    <modified-confidentiality-impact>__ModifiedConfidentiality__</modified-confidentiality-impact>\n    <modified-integrity-impact>__ModifiedIntegrity__</modified-integrity-impact>\n    <modified-availability-impact>__ModifiedAvailability__</modified-availability-impact>\n    <environmental-score>__EnvironmentalScore__</environmental-score>\n    <environmental-severity>__EnvironmentalSeverityRating__</environmental-severity>\n  </environmental_metrics>\n\n</cvssv3.1>\n'
-      var result = CVSS31.calculateCVSSFromMetrics(AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability)
+      const xmlTemplate = '<?xml version="1.0" encoding="UTF-8"?>\n<cvssv3.1 xmlns="https://www.first.org/cvss/cvss-v3.1.xsd"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="https://www.first.org/cvss/cvss-v3.1.xsd https://www.first.org/cvss/cvss-v3.1.xsd"\n  >\n\n  <base_metrics>\n    <attack-vector>__AttackVector__</attack-vector>\n    <attack-complexity>__AttackComplexity__</attack-complexity>\n    <privileges-required>__PrivilegesRequired__</privileges-required>\n    <user-interaction>__UserInteraction__</user-interaction>\n    <scope>__Scope__</scope>\n    <confidentiality-impact>__Confidentiality__</confidentiality-impact>\n    <integrity-impact>__Integrity__</integrity-impact>\n    <availability-impact>__Availability__</availability-impact>\n    <base-score>__BaseScore__</base-score>\n    <base-severity>__BaseSeverityRating__</base-severity>\n  </base_metrics>\n\n  <temporal_metrics>\n    <exploit-code-maturity>__ExploitCodeMaturity__</exploit-code-maturity>\n    <remediation-level>__RemediationLevel__</remediation-level>\n    <report-confidence>__ReportConfidence__</report-confidence>\n    <temporal-score>__TemporalScore__</temporal-score>\n    <temporal-severity>__TemporalSeverityRating__</temporal-severity>\n  </temporal_metrics>\n\n  <environmental_metrics>\n    <confidentiality-requirement>__ConfidentialityRequirement__</confidentiality-requirement>\n    <integrity-requirement>__IntegrityRequirement__</integrity-requirement>\n    <availability-requirement>__AvailabilityRequirement__</availability-requirement>\n    <modified-attack-vector>__ModifiedAttackVector__</modified-attack-vector>\n    <modified-attack-complexity>__ModifiedAttackComplexity__</modified-attack-complexity>\n    <modified-privileges-required>__ModifiedPrivilegesRequired__</modified-privileges-required>\n    <modified-user-interaction>__ModifiedUserInteraction__</modified-user-interaction>\n    <modified-scope>__ModifiedScope__</modified-scope>\n    <modified-confidentiality-impact>__ModifiedConfidentiality__</modified-confidentiality-impact>\n    <modified-integrity-impact>__ModifiedIntegrity__</modified-integrity-impact>\n    <modified-availability-impact>__ModifiedAvailability__</modified-availability-impact>\n    <environmental-score>__EnvironmentalScore__</environmental-score>\n    <environmental-severity>__EnvironmentalSeverityRating__</environmental-severity>\n  </environmental_metrics>\n\n</cvssv3.1>\n'
+      const result = CVSS31.calculateCVSSFromMetrics(AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability)
       if (result.success !== true) {
         return result
       }
-      var xmlOutput = xmlTemplate
-      xmlOutput = xmlOutput.replace('__AttackVector__', CVSS31.XML_MetricNames.MAV[AttackVector])
-      xmlOutput = xmlOutput.replace('__AttackComplexity__', CVSS31.XML_MetricNames.MAC[AttackComplexity])
-      xmlOutput = xmlOutput.replace('__PrivilegesRequired__', CVSS31.XML_MetricNames.MPR[PrivilegesRequired])
-      xmlOutput = xmlOutput.replace('__UserInteraction__', CVSS31.XML_MetricNames.MUI[UserInteraction])
-      xmlOutput = xmlOutput.replace('__Scope__', CVSS31.XML_MetricNames.MS[Scope])
-      xmlOutput = xmlOutput.replace('__Confidentiality__', CVSS31.XML_MetricNames.MCIA[Confidentiality])
-      xmlOutput = xmlOutput.replace('__Integrity__', CVSS31.XML_MetricNames.MCIA[Integrity])
-      xmlOutput = xmlOutput.replace('__Availability__', CVSS31.XML_MetricNames.MCIA[Availability])
-      xmlOutput = xmlOutput.replace('__BaseScore__', result.baseMetricScore)
-      xmlOutput = xmlOutput.replace('__BaseSeverityRating__', result.baseSeverity)
-      xmlOutput = xmlOutput.replace('__ExploitCodeMaturity__', CVSS31.XML_MetricNames.E[ExploitCodeMaturity || 'X'])
-      xmlOutput = xmlOutput.replace('__RemediationLevel__', CVSS31.XML_MetricNames.RL[RemediationLevel || 'X'])
-      xmlOutput = xmlOutput.replace('__ReportConfidence__', CVSS31.XML_MetricNames.RC[ReportConfidence || 'X'])
-      xmlOutput = xmlOutput.replace('__TemporalScore__', result.temporalMetricScore)
-      xmlOutput = xmlOutput.replace('__TemporalSeverityRating__', result.temporalSeverity)
-      xmlOutput = xmlOutput.replace('__ConfidentialityRequirement__', CVSS31.XML_MetricNames.CIAR[ConfidentialityRequirement || 'X'])
-      xmlOutput = xmlOutput.replace('__IntegrityRequirement__', CVSS31.XML_MetricNames.CIAR[IntegrityRequirement || 'X'])
-      xmlOutput = xmlOutput.replace('__AvailabilityRequirement__', CVSS31.XML_MetricNames.CIAR[AvailabilityRequirement || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedAttackVector__', CVSS31.XML_MetricNames.MAV[ModifiedAttackVector || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedAttackComplexity__', CVSS31.XML_MetricNames.MAC[ModifiedAttackComplexity || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedPrivilegesRequired__', CVSS31.XML_MetricNames.MPR[ModifiedPrivilegesRequired || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedUserInteraction__', CVSS31.XML_MetricNames.MUI[ModifiedUserInteraction || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedScope__', CVSS31.XML_MetricNames.MS[ModifiedScope || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedConfidentiality__', CVSS31.XML_MetricNames.MCIA[ModifiedConfidentiality || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedIntegrity__', CVSS31.XML_MetricNames.MCIA[ModifiedIntegrity || 'X'])
-      xmlOutput = xmlOutput.replace('__ModifiedAvailability__', CVSS31.XML_MetricNames.MCIA[ModifiedAvailability || 'X'])
-      xmlOutput = xmlOutput.replace('__EnvironmentalScore__', result.environmentalMetricScore)
-      xmlOutput = xmlOutput.replace('__EnvironmentalSeverityRating__', result.environmentalSeverity)
+      const xmlOutput = xmlTemplate
+        .replace('__AttackVector__', CVSS31.XML_MetricNames.MAV[AttackVector])
+        .replace('__AttackComplexity__', CVSS31.XML_MetricNames.MAC[AttackComplexity])
+        .replace('__PrivilegesRequired__', CVSS31.XML_MetricNames.MPR[PrivilegesRequired])
+        .replace('__UserInteraction__', CVSS31.XML_MetricNames.MUI[UserInteraction])
+        .replace('__Scope__', CVSS31.XML_MetricNames.MS[Scope])
+        .replace('__Confidentiality__', CVSS31.XML_MetricNames.MCIA[Confidentiality])
+        .replace('__Integrity__', CVSS31.XML_MetricNames.MCIA[Integrity])
+        .replace('__Availability__', CVSS31.XML_MetricNames.MCIA[Availability])
+        .replace('__BaseScore__', result.baseMetricScore)
+        .replace('__BaseSeverityRating__', result.baseSeverity)
+        .replace('__ExploitCodeMaturity__', CVSS31.XML_MetricNames.E[ExploitCodeMaturity || 'X'])
+        .replace('__RemediationLevel__', CVSS31.XML_MetricNames.RL[RemediationLevel || 'X'])
+        .replace('__ReportConfidence__', CVSS31.XML_MetricNames.RC[ReportConfidence || 'X'])
+        .replace('__TemporalScore__', result.temporalMetricScore)
+        .replace('__TemporalSeverityRating__', result.temporalSeverity)
+        .replace('__ConfidentialityRequirement__', CVSS31.XML_MetricNames.CIAR[ConfidentialityRequirement || 'X'])
+        .replace('__IntegrityRequirement__', CVSS31.XML_MetricNames.CIAR[IntegrityRequirement || 'X'])
+        .replace('__AvailabilityRequirement__', CVSS31.XML_MetricNames.CIAR[AvailabilityRequirement || 'X'])
+        .replace('__ModifiedAttackVector__', CVSS31.XML_MetricNames.MAV[ModifiedAttackVector || 'X'])
+        .replace('__ModifiedAttackComplexity__', CVSS31.XML_MetricNames.MAC[ModifiedAttackComplexity || 'X'])
+        .replace('__ModifiedPrivilegesRequired__', CVSS31.XML_MetricNames.MPR[ModifiedPrivilegesRequired || 'X'])
+        .replace('__ModifiedUserInteraction__', CVSS31.XML_MetricNames.MUI[ModifiedUserInteraction || 'X'])
+        .replace('__ModifiedScope__', CVSS31.XML_MetricNames.MS[ModifiedScope || 'X'])
+        .replace('__ModifiedConfidentiality__', CVSS31.XML_MetricNames.MCIA[ModifiedConfidentiality || 'X'])
+        .replace('__ModifiedIntegrity__', CVSS31.XML_MetricNames.MCIA[ModifiedIntegrity || 'X'])
+        .replace('__ModifiedAvailability__', CVSS31.XML_MetricNames.MCIA[ModifiedAvailability || 'X'])
+        .replace('__EnvironmentalScore__', result.environmentalMetricScore)
+        .replace('__EnvironmentalSeverityRating__', result.environmentalSeverity)
       return {
         success: true,
         xmlString: xmlOutput
       }
     }
     CVSS31.generateXMLFromVector = function (vectorString) {
-      var metricValues = {
+      const metricValues = {
         AV: undefined,
         AC: undefined,
         PR: undefined,
@@ -601,17 +577,17 @@ const Cvss31Mixin = ({
         MI: undefined,
         MA: undefined
       }
-      var badMetrics = []
+      const badMetrics = []
       if (!CVSS31.vectorStringRegex_31.test(vectorString)) {
         return {
           success: false,
           errorType: 'MalformedVectorString'
         }
       }
-      var metricNameValue = vectorString.substring(CVSS31.CVSSVersionIdentifier.length).split('/')
-      for (var i in metricNameValue) {
+      const metricNameValue = vectorString.substring(CVSS31.CVSSVersionIdentifier.length).split('/')
+      for (const i in metricNameValue) {
         if (metricNameValue.hasOwnProperty(i)) {
-          var singleMetric = metricNameValue[i].split(':')
+          const singleMetric = metricNameValue[i].split(':')
           if (typeof metricValues[singleMetric[0]] === 'undefined') {
             metricValues[singleMetric[0]] = singleMetric[1]
           } else {

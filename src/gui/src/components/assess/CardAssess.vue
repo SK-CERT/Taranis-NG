@@ -122,7 +122,13 @@
 
 <script>
 import CardAssessItem from '@/components/assess/CardAssessItem'
-import { groupAction, voteNewsItemAggregate, readNewsItemAggregate, importantNewsItemAggregate, deleteNewsItemAggregate } from '@/api/assess'
+import {
+  deleteNewsItemAggregate,
+  groupAction,
+  importantNewsItemAggregate,
+  readNewsItemAggregate,
+  voteNewsItemAggregate
+} from '@/api/assess'
 
 import AuthMixin from '@/services/auth/auth_mixin'
 import Permissions from '@/services/auth/permissions'
@@ -238,16 +244,15 @@ export default {
       }
     },
     stringToColor (string) {
-      var hash = 0
-      for (var i = 0; i < string.length; i++) {
+      let hash = 0
+      for (let i = 0; i < string.length; i++) {
         hash += string.charCodeAt(i)
       }
-      var color = '#' + Math.floor((parseFloat('0.' + hash)) * 16777215).toString(16)
-      return color
+      return `#${Math.floor((parseFloat(`0.${hash}`)) * 16777215).toString(16)}`
     },
     highlightReplace (content, regex) {
       return content.replace(new RegExp(regex, 'gi'), match => {
-        return '<mark>' + match + '</mark>'
+        return `<mark>${match}</mark>`
       })
     },
     showItemDetail (data) {
@@ -423,7 +428,7 @@ export default {
       })
     },
     removeHtml (html) {
-      var div = document.createElement('div')
+      const div = document.createElement('div')
       div.innerHTML = html
       return div.textContent || div.innerText || ''
     },
@@ -459,7 +464,7 @@ export default {
     })
     this.card_title = this.highlight(this.card.title)
     this.card_description = this.highlight(this.card.description)
-    for (var news_item of this.card.news_items) {
+    for (const news_item of this.card.news_items) {
       news_item.news_item_data.title = this.highlight(news_item.news_item_data.title)
       news_item.news_item_data.review = this.highlight(news_item.news_item_data.review)
       this.news_items.push(news_item)

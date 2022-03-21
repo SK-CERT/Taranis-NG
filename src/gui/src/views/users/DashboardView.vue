@@ -316,12 +316,11 @@ export default {
         })
     },
     stringToColor (string) {
-      var hash = 0
-      for (var i = 0; i < string.length; i++) {
+      let hash = 0
+      for (let i = 0; i < string.length; i++) {
         hash += string.charCodeAt(i)
       }
-      var color = '#' + Math.floor((parseFloat('0.' + hash)) * 16777215).toString(16)
-      return color
+      return `#${Math.floor((parseFloat('0.' + hash)) * 16777215).toString(16)}`
     }
   },
   mounted () {

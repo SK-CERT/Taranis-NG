@@ -192,10 +192,11 @@ export default {
         const arrayWithDuplicates = this.cpes.concat(this.csv)
 
         const removeDuplicates = function (originalArray, prop) {
+          let i
           const newArray = []
           const lookupObject = {}
 
-          for (var i in originalArray) {
+          for (i in originalArray) {
             lookupObject[originalArray[i][prop]] = originalArray[i]
           }
 

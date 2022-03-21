@@ -208,11 +208,11 @@ export default {
           const newArray = []
           const lookupObject = {}
 
-          for (var i in originalArray) {
+          for (const i in originalArray) {
             lookupObject[originalArray[i][prop]] = originalArray[i]
           }
 
-          for (i in lookupObject) {
+          for (const i in lookupObject) {
             newArray.push(lookupObject[i])
           }
 

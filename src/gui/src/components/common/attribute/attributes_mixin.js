@@ -2,8 +2,7 @@ import { getReportItemData, holdLockReportItem, lockReportItem, unlockReportItem
 import AuthMixin from '@/services/auth/auth_mixin'
 import Permissions from '@/services/auth/permissions'
 
-var AttributesMixin = {
-
+const AttributesMixin = {
   props: {
     values: Array,
     attribute_group: Object,
@@ -67,7 +66,7 @@ var AttributesMixin = {
         })
       }
 
-      var indexRefresh = 0
+      let indexRefresh = 0
       this.values.forEach(val => {
         val.index = indexRefresh++
       })
@@ -88,7 +87,7 @@ var AttributesMixin = {
         this.values.splice(index, 1)
       }
 
-      var indexRefresh = 0
+      let indexRefresh = 0
       setTimeout(() => {
         this.values.forEach(val => {
           val.index = indexRefresh++
@@ -130,9 +129,10 @@ var AttributesMixin = {
 
     onEdit (field_index) {
       if (this.edit === true) {
-        var data = {}
-        data.update = true
-        data.attribute_id = this.values[field_index].id
+        const data = {
+          update: true,
+          attribute_id: this.values[field_index].id
+        }
 
         let value = this.values[field_index].value
         if (this.attribute_group.attribute.type === 'CPE') {

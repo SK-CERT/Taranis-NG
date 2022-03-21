@@ -1,8 +1,6 @@
 
-var ImportCSVMixin = {
-
+const ImportCSVMixin = {
   methods: {
-
     csvStringToArray (strData, header) {
       // const objPattern = new RegExp(("(\\,|\\r?\\n|\\r|^)(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^\\,\\r\\n]*))"),"gi");
       const objPattern = new RegExp(('(\\,|\\r?\\n|\\r|^)(?:"((?:\\\\.|""|[^\\\\"])*)"|([^\\,"\\r\\n]*))'), 'gi')
@@ -15,8 +13,9 @@ var ImportCSVMixin = {
           : arrMatches[3])
       }
 
+      let hData
       if (header) {
-        var hData = arrData.shift()
+        hData = arrData.shift()
         const hashData = arrData.map(row => {
           let i = 0
           return hData.reduce(

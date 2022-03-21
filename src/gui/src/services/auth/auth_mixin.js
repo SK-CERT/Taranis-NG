@@ -1,8 +1,7 @@
 import AuthService from '@/services/auth/auth_service'
 import Permissions from '@/services/auth/permissions'
 
-var AuthMixin = {
-
+const AuthMixin = {
   data: () => ({
     permissions: Permissions
   }),
