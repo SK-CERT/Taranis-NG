@@ -3,6 +3,8 @@ name: linting
 on:
   pull_request:
 
+# TODO USE SECRET Environment variable to setup CICD pipeline
+
 jobs:
   lint:
     name: lint & check formatting
