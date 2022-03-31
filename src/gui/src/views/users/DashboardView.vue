@@ -221,6 +221,7 @@
                         </div>
                         <div>
                           <span class="caption grey--text">Last acitivity <b>{{ topic.last_activity }}</b></span>
+                          <!-- TODO: make this nice again -->
                         </div>
                       </v-card-subtitle>
                       <v-divider class="my-2"></v-divider>
