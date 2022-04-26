@@ -1,5 +1,6 @@
 <template>
-    <v-app class="taranis">
+    <v-app class="grey lighten-2">
+        <!-- class="taranis" -->
 
         <MainMenu v-if="isAuthenticated()"/>
 
@@ -28,7 +29,7 @@ export default {
   },
   data: () => ({
     visible: null,
-    isDark: true
+    // isDark: true
   }),
   mixins: [AuthMixin],
   methods: {
@@ -112,3 +113,4 @@ export default {
 
 <style src="./assets/common.css"></style>
 <style src="./assets/centralize.css"></style>
+<style lang="scss" src="./assets/awake.scss"></style>

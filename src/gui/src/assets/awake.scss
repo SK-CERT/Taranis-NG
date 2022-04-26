@@ -1,0 +1,38 @@
+@import "~vuetify/src/styles/styles.sass";
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;700;900&family=Rubik:wght@300;400;500;700;900&display=swap');
+
+$body-font-family: 'Rubik';
+$title-font-family: 'Montserrat';
+
+.v-application {
+    background-color: #F3F3F3 !important;
+    font-family: $body-font-family, sans-serif !important;
+    
+    [class*='text-'] {
+        font-family: $body-font-family, sans-serif !important;
+    }
+    [class*='display-'] {
+        font-family: $body-font-family, sans-serif !important;
+    }
+}
+
+.v-application .headline,
+.v-application .title,
+.v-application .subheading
+{
+    font-family: $title-font-family, sans-serif !important;
+}
+
+.fab-pin {
+    width: 28px !important;
+    height: 28px !important;
+}
+
+.v-application .v-btn.tag-mini {
+    min-width: 0px !important;
+    padding: 0 6px !important;
+    font-weight: 700 !important;
+    background-color: #6DAED9 !important;
+    color: #fff;
+}

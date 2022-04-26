@@ -1,0 +1,44 @@
+import Vue from 'vue'
+import Vuetify from 'vuetify'
+import 'vuetify/dist/vuetify.min.css'
+import { Scroll } from 'vuetify/lib/directives'
+
+Vue.use(Vuetify)
+
+const theme = {
+    primary: '#7468E8',
+    secondary: '#34a5e8',
+    accent: '#82B1FF',
+    info: '#2196F3',
+    error: '#FF5252',
+    success: '#4CAF50',
+    warning: '#FFC107',
+    'cx-app-header': '#c7c7c7',
+    'cx-toolbar-filter': '#ffffff',
+    'cx-combo-gray': '#f2f2f2',
+    'cx-user-menu': '#d9d9d9',
+    'cx-drawer-bg': '#4092dd',
+    'cx-drawer-text': '#fff',
+    'cx-drawer-text-invert': '#000',
+    'cx-line': '#fafafa',
+    'cx-favorites': '#ff9d48',
+    'cx-filter': '#9f02ff',
+    'cx-wordlist': '#FFC107',
+    'main-text-color': '#575757',
+}
+
+const vuetify = new Vuetify(
+    {
+        directives: {
+            Scroll
+        },
+        iconfont: 'mdi',
+        theme: {
+          themes: {
+            dark: theme,
+            light: theme,
+          },
+        },
+      })
+
+export default vuetify
