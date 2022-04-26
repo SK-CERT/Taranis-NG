@@ -4,6 +4,59 @@
 
         </template>
         <template v-slot:content>
+            <v-row>
+                <v-col xs="4">
+                    <card-topic></card-topic>
+                </v-col>
+                <v-col xs="4">
+                    <card-topic></card-topic>
+                </v-col>
+                <v-col xs="4">
+                    <card-topic></card-topic>
+                </v-col>
+            </v-row>
+            <v-row>
+                <v-col v-for="(topic, title) in topics" :key="title" cols="4" class="pa-2 mb-8">
+                  <template>
+                  <v-card class="mt-4 mx-auto" max-width="100%">
+                      <v-sheet
+                          class="v-sheet--offset mx-auto"
+                          color="cyan"
+                          elevation="4"
+                          max-width="calc(100% - 32px)"
+                      >
+                      </v-sheet>
+
+                      <v-card-title class="pt-0">
+                          <h2 class="title mb-2">{{ title }}</h2>
+                      </v-card-title>
+                      <v-card-subtitle>
+                        <div>
+                          <v-btn v-for="tag in topic.tags" :key="tag" rounded :color="stringToColor(tag)" dark x-small>
+                            {{ tag }}
+                          </v-btn>
+                        </div>
+                        <div>
+                          <span class="caption grey--text">Last acitivity <b>{{ topic.last_activity }}</b></span>
+                          <!-- TODO: make this nice again -->
+                        </div>
+                      </v-card-subtitle>
+                      <v-divider class="my-2"></v-divider>
+                      <v-card-text>
+                        {{ topic.summary }}
+                      </v-card-text>
+                      <v-card-actions>
+                          <span class="caption grey--text">112/9 |  662 | 34</span>
+                          <v-spacer></v-spacer>
+                          <v-btn icon title="view topic" class="mr-12">
+                              <v-icon>mdi-eye</v-icon>
+                              view topic
+                          </v-btn>
+                      </v-card-actions>
+                  </v-card>
+                  </template>
+                </v-col>
+            </v-row>
             <v-row no-gutters>
                 <v-col cols="6" class="pa-2 mb-8">
                     <template>
@@ -66,6 +119,7 @@
                 </v-col>
             </v-row>
             <v-row no-gutters>
+
                 <v-col cols="4" class="pa-2 mb-4">
                     <template>
                         <v-card
@@ -199,46 +253,7 @@
                         </v-card>
                     </template>
                 </v-col>
-                <v-col v-for="(topic, title) in topics" :key="title" cols="4" class="pa-2 mb-8">
-                  <template>
-                  <v-card class="mt-4 mx-auto" max-width="100%">
-                      <v-sheet
-                          class="v-sheet--offset mx-auto"
-                          color="cyan"
-                          elevation="4"
-                          max-width="calc(100% - 32px)"
-                      >
-                      </v-sheet>
 
-                      <v-card-title class="pt-0">
-                          <h2 class="title mb-2">{{ title }}</h2>
-                      </v-card-title>
-                      <v-card-subtitle>
-                        <div>
-                          <v-btn v-for="tag in topic.tags" :key="tag" rounded :color="stringToColor(tag)" dark x-small>
-                            {{ tag }}
-                          </v-btn>
-                        </div>
-                        <div>
-                          <span class="caption grey--text">Last acitivity <b>{{ topic.last_activity }}</b></span>
-                          <!-- TODO: make this nice again -->
-                        </div>
-                      </v-card-subtitle>
-                      <v-divider class="my-2"></v-divider>
-                      <v-card-text>
-                        {{ topic.summary }}
-                      </v-card-text>
-                      <v-card-actions>
-                          <span class="caption grey--text">112/9 |  662 | 34</span>
-                          <v-spacer></v-spacer>
-                          <v-btn icon title="view topic" class="mr-12">
-                              <v-icon>mdi-eye</v-icon>
-                              view topic
-                          </v-btn>
-                      </v-card-actions>
-                  </v-card>
-                  </template>
-                </v-col>
             </v-row>
             <!--<QuickChat/>-->
         </template>
@@ -248,13 +263,15 @@
 <script>
 import wordcloud from 'vue-wordcloud'
 import ViewLayout from '../../components/layouts/ViewLayout'
+import CardTopic from '@/components/common/card/CardTopic'
 // import QuickChat from "../../components/common/QuickChat";
 
 export default {
   name: 'DashboardView',
   components: {
     wordcloud,
-    ViewLayout
+    ViewLayout,
+    CardTopic
     // QuickChat
   },
   computed: {
