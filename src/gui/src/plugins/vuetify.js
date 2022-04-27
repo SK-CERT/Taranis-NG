@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 import { Scroll } from 'vuetify/lib/directives'
+import awakePinSvg from '@/assets/icons/pin.vue'
 
 Vue.use(Vuetify)
 
@@ -25,6 +26,8 @@ const theme = {
     'cx-filter': '#9f02ff',
     'cx-wordlist': '#FFC107',
     'main-text-color': '#575757',
+    'awake-green-color': '#77BB70',
+    'awake-red-color': '#D18E8E',
 }
 
 const vuetify = new Vuetify(
@@ -32,7 +35,14 @@ const vuetify = new Vuetify(
         directives: {
             Scroll
         },
-        iconfont: 'mdi',
+        icons: {
+          iconfont: 'mdi',
+          values: {
+            awakePin: {
+              component: awakePinSvg,
+            },
+          },
+        },
         theme: {
           themes: {
             dark: theme,
