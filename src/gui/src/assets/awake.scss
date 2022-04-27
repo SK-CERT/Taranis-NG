@@ -1,19 +1,24 @@
-@import "~vuetify/src/styles/styles.sass";
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;700;900&family=Rubik:wght@300;400;500;700;900&display=swap');
 
 $body-font-family: 'Rubik';
-$title-font-family: 'Montserrat';
+$title-font: 'Montserrat';
 
 .v-application {
     background-color: #F3F3F3 !important;
     font-family: $body-font-family, sans-serif !important;
+    font-size: 14px;
     
-    [class*='text-'] {
+    [class*='text-'], 
+    [class*='display-'],
+    .text-caption, 
+    span.text-caption,
+    .v-chip {
         font-family: $body-font-family, sans-serif !important;
     }
-    [class*='display-'] {
-        font-family: $body-font-family, sans-serif !important;
+    h1, h2, h3, h4, h5, h6,
+    h1.headline, h2.headline, h3.headline, h4.headline, h5.headline, h6.headline {
+        font-family: 'Montserrat', sans-serif !important;
     }
 }
 
@@ -21,7 +26,7 @@ $title-font-family: 'Montserrat';
 .v-application .title,
 .v-application .subheading
 {
-    font-family: $title-font-family, sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 .fab-pin {
@@ -29,10 +34,26 @@ $title-font-family: 'Montserrat';
     height: 28px !important;
 }
 
-.v-application .v-btn.tag-mini {
+.v-application .tag-mini {
     min-width: 0px !important;
-    padding: 0 6px !important;
+    // padding: 0 6px !important;
     font-weight: 700 !important;
     background-color: #6DAED9 !important;
     color: #fff;
 }
+.v-btn.btn-view-topic {
+    letter-spacing: 0;
+    font-weight: 400;
+    caret-color: #C8C8C8;
+    border-color: #C8C8C8;
+    color: #575757 !important;
+    padding: 16px 12px !important;
+}
+
+.v-chip.topic-label {
+    font-size: 12px !important;
+}
+
+// .your-svg-icon {
+//     fill: currentColor
+// }
