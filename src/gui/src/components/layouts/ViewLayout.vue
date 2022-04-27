@@ -1,10 +1,10 @@
 <template>
     <v-container>
         <div class="ma-5 pa-5">
-            <v-row class="view-panel">
+            <v-row class="view-panel" dense>
                 <slot name="panel"></slot>
             </v-row>
-            <v-row class="view-content">
+            <v-row class="view-content" dense>
                 <slot name="content"></slot>
             </v-row>
         </div>
