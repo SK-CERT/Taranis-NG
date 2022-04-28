@@ -8,7 +8,7 @@
 
         <v-toolbar-title class="headline" style="width: 300px">
           <div class="main-logo">
-            <svg class="logo" :class="{dark: darkTheme}" xmlns="http://www.w3.org/2000/svg" version="1.1" height="30"
+            <svg class="logo mt-0" :class="{dark: darkTheme}" xmlns="http://www.w3.org/2000/svg" version="1.1" height="30"
                  viewBox="0 0 435 84"
                  style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
 
