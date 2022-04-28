@@ -1,5 +1,145 @@
 <template>
-    <div></div>
+    <v-container class="pa-0">
+      <v-row>
+        <v-col>
+
+          <!-- search -->
+
+          <v-row class="pl-5 pr-5 pt-5">
+            <v-col>
+              <h4>search</h4>
+            </v-col>
+          </v-row>
+          <v-row class="pl-5 pr-5">
+            <v-col>
+              <v-text-field label="search" outlined dense append-icon="$awakeSearch"></v-text-field>
+            </v-col>
+          </v-row>
+
+        </v-col>
+      </v-row>
+
+          <v-divider class="mt-5 mb-5"></v-divider>
+        
+      <v-row>
+        <v-col>
+
+          <!-- filter results -->
+          
+          <v-row class="pl-5 pr-5 pt-5">
+            <v-col>
+              <h4>filter results</h4>
+            </v-col>
+          </v-row>
+
+          <!-- time tags -->
+          <v-row class="pl-5 pr-5">
+            <v-col justify="space-between" class="d-flex">
+              <v-btn outlined class="text-lowercase filter-btn mr-auto"> all </v-btn>
+              <v-btn outlined class="text-lowercase filter-btn mr-auto"> today </v-btn>
+              <v-btn outlined class="text-lowercase filter-btn"> this week </v-btn>
+            </v-col>
+          </v-row>
+
+          <!-- date picker -->
+          <v-row class="pl-5 pr-5 mt-1 mb-0">
+            <v-col>
+              <v-menu
+                ref="menu"
+                v-model="menu"
+                :close-on-content-click="false"
+                :return-value.sync="date"
+                transition="scale-transition"
+                offset-y
+                min-width="auto"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-text-field readonly outlined dense append-icon="mdi-calendar-range-outline"
+                    v-model="dateRangeText"
+                    v-bind="attrs"
+                    v-on="on"
+                    label="Date range"
+                    hide-details
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="dates"
+                  range
+                  no-title
+                  scrollable
+                >
+                  <v-spacer></v-spacer>
+                  <v-btn text color="primary" @click="menu = false">
+                    Cancel
+                  </v-btn>
+                  <v-btn text color="primary" @click="$refs.menu.save(date)">
+                    OK
+                  </v-btn>
+                </v-date-picker>
+              </v-menu>
+            </v-col>
+          </v-row>
+
+          <!-- tags -->
+          <v-row class="pl-5 pr-5 mt-1">
+            <v-col>
+              <v-combobox
+              v-model="selectedTags"
+              :items="tags"
+              label="tags"
+              multiple
+              deletable-chips
+              outlined 
+              dense
+              append-icon="mdi-chevron-down"
+            >
+              <template v-slot:selection="{ item, index }">
+                <v-chip small close label x-small v-if="index < 1" @click:close="deleteChip(item)">
+                  <span>{{ item }}</span>
+                </v-chip>
+                <span
+                  v-if="index === 1"
+                  class="grey--text text-caption"
+                >
+                  (+{{ selectedTags.length - 1 }} others)
+                </span>
+              </template>
+            </v-combobox>
+            </v-col>
+          </v-row>
+
+        </v-col>
+      </v-row>
+
+          <v-divider class="mt-5 mb-5"></v-divider>
+        
+      <v-row>
+        <v-col>
+
+          <v-row class="pl-5 pr-5 pt-5">
+            <v-col>
+              <h4>only show</h4>
+            </v-col>
+          </v-row>
+
+        </v-col>
+      </v-row>
+
+          <v-divider class="mt-5 mb-5"></v-divider>
+        
+      <v-row>
+        <v-col>
+
+          <v-row class="pl-5 pr-5 pt-5">
+            <v-col>
+              <h4>sort by</h4>
+            </v-col>
+          </v-row>
+
+        </v-col>
+      </v-row>
+      
+    </v-container>
 </template>
 
 <script>
@@ -10,8 +150,29 @@ export default {
 
   },
   data: () => ({
-    links: [
-    ]
-  })
+    links: [],
+    menu: false,
+    dates: ['2022-04-28', '2022-04-28'],
+    selectedTags: ['all'],
+    tags: [
+      'State',
+      'Vulnerability',
+      'Threat',
+      'DDoS',
+      'Cyberwar',
+      'Java',
+      'CVE',
+    ],
+  }),
+    computed: {
+      dateRangeText () {
+        return this.dates.join(' - ')
+      },
+    },
+    methods: {
+      deleteChip(chip) {
+        this.selectedTags = this.selectedTags.filter(c => c !== chip)
+      }
+    },
 }
 </script>

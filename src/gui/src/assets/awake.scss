@@ -20,6 +20,41 @@ $title-font: 'Montserrat';
     h1.headline, h2.headline, h3.headline, h4.headline, h5.headline, h6.headline {
         font-family: 'Montserrat', sans-serif !important;
     }
+
+    .main-menu-bar {
+        height: 48px;
+
+        .v-toolbar__content {
+            justify-content: end;
+            padding-right: 0px;
+            padding-left: 0px;
+        }
+    }
+    .main-logo {
+        display: flex;
+        // background-color: #7468E8;
+        background-color: #d6d6d6;
+        width: 300px;
+        height: 48px;
+        justify-content: center;
+        align-content: center;
+
+        & svg {
+            align-self: center;
+            fill: #fff;
+        }
+    }
+
+    .v-btn span.main-menu-item {
+        font-family: $body-font-family, sans-serif !important;
+        font-weight: 400;
+        letter-spacing: 0;
+    }
+
+    .v-btn.v-btn--active span.main-menu-item {
+        color: #7468E8;
+        font-weight: 500;
+    }
 }
 
 .v-application .headline,
@@ -58,6 +93,12 @@ $title-font: 'Montserrat';
 
 .v-chip.topic-label {
     font-size: 12px !important;
+    padding: 12px 8px !important; 
+}
+
+.v-application .v-card .last-activity {
+    font-size: .65rem !important;
+    font-family: $body-font-family, sans-serif !important;
 }
 
 .v-application .v-card h2.headline {
@@ -85,4 +126,47 @@ $title-font: 'Montserrat';
 }
 .v-application .v-card.hot-topic {
     border-left: 16px solid #DBE868;
+}
+
+.v-application .v-card.elevation-4 {
+    -webkit-box-shadow: 2px 4px 7px rgba(0,0,0,.15) !important;
+    box-shadow: 2px 4px 7px rgba(0,0,0,.15) !important;
+  }
+
+.v-application .sidebar {
+    .filter-btn {
+        min-width: 10px !important;
+        letter-spacing: 0;
+        font-weight: 400;
+        caret-color: #C8C8C8;
+        border-color: #C8C8C8;
+        color: #575757 !important;
+        padding: 16px 16px !important;
+    }
+    h4 {
+        font-family: $body-font-family, sans-serif !important;
+        font-weight: 500;
+        color: #575757;
+        font-size: 1.0rem;
+    }
+    
+    input {
+        color: #575757 !important;
+    }
+}
+.v-application input, 
+.v-application input::placeholder, 
+.v-application .v-label {
+    font-size: .875rem;
+    color: #c8c8c8 !important;
+    font-weight: 400;
+}
+
+.v-application .v-input__icon svg {
+    fill: #575757 !important;
+}
+
+
+.v-application .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state) > .v-input__control > .v-input__slot fieldset {
+    border-color: #c8c8c8;
 }
