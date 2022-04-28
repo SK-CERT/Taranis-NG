@@ -5,12 +5,10 @@
         </template>
         <template v-slot:content>
             <v-row dense class="d-flex align-stretch">
-                <v-col xs="12" sm="6" md="4" v-for="(topic, title) in topics" :key="title" >
-                    <card-topic :topic="topic" :title="title"></card-topic>
-                </v-col>
+                <adaptive-cardsize v-for="(topic, position) in topics" :key="position" :topic="topic" :position="position"></adaptive-cardsize>
             </v-row>
             <v-row>
-                <v-col v-for="(topic, title) in topics" :key="title" cols="4" class="pa-2 mb-8">
+                <v-col v-for="(topic, position) in topics" :key="position" cols="4" class="pa-2 mb-8">
                   <template>
                   <v-card class="mt-4 mx-auto" max-width="100%">
                       <v-sheet
@@ -257,7 +255,8 @@
 <script>
 import wordcloud from 'vue-wordcloud'
 import ViewLayout from '../../components/layouts/ViewLayout'
-import CardTopic from '@/components/common/card/CardTopic'
+// import CardTopic from '@/components/common/card/CardTopic'
+import AdaptiveCardsize from '@/components/layouts/AdaptiveCardsize'
 // import QuickChat from "../../components/common/QuickChat";
 
 export default {
@@ -265,7 +264,7 @@ export default {
   components: {
     wordcloud,
     ViewLayout,
-    CardTopic
+    AdaptiveCardsize,
     // QuickChat
   },
   computed: {
@@ -298,23 +297,62 @@ export default {
       250,
       240
     ],
-    topics: {
-      Ukraine: {
+    topics: [
+      {
+        title: 'Ukraine',
         tags: [{label: 'State', color: Math.floor(Math.random()*20)}, {label: 'Cyberwar', color:  Math.floor(Math.random()*20)}, {label: 'Threat', color:  Math.floor(Math.random()*20)}, {label: 'DDoS', color:  Math.floor(Math.random()*20)}],
+        ai: true,
+        hot: true,
+        pinned: true,
         last_activity: '15th March 2022',
         summary: 'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'
       },
-      Log4J: {
+      {
+        title: 'Log4J',
         tags: [{label: 'Vulnerability', color:  Math.floor(Math.random()*20)}, {label: 'Java', color:  Math.floor(Math.random()*20)}, {label: 'CVE', color:  Math.floor(Math.random()*20)}],
+        ai: false,
+        hot: false,
+        pinned: true,
         last_activity: '10th Jannuary 2022',
         summary: 'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'
       },
-      'Siemens SIMATIC': {
+      {
+        title: 'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
+        ai: true,
+        hot: false,
+        pinned: false,
         tags: [{label: 'OT/CPS', color:  Math.floor(Math.random()*20)}, {label: 'Siemens', color:  Math.floor(Math.random()*20)}, {label: 'Information Disclosure', color:  Math.floor(Math.random()*20)}],
         last_activity: '1st December 2021',
-        summary: 'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'
-      }
-    }
+        summary: 'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'   
+      },
+      {
+        title: 'Ukraine',
+        tags: [{label: 'State', color: Math.floor(Math.random()*20)}, {label: 'Cyberwar', color:  Math.floor(Math.random()*20)}, {label: 'Threat', color:  Math.floor(Math.random()*20)}, {label: 'DDoS', color:  Math.floor(Math.random()*20)}],
+        ai: true,
+        hot: true,
+        pinned: false,
+        last_activity: '15th March 2022',
+        summary: 'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'
+      },
+      {
+        title: 'Log4J',
+        tags: [{label: 'Vulnerability', color:  Math.floor(Math.random()*20)}, {label: 'Java', color:  Math.floor(Math.random()*20)}, {label: 'CVE', color:  Math.floor(Math.random()*20)}],
+        ai: false,
+        hot: false,
+        pinned: true,
+        last_activity: '10th Jannuary 2022',
+        summary: 'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'
+      },
+      {
+        title: 'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
+        ai: true,
+        hot: false,
+        pinned: false,
+        tags: [{label: 'OT/CPS', color:  Math.floor(Math.random()*20)}, {label: 'Siemens', color:  Math.floor(Math.random()*20)}, {label: 'Information Disclosure', color:  Math.floor(Math.random()*20)}],
+        last_activity: '1st December 2021',
+        summary: 'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam'   
+      },
+    ]
   }),
   methods: {
     wordClickHandler (name, value, vm) {
