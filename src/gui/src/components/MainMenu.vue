@@ -1,6 +1,10 @@
 <template>
-    <v-app-bar app dense clipped-left absolute flat color="cx-app-header" class="main-menu-bar pr-0 pl-0">
-      
+    <v-app-bar app dense clipped-left flat color="cx-app-header" class="main-menu-bar pr-0 pl-0">
+
+        <v-btn depressed tile color="primary" class="burger-menu" v-if="isAuthenticated()" @click.stop="navClicked">
+          <v-icon :class="['menu-icon', {'closed': !opened}]">mdi-menu-open</v-icon>
+          <!-- <v-icon>mdi-menu</v-icon> -->
+        </v-btn>
 
         <v-toolbar-title class="headline" style="width: 300px">
           <div class="main-logo">
@@ -20,15 +24,11 @@
           </div>
         </v-toolbar-title>
 
-        <v-btn depressed icon tile v-if="isAuthenticated()" @click.stop="navClicked">
-          <v-icon>mdi-menu</v-icon>
-        </v-btn>
-
         <v-spacer></v-spacer>
 
         <v-toolbar dense flat color="transparent" v-if="isAuthenticated()" class="justify-end">
             <div v-for="button in buttons" :key="button.route">
-                <v-btn text plain route color="main-text-color" :to="button.route"
+                <v-btn text plain tile route color="main-text-color" :to="button.route"
                        v-if="checkPermission(permissions[button.permission]) && button.show">
                     <!-- <v-icon left>{{button.icon}}</v-icon> -->
                     <span class="main-menu-item text-lowercase">{{$t(button.title)}}</span>
@@ -52,6 +52,7 @@ export default {
   components: { UserMenu },
   name: 'MainMenu',
   data: () => ({
+    opened: true,
     buttons: [
       {
         title: 'main_menu.dashboard',
@@ -115,6 +116,7 @@ export default {
   mixins: [AuthMixin],
   methods: {
     navClicked () {
+      this.opened = ! this.opened;
       this.$root.$emit('nav-clicked')
     },
 
