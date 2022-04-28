@@ -14,6 +14,7 @@ const theme = {
     error: '#FF5252',
     success: '#4CAF50',
     warning: '#FFC107',
+    grey: '#C9C9C9',
     'cx-app-header': '#c7c7c7',
     'cx-toolbar-filter': '#ffffff',
     'cx-combo-gray': '#f2f2f2',
