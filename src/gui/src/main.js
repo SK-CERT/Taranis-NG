@@ -1,8 +1,6 @@
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 import '@mdi/font/css/materialdesignicons.css'
 import Vue from 'vue'
-// import Vuetify from 'vuetify/lib'
-// import colors from 'vuetify/lib/util/colors'
 import App from './App.vue'
 import { router } from './router'
 import { store } from '@/store/store'
@@ -10,7 +8,6 @@ import ApiService from '@/services/api_service'
 import VueI18n from 'vue-i18n'
 import messages from '@/i18n/messages'
 import VeeValidate from 'vee-validate'
-import Themes from './assets/themes'
 import CKEditor from '@ckeditor/ckeditor5-vue'
 import VueCookies from 'vue-cookies'
 import VueSSE from 'vue-sse'
@@ -38,13 +35,6 @@ Vue.use(DatetimePicker)
 
 
 Vue.use(CKEditor)
-
-// const vuetify = new Vuetify({
-//   theme: {
-//     dark: false,
-//     themes: Themes.taranisDefault
-//   }
-// })
 
 Vue.use(VueI18n)
 
