@@ -19,7 +19,7 @@
         </v-col>
       </v-row>
 
-          <v-divider class="mt-5 mb-5"></v-divider>
+          <v-divider class="mt-0 mb-0"></v-divider>
         
       <v-row>
         <v-col>
@@ -34,19 +34,19 @@
 
           <!-- time tags -->
           <v-row class="pl-5 pr-5">
-            <v-col justify="space-between" class="d-flex">
-              <v-btn outlined class="text-lowercase filter-btn mr-auto"> all </v-btn>
-              <v-btn outlined class="text-lowercase filter-btn mr-auto"> today </v-btn>
-              <v-btn outlined class="text-lowercase filter-btn"> this week </v-btn>
+            <v-col justify="space-between" class="d-flex pb-0" style="column-gap: 10px;">
+              <v-btn outlined :class="['text-lowercase', 'filter-btn', {'clicked': date.tags.all,}]" @click="dateSelector('all')"> all </v-btn>
+              <v-btn outlined :class="['text-lowercase', 'filter-btn', {'clicked': date.tags.today,}]" @click="dateSelector('today')"> today </v-btn>
+              <v-btn outlined :class="['text-lowercase', 'filter-btn', {'clicked': date.tags.week,}]" @click="dateSelector('week')"> this week </v-btn>
             </v-col>
           </v-row>
 
           <!-- date picker -->
-          <v-row class="pl-5 pr-5 mt-1 mb-0">
+          <v-row class="pl-5 pr-5 mt-0 mb-0">
             <v-col>
               <v-menu
-                ref="menu"
-                v-model="menu"
+                ref="datePicker"
+                v-model="datePicker"
                 :close-on-content-click="false"
                 :return-value.sync="date"
                 transition="scale-transition"
@@ -58,21 +58,21 @@
                     v-model="dateRangeText"
                     v-bind="attrs"
                     v-on="on"
-                    label="Date range"
+                    placeholder="Date range"
                     hide-details
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                  v-model="dates"
+                  v-model="date.range"
                   range
                   no-title
                   scrollable
                 >
                   <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="menu = false">
+                  <v-btn text color="primary" @click="datePicker = false">
                     Cancel
                   </v-btn>
-                  <v-btn text color="primary" @click="$refs.menu.save(date)">
+                  <v-btn text color="primary" @click="$refs.datePicker.save(date), dateSelector('range')">
                     OK
                   </v-btn>
                 </v-date-picker>
@@ -111,7 +111,7 @@
         </v-col>
       </v-row>
 
-          <v-divider class="mt-5 mb-5"></v-divider>
+          <v-divider class="mt-0 mb-0"></v-divider>
         
       <v-row>
         <v-col>
@@ -125,7 +125,7 @@
         </v-col>
       </v-row>
 
-          <v-divider class="mt-5 mb-5"></v-divider>
+          <v-divider class="mt-0 mb-0"></v-divider>
         
       <v-row>
         <v-col>
@@ -152,7 +152,14 @@ export default {
   data: () => ({
     links: [],
     menu: false,
-    dates: ['2022-04-28', '2022-04-28'],
+    date: {
+      tags: {
+        all: true,
+        today: false,
+        week: false
+      },
+      range: []
+    },
     selectedTags: ['all'],
     tags: [
       'State',
@@ -166,12 +173,26 @@ export default {
   }),
     computed: {
       dateRangeText () {
-        return this.dates.join(' - ')
+        return this.date.range.join(' - ')
       },
     },
     methods: {
       deleteChip(chip) {
         this.selectedTags = this.selectedTags.filter(c => c !== chip)
+      },
+      dateSelector(elem) {
+        this.date.tags[elem] = !this.date.tags[elem]
+        if (elem === "all") {
+          this.date.tags.today = false;
+          this.date.tags.week = false;
+          this.date.range = [];
+        } else if (elem === "range") {
+          this.date.tags.today = false;
+          this.date.tags.week = false;
+          this.date.tags.all = false;
+        } else {
+          this.date.tags.all = false;
+        }
       }
     },
 }
