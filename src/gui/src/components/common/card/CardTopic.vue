@@ -34,7 +34,7 @@
 
                     <v-row class="flex-grow-0">
                         <v-col>
-                            <tag-list :tags="topic.tags" />
+                            <tag-topic v-for="tag in topic.tags" :key="tag.label" :tag="tag" />
                         </v-col>
                     </v-row>
                     
@@ -96,13 +96,13 @@
 
 <script>
 import TagMini from '@/components/common/tags/TagMini'
-import TagList from '@/components/common/tags/TagList'
+import TagTopic from '@/components/common/tags/TagTopic'
 
 export default {
   name: 'CardTopic',
   components: {
     TagMini,
-    TagList
+    TagTopic,
   },
   props: {
     title: String,
