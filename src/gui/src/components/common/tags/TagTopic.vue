@@ -3,6 +3,7 @@
       label
       class="mr-1 mb-1 topic-label"
       dark
+      x-small
       :color="labelcolor(tag.color)"
       >
         {{ tag.label }}

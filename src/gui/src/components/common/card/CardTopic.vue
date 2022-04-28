@@ -15,13 +15,13 @@
                     <!-- Header -->
 
                     <v-row class="flex-grow-0">
-                        <v-col cols="auto" class="mr-auto mt-1" order-sm="2" order-md="1">
+                        <v-col cols="auto" class="mr-auto mt-1">
                             <tag-mini label="AI" v-show="topic.ai" />
-                            <span class="text-caption font-weight-light main-text-color--text">Last activity: </span>
-                            <span class="text-caption font-weight-bold main-text-color--text">March, 15, 2022</span>
+                            <span class="last-activity font-weight-light main-text-color--text">Last activity: </span>
+                            <span class="last-activity font-weight-bold main-text-color--text">March, 15, 2022</span>
                         </v-col>
 
-                        <v-col cols="auto" order-sm="1" order-md="2">
+                        <v-col cols="auto">
                             <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click="topic.pinned = !topic.pinned">
                                 <v-icon>$awakePin</v-icon>
                             </v-btn>
