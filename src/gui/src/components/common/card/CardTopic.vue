@@ -66,21 +66,21 @@
                                 <v-row class="mx-0">
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small>mdi-file-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">92 /</span> 
-                                        <span class="text-caption font-weight-bold main-text-color--text">35</span> 
+                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.items.total }} /</span> 
+                                        <span class="text-caption font-weight-bold main-text-color--text">{{ topic.items.new }}</span> 
                                     </v-col>
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small color="awake-green-color">mdi-arrow-up-circle-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">356</span> 
+                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.votes.up }}</span> 
                                     </v-col>
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small>mdi-message-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">92 /</span> 
-                                        <span class="text-caption font-weight-bold main-text-color--text">35</span> 
+                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.comments.total }} /</span> 
+                                        <span class="text-caption font-weight-bold main-text-color--text">{{ topic.comments.new }}</span> 
                                     </v-col>
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small color="awake-red-color">mdi-arrow-down-circle-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">92</span> 
+                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.votes.down }}</span> 
                                     </v-col>
                                 </v-row>
                             </v-container>
