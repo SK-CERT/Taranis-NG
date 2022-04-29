@@ -202,9 +202,6 @@ export default {
     darkTheme: false
   }),
   mixins: [AuthMixin],
-  props: {
-    visible: Boolean
-  },
   methods: {
     navClicked () {
       this.opened = !this.opened
