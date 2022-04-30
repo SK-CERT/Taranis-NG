@@ -1,12 +1,17 @@
 <template>
     <v-card tile elevation="4" outlined height="100%" :class="[
     'pa-5',
-    'pl-1',
+    'pl-5',
     'align-self-stretch',
     'topic',
     {
-        'hot-topic': topic.hot,
+        'pinned-topic': topic.pinned,
     }]">
+        <div class="status-bar" v-if="topic.hot" :class="[
+        {
+            'hot-topic': topic.hot
+        }]">
+        </div>
         <v-container column style="height: 100%">
 
             <v-row no-gutters style="height: 100%">
@@ -22,7 +27,7 @@
                         </v-col>
 
                         <v-col cols="auto">
-                            <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click="topic.pinned = !topic.pinned">
+                            <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click="pinToTop">
                                 <v-icon>$awakePin</v-icon>
                             </v-btn>
                         </v-col>
@@ -110,11 +115,23 @@ export default {
     TagTopic
   },
   props: {
-    topic: {}
+    topic: {},
+    topicList: []
   },
   data: () => ({
   }),
+  emits: ['updatePinned'],
   methods: {
+    pinToTop: function () {
+      this.topic.pinned = !this.topic.pinned
+      if (this.topic.pinned) {
+        var first = this.topic.id
+        this.topicList.sort(function (x, y) { return x.id === first ? -1 : y.id === first ? 1 : 0 })
+      } else {
+        this.topicList.sort(function (x, y) { return x.pinned === true ? -1 : y.pinned === true ? 1 : 0 })
+      }
+      this.$emit('updatePinned', this.topicList)
+    }
   }
 }
 </script>

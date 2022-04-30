@@ -2,14 +2,17 @@
   <ViewLayout>
     <template v-slot:panel> </template>
     <template v-slot:content>
-      <v-row dense class="d-flex align-stretch">
+
+      <transition-group name="flip-list" tag="div" class="row d-flex align-stretch">
         <adaptive-cardsize
-          v-for="(topic, position) in topics"
-          :key="position"
+          v-for="(topic, index) in topicList"
+          :key="topic.id"
+          :topicList="topicList"
           :topic="topic"
-          :position="position"
+          :position="index"
+          @updatePinned="updatePinned"
         ></adaptive-cardsize>
-      </v-row>
+      </transition-group>
 
       <v-row no-gutters>
         <v-col cols="6" class="pa-2 mb-8">
@@ -22,9 +25,9 @@
                 max-width="calc(100% - 32px)"
               >
                 <wordcloud
-                  :data="tag_cloud"
+                  :data="tagCloud"
                   nameKey="word"
-                  valueKey="word_quantity"
+                  valueKey="wordQuantity"
                   :color="myColors"
                   :showTooltip="false"
                   :rotate="myRotate"
@@ -43,7 +46,7 @@
                 <v-icon class="mr-2"> mdi-email-multiple </v-icon>
                 <span class="caption grey--text"
                   >There are
-                  <strong>{{ getData.total_news_items }}</strong> total Assess
+                  <strong>{{ getData.totalNewsItems }}</strong> total Assess
                   items.</span
                 >
               </v-card-text>
@@ -61,7 +64,7 @@
                   mdi-email-check-outline
                 </v-icon>
                 <span class="caption grey--text"
-                  >There are <b>{{ getData.total_products }}</b> products ready
+                  >There are <b>{{ getData.totalProducts }}</b> products ready
                   for publications.</span
                 >
                 <v-divider inset></v-divider>
@@ -89,7 +92,7 @@
                 <v-icon class="mr-2"> mdi-account </v-icon>
                 <span class="caption grey--text"
                   >There are
-                  <b>{{ getData.report_items_completed }}</b> completed
+                  <b>{{ getData.reportItemsCompleted }}</b> completed
                   analyses.</span
                 >
                 <v-divider inset></v-divider>
@@ -98,7 +101,7 @@
                 </v-icon>
                 <span class="caption grey--text"
                   >There are
-                  <b>{{ getData.report_items_in_progress }}</b> pending
+                  <b>{{ getData.reportItemsInProgress }}</b> pending
                   analyses.</span
                 >
               </v-card-text>
@@ -133,7 +136,7 @@
                 <v-icon class="mr-2"> mdi-clock-check-outline </v-icon>
                 <span class="caption grey--text"
                   >Last successful run ended at
-                  <b>{{ getData.latest_collected }}</b></span
+                  <b>{{ getData.latestCollected }}</b></span
                 >
               </v-card-text>
             </v-card>
@@ -156,7 +159,7 @@
                 <v-divider class="my-2"></v-divider>
                 <v-icon class="mr-2" color="blue"> mdi-database </v-icon>
                 <span class="caption grey--text"
-                  >There are <b>{{ getData.total_database_items }}</b> live
+                  >There are <b>{{ getData.totalDatabaseItems }}</b> live
                   items.</span
                 >
                 <v-divider inset></v-divider>
@@ -192,14 +195,16 @@ export default {
     }
   },
   data: () => ({
+    items: [1, 2, 3, 4, 5, 6, 7, 8, 9],
     myColors: ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'],
     myRotate: { from: 0, to: 0, numOfOrientation: 0 },
     fontSize: [14, 40],
-    tag_cloud: [],
+    tagCloud: [],
     labels: ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
     value: [200, 675, 410, 390, 310, 460, 250, 240],
-    topics: [
+    topicList: [
       {
+        id: 1,
         title: 'Ukraine',
         tags: [
           { label: 'State', color: Math.floor(Math.random() * 20) },
@@ -210,7 +215,7 @@ export default {
         ai: true,
         hot: true,
         pinned: true,
-        last_activity: '15th March 2022',
+        lastActivity: '15th March 2022',
         summary:
           'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -218,6 +223,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 2,
         title: 'Log4J',
         tags: [
           { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
@@ -227,7 +233,7 @@ export default {
         ai: false,
         hot: false,
         pinned: true,
-        last_activity: '10th Jannuary 2022',
+        lastActivity: '10th Jannuary 2022',
         summary:
           'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -235,6 +241,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 3,
         title:
           'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
         ai: true,
@@ -248,7 +255,7 @@ export default {
             color: Math.floor(Math.random() * 20)
           }
         ],
-        last_activity: '1st December 2021',
+        lastActivity: '1st December 2021',
         summary:
           'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -256,6 +263,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 4,
         title: 'Ukraine',
         tags: [
           { label: 'State', color: Math.floor(Math.random() * 20) },
@@ -266,7 +274,7 @@ export default {
         ai: true,
         hot: true,
         pinned: false,
-        last_activity: '15th March 2022',
+        lastActivity: '15th March 2022',
         summary:
           'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -274,6 +282,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 5,
         title: 'Log4J',
         tags: [
           { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
@@ -283,7 +292,7 @@ export default {
         ai: false,
         hot: false,
         pinned: false,
-        last_activity: '10th Jannuary 2022',
+        lastActivity: '10th Jannuary 2022',
         summary:
           'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -291,6 +300,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 6,
         title:
           'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
         ai: true,
@@ -304,7 +314,7 @@ export default {
             color: Math.floor(Math.random() * 20)
           }
         ],
-        last_activity: '1st December 2021',
+        lastActivity: '1st December 2021',
         summary:
           'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -312,6 +322,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 7,
         title: 'Ukraine',
         tags: [
           { label: 'State', color: Math.floor(Math.random() * 20) },
@@ -322,7 +333,7 @@ export default {
         ai: true,
         hot: true,
         pinned: false,
-        last_activity: '15th March 2022',
+        lastActivity: '15th March 2022',
         summary:
           'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -330,6 +341,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 8,
         title: 'Log4J',
         tags: [
           { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
@@ -339,7 +351,7 @@ export default {
         ai: false,
         hot: false,
         pinned: false,
-        last_activity: '10th Jannuary 2022',
+        lastActivity: '10th Jannuary 2022',
         summary:
           'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -347,6 +359,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 9,
         title:
           'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
         ai: true,
@@ -360,7 +373,7 @@ export default {
             color: Math.floor(Math.random() * 20)
           }
         ],
-        last_activity: '1st December 2021',
+        lastActivity: '1st December 2021',
         summary:
           'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -368,6 +381,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 10,
         title: 'Ukraine',
         tags: [
           { label: 'State', color: Math.floor(Math.random() * 20) },
@@ -378,7 +392,7 @@ export default {
         ai: true,
         hot: true,
         pinned: false,
-        last_activity: '15th March 2022',
+        lastActivity: '15th March 2022',
         summary:
           'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -386,6 +400,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 11,
         title: 'Log4J',
         tags: [
           { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
@@ -395,7 +410,7 @@ export default {
         ai: false,
         hot: false,
         pinned: false,
-        last_activity: '10th Jannuary 2022',
+        lastActivity: '10th Jannuary 2022',
         summary:
           'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -403,6 +418,7 @@ export default {
         votes: { up: 92, down: 35 }
       },
       {
+        id: 12,
         title:
           'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
         ai: true,
@@ -416,7 +432,7 @@ export default {
             color: Math.floor(Math.random() * 20)
           }
         ],
-        last_activity: '1st December 2021',
+        lastActivity: '1st December 2021',
         summary:
           'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
         items: { total: 92, new: 35 },
@@ -426,13 +442,16 @@ export default {
     ]
   }),
   methods: {
+    updatePinned: function (newValue) {
+      this.topicList = newValue
+    },
     wordClickHandler (name, value, vm) {
       window.console.log('wordClickHandler', name, value, vm)
     },
 
     refreshTagCloud () {
       this.$store.dispatch('getAllDashboardData').then(() => {
-        this.tag_cloud = this.$store.getters.getDashboardData.tag_cloud
+        this.tagCloud = this.$store.getters.getDashboardData.tagCloud
       })
     },
     stringToColor (string) {
