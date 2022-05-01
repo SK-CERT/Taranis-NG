@@ -3,14 +3,14 @@
     <template v-slot:panel> </template>
     <template v-slot:content>
 
-      <transition-group name="flip-list" tag="div" class="row d-flex align-stretch">
+      <transition-group name="flip-list" tag="div" class="row d-flex align-stretch row--dense">
         <adaptive-cardsize
           v-for="(topic, index) in topicList"
           :key="topic.id"
           :topicList="topicList"
           :topic="topic"
           :position="index"
-          @updatePinned="updatePinned"
+          @updatePinned="updateTopicList"
         ></adaptive-cardsize>
       </transition-group>
 
@@ -182,17 +182,15 @@ import wordcloud from 'vue-wordcloud'
 import ViewLayout from '../../components/layouts/ViewLayout'
 import AdaptiveCardsize from '@/components/layouts/AdaptiveCardsize'
 
+import { faker } from '@faker-js/faker'
+import moment from 'moment'
+
 export default {
   name: 'DashboardView',
   components: {
     wordcloud,
     ViewLayout,
     AdaptiveCardsize
-  },
-  computed: {
-    getData () {
-      return this.$store.getters.getDashboardData
-    }
   },
   data: () => ({
     items: [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -202,268 +200,67 @@ export default {
     tagCloud: [],
     labels: ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
     value: [200, 675, 410, 390, 310, 460, 250, 240],
-    topicList: [
-      {
-        id: 1,
-        title: 'Ukraine',
-        tags: [
-          { label: 'State', color: Math.floor(Math.random() * 20) },
-          { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-          { label: 'Threat', color: Math.floor(Math.random() * 20) },
-          { label: 'DDoS', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: true,
-        hot: true,
-        pinned: true,
-        lastActivity: '15th March 2022',
-        summary:
-          'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 2,
-        title: 'Log4J',
-        tags: [
-          { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-          { label: 'Java', color: Math.floor(Math.random() * 20) },
-          { label: 'CVE', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: false,
-        hot: false,
-        pinned: true,
-        lastActivity: '10th Jannuary 2022',
-        summary:
-          'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 3,
-        title:
-          'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
-        ai: true,
-        hot: false,
-        pinned: false,
-        tags: [
-          { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-          { label: 'Siemens', color: Math.floor(Math.random() * 20) },
-          {
-            label: 'Information Disclosure',
-            color: Math.floor(Math.random() * 20)
-          }
-        ],
-        lastActivity: '1st December 2021',
-        summary:
-          'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 4,
-        title: 'Ukraine',
-        tags: [
-          { label: 'State', color: Math.floor(Math.random() * 20) },
-          { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-          { label: 'Threat', color: Math.floor(Math.random() * 20) },
-          { label: 'DDoS', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: true,
-        hot: true,
-        pinned: false,
-        lastActivity: '15th March 2022',
-        summary:
-          'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 5,
-        title: 'Log4J',
-        tags: [
-          { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-          { label: 'Java', color: Math.floor(Math.random() * 20) },
-          { label: 'CVE', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: false,
-        hot: false,
-        pinned: false,
-        lastActivity: '10th Jannuary 2022',
-        summary:
-          'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 6,
-        title:
-          'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
-        ai: true,
-        hot: false,
-        pinned: false,
-        tags: [
-          { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-          { label: 'Siemens', color: Math.floor(Math.random() * 20) },
-          {
-            label: 'Information Disclosure',
-            color: Math.floor(Math.random() * 20)
-          }
-        ],
-        lastActivity: '1st December 2021',
-        summary:
-          'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 7,
-        title: 'Ukraine',
-        tags: [
-          { label: 'State', color: Math.floor(Math.random() * 20) },
-          { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-          { label: 'Threat', color: Math.floor(Math.random() * 20) },
-          { label: 'DDoS', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: true,
-        hot: true,
-        pinned: false,
-        lastActivity: '15th March 2022',
-        summary:
-          'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 8,
-        title: 'Log4J',
-        tags: [
-          { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-          { label: 'Java', color: Math.floor(Math.random() * 20) },
-          { label: 'CVE', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: false,
-        hot: false,
-        pinned: false,
-        lastActivity: '10th Jannuary 2022',
-        summary:
-          'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 9,
-        title:
-          'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
-        ai: true,
-        hot: false,
-        pinned: false,
-        tags: [
-          { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-          { label: 'Siemens', color: Math.floor(Math.random() * 20) },
-          {
-            label: 'Information Disclosure',
-            color: Math.floor(Math.random() * 20)
-          }
-        ],
-        lastActivity: '1st December 2021',
-        summary:
-          'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 10,
-        title: 'Ukraine',
-        tags: [
-          { label: 'State', color: Math.floor(Math.random() * 20) },
-          { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-          { label: 'Threat', color: Math.floor(Math.random() * 20) },
-          { label: 'DDoS', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: true,
-        hot: true,
-        pinned: false,
-        lastActivity: '15th March 2022',
-        summary:
-          'Cyber conflicts are fought in the shadous. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 11,
-        title: 'Log4J',
-        tags: [
-          { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-          { label: 'Java', color: Math.floor(Math.random() * 20) },
-          { label: 'CVE', color: Math.floor(Math.random() * 20) }
-        ],
-        ai: false,
-        hot: false,
-        pinned: false,
-        lastActivity: '10th Jannuary 2022',
-        summary:
-          'Log4Shell (CVE-2021-44228) was a zer-day velnerability in Log4j. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      },
-      {
-        id: 12,
-        title:
-          'Siemens SIMATIC, this is a long title a very long title actually, maybe over 2 lines',
-        ai: true,
-        hot: false,
-        pinned: false,
-        tags: [
-          { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-          { label: 'Siemens', color: Math.floor(Math.random() * 20) },
-          {
-            label: 'Information Disclosure',
-            color: Math.floor(Math.random() * 20)
-          }
-        ],
-        lastActivity: '1st December 2021',
-        summary:
-          'The affected component stores the credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyamthe credentials of a local system account. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam',
-        items: { total: 92, new: 35 },
-        comments: { total: 92, new: 35 },
-        votes: { up: 92, down: 35 }
-      }
-    ]
+    topicList: []
   }),
+  computed: {
+    getData () {
+      return this.$store.getters.getDashboardData
+    }
+  },
   methods: {
-    updatePinned: function (newValue) {
-      this.topicList = newValue
+    updateTopicList: function (newTopicList) {
+      this.topicList = newTopicList
     },
     wordClickHandler (name, value, vm) {
       window.console.log('wordClickHandler', name, value, vm)
     },
-
     refreshTagCloud () {
       this.$store.dispatch('getAllDashboardData').then(() => {
         this.tagCloud = this.$store.getters.getDashboardData.tagCloud
       })
-    },
-    stringToColor (string) {
-      let hash = 0
-      for (let i = 0; i < string.length; i++) {
-        hash += string.charCodeAt(i)
-      }
-      return `#${Math.floor(parseFloat('0.' + hash) * 16777215).toString(16)}`
     }
   },
   mounted () {
     this.refreshTagCloud()
+
+    // Generate Dummy Data
+    var dummyTags = [
+      { label: 'State', color: Math.floor(Math.random() * 20) },
+      { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
+      { label: 'Threat', color: Math.floor(Math.random() * 20) },
+      { label: 'DDoS', color: Math.floor(Math.random() * 20) },
+      { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
+      { label: 'Java', color: Math.floor(Math.random() * 20) },
+      { label: 'CVE', color: Math.floor(Math.random() * 20) },
+      { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
+      { label: 'Python', color: Math.floor(Math.random() * 20) },
+      { label: 'Privacy', color: Math.floor(Math.random() * 20) },
+      { label: 'Social', color: Math.floor(Math.random() * 20) },
+      { label: 'APT', color: Math.floor(Math.random() * 20) },
+      { label: 'MitM', color: Math.floor(Math.random() * 20) }
+    ]
+
+    var numberOfDummyTopics = 30
+
+    for (var i = 1; i < numberOfDummyTopics; i++) {
+      var entry = {
+        id: i,
+        title: faker.lorem.words((Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
+        tags: faker.random.arrayElements(dummyTags, (Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
+        ai: Math.random() < 0.5,
+        hot: Math.random() < 0.2,
+        pinned: Math.random() < 0.05,
+        lastActivity: moment(String(faker.date.past(1))).format('DD.MM.YYYY, HH:mm:ss'),
+        summary: faker.lorem.paragraph(),
+        items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
+        comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
+        votes: { up: faker.commerce.price(70, 200, 0), down: faker.commerce.price(0, 70, 0) }
+      }
+      this.topicList.push(entry)
+    }
+
+    // Sort List by Date
+    // Sort List by pinned
 
     setInterval(
       function () {

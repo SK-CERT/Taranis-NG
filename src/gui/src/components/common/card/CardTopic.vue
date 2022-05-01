@@ -23,7 +23,7 @@
                         <v-col cols="auto" class="mr-auto mt-1">
                             <tag-mini label="AI" v-show="topic.ai" />
                             <span class="last-activity font-weight-light main-text-color--text">Last activity: </span>
-                            <span class="last-activity font-weight-bold main-text-color--text">March, 15, 2022</span>
+                            <span class="last-activity font-weight-bold main-text-color--text"> {{ topic.lastActivity }} </span>
                         </v-col>
 
                         <v-col cols="auto">
@@ -37,7 +37,7 @@
 
                     <v-row class="flex-grow-0 mt-1">
                         <v-col>
-                            <h2 class="font-weight-bold headline main-text-color--text">
+                            <h2 class="font-weight-bold headline main-text-color--text text-capitalize">
                                 {{ topic.title }}
                             </h2>
                         </v-col>

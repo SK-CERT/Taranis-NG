@@ -16,6 +16,7 @@
     "ckeditor5-vuejs": "^1.0.18",
     "core-js": "^2.6.12",
     "js-base64": "^3.7.2",
+    "moment": "^2.29.3",
     "papaparse": "^5.3.1",
     "tinymce-vue-2": "0.0.5",
     "vee-validate": "^2.2.15",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@babel/helper-compilation-targets": "^7.16.3",
     "@ckeditor/ckeditor5-alignment": "^20.0.0",
+    "@faker-js/faker": "^6.2.0",
     "@mdi/font": "^6.4.95",
     "@vue/cli-plugin-babel": "^3.3.0",
     "@vue/cli-plugin-eslint": "~4.5.12",
