@@ -142,15 +142,21 @@ span.text-caption,
 .v-icon.v-icon.closed {
   transform: scaleX(-1);
 }
-.v-icon.v-icon.desc {
+.selected .v-icon.v-icon.desc {
   transform: rotate(-180deg);
 }
 
-.v-icon.v-icon.filter-icon svg {
-  fill: #c9c9c9;
+.v-list .v-icon.filter-icon {
+  color: #c9c9c9 !important;
+  & svg {
+    fill: #c9c9c9 !important;
+  }
 }
-.v-icon.v-icon.filter-icon-active svg {
-  fill: #7468e8;
+.v-list .v-list-item--active.selected .v-icon.filter-icon {
+  color: #7468e8 !important;
+  & svg {
+    fill: #7468e8 !important;
+  }
 }
 .extra-dense {
   margin-top: -10px;

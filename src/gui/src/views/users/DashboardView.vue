@@ -317,7 +317,7 @@ export default {
         ai: Math.random() < 0.5,
         hot: Math.random() < 0.2,
         pinned: Math.random() < 0.05,
-        lastActivity: moment(String(faker.date.past(1))).format('DD/MM/YYYY hh:mm:ss'),
+        lastActivity: moment(String(faker.date.recent(10))).format('DD/MM/YYYY hh:mm:ss'),
         summary: faker.lorem.paragraph(),
         items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },

@@ -190,20 +190,19 @@
             <v-col class="pb-5">
               <v-list dense>
                 <v-list-item-group
-                  v-model="sortBy.selected"
+                  v-model="sortBy.value"
                   active-class="selected"
-                  multiple
                   class="filter-list"
+                  :value-comparator="(a,b) => {
+                    return (a.type === b.type) && (b.direction !== '')
+                    }"
                 >
                   <template v-for="(item, index) in sortBy.list">
-                    <v-list-item :key="item.title" class="extra-dense" :ripple="false" @click="orderState(index)">
-                      <template v-slot:default>
+                    <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @click="changeDirection(index)">
+                      <template v-slot:default={active}>
 
                         <v-list-item-icon class="mr-2">
-                          <v-icon v-if="item.order==='no'" small color="grey" class="filter-icon mt-auto mb-auto">
-                            {{ item.icon }}
-                          </v-icon>
-                          <v-icon v-else small color="primary" class="filter-icon-active mt-auto mb-auto">
+                          <v-icon small color="grey" class="filter-icon mt-auto mb-auto">
                             {{ item.icon }}
                           </v-icon>
                         </v-list-item-icon>
@@ -213,7 +212,7 @@
                         </v-list-item-content>
 
                         <v-list-item-action>
-                          <v-icon v-if="item.order != 'no'" small color="dark-grey" :class="['mt-auto', 'mb-auto', {'asc': item.order === 'asc', 'desc': item.order === 'desc',}]">
+                          <v-icon v-if="item.direction != '' && active" small color="dark-grey" :class="['mt-auto', 'mb-auto', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
                             mdi-chevron-up
                           </v-icon>
                         </v-list-item-action>
@@ -289,33 +288,37 @@ export default {
     },
     sortBy: {
       apply: false,
-      selected: [],
-      orderList: ['no', 'asc', 'desc'],
+      value: null,
       list: [
         {
           label: 'relevance score',
           icon: 'mdi-star-outline',
-          order: 'no'
+          type: 'relevanceScore',
+          direction: 'asc'
         },
         {
           label: 'last activity',
           icon: 'mdi-calendar-range-outline',
-          order: 'no'
+          type: 'lastActivity',
+          direction: 'asc'
         },
         {
           label: 'new news items',
           icon: 'mdi-file-outline',
-          order: 'no'
+          type: 'newItems',
+          direction: 'asc'
         },
         {
           label: 'new comments',
           icon: 'mdi-message-outline',
-          order: 'no'
+          type: 'newComments',
+          direction: 'asc'
         },
         {
           label: 'upvotes',
           icon: 'mdi-arrow-up-circle-outline',
-          order: 'no'
+          type: 'upvotes',
+          direction: 'asc'
         }
       ]
     }
@@ -348,6 +351,14 @@ export default {
         this.date.range = []
       }
       this.updateFilterList()
+    },
+    changeDirection (index) {
+      var item = this.sortBy.list[index]
+      if (item.direction === 'asc') {
+        item.direction = 'desc'
+      } else {
+        item.direction = (item.direction === 'desc') ? '' : 'asc'
+      }
     },
     orderState (index) {
       var item = this.sortBy.list[index]
