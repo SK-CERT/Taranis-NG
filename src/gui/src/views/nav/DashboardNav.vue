@@ -20,12 +20,12 @@
       </v-row>
 
           <v-divider class="mt-0 mb-0"></v-divider>
-        
+
       <v-row>
         <v-col class="pa-5 pb-3">
 
           <!-- filter results -->
-          
+
           <v-row class="pl-5 pr-5 pt-4">
             <v-col>
               <h4>filter results</h4>
@@ -89,27 +89,27 @@
               :items="tags.list"
               label="tags"
               multiple
-              outlined 
+              outlined
               dense
               append-icon="mdi-chevron-down"
               class="pl-0"
               hide-details
               deletable-chips
-              @focus="focused=true"
-              @blur="focused=false"
+              @focus="tags.focused=true"
+              @blur="tags.focused=false"
             >
               <template v-slot:selection="{ item, index }">
-                <v-chip small v-if="index < 1 && !focused" @click:close="deleteChip(item)" label color="grey--lighten-4"
+                <v-chip small v-if="index < 1 && !tags.focused" @click:close="deleteChip(item)" label color="grey--lighten-4"
                 close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
                   <span>{{ item }}</span>
                 </v-chip>
-                <v-chip small v-else-if="focused" @click:close="deleteChip(item)" label color="grey--lighten-4"
+                <v-chip small v-else-if="tags.focused" @click:close="deleteChip(item)" label color="grey--lighten-4"
                 close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
                   <span>{{ item }}</span>
                 </v-chip>
 
                 <span
-                  v-if="index === 1 && !focused"
+                  v-if="index === 1 && !tags.focused"
                   class="grey--text text-caption"
                 >
                   (+{{ tags.selected.length - 1 }})
@@ -123,7 +123,7 @@
       </v-row>
 
           <v-divider class="mt-0 mb-0"></v-divider>
-        
+
       <v-row>
         <v-col class="pa-5 pb-3">
 
@@ -145,7 +145,7 @@
                   <template v-for="item in filterBy.list">
                     <v-list-item :key="item.title" class="extra-dense" :ripple="false">
                       <template v-slot:default="{ active }">
-                        
+
                         <v-list-item-icon class="mr-2">
                           <v-icon v-if="!active" small color="grey" class="filter-icon mt-auto mb-auto">
                             {{ item.icon }}
@@ -176,7 +176,7 @@
       </v-row>
 
           <v-divider class="mt-2 mb-0"></v-divider>
-        
+
       <v-row>
         <v-col class="pa-5 pb-3">
 
@@ -198,7 +198,7 @@
                   <template v-for="(item, index) in sortBy.list">
                     <v-list-item :key="item.title" class="extra-dense" :ripple="false" @click="orderState(index)">
                       <template v-slot:default>
-                        
+
                         <v-list-item-icon class="mr-2">
                           <v-icon v-if="item.order==='no'" small color="grey" class="filter-icon mt-auto mb-auto">
                             {{ item.icon }}
@@ -227,7 +227,7 @@
 
         </v-col>
       </v-row>
-      
+
     </v-container>
 </template>
 
@@ -240,118 +240,156 @@ export default {
   },
   data: () => ({
     links: [],
-    menu: false,
+    datePicker: false,
     date: {
+      apply: true,
       range: [],
       chips: {
         all: true,
         today: false,
         week: false
-      },
+      }
     },
     tags: {
+      apply: false,
       focused: false,
       selected: ['all'],
       list: [
-          'all',
-          'State',
-          'Vulnerability',
-          'Threat',
-          'DDoS',
-          'Cyberwar',
-          'Java',
-          'CVE',
-        ],
+        'all',
+        'State',
+        'Vulnerability',
+        'Threat',
+        'DDoS',
+        'Cyberwar',
+        'Java',
+        'CVE'
+      ]
     },
     filterBy: {
+      apply: false,
       selected: [],
       list: [
         {
           label: 'active topics',
-          icon: 'mdi-message-outline',
+          icon: 'mdi-message-outline'
         },
         {
           label: 'pinned topics',
-          icon: '$awakePin',
+          icon: '$awakePin'
         },
         {
           label: 'hot topics',
-          icon: 'mdi-star-outline',
+          icon: 'mdi-star-outline'
         },
         {
           label: 'upvoted topics',
-          icon: 'mdi-arrow-up-circle-outline',
-        },
-      ],
+          icon: 'mdi-arrow-up-circle-outline'
+        }
+      ]
     },
     sortBy: {
+      apply: false,
       selected: [],
       orderList: ['no', 'asc', 'desc'],
       list: [
         {
           label: 'relevance score',
           icon: 'mdi-star-outline',
-          order: 'no',
+          order: 'no'
         },
         {
           label: 'last activity',
           icon: 'mdi-calendar-range-outline',
-          order: 'no',
+          order: 'no'
         },
         {
           label: 'new news items',
           icon: 'mdi-file-outline',
-          order: 'no',
+          order: 'no'
         },
         {
           label: 'new comments',
           icon: 'mdi-message-outline',
-          order: 'no',
+          order: 'no'
         },
         {
           label: 'upvotes',
           icon: 'mdi-arrow-up-circle-outline',
-          order: 'no',
-        },
-      ],
+          order: 'no'
+        }
+      ]
     }
   }),
-    computed: {
-      dateRangeText () {
-        return this.date.range.join(' - ')
-      },
+  computed: {
+    dateRangeText () {
+      return this.date.range.join(' - ')
     },
-    methods: {
-      deleteChip(chip) {
-        this.tags.selected = this.tags.selected.filter(c => c !== chip)
-      },
-      dateSelector(elem) {
-        this.date.chips[elem] = !this.date.chips[elem]
-        if (elem === "all") {
-          this.date.chips.today = false;
-          this.date.chips.week = false;
-          this.date.range = [];
-        } else if (elem === "range") {
-          this.date.chips.today = false;
-          this.date.chips.week = false;
-          this.date.chips.all = false;
-        } else {
-          this.date.chips.all = false;
-          this.date.range = [];
-        }
-      },
-      orderState(index) {
-        var item = this.sortBy.list[index];
-        item.order = this.sortBy.orderList[(this.sortBy.orderList.indexOf(item.order) + 1) % (this.sortBy.orderList).length];
-        // if (item.order === "asc") {
-        //   item.order = "desc";
-        // } else if (item.order === "desc") {
-        //   item.order = "no";
-        // } else {
-        //   item.order = "asc";
-        // }
-        return item.order;
+    getData () {
+      return this.$store.getters.getDashboardData
+    }
+  },
+  methods: {
+    deleteChip (chip) {
+      this.tags.selected = this.tags.selected.filter(c => c !== chip)
+    },
+    dateSelector (elem) {
+      this.date.chips[elem] = !this.date.chips[elem]
+      if (elem === 'all') {
+        this.date.chips.all = true
+        this.date.chips.today = false
+        this.date.chips.week = false
+        this.date.range = []
+      } else if (elem === 'range') {
+        this.date.chips.today = false
+        this.date.chips.week = false
+        this.date.chips.all = false
+      } else {
+        this.date.chips.all = false
+        this.date.range = []
       }
+      this.updateFilterList()
     },
+    orderState (index) {
+      var item = this.sortBy.list[index]
+      item.order = this.sortBy.orderList[(this.sortBy.orderList.indexOf(item.order) + 1) % (this.sortBy.orderList).length]
+      // this.updateFilterList()
+      return item.order
+    },
+    updateFilterList () {
+      // Set apply-value
+      this.date.apply = this.date.chips.all === false
+      this.tags.apply = ((this.tags.selected).length > 1 || ((this.tags.selected).length === 1 && this.tags.selected[0] !== 'all'))
+      this.filterBy.apply = (this.filterBy.selected).length > 0
+      this.sortBy.apply = (this.sortBy.selected).length > 0
+
+      var filterList = {
+        date: this.date,
+        filterBy: this.filterBy,
+        sortBy: this.sortBy,
+        tags: this.tags
+      }
+      this.$store.commit('setFilterList', filterList)
+    }
+  },
+  watch: {
+    'filterBy.selected': {
+      handler () {
+        this.updateFilterList()
+      },
+      deep: true
+    },
+    'sortBy.selected': {
+      handler () {
+        this.updateFilterList()
+      },
+      deep: true
+    },
+    'tags.selected': {
+      handler () {
+        this.updateFilterList()
+      },
+      deep: true
+    }
+  }
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" sm="6" :md="promValue" :xl="(promValue-1)">
-        <card-topic :topic="topic" :topicList="topicList" @updatePinned="updatePinned"></card-topic>
+        <card-topic :topic="topic" :topicList="topicList"></card-topic>
     </v-col>
 </template>
 

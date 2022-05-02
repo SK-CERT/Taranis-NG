@@ -7,9 +7,9 @@
         <adaptive-cardsize
           v-for="(topic, index) in topicList"
           :key="topic.id"
-          :topicList="topicList"
           :topic="topic"
           :position="index"
+          :topicList="topicList"
           @updatePinned="updateTopicList"
         ></adaptive-cardsize>
       </transition-group>
@@ -181,6 +181,7 @@
 import wordcloud from 'vue-wordcloud'
 import ViewLayout from '../../components/layouts/ViewLayout'
 import AdaptiveCardsize from '@/components/layouts/AdaptiveCardsize'
+// import { mapState } from 'vuex'
 
 import { faker } from '@faker-js/faker'
 import moment from 'moment'
@@ -200,7 +201,8 @@ export default {
     tagCloud: [],
     labels: ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
     value: [200, 675, 410, 390, 310, 460, 250, 240],
-    topicList: []
+    topicList: [],
+    filterList: {}
   }),
   computed: {
     getData () {
@@ -208,16 +210,81 @@ export default {
     }
   },
   methods: {
-    updateTopicList: function (newTopicList) {
+    updateTopicList (newTopicList) {
       this.topicList = newTopicList
+    },
+    applyFilters () {
+      if (Object.keys(this.filterList).length !== 0) {
+        for (const [filterName, filters] of Object.entries(this.filterList)) {
+          if (filters.apply) {
+            console.log(filterName + ' is applied')
+          }
+        }
+
+        console.log(this.filterList)
+
+        // date: this.date,
+        // filterBy: this.filterBy,
+        // sortBy: this.sortBy,
+        // tags: this.tags
+        // alert(JSON.stringify(this.filterList))
+      }
+    },
+    sortByLastActivity (direction) {
+      this.topicList.sort((x, y) => {
+        const firstElement = (direction === 'asc') ? x.lastActivity : y.lastActivity
+        const secondElement = (direction === 'asc') ? y.lastActivity : x.lastActivity
+        return moment(firstElement, 'DD/MM/YYYY hh:mm:ss').toDate() - moment(secondElement, 'DD/MM/YYYY hh:mm:ss').toDate()
+      })
+    },
+    sortByPinned () {
+      this.topicList.sort((x, y) => x.pinned === true ? -1 : y.pinned === true ? 1 : 0)
     },
     wordClickHandler (name, value, vm) {
       window.console.log('wordClickHandler', name, value, vm)
     },
     refreshTagCloud () {
-      this.$store.dispatch('getAllDashboardData').then(() => {
-        this.tagCloud = this.$store.getters.getDashboardData.tagCloud
-      })
+      // Dummy Tag-Cloud data
+      this.tagCloud = [{
+        name: 'State',
+        value: 26
+      },
+      {
+        name: 'Cyberwar',
+        value: 19
+      },
+      {
+        name: 'Threat',
+        value: 18
+      },
+      {
+        name: 'DDoS',
+        value: 16
+      },
+      {
+        name: 'Vulnerability',
+        value: 15
+      },
+      {
+        name: 'Java',
+        value: 9
+      },
+      {
+        name: 'CVE',
+        value: 9
+      },
+      {
+        name: 'OT/CPS',
+        value: 9
+      },
+      {
+        name: 'Python',
+        value: 6
+      }
+      ]
+    //   this.$store.dispatch('getAllDashboardData').then(() => {
+    //     this.tagCloud = this.$store.getters.getDashboardData.tagCloud
+    //   })
     }
   },
   mounted () {
@@ -240,7 +307,7 @@ export default {
       { label: 'MitM', color: Math.floor(Math.random() * 20) }
     ]
 
-    var numberOfDummyTopics = 30
+    var numberOfDummyTopics = 40
 
     for (var i = 1; i < numberOfDummyTopics; i++) {
       var entry = {
@@ -250,7 +317,7 @@ export default {
         ai: Math.random() < 0.5,
         hot: Math.random() < 0.2,
         pinned: Math.random() < 0.05,
-        lastActivity: moment(String(faker.date.past(1))).format('DD.MM.YYYY, HH:mm:ss'),
+        lastActivity: moment(String(faker.date.past(1))).format('DD/MM/YYYY hh:mm:ss'),
         summary: faker.lorem.paragraph(),
         items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
@@ -259,8 +326,8 @@ export default {
       this.topicList.push(entry)
     }
 
-    // Sort List by Date
-    // Sort List by pinned
+    this.sortByLastActivity('desc')
+    this.sortByPinned()
 
     setInterval(
       function () {
@@ -268,6 +335,13 @@ export default {
       }.bind(this),
       600000
     )
+
+    this.$store.commit('setFilterList', this.filterList)
+
+    this.$store.subscribe((mutation, state) => {
+      this.filterList = this.$store.getters.getFilterList
+      this.applyFilters()
+    })
   }
 }
 </script>

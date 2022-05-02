@@ -20,13 +20,13 @@
                     <!-- Header -->
 
                     <v-row class="flex-grow-0">
-                        <v-col cols="auto" class="mr-auto mt-1">
+                        <v-col cols="10" class="mr-auto mt-1">
                             <tag-mini label="AI" v-show="topic.ai" />
                             <span class="last-activity font-weight-light main-text-color--text">Last activity: </span>
                             <span class="last-activity font-weight-bold main-text-color--text"> {{ topic.lastActivity }} </span>
                         </v-col>
 
-                        <v-col cols="auto">
+                        <v-col cols="2" class="text-right">
                             <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click="pinToTop">
                                 <v-icon>$awakePin</v-icon>
                             </v-btn>
