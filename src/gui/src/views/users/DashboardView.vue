@@ -234,7 +234,7 @@ export default {
       this.topicList.sort((x, y) => {
         const firstElement = (direction === 'asc') ? x.lastActivity : y.lastActivity
         const secondElement = (direction === 'asc') ? y.lastActivity : x.lastActivity
-        return moment(firstElement, 'DD/MM/YYYY hh:mm:ss').toDate() - moment(secondElement, 'DD/MM/YYYY hh:mm:ss').toDate()
+        return moment(new Date(firstElement)).format('DD/MM/YYYY hh:mm:ss') - moment(new Date(secondElement)).format('DD/MM/YYYY hh:mm:ss')
       })
     },
     sortByPinned () {
@@ -317,7 +317,7 @@ export default {
         ai: Math.random() < 0.5,
         hot: Math.random() < 0.2,
         pinned: Math.random() < 0.05,
-        lastActivity: moment(String(faker.date.recent(10))).format('DD/MM/YYYY hh:mm:ss'),
+        lastActivity: moment(new Date(String(faker.date.recent(10)))).format('DD/MM/YYYY hh:mm:ss'),
         summary: faker.lorem.paragraph(),
         items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
