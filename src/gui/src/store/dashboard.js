@@ -10,7 +10,9 @@ const state = {
     latest_collected: '',
     tag_cloud: {}
   },
-  filterList: {}
+  filterList: {},
+  filter: {},
+  sortBy: {}
 }
 
 const actions = {
@@ -31,6 +33,14 @@ const mutations = {
 
   setFilterList (state, data) {
     state.filterList = data
+  },
+
+  applySortby (state, data) {
+    state.sortBy = data
+  },
+
+  applyFilter (state, data) {
+    state.filter = data
   }
 
 }
@@ -43,6 +53,14 @@ const getters = {
 
   getFilterList (state) {
     return state.filterList
+  },
+
+  getSortBy (state) {
+    return state.sortBy
+  },
+
+  getFilter (state) {
+    return state.filter
   }
 
 }

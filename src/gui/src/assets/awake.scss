@@ -280,8 +280,29 @@ span.text-caption,
   border-color: #c8c8c8;
 }
 
-.flip-list-move {
+.topics-grid {
   transition: transform 0.6s ease;
+}
+.topics-grid-move {
+  transition: transform 0.6s ease;
+}
+.topics-grid-enter-from,
+.topics-grid-leave-to {
+  opacity: 0;
+  transition: scale(0.6);
+}
+.topics-grid-enter-to,
+.topics-grid-leave-from {
+  opacity: 1;
+  transition: scale(1);
+}
+.topics-grid-enter-active,
+.topics-grid-leave-active {
+  transition: opacity 0.5s;
+}
+.topics-grid-enter,
+.topics-grid-leave-to {
+  opacity: 0;
 }
 
 .date-filter-group,
@@ -290,7 +311,6 @@ span.text-caption,
   width: 100%;
 }
 .date-filter-group .v-slide-group__content {
-  // display: flex;
   justify-content: space-between;
   column-gap: 10px;
 }

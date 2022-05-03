@@ -3,7 +3,7 @@
     <template v-slot:panel> </template>
     <template v-slot:content>
 
-      <transition-group name="flip-list" tag="div" class="row d-flex align-stretch row--dense">
+      <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense">
         <adaptive-cardsize
           v-for="(topic, index) in topicList"
           :key="topic.id"
@@ -181,7 +181,6 @@
 import wordcloud from 'vue-wordcloud'
 import ViewLayout from '../../components/layouts/ViewLayout'
 import AdaptiveCardsize from '@/components/layouts/AdaptiveCardsize'
-// import { mapState } from 'vuex'
 
 import { faker } from '@faker-js/faker'
 import moment from 'moment'
@@ -220,21 +219,13 @@ export default {
             console.log(filterName + ' is applied')
           }
         }
-
-        console.log(this.filterList)
-
-        // date: this.date,
-        // filterBy: this.filterBy,
-        // sortBy: this.sortBy,
-        // tags: this.tags
-        // alert(JSON.stringify(this.filterList))
       }
     },
     sortByLastActivity (direction) {
       this.topicList.sort((x, y) => {
         const firstElement = (direction === 'asc') ? x.lastActivity : y.lastActivity
         const secondElement = (direction === 'asc') ? y.lastActivity : x.lastActivity
-        return moment(new Date(firstElement)).format('DD/MM/YYYY hh:mm:ss') - moment(new Date(secondElement)).format('DD/MM/YYYY hh:mm:ss')
+        return moment(firstElement, 'DD/MM/YYYY hh:mm:ss') - moment(secondElement, 'DD/MM/YYYY hh:mm:ss')
       })
     },
     sortByPinned () {
@@ -245,42 +236,16 @@ export default {
     },
     refreshTagCloud () {
       // Dummy Tag-Cloud data
-      this.tagCloud = [{
-        name: 'State',
-        value: 26
-      },
-      {
-        name: 'Cyberwar',
-        value: 19
-      },
-      {
-        name: 'Threat',
-        value: 18
-      },
-      {
-        name: 'DDoS',
-        value: 16
-      },
-      {
-        name: 'Vulnerability',
-        value: 15
-      },
-      {
-        name: 'Java',
-        value: 9
-      },
-      {
-        name: 'CVE',
-        value: 9
-      },
-      {
-        name: 'OT/CPS',
-        value: 9
-      },
-      {
-        name: 'Python',
-        value: 6
-      }
+      this.tagCloud = [
+        { name: 'State', value: 26 },
+        { name: 'Cyberwar', value: 19 },
+        { name: 'Threat', value: 18 },
+        { name: 'DDoS', value: 16 },
+        { name: 'Vulnerability', value: 15 },
+        { name: 'Java', value: 9 },
+        { name: 'CVE', value: 9 },
+        { name: 'OT/CPS', value: 9 },
+        { name: 'Python', value: 6 }
       ]
     //   this.$store.dispatch('getAllDashboardData').then(() => {
     //     this.tagCloud = this.$store.getters.getDashboardData.tagCloud
@@ -310,7 +275,7 @@ export default {
     var numberOfDummyTopics = 40
 
     for (var i = 1; i < numberOfDummyTopics; i++) {
-      var entry = {
+      var entry = { 
         id: i,
         title: faker.lorem.words((Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
         tags: faker.random.arrayElements(dummyTags, (Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
@@ -336,11 +301,17 @@ export default {
       600000
     )
 
-    this.$store.commit('setFilterList', this.filterList)
-
     this.$store.subscribe((mutation, state) => {
-      this.filterList = this.$store.getters.getFilterList
-      this.applyFilters()
+
+      switch (mutation.type) {
+        case 'applySortby':
+          var sortBy = this.$store.getters.getSortBy
+          var direction = sortBy.direction
+          console.log(direction)
+          if (direction) {
+            this.sortByLastActivity(direction)
+          }
+      }
     })
   }
 }

@@ -201,7 +201,7 @@
                   :value-comparator="sortByActivation"
                 >
                   <template v-for="(item, index) in sortBy.list">
-                    <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @click="changeDirection(index)">
+                    <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @mousedown="changeDirection(index)">
                       <template v-slot:default={active}>
 
                         <v-list-item-icon class="mr-2">
@@ -253,22 +253,10 @@ export default {
     filterBy: {
       selected: [],
       list: [
-        {
-          label: 'active topics',
-          icon: 'mdi-message-outline'
-        },
-        {
-          label: 'pinned topics',
-          icon: '$awakePin'
-        },
-        {
-          label: 'hot topics',
-          icon: 'mdi-star-outline'
-        },
-        {
-          label: 'upvoted topics',
-          icon: 'mdi-arrow-up-circle-outline'
-        }
+        { label: 'active topics', icon: 'mdi-message-outline' },
+        { label: 'pinned topics', icon: '$awakePin' },
+        { label: 'hot topics', icon: 'mdi-star-outline' },
+        { label: 'upvoted topics', icon: 'mdi-arrow-up-circle-outline' }
       ]
     },
     sortBy: {
@@ -364,7 +352,7 @@ export default {
     },
     'sortBy.selected': {
       handler () {
-        this.updateFilterList()
+        this.$store.commit('applySortby', this.sortBy.selected)
       },
       deep: true
     },
