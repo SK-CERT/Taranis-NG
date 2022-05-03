@@ -34,10 +34,17 @@
 
           <!-- time tags -->
           <v-row class="pl-5 pr-5">
-            <v-col justify="space-between" class="d-flex pb-0" style="column-gap: 10px;">
-              <v-btn outlined :class="['text-lowercase', 'filter-btn', {'clicked': date.chips.all,}]" @click="dateSelector('all')"> all </v-btn>
-              <v-btn outlined :class="['text-lowercase', 'filter-btn', {'clicked': date.chips.today,}]" @click="dateSelector('today')"> today </v-btn>
-              <v-btn outlined :class="['text-lowercase', 'filter-btn', {'clicked': date.chips.week,}]" @click="dateSelector('week')"> this week </v-btn>
+            <v-col class="pb-0">
+              <v-chip-group
+                v-model="date.selected"
+                active-class="selected"
+                class="date-filter-group d-flex"
+                @change="date.range=[]"
+              >
+                <v-chip label outlined dark value="all">all</v-chip>
+                <v-chip label outlined dark value="today">today</v-chip>
+                <v-chip label outlined dark value="week">this week</v-chip>
+              </v-chip-group>
             </v-col>
           </v-row>
 
@@ -68,12 +75,14 @@
                   range
                   no-title
                   scrollable
+                  color="primary"
+                  @change="date.selected='range'"
                 >
                   <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="datePicker = false">
+                  <v-btn text outlined class="text-lowercase grey--text text--darken-2" @click="datePicker = false">
                     Cancel
                   </v-btn>
-                  <v-btn text color="primary" @click="$refs.datePicker.save(date), dateSelector('range')">
+                  <v-btn text outlined color="primary" @click="$refs.datePicker.save(date)">
                     OK
                   </v-btn>
                 </v-date-picker>
@@ -86,7 +95,7 @@
             <v-col>
               <v-combobox
               v-model="tags.selected"
-              :items="tags.list"
+              :items="tagList"
               label="tags"
               multiple
               outlined
@@ -95,21 +104,20 @@
               class="pl-0"
               hide-details
               deletable-chips
-              @focus="tags.focused=true"
-              @blur="tags.focused=false"
+              @change="selectDefaultIfEmpty"
             >
-              <template v-slot:selection="{ item, index }">
-                <v-chip small v-if="index < 1 && !tags.focused" @click:close="deleteChip(item)" label color="grey--lighten-4"
+              <template v-slot:selection="{ parent, item, index }">
+                <v-chip small v-if="index < 1 && !parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
                 close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
                   <span>{{ item }}</span>
                 </v-chip>
-                <v-chip small v-else-if="tags.focused" @click:close="deleteChip(item)" label color="grey--lighten-4"
+                <v-chip small v-else-if="parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
                 close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
                   <span>{{ item }}</span>
                 </v-chip>
 
                 <span
-                  v-if="index === 1 && !tags.focused"
+                  v-if="index === 1 && !parent.isMenuActive"
                   class="grey--text text-caption"
                 >
                   (+{{ tags.selected.length - 1 }})
@@ -147,10 +155,7 @@
                       <template v-slot:default="{ active }">
 
                         <v-list-item-icon class="mr-2">
-                          <v-icon v-if="!active" small color="grey" class="filter-icon mt-auto mb-auto">
-                            {{ item.icon }}
-                          </v-icon>
-                          <v-icon v-else small color="primary" class="filter-icon-active mt-auto mb-auto">
+                          <v-icon small color="grey" class="filter-icon mt-auto mb-auto">
                             {{ item.icon }}
                           </v-icon>
                         </v-list-item-icon>
@@ -160,8 +165,8 @@
                         </v-list-item-content>
 
                         <v-list-item-action>
-                          <v-icon v-if="active" small color="dark-grey" class="mt-auto mb-auto">
-                            mdi-check
+                          <v-icon v-if="active" small class="mt-auto mb-auto dark-grey--text text--lighten-3">
+                            mdi-check-bold
                           </v-icon>
                         </v-list-item-action>
                       </template>
@@ -190,12 +195,10 @@
             <v-col class="pb-5">
               <v-list dense>
                 <v-list-item-group
-                  v-model="sortBy.value"
+                  v-model="sortBy.selected"
                   active-class="selected"
                   class="filter-list"
-                  :value-comparator="(a,b) => {
-                    return (a.type === b.type) && (b.direction !== '')
-                    }"
+                  :value-comparator="sortByActivation"
                 >
                   <template v-for="(item, index) in sortBy.list">
                     <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @click="changeDirection(index)">
@@ -212,7 +215,7 @@
                         </v-list-item-content>
 
                         <v-list-item-action>
-                          <v-icon v-if="item.direction != '' && active" small color="dark-grey" :class="['mt-auto', 'mb-auto', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
+                          <v-icon v-if="item.direction != '' && active" :class="['mt-auto', 'mb-auto', 'dark-grey--text', 'text--lighten-3', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
                             mdi-chevron-up
                           </v-icon>
                         </v-list-item-action>
@@ -241,31 +244,13 @@ export default {
     links: [],
     datePicker: false,
     date: {
-      apply: true,
       range: [],
-      chips: {
-        all: true,
-        today: false,
-        week: false
-      }
+      selected: 'all'
     },
     tags: {
-      apply: false,
-      focused: false,
-      selected: ['all'],
-      list: [
-        'all',
-        'State',
-        'Vulnerability',
-        'Threat',
-        'DDoS',
-        'Cyberwar',
-        'Java',
-        'CVE'
-      ]
+      selected: ['all']
     },
     filterBy: {
-      apply: false,
       selected: [],
       list: [
         {
@@ -287,99 +272,87 @@ export default {
       ]
     },
     sortBy: {
-      apply: false,
-      value: null,
+      selected: null,
       list: [
         {
           label: 'relevance score',
           icon: 'mdi-star-outline',
           type: 'relevanceScore',
-          direction: 'asc'
+          direction: ''
         },
         {
           label: 'last activity',
           icon: 'mdi-calendar-range-outline',
           type: 'lastActivity',
-          direction: 'asc'
+          direction: ''
         },
         {
           label: 'new news items',
           icon: 'mdi-file-outline',
           type: 'newItems',
-          direction: 'asc'
+          direction: ''
         },
         {
           label: 'new comments',
           icon: 'mdi-message-outline',
           type: 'newComments',
-          direction: 'asc'
+          direction: ''
         },
         {
           label: 'upvotes',
           icon: 'mdi-arrow-up-circle-outline',
           type: 'upvotes',
-          direction: 'asc'
+          direction: ''
         }
       ]
-    }
+    },
+    tagList: ['all', 'State', 'Cyberwar', 'Threat', 'DDoS', 'Vulnerability', 'Java', 'CVE', 'OT/CPS', 'Python', 'Privacy', 'Social', 'APT', 'MitM']
   }),
   computed: {
     dateRangeText () {
-      return this.date.range.join(' - ')
+      return this.date.range.join(' – ')
     },
     getData () {
       return this.$store.getters.getDashboardData
     }
   },
   methods: {
-    deleteChip (chip) {
-      this.tags.selected = this.tags.selected.filter(c => c !== chip)
-    },
-    dateSelector (elem) {
-      this.date.chips[elem] = !this.date.chips[elem]
-      if (elem === 'all') {
-        this.date.chips.all = true
-        this.date.chips.today = false
-        this.date.chips.week = false
-        this.date.range = []
-      } else if (elem === 'range') {
-        this.date.chips.today = false
-        this.date.chips.week = false
-        this.date.chips.all = false
-      } else {
-        this.date.chips.all = false
-        this.date.range = []
+    selectDefaultIfEmpty () {
+      if (!this.tags.selected.length) {
+        this.tags.selected = ['all']
       }
-      this.updateFilterList()
+    },
+    removeSelectedTag (chip) {
+      this.tags.selected = this.tags.selected.filter(c => c !== chip)
+      this.selectDefaultIfEmpty()
     },
     changeDirection (index) {
-      var item = this.sortBy.list[index]
-      if (item.direction === 'asc') {
-        item.direction = 'desc'
-      } else {
-        item.direction = (item.direction === 'desc') ? '' : 'asc'
+      switch (this.sortBy.list[index].direction) {
+        case 'desc':
+          this.applyNewDirection(index, 'asc')
+          break
+        case 'asc':
+          this.applyNewDirection(index, '')
+          break
+        default:
+          this.applyNewDirection(index, 'desc')
+          break
       }
     },
-    orderState (index) {
-      var item = this.sortBy.list[index]
-      item.order = this.sortBy.orderList[(this.sortBy.orderList.indexOf(item.order) + 1) % (this.sortBy.orderList).length]
-      // this.updateFilterList()
-      return item.order
+    applyNewDirection (index, newDirection) {
+      this.sortBy.list = this.sortBy.list.map((item) => ({ ...item, direction: '' }))
+      this.sortBy.list[index].direction = newDirection
+    },
+    sortByActivation (a, b) {
+      if (a === null || a === undefined) {
+        return false
+      } else {
+        return (a.type === b.type) && (b.direction !== '')
+      }
     },
     updateFilterList () {
-      // Set apply-value
-      this.date.apply = this.date.chips.all === false
-      this.tags.apply = ((this.tags.selected).length > 1 || ((this.tags.selected).length === 1 && this.tags.selected[0] !== 'all'))
-      this.filterBy.apply = (this.filterBy.selected).length > 0
-      this.sortBy.apply = (this.sortBy.selected).length > 0
-
-      var filterList = {
-        date: this.date,
-        filterBy: this.filterBy,
-        sortBy: this.sortBy,
-        tags: this.tags
-      }
-      this.$store.commit('setFilterList', filterList)
+      // Update list in store
+      // this.$store.commit('setFilterList', filterList)
     }
   },
   watch: {
