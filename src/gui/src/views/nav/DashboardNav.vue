@@ -1,232 +1,201 @@
 <template>
     <v-container class="pa-0">
-      <v-row>
-        <v-col class="pa-5 pb-3">
+      
+      <!-- search -->
+      <v-row class="my-5 mr-0 px-5">
 
-          <!-- search -->
-
-          <v-row class="pl-5 pr-5 pt-5">
-            <v-col>
-              <h4>search</h4>
-            </v-col>
-          </v-row>
-          <v-row class="pl-5 pr-5">
-            <v-col>
-              <v-text-field label="search" outlined dense append-icon="$awakeSearch"></v-text-field>
-            </v-col>
-          </v-row>
-
+        <v-col cols="12" class="pb-0">
+          <h4>search</h4>
         </v-col>
+
+        <v-col cols="12">
+          <v-text-field label="search" outlined dense hide-details append-icon="$awakeSearch"></v-text-field>
+        </v-col>
+
       </v-row>
 
-          <v-divider class="mt-0 mb-0"></v-divider>
+      <v-divider class="mt-0 mb-0"></v-divider>
 
-      <v-row>
-        <v-col class="pa-5 pb-3">
+      <!-- filter results -->
+      <v-row class="my-5 mr-0 px-5">
 
-          <!-- filter results -->
+        <v-col cols="12" class="py-0">
+          <h4>filter results</h4>
+        </v-col>
 
-          <v-row class="pl-5 pr-5 pt-4">
-            <v-col>
-              <h4>filter results</h4>
-            </v-col>
-          </v-row>
+        <!-- time tags -->
+        <v-col cols="12" class="pb-0">
+          <v-chip-group
+            v-model="date.selected"
+            active-class="selected"
+            class="date-filter-group d-flex"
+            @change="date.range=[]"
+          >
+            <v-chip label outlined dark value="all">all</v-chip>
+            <v-chip label outlined dark value="today">today</v-chip>
+            <v-chip label outlined dark value="week">this week</v-chip>
+          </v-chip-group>
+        </v-col>
 
-          <!-- time tags -->
-          <v-row class="pl-5 pr-5">
-            <v-col class="pb-0">
-              <v-chip-group
-                v-model="date.selected"
-                active-class="selected"
-                class="date-filter-group d-flex"
-                @change="date.range=[]"
-              >
-                <v-chip label outlined dark value="all">all</v-chip>
-                <v-chip label outlined dark value="today">today</v-chip>
-                <v-chip label outlined dark value="week">this week</v-chip>
-              </v-chip-group>
-            </v-col>
-          </v-row>
-
-          <!-- date picker -->
-          <v-row class="pl-5 pr-5 mt-2 mb-0">
-            <v-col>
-              <v-menu
-                ref="datePicker"
-                v-model="datePicker"
-                :close-on-content-click="false"
-                :return-value.sync="date"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field readonly outlined dense append-icon="mdi-calendar-range-outline"
-                    v-model="dateRangeText"
-                    v-bind="attrs"
-                    v-on="on"
-                    placeholder="Date range"
-                    hide-details
-                    :class="[{'text-field-active': (date.range).length,}]"
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="date.range"
-                  range
-                  no-title
-                  scrollable
-                  color="primary"
-                  @change="date.selected='range'"
-                >
-                  <v-spacer></v-spacer>
-                  <v-btn text outlined class="text-lowercase grey--text text--darken-2" @click="datePicker = false">
-                    Cancel
-                  </v-btn>
-                  <v-btn text outlined color="primary" @click="$refs.datePicker.save(date)">
-                    OK
-                  </v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-          </v-row>
-
-          <!-- tags -->
-          <v-row class="pl-5 pr-5 mt-1 mb-5">
-            <v-col>
-              <v-combobox
-              v-model="tags.selected"
-              :items="tagList"
-              label="tags"
-              multiple
-              outlined
-              dense
-              append-icon="mdi-chevron-down"
-              class="pl-0"
-              hide-details
-              deletable-chips
-              @change="selectDefaultIfEmpty"
+        <!-- date picker -->
+        <v-col cols="12">
+          <v-menu
+            ref="datePicker"
+            v-model="datePicker"
+            :close-on-content-click="false"
+            :return-value.sync="date"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field readonly outlined dense append-icon="mdi-calendar-range-outline"
+                v-model="dateRangeText"
+                v-bind="attrs"
+                v-on="on"
+                placeholder="Date range"
+                hide-details
+                :class="[{'text-field-active': (date.range).length,}]"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              v-model="date.range"
+              range
+              no-title
+              scrollable
+              color="primary"
+              @change="date.selected='range'"
             >
-              <template v-slot:selection="{ parent, item, index }">
-                <v-chip small v-if="index < 1 && !parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
-                close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
-                  <span>{{ item }}</span>
-                </v-chip>
-                <v-chip small v-else-if="parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
-                close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
-                  <span>{{ item }}</span>
-                </v-chip>
+              <v-spacer></v-spacer>
+              <v-btn text outlined class="text-lowercase grey--text text--darken-2" @click="datePicker = false">
+                Cancel
+              </v-btn>
+              <v-btn text outlined color="primary" @click="$refs.datePicker.save(date)">
+                OK
+              </v-btn>
+            </v-date-picker>
+          </v-menu>
+        </v-col>
 
-                <span
-                  v-if="index === 1 && !parent.isMenuActive"
-                  class="grey--text text-caption"
-                >
-                  (+{{ tags.selected.length - 1 }})
-                </span>
+        <!-- tags -->
+        <v-col cols="12">
+          <v-combobox
+          v-model="tags.selected"
+          :items="tagList"
+          label="tags"
+          multiple
+          outlined
+          dense
+          append-icon="mdi-chevron-down"
+          class="pl-0"
+          hide-details
+          deletable-chips
+          @change="selectDefaultIfEmpty"
+        >
+          <template v-slot:selection="{ parent, item, index }">
+            <v-chip small v-if="index < 1 && !parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
+            close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
+              <span>{{ item }}</span>
+            </v-chip>
+            <v-chip small v-else-if="parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
+            close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
+              <span>{{ item }}</span>
+            </v-chip>
+            <span
+              v-if="index === 1 && !parent.isMenuActive"
+              class="grey--text text-caption"
+            >
+              (+{{ tags.selected.length - 1 }})
+            </span>
+          </template>
+        </v-combobox>
+        </v-col>
+
+      </v-row>
+
+      <v-divider class="mt-0 mb-0"></v-divider>
+
+
+      <v-row class="my-5 mr-0 px-5">
+        <v-col cols="12" class="py-0">
+          <h4>only show</h4>
+        </v-col>
+
+        <v-col cols="12">
+          <v-list dense class="py-0">
+            <v-list-item-group
+              v-model="filterBy.selected"
+              active-class="selected"
+              multiple
+              class="filter-list"
+            >
+              <template v-for="item in filterBy.list">
+                <v-list-item :key="item.title" class="extra-dense" :ripple="false">
+                  <template v-slot:default="{ active }">
+
+                    <v-list-item-icon class="mr-2">
+                      <v-icon small color="grey" class="filter-icon mt-auto mb-auto">
+                        {{ item.icon }}
+                      </v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content class="py-1 mt-auto mb-auto">
+                      {{ item.label }}
+                    </v-list-item-content>
+
+                    <v-list-item-action>
+                      <v-icon v-if="active" small class="mt-auto mb-auto dark-grey--text text--lighten-3">
+                        mdi-check-bold
+                      </v-icon>
+                    </v-list-item-action>
+                  </template>
+                </v-list-item>
               </template>
-            </v-combobox>
-            </v-col>
-          </v-row>
-
+            </v-list-item-group>
+          </v-list>
         </v-col>
       </v-row>
 
-          <v-divider class="mt-0 mb-0"></v-divider>
+      <v-divider class="mt-2 mb-0"></v-divider>
 
-      <v-row>
-        <v-col class="pa-5 pb-3">
-
-          <v-row class="pl-5 pr-5 pt-4">
-            <v-col class="pb-0">
-              <h4>only show</h4>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col class="pb-5">
-              <v-list dense>
-                <v-list-item-group
-                  v-model="filterBy.selected"
-                  active-class="selected"
-                  multiple
-                  class="filter-list"
-                >
-                  <template v-for="item in filterBy.list">
-                    <v-list-item :key="item.title" class="extra-dense" :ripple="false">
-                      <template v-slot:default="{ active }">
-
-                        <v-list-item-icon class="mr-2">
-                          <v-icon small color="grey" class="filter-icon mt-auto mb-auto">
-                            {{ item.icon }}
-                          </v-icon>
-                        </v-list-item-icon>
-
-                        <v-list-item-content class="py-1 mt-auto mb-auto">
-                          {{ item.label }}
-                        </v-list-item-content>
-
-                        <v-list-item-action>
-                          <v-icon v-if="active" small class="mt-auto mb-auto dark-grey--text text--lighten-3">
-                            mdi-check-bold
-                          </v-icon>
-                        </v-list-item-action>
-                      </template>
-                    </v-list-item>
-                  </template>
-                </v-list-item-group>
-              </v-list>
-            </v-col>
-          </v-row>
-
+ 
+      <v-row class="my-5 mr-0 px-5">
+        <v-col cols="12" class="py-0">
+          <h4>sort by</h4>
         </v-col>
-      </v-row>
 
-          <v-divider class="mt-2 mb-0"></v-divider>
+        <v-col cols="12">
+          <v-list dense class="py-0">
+            <v-list-item-group
+              v-model="sortBy.selected"
+              active-class="selected"
+              class="filter-list"
+              :value-comparator="sortByActivation"
+            >
+              <template v-for="(item, index) in sortBy.list">
+                <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @mousedown="changeDirection(index)">
+                  <template v-slot:default={active}>
 
-      <v-row>
-        <v-col class="pa-5 pb-3">
+                    <v-list-item-icon class="mr-2">
+                      <v-icon small color="grey" class="filter-icon mt-auto mb-auto">
+                        {{ item.icon }}
+                      </v-icon>
+                    </v-list-item-icon>
 
-          <v-row class="pl-5 pr-5 pt-4">
-            <v-col class="pb-0">
-              <h4>sort by</h4>
-            </v-col>
-          </v-row>
+                    <v-list-item-content class="py-1 mt-auto mb-auto">
+                      {{ item.label }}
+                    </v-list-item-content>
 
-          <v-row>
-            <v-col class="pb-5">
-              <v-list dense>
-                <v-list-item-group
-                  v-model="sortBy.selected"
-                  active-class="selected"
-                  class="filter-list"
-                  :value-comparator="sortByActivation"
-                >
-                  <template v-for="(item, index) in sortBy.list">
-                    <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @mousedown="changeDirection(index)">
-                      <template v-slot:default={active}>
-
-                        <v-list-item-icon class="mr-2">
-                          <v-icon small color="grey" class="filter-icon mt-auto mb-auto">
-                            {{ item.icon }}
-                          </v-icon>
-                        </v-list-item-icon>
-
-                        <v-list-item-content class="py-1 mt-auto mb-auto">
-                          {{ item.label }}
-                        </v-list-item-content>
-
-                        <v-list-item-action>
-                          <v-icon v-if="item.direction != '' && active" :class="['mt-auto', 'mb-auto', 'dark-grey--text', 'text--lighten-3', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
-                            mdi-chevron-up
-                          </v-icon>
-                        </v-list-item-action>
-                      </template>
-                    </v-list-item>
+                    <v-list-item-action>
+                      <v-icon v-if="item.direction != '' && active" :class="['mt-auto', 'mb-auto', 'dark-grey--text', 'text--lighten-3', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
+                        mdi-chevron-up
+                      </v-icon>
+                    </v-list-item-action>
                   </template>
-                </v-list-item-group>
-              </v-list>
-            </v-col>
-          </v-row>
-
+                </v-list-item>
+              </template>
+            </v-list-item-group>
+          </v-list>
         </v-col>
       </v-row>
 
