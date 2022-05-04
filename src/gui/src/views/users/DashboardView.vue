@@ -3,6 +3,45 @@
     <template v-slot:panel> </template>
     <template v-slot:content>
 
+      <v-row class="d-flex align-stretch row--dense">
+        <v-col cols="1">
+          <v-btn block outlined color="primary">1</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">2</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">3</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">4</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">5</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">6</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">7</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">8</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">9</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">10</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">11</v-btn>
+        </v-col>
+        <v-col cols="1">
+          <v-btn block outlined color="primary">12</v-btn>
+        </v-col>
+      </v-row>
+
       <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense">
         <adaptive-cardsize
           v-for="(topic, index) in topicList"
