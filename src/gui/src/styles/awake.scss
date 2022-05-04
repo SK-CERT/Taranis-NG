@@ -1,46 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;700;900&family=Rubik:wght@300;400;500;700;900&display=swap');
-
-$app-bar-height: 48px;
-
-// Typography
-
-$body-font-family: 'Rubik', sans-serif !default;
-$title-font: 'Montserrat', sans-serif !default;
-
-body,
-html,
-.v-application {
-  font-family: $body-font-family !important;
-  font-size: 14px;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-h1.headline,
-h2.headline,
-h3.headline,
-h4.headline,
-h5.headline,
-h6.headline,
-.v-application .headline,
-.v-application .title,
-.v-application .subheading {
-  font-family: $title-font !important;
-}
-
-[class*='text-'],
-[class*='display-'],
-.text-caption,
-span.text-caption,
-.v-chip,
-.v-list-item__title {
-  font-family: $body-font-family, sans-serif !important;
-}
+@import "@/styles/variables.scss";
+@import '~vuetify/src/styles/main.sass';
 
 // Global
 .v-application {
@@ -59,6 +18,10 @@ span.text-caption,
   font-weight: 400 !important;
 }
 
+.v-btn {
+  letter-spacing: 0;
+}
+
 // Menu
 
 .main-menu-bar {
@@ -66,7 +29,6 @@ span.text-caption,
 }
 
 .v-btn span.main-menu-item {
-  font-family: $body-font-family, sans-serif !important;
   font-weight: 400;
   letter-spacing: 0;
 }
@@ -84,7 +46,6 @@ span.text-caption,
 
 .main-logo {
   display: flex;
-  // background-color: #7468E8;
   background-color: #d6d6d6;
   width: calc(300px - #{$app-bar-height});
   height: $app-bar-height;
@@ -108,7 +69,6 @@ span.text-caption,
 
 .v-application .sidebar {
   h4 {
-    font-family: $body-font-family, sans-serif !important;
     font-weight: 500;
     color: #575757;
     font-size: 1rem;
@@ -143,8 +103,8 @@ span.text-caption,
   min-height: 30px;
   margin-top: 0px;
   margin-bottom: 0px;
-  // margin-top: -10px;
-  // margin-bottom: -10px;
+  padding-left: 0px;
+  padding-right: 0px;
 }
 .v-list--dense .v-list-item.extra-dense .v-list-item__icon,
 .v-list-item--dense.extra-dense .v-list-item__icon {
@@ -207,7 +167,6 @@ span.text-caption,
 
 .v-application .v-card .last-activity {
   font-size: 0.65rem !important;
-  font-family: $body-font-family, sans-serif !important;
 }
 
 .v-application .v-card h2.headline {
@@ -218,7 +177,6 @@ span.text-caption,
   line-clamp: 2;
   -webkit-box-orient: vertical;
   height: calc(2rem * 2);
-  font-family: $title-font !important;
 }
 
 .v-application .v-card p.topic-excerpt {
@@ -252,7 +210,6 @@ span.text-caption,
 
 .v-application .tag-mini {
   min-width: 0px !important;
-  // padding: 0 6px !important;
   font-weight: 700 !important;
   background-color: #6daed9 !important;
   color: #fff;
@@ -281,7 +238,7 @@ span.text-caption,
 }
 
 .topics-grid {
-  transition: transform 0.6s ease;
+  transition: all 0.6s ease;
 }
 .topics-grid-move {
   transition: transform 0.6s ease;
@@ -344,7 +301,6 @@ span.text-caption,
 // Datepicker
 .v-menu__content.theme--light.v-menu__content--fixed.menuable__content__active,
 .v-picker__body.v-picker__body--no-title.theme--light {
-  font-family: $body-font-family, sans-serif !important;
 
   & .v-btn--rounded {
     border-radius: 2px;

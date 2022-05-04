@@ -1,13 +1,14 @@
 import Vue from 'vue'
 import Vuetify from 'vuetify'
-import 'vuetify/dist/vuetify.min.css'
 import { Scroll } from 'vuetify/lib/directives'
 import awakePinSvg from '@/assets/icons/pin.vue'
 import awakeSearchSvg from '@/assets/icons/search.vue'
 
+import '@/styles/awake.scss'
+
 Vue.use(Vuetify)
 
-const theme = {
+const colors = {
   primary: '#7468E8',
   secondary: '#34a5e8',
   accent: '#82B1FF',
@@ -33,28 +34,46 @@ const theme = {
   'awake-red-color': '#D18E8E'
 }
 
+const theme = {
+  themes: {
+    dark: colors,
+    light: colors
+  }
+}
+
+const breakpoint = {
+  thresholds: {
+    xs: 600,
+    sm: 976,
+    md: 1280,
+    lg: 2560,
+  },
+  scrollBarWidth: 16,
+}
+
+const icons = {
+  iconfont: 'mdi',
+  values: {
+    awakePin: {
+      component: awakePinSvg
+    },
+    awakeSearch: {
+      component: awakeSearchSvg
+    }
+  }
+}
+
+const directives = { Scroll }
+
+
+// Set vuetify
+
 const vuetify = new Vuetify(
   {
-    directives: {
-      Scroll
-    },
-    icons: {
-      iconfont: 'mdi',
-      values: {
-        awakePin: {
-          component: awakePinSvg
-        },
-        awakeSearch: {
-          component: awakeSearchSvg
-        }
-      }
-    },
-    theme: {
-      themes: {
-        dark: theme,
-        light: theme
-      }
-    }
+    directives: directives,
+    breakpoint: breakpoint,
+    icons: icons,
+    theme: theme
   })
 
 export default vuetify

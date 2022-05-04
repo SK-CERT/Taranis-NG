@@ -17,6 +17,8 @@ import CSButton from '../src/components/common/CSButton'
 import layout_config from './assets/layout_config'
 import vuetify from '@/plugins/vuetify'
 
+import '@/styles/awake.scss'
+
 const CSL = {
   install (Vue) {
     Vue.prototype.UI = layout_config
@@ -32,7 +34,6 @@ Vue.use(require('vue-cookies'))
 Vue.use(VueCookies)
 Vue.use(VueSSE)
 Vue.use(DatetimePicker)
-
 
 Vue.use(CKEditor)
 
@@ -56,8 +57,6 @@ if (localStorage.ACCESS_TOKEN) {
 }
 
 Vue.component('cs-button', CSButton)
-
-console.log(vuetify)
 
 export const vm = new Vue({
   router,

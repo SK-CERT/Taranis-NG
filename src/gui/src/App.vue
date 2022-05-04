@@ -112,4 +112,6 @@ export default {
 
 <style src="./assets/common.css"></style>
 <style src="./assets/centralize.css"></style>
-<style lang="scss" src="./assets/awake.scss"></style>
+<style lang="scss">
+  @import "@/styles/awake.scss";
+</style>
