@@ -69,7 +69,7 @@
       color="transparent"
       class="justify-end"
     >
-      <div v-for="button in buttons" :key="button.route">
+      <div v-for="button in getButtonList(permissions)" :key="button.route">
         <v-btn
           text
           plain
@@ -78,7 +78,6 @@
           color="main-text-color"
           :ripple="false"
           :to="button.route"
-          v-if="checkPermission(permissions[button.permission]) && button.show"
         >
           <span class="main-menu-item text-lowercase">{{
             $t(button.title)
@@ -106,7 +105,7 @@
         </v-btn>
       </template>
       <v-list>
-        <v-list-item v-for="button in buttons" :key="button.route">
+        <v-list-item v-for="button in getButtonList(permissions)" :key="button.route">
           <v-btn
             text
             plain
@@ -115,9 +114,6 @@
             color="main-text-color"
             :ripple="false"
             :to="button.route"
-            v-if="
-              checkPermission(permissions[button.permission]) && button.show
-            "
           >
             <span class="main-menu-item text-lowercase">{{
               $t(button.title)
@@ -210,6 +206,10 @@ export default {
 
     darkToggle () {
       this.$vuetify.theme.dark = this.darkTheme
+    },
+
+    getButtonList (permissions) {
+      return this.buttons.filter(button => this.checkPermission(permissions[button.permission]) && button.show)
     }
   },
   mounted () {
