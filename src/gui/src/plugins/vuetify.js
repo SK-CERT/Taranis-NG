@@ -4,8 +4,6 @@ import { Scroll } from 'vuetify/lib/directives'
 import awakePinSvg from '@/assets/icons/pin.vue'
 import awakeSearchSvg from '@/assets/icons/search.vue'
 
-import '@/styles/awake.scss'
-
 Vue.use(Vuetify)
 
 const colors = {
@@ -46,9 +44,9 @@ const breakpoint = {
     xs: 600,
     sm: 976,
     md: 1280,
-    lg: 2560,
+    lg: 2560
   },
-  scrollBarWidth: 16,
+  scrollBarWidth: 16
 }
 
 const icons = {
@@ -64,7 +62,6 @@ const icons = {
 }
 
 const directives = { Scroll }
-
 
 // Set vuetify
 

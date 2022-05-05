@@ -17,8 +17,6 @@ import CSButton from '../src/components/common/CSButton'
 import layout_config from './assets/layout_config'
 import vuetify from '@/plugins/vuetify'
 
-import '@/styles/awake.scss'
-
 const CSL = {
   install (Vue) {
     Vue.prototype.UI = layout_config
