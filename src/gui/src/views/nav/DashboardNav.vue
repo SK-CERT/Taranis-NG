@@ -1,6 +1,6 @@
 <template>
     <v-container class="pa-0">
-      
+
       <!-- search -->
       <v-row class="my-5 mr-0 px-5">
 
@@ -115,7 +115,6 @@
 
       <v-divider class="mt-0 mb-0"></v-divider>
 
-
       <v-row class="my-5 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>only show</h4>
@@ -158,7 +157,6 @@
 
       <v-divider class="mt-2 mb-0"></v-divider>
 
- 
       <v-row class="my-5 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>sort by</h4>
@@ -277,6 +275,8 @@ export default {
     selectDefaultIfEmpty () {
       if (!this.tags.selected.length) {
         this.tags.selected = ['all']
+      } else if (this.tags.selected !== ['all']) {
+        this.tags.selected = this.tags.selected.filter(item => item !== 'all')
       }
     },
     removeSelectedTag (chip) {
