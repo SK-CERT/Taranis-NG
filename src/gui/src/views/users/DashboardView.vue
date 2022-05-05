@@ -49,7 +49,7 @@
           :topic="topic"
           :position="index"
           :topicList="topicList"
-          @updatePinned="updateTopicList"
+          @updateTopicList="updateTopicList"
         ></adaptive-cardsize>
       </transition-group>
 
@@ -314,7 +314,7 @@ export default {
     var numberOfDummyTopics = 40
 
     for (var i = 1; i < numberOfDummyTopics; i++) {
-      var entry = { 
+      var entry = {
         id: i,
         title: faker.lorem.words((Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
         tags: faker.random.arrayElements(dummyTags, (Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
@@ -325,7 +325,8 @@ export default {
         summary: faker.lorem.paragraph(),
         items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
-        votes: { up: faker.commerce.price(70, 200, 0), down: faker.commerce.price(0, 70, 0) }
+        votes: { up: faker.commerce.price(70, 200, 0), down: faker.commerce.price(0, 70, 0) },
+        selected: false
       }
       this.topicList.push(entry)
     }
@@ -341,7 +342,6 @@ export default {
     )
 
     this.$store.subscribe((mutation, state) => {
-
       switch (mutation.type) {
         case 'applySortby':
           var sortBy = this.$store.getters.getSortBy

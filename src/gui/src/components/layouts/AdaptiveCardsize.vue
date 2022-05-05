@@ -17,7 +17,7 @@ export default {
     topic: {},
     topicList: []
   },
-  emits: ['updatePinned'],
+  emits: ['updateTopicList'],
   computed: {
     promValue () {
       if (this.$vuetify.breakpoint.xl) {
