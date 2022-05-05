@@ -4,9 +4,13 @@
     'pl-5',
     'align-self-stretch',
     'topic',
+    'primary--text',
     {
         'pinned-topic': topic.pinned,
-    }]">
+        'selected': topic.selected,
+    }]"
+    @click="selectCard"
+    >
         <div class="status-bar" v-if="topic.hot" :class="[
         {
             'hot-topic': topic.hot
@@ -27,7 +31,7 @@
                         </v-col>
 
                         <v-col cols="2" class="text-right">
-                            <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click="pinToTop">
+                            <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click.native.capture="pinToTop($event)">
                                 <v-icon>$awakePin</v-icon>
                             </v-btn>
                         </v-col>
@@ -91,7 +95,7 @@
                             </v-container>
                         </v-col>
                         <v-col cols="12" md="4" class="mx-0 d-flex justify-end">
-                            <v-btn outlined class="text-lowercase btn-view-topic mt-1">
+                            <v-btn outlined class="text-lowercase btn-view-topic mt-1" @click.native.capture="viewTopic($event)">
                                 <v-icon left>mdi-eye-outline</v-icon>
                                 view topic
                             </v-btn>
@@ -120,9 +124,14 @@ export default {
   },
   data: () => ({
   }),
-  emits: ['updatePinned'],
+  emits: ['updateTopicList'],
   methods: {
-    pinToTop: function () {
+    selectCard: function () {
+      this.topicList.find(x => x.id === this.topic.id).selected = !this.topic.selected;
+      this.$emit('updateTopicList', this.topicList)
+    },
+    pinToTop: function (event) {
+      event.stopPropagation()
       this.topic.pinned = !this.topic.pinned
       if (this.topic.pinned) {
         var first = this.topic.id
@@ -130,7 +139,11 @@ export default {
       } else {
         this.topicList.sort(function (x, y) { return x.pinned === true ? -1 : y.pinned === true ? 1 : 0 })
       }
-      this.$emit('updatePinned', this.topicList)
+      this.$emit('updateTopicList', this.topicList)
+    },
+    viewTopic: function (event) {
+        event.stopPropagation()
+        console.log('view Topics clicked')
     }
   }
 }
