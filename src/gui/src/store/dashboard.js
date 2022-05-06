@@ -1,4 +1,6 @@
-import { getDashboardData } from '@/api/dashboard'
+import { actions } from './topics/actions'
+import { getters } from './topics/getters'
+import { mutations } from './topics/mutations'
 
 const state = {
   dashboard_data: {
@@ -12,57 +14,11 @@ const state = {
   },
   filterList: {},
   filter: {},
-  sortBy: {}
-}
-
-const actions = {
-
-  getAllDashboardData (context) {
-    return getDashboardData()
-      .then(response => {
-        context.commit('setDashboardData', response.data)
-      })
+  sortBy: {},
+  topicList: {
+    original: [],
+    accumulated: []
   }
-}
-
-const mutations = {
-
-  setDashboardData (state, data) {
-    state.dashboard_data = data
-  },
-
-  setFilterList (state, data) {
-    state.filterList = data
-  },
-
-  applySortby (state, data) {
-    state.sortBy = data
-  },
-
-  applyFilter (state, data) {
-    state.filter = data
-  }
-
-}
-
-const getters = {
-
-  getDashboardData (state) {
-    return state.dashboard_data
-  },
-
-  getFilterList (state) {
-    return state.filterList
-  },
-
-  getSortBy (state) {
-    return state.sortBy
-  },
-
-  getFilter (state) {
-    return state.filter
-  }
-
 }
 
 export const dashboard = {

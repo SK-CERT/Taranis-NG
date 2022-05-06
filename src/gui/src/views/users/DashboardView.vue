@@ -3,53 +3,13 @@
     <template v-slot:panel> </template>
     <template v-slot:content>
 
-      <v-row class="d-flex align-stretch row--dense">
-        <v-col cols="1">
-          <v-btn block outlined color="primary">1</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">2</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">3</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">4</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">5</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">6</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">7</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">8</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">9</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">10</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">11</v-btn>
-        </v-col>
-        <v-col cols="1">
-          <v-btn block outlined color="primary">12</v-btn>
-        </v-col>
-      </v-row>
-
       <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense">
         <adaptive-cardsize
-          v-for="(topic, index) in topicList"
+          v-for="(topic, index) in accumulatedTopicList"
           :key="topic.id"
           :topic="topic"
           :position="index"
-          :topicList="topicList"
-          @updateTopicList="updateTopicList"
+          :topicList="accumulatedTopicList"
         ></adaptive-cardsize>
       </transition-group>
 
@@ -239,17 +199,24 @@ export default {
     tagCloud: [],
     labels: ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
     value: [200, 675, 410, 390, 310, 460, 250, 240],
-    topicList: [],
+    // topicList: [],
+    replacement: [],
     filterList: {}
   }),
   computed: {
     getData () {
       return this.$store.getters.getDashboardData
+    },
+    originalTopicList () {
+      return this.$store.getters.getOriginalTopicList
+    },
+    accumulatedTopicList () {
+      return this.$store.getters.getAccumulatedTopicList
     }
   },
   methods: {
     updateTopicList (newTopicList) {
-      this.topicList = newTopicList
+      this.replacement = newTopicList
     },
     applyFilters () {
       if (Object.keys(this.filterList).length !== 0) {
@@ -260,15 +227,24 @@ export default {
         }
       }
     },
-    sortByLastActivity (direction) {
-      this.topicList.sort((x, y) => {
+    sortByLastActivity (topicList, direction, sortByPinned = false) {
+      return [...topicList].sort((x, y) => {
+        // Define direction
         const firstElement = (direction === 'asc') ? x.lastActivity : y.lastActivity
         const secondElement = (direction === 'asc') ? y.lastActivity : x.lastActivity
-        return moment(firstElement, 'DD/MM/YYYY hh:mm:ss') - moment(secondElement, 'DD/MM/YYYY hh:mm:ss')
+
+        // Sort
+        if (sortByPinned && x.pinned && !y.pinned) {
+          return -1
+        } else if (sortByPinned && !x.pinned && y.pinned) {
+          return 1
+        } else {
+          return moment(firstElement, 'DD/MM/YYYY hh:mm:ss') - moment(secondElement, 'DD/MM/YYYY hh:mm:ss')
+        }
       })
     },
     sortByPinned () {
-      this.topicList.sort((x, y) => x.pinned === true ? -1 : y.pinned === true ? 1 : 0)
+      this.replacement.sort((x, y) => x.pinned === true ? -1 : y.pinned === true ? 1 : 0)
     },
     wordClickHandler (name, value, vm) {
       window.console.log('wordClickHandler', name, value, vm)
@@ -312,10 +288,12 @@ export default {
     ]
 
     var numberOfDummyTopics = 40
+    var dummyData = []
 
     for (var i = 1; i < numberOfDummyTopics; i++) {
       var entry = {
         id: i,
+        relevanceScore: faker.commerce.price(0, 100, 0),
         title: faker.lorem.words((Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
         tags: faker.random.arrayElements(dummyTags, (Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
         ai: Math.random() < 0.5,
@@ -328,11 +306,13 @@ export default {
         votes: { up: faker.commerce.price(70, 200, 0), down: faker.commerce.price(0, 70, 0) },
         selected: false
       }
-      this.topicList.push(entry)
+      dummyData.push(entry)
     }
 
-    this.sortByLastActivity('desc')
-    this.sortByPinned()
+    this.$store.commit('setOriginalTopicList', dummyData)
+    var sortedList = this.sortByLastActivity(dummyData, 'desc', true)
+    this.$store.commit('setOriginalTopicList', JSON.parse(JSON.stringify(sortedList)))
+    this.$store.commit('setAccumulatedTopicList', JSON.parse(JSON.stringify(sortedList)))
 
     setInterval(
       function () {
@@ -341,17 +321,24 @@ export default {
       600000
     )
 
-    this.$store.subscribe((mutation, state) => {
-      switch (mutation.type) {
-        case 'applySortby':
-          var sortBy = this.$store.getters.getSortBy
-          var direction = sortBy.direction
-          console.log(direction)
-          if (direction) {
-            this.sortByLastActivity(direction)
-          }
-      }
-    })
+    // this.$store.subscribe((mutation, state) => {
+    //   console.log(mutation.type)
+    //   switch (mutation.type) {
+    //     case 'applySortby':
+    //       var sortBy = this.$store.getters.getSortBy
+    //       var direction = sortBy.direction
+    //       // if (direction) {
+    //       //   this.sortByLastActivity(direction)
+    //       // }
+    //       break
+    //     // case 'setOriginalTopicList':
+    //     //   console.log('setOriginalTopicList')
+    //     //   break
+    //     // case 'setAccumulatedTopicList':
+    //     //   console.log('setAccumulatedTopicList')
+    //     //   break
+    //   }
+    // })
   }
 }
 </script>

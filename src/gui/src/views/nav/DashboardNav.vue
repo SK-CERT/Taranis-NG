@@ -2,7 +2,7 @@
     <v-container class="pa-0">
 
       <!-- search -->
-      <v-row class="my-5 mr-0 px-5">
+      <v-row class="my-4 mr-0 px-5">
 
         <v-col cols="12" class="pb-0">
           <h4>search</h4>
@@ -17,7 +17,7 @@
       <v-divider class="mt-0 mb-0"></v-divider>
 
       <!-- filter results -->
-      <v-row class="my-5 mr-0 px-5">
+      <v-row class="my-4 mr-0 px-5">
 
         <v-col cols="12" class="py-0">
           <h4>filter results</h4>
@@ -29,7 +29,7 @@
             v-model="date.selected"
             active-class="selected"
             class="date-filter-group d-flex"
-            @change="date.range=[]"
+            @change="date.range=[]; defaultDate($event)"
           >
             <v-chip label outlined dark value="all">all</v-chip>
             <v-chip label outlined dark value="today">today</v-chip>
@@ -47,6 +47,7 @@
             transition="scale-transition"
             offset-y
             min-width="auto"
+            @change="defaultDate($event)"
           >
             <template v-slot:activator="{ on, attrs }">
               <v-text-field readonly outlined dense append-icon="mdi-calendar-range-outline"
@@ -78,7 +79,7 @@
         </v-col>
 
         <!-- tags -->
-        <v-col cols="12">
+        <v-col cols="10" class="pr-0">
           <v-combobox
           v-model="tags.selected"
           :items="tagList"
@@ -90,7 +91,7 @@
           class="pl-0"
           hide-details
           deletable-chips
-          @change="selectDefaultIfEmpty"
+          @change="defaultTag"
         >
           <template v-slot:selection="{ parent, item, index }">
             <v-chip small v-if="index < 1 && !parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
@@ -109,18 +110,29 @@
             </span>
           </template>
         </v-combobox>
+
+        </v-col>
+        <v-col cols="2" class="pl-1 d-flex tags-logic-operator">
+          <v-btn outlined dark @click="tags.andOperator = !tags.andOperator" :class="['text-lowercase', 'px-0', {'selected': tags.andOperator}]">
+            <span v-if="tags.andOperator">
+              &
+            </span>
+            <span v-else>
+              or
+            </span>
+          </v-btn>
         </v-col>
 
       </v-row>
 
       <v-divider class="mt-0 mb-0"></v-divider>
 
-      <v-row class="my-5 mr-0 px-5">
+      <v-row class="my-4 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>only show</h4>
         </v-col>
 
-        <v-col cols="12">
+        <v-col cols="12" class="pt-2">
           <v-list dense class="py-0">
             <v-list-item-group
               v-model="filterBy.selected"
@@ -128,8 +140,8 @@
               multiple
               class="filter-list"
             >
-              <template v-for="item in filterBy.list">
-                <v-list-item :key="item.title" class="extra-dense" :ripple="false">
+              <template>
+                <v-list-item v-for="item in filterBy.list" :key="item.title" class="extra-dense" :ripple="false">
                   <template v-slot:default="{ active }">
 
                     <v-list-item-icon class="mr-2">
@@ -157,21 +169,22 @@
 
       <v-divider class="mt-2 mb-0"></v-divider>
 
-      <v-row class="my-5 mr-0 px-5">
+      <v-row class="my-4 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>sort by</h4>
         </v-col>
 
-        <v-col cols="12">
+        <v-col cols="12" class="pt-2">
           <v-list dense class="py-0">
             <v-list-item-group
               v-model="sortBy.selected"
               active-class="selected"
               class="filter-list"
-              :value-comparator="sortByActivation"
+              mandatory
             >
-              <template v-for="(item, index) in sortBy.list">
-                <v-list-item :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @mousedown="changeDirection(index)">
+              <!-- :value-comparator="sortByActivation" -->
+              <template>
+                <v-list-item v-for="(item, index) in sortBy.list" :key="item.title" class="extra-dense" :ripple="false" :value="{'type' : item.type, 'direction' : item.direction }" @click.native.capture="changeDirection($event, index)">
                   <template v-slot:default={active}>
 
                     <v-list-item-icon class="mr-2">
@@ -185,7 +198,7 @@
                     </v-list-item-content>
 
                     <v-list-item-action>
-                      <v-icon v-if="item.direction != '' && active" :class="['mt-auto', 'mb-auto', 'dark-grey--text', 'text--lighten-3', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
+                      <v-icon v-if="active" :class="['mt-auto', 'mb-auto', 'dark-grey--text', 'text--lighten-3', {'asc': item.direction === 'asc', 'desc': item.direction === 'desc',}]">
                         mdi-chevron-up
                       </v-icon>
                     </v-list-item-action>
@@ -194,6 +207,19 @@
               </template>
             </v-list-item-group>
           </v-list>
+        </v-col>
+      </v-row>
+
+      <v-divider class="mt-1 mb-0"></v-divider>
+
+      <v-row class="mt-1 mr-0 px-5">
+        <v-col cols="12" class="py-0">
+          <v-checkbox
+            v-model="sortBy.keepPinned"
+            dense
+            hide-details
+            label="Pinned always on top"
+          ></v-checkbox>
         </v-col>
       </v-row>
 
@@ -215,6 +241,7 @@ export default {
       selected: 'all'
     },
     tags: {
+      andOperator: true,
       selected: ['all']
     },
     filterBy: {
@@ -227,13 +254,14 @@ export default {
       ]
     },
     sortBy: {
-      selected: null,
+      keepPinned: true,
+      selected: { },
       list: [
         {
           label: 'relevance score',
           icon: 'mdi-star-outline',
           type: 'relevanceScore',
-          direction: ''
+          direction: 'desc'
         },
         {
           label: 'last activity',
@@ -272,7 +300,12 @@ export default {
     }
   },
   methods: {
-    selectDefaultIfEmpty () {
+    defaultDate (event) {
+      if (!this.date.selected) {
+        this.date.selected = 'all'
+      }
+    },
+    defaultTag () {
       if (!this.tags.selected.length) {
         this.tags.selected = ['all']
       } else if (this.tags.selected !== ['all']) {
@@ -281,31 +314,13 @@ export default {
     },
     removeSelectedTag (chip) {
       this.tags.selected = this.tags.selected.filter(c => c !== chip)
-      this.selectDefaultIfEmpty()
+      this.defaultTag()
     },
-    changeDirection (index) {
-      switch (this.sortBy.list[index].direction) {
-        case 'desc':
-          this.applyNewDirection(index, 'asc')
-          break
-        case 'asc':
-          this.applyNewDirection(index, '')
-          break
-        default:
-          this.applyNewDirection(index, 'desc')
-          break
-      }
-    },
-    applyNewDirection (index, newDirection) {
+    changeDirection (event, index) {
+      event.preventDefault()
+      var newDirection = (this.sortBy.list[index].direction === 'desc') ? 'asc' : 'desc'
       this.sortBy.list = this.sortBy.list.map((item) => ({ ...item, direction: '' }))
       this.sortBy.list[index].direction = newDirection
-    },
-    sortByActivation (a, b) {
-      if (a === null || a === undefined) {
-        return false
-      } else {
-        return (a.type === b.type) && (b.direction !== '')
-      }
     },
     updateFilterList () {
       // Update list in store
@@ -319,9 +334,9 @@ export default {
       },
       deep: true
     },
-    'sortBy.selected': {
+    'sortBy': {
       handler () {
-        this.$store.commit('applySortby', this.sortBy.selected)
+        this.$store.dispatch('sortTopics', this.sortBy)
       },
       deep: true
     },

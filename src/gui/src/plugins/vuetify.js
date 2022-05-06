@@ -26,7 +26,6 @@ const colors = {
   'cx-favorites': '#ff9d48',
   'cx-filter': '#9f02ff',
   'cx-wordlist': '#FFC107',
-  'main-text-color': '#575757',
   'dark-grey': '#575757',
   'awake-green-color': '#77BB70',
   'awake-red-color': '#D18E8E'

@@ -26,8 +26,8 @@
                     <v-row class="flex-grow-0">
                         <v-col cols="10" class="mr-auto mt-1">
                             <tag-mini label="AI" v-show="topic.ai" />
-                            <span class="last-activity font-weight-light main-text-color--text">Last activity: </span>
-                            <span class="last-activity font-weight-bold main-text-color--text"> {{ topic.lastActivity }} </span>
+                            <span class="last-activity font-weight-light dark-grey--text">Last activity: </span>
+                            <span class="last-activity font-weight-bold dark-grey--text"> {{ topic.lastActivity }} </span>
                         </v-col>
 
                         <v-col cols="2" class="text-right">
@@ -41,7 +41,7 @@
 
                     <v-row class="flex-grow-0 mt-1">
                         <v-col>
-                            <h2 class="font-weight-bold headline main-text-color--text text-capitalize">
+                            <h2 class="font-weight-bold headline dark-grey--text text-capitalize">
                                 {{ topic.title }}
                             </h2>
                         </v-col>
@@ -61,7 +61,7 @@
 
                     <v-row class="flex-grow-0 mt-2">
                         <v-col>
-                            <p class="font-weight-light main-text-color--text topic-excerpt">
+                            <p class="font-weight-light dark-grey--text topic-excerpt">
                                 {{ topic.summary }}
                             </p>
                         </v-col>
@@ -75,21 +75,21 @@
                                 <v-row class="mx-0">
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small>mdi-file-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.items.total }} /</span>
-                                        <span class="text-caption font-weight-bold main-text-color--text">{{ topic.items.new }}</span>
+                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.items.total }} /</span>
+                                        <span class="text-caption font-weight-bold dark-grey--text">{{ topic.items.new }}</span>
                                     </v-col>
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small color="awake-green-color">mdi-arrow-up-circle-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.votes.up }}</span>
+                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.votes.up }}</span>
                                     </v-col>
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small>mdi-message-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.comments.total }} /</span>
-                                        <span class="text-caption font-weight-bold main-text-color--text">{{ topic.comments.new }}</span>
+                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.comments.total }} /</span>
+                                        <span class="text-caption font-weight-bold dark-grey--text">{{ topic.comments.new }}</span>
                                     </v-col>
                                     <v-col cols="6" class="pa-0 pt-0 pr-1">
                                         <v-icon left small color="awake-red-color">mdi-arrow-down-circle-outline</v-icon>
-                                        <span class="text-caption font-weight-light main-text-color--text">{{ topic.votes.down }}</span>
+                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.votes.down }}</span>
                                     </v-col>
                                 </v-row>
                             </v-container>
@@ -119,31 +119,23 @@ export default {
     TagTopic
   },
   props: {
-    topic: {},
-    topicList: []
+    topic: {}
   },
   data: () => ({
   }),
-  emits: ['updateTopicList'],
+  computed: {
+  },
   methods: {
     selectCard: function () {
-      this.topicList.find(x => x.id === this.topic.id).selected = !this.topic.selected;
-      this.$emit('updateTopicList', this.topicList)
+      this.$store.dispatch('selectTopic', this.topic.id)
     },
     pinToTop: function (event) {
       event.stopPropagation()
-      this.topic.pinned = !this.topic.pinned
-      if (this.topic.pinned) {
-        var first = this.topic.id
-        this.topicList.sort(function (x, y) { return x.id === first ? -1 : y.id === first ? 1 : 0 })
-      } else {
-        this.topicList.sort(function (x, y) { return x.pinned === true ? -1 : y.pinned === true ? 1 : 0 })
-      }
-      this.$emit('updateTopicList', this.topicList)
+      this.$store.dispatch('pinTopic', this.topic.id)
     },
     viewTopic: function (event) {
-        event.stopPropagation()
-        console.log('view Topics clicked')
+      event.stopPropagation()
+      console.log('view Topics clicked')
     }
   }
 }
