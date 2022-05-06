@@ -75,7 +75,7 @@
           plain
           tile
           route
-          color="main-text-color"
+          color="dark-grey"
           :ripple="false"
           :to="button.route"
         >
@@ -111,7 +111,7 @@
             plain
             tile
             route
-            color="main-text-color"
+            color="dark-grey"
             :ripple="false"
             :to="button.route"
           >

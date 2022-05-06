@@ -13,10 +13,11 @@
 }
 .v-list--dense .v-list-item .v-list-item__title {
   font-weight: 400 !important;
+  color: $dark-grey;
 }
 
 .v-btn {
-  letter-spacing: 0;
+  letter-spacing: normal;
 }
 
 // Menu
@@ -27,11 +28,11 @@
 
 .v-btn span.main-menu-item {
   font-weight: 400;
-  letter-spacing: 0;
+  letter-spacing: normal;
 }
 
 .v-btn.v-btn--active span.main-menu-item {
-  color: #7468e8;
+  color: $primary;
   font-weight: 500;
 }
 
@@ -51,7 +52,7 @@
 
   & svg {
     align-self: center;
-    fill: #fff;
+    fill: white;
   }
 }
 
@@ -67,12 +68,12 @@
 .v-application .sidebar {
   h4 {
     font-weight: 500;
-    color: #575757;
+    color: $dark-grey;
     font-size: 1rem;
   }
 
   input {
-    color: #575757 !important;
+    color: $dark-grey !important;
   }
 }
 
@@ -84,15 +85,15 @@
 }
 
 .v-list .v-icon.filter-icon {
-  color: #c9c9c9 !important;
+  color: $light-grey-1 !important;
   & svg {
-    fill: #c9c9c9 !important;
+    fill: $light-grey-1 !important;
   }
 }
 .v-list .v-list-item--active.selected .v-icon.filter-icon {
-  color: #7468e8 !important;
+  color: $primary !important;
   & svg {
-    fill: #7468e8 !important;
+    fill: $primary !important;
   }
 }
 
@@ -119,7 +120,7 @@
   background: none;
 }
 .text-field-active fieldset {
-  border: 2px solid #7468e8 !important;
+  border: 2px solid $primary !important;
 }
 .v-select__selections {
   overflow-x: hidden;
@@ -132,7 +133,7 @@
 .v-select__selections .v-chip {
   overflow: initial;
   flex-shrink: 0;
-  background-color: #c9c9c9;
+  background-color: $light-grey-1;
 }
 
 // Topic Cards
@@ -142,18 +143,18 @@
   height: 28px !important;
 
   &.pinned {
-    background-color: #7468e8;
-    border-color: #7468e8;
-    fill: #ffffff;
+    background-color: $primary;
+    border-color: $primary;
+    fill: white;
   }
 }
 
 .v-btn.btn-view-topic {
-  letter-spacing: 0;
+  letter-spacing: normal;
   font-weight: 400;
-  caret-color: #c8c8c8;
-  border-color: #c8c8c8;
-  color: #575757 !important;
+  caret-color: $light-grey-2;
+  border-color: $light-grey-2;
+  color: $dark-grey !important;
   padding: 16px 12px !important;
 }
 
@@ -187,19 +188,19 @@
 }
 
 // .v-application .v-card.pinned-topic {
-//   border: 3px solid #7468e8;
+//   border: 3px solid $primary;
 //   padding: 18px !important;
 // }
 
 .v-application .v-card {
   transition: all 0.4s;
-  border: 3px solid #fff;
-  background-color: #fff;
+  border: 3px solid white;
+  background-color: white;
   padding: 18px !important;
 }
 .v-application .v-card.selected {
-  border: 3px solid #7468e8;
-  background-color: #f4f3fb;
+  border: 3px solid $primary;
+  background-color: $topic-selected-bg;
   padding: 18px !important;
 }
 .v-application .v-card--link:before {
@@ -215,7 +216,7 @@
   display: block;
 }
 .status-bar.hot-topic {
-  background-color: #dbe868;
+  background-color: $topic-hot;
 }
 
 // Tags
@@ -223,8 +224,8 @@
 .v-application .tag-mini {
   min-width: 0px !important;
   font-weight: 700 !important;
-  background-color: #6daed9 !important;
-  color: #fff;
+  background-color: $accent !important;
+  color: white;
 }
 
 // Form fields
@@ -233,12 +234,12 @@
 .v-application input::placeholder,
 .v-application .v-label {
   font-size: 0.875rem;
-  color: #c8c8c8 !important;
+  color: $light-grey-2 !important;
   font-weight: 400;
 }
 
 .v-application .v-input__icon svg {
-  fill: #575757 !important;
+  fill: $dark-grey !important;
 }
 
 .v-application
@@ -246,7 +247,7 @@
   > .v-input__control
   > .v-input__slot
   fieldset {
-  border-color: #c8c8c8;
+  border-color: $light-grey-2;
 }
 
 .topics-grid {
@@ -285,13 +286,14 @@
 }
 
 .v-application .sidebar .filter-btn,
-.date-filter-group .v-slide-group__content .v-chip {
+.date-filter-group .v-slide-group__content .v-chip,
+.tags-logic-operator .v-btn {
   min-width: 10px !important;
-  letter-spacing: 0;
+  letter-spacing: normal;
   font-weight: 400;
-  caret-color: #c8c8c8;
-  border-color: #c8c8c8;
-  color: #575757 !important;
+  caret-color: $light-grey-2;
+  border-color: $light-grey-2;
+  color: $dark-grey !important;
   flex-grow: 1 !important;
   padding: 19px 10px;
   margin: 0;
@@ -300,15 +302,21 @@
   &.clicked,
   &.selected,
   &.v-chip--outlined.selected {
-    background-color: #7468e8 !important;
-    border-color: #7468e8;
-    fill: #ffffff;
+    background-color: $primary !important;
+    border-color: $primary;
+    fill: white;
 
     & span {
-      color: #ffffff;
+      color: white;
     }
   }
 }
+
+.tags-logic-operator .v-btn.v-btn--outlined {
+  height: 100%;
+  font-size: 14px;
+}
+
 
 // Datepicker
 .v-menu__content.theme--light.v-menu__content--fixed.menuable__content__active,
@@ -321,6 +329,28 @@
   }
 
   & .v-picker__actions .v-btn__content {
-    letter-spacing: 0;
+    letter-spacing: normal;
   }
+}
+
+.v-application .v-label {
+  color: $dark-grey !important;
+  font-size: 14px;
+}
+
+.v-list--dense .v-list-item .v-list-item__title {
+  font-size: 0.9rem;
+}
+
+.v-list--dense .v-list-item .v-list-item__action {
+  margin: 6px 16px 4px 0;
+}
+
+.v-list--dense .v-list-item .v-list-item__action .v-icon {
+  font-size: 18px;
+}
+
+.v-input--checkbox .v-icon {
+  font-size: 18px;
+  margin-left: -4px;
 }
