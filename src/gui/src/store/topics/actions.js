@@ -23,4 +23,10 @@ export const actions = {
     context.commit('sortTopics')
   },
 
+  filterTopics (context, data) {
+    context.commit('applyFilter', data)
+    context.commit('filterTopics')
+    context.commit('sortTopics')
+  },
+
 }

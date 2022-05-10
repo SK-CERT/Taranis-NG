@@ -1,95 +1,147 @@
-
-import moment from 'moment'
+import moment from "moment";
 
 export const mutations = {
+  togglePin(state, id) {
+    var index = state.topicList.accumulated.findIndex((x) => x.id === id);
+    state.topicList.accumulated[index].pinned =
+      !state.topicList.accumulated[index].pinned;
+    var index = state.topicList.original.findIndex((x) => x.id === id);
+    state.topicList.original[index].pinned =
+      !state.topicList.original[index].pinned;
+  },
 
-    togglePin(state, id) {
-        var index = state.topicList.accumulated.findIndex(x => x.id === id)
-        state.topicList.accumulated[index].pinned = !state.topicList.accumulated[index].pinned
-    },
+  toggleSelect(state, id) {
+    var index = state.topicList.accumulated.findIndex((x) => x.id === id);
+    state.topicList.accumulated[index].selected =
+      !state.topicList.accumulated[index].selected;
+  },
 
-    toggleSelect(state, id) {
-        var index = state.topicList.accumulated.findIndex(x => x.id === id)
-        state.topicList.accumulated[index].selected = !state.topicList.accumulated[index].selected
-    },
+  sortTopics(state) {
+    var type = state.sortBy.selected.type;
+    var direction = state.sortBy.selected.direction;
+    var keepPinned = state.sortBy.keepPinned;
 
+    state.topicList.accumulated.sort((x, y) => {
+      // Get properties
+      var elements = getElements(type, x, y);
 
-    sortTopics(state) {
+      // Set direction
+      elements = direction === "asc" ? elements : [elements[1], elements[0]];
 
-        var type = state.sortBy.selected.type
-        var direction = state.sortBy.selected.direction
-        var keepPinned = state.sortBy.keepPinned
+      // Apply pinned sorting
+      if (keepPinned) {
+        if (x.pinned && !y.pinned) return -1;
+        if (!x.pinned && y.pinned) return 1;
+      }
 
-        state.topicList.accumulated.sort((x, y) => {
+      // Apply property sorting
+      return propertySorting(type, elements);
+    });
+  },
 
-            // Get properties
-            var elements = getElements(type, x, y)
+  // Setters
+  setDashboardData(state, data) {
+    state.dashboard_data = data;
+  },
 
-            // Set direction
-            elements = (direction === 'asc') ? elements : [elements[1], elements[0]]
+  applySortby(state, data) {
+    state.sortBy = data;
+  },
 
-            // Apply pinned sorting
-            if (keepPinned) {
-                if (x.pinned && !y.pinned) return -1
-                if (!x.pinned && y.pinned) return 1
-            } 
+  setTopicList(state, { selector, data }) {
+    state.topicList[selector] = data;
+  },
 
-            // Apply property sorting
-            return propertySorting(type, elements)
-        })
-    },
+  setFilterList(state, data) {
+    state.filterList = data;
+  },
 
-    // Setters
-    setDashboardData(state, data) {
-        state.dashboard_data = data
-    },
+  setOriginalTopicList(state, data) {
+    state.topicList.original = data;
+  },
 
-    applySortby(state, data) {
-        state.sortBy = data
-    },
+  setAccumulatedTopicList(state, data) {
+    state.topicList.accumulated = data;
+  },
 
-    setTopicList(state, { selector, data }) {
-        state.topicList[selector] = data
-    },
+  applyFilter(state, data) {
+    state.filter = data;
+  },
 
-    setFilterList(state, data) {
-        state.filterList = data
-    },
+  filterTopics(state) {
+    var filterIndices = state.filter.selected
 
-    setOriginalTopicList(state, data) {
-        state.topicList.original = data
-    },
+    state.topicList.accumulated = JSON.parse(JSON.stringify(state.topicList.original))
 
-    setAccumulatedTopicList(state, data) {
-        state.topicList.accumulated = data
-    },
+    filterIndices.forEach( (index) => {
+        let filter = state.filter.list[index].label
+        switch (filter) {
+            case "active topics":
+              state.topicList.accumulated = state.topicList.accumulated.filter((item) => parseInt(item.comments.new) > 0 )
+              break
+            case "pinned topics":
+              state.topicList.accumulated = state.topicList.accumulated.filter((item) => item.pinned)
+              break
+            case "hot topics":
+              state.topicList.accumulated = state.topicList.accumulated.filter((item) => item.hot)
+              break
+            case "upvoted topics":
+              state.topicList.accumulated = state.topicList.accumulated.filter((item) => parseInt(item.votes.up) > parseInt(item.votes.down))
+              break
+            default:
+              state.topicList.accumulated = state.topicList.accumulated.filter((item) => true)
+              break
+          }
+    
 
-    applyFilter(state, data) {
-        state.filter = data
-    }
+    })
 
-}
+    // var type = state.sortBy.selected.type;
+    // var direction = state.sortBy.selected.direction;
+    // var keepPinned = state.sortBy.keepPinned;
+
+    // state.topicList.accumulated.sort((x, y) => {
+    //   // Get properties
+    //   var elements = getElements(type, x, y);
+
+    //   // Set direction
+    //   elements = direction === "asc" ? elements : [elements[1], elements[0]];
+
+    //   // Apply pinned sorting
+    //   if (keepPinned) {
+    //     if (x.pinned && !y.pinned) return -1;
+    //     if (!x.pinned && y.pinned) return 1;
+    //   }
+
+    //   // Apply property sorting
+    //   return propertySorting(type, elements);
+    // });
+  },
+};
 
 function getElements(type, x, y) {
-    switch(type) {
-        case 'relevanceScore':
-            return [x.relevanceScore, y.relevanceScore]
-        case 'lastActivity':
-            return [x.lastActivity, y.lastActivity]
-        case 'newItems':
-            return [x.items.new, y.items.new]
-        case 'newComments':
-            return [x.comments.new, y.comments.new]
-        case 'upvotes':
-            return [x.votes.up, y.votes.up]
-    }
+  switch (type) {
+    case "relevanceScore":
+      return [x.relevanceScore, y.relevanceScore];
+    case "lastActivity":
+      return [x.lastActivity, y.lastActivity];
+    case "newItems":
+      return [x.items.new, y.items.new];
+    case "newComments":
+      return [x.comments.new, y.comments.new];
+    case "upvotes":
+      return [x.votes.up, y.votes.up];
+  }
 }
 
 function propertySorting(type, elements) {
-    if (elements[0] === elements[1]) return 0 
-    if (type === 'lastActivity') {
-        return moment(elements[0], 'DD/MM/YYYY hh:mm:ss') - moment(elements[1], 'DD/MM/YYYY hh:mm:ss')
-    } else {
-        return (parseInt(elements[0]) < parseInt(elements[1])) ? -1 : 1
-    }
+  if (elements[0] === elements[1]) return 0;
+  if (type === "lastActivity") {
+    return (
+      moment(elements[0], "DD/MM/YYYY hh:mm:ss") -
+      moment(elements[1], "DD/MM/YYYY hh:mm:ss")
+    );
+  } else {
+    return parseInt(elements[0]) < parseInt(elements[1]) ? -1 : 1;
+  }
 }
