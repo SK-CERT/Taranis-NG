@@ -141,7 +141,7 @@
               class="filter-list"
             >
               <template>
-                <v-list-item v-for="item in filterBy.list" :key="item.title" class="extra-dense" :ripple="false">
+                <v-list-item v-for="item in filterBy.list" :key="item.label" class="extra-dense" :ripple="false">
                   <template v-slot:default="{ active }">
 
                     <v-list-item-icon class="mr-2">
@@ -328,9 +328,10 @@ export default {
     }
   },
   watch: {
-    'filterBy.selected': {
+    'filterBy': {
       handler () {
-        this.updateFilterList()
+        this.$store.dispatch('filterTopics', this.filterBy)
+        // this.updateFilterList()
       },
       deep: true
     },

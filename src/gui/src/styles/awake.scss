@@ -250,29 +250,40 @@
   border-color: $light-grey-2;
 }
 
-.topics-grid {
-  transition: all 0.6s ease;
+.topics-grid-container {
+  position: relative;
 }
+
 .topics-grid-move {
-  transition: transform 0.6s ease;
+  transition: all 0.4s ease;
+  z-index: 10000;
 }
-.topics-grid-enter-from,
-.topics-grid-leave-to {
+
+.topics-grid-enter {
   opacity: 0;
-  transition: scale(0.6);
+  z-index: 10000;
 }
-.topics-grid-enter-to,
-.topics-grid-leave-from {
+.topics-grid-enter-to {
   opacity: 1;
-  transition: scale(1);
+  z-index: 10000;
 }
-.topics-grid-enter-active,
-.topics-grid-leave-active {
-  transition: opacity 0.5s;
+.topics-grid-enter-active {
+  transition: all 0.4s ease;
+  z-index: 10000;
 }
-.topics-grid-enter,
+
+.topics-grid-leave {
+  opacity: 1;
+  z-index: -1;
+}
 .topics-grid-leave-to {
   opacity: 0;
+  z-index: -1;
+}
+.topics-grid-leave-active {
+  transition: all 0.4s ease;
+  position: absolute;
+  z-index: 0;
 }
 
 .date-filter-group,
@@ -317,11 +328,9 @@
   font-size: 14px;
 }
 
-
 // Datepicker
 .v-menu__content.theme--light.v-menu__content--fixed.menuable__content__active,
 .v-picker__body.v-picker__body--no-title.theme--light {
-
   & .v-btn--rounded {
     border-radius: 2px;
     display: block;

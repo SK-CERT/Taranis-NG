@@ -3,13 +3,12 @@
     <template v-slot:panel> </template>
     <template v-slot:content>
 
-      <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense">
+      <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense topics-grid-container" appear>
         <adaptive-cardsize
           v-for="(topic, index) in accumulatedTopicList"
           :key="topic.id"
           :topic="topic"
           :position="index"
-          :topicList="accumulatedTopicList"
         ></adaptive-cardsize>
       </transition-group>
 
@@ -303,7 +302,7 @@ export default {
         summary: faker.lorem.paragraph(),
         items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
-        votes: { up: faker.commerce.price(70, 200, 0), down: faker.commerce.price(0, 70, 0) },
+        votes: { up: faker.commerce.price(0, 150, 0), down: faker.commerce.price(0, 250, 0) },
         selected: false
       }
       dummyData.push(entry)
