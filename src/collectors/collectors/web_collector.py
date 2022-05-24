@@ -401,7 +401,6 @@ class WebCollector(BaseCollector):
             profile.set_preference('network.proxy.type', 1) # manual proxy config
             profile.set_preference('network.proxy.socks', '127.0.0.1')
             profile.set_preference('network.proxy.socks_port', 9050)
-            # TODO: fix to include the proper url for core api
             profile.set_preference('network.proxy.no_proxies_on', f'localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8');
 
         elif self.proxy:
@@ -412,7 +411,6 @@ class WebCollector(BaseCollector):
             profile.set_preference('network.proxy.ssl_port', int(self.proxy_port))
             profile.set_preference('network.proxy.ftp', self.proxy)
             profile.set_preference('network.proxy.ftp_port', int(self.proxy_port))
-            # TODO: fix to include the proper url for core api
             profile.set_preference('network.proxy.no_proxies_on', f'localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8');
         else:
             profile.set_preference('network.proxy.type', 0) # no proxy
