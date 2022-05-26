@@ -12,7 +12,7 @@ const state = {
     latest_collected: '',
     tag_cloud: {}
   },
-  filterList: {},
+  filterTags: [],
   filter: {},
   sortBy: {},
   topicList: {

@@ -25,8 +25,18 @@ export const actions = {
 
   filterTopics (context, data) {
     context.commit('applyFilter', data)
+    context.commit('resetList')
     context.commit('filterTopics')
+    context.commit('filterTopicsByTags')
     context.commit('sortTopics')
   },
+
+  filterTopicsByTags (context, data) {
+    context.commit('applyTagsFilter', data)
+    context.commit('resetList')
+    context.commit('filterTopics')
+    context.commit('filterTopicsByTags')
+    context.commit('sortTopics')
+  }
 
 }
