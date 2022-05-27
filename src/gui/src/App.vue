@@ -28,7 +28,7 @@ export default {
     Notification
   },
   data: () => ({
-    visible: null,
+    visible: null
   }),
   mixins: [AuthMixin],
   methods: {

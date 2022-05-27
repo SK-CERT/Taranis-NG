@@ -395,7 +395,6 @@ export default {
     filterBy: {
       handler () {
         this.$store.dispatch('filterTopics', this.filterBy)
-        // this.updateFilterList()
       },
       deep: true
     },

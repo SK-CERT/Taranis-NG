@@ -1,6 +1,6 @@
 <template>
-    <v-chip  
-        label 
+    <v-chip
+        label
         x-small dark left
         class="mr-1 px-1 text-caption text-weight-bold text-uppercase tag-mini">
         {{ label }}
