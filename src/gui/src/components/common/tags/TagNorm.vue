@@ -12,7 +12,7 @@
 
 <script>
 export default {
-  name: 'TagTopic',
+  name: 'TagNorm',
   props: {
     tag: {}
   },
