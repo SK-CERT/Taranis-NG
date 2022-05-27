@@ -1,5 +1,4 @@
 <template>
-
     <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense topics-grid-container" appear>
         <card-news-item
           v-for="(newsItem, index) in filteredNewsItems"
@@ -42,6 +41,8 @@ import NewsItemAggregateDetail from '@/components/assess/NewsItemAggregateDetail
 
 import CardNewsItem from '@/components/common/card/CardNewsItem'
 
+import { mapState } from 'vuex';
+
 import { faker } from '@faker-js/faker'
 import moment from 'moment'
 
@@ -74,7 +75,13 @@ export default {
       in_analyze: false,
       sort: 'DATE_DESC'
     },
-    aggregate_open: []
+    aggregate_open: [],
+    filterAttributeOptions: [
+      { label: 'unread', icon: '$awakeUnread' },
+      { label: 'tagged as important', icon: '$awakeImportant' },
+      { label: 'recommended', icon: 'mdi-star-outline' },
+      { label: 'items in analysis', icon: '$awakeReport' }
+    ]
   }),
   methods: {
     cardLayout: function () {
@@ -216,11 +223,19 @@ export default {
   },
 
   computed: {
+    
+    ...mapState('newsItemsFilter', [
+        'filter',
+        'order'
+    ]),
+
     filteredNewsItems () {
       // apply filters here
       // var filteredData = this.news_items_data.filter((newsItem) => {
       //   return newsItem.votes.up > 100
       // })
+      var filterAttributes = this.$store.getters.getFilterAttributes
+
       var filteredData = [...this.news_items_data].sort((x, y) => {
         return this.propertySorting('publishedDate', [x.published, y.published])
       })

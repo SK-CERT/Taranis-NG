@@ -210,13 +210,13 @@
         <v-col cols="12" class="pt-2">
           <v-list dense class="py-0">
             <v-list-item-group
-              v-model="filterBy.selected"
+              v-model="filter.attributes"
               active-class="selected"
               multiple
               class="filter-list"
             >
               <template>
-                <v-list-item v-for="item in filterBy.list" :key="item.label" class="extra-dense" :ripple="false">
+                <v-list-item v-for="item in filterAttributeOptions" :key="item.label" class="extra-dense" :ripple="false">
                   <template v-slot:default="{ active }">
 
                     <v-list-item-icon class="mr-2">
@@ -290,10 +290,11 @@
 
 <script>
 
-export default {
-  name: 'DashboardNav',
-  components: {
+import { mapState } from 'vuex';
 
+export default {
+  name: 'AssessNav',
+  components: {
   },
   data: () => ({
     links: [],
@@ -312,15 +313,24 @@ export default {
     sources: {
       selected: ['all']
     },
-    filterBy: {
-      selected: [],
-      list: [
-        { label: 'unread', icon: '$awakeUnread' },
-        { label: 'tagged as important', icon: '$awakeImportant' },
-        { label: 'recommended', icon: 'mdi-star-outline' },
-        { label: 'items in analysis', icon: '$awakeReport' }
-      ]
-    },
+    // filter: {
+    //   attribute: [],
+    // },
+    filterAttributeOptions: [
+      { label: 'unread', icon: '$awakeUnread' },
+      { label: 'tagged as important', icon: '$awakeImportant' },
+      { label: 'recommended', icon: 'mdi-star-outline' },
+      { label: 'items in analysis', icon: '$awakeReport' }
+    ],
+    // filterBy: {
+    //   selected: [],
+    //   list: [
+    //     { label: 'unread', icon: '$awakeUnread' },
+    //     { label: 'tagged as important', icon: '$awakeImportant' },
+    //     { label: 'recommended', icon: 'mdi-star-outline' },
+    //     { label: 'items in analysis', icon: '$awakeReport' }
+    //   ]
+    // },
     sortBy: {
       selected: { },
       list: [
@@ -348,7 +358,19 @@ export default {
     },
     getData () {
       return this.$store.getters.getDashboardData
-    }
+    },
+    
+    ...mapState('newsItemsFilter', [
+        'filter',
+        'order'
+    ])
+    // get () {
+    //   return this.$store.getters.getNewsItemsFilterAttribute
+    // },
+    // set (value) {
+    //   this.$store.dispatch('updateNewsItemsFilterAttribute', value)
+    // }
+    
   },
   methods: {
     defaultDate (event) {
@@ -401,25 +423,31 @@ export default {
     }
   },
   watch: {
-    filterBy: {
-      handler () {
-        this.$store.dispatch('filterTopics', this.filterBy)
-        // this.updateFilterList()
-      },
-      deep: true
-    },
-    sortBy: {
-      handler () {
-        this.$store.dispatch('sortTopics', this.sortBy)
-      },
-      deep: true
-    },
-    'tags.selected': {
-      handler () {
-        this.updateFilterList()
-      },
-      deep: true
-    }
+    // filter: {
+    //   handler () {
+    //     this.$store.dispatch('filter', this.filter)
+    //   },
+    //   deep: true
+    // },
+    // filterBy: {
+    //   handler () {
+    //     this.$store.dispatch('filterTopics', this.filterBy)
+    //     // this.updateFilterList()
+    //   },
+    //   deep: true
+    // },
+    // sortBy: {
+    //   handler () {
+    //     this.$store.dispatch('sortTopics', this.sortBy)
+    //   },
+    //   deep: true
+    // },
+    // 'tags.selected': {
+    //   handler () {
+    //     this.updateFilterList()
+    //   },
+    //   deep: true
+    // }
   }
 }
 </script>
