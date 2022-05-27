@@ -90,16 +90,17 @@
           append-icon="mdi-chevron-down"
           class="pl-0"
           hide-details
+          hide-selected
           deletable-chips
           @change="defaultTag"
         >
           <template v-slot:selection="{ parent, item, index }">
             <v-chip small v-if="index < 1 && !parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
-            close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
+            close close-icon="$newsItemActionRemove" class="pa-2 ml-0 mt-1">
               <span>{{ item }}</span>
             </v-chip>
             <v-chip small v-else-if="parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
-            close close-icon="mdi-close" class="pa-2 ml-0 mt-1">
+            close close-icon="$newsItemActionRemove" class="pa-2 ml-0 mt-1">
               <span>{{ item }}</span>
             </v-chip>
             <span
