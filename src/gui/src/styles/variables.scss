@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap');
 
 $body-font-family: 'Rubik', sans-serif !default;
 $heading-font-family: 'Montserrat', sans-serif !default; 
@@ -39,4 +39,8 @@ $dark-grey: #575757;
 $topic-selected-bg: #F4F3FB;
 $topic-hot: #DBE868;
 $awake-green-color: #77BB70;
-$awake-red-color: #D18E8E
+$awake-red-color: #D18E8E;
+
+$status-important: #DBE868;
+$status-unread: #7468E8;
+$status-error: #D18E8E;
