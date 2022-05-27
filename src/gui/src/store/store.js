@@ -10,6 +10,7 @@ import { settings } from '@/store/settings'
 import { assets } from '@/store/assets'
 import { dashboard } from '@/store/dashboard'
 import { osint_source } from '@/store/osint_source'
+import { newsItemsFilter } from '@/store/newsItemsFilter'
 
 Vue.use(Vuex)
 
@@ -73,6 +74,7 @@ export const store = new Vuex.Store({
     settings,
     assets,
     dashboard,
-    osint_source
+    osint_source,
+    newsItemsFilter
   }
 })

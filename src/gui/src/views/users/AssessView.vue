@@ -2,16 +2,17 @@
     <div>
         <ViewLayout>
             <template v-slot:panel>
-                <ToolbarFilterAssess title='nav_menu.newsitems' total_count_title="assess.total_count"
+                <!-- <ToolbarFilterAssess title='nav_menu.newsitems' total_count_title="assess.total_count"
                                      @update-news-items-filter="updateFilter"
                                      ref="toolbarFilter">
                     <template v-slot:addbutton>
 
                     </template>
-                </ToolbarFilterAssess>
+                </ToolbarFilterAssess> -->
             </template>
             <template v-slot:content>
-                <ContentDataAssess
+
+                  <ContentDataAssess
                         card-item="CardAssess"
                         selfID="selector_assess"
                         data_set="assess"
@@ -21,7 +22,6 @@
                         @card-items-reindex="cardReindex"
                         @update-news-items-filter="updateFilter"
                 />
-                <NewReportItem class="nri"/>
             </template>
 
         </ViewLayout>
@@ -83,7 +83,7 @@ export default {
     },
 
     firstDialog (action) {
-      if (action == 'push') {
+      if (action === 'push') {
         this.dialog_stack++
       } else {
         this.dialog_stack--

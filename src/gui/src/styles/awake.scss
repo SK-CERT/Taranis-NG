@@ -3,6 +3,10 @@
   background-color: #f3f3f3 !important;
 }
 
+a {
+  text-decoration: none !important;
+}
+
 .v-application .v-card.elevation-4 {
   -webkit-box-shadow: 2px 4px 7px rgba(0, 0, 0, 0.15) !important;
   box-shadow: 2px 4px 7px rgba(0, 0, 0, 0.15) !important;
@@ -150,12 +154,17 @@
 }
 
 .v-btn.btn-view-topic {
+  background-color: white;
   letter-spacing: normal;
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
   color: $dark-grey !important;
   padding: 16px 12px !important;
+
+  & svg {
+    fill: $dark-grey;
+  }
 }
 
 .v-chip.topic-label {
@@ -196,7 +205,7 @@
   transition: all 0.4s;
   border: 3px solid white;
   background-color: white;
-  padding: 18px !important;
+  padding: 8px 18px !important;
 }
 .v-application .v-card.selected {
   border: 3px solid $primary;
@@ -210,13 +219,10 @@
 .status-bar {
   position: absolute;
   height: 100%;
-  width: 16px;
+  width: 12px;
   top: 0px;
   left: 0px;
   display: block;
-}
-.status-bar.hot-topic {
-  background-color: $topic-hot;
 }
 
 // Tags
@@ -259,20 +265,16 @@
 
 .topics-grid-move {
   transition: all 0.4s ease;
-  z-index: 10000;
 }
 
 .topics-grid-enter {
   opacity: 0;
-  z-index: 10000;
 }
 .topics-grid-enter-to {
   opacity: 1;
-  z-index: 10000;
 }
 .topics-grid-enter-active {
   transition: all 0.4s ease;
-  z-index: 10000;
 }
 
 .topics-grid-leave {
@@ -365,4 +367,137 @@
 .v-input--checkbox .v-icon {
   font-size: 18px;
   margin-left: -4px;
+}
+
+.v-application .v-card h2.headline.news-item-headline {
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  height: calc(1.5em * 1);
+}
+
+.news-item-excerpt {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  height: calc(1.5em * 4);
+}
+
+.news-item-meta-infos.row {
+  
+  margin-top: 0px;
+  
+  & .col {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  
+  & > div {
+  font-size: 0.78rem;
+  }
+  
+  & .news-item-meta-infos-label {
+    min-width: 85px;
+    max-width: 85px;
+  }
+  
+  a.meta-link {
+    & .icon {
+      color: $primary;
+      text-decoration: none !important;
+    }
+    & .label {
+      color: $primary;
+      text-decoration: none !important;
+      text-transform: lowercase;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      -webkit-box-orient: vertical;
+      height: calc(1.5em * 1);
+    }
+  }
+}
+
+.v-application .v-card.newsItem {
+  padding: 0px 36px 0px 18px !important;
+}
+
+.news-item-action-bar {
+  position: absolute;
+  height: 100%;
+  width: 36px;
+  top: 0px;
+  right: 0px;
+  display: flex;
+  flex-direction: column;
+  background-color: #f3f3f3;
+}
+
+
+.news-item-action-bar .v-btn--icon.v-size--default .v-icon,
+.news-item-action-bar .v-btn--icon.v-size--default .v-icon svg {
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  fill: $light-grey-2;
+}
+.news-item-action-bar .v-btn--icon.active .v-icon svg {
+  fill: $primary;
+}
+
+.decorateSource {
+  color: $awake-green-color;
+  & svg {
+    fill: $awake-green-color;
+  }
+}
+
+.news-item-action-bar .v-btn--icon.news-item-topic-action, 
+.news-item-action-bar .v-btn--icon.news-item-topic-action .v-icon svg{
+  background-color: #E8E4AA;
+  fill: $dark-grey;
+}
+
+.v-btn.news-item-btn {
+  background-color: white;
+  letter-spacing: normal;
+  font-weight: 400;
+  caret-color: $light-grey-2;
+  border-color: $light-grey-2;
+  color: $dark-grey !important;
+  padding: 14px 12px !important;
+  height: 32px;
+  
+  & svg {
+    fill: $dark-grey;
+  }
+}
+
+.status-unread.status-important,
+.status-important {
+  background-color: $status-important !important;
+}
+.status-important.status-error,
+.status-unread.status-error,
+.status-error {
+  background-color: $status-error !important;
+}
+.status-unread {
+  background-color: $status-unread;
+}
+.status-hot {
+  background-color: $status-important;
 }

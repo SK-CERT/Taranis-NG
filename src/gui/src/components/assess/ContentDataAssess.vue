@@ -1,6 +1,14 @@
 <template>
+    <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense topics-grid-container" appear>
+        <card-news-item
+          v-for="(newsItem, index) in filteredNewsItems"
+          :key="newsItem.id"
+          :newsItem="newsItem"
+          :position="index"
+        ></card-news-item>
+      </transition-group>
 
-    <v-container class="selector_assess" :id="selfID">
+    <!-- <v-container class="selector_assess" :id="selfID">
         <component v-bind:is="cardLayout()" v-for="(news_item,i) in news_items_data" :card="news_item"
                    :key="i" :analyze_selector="analyze_selector"
                    :preselected="preselected(news_item.id)"
@@ -21,7 +29,7 @@
         <NewsItemSingleDetail ref="newsItemSingleDetail"/>
         <NewsItemDetail ref="newsItemDetail"/>
         <NewsItemAggregateDetail ref="newsItemAggregateDetail"/>
-    </v-container>
+    </v-container> -->
 
 </template>
 
@@ -31,9 +39,17 @@ import NewsItemSingleDetail from '@/components/assess/NewsItemSingleDetail'
 import NewsItemDetail from '@/components/assess/NewsItemDetail'
 import NewsItemAggregateDetail from '@/components/assess/NewsItemAggregateDetail'
 
+import CardNewsItem from '@/components/common/card/CardNewsItem'
+
+import { mapState } from 'vuex';
+
+import { faker } from '@faker-js/faker'
+import moment from 'moment'
+
 export default {
   name: 'ContentDataAssess',
   components: {
+    CardNewsItem,
     CardAssess,
     NewsItemSingleDetail,
     NewsItemDetail,
@@ -59,7 +75,13 @@ export default {
       in_analyze: false,
       sort: 'DATE_DESC'
     },
-    aggregate_open: []
+    aggregate_open: [],
+    filterAttributeOptions: [
+      { label: 'unread', icon: '$awakeUnread' },
+      { label: 'tagged as important', icon: '$awakeImportant' },
+      { label: 'recommended', icon: 'mdi-star-outline' },
+      { label: 'items in analysis', icon: '$awakeReport' }
+    ]
   }),
   methods: {
     cardLayout: function () {
@@ -176,7 +198,7 @@ export default {
 
     aggregateOpen (folder) {
       for (let i = 0; i < this.aggregate_open.length; i++) {
-        if (this.aggregate_open[i] == folder.id && folder.news_items.length !== 1) {
+        if (this.aggregate_open[i] === folder.id && folder.news_items.length !== 1) {
           return true
         }
       }
@@ -185,10 +207,50 @@ export default {
 
     forceReindex () {
       this.$emit('card-items-reindex')
+    },
+
+    propertySorting (type, elements) {
+      if (elements[0] === elements[1]) return 0
+      if (type === 'publishedDate') {
+        return (
+          moment(elements[0], 'DD/MM/YYYY hh:mm:ss') -
+          moment(elements[1], 'DD/MM/YYYY hh:mm:ss')
+        )
+      } else {
+        return parseInt(elements[0]) < parseInt(elements[1]) ? -1 : 1
+      }
     }
   },
 
   computed: {
+    
+    ...mapState('newsItemsFilter', [
+        'filter',
+        'order'
+    ]),
+
+    filteredNewsItems () {
+      // apply filters here
+      // var filteredData = this.news_items_data.filter((newsItem) => {
+      //   return newsItem.votes.up > 100
+      // })
+      var filterAttributes = this.$store.getters.getFilterAttributes
+
+      var filteredData = [...this.news_items_data].sort((x, y) => {
+        return this.propertySorting('publishedDate', [x.published, y.published])
+      })
+
+      // 1) Get filter/sort from store...
+      // 2) apply all filters
+      // 3) apply sorting
+      // ...
+      // var filteredData.filter ....
+      // filteredData.sort ....
+      // return filteredData ....
+
+      return filteredData
+    },
+
     multiSelectActive () {
       return this.$store.getters.getMultiSelect
     },
@@ -220,6 +282,54 @@ export default {
   mounted () {
     this.$root.$on('news-items-updated', this.news_items_updated)
     this.$root.$on('force-reindex', this.forceReindex)
+
+    // Generate Dummy Data
+    var dummyTags = [
+      { label: 'State', color: Math.floor(Math.random() * 20) },
+      { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
+      { label: 'Threat', color: Math.floor(Math.random() * 20) },
+      { label: 'DDoS', color: Math.floor(Math.random() * 20) },
+      { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
+      { label: 'Java', color: Math.floor(Math.random() * 20) },
+      { label: 'CVE', color: Math.floor(Math.random() * 20) },
+      { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
+      { label: 'Python', color: Math.floor(Math.random() * 20) },
+      { label: 'Privacy', color: Math.floor(Math.random() * 20) },
+      { label: 'Social', color: Math.floor(Math.random() * 20) },
+      { label: 'APT', color: Math.floor(Math.random() * 20) },
+      { label: 'MitM', color: Math.floor(Math.random() * 20) }
+    ]
+
+    var dummyTopics = [
+      'porro ad nihil iusto iure', 'modi odit', 'aliquam nulla', 'aut exercitationem', 'quia reiciendis dolor', 'necessitatibus at quidem', 'maiores assumenda modi aut', 'rerum sit'
+    ]
+
+    var numberOfDummyTopics = 40
+    var dummyData = []
+
+    for (var i = 1; i < numberOfDummyTopics; i++) {
+      var sourceDomain = faker.internet.domainName()
+      var entry = {
+        id: i,
+        relevanceScore: faker.commerce.price(0, 100, 0),
+        title: faker.lorem.words((Math.floor(Math.random() * (10 - 7 + 1)) + 7)),
+        excerpt: faker.lorem.paragraph(100),
+        tags: faker.random.arrayElements(dummyTags, (Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
+        published: moment(new Date(String(faker.date.recent(10)))).format('DD/MM/YYYY hh:mm:ss'),
+        collected: moment(new Date(String(faker.date.recent(10)))).format('DD/MM/YYYY hh:mm:ss'),
+        source: { domain: sourceDomain, url: `${faker.internet.protocol()}://${sourceDomain}/rss/${moment(new Date(String(faker.date.recent(10)))).format('YYYY/MM/DD')}/${faker.internet.password(20)}` },
+        addedBy: faker.lorem.words(1),
+        topics: faker.random.arrayElements(dummyTopics, (Math.floor(Math.random() * (5 - 2 + 1)) + 2)),
+        votes: { up: faker.commerce.price(0, 150, 0), down: faker.commerce.price(0, 250, 0) },
+        important: Math.random() < 0.2,
+        read: Math.random() < 0.2,
+        decorateSource: Math.random() < 0.2,
+        selected: false
+      }
+      dummyData.push(entry)
+    }
+
+    this.news_items_data = dummyData
   },
 
   beforeDestroy () {
