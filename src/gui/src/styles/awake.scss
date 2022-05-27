@@ -259,6 +259,9 @@ a {
 .topics-grid-container {
   position: relative;
 }
+.topics-grid-container > div {
+  min-width: 300px;
+}
 
 .topics-grid-move {
   transition: all 0.4s ease;
