@@ -1,7 +1,7 @@
 <template>
     <v-card tile elevation="4" outlined height="100%" :class="[
-    'pa-5',
-    'pl-5',
+    'px-5',
+    'py-4',
     'align-self-stretch',
     'topic',
     'primary--text',
@@ -13,7 +13,7 @@
     >
         <div class="status-bar" v-if="topic.hot" :class="[
         {
-            'hot-topic': topic.hot
+            'status-hot': topic.hot
         }]">
         </div>
         <v-container column style="height: 100%">
@@ -47,9 +47,9 @@
                         </v-col>
                     </v-row>
 
-                    <v-row class="flex-grow-0 mt-1">
+                    <v-row class="flex-grow-0 mt-0">
                         <v-col>
-                            <tag-topic v-for="tag in topic.tags" :key="tag.label" :tag="tag" />
+                            <tag-norm v-for="tag in topic.tags" :key="tag.label" :tag="tag" />
                         </v-col>
                     </v-row>
 
@@ -59,9 +59,9 @@
 
                     <!-- Excerpt -->
 
-                    <v-row class="flex-grow-0 mt-2">
+                    <v-row class="flex-grow-0 mt-0 mb-0">
                         <v-col>
-                            <p class="font-weight-light dark-grey--text topic-excerpt">
+                            <p class="font-weight-light dark-grey--text topic-excerpt mb-0">
                                 {{ topic.summary }}
                             </p>
                         </v-col>
@@ -96,7 +96,7 @@
                         </v-col>
                         <v-col cols="12" md="4" class="mx-0 d-flex justify-end">
                             <v-btn outlined class="text-lowercase btn-view-topic mt-1" @click.native.capture="viewTopic($event)">
-                                <v-icon left>mdi-eye-outline</v-icon>
+                                <v-icon left>$awakeEye</v-icon>
                                 view topic
                             </v-btn>
                         </v-col>
@@ -110,13 +110,13 @@
 
 <script>
 import TagMini from '@/components/common/tags/TagMini'
-import TagTopic from '@/components/common/tags/TagTopic'
+import TagNorm from '@/components/common/tags/TagNorm'
 
 export default {
   name: 'CardTopic',
   components: {
     TagMini,
-    TagTopic
+    TagNorm
   },
   props: {
     topic: {}
