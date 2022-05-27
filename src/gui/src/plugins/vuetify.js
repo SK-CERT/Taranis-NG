@@ -3,6 +3,20 @@ import Vuetify from 'vuetify'
 import { Scroll } from 'vuetify/lib/directives'
 import awakePinSvg from '@/assets/icons/pin.vue'
 import awakeSearchSvg from '@/assets/icons/search.vue'
+import awakeCommentSvg from '@/assets/icons/comment.vue'
+import awakeEditSvg from '@/assets/icons/edit.vue'
+import awakeEyeSvg from '@/assets/icons/eye.vue'
+import awakeRelatedSvg from '@/assets/icons/related.vue'
+import awakeReportSvg from '@/assets/icons/report.vue'
+import awakeRibbonSvg from '@/assets/icons/ribbon.vue'
+import awakeUnreadSvg from '@/assets/icons/unread.vue'
+import awakeImportantSvg from '@/assets/icons/important.vue'
+import newsItemActionDeleteSvg from '@/assets/icons/action-delete.vue'
+import newsItemActionReadSvg from '@/assets/icons/action-read.vue'
+import newsItemActionUnreadSvg from '@/assets/icons/action-unread.vue'
+import newsItemActionRemoveSvg from '@/assets/icons/action-remove.vue'
+import newsItemActionRibbonSvg from '@/assets/icons/action-ribbon.vue'
+import newsItemActionImportantSvg from '@/assets/icons/action-important.vue'
 
 Vue.use(Vuetify)
 
@@ -56,6 +70,48 @@ const icons = {
     },
     awakeSearch: {
       component: awakeSearchSvg
+    },
+    awakeEye: {
+      component: awakeEyeSvg
+    },
+    awakeComment: {
+      component: awakeCommentSvg
+    },
+    awakeEdit: {
+      component: awakeEditSvg
+    },
+    awakeRelated: {
+      component: awakeRelatedSvg
+    },
+    awakeImportant: {
+      component: awakeImportantSvg
+    },
+    awakeUnread: {
+      component: awakeUnreadSvg
+    },
+    awakeReport: {
+      component: awakeReportSvg
+    },
+    awakeRibbon: {
+      component: awakeRibbonSvg
+    },
+    newsItemActionDelete: {
+      component: newsItemActionDeleteSvg
+    },
+    newsItemActionRead: {
+      component: newsItemActionReadSvg
+    },
+    newsItemActionUnread: {
+      component: newsItemActionUnreadSvg
+    },
+    newsItemActionRemove: {
+      component: newsItemActionRemoveSvg
+    },
+    newsItemActionRibbon: {
+      component: newsItemActionRibbonSvg
+    },
+    newsItemActionImportant: {
+      component: newsItemActionImportantSvg
     }
   }
 }
