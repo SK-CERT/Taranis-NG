@@ -1,19 +1,27 @@
 <template>
-    <v-app class="grey lighten-2">
-        <!-- class="taranis" -->
+  <v-app class="grey lighten-2">
+    <!-- class="taranis" -->
 
-        <MainMenu v-if="isAuthenticated()"/>
+    <MainMenu v-if="isAuthenticated()" />
 
-        <v-navigation-drawer clipped v-model="visible" width="300px" app color="cx-drawer-bg" v-if="isAuthenticated()" class="sidebar">
-            <router-view name="nav"></router-view>
-        </v-navigation-drawer>
+    <v-navigation-drawer
+      clipped
+      v-model="visible"
+      width="300px"
+      app
+      color="cx-drawer-bg"
+      v-if="isAuthenticated()"
+      class="sidebar"
+    >
+      <router-view name="nav"></router-view>
+    </v-navigation-drawer>
 
-        <v-main>
-            <router-view/>
-        </v-main>
+    <v-main>
+      <router-view />
+    </v-main>
 
-        <Notification v-if="isAuthenticated()"/>
-    </v-app>
+    <Notification v-if="isAuthenticated()" />
+  </v-app>
 </template>
 
 <script>
@@ -33,24 +41,30 @@ export default {
   mixins: [AuthMixin],
   methods: {
     connectSSE () {
-      this.$sse(((typeof (process.env.VUE_APP_TARANIS_NG_CORE_SSE) === 'undefined') ? '$VUE_APP_TARANIS_NG_CORE_SSE' : process.env.VUE_APP_TARANIS_NG_CORE_SSE) + '?jwt=' + this.$store.getters.getJWT, { format: 'json' })
-        .then(sse => {
-          sse.subscribe('news-items-updated', (data) => {
-            this.$root.$emit('news-items-updated', data)
-          })
-          sse.subscribe('report-items-updated', (data) => {
-            this.$root.$emit('report-items-updated', data)
-          })
-          sse.subscribe('report-item-updated', (data) => {
-            this.$root.$emit('report-item-updated', data)
-          })
-          sse.subscribe('report-item-locked', (data) => {
-            this.$root.$emit('report-item-locked', data)
-          })
-          sse.subscribe('report-item-unlocked', (data) => {
-            this.$root.$emit('report-item-unlocked', data)
-          })
+      this.$sse(
+        (typeof process.env.VUE_APP_TARANIS_NG_CORE_SSE === 'undefined'
+          ? '$VUE_APP_TARANIS_NG_CORE_SSE'
+          : process.env.VUE_APP_TARANIS_NG_CORE_SSE) +
+          '?jwt=' +
+          this.$store.getters.getJWT,
+        { format: 'json' }
+      ).then((sse) => {
+        sse.subscribe('news-items-updated', (data) => {
+          this.$root.$emit('news-items-updated', data)
         })
+        sse.subscribe('report-items-updated', (data) => {
+          this.$root.$emit('report-items-updated', data)
+        })
+        sse.subscribe('report-item-updated', (data) => {
+          this.$root.$emit('report-item-updated', data)
+        })
+        sse.subscribe('report-item-locked', (data) => {
+          this.$root.$emit('report-item-locked', data)
+        })
+        sse.subscribe('report-item-unlocked', (data) => {
+          this.$root.$emit('report-item-unlocked', data)
+        })
+      })
     },
 
     reconnectSSE () {
@@ -85,19 +99,22 @@ export default {
       }
     }
 
-    setInterval(function () {
-      if (this.isAuthenticated()) {
-        if (this.needTokenRefresh() === true) {
-          this.$store.dispatch('refresh').then(() => {
-            this.reconnectSSE()
-          })
+    setInterval(
+      function () {
+        if (this.isAuthenticated()) {
+          if (this.needTokenRefresh() === true) {
+            this.$store.dispatch('refresh').then(() => {
+              this.reconnectSSE()
+            })
+          }
+        } else {
+          if (this.$store.getters.getJWT) {
+            this.logout()
+          }
         }
-      } else {
-        if (this.$store.getters.getJWT) {
-          this.logout()
-        }
-      }
-    }.bind(this), 5000)
+      }.bind(this),
+      5000
+    )
 
     this.$root.$on('nav-clicked', () => {
       this.visible = !this.visible
@@ -114,5 +131,5 @@ export default {
 <style src="./assets/centralize.css"></style>
 
 <style lang="scss">
-  @import "@/styles/awake.scss";
+@import "@/styles/awake.scss";
 </style>

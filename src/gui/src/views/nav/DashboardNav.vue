@@ -38,7 +38,7 @@
         >
           <v-chip label outlined dark value="all">all</v-chip>
           <v-chip label outlined dark value="today">today</v-chip>
-          <v-chip label outlined dark value="week">this week</v-chip>
+          <v-chip label outlined dark value="week">one week</v-chip>
         </v-chip-group>
       </v-col>
 
@@ -114,12 +114,28 @@
           @change="defaultTag"
         >
           <template v-slot:selection="{ parent, item, index }">
-            <v-chip small v-if="index < 1 && !parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
-            close close-icon="$newsItemActionRemove" class="pa-2 ml-0 mt-1">
+            <v-chip
+              small
+              v-if="index < 1 && !parent.isMenuActive"
+              @click:close="removeSelectedTag(item)"
+              label
+              color="grey--lighten-4"
+              close
+              close-icon="$newsItemActionRemove"
+              class="pa-2 ml-0 mt-1"
+            >
               <span>{{ item }}</span>
             </v-chip>
-            <v-chip small v-else-if="parent.isMenuActive" @click:close="removeSelectedTag(item)" label color="grey--lighten-4"
-            close close-icon="$newsItemActionRemove" class="pa-2 ml-0 mt-1">
+            <v-chip
+              small
+              v-else-if="parent.isMenuActive"
+              @click:close="removeSelectedTag(item)"
+              label
+              color="grey--lighten-4"
+              close
+              close-icon="$newsItemActionRemove"
+              class="pa-2 ml-0 mt-1"
+            >
               <span>{{ item }}</span>
             </v-chip>
             <span
