@@ -4,19 +4,27 @@ export const newsItemsFilter = {
   namespaced: true,
   state: {
     filter: {
-      attributes: [],
-      tags: [],
-      time: {}
+      search: "",
+      attributes: {
+        selected: []
+      },
+      tags: {
+        andOperator: true,
+        selected: ['all']
+      },
+      date: {
+        range: [],
+        selected: 'all'
+      }
     },
     order: {
-      by: '',
-      direction: 'desc'
+      selected: []
     }
   },
   getters: {
-    getField,
+    getField
   },
   mutations: {
-    updateField,
-  },
+    updateField
+  }
 }
