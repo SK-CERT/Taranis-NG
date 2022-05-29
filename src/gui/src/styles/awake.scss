@@ -393,23 +393,22 @@ a {
 }
 
 .news-item-meta-infos.row {
-  
   margin-top: 0px;
-  
+
   & .col {
     padding-top: 4px;
     padding-bottom: 4px;
   }
-  
+
   & > div {
-  font-size: 0.78rem;
+    font-size: 0.78rem;
   }
-  
+
   & .news-item-meta-infos-label {
     min-width: 85px;
     max-width: 85px;
   }
-  
+
   a.meta-link {
     & .icon {
       color: $primary;
@@ -446,7 +445,6 @@ a {
   background-color: #f3f3f3;
 }
 
-
 .news-item-action-bar .v-btn--icon.v-size--default .v-icon,
 .news-item-action-bar .v-btn--icon.v-size--default .v-icon svg {
   font-size: 18px;
@@ -465,9 +463,9 @@ a {
   }
 }
 
-.news-item-action-bar .v-btn--icon.news-item-topic-action, 
-.news-item-action-bar .v-btn--icon.news-item-topic-action .v-icon svg{
-  background-color: #E8E4AA;
+.news-item-action-bar .v-btn--icon.news-item-topic-action,
+.news-item-action-bar .v-btn--icon.news-item-topic-action .v-icon svg {
+  background-color: #e8e4aa;
   fill: $dark-grey;
 }
 
@@ -480,7 +478,7 @@ a {
   color: $dark-grey !important;
   padding: 14px 12px !important;
   height: 32px;
-  
+
   & svg {
     fill: $dark-grey;
   }
@@ -500,4 +498,9 @@ a {
 }
 .status-hot {
   background-color: $status-important;
+}
+
+.highlightText {
+  background-color: yellow !important;
+  color: red;
 }
