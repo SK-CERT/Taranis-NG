@@ -588,37 +588,7 @@ export default {
         direction: ''
       }))
       this.orderOptions[index].direction = newDirection
-    },
-    test () {
-      alert('test')
     }
-  },
-  watch: {
-    // filter: {
-    //   handler () {
-    //     this.$store.dispatch('filter', this.filter)
-    //   },
-    //   deep: true
-    // },
-    // filterBy: {
-    //   handler () {
-    //     this.$store.dispatch('filterTopics', this.filterBy)
-    //     // this.updateFilterList()
-    //   },
-    //   deep: true
-    // },
-    // order: {
-    //   handler () {
-    //     this.$store.dispatch('sortTopics', this.orderOptions)
-    //   },
-    //   deep: true
-    // },
-    // 'tags.selected': {
-    //   handler () {
-    //     this.updateFilterList()
-    //   },
-    //   deep: true
-    // }
   }
 }
 </script>
