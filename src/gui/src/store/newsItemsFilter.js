@@ -4,7 +4,7 @@ export const newsItemsFilter = {
   namespaced: true,
   state: {
     filter: {
-      search: "",
+      search: '',
       attributes: {
         selected: []
       },
