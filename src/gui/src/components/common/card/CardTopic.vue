@@ -42,7 +42,7 @@
                 >Last activity:
               </span>
               <span class="last-activity font-weight-bold dark-grey--text">
-                {{ topic.lastActivity }}
+                {{ lastActivity }}
               </span>
             </v-col>
 
@@ -88,7 +88,7 @@
           <v-row class="flex-grow-0 mt-0 mb-0">
             <v-col>
               <p class="font-weight-light dark-grey--text topic-excerpt mb-0">
-                {{ topic.summary }}
+                {{ topic.excerpt }}
               </p>
             </v-col>
           </v-row>
@@ -166,6 +166,7 @@
 <script>
 import TagMini from '@/components/common/tags/TagMini'
 import TagNorm from '@/components/common/tags/TagNorm'
+import moment from 'moment'
 
 export default {
   name: 'CardTopic',
@@ -177,7 +178,11 @@ export default {
     topic: {}
   },
   data: () => ({}),
-  computed: {},
+  computed: {
+    lastActivity () {
+      return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
+    }
+  },
   methods: {
     selectCard: function () {
       this.$store.dispatch('selectTopic', this.topic.id)
