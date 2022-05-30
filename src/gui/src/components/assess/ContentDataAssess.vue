@@ -16,74 +16,12 @@
     </transition-group>
 
     <v-expand-transition>
-      <v-app-bar
+      <selection-toolbar
         v-if="activeSelection"
-        clipped-right
-        bottom
-        flat
-        fixed
-        dense
-        dark
-        style="bottom: 0px !important; top: auto !important"
-      >
-        <span> selected: {{ selection.length }} </span>
-      </v-app-bar>
+        :selection="selection"
+      ></selection-toolbar>
     </v-expand-transition>
-
-    <!-- </v-expand-x-transition> -->
-    <!-- <v-row>
-      <v-col>
-        <v-bottom-navigation
-          :input-value="activeSelection"
-          color="indigo"
-          fixed
-          clipped-left
-        >
-          <span> selected: {{ selection.length }} </span>
-          <v-btn>
-            <span>Recents</span>
-
-            <v-icon>mdi-history</v-icon>
-          </v-btn>
-
-          <v-btn>
-            <span>Favorites</span>
-
-            <v-icon>mdi-heart</v-icon>
-          </v-btn>
-
-          <v-btn>
-            <span>Nearby</span>
-
-            <v-icon>mdi-map-marker</v-icon>
-          </v-btn>
-        </v-bottom-navigation>
-      </v-col>
-    </v-row> -->
   </div>
-
-  <!-- <v-container class="selector_assess" :id="selfID">
-        <component v-bind:is="cardLayout()" v-for="(news_item,i) in news_items_data" :card="news_item"
-                   :key="i" :analyze_selector="analyze_selector"
-                   :preselected="preselected(news_item.id)"
-                   :word_list_regex="regexWordList"
-                   :data_set="data_set"
-                   :filter="filter"
-                   @show-single-aggregate-detail="showSingleAggregateDetail(news_item)"
-                   @show-aggregate-detail="showAggregateDetail(news_item)"
-                   @show-item-detail="showItemDetail"
-                   @aggregate-open="setAggregateOpen"
-                   @update-news-items-filter="updateFilter"
-                   ref="card"
-                   :aggregate_opened="aggregateOpen(news_item)"
-                   @check-focus="checkFocus"
-        >
-        </component>
-        <v-card v-intersect.quiet="infiniteScrolling"></v-card>
-        <NewsItemSingleDetail ref="newsItemSingleDetail"/>
-        <NewsItemDetail ref="newsItemDetail"/>
-        <NewsItemAggregateDetail ref="newsItemAggregateDetail"/>
-    </v-container> -->
 </template>
 
 <script>
@@ -93,6 +31,7 @@
 // import NewsItemAggregateDetail from '@/components/assess/NewsItemAggregateDetail'
 
 import CardNewsItem from '@/components/common/card/CardNewsItem'
+import SelectionToolbar from '@/components/assess/SelectionToolbar'
 
 import { mapState } from 'vuex'
 import { xor } from 'lodash'
@@ -107,7 +46,8 @@ export default {
     // NewsItemSingleDetail,
     // NewsItemDetail,
     // NewsItemAggregateDetail,
-    CardNewsItem
+    CardNewsItem,
+    SelectionToolbar
   },
   props: {
     // analyze_selector: Boolean,
@@ -343,7 +283,7 @@ export default {
         case 'today':
           range = [today.setHours(0, 0, 0, 0), today.setHours(23, 59, 59, 999)]
           break
-        case 'week':
+        case 'week': {
           const oneWeekAgo = (d) => {
             d.setDate(d.getDate() - 7)
             d.setHours(0, 0, 0, 0)
@@ -351,6 +291,7 @@ export default {
           }
           range = [oneWeekAgo(today), today.setHours(23, 59, 59, 999)]
           break
+        }
         case 'range':
           range = [
             new Date(dateRange[0]).setHours(0, 0, 0, 0),
@@ -434,6 +375,11 @@ export default {
               directionModifier
             )
         }
+      })
+
+      this.$store.dispatch('updateSelection', {
+        total: this.news_items_data.length,
+        filtered: filteredData.length
       })
 
       return filteredData
