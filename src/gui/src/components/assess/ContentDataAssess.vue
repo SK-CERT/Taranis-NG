@@ -25,19 +25,15 @@
 </template>
 
 <script>
-// import CardAssess from './CardAssess'
-// import NewsItemSingleDetail from '@/components/assess/NewsItemSingleDetail'
-// import NewsItemDetail from '@/components/assess/NewsItemDetail'
-// import NewsItemAggregateDetail from '@/components/assess/NewsItemAggregateDetail'
-
 import CardNewsItem from '@/components/common/card/CardNewsItem'
 import SelectionToolbar from '@/components/assess/SelectionToolbar'
 
 import { mapState } from 'vuex'
+import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
 import { xor } from 'lodash'
+import moment from 'moment'
 
 import { faker } from '@faker-js/faker'
-import moment from 'moment'
 
 export default {
   name: 'ContentDataAssess',
@@ -52,24 +48,12 @@ export default {
   props: {
     // analyze_selector: Boolean,
     // selection: Array,
-    // cardItem: String,
     // selfID: String,
-    // data_set: String,
-    // filter: Object
+    // data_set: String
   },
   data: () => ({
     news_items_data: [],
     news_items_data_loaded: false,
-    news_items_filter: {
-      search: '',
-      range: 'ALL',
-      read: false,
-      important: false,
-      relevant: false,
-      in_analyze: false,
-      sort: 'DATE_DESC'
-    },
-    aggregate_open: [],
     selection: []
   }),
   methods: {
@@ -80,236 +64,84 @@ export default {
 
       this.selection = xor(this.selection, [itemId])
     },
-    // cardLayout: function () {
-    //   return this.cardItem
-    // },
 
-    // preselected (item_id) {
-    //   if (this.selection != null) {
-    //     for (let i = 0; i < this.selection.length; i++) {
-    //       if (this.selection[i].id === item_id) {
-    //         return true
-    //       }
-    //     }
-    //   }
-    //   return false
-    // },
-
-    // infiniteScrolling (entries, observer, isIntersecting) {
-    //   if (this.news_items_data_loaded && isIntersecting) {
-    //     this.updateData(true, false)
-    //   }
-    // },
-
-    // showSingleAggregateDetail (news_item) {
-    //   this.$root.$emit('change-state', 'SHOW_ITEM')
-    //   this.$refs.newsItemSingleDetail.open(news_item)
-    // },
-
-    // showAggregateDetail (news_item) {
-    //   this.$root.$emit('change-state', 'SHOW_ITEM')
-    //   this.$refs.newsItemAggregateDetail.open(news_item)
-    // },
+    infiniteScrolling (entries, observer, isIntersecting) {
+      if (this.news_items_data_loaded && isIntersecting) {
+        this.updateData(true, false)
+      }
+    },
 
     // showItemDetail (news_item) {
     //   this.$root.$emit('change-state', 'SHOW_ITEM')
     //   this.$refs.newsItemDetail.open(news_item)
     // },
 
-    // updateData (append, reload_all) {
-    //   this.news_items_data_loaded = false
+    updateData (append, reload_all) {
+      this.news_items_data_loaded = false
 
-    //   if (append === false) {
-    //     this.news_items_data = []
-    //   }
+      if (append === false) {
+        this.news_items_data = []
+      }
 
-    //   let offset = this.news_items_data.length
-    //   let limit = 20
-    //   if (reload_all) {
-    //     offset = 0
-    //     if (this.news_items_data.length > limit) {
-    //       limit = this.news_items_data.length
-    //     }
-    //     this.news_items_data = []
-    //   }
-
-    //   let group = ''
-
-    //   if (this.analyze_selector) {
-    //     group = this.$store.getters.getCurrentGroup
-    //   } else {
-    //     if (window.location.pathname.includes('/group/')) {
-    //       const i = window.location.pathname.indexOf('/group/')
-    //       const len = window.location.pathname.length
-    //       group = window.location.pathname.substring(i + 7, len)
-    //       this.$store.dispatch('changeCurrentGroup', group)
-    //     }
-    //   }
-
-    //   this.$store
-    //     .dispatch('getNewsItemsByGroup', {
-    //       group_id: group,
-    //       data: {
-    //         filter: this.news_items_filter,
-    //         offset: offset,
-    //         limit: limit
-    //       }
-    //     })
-    //     .then(() => {
-    //       this.news_items_data = this.news_items_data.concat(
-    //         this.$store.getters.getNewsItems.items
-    //       )
-    //       this.$emit(
-    //         'new-data-loaded',
-    //         this.$store.getters.getNewsItems.total_count
-    //       )
-    //       setTimeout(() => {
-    //         this.$emit('card-items-reindex')
-    //       }, 200)
-    //       setTimeout(() => {
-    //         this.news_items_data_loaded = true
-    //       }, 1000)
-    //     })
-    // },
-
-    // updateFilter (filter) {
-    //   Object.assign(this.news_items_filter, filter)
-    //   this.updateData(false, false)
-    // },
-
-    // setAggregateOpen (folder) {
-    //   if (!this.aggregate_open.length) {
-    //     this.aggregate_open.push(folder.id)
-    //   } else if (folder.opened === false) {
-    //     const close = this.aggregate_open.indexOf(folder.id)
-    //     this.aggregate_open.splice(close, 1)
-    //   } else {
-    //     this.aggregate_open.push(folder.id)
-    //   }
-    // },
-
-    // checkFocus (pos) {
-    //   this.$root.$emit('check-focus', pos)
-    // },
-
-    // news_items_updated () {
-    //   // only update items when not in selection mode
-    //   if (!this.multiSelectActive) {
-    //     this.updateData(false, true)
-    //   }
-    // },
-
-    // aggregateOpen (folder) {
-    //   for (let i = 0; i < this.aggregate_open.length; i++) {
-    //     if (
-    //       this.aggregate_open[i] === folder.id &&
-    //       folder.news_items.length !== 1
-    //     ) {
-    //       return true
-    //     }
-    //   }
-    //   return false
-    // },
-
-    // forceReindex () {
-    //   this.$emit('card-items-reindex')
-    // },
-
-    // propertySorting (type, elements) {
-    //   if (elements[0] === elements[1]) return 0
-    //   if (type === 'publishedDate') {
-    //     return (
-    //       moment(elements[0], 'DD/MM/YYYY hh:mm:ss') -
-    //       moment(elements[1], 'DD/MM/YYYY hh:mm:ss')
-    //     )
-    //   } else {
-    //     return parseInt(elements[0]) < parseInt(elements[1]) ? -1 : 1
-    //   }
-    // },
-
-    applyFilter (newsItems, type) {
-      return newsItems.filter((newsItem) => {
-        switch (type) {
-          case 'unread':
-            return !newsItem.read
-          case 'important':
-            return newsItem.important
-          case 'recommended':
-            return newsItem.recommended
-          case 'analysis':
-            return newsItem.inAnalysis
-          case 'selected':
-            return newsItem.selected
+      let offset = this.news_items_data.length
+      let limit = 20
+      if (reload_all) {
+        offset = 0
+        if (this.news_items_data.length > limit) {
+          limit = this.news_items_data.length
         }
-      })
-    },
-    searchNewsItems (fields, searchString) {
-      let match = false
+        this.news_items_data = []
+      }
 
-      const regexStr = searchString
-        .trim()
-        .match(/\\?.|^$/g)
-        .reduce(
-          (previousValue, currentValue) => {
-            if (currentValue === '"') {
-              previousValue.quote ^= 1
-            } else if (!previousValue.quote && currentValue === ' ') {
-              previousValue.a.push('')
-            } else {
-              previousValue.a[previousValue.a.length - 1] +=
-                currentValue.replace(/\\(.)/, '$1')
-            }
-            return previousValue
-          },
-          { a: [''] }
-        )
-        .a.join('|')
+      let group = ''
 
-      const searchRegEx = new RegExp(regexStr, 'gi')
-
-      for (let i = 0; i < fields.length; i++) {
-        if ([...fields[0].matchAll(searchRegEx)].length > 0) {
-          match = true
-          break
+      if (this.analyze_selector) {
+        group = this.$store.getters.getCurrentGroup
+      } else {
+        if (window.location.pathname.includes('/group/')) {
+          const i = window.location.pathname.indexOf('/group/')
+          const len = window.location.pathname.length
+          group = window.location.pathname.substring(i + 7, len)
+          this.$store.dispatch('changeCurrentGroup', group)
         }
       }
 
-      return match
-    },
-    evaluateDateRange (publishedDate, selectedType, dateRange) {
-      let range = []
-      const today = new Date()
-      switch (selectedType) {
-        case 'today':
-          range = [today.setHours(0, 0, 0, 0), today.setHours(23, 59, 59, 999)]
-          break
-        case 'week': {
-          const oneWeekAgo = (d) => {
-            d.setDate(d.getDate() - 7)
-            d.setHours(0, 0, 0, 0)
-            return Math.floor(d.getTime())
+      this.$store
+        .dispatch('getNewsItemsByGroup', {
+          group_id: group,
+          data: {
+            filter: this.news_items_filter,
+            offset: offset,
+            limit: limit
           }
-          range = [oneWeekAgo(today), today.setHours(23, 59, 59, 999)]
-          break
-        }
-        case 'range':
-          range = [
-            new Date(dateRange[0]).setHours(0, 0, 0, 0),
-            new Date(dateRange[1]).setHours(23, 59, 59, 999)
-          ]
-          break
-      }
-
-      return publishedDate >= range[0] && publishedDate <= range[1]
+        })
+        .then(() => {
+          this.news_items_data = this.news_items_data.concat(
+            this.$store.getters.getNewsItems.items
+          )
+          this.$emit(
+            'new-data-loaded',
+            this.$store.getters.getNewsItems.total_count
+          )
+          setTimeout(() => {
+            this.$emit('card-items-reindex')
+          }, 200)
+          setTimeout(() => {
+            this.news_items_data_loaded = true
+          }, 1000)
+        })
     },
-    matchTags (itemTags, selectedTags, andOperator) {
-      const selectedTagExists = (selectedTag) =>
-        itemTags.some((itemTag) => itemTag.label === selectedTag)
 
-      return andOperator
-        ? selectedTags.every(selectedTagExists)
-        : selectedTags.some(selectedTagExists)
-    }
+    checkFocus (pos) {
+      this.$root.$emit('check-focus', pos)
+    },
+
+    news_items_updated () {
+      // only update items when not in selection mode
+      if (!this.activeSelection) {
+        this.updateData(false, true)
+      }
+    },    
   },
 
   computed: {
@@ -322,7 +154,7 @@ export default {
       filteredData = filteredData.filter((item) => {
         return (
           !this.filter.search ||
-          this.searchNewsItems([item.title, item.excerpt], this.filter.search)
+          filterSearch([item.title, item.excerpt], this.filter.search)
         )
       })
 
@@ -330,7 +162,7 @@ export default {
       filteredData = filteredData.filter((item) => {
         return (
           this.filter.date.selected === 'all' ||
-          this.evaluateDateRange(
+          filterDateRange(
             item.published,
             this.filter.date.selected,
             this.filter.date.range
@@ -342,7 +174,7 @@ export default {
       filteredData = filteredData.filter((item) => {
         return (
           this.filter.tags.selected.includes('all') ||
-          this.matchTags(
+          filterTags(
             item.tags,
             this.filter.tags.selected,
             this.filter.tags.andOperator
@@ -352,12 +184,25 @@ export default {
 
       // ONLY SHOW
       this.filter.attributes.selected.forEach((type) => {
-        filteredData = this.applyFilter(filteredData, type)
+        filteredData = filteredData.filter((item) => {
+          switch (type) {
+            case 'unread':
+              return !item.read
+            case 'important':
+              return item.important
+            case 'recommended':
+              return item.recommended
+            case 'analysis':
+              return item.inAnalysis
+            case 'selected':
+              return item.selected
+          }
+        })
       })
 
       // SORTING
       filteredData.sort((x, y) => {
-        // Set direction
+        
         const directionModifier =
           this.order.selected.direction === 'asc' ? 1 : -1
 
@@ -377,7 +222,7 @@ export default {
         }
       })
 
-      this.$store.dispatch('updateSelection', {
+      this.$store.dispatch('updateItemCount', {
         total: this.news_items_data.length,
         filtered: filteredData.length
       })
@@ -389,32 +234,6 @@ export default {
       return this.selection.length > 0
     }
 
-    // multiSelectActive () {
-    //   return this.$store.getters.getMultiSelect
-    // },
-
-    // regexWordList () {
-    //   const wordsData = this.$store.getters.getProfileWordLists
-    //   let wordListRegex = []
-    //   let chop
-
-    //   if (wordsData.length) {
-    //     for (let i = 0; i < wordsData.length; i++) {
-    //       for (let j = 0; j < wordsData[i].categories.length; j++) {
-    //         wordsData[i].categories[j].entries.forEach((t) => {
-    //           wordListRegex.push(t.value + '|')
-    //         })
-    //       }
-    //     }
-
-    //     chop = wordListRegex.join('')
-    //     wordListRegex = chop.substring(0, chop.length - 1)
-    //   } else {
-    //     wordListRegex = null
-    //   }
-
-    //   return wordListRegex
-    // }
   },
 
   mounted () {
