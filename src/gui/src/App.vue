@@ -12,6 +12,7 @@
       color="cx-drawer-bg"
       v-if="isAuthenticated()"
       class="sidebar"
+      style="max-height: 100% !important; height: calc(100vh - 48px) !important;"
     >
       <router-view name="nav"></router-view>
     </v-navigation-drawer>
