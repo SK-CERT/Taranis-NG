@@ -1,32 +1,23 @@
 <template>
-    <div>
-        <ViewLayout>
-            <template v-slot:panel>
-                <!-- <ToolbarFilterAssess title='nav_menu.newsitems' total_count_title="assess.total_count"
-                                     @update-news-items-filter="updateFilter"
-                                     ref="toolbarFilter">
-                    <template v-slot:addbutton>
-
-                    </template>
-                </ToolbarFilterAssess> -->
-            </template>
-            <template v-slot:content>
-
-                  <ContentDataAssess
-                        card-item="CardAssess"
-                        selfID="selector_assess"
-                        data_set="assess"
-                        ref="contentData"
-                        :filter="filter"
-                        @new-data-loaded="newDataLoaded"
-                        @card-items-reindex="cardReindex"
-                        @update-news-items-filter="updateFilter"
-                />
-            </template>
-
-        </ViewLayout>
-    </div>
-
+  <div>
+    <ViewLayout>
+      <template v-slot:panel>
+        <topic-header-assess> </topic-header-assess>
+      </template>
+      <template v-slot:content>
+        <ContentDataAssess
+          card-item="CardAssess"
+          selfID="selector_assess"
+          data_set="assess"
+          ref="contentData"
+          :filter="filter"
+          @new-data-loaded="newDataLoaded"
+          @card-items-reindex="cardReindex"
+          @update-news-items-filter="updateFilter"
+        />
+      </template>
+    </ViewLayout>
+  </div>
 </template>
 
 <script>
@@ -34,6 +25,7 @@ import ViewLayout from '@/components/layouts/ViewLayout'
 import NewReportItem from '@/components/analyze/NewReportItem'
 import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess'
 import ContentDataAssess from '@/components/assess/ContentDataAssess'
+import TopicHeaderAssess from '@/components/assess/TopicHeaderAssess'
 
 import KeyboardMixin from '../../assets/keyboard_mixin'
 
@@ -43,6 +35,7 @@ export default {
     ViewLayout,
     ToolbarFilterAssess,
     ContentDataAssess,
+    TopicHeaderAssess,
     NewReportItem
   },
   props: {
@@ -112,7 +105,7 @@ export default {
 
     this.$root.$on('clear-cards', () => {
       const cards = document.querySelectorAll('.card-item')
-      cards.forEach(card => card.remove())
+      cards.forEach((card) => card.remove())
     })
   },
   created () {

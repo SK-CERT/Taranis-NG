@@ -15,6 +15,7 @@ a {
 .v-list--dense .v-list-item {
   min-height: 20px;
 }
+
 .v-list--dense .v-list-item .v-list-item__title {
   font-weight: 400 !important;
   color: $dark-grey;
@@ -61,9 +62,9 @@ a {
 }
 
 .v-application .v-btn.burger-menu {
-  min-width: $app-bar-height !important;
-  width: $app-bar-height !important;
-  height: $app-bar-height !important;
+  min-width: $app-bar-height  !important;
+  width: $app-bar-height  !important;
+  height: $app-bar-height  !important;
   display: block;
 }
 
@@ -77,27 +78,31 @@ a {
   }
 
   input {
-    color: $dark-grey !important;
+    color: $dark-grey  !important;
   }
 }
 
 .v-icon.v-icon.closed {
   transform: scaleX(-1);
 }
+
 .selected .v-icon.v-icon.desc {
   transform: rotate(-180deg);
 }
 
 .v-list .v-icon.filter-icon {
-  color: $light-grey-1 !important;
+  color: $light-grey-1  !important;
+
   & svg {
-    fill: $light-grey-1 !important;
+    fill: $light-grey-1  !important;
   }
 }
+
 .v-list .v-list-item--active.selected .v-icon.filter-icon {
-  color: $primary !important;
+  color: $primary  !important;
+
   & svg {
-    fill: $primary !important;
+    fill: $primary  !important;
   }
 }
 
@@ -108,6 +113,7 @@ a {
   padding-left: 0px;
   padding-right: 0px;
 }
+
 .v-list--dense .v-list-item.extra-dense .v-list-item__icon,
 .v-list-item--dense.extra-dense .v-list-item__icon {
   height: 30px;
@@ -123,17 +129,21 @@ a {
 .filter-list .v-list-item::before {
   background: none;
 }
+
 .text-field-active fieldset {
-  border: 2px solid $primary !important;
+  border: 2px solid $primary  !important;
 }
+
 .v-select__selections {
   overflow-x: hidden;
   overflow-y: hidden;
   flex-wrap: nowrap !important;
 }
+
 .v-select--is-menu-active .v-select__selections {
   flex-wrap: wrap !important;
 }
+
 .v-select__selections .v-chip {
   overflow: initial;
   flex-shrink: 0;
@@ -159,7 +169,7 @@ a {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   padding: 16px 12px !important;
 
   & svg {
@@ -207,11 +217,25 @@ a {
   background-color: white;
   padding: 8px 18px !important;
 }
+
 .v-application .v-card.selected {
   border: 3px solid $primary;
   background-color: $topic-selected-bg;
   padding: 18px !important;
+
+  & .news-item-action-bar {
+    background-color: lighten($primary, 28);
+
+    & .news-item-action.v-size--default .v-icon svg {
+      fill: lighten($dark-grey, 30);
+    }
+
+    & .news-item-action.active.v-size--default .v-icon svg {
+      fill: $primary;
+    }
+  }
 }
+
 .v-application .v-card--link:before {
   background: none;
 }
@@ -230,7 +254,7 @@ a {
 .v-application .tag-mini {
   min-width: 0px !important;
   font-weight: 700 !important;
-  background-color: $accent !important;
+  background-color: $accent  !important;
   color: white;
 }
 
@@ -240,26 +264,23 @@ a {
 .v-application input::placeholder,
 .v-application .v-label {
   font-size: 0.875rem;
-  color: $light-grey-2 !important;
+  color: $light-grey-2  !important;
   font-weight: 400;
 }
 
 .v-application .v-input__icon svg {
-  fill: $dark-grey !important;
+  fill: $dark-grey  !important;
 }
 
-.v-application
-  .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)
-  > .v-input__control
-  > .v-input__slot
-  fieldset {
+.v-application .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)>.v-input__control>.v-input__slot fieldset {
   border-color: $light-grey-2;
 }
 
 .topics-grid-container {
   position: relative;
 }
-.topics-grid-container > div {
+
+.topics-grid-container>div {
   min-width: 300px;
 }
 
@@ -270,9 +291,11 @@ a {
 .topics-grid-enter {
   opacity: 0;
 }
+
 .topics-grid-enter-to {
   opacity: 1;
 }
+
 .topics-grid-enter-active {
   transition: all 0.4s ease;
 }
@@ -281,10 +304,12 @@ a {
   opacity: 1;
   z-index: -1;
 }
+
 .topics-grid-leave-to {
   opacity: 0;
   z-index: -1;
 }
+
 .topics-grid-leave-active {
   transition: all 0.4s ease;
   position: absolute;
@@ -296,6 +321,7 @@ a {
 .date-filter-group .v-slide-group__content {
   width: 100%;
 }
+
 .date-filter-group .v-slide-group__content {
   justify-content: space-between;
   column-gap: 10px;
@@ -309,7 +335,7 @@ a {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   flex-grow: 1 !important;
   padding: 19px 10px;
   margin: 0;
@@ -318,7 +344,7 @@ a {
   &.clicked,
   &.selected,
   &.v-chip--outlined.selected {
-    background-color: $primary !important;
+    background-color: $primary  !important;
     border-color: $primary;
     fill: white;
 
@@ -348,7 +374,7 @@ a {
 }
 
 .v-application .v-label {
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   font-size: 14px;
 }
 
@@ -400,7 +426,7 @@ a {
     padding-bottom: 4px;
   }
 
-  & > div {
+  &>div {
     font-size: 0.78rem;
   }
 
@@ -414,6 +440,7 @@ a {
       color: $primary;
       text-decoration: none !important;
     }
+
     & .label {
       color: $primary;
       text-decoration: none !important;
@@ -452,12 +479,14 @@ a {
   height: 36px;
   fill: $light-grey-2;
 }
+
 .news-item-action-bar .v-btn--icon.active .v-icon svg {
   fill: $primary;
 }
 
 .decorateSource {
   color: $awake-green-color;
+
   & svg {
     fill: $awake-green-color;
   }
@@ -469,13 +498,14 @@ a {
   fill: $dark-grey;
 }
 
+.v-btn.topic-header-btn,
 .v-btn.news-item-btn {
   background-color: white;
   letter-spacing: normal;
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   padding: 14px 12px !important;
   height: 32px;
 
@@ -484,23 +514,118 @@ a {
   }
 }
 
+// .v-btn.topic-header-btn {
+//   caret-color: white;
+//   border-color: white;
+// }
+
 .status-unread.status-important,
 .status-important {
-  background-color: $status-important !important;
+  background-color: $status-important  !important;
 }
+
 .status-important.status-error,
 .status-unread.status-error,
 .status-error {
-  background-color: $status-error !important;
+  background-color: $status-error  !important;
 }
+
 .status-unread {
   background-color: $status-unread;
 }
+
 .status-hot {
   background-color: $status-important;
 }
 
-.highlightText {
-  background-color: yellow !important;
-  color: red;
+.justify-content-center {
+  justify-content: center;
+}
+
+.selection-toolbar {
+  & .v-toolbar__content {
+    height: auto !important;
+  }
+
+  & .selection-indicator {
+    font-size: 0.875rem;
+  }
+
+  & .selection-toolbar-btn {
+    & svg {
+      fill: white;
+    }
+  }
+}
+
+.item-count {
+  text-align: right;
+
+  & span {
+    font-size: 0.875rem;
+    color: lighten($dark-grey, 30);
+  }
+}
+
+.topic-header-container {
+  background-color: #e8e4aa;
+
+  & .card-alignment {
+    padding-left: 20px !important;
+  }
+
+  & .card-padding {
+    padding-right: 36px !important;
+    padding-left: 18px !important;
+  }
+
+  & h1 {
+    color: $dark-grey;
+    font-weight: 700;
+  }
+
+  .topic-excerpt {
+    font-size: 13px;
+    margin-bottom: 0px;
+    color: $dark-grey;
+  }
+
+  & .topic-header-meta-infos.row {
+    margin-top: 0px;
+
+    & .col {
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    &>div {
+      font-size: 0.78rem;
+    }
+
+    & .topic-header-meta-infos-label {
+      min-width: 120px;
+      max-width: 120px;
+    }
+
+    a.meta-link {
+      & .icon {
+        color: $primary;
+        text-decoration: none !important;
+      }
+
+      & .label {
+        color: $primary;
+        text-decoration: none !important;
+        text-transform: lowercase;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+        -webkit-box-orient: vertical;
+        height: calc(1.5em * 1);
+      }
+    }
+  }
 }
