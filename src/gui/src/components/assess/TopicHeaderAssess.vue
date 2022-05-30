@@ -1,5 +1,5 @@
 <template>
-  <v-container class="mx-3 pa-5 pb-0">
+  <v-container class="mx-3 pa-5 pb-5">
     <v-row class="card-padding my-4" no-gutters>
       <v-col class="headline card-alignment mb-4" cols="12" sm="12" md="7">
         <h1 class="pl-3 text-capitalize">{{ topic.title }}</h1>
