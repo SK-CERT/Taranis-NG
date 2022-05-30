@@ -10,6 +10,7 @@ import awakeRelatedSvg from '@/assets/icons/related.vue'
 import awakeReportSvg from '@/assets/icons/report.vue'
 import awakeRibbonSvg from '@/assets/icons/ribbon.vue'
 import awakeUnreadSvg from '@/assets/icons/unread.vue'
+import awakeDeleteSvg from '@/assets/icons/delete.vue'
 import awakeImportantSvg from '@/assets/icons/important.vue'
 import newsItemActionDeleteSvg from '@/assets/icons/action-delete.vue'
 import newsItemActionReadSvg from '@/assets/icons/action-read.vue'
@@ -94,6 +95,9 @@ const icons = {
     },
     awakeRibbon: {
       component: awakeRibbonSvg
+    },
+    awakeDelete: {
+      component: awakeDeleteSvg
     },
     newsItemActionDelete: {
       component: newsItemActionDeleteSvg
