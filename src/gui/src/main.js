@@ -16,6 +16,7 @@ import CSButton from '../src/components/common/CSButton'
 
 import layout_config from './assets/layout_config'
 import vuetify from '@/plugins/vuetify'
+import SmoothScrollbar from 'vue-smooth-scrollbar'
 
 const CSL = {
   install (Vue) {
@@ -55,6 +56,8 @@ if (localStorage.ACCESS_TOKEN) {
 }
 
 Vue.component('cs-button', CSButton)
+
+Vue.use(SmoothScrollbar)
 
 export const vm = new Vue({
   router,
