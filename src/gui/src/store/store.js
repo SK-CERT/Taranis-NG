@@ -20,44 +20,60 @@ const state = {
     name: '',
     organization_name: '',
     permissions: []
+  },
+  selection: {
+    total: 0,
+    filtered: 0
   }
 }
 
 const actions = {
 
-  setUser (context, userData) {
+  setUser(context, userData) {
     context.commit('setUser', userData)
   },
 
-  logout (context) {
+  updateSelection(context, selection) {
+    context.commit('updateSelection', selection)
+  },
+
+  logout(context) {
     context.commit('clearJwtToken')
   }
 }
 
 const mutations = {
 
-  setUser (state, userData) {
+  setUser(state, userData) {
     state.user = userData
+  },
+
+  updateSelection(state, selection) {
+    state.selection = selection
   }
 }
 
 const getters = {
 
-  getUserId (state) {
+  getUserId(state) {
     return state.user.id
   },
 
-  getUserName (state) {
+  getUserName(state) {
     return state.user.name
   },
 
-  getOrganizationName (state) {
+  getOrganizationName(state) {
     return state.user.organization_name
   },
 
-  getPermissions (state) {
+  getPermissions(state) {
     return state.user.permissions
-  }
+  },
+
+  getSelection(state) {
+    return state.selection
+  },
 }
 
 export const store = new Vuex.Store({

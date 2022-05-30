@@ -1,11 +1,11 @@
 <template>
   <v-app-bar
-    app
     dense
-    clipped-left
     flat
     color="cx-app-header"
     class="main-menu-bar pr-0 pl-0"
+    app
+    clipped-left
   >
     <v-btn
       depressed
@@ -18,7 +18,7 @@
       <v-icon
         :class="[
           'menu-icon',
-          { closed: !opened || this.$vuetify.breakpoint.mdAndDown },
+          { closed: !opened || this.$vuetify.breakpoint.mdAndDown }
         ]"
         >mdi-menu-open</v-icon
       >
@@ -57,6 +57,15 @@
         </svg>
       </div>
     </v-toolbar-title>
+
+    <div class="item-count">
+      <span
+        >total items: <strong>{{ selection.total }}</strong> /
+      </span>
+      <span
+        >displayed items: <strong>{{ selection.filtered }}</strong></span
+      >
+    </div>
 
     <v-spacer></v-spacer>
 
@@ -105,7 +114,10 @@
         </v-btn>
       </template>
       <v-list>
-        <v-list-item v-for="button in getButtonList(permissions)" :key="button.route">
+        <v-list-item
+          v-for="button in getButtonList(permissions)"
+          :key="button.route"
+        >
           <v-btn
             text
             plain
@@ -131,6 +143,8 @@
 import UserMenu from '../components/UserMenu'
 import AuthMixin from '../services/auth/auth_mixin'
 import Permissions from '@/services/auth/permissions'
+
+import { mapState } from 'vuex'
 
 export default {
   components: { UserMenu },
@@ -209,8 +223,14 @@ export default {
     },
 
     getButtonList (permissions) {
-      return this.buttons.filter(button => this.checkPermission(permissions[button.permission]) && button.show)
+      return this.buttons.filter(
+        (button) =>
+          this.checkPermission(permissions[button.permission]) && button.show
+      )
     }
+  },
+  computed: {
+    ...mapState(['selection'])
   },
   mounted () {
     if (this.checkPermission(Permissions.ASSESS_CREATE)) {
