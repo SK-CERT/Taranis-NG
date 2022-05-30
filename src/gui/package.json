@@ -32,6 +32,7 @@
     "vue-quill-editor": "^3.0.6",
     "vue-router": "^3.5.3",
     "vue-shortkey": "^3.1.7",
+    "vue-smooth-scrollbar": "^1.0.3",
     "vue-sse": "^1.1.1",
     "vue-wordcloud": "^1.1.1",
     "vue2-datepicker": "^3.10.2",
