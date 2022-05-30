@@ -9,6 +9,7 @@
 
         <v-col cols="12">
           <v-text-field
+            v-model="filter.search"
             label="search"
             outlined
             dense
@@ -29,12 +30,12 @@
         <!-- time tags -->
         <v-col cols="12" class="pb-0">
           <v-chip-group
-            v-model="date.selected"
+            v-model="filter.date.selected"
             active-class="selected"
             class="date-filter-group d-flex"
             @change="
-              date.range = [];
-              defaultDate($event);
+              filter.date.range = []
+              defaultDate($event)
             "
           >
             <v-chip label outlined dark value="all">all</v-chip>
@@ -49,7 +50,7 @@
             ref="datePicker"
             v-model="datePicker"
             :close-on-content-click="false"
-            :return-value.sync="date"
+            :return-value.sync="filter.date"
             transition="scale-transition"
             offset-y
             min-width="auto"
@@ -66,16 +67,16 @@
                 v-on="on"
                 placeholder="Date range"
                 hide-details
-                :class="[{ 'text-field-active': date.range.length }]"
+                :class="[{ 'text-field-active': filter.date.range.length }]"
               ></v-text-field>
             </template>
             <v-date-picker
-              v-model="date.range"
+              v-model="filter.date.range"
               range
               no-title
               scrollable
               color="primary"
-              @change="date.selected = 'range'"
+              @change="filter.date.selected = 'range'"
             >
               <v-spacer></v-spacer>
               <v-btn
@@ -90,7 +91,7 @@
                 text
                 outlined
                 color="primary"
-                @click="$refs.datePicker.save(date)"
+                @click="$refs.datePicker.save(filter.date)"
               >
                 OK
               </v-btn>
@@ -101,7 +102,7 @@
         <!-- tags -->
         <v-col cols="10" class="pr-0">
           <v-combobox
-            v-model="tags.selected"
+            v-model="filter.tags.selected"
             :items="tagList"
             label="tags"
             multiple
@@ -143,7 +144,7 @@
                 v-if="index === 1 && !parent.isMenuActive"
                 class="grey--text text-caption"
               >
-                (+{{ tags.selected.length - 1 }})
+                (+{{ filter.tags.selected.length - 1 }})
               </span>
             </template>
           </v-combobox>
@@ -152,10 +153,14 @@
           <v-btn
             outlined
             dark
-            @click="tags.andOperator = !tags.andOperator"
-            :class="['text-lowercase', 'px-0', { selected: tags.andOperator }]"
+            @click="filter.tags.andOperator = !filter.tags.andOperator"
+            :class="[
+              'text-lowercase',
+              'px-0',
+              { selected: filter.tags.andOperator }
+            ]"
           >
-            <span v-if="tags.andOperator"> & </span>
+            <span v-if="filter.tags.andOperator"> & </span>
             <span v-else> or </span>
           </v-btn>
         </v-col>
@@ -171,17 +176,18 @@
         <v-col cols="12" class="pt-2">
           <v-list dense class="py-0">
             <v-list-item-group
-              v-model="filterBy.selected"
               active-class="selected"
+              v-model="filter.attributes.selected"
               multiple
               class="filter-list"
             >
               <template>
                 <v-list-item
-                  v-for="item in filterBy.list"
-                  :key="item.label"
+                  v-for="item in filterAttributeOptions"
+                  :key="item.type"
                   class="extra-dense"
                   :ripple="false"
+                  :value="item.type"
                 >
                   <template v-slot:default="{ active }">
                     <v-list-item-icon class="mr-2">
@@ -225,7 +231,7 @@
         <v-col cols="12" class="pt-2">
           <v-list dense class="py-0">
             <v-list-item-group
-              v-model="sortBy.selected"
+              v-model="order.selected"
               active-class="selected"
               class="filter-list"
               mandatory
@@ -233,7 +239,7 @@
               <!-- :value-comparator="sortByActivation" -->
               <template>
                 <v-list-item
-                  v-for="(item, index) in sortBy.list"
+                  v-for="(item, index) in orderOptions"
                   :key="item.title"
                   class="extra-dense"
                   :ripple="false"
@@ -285,7 +291,7 @@
       <v-row class="mt-1 mr-0 px-5 pb-10">
         <v-col cols="12" class="py-0">
           <v-checkbox
-            v-model="sortBy.keepPinned"
+            v-model="order.keepPinned"
             dense
             hide-details
             label="Pinned always on top"
@@ -297,6 +303,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   name: 'DashboardNav',
   components: {},
@@ -311,51 +319,44 @@ export default {
       andOperator: true,
       selected: ['all']
     },
-    filterBy: {
-      selected: [],
-      list: [
-        { label: 'active topics', icon: 'mdi-message-outline' },
-        { label: 'pinned topics', icon: '$awakePin' },
-        { label: 'hot topics', icon: 'mdi-star-outline' },
-        { label: 'upvoted topics', icon: 'mdi-arrow-up-circle-outline' }
-      ]
-    },
-    sortBy: {
-      keepPinned: true,
-      selected: {},
-      list: [
-        {
-          label: 'relevance score',
-          icon: 'mdi-star-outline',
-          type: 'relevanceScore',
-          direction: 'desc'
-        },
-        {
-          label: 'last activity',
-          icon: 'mdi-calendar-range-outline',
-          type: 'lastActivity',
-          direction: ''
-        },
-        {
-          label: 'new news items',
-          icon: 'mdi-file-outline',
-          type: 'newItems',
-          direction: ''
-        },
-        {
-          label: 'new comments',
-          icon: 'mdi-message-outline',
-          type: 'newComments',
-          direction: ''
-        },
-        {
-          label: 'upvotes',
-          icon: 'mdi-arrow-up-circle-outline',
-          type: 'upvotes',
-          direction: ''
-        }
-      ]
-    },
+    filterAttributeOptions: [
+      { type: 'active', label: 'active topics', icon: 'mdi-message-outline' },
+      { type: 'pinned', label: 'pinned topics', icon: '$awakePin' },
+      { type: 'hot', label: 'hot topics', icon: 'mdi-star-outline' },
+      { type: 'upvoted', label: 'upvoted topics', icon: 'mdi-arrow-up-circle-outline' }
+    ],
+    orderOptions: [
+      {
+        label: 'relevance score',
+        icon: 'mdi-star-outline',
+        type: 'relevanceScore',
+        direction: 'desc'
+      },
+      {
+        label: 'last activity',
+        icon: 'mdi-calendar-range-outline',
+        type: 'lastActivity',
+        direction: ''
+      },
+      {
+        label: 'new news items',
+        icon: 'mdi-file-outline',
+        type: 'newItems',
+        direction: ''
+      },
+      {
+        label: 'new comments',
+        icon: 'mdi-message-outline',
+        type: 'newComments',
+        direction: ''
+      },
+      {
+        label: 'upvotes',
+        icon: 'mdi-arrow-up-circle-outline',
+        type: 'upvotes',
+        direction: ''
+      }
+    ],
     tagList: [
       'all',
       'State',
@@ -374,6 +375,8 @@ export default {
     ]
   }),
   computed: {
+    ...mapState('topicsFilter', ['filter', 'order']),
+
     dateRangeText () {
       return this.date.range.join(' – ')
     },
@@ -383,51 +386,44 @@ export default {
   },
   methods: {
     defaultDate (event) {
-      if (!this.date.selected) {
-        this.date.selected = 'all'
+      if (!this.filter.date.selected) {
+        this.filter.date.selected = 'all'
+      }
+    },
+    defaultSource () {
+      if (!this.sources.selected.length) {
+        this.sources.selected = ['all']
+      } else if (this.sources.selected !== ['all']) {
+        this.sources.selected = this.sources.selected.filter(
+          (item) => item !== 'all'
+        )
       }
     },
     defaultTag () {
-      if (!this.tags.selected.length) {
-        this.tags.selected = ['all']
-      } else if (this.tags.selected !== ['all']) {
-        this.tags.selected = this.tags.selected.filter((item) => item !== 'all')
+      if (!this.filter.tags.selected.length) {
+        this.filter.tags.selected = ['all']
+      } else if (this.filter.tags.selected !== ['all']) {
+        this.filter.tags.selected = this.filter.tags.selected.filter(
+          (item) => item !== 'all'
+        )
       }
     },
     removeSelectedTag (chip) {
-      this.tags.selected = this.tags.selected.filter((c) => c !== chip)
+      this.filter.tags.selected = this.filter.tags.selected.filter(
+        (c) => c !== chip
+      )
       this.defaultTag()
     },
     changeDirection (event, index) {
       event.preventDefault()
       var newDirection =
-        this.sortBy.list[index].direction === 'desc' ? 'asc' : 'desc'
-      this.sortBy.list = this.sortBy.list.map((item) => ({
+        this.orderOptions[index].direction === 'desc' ? 'asc' : 'desc'
+      this.orderOptions = this.orderOptions.map((item) => ({
         ...item,
         direction: ''
       }))
-      this.sortBy.list[index].direction = newDirection
-    }
-  },
-  watch: {
-    filterBy: {
-      handler () {
-        this.$store.dispatch('filterTopics', this.filterBy)
-      },
-      deep: true
-    },
-    sortBy: {
-      handler () {
-        this.$store.dispatch('sortTopics', this.sortBy)
-      },
-      deep: true
-    },
-    tags: {
-      handler () {
-        this.$store.dispatch('filterTopicsByTags', this.tags)
-      },
-      deep: true
-    }
+      this.orderOptions[index].direction = newDirection
+    }    
   }
 }
 </script>

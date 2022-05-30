@@ -5,7 +5,7 @@
 
       <transition-group name="topics-grid" tag="div" class="row d-flex align-stretch row--dense topics-grid-container" appear>
         <adaptive-cardsize
-          v-for="(topic, index) in accumulatedTopicList"
+          v-for="(topic, index) in filteredTopics"
           :key="topic.id"
           :topic="topic"
           :position="index"
@@ -180,8 +180,12 @@ import wordcloud from 'vue-wordcloud'
 import ViewLayout from '../../components/layouts/ViewLayout'
 import AdaptiveCardsize from '@/components/layouts/AdaptiveCardsize'
 
-import { faker } from '@faker-js/faker'
+import { mapState } from 'vuex'
+import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
+import { xor } from 'lodash'
 import moment from 'moment'
+
+import { faker } from '@faker-js/faker'
 
 export default {
   name: 'DashboardView',
@@ -198,52 +202,115 @@ export default {
     tagCloud: [],
     labels: ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
     value: [200, 675, 410, 390, 310, 460, 250, 240],
-    // topicList: [],
     replacement: [],
-    filterList: {}
+    filterList: {},
+    topics: [],
+    selection: []
   }),
   computed: {
-    getData () {
-      return this.$store.getters.getDashboardData
-    },
-    originalTopicList () {
-      return this.$store.getters.getOriginalTopicList
-    },
-    accumulatedTopicList () {
-      return this.$store.getters.getAccumulatedTopicList
-    }
-  },
-  methods: {
-    updateTopicList (newTopicList) {
-      this.replacement = newTopicList
-    },
-    applyFilters () {
-      if (Object.keys(this.filterList).length !== 0) {
-        for (const [filterName, filters] of Object.entries(this.filterList)) {
-          if (filters.apply) {
-            console.log(filterName + ' is applied')
-          }
-        }
-      }
-    },
-    sortByLastActivity (topicList, direction, sortByPinned = false) {
-      return [...topicList].sort((x, y) => {
-        // Define direction
-        const firstElement = (direction === 'asc') ? x.lastActivity : y.lastActivity
-        const secondElement = (direction === 'asc') ? y.lastActivity : x.lastActivity
+    ...mapState('topicsFilter', ['filter', 'order']),
 
-        // Sort
-        if (sortByPinned && x.pinned && !y.pinned) {
-          return -1
-        } else if (sortByPinned && !x.pinned && y.pinned) {
-          return 1
-        } else {
-          return moment(firstElement, 'DD/MM/YYYY hh:mm:ss') - moment(secondElement, 'DD/MM/YYYY hh:mm:ss')
+    filteredTopics () {
+      let filteredData = [...this.topics]
+
+      // SEARCH
+      filteredData = filteredData.filter((item) => {
+        return (
+          !this.filter.search ||
+          filterSearch([item.title, item.excerpt], this.filter.search)
+        )
+      })
+
+      // DATE
+      filteredData = filteredData.filter((item) => {
+        return (
+          this.filter.date.selected === 'all' ||
+          filterDateRange(
+            item.lastActivity,
+            this.filter.date.selected,
+            this.filter.date.range
+          )
+        )
+      })
+
+      // TAGS
+      filteredData = filteredData.filter((item) => {
+        return (
+          this.filter.tags.selected.includes('all') ||
+          filterTags(
+            item.tags,
+            this.filter.tags.selected,
+            this.filter.tags.andOperator
+          )
+        )
+      })
+
+      // ONLY SHOW
+      this.filter.attributes.selected.forEach((type) => {
+        filteredData = filteredData.filter((item) => {
+          switch (type) {
+            case 'active':
+              return (parseInt(item.comments.new) > 0)
+            case 'pinned':
+              return item.pinned
+            case 'hot':
+              return item.hot
+            case 'upvoted':
+              return (parseInt(item.votes.up) > parseInt(item.votes.down))
+            default:
+              return true
+          }
+        })
+      })
+
+      // SORTING
+      filteredData.sort((x, y) => {
+        
+        const directionModifier =
+          this.order.selected.direction === 'asc' ? 1 : -1
+        
+        const sorter = function (a, b) {
+          return parseInt(a) < parseInt(b)
+              ? -1 * directionModifier
+              : 1 * directionModifier
+        }
+
+        if (this.order.keepPinned) {
+          if (x.pinned && !y.pinned) return -1
+          if (!x.pinned && y.pinned) return 1
+        }
+
+        if (x === y) return 0
+
+        switch (this.order.selected.type) {
+          case 'relevanceScore':
+            return sorter(x.relevanceScore, y.relevanceScore)
+          case 'newItems':
+            return sorter(x.items.new, y.items.new)
+          case 'newComments':
+            return sorter(x.comments.new, y.comments.new)
+          case 'upvotes':
+            return sorter(x.votes.up, y.votes.up)
+          case 'lastActivity':
+            return (
+              (moment(x.lastActivity, 'DD/MM/YYYY hh:mm:ss') -
+                moment(y.lastActivity, 'DD/MM/YYYY hh:mm:ss')) *
+              directionModifier
+            )
         }
       })
+
+      this.$store.dispatch('updateItemCount', {
+        total: this.topics.length,
+        filtered: filteredData.length
+      })
+
+      return filteredData
     },
-    sortByPinned () {
-      this.replacement.sort((x, y) => x.pinned === true ? -1 : y.pinned === true ? 1 : 0)
+  },
+  methods: {
+    getData () {
+      return this.$store.getters.getDashboardData
     },
     wordClickHandler (name, value, vm) {
       window.console.log('wordClickHandler', name, value, vm)
@@ -298,8 +365,8 @@ export default {
         ai: Math.random() < 0.5,
         hot: Math.random() < 0.2,
         pinned: Math.random() < 0.05,
-        lastActivity: moment(new Date(String(faker.date.recent(10)))).format('DD/MM/YYYY hh:mm:ss'),
-        summary: faker.lorem.paragraph(),
+        lastActivity: new Date(String(faker.date.recent(10))),
+        excerpt: faker.lorem.paragraph(),
         items: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         comments: { total: faker.commerce.price(70, 200, 0), new: faker.commerce.price(0, 70, 0) },
         votes: { up: faker.commerce.price(0, 150, 0), down: faker.commerce.price(0, 250, 0) },
@@ -308,10 +375,7 @@ export default {
       dummyData.push(entry)
     }
 
-    this.$store.commit('setOriginalTopicList', dummyData)
-    var sortedList = this.sortByLastActivity(dummyData, 'desc', true)
-    this.$store.commit('setOriginalTopicList', JSON.parse(JSON.stringify(sortedList)))
-    this.$store.commit('setAccumulatedTopicList', JSON.parse(JSON.stringify(sortedList)))
+    this.topics = dummyData
 
     setInterval(
       function () {
@@ -320,24 +384,6 @@ export default {
       600000
     )
 
-    // this.$store.subscribe((mutation, state) => {
-    //   console.log(mutation.type)
-    //   switch (mutation.type) {
-    //     case 'applySortby':
-    //       var sortBy = this.$store.getters.getSortBy
-    //       var direction = sortBy.direction
-    //       // if (direction) {
-    //       //   this.sortByLastActivity(direction)
-    //       // }
-    //       break
-    //     // case 'setOriginalTopicList':
-    //     //   console.log('setOriginalTopicList')
-    //     //   break
-    //     // case 'setAccumulatedTopicList':
-    //     //   console.log('setAccumulatedTopicList')
-    //     //   break
-    //   }
-    // })
   }
 }
 </script>
