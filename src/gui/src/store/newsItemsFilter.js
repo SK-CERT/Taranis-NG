@@ -18,7 +18,7 @@ export const newsItemsFilter = {
       }
     },
     order: {
-      selected: []
+      selected: {}
     }
   },
   getters: {

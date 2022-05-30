@@ -60,10 +60,10 @@
 
     <div class="item-count">
       <span
-        >total items: <strong>{{ selection.total }}</strong> /
+        >total items: <strong>{{ itemCount.total }}</strong> /
       </span>
       <span
-        >displayed items: <strong>{{ selection.filtered }}</strong></span
+        >displayed items: <strong>{{ itemCount.filtered }}</strong></span
       >
     </div>
 
@@ -230,7 +230,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['selection'])
+    ...mapState(['itemCount'])
   },
   mounted () {
     if (this.checkPermission(Permissions.ASSESS_CREATE)) {

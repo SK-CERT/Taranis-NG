@@ -11,6 +11,7 @@ import { assets } from '@/store/assets'
 import { dashboard } from '@/store/dashboard'
 import { osint_source } from '@/store/osint_source'
 import { newsItemsFilter } from '@/store/newsItemsFilter'
+import { topicsFilter } from '@/store/topicsFilter'
 
 Vue.use(Vuex)
 
@@ -21,7 +22,7 @@ const state = {
     organization_name: '',
     permissions: []
   },
-  selection: {
+  itemCount: {
     total: 0,
     filtered: 0
   }
@@ -33,8 +34,8 @@ const actions = {
     context.commit('setUser', userData)
   },
 
-  updateSelection(context, selection) {
-    context.commit('updateSelection', selection)
+  updateItemCount(context, itemCount) {
+    context.commit('updateItemCount', itemCount)
   },
 
   logout(context) {
@@ -48,8 +49,8 @@ const mutations = {
     state.user = userData
   },
 
-  updateSelection(state, selection) {
-    state.selection = selection
+  updateItemCount(state, itemCount) {
+    state.itemCount = itemCount
   }
 }
 
@@ -91,6 +92,7 @@ export const store = new Vuex.Store({
     assets,
     dashboard,
     osint_source,
-    newsItemsFilter
+    newsItemsFilter,
+    topicsFilter
   }
 })
