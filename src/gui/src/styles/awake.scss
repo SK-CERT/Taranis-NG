@@ -221,7 +221,7 @@ a {
 .v-application .v-card.selected {
   border: 3px solid $primary;
   background-color: $topic-selected-bg;
-  padding: 18px !important;
+  padding: 8px 18px !important;
 
   & .news-item-action-bar {
     background-color: lighten($primary, 28);
@@ -431,8 +431,8 @@ a {
   }
 
   & .news-item-meta-infos-label {
-    min-width: 85px;
-    max-width: 85px;
+    min-width: 100px;
+    max-width: 100px;
   }
 
   a.meta-link {
@@ -551,10 +551,17 @@ a {
     font-size: 0.875rem;
   }
 
-  & .selection-toolbar-btn {
-    & svg {
-      fill: white;
-    }
+}
+
+.selection-toolbar-btn {
+  & svg {
+    fill: white;
+  }
+}
+
+.red-icon {
+  & svg {
+    fill: darken($awake-red-color, 10);
   }
 }
 
@@ -629,4 +636,8 @@ a {
       }
     }
   }
+}
+
+.v-btn.v-btn--icon.votes-btn::before {
+  background: none !important;
 }

@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;900&display=swap');
 
 $body-font-family: 'Rubik', sans-serif !default;
-$heading-font-family: 'Montserrat', sans-serif !default; 
+$heading-font-family: 'Montserrat', sans-serif !default;
 
 $font-size-root: 14px;
 $btn-letter-spacing: 0;
@@ -10,6 +10,13 @@ $btn-font-weight: 400;
 
 $app-bar-height: 48px;
 
+$grid-breakpoints: (
+    'xs': 0,
+    'sm': 600px - 16px,
+    'md': 976px - 16px,
+    'lg': 1280px - 16px,
+    'xl': 2560px - 16px
+);
 
 // Colors:
 
