@@ -11,18 +11,18 @@
         'newsItem',
         'dark-grey--text',
         {
-          selected: newsItem.selected,
-        },
+          selected: newsItem.selected
+        }
       ]"
-      @click="selectCard"
+      @click="toggleSelection"
     >
       <div
         class="status-bar"
         :class="[
           {
             'status-important': newsItem.important,
-            'status-unread': !newsItem.read,
-          },
+            'status-unread': !newsItem.read
+          }
         ]"
       ></div>
 
@@ -35,6 +35,7 @@
           tile
           class="news-item-action"
           :class="[{ active: newsItem.read }]"
+          @click.native.capture="markAsRead($event)"
         >
           <v-icon> $newsItemActionRead </v-icon>
         </v-btn>
@@ -43,10 +44,16 @@
           tile
           class="news-item-action"
           :class="[{ active: newsItem.important }]"
+          @click.native.capture="markAsImportant($event)"
         >
           <v-icon> $newsItemActionImportant </v-icon>
         </v-btn>
-        <v-btn icon tile class="news-item-action">
+        <v-btn
+          icon
+          tile
+          class="news-item-action"
+          @click.native.capture="deleteNewsItem($event)"
+        >
           <v-icon> $newsItemActionDelete </v-icon>
         </v-btn>
         <v-btn
@@ -54,6 +61,7 @@
           tile
           class="news-item-action"
           :class="[{ active: newsItem.decorateSource }]"
+          @click.native.capture="decorateSource($event)"
         >
           <v-icon> $newsItemActionRibbon </v-icon>
         </v-btn>
@@ -72,12 +80,7 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col class="pb-1">
                   <h2
-                    class="
-                      headline
-                      dark-grey--text
-                      text-capitalize
-                      news-item-headline
-                    "
+                    class="headline dark-grey--text text-capitalize news-item-headline"
                   >
                     {{ newsItem.title }}
                   </h2>
@@ -87,12 +90,7 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
                   <p
-                    class="
-                      font-weight-light
-                      dark-grey--text
-                      news-item-excerpt
-                      mb-0
-                    "
+                    class="font-weight-light dark-grey--text news-item-excerpt mb-0"
                   >
                     {{ newsItem.excerpt }}
                   </p>
@@ -135,15 +133,11 @@
                       small
                       color="awake-green-color"
                       class="align-self-center mr-1"
+                      @click.native.capture="upvote($event)"
                       >mdi-arrow-up-circle-outline</v-icon
                     >
                     <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
+                      class="text-caption font-weight-light dark-grey--text align-self-center"
                       >{{ newsItem.votes.up }}</span
                     >
                   </div>
@@ -153,15 +147,11 @@
                       small
                       color="awake-red-color"
                       class="align-self-center mr-1"
+                      @click.native.capture="downvote($event)"
                       >mdi-arrow-down-circle-outline</v-icon
                     >
                     <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
+                      class="text-caption font-weight-light dark-grey--text align-self-center"
                       >{{ newsItem.votes.down }}</span
                     >
                   </div>
@@ -217,6 +207,14 @@
               </v-row>
               <v-row class="news-item-meta-infos">
                 <v-col class="news-item-meta-infos-label">
+                  <strong>Source Type:</strong>
+                </v-col>
+                <v-col>
+                  {{ newsItem.source.type }}
+                </v-col>
+              </v-row>
+              <v-row class="news-item-meta-infos">
+                <v-col class="news-item-meta-infos-label">
                   <strong>Added by:</strong>
                 </v-col>
                 <v-col>
@@ -267,108 +265,13 @@
       </v-container>
     </v-card>
   </v-col>
-  <!-- <v-card tile elevation="4" outlined height="100%" :class="[
-    'pa-5',
-    'pl-5',
-    'align-self-stretch',
-    'topic',
-    'primary--text',
-    {
-        'pinned-topic': topic.pinned,
-        'selected': topic.selected,
-    }]"
-    @click="selectCard"
-    >
-        <div class="status-bar" v-if="topic.hot" :class="[
-        {
-            'status-hot': topic.hot
-        }]">
-        </div>
-        <v-container column style="height: 100%">
-
-            <v-row no-gutters style="height: 100%">
-                <v-col class="d-flex flex-column" align-self="start" style="height: 100%">
-
-                    <v-row class="flex-grow-0">
-                        <v-col cols="10" class="mr-auto mt-1">
-                            <tag-mini label="AI" v-show="topic.ai" />
-                            <span class="last-activity font-weight-light dark-grey--text">Last activity: </span>
-                            <span class="last-activity font-weight-bold dark-grey--text"> {{ topic.lastActivity }} </span>
-                        </v-col>
-
-                        <v-col cols="2" class="text-right">
-                            <v-btn fab depressed outlined x-small color="grey" :class="['fab-pin', {'pinned': topic.pinned,}]" @click.native.capture="pinToTop($event)">
-                                <v-icon>$awakePin</v-icon>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-
-                    <v-row class="flex-grow-0 mt-1">
-                        <v-col>
-                            <h2 class="font-weight-bold headline dark-grey--text text-capitalize">
-                                {{ topic.title }}
-                            </h2>
-                        </v-col>
-                    </v-row>
-
-                    <v-row class="flex-grow-0 mt-1">
-                        <v-col>
-                            <tag-topic v-for="tag in topic.tags" :key="tag.label" :tag="tag" />
-                        </v-col>
-                    </v-row>
-
-                    <v-spacer></v-spacer>
-
-                    <v-row class="flex-grow-0 mt-2">
-                        <v-col>
-                            <p class="font-weight-light dark-grey--text topic-excerpt">
-                                {{ topic.summary }}
-                            </p>
-                        </v-col>
-                    </v-row>
-
-                    <v-row no-gutter wrap align="center" justify="end" class="flex-grow-0 mt-0">
-                        <v-col cols="12" md="8" class="mx-0 d-flex justify-start">
-                            <v-container class="mx-0 pa-0">
-                                <v-row class="mx-0">
-                                    <v-col cols="6" class="pa-0 pt-0 pr-1">
-                                        <v-icon left small>mdi-file-outline</v-icon>
-                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.items.total }} /</span>
-                                        <span class="text-caption font-weight-bold dark-grey--text">{{ topic.items.new }}</span>
-                                    </v-col>
-                                    <v-col cols="6" class="pa-0 pt-0 pr-1">
-                                        <v-icon left small color="awake-green-color">mdi-arrow-up-circle-outline</v-icon>
-                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.votes.up }}</span>
-                                    </v-col>
-                                    <v-col cols="6" class="pa-0 pt-0 pr-1">
-                                        <v-icon left small>mdi-message-outline</v-icon>
-                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.comments.total }} /</span>
-                                        <span class="text-caption font-weight-bold dark-grey--text">{{ topic.comments.new }}</span>
-                                    </v-col>
-                                    <v-col cols="6" class="pa-0 pt-0 pr-1">
-                                        <v-icon left small color="awake-red-color">mdi-arrow-down-circle-outline</v-icon>
-                                        <span class="text-caption font-weight-light dark-grey--text">{{ topic.votes.down }}</span>
-                                    </v-col>
-                                </v-row>
-                            </v-container>
-                        </v-col>
-                        <v-col cols="12" md="4" class="mx-0 d-flex justify-end">
-                            <v-btn outlined class="text-lowercase btn-view-topic mt-1" @click.native.capture="viewTopic($event)">
-                                <v-icon left>mdi-eye-outline</v-icon>
-                                view topic
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-
-                </v-col>
-            </v-row>
-        </v-container>
-    </v-card> -->
 </template>
 
 <script>
 import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
+
+import { mapActions } from 'vuex'
 
 export default {
   name: 'CardNewsItem',
@@ -388,12 +291,40 @@ export default {
     }
   },
   methods: {
-    selectCard: function () {
-      this.$emit('selectCard', this.newsItem.id)
+    ...mapActions('assess', [
+      'selectNewsItem',
+      'upvoteNewsItem',
+      'downvoteNewsItem'
+    ]),
+
+    toggleSelection: function () {
+      this.newsItem.selected = !this.newsItem.selected
+      this.selectNewsItem(this.newsItem.id)
+      // this.$emit('selectItem', this.newsItem.id)
     },
-    pinToTop: function (event) {
+    markAsRead: function (event) {
       event.stopPropagation()
-      this.$store.dispatch('pinTopic', this.topic.id)
+      this.newsItem.read = !this.newsItem.read
+    },
+    markAsImportant: function (event) {
+      event.stopPropagation()
+      this.newsItem.important = !this.newsItem.important
+    },
+    decorateSource: function (event) {
+      event.stopPropagation()
+      this.newsItem.decorateSource = !this.newsItem.decorateSource
+    },
+    deleteNewsItem: function (event) {
+      event.stopPropagation()
+      this.$emit('deleteItem', this.newsItem.id)
+    },
+    upvote: function (event) {
+      event.stopPropagation()
+      this.upvoteNewsItem(this.newsItem.id)
+    },
+    downvote: function (event) {
+      event.stopPropagation()
+      this.downvoteNewsItem(this.newsItem.id)
     },
     viewTopic: function (event) {
       event.stopPropagation()
