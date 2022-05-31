@@ -16,7 +16,7 @@
                   class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-4"
                 >
                   <p class="topic-excerpt">
-                    {{ topic.summary }}
+                    {{ topic.excerpt }}
                   </p>
                 </v-col>
               </v-row>
@@ -138,7 +138,6 @@
 </template>
 
 <script>
-import { faker } from '@faker-js/faker'
 import moment from 'moment'
 
 import TagMini from '@/components/common/tags/TagMini'
@@ -152,61 +151,14 @@ export default {
     TagMini,
     TagNorm
   },
-  props: {},
-  data: () => ({
+  props: {
     topic: {}
-  }),
+  },
+  data: () => ({}),
   methods: {},
   computed: {
     lastActivity () {
       return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
-    }
-  },
-  mounted () {
-    // Generate Dummy Data
-    var dummyTags = [
-      { label: 'State', color: Math.floor(Math.random() * 20) },
-      { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-      { label: 'Threat', color: Math.floor(Math.random() * 20) },
-      { label: 'DDoS', color: Math.floor(Math.random() * 20) },
-      { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-      { label: 'Java', color: Math.floor(Math.random() * 20) },
-      { label: 'CVE', color: Math.floor(Math.random() * 20) },
-      { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-      { label: 'Python', color: Math.floor(Math.random() * 20) },
-      { label: 'Privacy', color: Math.floor(Math.random() * 20) },
-      { label: 'Social', color: Math.floor(Math.random() * 20) },
-      { label: 'APT', color: Math.floor(Math.random() * 20) },
-      { label: 'MitM', color: Math.floor(Math.random() * 20) }
-    ]
-
-    this.topic = {
-      id: 0,
-      relevanceScore: faker.commerce.price(0, 100, 0),
-      title: faker.lorem.words(Math.floor(Math.random() * (5 - 2 + 1)) + 2),
-      tags: faker.random.arrayElements(
-        dummyTags,
-        Math.floor(Math.random() * (5 - 2 + 1)) + 2
-      ),
-      ai: Math.random() < 0.5,
-      originator: `${faker.name.firstName()} ${faker.name.lastName()}`,
-      hot: Math.random() < 0.2,
-      pinned: Math.random() < 0.05,
-      lastActivity: new Date(String(faker.date.recent(10))),
-      summary: faker.lorem.paragraph(35),
-      items: {
-        total: faker.commerce.price(70, 200, 0),
-        new: faker.commerce.price(0, 70, 0)
-      },
-      comments: {
-        total: faker.commerce.price(70, 200, 0),
-        new: faker.commerce.price(0, 70, 0)
-      },
-      votes: {
-        up: faker.commerce.price(0, 150, 0),
-        down: faker.commerce.price(0, 250, 0)
-      },
-      selected: false
     }
   }
 }
