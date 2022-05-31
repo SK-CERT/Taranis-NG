@@ -2,10 +2,10 @@
   <div>
     <ViewLayout>
       <template v-slot:panel>
-        <topic-header-assess> </topic-header-assess>
+        <topic-header-assess :topic="topic"> </topic-header-assess>
       </template>
       <template v-slot:content>
-        <ContentDataAssess
+        <AssessContent
           card-item="CardAssess"
           selfID="selector_assess"
           data_set="assess"
@@ -24,17 +24,22 @@
 import ViewLayout from '@/components/layouts/ViewLayout'
 import NewReportItem from '@/components/analyze/NewReportItem'
 import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess'
-import ContentDataAssess from '@/components/assess/ContentDataAssess'
+import AssessContent from '@/components/assess/AssessContent'
 import TopicHeaderAssess from '@/components/assess/TopicHeaderAssess'
 
 import KeyboardMixin from '../../assets/keyboard_mixin'
+
+import { mapState, mapGetters, mapActions } from 'vuex'
+
+import moment from 'moment'
+import { faker } from '@faker-js/faker'
 
 export default {
   name: 'Assess',
   components: {
     ViewLayout,
     ToolbarFilterAssess,
-    ContentDataAssess,
+    AssessContent,
     TopicHeaderAssess,
     NewReportItem
   },
@@ -43,15 +48,20 @@ export default {
   },
   data: () => ({
     dialog_stack: 0,
-    filter: { search: '', tag: '' }
+    filter: { search: '', tag: '' },
+    topic: {}
   }),
   mixins: [KeyboardMixin('assess')],
   computed: {
+    ...mapState('assess', ['newsItems']),
+
     multiSelectActive () {
       return this.$store.getters.getMultiSelect
     }
   },
   methods: {
+    ...mapActions('assess', ['updateNewsItems']),
+
     newDataLoaded (count) {
       this.$refs.toolbarFilter.updateDataCount(count)
     },
@@ -94,20 +104,6 @@ export default {
       this.$refs.contentData.updateData(false, false)
     }
   },
-  mounted () {
-    if (window.location.pathname.includes('/group/')) {
-      this.$refs.contentData.updateData(false, false)
-    }
-
-    this.$root.$on('first-dialog', (action) => {
-      this.firstDialog(action)
-    })
-
-    this.$root.$on('clear-cards', () => {
-      const cards = document.querySelectorAll('.card-item')
-      cards.forEach((card) => card.remove())
-    })
-  },
   created () {
     document.addEventListener('keydown', this.keyAction, false)
     const element = document.querySelector('card-item')
@@ -123,6 +119,131 @@ export default {
     }
     this.$root.$off('first-dialog')
     this.$root.$off('clear-cards')
+  },
+  mounted () {
+    if (window.location.pathname.includes('/group/')) {
+      this.$refs.contentData.updateData(false, false)
+    }
+
+    this.$root.$on('first-dialog', (action) => {
+      this.firstDialog(action)
+    })
+
+    this.$root.$on('clear-cards', () => {
+      const cards = document.querySelectorAll('.card-item')
+      cards.forEach((card) => card.remove())
+    })
+
+    // Generate Dummy Data
+    var dummyTags = [
+      { label: 'State', color: Math.floor(Math.random() * 20) },
+      { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
+      { label: 'Threat', color: Math.floor(Math.random() * 20) },
+      { label: 'DDoS', color: Math.floor(Math.random() * 20) },
+      { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
+      { label: 'Java', color: Math.floor(Math.random() * 20) },
+      { label: 'CVE', color: Math.floor(Math.random() * 20) },
+      { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
+      { label: 'Python', color: Math.floor(Math.random() * 20) },
+      { label: 'Privacy', color: Math.floor(Math.random() * 20) },
+      { label: 'Social', color: Math.floor(Math.random() * 20) },
+      { label: 'APT', color: Math.floor(Math.random() * 20) },
+      { label: 'MitM', color: Math.floor(Math.random() * 20) }
+    ]
+
+    this.topic = {
+      id: 0,
+      relevanceScore: parseInt(faker.commerce.price(0, 100, 0)),
+      title: faker.lorem.words(Math.floor(Math.random() * (5 - 2 + 1)) + 2),
+      tags: faker.random.arrayElements(
+        dummyTags,
+        Math.floor(Math.random() * (5 - 2 + 1)) + 2
+      ),
+      ai: Math.random() < 0.5,
+      originator: `${faker.name.firstName()} ${faker.name.lastName()}`,
+      hot: Math.random() < 0.2,
+      pinned: Math.random() < 0.05,
+      lastActivity: new Date(String(faker.date.recent(10))),
+      excerpt: faker.lorem.paragraph(35),
+      items: {
+        total: parseInt(faker.commerce.price(70, 200, 0)),
+        new: parseInt(faker.commerce.price(0, 70, 0))
+      },
+      comments: {
+        total: parseInt(faker.commerce.price(70, 200, 0)),
+        new: parseInt(faker.commerce.price(0, 70, 0))
+      },
+      votes: {
+        up: parseInt(faker.commerce.price(0, 150, 0)),
+        down: parseInt(faker.commerce.price(0, 250, 0))
+      },
+      selected: false
+    }
+
+    var dummyTopics = [
+      'porro ad nihil iusto iure',
+      'modi odit',
+      'aliquam nulla',
+      'aut exercitationem',
+      'quia reiciendis dolor',
+      'necessitatibus at quidem',
+      'maiores assumenda modi aut',
+      'rerum sit'
+    ]
+
+    var dummySourceTypes = [
+      'RSS',
+      'MISP',
+      'Web',
+      'Twitter',
+      'Email',
+      'Slack',
+      'Atom'
+    ]
+
+    var numberOfDummyTopics = 40
+    var dummyData = []
+
+    for (var i = 1; i < numberOfDummyTopics; i++) {
+      var sourceDomain = faker.internet.domainName()
+      var entry = {
+        id: i,
+        relevanceScore: faker.commerce.price(0, 100, 0),
+        title: faker.hacker.phrase(),
+        excerpt: faker.lorem.paragraph(100),
+        tags: faker.random.arrayElements(
+          dummyTags,
+          Math.floor(Math.random() * (5 - 2 + 1)) + 2
+        ),
+        published: new Date(String(faker.date.recent(10))),
+        collected: new Date(String(faker.date.recent(10))),
+        source: {
+          domain: sourceDomain,
+          url: `${faker.internet.protocol()}://${sourceDomain}/rss/${moment(
+            new Date(String(faker.date.recent(10)))
+          ).format('YYYY/MM/DD')}/${faker.internet.password(20)}`,
+          type: dummySourceTypes[Math.floor(Math.random() * 7)]
+        },
+        addedBy: faker.lorem.words(1),
+        topics: faker.random.arrayElements(
+          dummyTopics,
+          Math.floor(Math.random() * (5 - 2 + 1)) + 2
+        ),
+        votes: {
+          up: parseInt(faker.commerce.price(0, 150, 0)),
+          down: parseInt(faker.commerce.price(0, 250, 0))
+        },
+        important: Math.random() < 0.2,
+        read: Math.random() < 0.2,
+        decorateSource: Math.random() < 0.2,
+        recommended: Math.random() < 0.2,
+        inAnalysis: Math.random() < 0.2,
+        selected: false
+      }
+      dummyData.push(entry)
+    }
+
+    this.updateNewsItems(dummyData)
   }
 }
 </script>

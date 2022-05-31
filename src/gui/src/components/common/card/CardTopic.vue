@@ -15,7 +15,7 @@
         selected: topic.selected
       }
     ]"
-    @click="selectCard"
+    @click="toggleSelection"
   >
     <div
       class="status-bar"
@@ -116,7 +116,11 @@
                     >
                   </v-col>
                   <v-col cols="6" class="pa-0 pt-0 pr-1">
-                    <v-icon left small color="awake-green-color"
+                    <v-icon
+                      @click.native.capture="upvote($event)"
+                      left
+                      small
+                      color="awake-green-color"
                       >mdi-arrow-up-circle-outline</v-icon
                     >
                     <span
@@ -135,7 +139,11 @@
                     >
                   </v-col>
                   <v-col cols="6" class="pa-0 pt-0 pr-1">
-                    <v-icon left small color="awake-red-color"
+                    <v-icon
+                      @click.native.capture="downvote($event)"
+                      left
+                      small
+                      color="awake-red-color"
                       >mdi-arrow-down-circle-outline</v-icon
                     >
                     <span
@@ -168,6 +176,8 @@ import TagMini from '@/components/common/tags/TagMini'
 import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
 
+import { mapActions } from 'vuex'
+
 export default {
   name: 'CardTopic',
   components: {
@@ -184,12 +194,28 @@ export default {
     }
   },
   methods: {
-    selectCard: function () {
-      this.$store.dispatch('selectTopic', this.topic.id)
+    ...mapActions('dashboard', [
+      'pinTopic',
+      'upvoteTopic',
+      'downvoteTopic',
+      'selectTopic'
+    ]),
+
+    toggleSelection: function () {
+      this.topic.selected = !this.topic.selected
+      this.selectTopic(this.topic.id)
     },
     pinToTop: function (event) {
       event.stopPropagation()
-      this.$store.dispatch('pinTopic', this.topic.id)
+      this.pinTopic(this.topic.id)
+    },
+    upvote: function (event) {
+      event.stopPropagation()
+      this.upvoteTopic(this.topic.id)
+    },
+    downvote: function (event) {
+      event.stopPropagation()
+      this.downvoteTopic(this.topic.id)
     },
     viewTopic: function (event) {
       event.stopPropagation()

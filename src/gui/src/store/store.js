@@ -74,7 +74,7 @@ const getters = {
 
   getSelection(state) {
     return state.selection
-  },
+  }
 }
 
 export const store = new Vuex.Store({

@@ -35,7 +35,6 @@ export function filterSearch(fields, searchString) {
 };
 
 export function filterDateRange(publishedDate, selectedType, dateRange) {
-  console.log("test2")
   let range = [];
   const today = new Date();
   switch (selectedType) {

@@ -11,39 +11,32 @@
         :key="newsItem.id"
         :newsItem="newsItem"
         :position="index"
-        @selectCard="selectCard"
+        @deleteItem="deleteItem"
       ></card-news-item>
     </transition-group>
 
     <v-expand-transition>
-      <selection-toolbar
+      <assess-selection-toolbar
         v-if="activeSelection"
-        :selection="selection"
-      ></selection-toolbar>
+        :selection="getNewsItemsSelection()"
+      ></assess-selection-toolbar>
     </v-expand-transition>
   </div>
 </template>
 
 <script>
 import CardNewsItem from '@/components/common/card/CardNewsItem'
-import SelectionToolbar from '@/components/assess/SelectionToolbar'
+import AssessSelectionToolbar from '@/components/assess/AssessSelectionToolbar'
 
-import { mapState } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
-import { xor } from 'lodash'
 import moment from 'moment'
 
-import { faker } from '@faker-js/faker'
-
 export default {
-  name: 'ContentDataAssess',
+  name: 'AssessContent',
   components: {
-    // CardAssess,
-    // NewsItemSingleDetail,
-    // NewsItemDetail,
-    // NewsItemAggregateDetail,
     CardNewsItem,
-    SelectionToolbar
+    AssessSelectionToolbar
   },
   props: {
     // analyze_selector: Boolean,
@@ -52,21 +45,14 @@ export default {
     // data_set: String
   },
   data: () => ({
-    news_items_data: [],
-    news_items_data_loaded: false,
-    selection: []
+    newsItems_loaded: false
   }),
   methods: {
-    selectCard (itemId) {
-      var index = this.news_items_data.findIndex((x) => x.id === itemId)
-      this.news_items_data[index].selected =
-        !this.news_items_data[index].selected
-
-      this.selection = xor(this.selection, [itemId])
-    },
+    ...mapActions('assess', ['deleteNewsItem']),
+    ...mapGetters('assess', ['getNewsItems', 'getNewsItemsSelection']),
 
     infiniteScrolling (entries, observer, isIntersecting) {
-      if (this.news_items_data_loaded && isIntersecting) {
+      if (this.newsItems_loaded && isIntersecting) {
         this.updateData(true, false)
       }
     },
@@ -77,20 +63,20 @@ export default {
     // },
 
     updateData (append, reload_all) {
-      this.news_items_data_loaded = false
+      this.newsItems_loaded = false
 
       if (append === false) {
-        this.news_items_data = []
+        this.newsItems = []
       }
 
-      let offset = this.news_items_data.length
+      let offset = this.newsItems.length
       let limit = 20
       if (reload_all) {
         offset = 0
-        if (this.news_items_data.length > limit) {
-          limit = this.news_items_data.length
+        if (this.newsItems.length > limit) {
+          limit = this.newsItems.length
         }
-        this.news_items_data = []
+        this.newsItems = []
       }
 
       let group = ''
@@ -116,7 +102,7 @@ export default {
           }
         })
         .then(() => {
-          this.news_items_data = this.news_items_data.concat(
+          this.newsItems = this.newsItems.concat(
             this.$store.getters.getNewsItems.items
           )
           this.$emit(
@@ -127,7 +113,7 @@ export default {
             this.$emit('card-items-reindex')
           }, 200)
           setTimeout(() => {
-            this.news_items_data_loaded = true
+            this.newsItems_loaded = true
           }, 1000)
         })
     },
@@ -141,14 +127,19 @@ export default {
       if (!this.activeSelection) {
         this.updateData(false, true)
       }
-    },    
+    },
+
+    deleteItem (id) {
+      this.deleteNewsItem(id)
+    }
   },
 
   computed: {
     ...mapState('newsItemsFilter', ['filter', 'order']),
+    ...mapState('assess', ['newsItems']),
 
     filteredNewsItems () {
-      let filteredData = [...this.news_items_data]
+      let filteredData = this.getNewsItems()
 
       // SEARCH
       filteredData = filteredData.filter((item) => {
@@ -202,7 +193,6 @@ export default {
 
       // SORTING
       filteredData.sort((x, y) => {
-        
         const directionModifier =
           this.order.selected.direction === 'asc' ? 1 : -1
 
@@ -210,7 +200,7 @@ export default {
 
         switch (this.order.selected.type) {
           case 'relevanceScore':
-            return parseInt(x.relevanceScore) < parseInt(y.relevanceScore)
+            return x.relevanceScore < y.relevanceScore
               ? -1 * directionModifier
               : 1 * directionModifier
           case 'publishedDate':
@@ -223,7 +213,7 @@ export default {
       })
 
       this.$store.dispatch('updateItemCount', {
-        total: this.news_items_data.length,
+        total: this.newsItems.length,
         filtered: filteredData.length
       })
 
@@ -231,85 +221,13 @@ export default {
     },
 
     activeSelection () {
-      return this.selection.length > 0
+      return this.getNewsItemsSelection().length > 0
     }
-
   },
 
   mounted () {
     // this.$root.$on('news-items-updated', this.news_items_updated)
     // this.$root.$on('force-reindex', this.forceReindex)
-
-    // Generate Dummy Data
-    var dummyTags = [
-      { label: 'State', color: Math.floor(Math.random() * 20) },
-      { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-      { label: 'Threat', color: Math.floor(Math.random() * 20) },
-      { label: 'DDoS', color: Math.floor(Math.random() * 20) },
-      { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-      { label: 'Java', color: Math.floor(Math.random() * 20) },
-      { label: 'CVE', color: Math.floor(Math.random() * 20) },
-      { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-      { label: 'Python', color: Math.floor(Math.random() * 20) },
-      { label: 'Privacy', color: Math.floor(Math.random() * 20) },
-      { label: 'Social', color: Math.floor(Math.random() * 20) },
-      { label: 'APT', color: Math.floor(Math.random() * 20) },
-      { label: 'MitM', color: Math.floor(Math.random() * 20) }
-    ]
-
-    var dummyTopics = [
-      'porro ad nihil iusto iure',
-      'modi odit',
-      'aliquam nulla',
-      'aut exercitationem',
-      'quia reiciendis dolor',
-      'necessitatibus at quidem',
-      'maiores assumenda modi aut',
-      'rerum sit'
-    ]
-
-    var numberOfDummyTopics = 40
-    var dummyData = []
-
-    for (var i = 1; i < numberOfDummyTopics; i++) {
-      var sourceDomain = faker.internet.domainName()
-      var entry = {
-        id: i,
-        relevanceScore: faker.commerce.price(0, 100, 0),
-        title: faker.hacker.phrase(),
-        excerpt: faker.lorem.paragraph(100),
-        tags: faker.random.arrayElements(
-          dummyTags,
-          Math.floor(Math.random() * (5 - 2 + 1)) + 2
-        ),
-        published: new Date(String(faker.date.recent(10))),
-        collected: new Date(String(faker.date.recent(10))),
-        source: {
-          domain: sourceDomain,
-          url: `${faker.internet.protocol()}://${sourceDomain}/rss/${moment(
-            new Date(String(faker.date.recent(10)))
-          ).format('YYYY/MM/DD')}/${faker.internet.password(20)}`
-        },
-        addedBy: faker.lorem.words(1),
-        topics: faker.random.arrayElements(
-          dummyTopics,
-          Math.floor(Math.random() * (5 - 2 + 1)) + 2
-        ),
-        votes: {
-          up: faker.commerce.price(0, 150, 0),
-          down: faker.commerce.price(0, 250, 0)
-        },
-        important: Math.random() < 0.2,
-        read: Math.random() < 0.2,
-        decorateSource: Math.random() < 0.2,
-        recommended: Math.random() < 0.2,
-        inAnalysis: Math.random() < 0.2,
-        selected: false
-      }
-      dummyData.push(entry)
-    }
-
-    this.news_items_data = dummyData
   }
 
   // beforeDestroy () {
