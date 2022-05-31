@@ -11,6 +11,9 @@ import awakeReportSvg from '@/assets/icons/report.vue'
 import awakeRibbonSvg from '@/assets/icons/ribbon.vue'
 import awakeUnreadSvg from '@/assets/icons/unread.vue'
 import awakeDeleteSvg from '@/assets/icons/delete.vue'
+import awakeMergeSvg from '@/assets/icons/merge.vue'
+import awakeShareSvg from '@/assets/icons/share.vue'
+import awakeCloseSvg from '@/assets/icons/close.vue'
 import awakeImportantSvg from '@/assets/icons/important.vue'
 import newsItemActionDeleteSvg from '@/assets/icons/action-delete.vue'
 import newsItemActionReadSvg from '@/assets/icons/action-read.vue'
@@ -69,6 +72,12 @@ const icons = {
     awakePin: {
       component: awakePinSvg
     },
+    awakeMerge: {
+      component: awakeMergeSvg
+    },
+    awakeShare: {
+      component: awakeShareSvg
+    },
     awakeSearch: {
       component: awakeSearchSvg
     },
@@ -89,6 +98,9 @@ const icons = {
     },
     awakeUnread: {
       component: awakeUnreadSvg
+    },
+    awakeClose: {
+      component: awakeCloseSvg
     },
     awakeReport: {
       component: awakeReportSvg
