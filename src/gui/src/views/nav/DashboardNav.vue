@@ -2,7 +2,7 @@
   <smooth-scrollbar>
     <v-container class="pa-0">
       <!-- search -->
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="pb-0">
           <h4>search</h4>
         </v-col>
@@ -22,7 +22,7 @@
       <v-divider class="mt-0 mb-0"></v-divider>
 
       <!-- filter results -->
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>filter results</h4>
         </v-col>
@@ -168,7 +168,7 @@
 
       <v-divider class="mt-0 mb-0"></v-divider>
 
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>only show</h4>
         </v-col>
@@ -223,7 +223,7 @@
 
       <v-divider class="mt-2 mb-0"></v-divider>
 
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>sort by</h4>
         </v-col>
@@ -271,8 +271,8 @@
                           'text--lighten-3',
                           {
                             asc: item.direction === 'asc',
-                            desc: item.direction === 'desc',
-                          },
+                            desc: item.direction === 'desc'
+                          }
                         ]"
                       >
                         mdi-chevron-up
@@ -323,7 +323,16 @@ export default {
       { type: 'active', label: 'active topics', icon: 'mdi-message-outline' },
       { type: 'pinned', label: 'pinned topics', icon: '$awakePin' },
       { type: 'hot', label: 'hot topics', icon: 'mdi-star-outline' },
-      { type: 'upvoted', label: 'upvoted topics', icon: 'mdi-arrow-up-circle-outline' }
+      {
+        type: 'upvoted',
+        label: 'upvoted topics',
+        icon: 'mdi-arrow-up-circle-outline'
+      },
+      {
+        type: 'selected',
+        label: 'selected',
+        icon: 'mdi-checkbox-marked-outline'
+      }
     ],
     orderOptions: [
       {
@@ -423,7 +432,7 @@ export default {
         direction: ''
       }))
       this.orderOptions[index].direction = newDirection
-    }    
+    }
   }
 }
 </script>

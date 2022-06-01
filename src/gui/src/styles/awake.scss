@@ -107,7 +107,7 @@ a {
 }
 
 .v-list--dense .v-list-item.extra-dense {
-  min-height: 30px;
+  min-height: 24px;
   margin-top: 0px;
   margin-bottom: 0px;
   padding-left: 0px;
@@ -116,8 +116,8 @@ a {
 
 .v-list--dense .v-list-item.extra-dense .v-list-item__icon,
 .v-list-item--dense.extra-dense .v-list-item__icon {
-  height: 30px;
-  margin-top: 0px;
+  height: 24px;
+  margin-top: 3px;
   margin-bottom: 0px;
 }
 

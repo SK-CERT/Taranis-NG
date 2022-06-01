@@ -293,6 +293,8 @@ export default {
               return item.hot
             case 'upvoted':
               return item.votes.up > item.votes.down
+            case 'selected':
+              return item.selected
             default:
               return true
           }

@@ -2,7 +2,7 @@
   <smooth-scrollbar>
     <v-container class="pa-0">
       <!-- scope -->
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="pb-0">
           <h4>scope</h4>
         </v-col>
@@ -111,7 +111,7 @@
       <v-divider class="mt-0 mb-0"></v-divider>
 
       <!-- search -->
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12">
           <v-text-field
             v-model="filter.search"
@@ -127,7 +127,7 @@
       <v-divider class="mt-0 mb-0"></v-divider>
 
       <!-- filter results -->
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>filter results</h4>
         </v-col>
@@ -272,7 +272,7 @@
 
       <v-divider class="mt-0 mb-0"></v-divider>
 
-      <v-row class="my-4 mr-0 px-5">
+      <v-row class="my-3 mr-0 px-5">
         <v-col cols="12" class="py-0">
           <h4>only show</h4>
         </v-col>
@@ -327,7 +327,7 @@
 
       <v-divider class="mt-2 mb-0"></v-divider>
 
-      <v-row class="my-4 mr-0 px-5 pb-5">
+      <v-row class="my-3 mr-0 px-5 pb-5">
         <v-col cols="12" class="py-0">
           <h4>sort by</h4>
         </v-col>
