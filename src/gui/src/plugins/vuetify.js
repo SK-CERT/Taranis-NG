@@ -61,7 +61,7 @@ const breakpoint = {
     xs: 600,
     sm: 976,
     md: 1280,
-    lg: 2560
+    lg: 2200
   },
   scrollBarWidth: 16
 }

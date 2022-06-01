@@ -1,7 +1,7 @@
 <template>
-    <v-col xs="12" sm="6" md="4" :xl="promValue">
-        <card-topic :topic="topic"></card-topic>
-    </v-col>
+  <v-col xs="12" sm="6" md="4" :lg="promValue">
+    <card-topic :topic="topic"></card-topic>
+  </v-col>
 </template>
 
 <script>
@@ -19,9 +19,9 @@ export default {
   computed: {
     promValue () {
       if (this.$vuetify.breakpoint.xl) {
-        return (this.position < 4) ? 3 : 2
+        return this.position < 4 ? 3 : 2
       } else {
-        return (this.position < 3) ? 4 : 3
+        return this.position < 3 ? 4 : 3
       }
     }
   }
