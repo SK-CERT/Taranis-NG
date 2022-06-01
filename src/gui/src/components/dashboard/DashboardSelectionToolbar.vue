@@ -35,51 +35,17 @@
               </v-btn>
             </template>
 
-            <v-card>
-              <v-card-title>
-                <h2
-                  class="font-weight-bold headline dark-grey--text text-capitalize"
-                >
-                  Merge Topics
-                </h2>
-              </v-card-title>
-
-              <v-card-text>
-                Topics <strong>{{ selection }}</strong> will be merged.
-              </v-card-text>
-
-              <v-divider></v-divider>
-
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="awake-red-color darken-1"
-                  outlined
-                  @click="mergeDialog = false"
-                  class="text-lowercase"
-                >
-                  <v-icon left class="red-icon">$awakeClose</v-icon>
-                  abort
-                </v-btn>
-                <v-btn
-                  color="primary"
-                  dark
-                  depressed
-                  @click="mergeDialog = false"
-                  class="text-lowercase selection-toolbar-btn"
-                >
-                  <v-icon left>$awakeMerge</v-icon>
-                  merge topics
-                </v-btn>
-              </v-card-actions>
-            </v-card>
+            <popup-merge-topics
+              v-model:dialog="mergeDialog"
+              :selection="selection"
+            />
           </v-dialog>
 
           <!------------------------>
           <!-- Create Sharing Set -->
           <!------------------------>
 
-          <v-dialog v-model="mergeDialog" width="600">
+          <v-dialog v-model="shareDialog" width="600">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 :ripple="false"
@@ -113,7 +79,7 @@
                 <v-btn
                   color="awake-red-color darken-1"
                   outlined
-                  @click="mergeDialog = false"
+                  @click="shareDialog = false"
                   class="text-lowercase"
                 >
                   <v-icon left class="red-icon">$awakeClose</v-icon>
@@ -123,7 +89,7 @@
                   color="primary"
                   dark
                   depressed
-                  @click="mergeDialog = false"
+                  @click="shareDialog = false"
                   class="text-lowercase selection-toolbar-btn"
                 >
                   <v-icon left>$awakeShare</v-icon>
@@ -196,15 +162,19 @@
 
 <script>
 import { mapActions } from 'vuex'
+import PopupMergeTopics from '@/components/popups/PopupMergeTopics'
 
 export default {
   name: 'DashboardSelectionToolbar',
-  components: {},
+  components: {
+    PopupMergeTopics
+  },
   props: {
     selection: []
   },
   data: () => ({
-    mergeDialog: false
+    mergeDialog: false,
+    shareDialog: false
   }),
   methods: {
     ...mapActions('dashboard', ['pinTopic', 'unselectAllTopics']),

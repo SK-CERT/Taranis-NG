@@ -108,7 +108,7 @@
                   <v-col cols="6" class="pa-0 pt-0 pr-1">
                     <v-icon left small>mdi-file-outline</v-icon>
                     <span class="text-caption font-weight-light dark-grey--text"
-                      >{{ topic.items.total }} /</span
+                      >{{ topic.items.total }}/</span
                     >
                     <span
                       class="text-caption font-weight-bold dark-grey--text"
@@ -131,7 +131,7 @@
                   <v-col cols="6" class="pa-0 pt-0 pr-1">
                     <v-icon left small>mdi-message-outline</v-icon>
                     <span class="text-caption font-weight-light dark-grey--text"
-                      >{{ topic.comments.total }} /</span
+                      >{{ topic.comments.total }}/</span
                     >
                     <span
                       class="text-caption font-weight-bold dark-grey--text"
