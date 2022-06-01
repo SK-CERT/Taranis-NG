@@ -161,8 +161,11 @@ const getters = {
 
   getDashboardData(state) {
     return state.dashboard_data
-  }
+  },
 
+  getTopicById: (state) => (id) => {
+    return state.topics.find(topic => topic.id === id)
+  }
 }
 
 export const dashboard = {
