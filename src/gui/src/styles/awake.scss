@@ -263,9 +263,12 @@ a {
 .v-application input,
 .v-application input::placeholder,
 .v-application .v-label {
-  font-size: 0.875rem;
-  color: $light-grey-2  !important;
+  font-size: 0.915rem;
   font-weight: 400;
+}
+
+.v-application input::placeholder {
+  color: $light-grey-2  !important;
 }
 
 .v-application .v-input__icon svg {
@@ -640,4 +643,18 @@ a {
 
 .v-btn.v-btn--icon.votes-btn::before {
   background: none !important;
+}
+
+.v-card.merge-topic-details {
+  background-color: #ebebeb;
+  height: 100%;
+  width: 100%;
+}
+
+.merge-topics-details-title {
+  font-family: $heading-font-family;
+}
+
+.merge-topics-details-meta {
+  font-size: 0.75rem;
 }
