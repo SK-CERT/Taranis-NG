@@ -43,7 +43,7 @@ export default {
       { label: 'MitM', color: Math.floor(Math.random() * 20) }
     ]
 
-    var numberOfDummyTopics = 40
+    var numberOfDummyTopics = 20
     var dummyData = []
 
     for (var i = 1; i < numberOfDummyTopics; i++) {
@@ -55,8 +55,8 @@ export default {
           dummyTags,
           Math.floor(Math.random() * (5 - 2 + 1)) + 2
         ),
-        ai: Math.random() < 0.5,
-        hot: Math.random() < 0.2,
+        ai: Math.random() < 0.25,
+        hot: Math.random() < 0.15,
         pinned: Math.random() < 0.05,
         lastActivity: new Date(String(faker.date.recent(10))),
         excerpt: faker.lorem.paragraph(),
@@ -72,6 +72,7 @@ export default {
           up: parseInt(faker.commerce.price(0, 150, 0)),
           down: parseInt(faker.commerce.price(0, 250, 0))
         },
+        shared: Math.random() < 0.15,
         selected: false
       }
       dummyData.push(entry)

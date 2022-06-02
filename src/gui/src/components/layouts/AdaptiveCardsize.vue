@@ -1,5 +1,5 @@
 <template>
-  <v-col xs="12" sm="6" md="4" :lg="promValue">
+  <v-col xs="12" sm="6" md="4" :xl="promValue">
     <card-topic :topic="topic"></card-topic>
   </v-col>
 </template>

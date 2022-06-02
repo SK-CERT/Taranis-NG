@@ -1,18 +1,34 @@
 <template>
-  <div>
-    <transition-group
-      name="topics-grid"
-      tag="div"
-      class="row d-flex align-stretch row--dense topics-grid-container"
-      appear
-    >
-      <adaptive-cardsize
-        v-for="(topic, index) in filteredTopics"
-        :key="topic.id"
-        :topic="topic"
-        :position="index"
-      ></adaptive-cardsize>
-    </transition-group>
+  <v-col>
+    <v-container fluid>
+      <transition name="empty-list-transition" mode="out-in">
+        <v-row v-if="!filteredTopics.length">
+          <v-col cols="12" class="empty-list-notification">
+            <v-icon x-large> mdi-circle-off-outline </v-icon>
+            <span v-if="this.topics.length">
+              The currently selected filters do not yield any results. Try
+              changing the filters.
+            </span>
+            <span v-else> No elements to display. </span>
+          </v-col>
+        </v-row>
+
+        <transition-group
+          name="topics-grid"
+          tag="div"
+          class="row d-flex align-stretch row--dense topics-grid-container"
+          v-else
+          appear
+        >
+          <adaptive-cardsize
+            v-for="(topic, index) in filteredTopics"
+            :key="topic.id"
+            :topic="topic"
+            :position="index"
+          ></adaptive-cardsize>
+        </transition-group>
+      </transition>
+    </v-container>
 
     <v-expand-transition>
       <dashboard-selection-toolbar
@@ -22,7 +38,7 @@
       ></dashboard-selection-toolbar>
     </v-expand-transition>
 
-    <v-container>
+    <v-container class="d-none">
       <v-row no-gutters>
         <v-col cols="6" class="pa-2 mb-8">
           <template>
@@ -180,7 +196,7 @@
         </v-col>
       </v-row>
     </v-container>
-  </div>
+  </v-col>
 </template>
 
 <script>
@@ -191,8 +207,6 @@ import DashboardSelectionToolbar from '@/components/dashboard/DashboardSelection
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
 import moment from 'moment'
-
-import { faker } from '@faker-js/faker'
 
 export default {
   name: 'DashboardContent',
