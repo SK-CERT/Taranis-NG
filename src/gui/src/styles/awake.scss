@@ -29,6 +29,7 @@ a {
 
 .main-menu-bar {
   height: $app-bar-height;
+  z-index: 100 !important;
 }
 
 .v-btn span.main-menu-item {
@@ -254,8 +255,23 @@ a {
 .v-application .tag-mini {
   min-width: 0px !important;
   font-weight: 700 !important;
-  background-color: $accent  !important;
   color: white;
+
+  &.ai {
+    background-color: $accent  !important;
+  }
+
+  &.shared {
+    background-color: lighten($primary, 5) !important;
+
+    & .v-icon {
+      transform: scaleX(-1);
+    }
+
+    & svg {
+      fill: white !important;
+    }
+  }
 }
 
 // Form fields
@@ -288,6 +304,22 @@ a {
 }
 
 .topics-grid-move {
+  z-index: 10;
+}
+
+.topics-grid-enter,
+.topics-grid-enter-to,
+.topics-grid-enter-active {
+  z-index: 20;
+}
+
+.topics-grid-leave,
+.topics-grid-leave-to,
+.topics-grid-leave-active {
+  z-index: 0;
+}
+
+.topics-grid-move {
   transition: all 0.4s ease;
 }
 
@@ -305,12 +337,10 @@ a {
 
 .topics-grid-leave {
   opacity: 1;
-  z-index: -1;
 }
 
 .topics-grid-leave-to {
   opacity: 0;
-  z-index: -1;
 }
 
 .topics-grid-leave-active {
@@ -318,6 +348,35 @@ a {
   position: absolute;
   z-index: 0;
 }
+
+.empty-list-transition-enter-active,
+.empty-list-transition-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.empty-list-transition-enter-from,
+.empty-list-transition-leave-to {
+  opacity: 0;
+}
+
+.empty-list-notification {
+  background-color: $cx-app-header;
+  border-radius: 3px;
+  text-align: center;
+  padding: 60px;
+  color: lighten($dark-grey, 30);
+
+  & .v-icon {
+    color: lighten($dark-grey, 30);
+    display: block;
+    padding: 14px;
+
+    & svg {
+      fill: lighten($dark-grey, 30);
+    }
+  }
+}
+
 
 .date-filter-group,
 .date-filter-group .v-slide-group__wrapper,
@@ -546,6 +605,8 @@ a {
 }
 
 .selection-toolbar {
+  z-index: 100 !important;
+
   & .v-toolbar__content {
     height: auto !important;
   }
@@ -646,15 +707,66 @@ a {
 }
 
 .v-card.merge-topic-details {
-  background-color: #ebebeb;
   height: 100%;
   width: 100%;
+  border: $topic-selected-bg;
+  background-color: $topic-selected-bg;
+  caret-color: $topic-selected-bg;
 }
 
 .merge-topics-details-title {
   font-family: $heading-font-family;
+  color: $dark-grey;
 }
 
 .merge-topics-details-meta {
   font-size: 0.75rem;
+}
+
+.topic {
+  position: relative;
+  overflow: hidden;
+
+  &.hot-topic {
+    background-color: lighten(#e8e4aa, 10);
+  }
+}
+
+.topic.corner-tag-ai,
+.topic.corner-tag-shared {
+  &:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: -44px;
+    width: 78px;
+    height: 78px;
+    transform: rotate(45deg);
+    background-color: darken($topic-hot, 20);
+  }
+
+  & .topic-corner-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    margin: 6px;
+    font-weight: 700;
+
+    & svg {
+      fill: white !important;
+    }
+  }
+}
+
+.topic.corner-tag-shared {
+  &:after {
+    background-color: $accent  !important;
+  }
+
+  & .topic-corner-tag .v-icon {
+    transform: scaleX(-1);
+  }
+
 }

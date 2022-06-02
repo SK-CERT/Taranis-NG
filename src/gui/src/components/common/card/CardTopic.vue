@@ -12,12 +12,15 @@
       'primary--text',
       {
         'pinned-topic': topic.pinned,
-        selected: topic.selected
+        selected: topic.selected,
+        'corner-tag-ai': topic.ai,
+        'corner-tag-shared': topic.shared,
+        'hot-topic': topic.hot
       }
     ]"
     @click="toggleSelection"
   >
-    <div
+    <!-- <div
       class="status-bar"
       v-if="topic.hot"
       :class="[
@@ -25,7 +28,21 @@
           'status-hot': topic.hot
         }
       ]"
-    ></div>
+    ></div> -->
+
+    <div
+      v-if="topic.ai && !topic.shared"
+      class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
+    >
+      AI
+    </div>
+    <div
+      v-if="topic.shared"
+      class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
+    >
+      <v-icon x-small>$awakeShare</v-icon>
+    </div>
+
     <v-container column style="height: 100%">
       <v-row no-gutters style="height: 100%">
         <v-col
@@ -37,7 +54,7 @@
 
           <v-row class="flex-grow-0">
             <v-col cols="10" class="mr-auto mt-1">
-              <tag-mini label="AI" v-show="topic.ai" />
+              <!-- <tag-mini v-if="topic.ai" type="ai" /> -->
               <span class="last-activity font-weight-light dark-grey--text"
                 >Last activity:
               </span>
