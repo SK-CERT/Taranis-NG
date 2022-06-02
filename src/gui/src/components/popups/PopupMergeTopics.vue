@@ -14,22 +14,23 @@
       <v-row no-gutters>
         <v-col>
           <v-container fluid>
-            <v-row no-gutters>
+            <v-row>
               <v-col
                 :sm="getColSize"
                 v-for="topicId in selection"
                 :key="topicId"
-                class="d-flex"
+                class="d-flex pa-1"
               >
                 <v-card
-                  outlined
+                  elevation="1"
+                  tile
                   height="100%"
                   class="align-self-stretch d-flex flex-column merge-topic-details"
                 >
                   <v-row justify="start" no-gutters class="flex-grow-0">
                     <v-col>
                       <h4
-                        class="font-weight-bold merge-topics-details-title dark-grey--text text-capitalize my-2"
+                        class="font-weight-bold merge-topics-details-title text-capitalize my-2"
                       >
                         {{ getTopicDetails(topicId).title }}
                       </h4>
