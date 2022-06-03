@@ -295,54 +295,70 @@ a {
   border-color: $light-grey-2;
 }
 
+.news-items-grid-container,
 .topics-grid-container {
   position: relative;
 }
 
+.news-items-grid-container>div,
 .topics-grid-container>div {
-  min-width: 300px;
+  min-width: 240px;
 }
 
+.news-items-grid-move,
 .topics-grid-move {
   z-index: 10;
 }
 
+.news-items-grid-enter,
 .topics-grid-enter,
+.news-items-grid-enter-to,
 .topics-grid-enter-to,
+.news-items-grid-enter-active,
 .topics-grid-enter-active {
   z-index: 20;
 }
 
+.news-items-grid-leave,
 .topics-grid-leave,
+.news-items-grid-leave-to,
 .topics-grid-leave-to,
+.news-items-grid-leave-active,
 .topics-grid-leave-active {
   z-index: 0;
 }
 
+.news-items-grid-move,
 .topics-grid-move {
   transition: all 0.4s ease;
 }
 
+.news-items-grid-enter,
 .topics-grid-enter {
   opacity: 0;
 }
 
+.news-items-grid-enter-to,
 .topics-grid-enter-to {
   opacity: 1;
 }
 
+.news-items-grid-enter-active,
 .topics-grid-enter-active {
   transition: all 0.4s ease;
 }
 
+.news-items-grid-leave,
 .topics-grid-leave {
   opacity: 1;
 }
 
+.news-items-grid-leave-to,
 .topics-grid-leave-to {
   opacity: 0;
 }
 
+.news-items-grid-leave-active,
 .topics-grid-leave-active {
   transition: all 0.4s ease;
   position: absolute;
@@ -360,7 +376,7 @@ a {
 }
 
 .empty-list-notification {
-  background-color: $cx-app-header;
+  // background-color: $cx-app-header;
   border-radius: 3px;
   text-align: center;
   padding: 60px;
@@ -457,17 +473,6 @@ a {
   margin-left: -4px;
 }
 
-.v-application .v-card h2.headline.news-item-headline {
-  font-size: 1.4rem !important;
-  font-weight: 600 !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
-  height: calc(1.5em * 1);
-}
 
 .news-item-excerpt {
   font-size: 13px;
@@ -519,7 +524,7 @@ a {
   }
 }
 
-.v-application .v-card.newsItem {
+.v-application .v-card.news-item {
   padding: 0px 36px 0px 18px !important;
 }
 
@@ -556,7 +561,7 @@ a {
 
 .news-item-action-bar .v-btn--icon.news-item-topic-action,
 .news-item-action-bar .v-btn--icon.news-item-topic-action .v-icon svg {
-  background-color: #e8e4aa;
+  background-color: $topic-header-bg;
   fill: $dark-grey;
 }
 
@@ -581,10 +586,10 @@ a {
 //   border-color: white;
 // }
 
-.status-unread.status-important,
-.status-important {
-  background-color: $status-important  !important;
-}
+// .status-unread.status-important,
+// .status-important {
+//   background-color: $status-important  !important;
+// }
 
 .status-important.status-error,
 .status-unread.status-error,
@@ -592,9 +597,9 @@ a {
   background-color: $status-error  !important;
 }
 
-.status-unread {
-  background-color: $status-unread;
-}
+// .status-unread {
+//   background-color: $status-unread;
+// }
 
 .status-hot {
   background-color: $status-important;
@@ -639,7 +644,7 @@ a {
 }
 
 .topic-header-container {
-  background-color: #e8e4aa;
+  background-color: darken($topic-header-bg, 5);
 
   & .card-alignment {
     padding-left: 20px !important;
@@ -654,6 +659,14 @@ a {
     color: $dark-grey;
     font-weight: 700;
     line-height: 1.2;
+  }
+
+  & h3 {
+    font-size: 16px;
+    color: $dark-grey;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: none;
   }
 
   .topic-excerpt {
@@ -709,9 +722,12 @@ a {
 .v-card.merge-topic-details {
   height: 100%;
   width: 100%;
-  border: $topic-selected-bg;
-  background-color: $topic-selected-bg;
+  border: 3px solid $primary;
+  background-color: white;
   caret-color: $topic-selected-bg;
+  // border: $topic-selected-bg;
+  // background-color: $topic-selected-bg;
+  // caret-color: $topic-selected-bg;
 }
 
 .merge-topics-details-title {
@@ -723,12 +739,117 @@ a {
   font-size: 0.75rem;
 }
 
+.news-item {
+  position: relative;
+  overflow: hidden;
+
+  & h2.news-item-title {
+    font-family: $heading-font-family;
+    font-size: 1.4rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    height: calc(1.5em * 1);
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  & h2.news-item-title.status-unread {
+    font-weight: 800 !important;
+
+    & .new-indicator {
+      color: $accent;
+      vertical-align: sub;
+      font-size: 70%;
+    }
+  }
+
+  &.status-important:not(.selected) {
+    background-color: #f3f1d2 !important;
+
+    & .news-item-action-bar {
+      background-color: #edeac1 !important;
+
+      & .v-btn--icon.news-item-topic-action svg {
+        background-color: #e0dca4 !important;
+      }
+
+      & .news-item-action.v-size--default .v-icon {
+        color: lighten($dark-grey, 30);
+
+        & svg {
+          fill: lighten($dark-grey, 30);
+        }
+      }
+
+      & .news-item-action.active.v-size--default .v-icon {
+        color: $primary;
+
+        & svg {
+          fill: $primary;
+        }
+      }
+
+    }
+
+    & .new-indicator {
+      color: darken($topic-header-bg, 30) !important;
+    }
+  }
+}
+
+.news-item.corner-tag-restricted,
+.news-item.corner-tag-shared {
+  &:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: -44px;
+    width: 78px;
+    height: 78px;
+    transform: rotate(45deg);
+  }
+
+  & .news-item-corner-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    margin: 6px;
+    font-weight: 700;
+
+    & .v-icon {
+      color: white;
+    }
+
+    & svg {
+      fill: white !important;
+    }
+  }
+}
+
+.news-item.corner-tag-restricted {
+  &:after {
+    background-color: $light-grey-2  !important;
+  }
+}
+
+.news-item.corner-tag-shared {
+  &:after {
+    background-color: $accent  !important;
+  }
+}
+
 .topic {
   position: relative;
   overflow: hidden;
 
   &.hot-topic {
-    background-color: lighten(#e8e4aa, 10);
+    background-color: lighten($topic-header-bg, 10);
   }
 }
 
@@ -764,9 +885,16 @@ a {
   &:after {
     background-color: $accent  !important;
   }
+}
 
-  & .topic-corner-tag .v-icon {
-    transform: scaleX(-1);
+.flipped-icon {
+  transform: scaleX(-1);
+}
+
+.icon-color-grey {
+  color: $dark-grey;
+
+  & svg {
+    fill: $dark-grey;
   }
-
 }
