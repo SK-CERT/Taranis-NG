@@ -20,12 +20,16 @@
           v-else
           appear
         >
-          <adaptive-cardsize
-            v-for="(topic, index) in filteredTopics"
+          <v-col
+            xs="12"
+            sm="6"
+            md="4"
+            xl="3"
+            v-for="topic in filteredTopics"
             :key="topic.id"
-            :topic="topic"
-            :position="index"
-          ></adaptive-cardsize>
+          >
+            <card-topic :topic="topic"></card-topic>
+          </v-col>
         </transition-group>
       </transition>
     </v-container>
@@ -201,8 +205,8 @@
 
 <script>
 import wordcloud from 'vue-wordcloud'
-import AdaptiveCardsize from '@/components/layouts/AdaptiveCardsize'
 import DashboardSelectionToolbar from '@/components/dashboard/DashboardSelectionToolbar'
+import CardTopic from '@/components/common/card/CardTopic'
 
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
@@ -212,7 +216,7 @@ export default {
   name: 'DashboardContent',
   components: {
     wordcloud,
-    AdaptiveCardsize,
+    CardTopic,
     DashboardSelectionToolbar
   },
   data: () => ({
