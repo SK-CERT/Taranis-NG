@@ -2,7 +2,10 @@
   <v-container class="mx-3 pa-5 pb-5">
     <v-row class="card-padding my-4" no-gutters>
       <v-col class="headline card-alignment mb-4" cols="12" sm="12" md="7">
-        <h1 class="pl-3 text-capitalize">{{ topic.title }}</h1>
+        <h3 class="pl-3">Topic</h3>
+        <h1 class="pl-3 text-capitalize">
+          {{ topic.title }}
+        </h1>
       </v-col>
     </v-row>
     <v-row class="card-padding mt-5" no-gutters>
@@ -18,6 +21,34 @@
                   <p class="topic-excerpt">
                     {{ topic.excerpt }}
                   </p>
+                </v-col>
+              </v-row>
+
+              <v-row class="flex-grow-0">
+                <v-col
+                  cols="12"
+                  class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-0 dark-grey--text"
+                >
+                  <h3>Activity over time</h3>
+                </v-col>
+              </v-row>
+              <v-row class="flex-grow-0">
+                <v-col
+                  cols="12"
+                  class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-4"
+                >
+                  <calendar-heatmap
+                    :values="metaData.heatmapData"
+                    :endDate="heatmapEndDate"
+                    tooltip-unit="published items"
+                    :range-color="[
+                      '#d6d29d',
+                      '#e9c645',
+                      '#db993f',
+                      '#bc482b',
+                      '#8f0429'
+                    ]"
+                  />
                 </v-col>
               </v-row>
 
@@ -85,6 +116,16 @@
           </v-row>
           <v-row class="topic-header-meta-infos">
             <v-col class="topic-header-meta-infos-label">
+              <strong>Comments:</strong>
+            </v-col>
+            <v-col>
+              <v-icon left small>mdi-message-outline</v-icon>
+              {{ topic.comments.total }} /
+              <strong>{{ topic.comments.new }}</strong>
+            </v-col>
+          </v-row>
+          <v-row class="topic-header-meta-infos">
+            <v-col class="topic-header-meta-infos-label">
               <strong>Topic upvotes:</strong>
             </v-col>
             <v-col>
@@ -101,7 +142,8 @@
             <v-col>
               <v-icon left small color="awake-red-color"
                 >mdi-arrow-down-circle-outline</v-icon
-              >{{ topic.votes.down }}
+              >
+              {{ topic.votes.down }}
             </v-col>
           </v-row>
           <v-row class="topic-header-meta-infos">
@@ -113,16 +155,52 @@
               <span v-else>{{ topic.originator }}</span>
             </v-col>
           </v-row>
+
           <v-row class="topic-header-meta-infos">
             <v-col class="topic-header-meta-infos-label">
-              <strong>Comments:</strong>
+              <strong>Sharing Sets:</strong>
             </v-col>
             <v-col>
-              <v-icon left small>mdi-message-outline</v-icon>
-              {{ topic.comments.total }} /
-              <strong>{{ topic.comments.new }}</strong>
+              <span>{{ metaData.sharingSets }}</span>
             </v-col>
           </v-row>
+          <v-row class="topic-header-meta-infos">
+            <v-col class="topic-header-meta-infos-label">
+              <strong>Shared Items:</strong>
+            </v-col>
+            <v-col>
+              <v-icon left small class="icon-color-grey"
+                >$awakeShareOutline</v-icon
+              >
+              <span>{{ metaData.numberSharedItems }}</span>
+            </v-col>
+          </v-row>
+          <v-row class="topic-header-meta-infos">
+            <v-col class="topic-header-meta-infos-label">
+              <strong>Restricted Items:</strong>
+            </v-col>
+            <v-col>
+              <v-icon left small>mdi-lock-outline</v-icon>
+              <span>{{ metaData.numberRestrictedItems }}</span>
+            </v-col>
+          </v-row>
+          <v-row class="topic-header-meta-infos">
+            <v-col class="topic-header-meta-infos-label">
+              <strong>Keywords:</strong>
+            </v-col>
+            <v-col>
+              <span>{{ keywords }}</span>
+            </v-col>
+          </v-row>
+          <v-row class="topic-header-meta-infos">
+            <v-col class="topic-header-meta-infos-label">
+              <strong>Related Topics:</strong>
+            </v-col>
+            <v-col>
+              <span>{{ relatedTopics }}</span>
+            </v-col>
+          </v-row>
+
           <v-row class="topic-header-meta-infos">
             <v-col class="topic-header-meta-infos-label d-flex align-center">
               <strong>Tags:</strong>
@@ -142,6 +220,7 @@ import moment from 'moment'
 
 import TagMini from '@/components/common/tags/TagMini'
 import TagNorm from '@/components/common/tags/TagNorm'
+import { CalendarHeatmap } from 'vue-calendar-heatmap'
 
 // import { mapState } from 'vuex'
 
@@ -149,16 +228,61 @@ export default {
   name: 'TopicHeaderAssess',
   components: {
     TagMini,
-    TagNorm
+    TagNorm,
+    CalendarHeatmap
   },
   props: {
-    topic: {}
+    topic: {},
+    newsItems: []
   },
   data: () => ({}),
   methods: {},
   computed: {
     lastActivity () {
       return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
+    },
+    relatedTopics () {
+      return this.topic.relatedTopics.join(', ')
+    },
+    keywords () {
+      return this.topic.keywords.join(', ')
+    },
+    metaData () {
+      const heatmapCounter = {}
+      let numberSharedItems = 0
+      let numberRestrictedItems = 0
+      const sharingSets = []
+
+      this.newsItems.forEach((element) => {
+        const date = moment(element.published).format('YYYY/MM/DD')
+        heatmapCounter[date] = heatmapCounter[date] || 0
+        heatmapCounter[date]++
+
+        if (element.shared) numberSharedItems++
+
+        if (element.restricted) numberRestrictedItems++
+
+        if (element.sharingSets.length) {
+          element.sharingSets.forEach((sharingSet) => {
+            if (sharingSets.indexOf(sharingSet) === -1) {
+              sharingSets.push(sharingSet)
+            }
+          })
+        }
+      })
+
+      return {
+        heatmapData: Object.entries(heatmapCounter).map((e) => ({
+          date: [e[0]],
+          count: e[1]
+        })),
+        numberSharedItems: numberSharedItems,
+        numberRestrictedItems: numberRestrictedItems,
+        sharingSets: sharingSets.join(', ')
+      }
+    },
+    heatmapEndDate () {
+      return moment(new Date()).format('YYYY/MM/DD')
     }
   }
 }
