@@ -22,7 +22,7 @@
                 class="d-flex pa-1"
               >
                 <v-card
-                  elevation="1"
+                  elevation="2"
                   tile
                   height="100%"
                   class="align-self-stretch d-flex flex-column merge-topic-details"
@@ -45,22 +45,25 @@
                     no-gutters
                     class="flex-grow-0 my-2 merge-topics-details-meta"
                   >
+                    <v-col cols="12" v-if="getTopicDetails(topicId).shared">
+                      <v-icon left x-small class="mr-1 flipped-icon"
+                        >$awakeShare</v-icon
+                      >
+                      Shared Set
+                    </v-col>
+                    <v-col cols="12" v-else>
+                      <v-icon left x-small class="mr-1 flipped-icon"
+                        >mdi-folder-outline</v-icon
+                      >
+                      Local Topic
+                    </v-col>
+
                     <v-col cols="12">
                       <v-icon left x-small class="mr-1"
                         >mdi-file-outline</v-icon
                       >
                       {{ getTopicDetails(topicId).items.total }}/
                       <strong>{{ getTopicDetails(topicId).items.new }}</strong>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-icon left x-small class="mr-1"
-                        >mdi-arrow-up-circle-outline</v-icon
-                      >
-                      {{ getTopicDetails(topicId).comments.total }}
-                      <v-icon left x-small class="mr-1 ml-2"
-                        >mdi-arrow-down-circle-outline</v-icon
-                      >
-                      {{ getTopicDetails(topicId).comments.total }}
                     </v-col>
                   </v-row>
                 </v-card>
