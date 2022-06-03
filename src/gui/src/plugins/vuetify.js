@@ -13,6 +13,7 @@ import awakeUnreadSvg from '@/assets/icons/unread.vue'
 import awakeDeleteSvg from '@/assets/icons/delete.vue'
 import awakeMergeSvg from '@/assets/icons/merge.vue'
 import awakeShareSvg from '@/assets/icons/share.vue'
+import awakeShareOutlineSvg from '@/assets/icons/shareOutline.vue'
 import awakeCloseSvg from '@/assets/icons/close.vue'
 import awakeImportantSvg from '@/assets/icons/important.vue'
 import newsItemActionDeleteSvg from '@/assets/icons/action-delete.vue'
@@ -77,6 +78,9 @@ const icons = {
     },
     awakeShare: {
       component: awakeShareSvg
+    },
+    awakeShareOutline: {
+      component: awakeShareOutlineSvg
     },
     awakeSearch: {
       component: awakeSearchSvg
