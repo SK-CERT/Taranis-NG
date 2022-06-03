@@ -40,8 +40,13 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.core
-#   ports: 
-#     - "5000:80"
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+    ports: 
+      - "${CORE_PORT}:80"
     environment: 
       REDIS_URL: "redis://redis"
       DB_URL: "database"
@@ -94,12 +99,19 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.bots
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
     environment:
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       TARANIS_NG_CORE_URL: "http://core/api/v1"
       TARANIS_NG_CORE_SSE: "http://core/sse"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
+    ports:
+      - "${BOT_PORT}:80"
     logging:
       driver: "json-file"
       options:
@@ -115,6 +127,11 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.collectors
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
@@ -122,7 +139,7 @@ services:
       DEBUG: "true"
       TZ: "${TZ}"
     ports:
-      - "5001:80"
+      - "${COLLECTOR_PORT}:80"
     volumes:
       - "collector_storage:/app/storage"
     logging:
@@ -140,13 +157,18 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.presenters
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
     ports:
-      - "5002:80"
+      - "${PRESENTER_PORT}:80"
     volumes:
       - "presenters_templates:/app/templates"
     logging:
@@ -164,13 +186,18 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.publishers
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
     ports:
-      - "5003:80"
+      - "${PUBLISHER_PORT}:80"
     logging:
       driver: "json-file"
       options:
@@ -185,6 +212,11 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.gui
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
 #    ports: 
 #      - "8080:80"
     environment:
