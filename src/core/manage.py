@@ -7,6 +7,7 @@ import logging
 from flask import Flask
 from flask_script import Manager,Command
 from flask_script.commands import Option
+import traceback
 
 from managers import db_manager
 from model import *
@@ -324,6 +325,7 @@ class DictionaryManagement(Command):
             try:
                 attribute.Attribute.load_dictionaries('cve')
             except Exception:
+                app.logger.debug(traceback.format_exc())
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
@@ -337,6 +339,7 @@ class DictionaryManagement(Command):
             try:
                 attribute.Attribute.load_dictionaries('cpe')
             except Exception:
+                app.logger.debug(traceback.format_exc())
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
@@ -352,6 +355,7 @@ class DictionaryManagement(Command):
                         break
                     out_file.write(chunk)
         except Exception:
+            app.logger.debug(traceback.format_exc())
             app.logger.critical("Upload failed!")
             abort()
 
