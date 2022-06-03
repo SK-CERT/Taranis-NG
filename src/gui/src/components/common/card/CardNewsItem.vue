@@ -8,23 +8,31 @@
       :class="[
         'pl-5',
         'align-self-stretch',
-        'newsItem',
+        'news-item',
         'dark-grey--text',
         {
-          selected: newsItem.selected
+          selected: newsItem.selected,
+          'corner-tag-shared': newsItem.shared && !newsItem.restricted,
+          'corner-tag-restricted': newsItem.restricted,
+          'status-important': newsItem.important,
+          'status-unread': !newsItem.read
         }
       ]"
       @click="toggleSelection"
     >
       <div
-        class="status-bar"
-        :class="[
-          {
-            'status-important': newsItem.important,
-            'status-unread': !newsItem.read
-          }
-        ]"
-      ></div>
+        v-if="newsItem.shared && !newsItem.restricted"
+        class="news-item-corner-tag text-caption text-weight-bold text-uppercase white--text"
+      >
+        <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
+      </div>
+
+      <div
+        v-if="newsItem.restricted"
+        class="news-item-corner-tag text-caption text-weight-bold text-uppercase white--text"
+      >
+        <v-icon x-small>mdi-lock-outline</v-icon>
+      </div>
 
       <div class="news-item-action-bar">
         <v-btn icon tile class="news-item-topic-action">
@@ -80,8 +88,14 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col class="pb-1">
                   <h2
-                    class="headline dark-grey--text text-capitalize news-item-headline"
+                    :class="[
+                      'news-item-title',
+                      {
+                        'status-unread': !newsItem.read
+                      }
+                    ]"
                   >
+                    <sup v-if="!newsItem.read" class="new-indicator"> * </sup>
                     {{ newsItem.title }}
                   </h2>
                 </v-col>

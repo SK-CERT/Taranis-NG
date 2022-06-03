@@ -20,16 +20,6 @@
     ]"
     @click="toggleSelection"
   >
-    <!-- <div
-      class="status-bar"
-      v-if="topic.hot"
-      :class="[
-        {
-          'status-hot': topic.hot
-        }
-      ]"
-    ></div> -->
-
     <div
       v-if="topic.ai && !topic.shared"
       class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
@@ -40,7 +30,7 @@
       v-if="topic.shared"
       class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
     >
-      <v-icon x-small>$awakeShare</v-icon>
+      <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
     </div>
 
     <v-container column style="height: 100%">
@@ -189,7 +179,6 @@
 </template>
 
 <script>
-import TagMini from '@/components/common/tags/TagMini'
 import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
 
@@ -198,7 +187,6 @@ import { mapActions } from 'vuex'
 export default {
   name: 'CardTopic',
   components: {
-    TagMini,
     TagNorm
   },
   props: {
