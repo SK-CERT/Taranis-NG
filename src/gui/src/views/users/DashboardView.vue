@@ -43,6 +43,17 @@ export default {
       { label: 'MitM', color: Math.floor(Math.random() * 20) }
     ]
 
+    var dummyTopics = [
+      'porro ad nihil iusto iure',
+      'modi odit',
+      'aliquam nulla',
+      'aut exercitationem',
+      'quia reiciendis dolor',
+      'necessitatibus at quidem',
+      'maiores assumenda modi aut',
+      'rerum sit'
+    ]
+
     var numberOfDummyTopics = 20
     var dummyData = []
 
@@ -73,6 +84,13 @@ export default {
           down: parseInt(faker.commerce.price(0, 250, 0))
         },
         shared: Math.random() < 0.15,
+        relatedTopics: faker.random.arrayElements(
+          dummyTopics,
+          Math.floor(Math.random() * (5 - 2 + 1)) + 2
+        ),
+        keywords: faker.random
+          .words(Math.random() * (16 - 6 + 1) + 6)
+          .split(' '),
         selected: false
       }
       dummyData.push(entry)

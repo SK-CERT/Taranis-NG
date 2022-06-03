@@ -2,7 +2,8 @@
   <div>
     <ViewLayout>
       <template v-slot:panel>
-        <topic-header-assess :topic="topic"> </topic-header-assess>
+        <topic-header-assess :topic="topic" :newsItems="newsItems">
+        </topic-header-assess>
       </template>
       <template v-slot:content>
         <AssessContent
@@ -134,6 +135,34 @@ export default {
       cards.forEach((card) => card.remove())
     })
 
+    var dummyTopics = [
+      'porro ad nihil iusto iure',
+      'modi odit',
+      'aliquam nulla',
+      'aut exercitationem',
+      'quia reiciendis dolor',
+      'necessitatibus at quidem',
+      'maiores assumenda modi aut',
+      'rerum sit'
+    ]
+
+    var dummySourceTypes = [
+      'RSS',
+      'MISP',
+      'Web',
+      'Twitter',
+      'Email',
+      'Slack',
+      'Atom'
+    ]
+
+    var dummySharingSets = [
+      'Sharingset One',
+      'Sharingset Two',
+      'Sharingset Three',
+      'Sharingset Four'
+    ]
+
     // Generate Dummy Data
     var dummyTags = [
       { label: 'State', color: Math.floor(Math.random() * 20) },
@@ -159,12 +188,12 @@ export default {
         dummyTags,
         Math.floor(Math.random() * (5 - 2 + 1)) + 2
       ),
-      ai: Math.random() < 0.5,
-      originator: `${faker.name.firstName()} ${faker.name.lastName()}`,
-      hot: Math.random() < 0.2,
+      ai: Math.random() < 0.25,
+      hot: Math.random() < 0.15,
       pinned: Math.random() < 0.05,
+      originator: `${faker.name.firstName()} ${faker.name.lastName()}`,
       lastActivity: new Date(String(faker.date.recent(10))),
-      excerpt: faker.lorem.paragraph(35),
+      excerpt: faker.lorem.paragraph(15),
       items: {
         total: parseInt(faker.commerce.price(70, 200, 0)),
         new: parseInt(faker.commerce.price(0, 70, 0))
@@ -177,35 +206,21 @@ export default {
         up: parseInt(faker.commerce.price(0, 150, 0)),
         down: parseInt(faker.commerce.price(0, 250, 0))
       },
+      shared: Math.random() < 0.15,
+      relatedTopics: faker.random.arrayElements(
+        dummyTopics,
+        Math.floor(Math.random() * (5 - 2 + 1)) + 2
+      ),
+      keywords: faker.random.words(Math.random() * (16 - 6 + 1) + 6).split(' '),
       selected: false
     }
 
-    var dummyTopics = [
-      'porro ad nihil iusto iure',
-      'modi odit',
-      'aliquam nulla',
-      'aut exercitationem',
-      'quia reiciendis dolor',
-      'necessitatibus at quidem',
-      'maiores assumenda modi aut',
-      'rerum sit'
-    ]
-
-    var dummySourceTypes = [
-      'RSS',
-      'MISP',
-      'Web',
-      'Twitter',
-      'Email',
-      'Slack',
-      'Atom'
-    ]
-
-    var numberOfDummyTopics = 40
+    var numberOfDummyItems = Math.floor(Math.random() * (140 - 40 + 1)) + 40
     var dummyData = []
 
-    for (var i = 1; i < numberOfDummyTopics; i++) {
+    for (var i = 1; i < numberOfDummyItems; i++) {
       var sourceDomain = faker.internet.domainName()
+      const shared = Math.random() < 0.2
       var entry = {
         id: i,
         relevanceScore: faker.commerce.price(0, 100, 0),
@@ -215,12 +230,12 @@ export default {
           dummyTags,
           Math.floor(Math.random() * (5 - 2 + 1)) + 2
         ),
-        published: new Date(String(faker.date.recent(10))),
-        collected: new Date(String(faker.date.recent(10))),
+        published: new Date(String(faker.date.recent(80))),
+        collected: new Date(String(faker.date.recent(20))),
         source: {
           domain: sourceDomain,
           url: `${faker.internet.protocol()}://${sourceDomain}/rss/${moment(
-            new Date(String(faker.date.recent(10)))
+            new Date(String(faker.date.recent(50)))
           ).format('YYYY/MM/DD')}/${faker.internet.password(20)}`,
           type: dummySourceTypes[Math.floor(Math.random() * 7)]
         },
@@ -238,6 +253,14 @@ export default {
         decorateSource: Math.random() < 0.2,
         recommended: Math.random() < 0.2,
         inAnalysis: Math.random() < 0.2,
+        shared: shared,
+        sharingSets: shared
+          ? faker.random.arrayElements(
+            dummySharingSets,
+            Math.floor(Math.random() * (3 - 1 + 1)) + 1
+          )
+          : [],
+        restricted: Math.random() < 0.2,
         selected: false
       }
       dummyData.push(entry)

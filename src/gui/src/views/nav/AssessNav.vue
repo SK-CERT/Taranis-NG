@@ -59,6 +59,56 @@
 
         <v-col cols="12" class="pt-0">
           <v-combobox
+            v-model="sharingSets.selected"
+            :items="sharingSetList"
+            label="Sharing Set"
+            multiple
+            outlined
+            dense
+            hide-selected
+            append-icon="mdi-chevron-down"
+            class="pl-0"
+            hide-details
+            search-input
+            @change="defaultSharingSet"
+          >
+            <template v-slot:selection="{ parent, item, index }">
+              <v-chip
+                small
+                v-if="index < 1 && !parent.isMenuActive"
+                @click:close="removeSelectedSharingSet(item)"
+                label
+                color="grey--lighten-4"
+                close
+                close-icon="$newsItemActionRemove"
+                class="pa-2 ml-0 mt-1"
+              >
+                <span>{{ item }}</span>
+              </v-chip>
+              <v-chip
+                small
+                v-else-if="parent.isMenuActive"
+                @click:close="removeSelectedSharingSet(item)"
+                label
+                color="grey--lighten-4"
+                close
+                close-icon="$newsItemActionRemove"
+                class="pa-2 ml-0 mt-1"
+              >
+                <span>{{ item }}</span>
+              </v-chip>
+              <span
+                v-if="index === 1 && !parent.isMenuActive"
+                class="grey--text text-caption"
+              >
+                (+{{ sharingSets.selected.length - 1 }})
+              </span>
+            </template>
+          </v-combobox>
+        </v-col>
+
+        <v-col cols="12" class="pt-0">
+          <v-combobox
             v-model="sources.selected"
             :items="sourcesList"
             label="Sources"
@@ -112,6 +162,10 @@
 
       <!-- search -->
       <v-row class="my-3 mr-0 px-5">
+        <v-col cols="12" class="py-0">
+          <h4>search</h4>
+        </v-col>
+
         <v-col cols="12">
           <v-text-field
             v-model="filter.search"
@@ -412,6 +466,9 @@ export default {
     topics: {
       selected: ['all']
     },
+    sharingSets: {
+      selected: ['all']
+    },
     sources: {
       selected: ['all']
     },
@@ -425,8 +482,11 @@ export default {
         label: 'tagged as important',
         icon: '$awakeImportant'
       },
-      { type: 'recommended', label: 'recommended', icon: 'mdi-star-outline' },
-      { type: 'analysis', label: 'items in analysis', icon: '$awakeReport' },
+      {
+        type: 'shared',
+        label: 'items in sharing set',
+        icon: '$awakeShareOutline'
+      },
       {
         type: 'selected',
         label: 'selected',
@@ -505,6 +565,22 @@ export default {
       'APT',
       'MitM'
     ],
+    sharingSetList: [
+      'all',
+      'State',
+      'Cyberwar',
+      'Threat',
+      'DDoS',
+      'Vulnerability',
+      'Java',
+      'CVE',
+      'OT/CPS',
+      'Python',
+      'Privacy',
+      'Social',
+      'APT',
+      'MitM'
+    ],
     sourcesList: [
       'all',
       'State',
@@ -563,6 +639,21 @@ export default {
     removeSelectedTopic (chip) {
       this.topics.selected = this.topics.selected.filter((c) => c !== chip)
       this.defaultTopic()
+    },
+    defaultSharingSet () {
+      if (!this.sharingSets.selected.length) {
+        this.sharingSets.selected = ['all']
+      } else if (this.sharingSets.selected !== ['all']) {
+        this.sharingSets.selected = this.sharingSets.selected.filter(
+          (item) => item !== 'all'
+        )
+      }
+    },
+    removeSelectedSharingSet (chip) {
+      this.sharingSets.selected = this.sharingSets.selected.filter(
+        (c) => c !== chip
+      )
+      this.defaultSharingSet()
     },
     defaultTag () {
       if (!this.filter.tags.selected.length) {
