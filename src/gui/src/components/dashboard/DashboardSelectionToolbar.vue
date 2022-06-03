@@ -54,7 +54,7 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                <v-icon left>$awakeShare</v-icon>
+                <v-icon left>$awakeShareOutline</v-icon>
                 share
               </v-btn>
             </template>

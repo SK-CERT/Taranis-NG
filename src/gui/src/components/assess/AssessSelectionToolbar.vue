@@ -65,16 +65,16 @@ export default {
         icon: 'mdi-folder-plus-outline'
       },
       {
+        label: 'create sharing set',
+        icon: '$awakeShareOutline'
+      },
+      {
         label: 'create report',
         icon: '$awakeReport'
       },
       {
-        label: 'mark as read',
-        icon: '$awakeEye'
-      },
-      {
-        label: 'mark as important',
-        icon: '$awakeImportant'
+        label: 'remove from topic',
+        icon: '$awakeClose'
       },
       {
         label: 'delete items',
