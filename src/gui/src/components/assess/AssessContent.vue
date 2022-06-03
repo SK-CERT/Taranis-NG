@@ -1,19 +1,35 @@
 <template>
-  <div class="overflow-hidden">
-    <transition-group
-      name="topics-grid"
-      tag="div"
-      class="row d-flex align-stretch row--dense topics-grid-container"
-      appear
-    >
-      <card-news-item
-        v-for="(newsItem, index) in filteredNewsItems"
-        :key="newsItem.id"
-        :newsItem="newsItem"
-        :position="index"
-        @deleteItem="deleteItem"
-      ></card-news-item>
-    </transition-group>
+  <v-col class="overflow-hidden">
+    <v-container fluid>
+      <transition name="empty-list-transition" mode="out-in">
+        <v-row v-if="!filteredNewsItems.length">
+          <v-col cols="12" class="empty-list-notification">
+            <v-icon x-large> mdi-circle-off-outline </v-icon>
+            <span v-if="getNewsItems().length">
+              The currently selected filters do not yield any results. Try
+              changing the filters.
+            </span>
+            <span v-else> No elements to display. </span>
+          </v-col>
+        </v-row>
+
+        <transition-group
+          name="news-items-grid"
+          tag="div"
+          class="row d-flex align-stretch row--dense topics-grid-container"
+          v-else
+          appear
+        >
+          <card-news-item
+            v-for="(newsItem, index) in filteredNewsItems"
+            :key="newsItem.id"
+            :newsItem="newsItem"
+            :position="index"
+            @deleteItem="deleteItem"
+          ></card-news-item>
+        </transition-group>
+      </transition>
+    </v-container>
 
     <v-expand-transition>
       <assess-selection-toolbar
@@ -21,7 +37,7 @@
         :selection="getNewsItemsSelection()"
       ></assess-selection-toolbar>
     </v-expand-transition>
-  </div>
+  </v-col>
 </template>
 
 <script>
@@ -181,10 +197,8 @@ export default {
               return !item.read
             case 'important':
               return item.important
-            case 'recommended':
-              return item.recommended
-            case 'analysis':
-              return item.inAnalysis
+            case 'shared':
+              return item.shared
             case 'selected':
               return item.selected
           }
