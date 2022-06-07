@@ -45,7 +45,7 @@
                     no-gutters
                     class="flex-grow-0 my-2 merge-topics-details-meta"
                   >
-                    <v-col cols="12" v-if="getTopicDetails(topicId).shared">
+                    <v-col cols="12" v-if="getTopicDetails(topicId).isSharingSet">
                       <v-icon left x-small class="mr-1 flipped-icon"
                         >$awakeShare</v-icon
                       >
@@ -233,7 +233,7 @@ export default {
   }),
   methods: {
     ...mapActions('dashboard', ['pinTopic', 'unselectAllTopics']),
-    ...mapGetters('dashboard', ['getTopicById', 'test']),
+    ...mapGetters('dashboard', ['getTopicById']),
 
     getTopicDetails (id) {
       const topic = this.getTopicById()(id)

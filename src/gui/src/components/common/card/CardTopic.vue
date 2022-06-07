@@ -14,20 +14,20 @@
         'pinned-topic': topic.pinned,
         selected: topic.selected,
         'corner-tag-ai': topic.ai,
-        'corner-tag-shared': topic.shared,
+        'corner-tag-shared': topic.isSharingSet,
         'hot-topic': topic.hot
       }
     ]"
     @click="toggleSelection"
   >
     <div
-      v-if="topic.ai && !topic.shared"
+      v-if="topic.ai && !topic.isSharingSet"
       class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
     >
       AI
     </div>
     <div
-      v-if="topic.shared"
+      v-if="topic.isSharingSet"
       class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
     >
       <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
@@ -165,6 +165,7 @@
               <v-btn
                 outlined
                 class="text-lowercase btn-view-topic mt-1"
+                :to="{ path: '/assess', query: { topic: topic.id }}"
                 @click.native.capture="viewTopic($event)"
               >
                 <v-icon left>$awakeEye</v-icon>

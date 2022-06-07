@@ -12,6 +12,7 @@ import { dashboard } from '@/store/dashboard'
 import { osint_source } from '@/store/osint_source'
 import { newsItemsFilter } from '@/store/newsItemsFilter'
 import { topicsFilter } from '@/store/topicsFilter'
+import { dummyData } from '@/store/dummyData'
 
 Vue.use(Vuex)
 
@@ -93,6 +94,7 @@ export const store = new Vuex.Store({
     dashboard,
     osint_source,
     newsItemsFilter,
-    topicsFilter
+    topicsFilter,
+    dummyData
   }
 })

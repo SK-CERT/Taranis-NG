@@ -250,10 +250,10 @@
                 </v-col>
                 <v-col>
                   <span
-                    v-for="(topic, index) in newsItem.topics"
-                    :key="topic"
+                    v-for="(topicId, index) in newsItem.topics"
+                    :key="topicId"
                     class="text-capitalize"
-                    >{{ topic }}
+                    >{{ getTopicTitle(topicId) }}
                     <span
                       v-if="index != Object.keys(newsItem.topics).length - 1"
                       >,
@@ -285,7 +285,7 @@
 import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
 
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'CardNewsItem',
@@ -305,12 +305,18 @@ export default {
     }
   },
   methods: {
+    
+    ...mapGetters('dashboard', ['getTopicById']),
+
     ...mapActions('assess', [
       'selectNewsItem',
       'upvoteNewsItem',
       'downvoteNewsItem'
     ]),
 
+    getTopicTitle: function(topicId) {
+      return this.getTopicById()(topicId).title
+    },
     toggleSelection: function () {
       this.newsItem.selected = !this.newsItem.selected
       this.selectNewsItem(this.newsItem.id)

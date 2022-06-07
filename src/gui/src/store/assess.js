@@ -139,6 +139,10 @@ const getters = {
   getNewsItems (state) {
     return state.newsItems
   },
+  
+  getNewsItemsByTopicId: (state) => (id) => {
+    return state.newsItems.filter(newsItem => newsItem.topics.includes(id))
+  },
 
   getNewsItemsSelection (state) {
     return state.newsItemsSelection

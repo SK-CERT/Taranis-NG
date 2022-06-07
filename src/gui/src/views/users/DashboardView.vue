@@ -22,81 +22,11 @@ export default {
   },
   data: () => ({}),
   methods: {
-    ...mapActions('dashboard', ['updateTopics'])
+    ...mapActions('dashboard', ['updateTopics']),
+    ...mapGetters('dummyData', ['getDummyTopics', 'getDummySharingSets', 'getDummyNewsItems'])
   },
   computed: {},
   mounted () {
-    // Generate Dummy Data
-    var dummyTags = [
-      { label: 'State', color: Math.floor(Math.random() * 20) },
-      { label: 'Cyberwar', color: Math.floor(Math.random() * 20) },
-      { label: 'Threat', color: Math.floor(Math.random() * 20) },
-      { label: 'DDoS', color: Math.floor(Math.random() * 20) },
-      { label: 'Vulnerability', color: Math.floor(Math.random() * 20) },
-      { label: 'Java', color: Math.floor(Math.random() * 20) },
-      { label: 'CVE', color: Math.floor(Math.random() * 20) },
-      { label: 'OT/CPS', color: Math.floor(Math.random() * 20) },
-      { label: 'Python', color: Math.floor(Math.random() * 20) },
-      { label: 'Privacy', color: Math.floor(Math.random() * 20) },
-      { label: 'Social', color: Math.floor(Math.random() * 20) },
-      { label: 'APT', color: Math.floor(Math.random() * 20) },
-      { label: 'MitM', color: Math.floor(Math.random() * 20) }
-    ]
-
-    var dummyTopics = [
-      'porro ad nihil iusto iure',
-      'modi odit',
-      'aliquam nulla',
-      'aut exercitationem',
-      'quia reiciendis dolor',
-      'necessitatibus at quidem',
-      'maiores assumenda modi aut',
-      'rerum sit'
-    ]
-
-    var numberOfDummyTopics = 20
-    var dummyData = []
-
-    for (var i = 1; i < numberOfDummyTopics; i++) {
-      var entry = {
-        id: i,
-        relevanceScore: parseInt(faker.commerce.price(0, 100, 0)),
-        title: faker.lorem.words(Math.floor(Math.random() * (5 - 2 + 1)) + 2),
-        tags: faker.random.arrayElements(
-          dummyTags,
-          Math.floor(Math.random() * (5 - 2 + 1)) + 2
-        ),
-        ai: Math.random() < 0.25,
-        hot: Math.random() < 0.15,
-        pinned: Math.random() < 0.05,
-        lastActivity: new Date(String(faker.date.recent(10))),
-        excerpt: faker.lorem.paragraph(),
-        items: {
-          total: parseInt(faker.commerce.price(70, 200, 0)),
-          new: parseInt(faker.commerce.price(0, 70, 0))
-        },
-        comments: {
-          total: parseInt(faker.commerce.price(70, 200, 0)),
-          new: parseInt(faker.commerce.price(0, 70, 0))
-        },
-        votes: {
-          up: parseInt(faker.commerce.price(0, 150, 0)),
-          down: parseInt(faker.commerce.price(0, 250, 0))
-        },
-        shared: Math.random() < 0.15,
-        relatedTopics: faker.random.arrayElements(
-          dummyTopics,
-          Math.floor(Math.random() * (5 - 2 + 1)) + 2
-        ),
-        keywords: faker.random
-          .words(Math.random() * (16 - 6 + 1) + 6)
-          .split(' '),
-        selected: false
-      }
-      dummyData.push(entry)
-    }
-
-    this.updateTopics(dummyData)
   }
 }
 </script>

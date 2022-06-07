@@ -29,6 +29,7 @@
 import MainMenu from './components/MainMenu'
 import AuthMixin from './services/auth/auth_mixin'
 import Notification from './components/common/Notification'
+import { mapState, mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'App',
@@ -41,6 +42,12 @@ export default {
   }),
   mixins: [AuthMixin],
   methods: {
+
+    ...mapActions('dashboard', ['updateTopics']),    
+    ...mapActions('assess', ['updateNewsItems']),
+    ...mapActions('dummyData', ['init']),
+    ...mapGetters('dummyData', ['getDummyTopics', 'getDummySharingSets', 'getDummyNewsItems']),
+
     connectSSE () {
       this.$sse(
         (typeof process.env.VUE_APP_TARANIS_NG_CORE_SSE === 'undefined'
@@ -80,6 +87,7 @@ export default {
     this.$root.$emit('app-updated')
   },
   mounted () {
+
     if (this.$cookies.isKey('jwt')) {
       this.$store.dispatch('setToken', this.$cookies.get('jwt')).then(() => {
         this.$cookies.remove('jwt')
@@ -124,6 +132,14 @@ export default {
     this.$root.$on('logged-in', () => {
       this.connectSSE()
     })
+  },
+  created () {    
+    // Generate Dummy Data
+    this.init()
+    let topics = this.getDummyTopics()
+    let sharingSets = this.getDummySharingSets()
+    this.updateTopics(topics.concat(sharingSets))
+    this.updateNewsItems(this.getDummyNewsItems())
   }
 }
 </script>

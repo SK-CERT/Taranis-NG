@@ -36,7 +36,7 @@
 
     <v-expand-transition>
       <dashboard-selection-toolbar
-        class="py-3 px-1"
+        class="px-1"
         v-if="activeSelection"
         :selection="getTopicSelection()"
       ></dashboard-selection-toolbar>

@@ -38,6 +38,7 @@
                   class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-4"
                 >
                   <calendar-heatmap
+                    class="calendar-heatmap"
                     :values="metaData.heatmapData"
                     :endDate="heatmapEndDate"
                     tooltip-unit="published items"
@@ -221,6 +222,8 @@ import moment from 'moment'
 import TagMini from '@/components/common/tags/TagMini'
 import TagNorm from '@/components/common/tags/TagNorm'
 import { CalendarHeatmap } from 'vue-calendar-heatmap'
+import { mapActions, mapGetters } from 'vuex'
+
 
 // import { mapState } from 'vuex'
 
@@ -232,12 +235,17 @@ export default {
     CalendarHeatmap
   },
   props: {
-    topic: {},
-    newsItems: []
+    topicId: Number
   },
   data: () => ({}),
-  methods: {},
+  methods: {
+    ...mapGetters('dashboard', ['getTopicById']),
+    ...mapGetters('assess', ['getNewsItemsByTopicId']),
+  },
   computed: {
+    topic () {
+      return this.getTopicById()(this.topicId)
+    },
     lastActivity () {
       return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
     },
@@ -251,9 +259,10 @@ export default {
       const heatmapCounter = {}
       let numberSharedItems = 0
       let numberRestrictedItems = 0
+      let newsItems = this.getNewsItemsByTopicId()(this.topicId)
       const sharingSets = []
 
-      this.newsItems.forEach((element) => {
+      newsItems.forEach((element) => {
         const date = moment(element.published).format('YYYY/MM/DD')
         heatmapCounter[date] = heatmapCounter[date] || 0
         heatmapCounter[date]++
