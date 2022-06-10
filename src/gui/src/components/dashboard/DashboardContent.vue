@@ -311,6 +311,8 @@ export default {
               return item.hot
             case 'upvoted':
               return item.votes.up > item.votes.down
+            case 'sharingSets':
+              return item.isSharingSet
             case 'selected':
               return item.selected
             default:
