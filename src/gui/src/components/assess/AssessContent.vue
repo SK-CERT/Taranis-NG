@@ -161,10 +161,33 @@ export default {
     ...mapState('assess', ['newsItems']),
 
     filteredNewsItems () {
-      // let filteredData = this.getNewsItems()
       let filteredData = []
-      if (this.filter.scope.topics.length) {
+      if (
+        this.filter.scope.topics.length &&
+        this.filter.scope.sharingSets.length
+      ) {
+        const scopedData = this.getNewsItemsByTopicList()(
+          this.filter.scope.topics
+        )
+
+        const sharingSetList = this.filter.scope.sharingSets
+
+        filteredData = scopedData.filter((newsItem) => {
+          return newsItem.sharingSets.some(
+            (itemSharingSet) =>
+              sharingSetList
+                .map((sharingSet) => sharingSet.id)
+                .indexOf(itemSharingSet) >= 0
+          )
+        })
+      } else if (this.filter.scope.topics.length) {
         filteredData = this.getNewsItemsByTopicList()(this.filter.scope.topics)
+      } else if (this.filter.scope.sharingSets.length) {
+        filteredData = this.getNewsItemsByTopicList()(
+          this.filter.scope.sharingSets
+        )
+      } else {
+        filteredData = this.getNewsItems()
       }
 
       console.log(filteredData.length)

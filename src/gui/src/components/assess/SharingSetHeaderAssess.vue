@@ -215,7 +215,7 @@ export default {
     ...mapState('newsItemsFilter', ['filter']),
 
     topic () {
-      return this.getTopicById()(parseInt(this.filter.scope.topics[0].id))
+      return this.getTopicById()(parseInt(this.filter.scope.sharingSets[0].id))
     },
     lastActivity () {
       return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')

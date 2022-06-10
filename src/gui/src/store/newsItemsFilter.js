@@ -18,7 +18,8 @@ export const newsItemsFilter = {
       },
       scope: {
         topics: [],
-        sharingSets: []
+        sharingSets: [],
+        sources: []
       }
 
     },

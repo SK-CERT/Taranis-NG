@@ -160,7 +160,13 @@ const getters = {
   },
 
   getTopicSelectionList(state) {
-    return state.topics.map(function (topic) { return { id: topic.id, title: topic.title } })
+    let filteredTopics = state.topics.filter((topic) => !topic.isSharingSet)
+    return filteredTopics.map(function (topic) { return { id: topic.id, title: topic.title } })
+  },
+
+  getSharingSetSelectionList(state) {
+    let filteredTopics = state.topics.filter((topic) => topic.isSharingSet)
+    return filteredTopics.map(function (topic) { return { id: topic.id, title: topic.title } })
   },
 
   getDashboardData(state) {

@@ -2,15 +2,15 @@
   <div>
     <ViewLayout>
       <template v-slot:panel>
-        <!-- <sharing-set-header-assess
-          v-if="topic.isSharingSet"
-          :newsItems="newsItems"
-        /> -->
-        <!-- :topic="topic" -->
         <v-expand-transition>
-          <div v-if="filter.scope.topics.length === 1">
-            <sharing-set-header-assess v-if="topic.isSharingSet" />
-            <topic-header-assess v-else />
+          <div
+            v-if="
+              filter.scope.topics.length === 1 ||
+              filter.scope.sharingSets.length === 1
+            "
+          >
+            <topic-header-assess v-if="filter.scope.topics.length === 1" />
+            <sharing-set-header-assess v-else />
           </div>
         </v-expand-transition>
       </template>

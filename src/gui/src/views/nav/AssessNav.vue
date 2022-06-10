@@ -71,9 +71,12 @@
 
         <v-col cols="12" class="pt-0">
           <v-combobox
-            v-model="sharingSets.selected"
-            :items="sharingSetList"
-            label="Sharing Set"
+            v-model="filter.scope.sharingSets"
+            :items="getSharingSetSelectionList()"
+            label="Sharing Sets"
+            placeholder="all Sharing Sets"
+            return-object
+            item-text="title"
             multiple
             outlined
             dense
@@ -82,38 +85,47 @@
             class="pl-0"
             hide-details
             search-input
-            @change="defaultSharingSet"
           >
+            <template v-slot:item="{ item }">
+              <span class="dropdown-list-item">
+                {{ item.title }}
+              </span>
+            </template>
             <template v-slot:selection="{ parent, item, index }">
               <v-chip
                 small
                 v-if="index < 1 && !parent.isMenuActive"
-                @click:close="removeSelectedSharingSet(item)"
                 label
                 color="grey--lighten-4"
                 close
                 close-icon="$newsItemActionRemove"
                 class="pa-2 ml-0 mt-1"
+                @click:close="parent.selectItem(item)"
               >
-                <span>{{ item }}</span>
+                <span class="text-truncate text-capitalize topics-chip">{{
+                  item.title
+                }}</span>
               </v-chip>
+
               <v-chip
                 small
                 v-else-if="parent.isMenuActive"
-                @click:close="removeSelectedSharingSet(item)"
                 label
                 color="grey--lighten-4"
                 close
                 close-icon="$newsItemActionRemove"
                 class="pa-2 ml-0 mt-1"
+                @click:close="parent.selectItem(item)"
               >
-                <span>{{ item }}</span>
+                <span class="text-capitalize">
+                  {{ item.title }}
+                </span>
               </v-chip>
               <span
                 v-if="index === 1 && !parent.isMenuActive"
                 class="grey--text text-caption"
               >
-                (+{{ sharingSets.selected.length - 1 }})
+                (+{{ filter.scope.sharingSets.length - 1 }})
               </span>
             </template>
           </v-combobox>
@@ -121,9 +133,12 @@
 
         <v-col cols="12" class="pt-0">
           <v-combobox
-            v-model="sources.selected"
+            v-model="filter.scope.sources"
             :items="sourcesList"
             label="Sources"
+            placeholder="all Sources"
+            return-object
+            item-text="title"
             multiple
             outlined
             dense
@@ -132,38 +147,47 @@
             class="pl-0"
             hide-details
             search-input
-            @change="defaultSource"
           >
+            <template v-slot:item="{ item }">
+              <span class="dropdown-list-item">
+                {{ item.title }}
+              </span>
+            </template>
             <template v-slot:selection="{ parent, item, index }">
               <v-chip
                 small
                 v-if="index < 1 && !parent.isMenuActive"
-                @click:close="removeSelectedSource(item)"
                 label
                 color="grey--lighten-4"
                 close
                 close-icon="$newsItemActionRemove"
                 class="pa-2 ml-0 mt-1"
+                @click:close="parent.selectItem(item)"
               >
-                <span>{{ item }}</span>
+                <span class="text-truncate text-capitalize topics-chip">{{
+                  item.title
+                }}</span>
               </v-chip>
+
               <v-chip
                 small
                 v-else-if="parent.isMenuActive"
-                @click:close="removeSelectedSource(item)"
                 label
                 color="grey--lighten-4"
                 close
                 close-icon="$newsItemActionRemove"
                 class="pa-2 ml-0 mt-1"
+                @click:close="parent.selectItem(item)"
               >
-                <span>{{ item }}</span>
+                <span class="text-capitalize">
+                  {{ item.title }}
+                </span>
               </v-chip>
               <span
                 v-if="index === 1 && !parent.isMenuActive"
                 class="grey--text text-caption"
               >
-                (+{{ sources.selected.length - 1 }})
+                (+{{ filter.scope.sources.length - 1 }})
               </span>
             </template>
           </v-combobox>
@@ -467,26 +491,9 @@ export default {
   data: () => ({
     links: [],
     datePicker: false,
-    // date: {
-    //   range: [],
-    //   selected: 'all'
-    // },
-    // tags: {
-    //   andOperator: true,
-    //   selected: ['all']
-    // },
-    topics: {
-      selected: ['all']
-    },
-    sharingSets: {
-      selected: ['all']
-    },
     sources: {
       selected: ['all']
     },
-    // filter: {
-    //   attribute: [],
-    // },
     filterAttributeOptions: [
       { type: 'unread', label: 'unread', icon: '$awakeUnread' },
       {
@@ -519,32 +526,6 @@ export default {
         direction: ''
       }
     ],
-    // filterBy: {
-    //   selected: [],
-    //   list: [
-    //     { label: 'unread', icon: '$awakeUnread' },
-    //     { label: 'tagged as important', icon: '$awakeImportant' },
-    //     { label: 'recommended', icon: 'mdi-star-outline' },
-    //     { label: 'items in analysis', icon: '$awakeReport' }
-    //   ]
-    // },
-    // order: {
-    //   selected: {},
-    //   list: [
-    //     {
-    //       label: 'published date',
-    //       icon: 'mdi-calendar-range-outline',
-    //       type: 'publishedDate',
-    //       direction: 'desc'
-    //     },
-    //     {
-    //       label: 'relevance',
-    //       icon: '$awakeRelated',
-    //       type: 'publishedDate',
-    //       direction: ''
-    //     }
-    //   ]
-    // },
     tagList: [
       'all',
       'State',
@@ -561,53 +542,11 @@ export default {
       'APT',
       'MitM'
     ],
-    topicsList: [
-      'all',
-      'State',
-      'Cyberwar',
-      'Threat',
-      'DDoS',
-      'Vulnerability',
-      'Java',
-      'CVE',
-      'OT/CPS',
-      'Python',
-      'Privacy',
-      'Social',
-      'APT',
-      'MitM'
-    ],
-    sharingSetList: [
-      'all',
-      'State',
-      'Cyberwar',
-      'Threat',
-      'DDoS',
-      'Vulnerability',
-      'Java',
-      'CVE',
-      'OT/CPS',
-      'Python',
-      'Privacy',
-      'Social',
-      'APT',
-      'MitM'
-    ],
     sourcesList: [
-      'all',
-      'State',
-      'Cyberwar',
-      'Threat',
-      'DDoS',
-      'Vulnerability',
-      'Java',
-      'CVE',
-      'OT/CPS',
-      'Python',
-      'Privacy',
-      'Social',
-      'APT',
-      'MitM'
+      { id: 1, title: 'Source 1' },
+      { id: 2, title: 'Source 2' },
+      { id: 3, title: 'Source 3' },
+      { id: 4, title: 'Source 4' }
     ]
   }),
   computed: {
@@ -621,7 +560,11 @@ export default {
     ...mapState('newsItemsFilter', ['filter', 'order'])
   },
   methods: {
-    ...mapGetters('dashboard', ['getTopicTitleById', 'getTopicSelectionList']),
+    ...mapGetters('dashboard', [
+      'getTopicTitleById',
+      'getTopicSelectionList',
+      'getSharingSetSelectionList'
+    ]),
 
     getTopicTitle (item) {
       return this.getTopicTitleById()(parseInt(item.id))
@@ -631,47 +574,6 @@ export default {
       if (!this.filter.date.selected) {
         this.filter.date.selected = 'all'
       }
-    },
-    defaultSource () {
-      if (!this.sources.selected.length) {
-        this.sources.selected = ['all']
-      } else if (this.sources.selected !== ['all']) {
-        this.sources.selected = this.sources.selected.filter(
-          (item) => item !== 'all'
-        )
-      }
-    },
-    removeSelectedSource (chip) {
-      this.sources.selected = this.sources.selected.filter((c) => c !== chip)
-      this.defaultSource()
-    },
-    defaultTopic () {
-      if (!this.topics.selected.length) {
-        this.topics.selected = ['all']
-      } else if (this.topics.selected !== ['all']) {
-        this.topics.selected = this.topics.selected.filter(
-          (item) => item !== 'all'
-        )
-      }
-    },
-    removeSelectedTopic (chip) {
-      this.topics.selected = this.topics.selected.filter((c) => c !== chip)
-      this.defaultTopic()
-    },
-    defaultSharingSet () {
-      if (!this.sharingSets.selected.length) {
-        this.sharingSets.selected = ['all']
-      } else if (this.sharingSets.selected !== ['all']) {
-        this.sharingSets.selected = this.sharingSets.selected.filter(
-          (item) => item !== 'all'
-        )
-      }
-    },
-    removeSelectedSharingSet (chip) {
-      this.sharingSets.selected = this.sharingSets.selected.filter(
-        (c) => c !== chip
-      )
-      this.defaultSharingSet()
     },
     defaultTag () {
       if (!this.filter.tags.selected.length) {
