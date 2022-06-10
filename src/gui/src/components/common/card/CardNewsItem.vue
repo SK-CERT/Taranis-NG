@@ -249,15 +249,8 @@
                   <strong>Topics:</strong>
                 </v-col>
                 <v-col>
-                  <span
-                    v-for="(topicId, index) in newsItem.topics"
-                    :key="topicId"
-                    class="text-capitalize"
-                    >{{ getTopicTitle(topicId) }}
-                    <span
-                      v-if="index != Object.keys(newsItem.topics).length - 1"
-                      >,
-                    </span>
+                  <span class="news-item-meta-topics-list text-capitalize">
+                    {{ topicsList }}
                   </span>
                 </v-col>
               </v-row>
@@ -302,11 +295,21 @@ export default {
     },
     collectedDate () {
       return moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss')
+    },
+    topicsList () {
+      const topicTitles = []
+      this.newsItem.topics.forEach((id) => {
+        const newTopicTitle = this.getTopicTitleById()(id)
+        if (topicTitles.indexOf(newTopicTitle) === -1) {
+          topicTitles.push(newTopicTitle)
+        }
+      })
+
+      return topicTitles.length ? topicTitles.join(', ') : '-'
     }
   },
   methods: {
-    
-    ...mapGetters('dashboard', ['getTopicById']),
+    ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
 
     ...mapActions('assess', [
       'selectNewsItem',
@@ -314,8 +317,8 @@ export default {
       'downvoteNewsItem'
     ]),
 
-    getTopicTitle: function(topicId) {
-      return this.getTopicById()(topicId).title
+    getTopicTitle: function (topicId) {
+      return this.getTopicTitleById()(topicId)
     },
     toggleSelection: function () {
       this.newsItem.selected = !this.newsItem.selected
