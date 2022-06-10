@@ -153,6 +153,10 @@ a {
 
 // Topic Cards
 
+.topic-title {
+  line-height: 1.2;
+}
+
 .fab-pin {
   width: 28px !important;
   height: 28px !important;
@@ -183,8 +187,14 @@ a {
   padding: 12px 8px !important;
 }
 
-.v-application .v-card .last-activity {
-  font-size: 0.65rem !important;
+.v-application .v-card .activity-row {
+  min-height: 54px;
+  line-height: 1;
+  padding-bottom: 12px;
+
+  & .last-activity {
+    font-size: 0.65rem !important;
+  }
 }
 
 .v-application .v-card h2.headline {
@@ -489,8 +499,8 @@ a {
   margin-top: 0px;
 
   & .col {
-    padding-top: 4px;
-    padding-bottom: 4px;
+    padding-top: 2px;
+    padding-bottom: 0px;
   }
 
   &>div {
@@ -500,6 +510,16 @@ a {
   & .news-item-meta-infos-label {
     min-width: 100px;
     max-width: 100px;
+  }
+
+  & .news-item-meta-topics-list {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    height: calc(1.5em * 2);
   }
 
   a.meta-link {
@@ -645,7 +665,14 @@ a {
 
 .topic-header-container {
   background-color: darken($topic-header-bg, 5);
+}
 
+.sharingset-header-container {
+  background-color: lighten($accent, 25);
+}
+
+.topic-header-container,
+.sharingset-header-container {
   & .card-alignment {
     padding-left: 20px !important;
   }
@@ -902,4 +929,16 @@ a {
 
 .calendar-heatmap {
   max-width: 740px;
+}
+
+.topics-chip {
+  max-width: 120px;
+}
+
+.dropdown-list-item {
+  font-size: 0.9rem;
+  color: $dark-grey;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  text-transform: capitalize;
 }
