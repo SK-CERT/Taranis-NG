@@ -9,9 +9,12 @@
 
         <v-col cols="12">
           <v-combobox
-            v-model="topics.selected"
-            :items="topicsList"
-            label="Topic"
+            v-model="filter.scope.topics"
+            :items="getTopicSelectionList()"
+            label="Topics"
+            placeholder="all Topics"
+            return-object
+            item-text="title"
             multiple
             outlined
             dense
@@ -20,38 +23,47 @@
             class="pl-0"
             hide-details
             search-input
-            @change="defaultTopic"
           >
+            <template v-slot:item="{ item }">
+              <span class="dropdown-list-item">
+                {{ item.title }}
+              </span>
+            </template>
             <template v-slot:selection="{ parent, item, index }">
               <v-chip
                 small
                 v-if="index < 1 && !parent.isMenuActive"
-                @click:close="removeSelectedTopic(item)"
                 label
                 color="grey--lighten-4"
                 close
                 close-icon="$newsItemActionRemove"
                 class="pa-2 ml-0 mt-1"
+                @click:close="parent.selectItem(item)"
               >
-                <span>{{ item }}</span>
+                <span class="text-truncate text-capitalize topics-chip">{{
+                  item.title
+                }}</span>
               </v-chip>
+
               <v-chip
                 small
                 v-else-if="parent.isMenuActive"
-                @click:close="removeSelectedTopic(item)"
                 label
                 color="grey--lighten-4"
                 close
                 close-icon="$newsItemActionRemove"
                 class="pa-2 ml-0 mt-1"
+                @click:close="parent.selectItem(item)"
               >
-                <span>{{ item }}</span>
+                <span class="text-capitalize">
+                  {{ item.title }}
+                </span>
               </v-chip>
               <span
                 v-if="index === 1 && !parent.isMenuActive"
                 class="grey--text text-caption"
               >
-                (+{{ topics.selected.length - 1 }})
+                (+{{ filter.scope.topics.length - 1 }})
               </span>
             </template>
           </v-combobox>
@@ -447,7 +459,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 
 export default {
   name: 'AssessNav',
@@ -609,6 +621,12 @@ export default {
     ...mapState('newsItemsFilter', ['filter', 'order'])
   },
   methods: {
+    ...mapGetters('dashboard', ['getTopicTitleById', 'getTopicSelectionList']),
+
+    getTopicTitle (item) {
+      return this.getTopicTitleById()(parseInt(item.id))
+    },
+
     defaultDate (event) {
       if (!this.filter.date.selected) {
         this.filter.date.selected = 'all'

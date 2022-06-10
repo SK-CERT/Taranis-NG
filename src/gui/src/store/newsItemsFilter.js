@@ -15,7 +15,12 @@ export const newsItemsFilter = {
       date: {
         range: [],
         selected: 'all'
+      },
+      scope: {
+        topics: [],
+        sharingSets: []
       }
+
     },
     order: {
       selected: {}
