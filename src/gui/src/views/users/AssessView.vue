@@ -161,9 +161,12 @@ export default {
     })
 
     const topicId = parseInt(this.$route.query.topic)
-    this.filter.scope.topics = [
-      { id: topicId, title: this.getTopicTitleById()(topicId) }
-    ]
+    const topic = this.getTopicById()(topicId)
+    if (topic.isSharingSet) {
+      this.filter.scope.sharingSets = [{ id: topicId, title: topic.title }]
+    } else {
+      this.filter.scope.topics = [{ id: topicId, title: topic.title }]
+    }
   }
 }
 </script>
