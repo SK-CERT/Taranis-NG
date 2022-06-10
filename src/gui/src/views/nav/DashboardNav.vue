@@ -324,9 +324,9 @@ export default {
       { type: 'pinned', label: 'pinned topics', icon: '$awakePin' },
       { type: 'hot', label: 'hot topics', icon: 'mdi-star-outline' },
       {
-        type: 'upvoted',
-        label: 'upvoted topics',
-        icon: 'mdi-arrow-up-circle-outline'
+        type: 'sharingSets',
+        label: 'sharing sets',
+        icon: '$awakeShareOutline'
       },
       {
         type: 'selected',
