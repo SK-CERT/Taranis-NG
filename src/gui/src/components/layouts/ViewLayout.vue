@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-container fluid class="ma-0 pa-0 topic-header-container">
+    <v-container fluid class="ma-0 pa-0">
       <v-row class="view-panel" dense>
         <slot name="panel"></slot>
       </v-row>
