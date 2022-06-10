@@ -7,6 +7,7 @@ import logging
 from flask import Flask
 from flask_script import Manager,Command
 from flask_script.commands import Option
+import traceback
 
 from managers import db_manager
 from model import *

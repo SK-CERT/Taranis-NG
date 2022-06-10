@@ -52,20 +52,20 @@
 
                                 <!--FOOTER-->
                                 <v-row v-bind="UI.CARD.FOOTER">
-                                    <v-col cols="11">
+                                    <v-col cols="8">
                                         <template v-if="!singleAggregate">
                                             <v-btn depressed small color="primary" data-button="aggregate"
                                                    @click.stop="openCard">
                                                 <v-icon v-if="opened" left>mdi-arrow-down-drop-circle</v-icon>
                                                 <v-icon v-if="!opened" left>mdi-arrow-right-drop-circle</v-icon>
-                                                <span
-                                                    class="subtitle-2"> {{ $t('card_item.aggregated_items') }}: {{ card.news_items.length }}</span>
+                                                <div
+                                                    class="subtitle-2"> {{ $t('card_item.aggregated_items') }}: {{ card.news_items.length }}</div>
                                             </v-btn>
                                         </template>
                                         <template v-else>
-                                            <span  class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
+                                            <div  class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
                                                 {{ itemLink }}
-                                            </span>
+                                            </div>
                                         </template>
 
                                         <span class="caption font-weight-bold grey--text pl-2 pr-1">
@@ -81,7 +81,7 @@
                                             {{ $t('card_item.in_analyze') }}
                                         </v-btn>
                                     </v-col>
-                                    <v-col cols="1">
+                                    <v-col cols="4">
                                         <!--HOVER TOOLBAR-->
                                         <div v-show="hover">
                                             <v-row v-if="!multiSelectActive && !analyze_selector"
