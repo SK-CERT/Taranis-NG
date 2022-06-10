@@ -43,14 +43,30 @@
           <!-- Header -->
 
           <v-row class="flex-grow-0">
-            <v-col cols="10" class="mr-auto mt-1">
-              <!-- <tag-mini v-if="topic.ai" type="ai" /> -->
-              <span class="last-activity font-weight-light dark-grey--text"
-                >Last activity:
-              </span>
-              <span class="last-activity font-weight-bold dark-grey--text">
-                {{ lastActivity }}
-              </span>
+            <v-col cols="10" class="mr-auto mt-1 activity-row">
+              <div v-if="topic.isSharingSet">
+                <span class="last-activity font-weight-light dark-grey--text"
+                  >Shared on:
+                </span>
+                <span class="last-activity font-weight-bold dark-grey--text">
+                  {{ lastActivity }} </span
+                ><br />
+                <span class="last-activity font-weight-light dark-grey--text"
+                  >Shared by:
+                </span>
+                <span class="last-activity font-weight-bold dark-grey--text">
+                  {{ topic.originator }}
+                </span>
+              </div>
+
+              <div v-else>
+                <span class="last-activity font-weight-light dark-grey--text"
+                  >Last activity:
+                </span>
+                <span class="last-activity font-weight-bold dark-grey--text">
+                  {{ lastActivity }}
+                </span>
+              </div>
             </v-col>
 
             <v-col cols="2" class="text-right">
@@ -70,10 +86,10 @@
 
           <!-- Title -->
 
-          <v-row class="flex-grow-0 mt-1">
-            <v-col>
+          <v-row class="flex-grow-0 mt-0">
+            <v-col class="py-3">
               <h2
-                class="font-weight-bold headline dark-grey--text text-capitalize"
+                class="font-weight-bold headline topic-title dark-grey--text text-capitalize"
               >
                 {{ topic.title }}
               </h2>
@@ -165,9 +181,12 @@
               <v-btn
                 outlined
                 class="text-lowercase btn-view-topic mt-1"
-                :to="{ path: '/assess', query: { topic: topic.id }}"
-                @click.native.capture="viewTopic($event)"
+                :to="{
+                  path: '/assess',
+                  query: { topic: topic.id }
+                }"
               >
+                <!-- @click.native.capture="viewTopic($event)" -->
                 <v-icon left>$awakeEye</v-icon>
                 view topic
               </v-btn>
@@ -222,11 +241,11 @@ export default {
     downvote: function (event) {
       event.stopPropagation()
       this.downvoteTopic(this.topic.id)
-    },
-    viewTopic: function (event) {
-      event.stopPropagation()
-      console.log('view Topics clicked')
     }
+    // viewTopic: function (event) {
+    //   event.stopPropagation()
+    //   console.log('view Topics clicked')
+    // }
   }
 }
 </script>
