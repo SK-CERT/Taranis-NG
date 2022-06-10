@@ -144,7 +144,7 @@ import UserMenu from '../components/UserMenu'
 import AuthMixin from '../services/auth/auth_mixin'
 import Permissions from '@/services/auth/permissions'
 
-import { mapState } from 'vuex'
+import { mapGetters, mapState, mapActions } from 'vuex'
 
 export default {
   components: { UserMenu },
@@ -213,6 +213,8 @@ export default {
   }),
   mixins: [AuthMixin],
   methods: {
+    ...mapActions('assess', ['getManualOSINTSources']),
+
     navClicked () {
       this.opened = !this.opened
       this.$root.$emit('nav-clicked')
@@ -234,9 +236,8 @@ export default {
   },
   mounted () {
     if (this.checkPermission(Permissions.ASSESS_CREATE)) {
-      this.$store.dispatch('getManualOSINTSources').then(() => {
-        this.buttons[2].show =
-          this.$store.getters.getManualOSINTSources.length > 0
+      this.getManualOSINTSources().then(() => {
+        this.buttons[2].show = this.getManualOSINTSources().length > 0
       })
     }
   }
