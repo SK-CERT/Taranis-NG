@@ -1,9 +1,9 @@
 <template>
-  <div class="topic-header-container">
+  <div class="sharingset-header-container">
     <v-container class="mx-3 pa-5 pb-5">
       <v-row class="card-padding my-4" no-gutters>
         <v-col class="headline card-alignment mb-4" cols="12" sm="12" md="7">
-          <h3 class="pl-3">Topic</h3>
+          <h3 class="pl-3">Sharing Set</h3>
           <h1 class="pl-3 text-capitalize">
             {{ topic.title }}
           </h1>
@@ -44,7 +44,7 @@
                       :endDate="heatmapEndDate"
                       tooltip-unit="published items"
                       :range-color="[
-                        '#d6d29d',
+                        'rgb(185, 210, 227)',
                         '#e9c645',
                         '#db993f',
                         '#bc482b',
@@ -128,29 +128,7 @@
             </v-row>
             <v-row class="topic-header-meta-infos">
               <v-col class="topic-header-meta-infos-label">
-                <strong>Topic upvotes:</strong>
-              </v-col>
-              <v-col>
-                <v-icon left small color="awake-green-color"
-                  >mdi-arrow-up-circle-outline</v-icon
-                >
-                {{ topic.votes.up }}
-              </v-col>
-            </v-row>
-            <v-row class="topic-header-meta-infos">
-              <v-col class="topic-header-meta-infos-label">
-                <strong>Topic downvotes:</strong>
-              </v-col>
-              <v-col>
-                <v-icon left small color="awake-red-color"
-                  >mdi-arrow-down-circle-outline</v-icon
-                >
-                {{ topic.votes.down }}
-              </v-col>
-            </v-row>
-            <v-row class="topic-header-meta-infos">
-              <v-col class="topic-header-meta-infos-label">
-                <strong>Originator:</strong>
+                <strong>Shared by:</strong>
               </v-col>
               <v-col>
                 <tag-mini label="AI" v-if="topic.ai" />
@@ -160,14 +138,6 @@
               </v-col>
             </v-row>
 
-            <v-row class="topic-header-meta-infos">
-              <v-col class="topic-header-meta-infos-label">
-                <strong>Sharing Sets:</strong>
-              </v-col>
-              <v-col>
-                <span class="text-capitalize">{{ metaData.sharingSets }}</span>
-              </v-col>
-            </v-row>
             <v-row class="topic-header-meta-infos">
               <v-col class="topic-header-meta-infos-label">
                 <strong>Shared Items:</strong>
@@ -194,16 +164,6 @@
               </v-col>
               <v-col>
                 <span class="text-capitalize">{{ keywords }}</span>
-              </v-col>
-            </v-row>
-            <v-row class="topic-header-meta-infos">
-              <v-col class="topic-header-meta-infos-label">
-                <strong>Related Topics:</strong>
-              </v-col>
-              <v-col>
-                <span class="text-capitalize">{{
-                  metaData.relatedTopics
-                }}</span>
               </v-col>
             </v-row>
 
@@ -237,7 +197,7 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 // import { mapState } from 'vuex'
 
 export default {
-  name: 'TopicHeaderAssess',
+  name: 'SharingSetHeaderAssess',
   components: {
     TagMini,
     TagNorm,
@@ -271,8 +231,6 @@ export default {
       let numberSharedItems = 0
       let numberRestrictedItems = 0
       const newsItems = this.getNewsItemsByTopicId()(this.topic.id)
-      const metaSharingSetsList = []
-      const metaRelatedTopicList = []
 
       newsItems.forEach((element) => {
         const date = moment(element.published).format('YYYY/MM/DD')
@@ -282,22 +240,6 @@ export default {
         if (element.shared) numberSharedItems++
 
         if (element.restricted) numberRestrictedItems++
-
-        if (element.sharingSets.length) {
-          element.sharingSets.forEach((sharingSetId) => {
-            const newSharingset = this.getTopicTitleById()(sharingSetId)
-            if (metaSharingSetsList.indexOf(newSharingset) === -1) {
-              metaSharingSetsList.push(newSharingset)
-            }
-          })
-        }
-      })
-
-      this.topic.relatedTopics.forEach((relatedTopicId) => {
-        const newRelatedTopic = this.getTopicTitleById()(relatedTopicId)
-        if (metaRelatedTopicList.indexOf(newRelatedTopic) === -1) {
-          metaRelatedTopicList.push(newRelatedTopic)
-        }
       })
 
       return {
@@ -306,13 +248,7 @@ export default {
           count: e[1]
         })),
         numberSharedItems: numberSharedItems,
-        numberRestrictedItems: numberRestrictedItems,
-        sharingSets: metaSharingSetsList.length
-          ? metaSharingSetsList.join(', ')
-          : '-',
-        relatedTopics: metaRelatedTopicList.length
-          ? metaRelatedTopicList.join(', ')
-          : '-'
+        numberRestrictedItems: numberRestrictedItems
       }
     },
     heatmapEndDate () {

@@ -2,8 +2,17 @@
   <div>
     <ViewLayout>
       <template v-slot:panel>
-        <topic-header-assess :topicId="topicId" :newsItems="newsItems">
-        </topic-header-assess>
+        <!-- <sharing-set-header-assess
+          v-if="topic.isSharingSet"
+          :newsItems="newsItems"
+        /> -->
+        <!-- :topic="topic" -->
+        <v-expand-transition>
+          <div v-if="filter.scope.topics.length === 1">
+            <sharing-set-header-assess v-if="topic.isSharingSet" />
+            <topic-header-assess v-else />
+          </div>
+        </v-expand-transition>
       </template>
       <template v-slot:content>
         <AssessContent
@@ -12,11 +21,11 @@
           data_set="assess"
           ref="contentData"
           :filter="filter"
-          :topicId="topicId"
           @new-data-loaded="newDataLoaded"
           @card-items-reindex="cardReindex"
           @update-news-items-filter="updateFilter"
         />
+        <!-- :topic="topic" -->
       </template>
     </ViewLayout>
   </div>
@@ -28,6 +37,7 @@ import NewReportItem from '@/components/analyze/NewReportItem'
 import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess'
 import AssessContent from '@/components/assess/AssessContent'
 import TopicHeaderAssess from '@/components/assess/TopicHeaderAssess'
+import SharingSetHeaderAssess from '@/components/assess/SharingSetHeaderAssess'
 
 import KeyboardMixin from '../../assets/keyboard_mixin'
 
@@ -43,21 +53,31 @@ export default {
     ToolbarFilterAssess,
     AssessContent,
     TopicHeaderAssess,
+    SharingSetHeaderAssess,
     NewReportItem
   },
   props: {
     analyze_selector: Boolean
   },
   data: () => ({
-    dialog_stack: 0,
-    filter: { search: '', tag: '' },
+    dialog_stack: 0
+    // filter: { search: '', tag: '' }
   }),
   mixins: [KeyboardMixin('assess')],
   computed: {
-    ...mapState('assess', ['newsItems']),
+    // ...mapState('assess', ['newsItems']),
+    ...mapState('newsItemsFilter', ['filter']),
 
-    topicId() {
-      return parseInt(this.$route.query.topic)
+    // topic () {
+    //   const topicId = parseInt(this.$route.query.topic)
+    //   this.filter.scope.topics = [
+    //     { id: topicId, title: this.getTopicTitleById()(topicId) }
+    //   ]
+    //   // return this.getTopicById()(topicId)
+    // },
+
+    topic () {
+      return this.getTopicById()(parseInt(this.filter.scope.topics[0].id))
     },
 
     multiSelectActive () {
@@ -66,6 +86,7 @@ export default {
   },
   methods: {
     ...mapActions('assess', ['updateNewsItems']),
+    ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
 
     newDataLoaded (count) {
       this.$refs.toolbarFilter.updateDataCount(count)
@@ -138,6 +159,11 @@ export default {
       const cards = document.querySelectorAll('.card-item')
       cards.forEach((card) => card.remove())
     })
+
+    const topicId = parseInt(this.$route.query.topic)
+    this.filter.scope.topics = [
+      { id: topicId, title: this.getTopicTitleById()(topicId) }
+    ]
   }
 }
 </script>
