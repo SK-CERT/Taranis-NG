@@ -55,7 +55,7 @@ export default {
     AssessSelectionToolbar
   },
   props: {
-    topicId: Number
+    // topic: {}
     // analyze_selector: Boolean,
     // selection: Array,
     // selfID: String,
@@ -66,7 +66,12 @@ export default {
   }),
   methods: {
     ...mapActions('assess', ['deleteNewsItem']),
-    ...mapGetters('assess', ['getNewsItems', 'getNewsItemsSelection', 'getNewsItemsByTopicId']),
+    ...mapGetters('assess', [
+      'getNewsItems',
+      'getNewsItemsSelection',
+      'getNewsItemsByTopicId',
+      'getNewsItemsByTopicList'
+    ]),
 
     infiniteScrolling (entries, observer, isIntersecting) {
       if (this.newsItems_loaded && isIntersecting) {
@@ -157,7 +162,12 @@ export default {
 
     filteredNewsItems () {
       // let filteredData = this.getNewsItems()
-      let filteredData = this.getNewsItemsByTopicId()(this.topicId)
+      let filteredData = []
+      if (this.filter.scope.topics.length) {
+        filteredData = this.getNewsItemsByTopicList()(this.filter.scope.topics)
+      }
+
+      console.log(filteredData.length)
 
       // SEARCH
       filteredData = filteredData.filter((item) => {
