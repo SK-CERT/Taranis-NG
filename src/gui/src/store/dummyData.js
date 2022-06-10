@@ -16,58 +16,56 @@ const actions = {
   init(context) {
     context.commit('INIT_DUMMYDATA')
   }
-  
+
 }
 
 const mutations = {
-  
+
   updateField,
-  
-  INIT_DUMMYDATA (state) {
-    let numberOfDummyTopics = 40
-    let numberOfDummySharingSets = 6
-    let numberOfDummyNewsItem = 1000
+
+  INIT_DUMMYDATA(state) {
+    const numberOfDummyTopics = 40
+    const numberOfDummySharingSets = 6
+    const numberOfDummyNewsItem = 100 //1000
     state.dummyTopics = generateTopics(numberOfDummyTopics, false, 0)
-    console.log(state.dummyTopics)
     state.dummyNewsItems = generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics)
-    console.log(state.dummyNewsItems)
 
     // Assign Items to topics
     state.dummyTopics.forEach(topic => {
-      let items = faker.random.arrayElements(
+      const items = faker.random.arrayElements(
         state.dummyNewsItems,
         topic.items.total
       )
       items.forEach(item => {
         item.topics.push(topic.id)
       })
-   });
-   
-   state.dummySharingSets = generateTopics(numberOfDummySharingSets, true, numberOfDummyTopics)
-   console.log(state.dummySharingSets)
+    })
 
-   // Assign Items to Sharingsets
-   state.dummySharingSets.forEach(sharingSet => {
-     let items = faker.random.arrayElements(
-       state.dummyNewsItems,
-       sharingSet.items.total
-     )
-     items.forEach(item => {
-       item.topics.forEach(topicId => {
-         let parentTopic = state.dummyTopics.find(topic => topic.id === topicId)
-        //  Set has shared
-         parentTopic.hasSharedItems = true;
-        //  append sharing set to topic
-         if (!parentTopic.sharingSets.includes(sharingSet.id)) {
-          parentTopic.sharingSets.push(sharingSet.id);
-        }
-       })
-       item.shared = true
-       item.sharingSets.push(sharingSet.id)
-     })
-  });
+    state.dummySharingSets = generateTopics(numberOfDummySharingSets, true, numberOfDummyTopics)
 
-
+    // Assign Items to Sharingsets
+    state.dummySharingSets.forEach(sharingSet => {
+      const items = faker.random.arrayElements(
+        state.dummyNewsItems,
+        sharingSet.items.total
+      )
+      items.forEach(item => {
+        item.topics.forEach(topicId => {
+          const parentTopic = state.dummyTopics.find(topic => topic.id === topicId)
+          if (parentTopic) {
+            //  Set has shared
+            parentTopic.hasSharedItems = true
+            //  append sharing set to topic
+            if (!parentTopic.sharingSets.includes(sharingSet.id)) {
+              parentTopic.sharingSets.push(sharingSet.id)
+            }
+          }
+        })
+        item.topics.push(sharingSet.id)
+        item.shared = true
+        item.sharingSets.push(sharingSet.id)
+      })
+    })
   }
 }
 
@@ -75,15 +73,15 @@ const getters = {
 
   getField,
 
-  getDummyTopics (state) {
+  getDummyTopics(state) {
     return state.dummyTopics
   },
-  getDummySharingSets (state) {
+  getDummySharingSets(state) {
     return state.dummySharingSets
   },
-  getDummyNewsItems (state) {
+  getDummyNewsItems(state) {
     return state.dummyNewsItems
-  },
+  }
 
 }
 
@@ -124,11 +122,10 @@ var dummySourceTypes = [
 ]
 
 function generateTopics(numberOfDummyTopics, sharingSet, offset) {
-
-  let dummyData = []
+  const dummyData = []
 
   for (let i = 1; i < numberOfDummyTopics; i++) {
-    let entry = {
+    const entry = {
       id: i + offset,
       relevanceScore: parseInt(faker.commerce.price(0, 100, 0)),
       title: Math.random() < 0.5 ? `${faker.hacker.adjective()} ${faker.hacker.noun()} ${faker.hacker.abbreviation()}` : `${faker.hacker.adjective()} ${faker.hacker.noun()} ${faker.hacker.noun()}`,
@@ -137,10 +134,11 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
         Math.floor(Math.random() * (5 - 2 + 1)) + 2
       ),
       ai: Math.random() < 0.25,
+      originator: `${faker.name.firstName()} ${faker.name.lastName()}`,
       hot: Math.random() < 0.15,
       pinned: Math.random() < 0.05,
       lastActivity: new Date(String(faker.date.recent(10))),
-      excerpt: faker.lorem.paragraph(30),
+      excerpt: sharingSet ? faker.lorem.paragraph(10) : faker.lorem.paragraph(20),
       items: {
         total: sharingSet ? parseInt(faker.commerce.price(6, 16, 0)) : parseInt(faker.commerce.price(40, 80, 0)),
         new: parseInt(faker.commerce.price(0, 6, 0))
@@ -165,8 +163,8 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
 
     if (!sharingSet) {
       // Add related topics
-      for (let i = 1; i < Math.floor(Math.random() * (4)); i++) {
-        let newTopicLink = Math.floor(Math.random() * (numberOfDummyTopics))
+      for (let y = 1; y < Math.floor(Math.random() * (4)); y++) {
+        const newTopicLink = Math.floor(Math.random() * (numberOfDummyTopics))
         if (!entry.relatedTopics.includes(newTopicLink)) {
           entry.relatedTopics.push(newTopicLink)
         }
@@ -179,8 +177,7 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
   return dummyData
 }
 
-function generateNewsItems (numberOfDummyNewsItem, numberOfDummyTopics) {
-
+function generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics) {
   var dummyData = []
 
   for (var i = 1; i < numberOfDummyNewsItem; i++) {

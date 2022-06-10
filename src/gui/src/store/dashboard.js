@@ -18,34 +18,34 @@ const state = {
 
 const actions = {
 
-  getAllDashboardData (context) {
+  getAllDashboardData(context) {
     return getDashboardData()
       .then(response => {
         context.commit('setDashboardData', response.data)
       })
   },
 
-  updateTopics (context, topics) {
+  updateTopics(context, topics) {
     context.commit('UPDATE_TOPICS', topics)
   },
 
-  pinTopic (context, id) {
+  pinTopic(context, id) {
     context.commit('PIN_TOPIC', id)
   },
 
-  upvoteTopic (context, id) {
+  upvoteTopic(context, id) {
     context.commit('UPVOTE_TOPIC', id)
   },
 
-  downvoteTopic (context, id) {
+  downvoteTopic(context, id) {
     context.commit('DOWNVOTE_TOPIC', id)
   },
 
-  selectTopic (context, id) {
+  selectTopic(context, id) {
     context.commit('SELECT_TOPIC', id)
   },
 
-  unselectAllTopics (context, id) {
+  unselectAllTopics(context, id) {
     context.commit('UNSELECT_ALL_TOPICS', id)
   }
 
@@ -80,31 +80,31 @@ const mutations = {
 
   updateField,
 
-  UPDATE_TOPICS (state, topics) {
+  UPDATE_TOPICS(state, topics) {
     state.topics = topics
   },
 
-  PIN_TOPIC (state, id) {
+  PIN_TOPIC(state, id) {
     const index = state.topics.findIndex((x) => x.id === id)
     state.topics[index].pinned =
       !state.topics[index].pinned
   },
 
-  UPVOTE_TOPIC (state, id) {
+  UPVOTE_TOPIC(state, id) {
     const index = state.topics.findIndex((x) => x.id === id)
     state.topics[index].votes.up += 1
   },
 
-  DOWNVOTE_TOPIC (state, id) {
+  DOWNVOTE_TOPIC(state, id) {
     const index = state.topics.findIndex((x) => x.id === id)
     state.topics[index].votes.down += 1
   },
 
-  SELECT_TOPIC (state, id) {
+  SELECT_TOPIC(state, id) {
     state.topicSelection = xor(state.topicSelection, [id])
   },
 
-  UNSELECT_ALL_TOPICS (state) {
+  UNSELECT_ALL_TOPICS(state) {
     state.topicSelection = []
     state.topics.forEach(element => {
       element.selected = false
@@ -151,20 +151,28 @@ const getters = {
 
   getField,
 
-  getTopics (state) {
+  getTopics(state) {
     return state.topics
   },
 
-  getTopicSelection (state) {
+  getTopicSelection(state) {
     return state.topicSelection
   },
 
-  getDashboardData (state) {
+  getTopicSelectionList(state) {
+    return state.topics.map(function (topic) { return { id: topic.id, title: topic.title } })
+  },
+
+  getDashboardData(state) {
     return state.dashboard_data
   },
 
   getTopicById: (state) => (id) => {
     return state.topics.find(topic => topic.id === id)
+  },
+
+  getTopicTitleById: (state) => (id) => {
+    return state.topics.find(topic => topic.id === id).title
   }
 }
 
