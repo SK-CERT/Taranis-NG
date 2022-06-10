@@ -22,11 +22,16 @@ export default {
   },
   data: () => ({}),
   methods: {
-    ...mapActions('dashboard', ['updateTopics']),
-    ...mapGetters('dummyData', ['getDummyTopics', 'getDummySharingSets', 'getDummyNewsItems'])
+    ...mapActions('dashboard', ['updateTopics', 'unselectAllTopics']),
+    ...mapGetters('dummyData', [
+      'getDummyTopics',
+      'getDummySharingSets',
+      'getDummyNewsItems'
+    ])
   },
   computed: {},
   mounted () {
+    this.unselectAllTopics()
   }
 }
 </script>
