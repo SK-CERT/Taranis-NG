@@ -207,7 +207,7 @@ a {
   height: calc(2rem * 2);
 }
 
-.v-application .v-card p.topic-excerpt {
+.v-application .v-card p.topic-summary {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -484,7 +484,7 @@ a {
 }
 
 
-.news-item-excerpt {
+.news-item-summary {
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -696,7 +696,7 @@ a {
     text-transform: none;
   }
 
-  .topic-excerpt {
+  .topic-summary {
     font-size: 13px;
     margin-bottom: 0px;
     color: $dark-grey;

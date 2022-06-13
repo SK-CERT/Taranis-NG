@@ -19,8 +19,8 @@
                     cols="12"
                     class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-4"
                   >
-                    <p class="topic-excerpt">
-                      {{ topic.excerpt }}
+                    <p class="topic-summary">
+                      {{ topic.summary }}
                     </p>
                   </v-col>
                 </v-row>

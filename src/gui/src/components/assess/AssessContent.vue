@@ -196,7 +196,7 @@ export default {
       filteredData = filteredData.filter((item) => {
         return (
           !this.filter.search ||
-          filterSearch([item.title, item.excerpt], this.filter.search)
+          filterSearch([item.title, item.summary], this.filter.search)
         )
       })
 

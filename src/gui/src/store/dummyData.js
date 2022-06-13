@@ -138,7 +138,7 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
       hot: Math.random() < 0.15,
       pinned: Math.random() < 0.05,
       lastActivity: new Date(String(faker.date.recent(10))),
-      excerpt: sharingSet ? faker.lorem.paragraph(10) : faker.lorem.paragraph(20),
+      summary: sharingSet ? faker.lorem.paragraph(10) : faker.lorem.paragraph(20),
       items: {
         total: sharingSet ? parseInt(faker.commerce.price(6, 16, 0)) : parseInt(faker.commerce.price(40, 80, 0)),
         new: parseInt(faker.commerce.price(0, 6, 0))
@@ -186,7 +186,7 @@ function generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics) {
       id: i,
       relevanceScore: faker.commerce.price(0, 100, 0),
       title: faker.hacker.phrase(),
-      excerpt: faker.lorem.paragraph(100),
+      summary: faker.lorem.paragraph(100),
       tags: faker.random.arrayElements(
         dummyTags,
         Math.floor(Math.random() * (5 - 2 + 1)) + 2

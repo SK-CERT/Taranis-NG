@@ -104,9 +104,9 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
                   <p
-                    class="font-weight-light dark-grey--text news-item-excerpt mb-0"
+                    class="font-weight-light dark-grey--text news-item-summary mb-0"
                   >
-                    {{ newsItem.excerpt }}
+                    {{ newsItem.summary }}
                   </p>
                 </v-col>
               </v-row>

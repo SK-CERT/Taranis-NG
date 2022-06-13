@@ -106,12 +106,12 @@
 
           <v-spacer></v-spacer>
 
-          <!-- Excerpt -->
+          <!-- summary -->
 
           <v-row class="flex-grow-0 mt-0 mb-0">
             <v-col>
-              <p class="font-weight-light dark-grey--text topic-excerpt mb-0">
-                {{ topic.excerpt }}
+              <p class="font-weight-light dark-grey--text topic-summary mb-0">
+                {{ topic.summary }}
               </p>
             </v-col>
           </v-row>
