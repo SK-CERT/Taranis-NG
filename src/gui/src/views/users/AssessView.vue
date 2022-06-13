@@ -68,14 +68,6 @@ export default {
     // ...mapState('assess', ['newsItems']),
     ...mapState('newsItemsFilter', ['filter']),
 
-    // topic () {
-    //   const topicId = parseInt(this.$route.query.topic)
-    //   this.filter.scope.topics = [
-    //     { id: topicId, title: this.getTopicTitleById()(topicId) }
-    //   ]
-    //   // return this.getTopicById()(topicId)
-    // },
-
     topic () {
       return this.getTopicById()(parseInt(this.filter.scope.topics[0].id))
     },
@@ -86,6 +78,7 @@ export default {
   },
   methods: {
     ...mapActions('assess', ['updateNewsItems']),
+    ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
     ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
 
     newDataLoaded (count) {
@@ -160,11 +153,14 @@ export default {
       cards.forEach((card) => card.remove())
     })
 
+    this.resetNewsItemsFilter()
     const topicId = parseInt(this.$route.query.topic)
     const topic = this.getTopicById()(topicId)
     if (topic.isSharingSet) {
       this.filter.scope.sharingSets = [{ id: topicId, title: topic.title }]
+      this.filter.scope.topics = []
     } else {
+      this.filter.scope.sharingSets = []
       this.filter.scope.topics = [{ id: topicId, title: topic.title }]
     }
   }

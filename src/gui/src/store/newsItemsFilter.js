@@ -27,10 +27,41 @@ export const newsItemsFilter = {
       selected: {}
     }
   },
+  actions: {
+    resetNewsItemsFilter (context) {
+      context.commit('RESET_NEWSITEMS_FILTERS')
+    }
+  },
   getters: {
     getField
   },
   mutations: {
-    updateField
+    updateField,
+
+    RESET_NEWSITEMS_FILTERS (state) {
+      state.filter = {
+        search: '',
+        attributes: {
+          selected: []
+        },
+        tags: {
+          andOperator: true,
+          selected: ['all']
+        },
+        date: {
+          range: [],
+          selected: 'all'
+        },
+        scope: {
+          topics: [],
+          sharingSets: [],
+          sources: []
+        }
+      }
+      state.order = {
+        selected: {}
+      }
+    }
+
   }
 }
