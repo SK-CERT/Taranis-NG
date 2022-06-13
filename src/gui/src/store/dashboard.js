@@ -18,42 +18,46 @@ const state = {
 
 const actions = {
 
-  getAllDashboardData(context) {
+  getAllDashboardData (context) {
     return getDashboardData()
       .then(response => {
         context.commit('setDashboardData', response.data)
       })
   },
 
-  updateTopics(context, topics) {
+  updateTopics (context, topics) {
     context.commit('UPDATE_TOPICS', topics)
   },
 
-  pinTopic(context, id) {
+  updateTopic (context, topic) {
+    context.commit('UPDATE_TOPIC', topic)
+  },
+
+  pinTopic (context, id) {
     context.commit('PIN_TOPIC', id)
   },
 
-  upvoteTopic(context, id) {
+  upvoteTopic (context, id) {
     context.commit('UPVOTE_TOPIC', id)
   },
 
-  downvoteTopic(context, id) {
+  downvoteTopic (context, id) {
     context.commit('DOWNVOTE_TOPIC', id)
   },
 
-  selectTopic(context, id) {
+  selectTopic (context, id) {
     context.commit('SELECT_TOPIC', id)
   },
 
-  unselectAllTopics(context) {
+  unselectAllTopics (context) {
     context.commit('UNSELECT_ALL_TOPICS')
   },
 
-  removeTopicById(context, id) {
+  removeTopicById (context, id) {
     context.commit('REMOVE_TOPIC', id)
   },
 
-  createNewTopic(context, mergedTopic) {
+  createNewTopic (context, mergedTopic) {
     context.commit('CREATE_TOPIC', mergedTopic)
   }
 
@@ -63,42 +67,47 @@ const mutations = {
 
   updateField,
 
-  UPDATE_TOPICS(state, topics) {
+  UPDATE_TOPICS (state, topics) {
     state.topics = topics
   },
 
-  PIN_TOPIC(state, id) {
+  UPDATE_TOPIC (state, topic) {
+    const index = state.topics.findIndex((x) => x.id === topic.id)
+    state.topics[index] = topic
+  },
+
+  PIN_TOPIC (state, id) {
     const index = state.topics.findIndex((x) => x.id === id)
     state.topics[index].pinned =
       !state.topics[index].pinned
   },
 
-  UPVOTE_TOPIC(state, id) {
+  UPVOTE_TOPIC (state, id) {
     const index = state.topics.findIndex((x) => x.id === id)
     state.topics[index].votes.up += 1
   },
 
-  DOWNVOTE_TOPIC(state, id) {
+  DOWNVOTE_TOPIC (state, id) {
     const index = state.topics.findIndex((x) => x.id === id)
     state.topics[index].votes.down += 1
   },
 
-  SELECT_TOPIC(state, id) {
+  SELECT_TOPIC (state, id) {
     state.topicSelection = xor(state.topicSelection, [id])
   },
 
-  UNSELECT_ALL_TOPICS(state) {
+  UNSELECT_ALL_TOPICS (state) {
     state.topicSelection = []
     state.topics.forEach(element => {
       element.selected = false
     })
   },
 
-  REMOVE_TOPIC(state, id) {
+  REMOVE_TOPIC (state, id) {
     state.topics = [...state.topics].filter((topic) => topic.id !== id)
   },
 
-  CREATE_TOPIC(state, newTopic) {
+  CREATE_TOPIC (state, newTopic) {
     // Assign new ID
     // newTopic.id = Math.floor(Math.random() * (500 - 100 + 1)) + 100
     newTopic.id = 999
@@ -112,25 +121,25 @@ const getters = {
 
   getField,
 
-  getTopics(state) {
+  getTopics (state) {
     return state.topics
   },
 
-  getTopicSelection(state) {
+  getTopicSelection (state) {
     return state.topicSelection
   },
 
-  getTopicSelectionList(state) {
-    let filteredTopics = state.topics.filter((topic) => !topic.isSharingSet)
+  getTopicSelectionList (state) {
+    const filteredTopics = state.topics.filter((topic) => !topic.isSharingSet)
     return filteredTopics.map(function (topic) { return { id: topic.id, title: topic.title } })
   },
 
-  getSharingSetSelectionList(state) {
-    let filteredTopics = state.topics.filter((topic) => topic.isSharingSet)
+  getSharingSetSelectionList (state) {
+    const filteredTopics = state.topics.filter((topic) => topic.isSharingSet)
     return filteredTopics.map(function (topic) { return { id: topic.id, title: topic.title } })
   },
 
-  getDashboardData(state) {
+  getDashboardData (state) {
     return state.dashboard_data
   },
 
