@@ -58,6 +58,10 @@ const actions = {
     context.commit('setCurrentGroup', data)
   },
 
+  replaceLinkedTopics(context, { src, dest }) {
+    context.commit('REPLACE_LINKED_TOPICS', { src, dest })
+  },
+
   getManualOSINTSources(context) {
     return getManualOSINTSources()
       .then(response => {
@@ -95,6 +99,23 @@ const mutations = {
   DELETE_NEWSITEM(state, id) {
     state.newsItems = state.newsItems.filter((x) => x.id !== id)
     state.newsItemsSelection = state.newsItemsSelection.filter((x) => x !== id)
+  },
+
+  REPLACE_LINKED_TOPICS(state, replacement) {
+    console.log(replacement.src)
+    console.log(replacement.dest)
+
+    replacement.src.forEach(topicToReplace => {
+      state.newsItems = [...state.newsItems].map(({ topics, ...rest }) => ({
+        topics: topics.map(element => {
+          if (topicToReplace === element) {
+            return replacement.dest
+          }
+          return element
+        }), ...rest
+      }));
+    });
+
   },
 
   setNewsItems(state, news_items) {

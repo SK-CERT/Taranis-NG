@@ -36,7 +36,7 @@
 
     <v-expand-transition>
       <dashboard-selection-toolbar
-        class="px-1"
+        class="px-1 py-2"
         v-if="activeSelection"
         :selection="getTopicSelection()"
       ></dashboard-selection-toolbar>
@@ -271,7 +271,7 @@ export default {
       filteredData = filteredData.filter((item) => {
         return (
           !this.filter.search ||
-          filterSearch([item.title, item.excerpt], this.filter.search)
+          filterSearch([item.title, item.summary], this.filter.search)
         )
       })
 

@@ -45,34 +45,17 @@ const actions = {
     context.commit('SELECT_TOPIC', id)
   },
 
-  unselectAllTopics(context, id) {
-    context.commit('UNSELECT_ALL_TOPICS', id)
+  unselectAllTopics(context) {
+    context.commit('UNSELECT_ALL_TOPICS')
+  },
+
+  removeTopicById(context, id) {
+    context.commit('REMOVE_TOPIC', id)
+  },
+
+  createNewTopic(context, mergedTopic) {
+    context.commit('CREATE_TOPIC', mergedTopic)
   }
-
-  // selectTopic(context, id) {
-  //   context.commit('toggleSelect', id)
-  // },
-
-  // sortTopics(context, data) {
-  //   context.commit('applySortby', data)
-  //   context.commit('sortTopics')
-  // },
-
-  // filterTopics(context, data) {
-  //   context.commit('applyFilter', data)
-  //   context.commit('resetList')
-  //   context.commit('filterTopics')
-  //   context.commit('filterTopicsByTags')
-  //   context.commit('sortTopics')
-  // },
-
-  // filterTopicsByTags(context, data) {
-  //   context.commit('applyTagsFilter', data)
-  //   context.commit('resetList')
-  //   context.commit('filterTopics')
-  //   context.commit('filterTopicsByTags')
-  //   context.commit('sortTopics')
-  // }
 
 }
 
@@ -109,41 +92,19 @@ const mutations = {
     state.topics.forEach(element => {
       element.selected = false
     })
+  },
+
+  REMOVE_TOPIC(state, id) {
+    state.topics = [...state.topics].filter((topic) => topic.id !== id)
+  },
+
+  CREATE_TOPIC(state, newTopic) {
+    // Assign new ID
+    // newTopic.id = Math.floor(Math.random() * (500 - 100 + 1)) + 100
+    newTopic.id = 999
+
+    state.topics.push(newTopic)
   }
-
-  // toggleSelect(state, id) {
-  //   var index = state.topicList.accumulated.findIndex((x) => x.id === id)
-  //   state.topicList.accumulated[index].selected =
-  //     !state.topicList.accumulated[index].selected
-  // },
-
-  // sortTopics(state) {
-  //   var type = state.sortBy.selected.type
-  //   var direction = state.sortBy.selected.direction
-  //   var keepPinned = state.sortBy.keepPinned
-
-  //   state.topicList.accumulated.sort((x, y) => {
-  //     // Get properties
-  //     var elements = getElements(type, x, y)
-
-  //     // Set direction
-  //     elements = direction === 'asc' ? elements : [elements[1], elements[0]]
-
-  //     // Apply pinned sorting
-  //     if (keepPinned) {
-  //       if (x.pinned && !y.pinned) return -1
-  //       if (!x.pinned && y.pinned) return 1
-  //     }
-
-  //     // Apply property sorting
-  //     return propertySorting(type, elements)
-  //   })
-  // },
-
-  // // Setters
-  // setDashboardData(state, data) {
-  //   state.dashboard_data = data
-  // },
 
 }
 
