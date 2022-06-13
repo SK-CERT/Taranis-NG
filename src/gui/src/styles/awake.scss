@@ -497,6 +497,7 @@ a {
 
 .news-item-meta-infos.row {
   margin-top: 0px;
+  min-height: 20px;
 
   & .col {
     padding-top: 2px;
@@ -876,7 +877,11 @@ a {
   overflow: hidden;
 
   &.hot-topic {
-    background-color: lighten($topic-header-bg, 10);
+    background-color: lighten($topic-header-bg, 5);
+  }
+  
+  &.shared-topic, &.hot-topic.shared-topic {
+    background-color: lighten($accent, 30);
   }
 }
 

@@ -15,7 +15,8 @@
         selected: topic.selected,
         'corner-tag-ai': topic.ai,
         'corner-tag-shared': topic.isSharingSet,
-        'hot-topic': topic.hot
+        'hot-topic': topic.hot,
+        'shared-topic': topic.isSharingSet
       }
     ]"
     @click="toggleSelection"
@@ -181,6 +182,7 @@
               <v-btn
                 outlined
                 class="text-lowercase btn-view-topic mt-1"
+                @click.native.capture="$event.stopPropagation()"
                 :to="{
                   path: '/assess',
                   query: { topic: topic.id }
