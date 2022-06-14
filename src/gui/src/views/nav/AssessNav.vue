@@ -55,7 +55,7 @@
                 class="pa-2 ml-0 mt-1"
                 @click:close="parent.selectItem(item)"
               >
-                <span class="text-capitalize">
+                <span class="text-truncate text-capitalize topics-chip">
                   {{ item.title }}
                 </span>
               </v-chip>
@@ -117,7 +117,7 @@
                 class="pa-2 ml-0 mt-1"
                 @click:close="parent.selectItem(item)"
               >
-                <span class="text-capitalize">
+                <span class="text-truncate text-capitalize topics-chip">
                   {{ item.title }}
                 </span>
               </v-chip>
@@ -179,7 +179,7 @@
                 class="pa-2 ml-0 mt-1"
                 @click:close="parent.selectItem(item)"
               >
-                <span class="text-capitalize">
+                <span class="text-truncate text-capitalize topics-chip">
                   {{ item.title }}
                 </span>
               </v-chip>

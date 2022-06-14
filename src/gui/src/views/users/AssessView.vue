@@ -4,6 +4,7 @@
       <template v-slot:panel>
         <v-expand-transition>
           <div
+            style="width: 100%"
             v-if="
               filter.scope.topics.length === 1 ||
               filter.scope.sharingSets.length === 1

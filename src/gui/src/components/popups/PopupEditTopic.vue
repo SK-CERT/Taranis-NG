@@ -33,13 +33,13 @@
           <!------------->
 
           <v-col cols="12" class="py-0 pt-2">
-              <v-textarea
-                v-model="newSummary"
-                label="Summary"
-                hide-details
-                outlined
-              ></v-textarea>
-            </v-col>
+            <v-textarea
+              v-model="newSummary"
+              label="Summary"
+              hide-details
+              outlined
+            ></v-textarea>
+          </v-col>
         </v-row>
       </v-container>
 
@@ -51,7 +51,7 @@
           color="awake-red-color darken-1"
           outlined
           @click="$emit('input', false)"
-          class="text-lowercase"
+          class="text-lowercase pr-4"
         >
           <v-icon left class="red-icon">$awakeClose</v-icon>
           abort
@@ -61,7 +61,7 @@
           dark
           depressed
           @click="submit()"
-          class="text-lowercase selection-toolbar-btn"
+          class="text-lowercase selection-toolbar-btn pr-4"
         >
           <v-icon left>mdi-check</v-icon>
           apply
@@ -98,7 +98,6 @@ export default {
       // Close Popup
       this.$emit('input', false)
     }
-
   },
   computed: {},
   mounted () {

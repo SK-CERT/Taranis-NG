@@ -211,7 +211,7 @@
           color="awake-red-color darken-1"
           outlined
           @click="$emit('input', false)"
-          class="text-lowercase"
+          class="text-lowercase pr-4"
         >
           <v-icon left class="red-icon">$awakeClose</v-icon>
           abort
@@ -221,7 +221,7 @@
           dark
           depressed
           @click="mergeSelectedTopics()"
-          class="text-lowercase selection-toolbar-btn"
+          class="text-lowercase selection-toolbar-btn pr-4"
         >
           <v-icon left>$awakeMerge</v-icon>
           merge topics
@@ -261,9 +261,7 @@ export default {
     ...mapGetters('dashboard', ['getTopicById']),
 
     getTopicDetails (id) {
-      const topic = this.getTopicById()(parseInt(id))
-
-      return topic
+      return this.getTopicById()(parseInt(id))
     },
 
     mergeSelectedTopics () {
@@ -276,6 +274,7 @@ export default {
       mergedTopic.summary = this.mergeSummary
         ? this.mergeSummary
         : 'this is an AI created summary ...' // should be replaced by NLP algorithm
+      mergedTopic.id = 999
 
       // reset selection
       this.unselectAllTopics()
@@ -286,7 +285,7 @@ export default {
       }
 
       this.createNewTopic(mergedTopic)
-      this.replaceLinkedTopics({ src: oldTopics, dest: 999 })
+      this.replaceLinkedTopics({ src: oldTopics, dest: mergedTopic.id })
 
       console.log(mergedTopic)
 
