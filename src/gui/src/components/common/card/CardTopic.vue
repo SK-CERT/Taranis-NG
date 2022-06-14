@@ -182,7 +182,6 @@
               <v-btn
                 outlined
                 class="text-lowercase btn-view-topic mt-1"
-                @click.native.capture="$event.stopPropagation()"
                 :to="{
                   path: '/assess',
                   query: { topic: topic.id }
