@@ -232,7 +232,7 @@ export default {
     selection: []
   }),
   methods: {
-    ...mapActions('dashboard', ['updateTopics']),
+    ...mapActions('dashboard', ['updateTopics', 'unselectAllTopics']),
     ...mapGetters('dashboard', ['getTopics', 'getTopicSelection']),
 
     getData () {
@@ -262,7 +262,7 @@ export default {
   computed: {
     ...mapState('topicsFilter', ['filter', 'order']),
 
-    ...mapState('dashboard', ['topics']),
+    ...mapState('dashboard', ['topics', 'topicSelection']),
 
     filteredTopics () {
       let filteredData = this.getTopics()
@@ -364,11 +364,12 @@ export default {
     },
 
     activeSelection () {
-      return this.getTopicSelection().length > 0
+      return this.topicSelection.length > 0
     }
   },
   mounted () {
     this.refreshTagCloud()
+    this.unselectAllTopics()
 
     setInterval(
       function () {
