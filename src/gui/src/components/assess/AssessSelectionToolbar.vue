@@ -29,6 +29,30 @@
           </v-btn>
         </v-col>
 
+        <!------------------>
+        <!-- Merge Topics -->
+        <!------------------>
+
+        <v-dialog v-model="shareDialog" width="1024">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              :ripple="false"
+              text
+              class="text-lowercase selection-toolbar-btn mr-1 mt-1"
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon left>$awakeShareOutline</v-icon>
+              share
+            </v-btn>
+          </template>
+
+          <popup-share-items
+            v-model:dialog="shareDialog"
+            :selection="selection"
+          />
+        </v-dialog>
+
         <!-- <v-spacer></v-spacer> -->
 
         <v-col
@@ -46,11 +70,14 @@
 </template>
 
 <script>
-// import { mapState } from 'vuex'
+// import PopupShareItems from 'vuex'
+import PopupShareItems from '@/components/popups/PopupShareItems'
 
 export default {
   name: 'AssessSelectionToolbar',
-  components: {},
+  components: {
+    PopupShareItems
+  },
   props: {
     selection: []
   },
@@ -65,7 +92,7 @@ export default {
         icon: 'mdi-folder-plus-outline'
       },
       {
-        label: 'create sharing set',
+        label: 'share',
         icon: '$awakeShareOutline'
       },
       {
@@ -80,7 +107,8 @@ export default {
         label: 'delete items',
         icon: '$awakeDelete'
       }
-    ]
+    ],
+    shareDialog: false
   }),
   methods: {},
   computed: {},

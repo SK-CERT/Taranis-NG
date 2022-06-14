@@ -586,6 +586,12 @@ a {
   fill: $dark-grey;
 }
 
+.news-item-action-bar .v-btn--icon.news-item-sharing-set-action,
+.news-item-action-bar .v-btn--icon.news-item-sharing-set-action .v-icon svg {
+  background-color: lighten($accent, 25);
+  fill: $dark-grey;
+}
+
 .v-btn.topic-header-btn,
 .v-btn.news-item-btn {
   background-color: white;
@@ -753,9 +759,23 @@ a {
   border: 3px solid $primary;
   background-color: white;
   caret-color: $topic-selected-bg;
-  // border: $topic-selected-bg;
-  // background-color: $topic-selected-bg;
-  // caret-color: $topic-selected-bg;
+}
+
+.v-card.share-items-details {
+  height: 100%;
+  width: 100%;
+  border: 3px solid white;
+  background-color: lighten($accent, 30);
+  padding: 0px 0px 0px 16px !important;
+
+  &.restricted {
+    background-color: lighten($awake-red-color, 25);
+    // border: 3px solid $awake-red-color;
+  }
+
+  & .v-btn {
+    margin: auto 0px !important;
+  }
 }
 
 .merge-topics-details-title {
@@ -879,8 +899,9 @@ a {
   &.hot-topic {
     background-color: lighten($topic-header-bg, 5);
   }
-  
-  &.shared-topic, &.hot-topic.shared-topic {
+
+  &.shared-topic,
+  &.hot-topic.shared-topic {
     background-color: lighten($accent, 30);
   }
 }
@@ -946,4 +967,17 @@ a {
   padding-top: 4px;
   padding-bottom: 8px;
   text-transform: capitalize;
+}
+
+.v-btn.sharing-sumbit-btn.v-btn--has-bg {
+  transition: all 400ms ease;
+
+  &.v-btn--disabled {
+    background-color: lighten($light-grey-1, 20) !important;
+    color: white !important;
+
+    & span {
+      color: white !important;
+    }
+  }
 }
