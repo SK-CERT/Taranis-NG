@@ -9,12 +9,12 @@
     >
       <template>
         <v-list-item
-          v-for="(item, index) in orderOptions"
+          v-for="item in orderOptions"
           :key="item.title"
           class="extra-dense"
           :ripple="false"
           :value="{ type: item.type, direction: item.direction }"
-          @click.native.capture="changeDirection($event, index)"
+          @click.native.capture="changeDirection($event, item)"
         >
           <template v-slot:default="{ active }">
             <v-list-item-icon class="mr-2">
@@ -65,15 +65,19 @@ export default {
     setValue (newValue) {
       this.$emit('input', newValue)
     },
-    changeDirection (event, index) {
+    changeDirection (event, item) {
       event.preventDefault()
-      var newDirection =
-        this.orderOptions[index].direction === 'desc' ? 'asc' : 'desc'
-      this.orderOptions = this.orderOptions.map((item) => ({
-        ...item,
-        direction: ''
-      }))
-      this.orderOptions[index].direction = newDirection
+      this.orderOptions = this.orderOptions.map((orderOption) =>
+        orderOption.type === item.type
+          ? {
+            ...orderOption,
+            direction: orderOption.direction === 'desc' ? 'asc' : 'desc'
+          }
+          : {
+            ...orderOption,
+            direction: ''
+          }
+      )
     }
   },
   mounted () {
