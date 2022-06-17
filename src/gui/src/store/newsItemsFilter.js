@@ -10,7 +10,7 @@ export const newsItemsFilter = {
       },
       tags: {
         andOperator: true,
-        selected: ['all']
+        selected: []
       },
       date: {
         range: [],
@@ -46,7 +46,7 @@ export const newsItemsFilter = {
         },
         tags: {
           andOperator: true,
-          selected: ['all']
+          selected: []
         },
         date: {
           range: [],

@@ -95,7 +95,7 @@ export const dummyData = {
 
 // -------------------------------------------------------
 
-var dummyTags = [
+let dummyTags = [
   { label: 'State', color: 1 },
   { label: 'Cyberwar', color: 2 },
   { label: 'Threat', color: 3 },
@@ -111,7 +111,7 @@ var dummyTags = [
   { label: 'MitM', color: 13 }
 ]
 
-var dummySourceTypes = [
+let dummySourceTypes = [
   'RSS',
   'MISP',
   'Web',
@@ -178,11 +178,11 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
 }
 
 function generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics) {
-  var dummyData = []
+  let dummyData = []
 
-  for (var i = 1; i < numberOfDummyNewsItem; i++) {
-    var sourceDomain = faker.internet.domainName()
-    var entry = {
+  for (let i = 1; i < numberOfDummyNewsItem; i++) {
+    let sourceDomain = faker.internet.domainName()
+    let entry = {
       id: i,
       relevanceScore: faker.commerce.price(0, 100, 0),
       title: faker.hacker.phrase(),
