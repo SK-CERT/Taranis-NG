@@ -12,25 +12,17 @@ import ViewLayout from '@/components/layouts/ViewLayout'
 import DashboardContent from '@/components/dashboard/DashboardContent'
 import { mapState, mapGetters, mapActions } from 'vuex'
 
-import { faker } from '@faker-js/faker'
-
 export default {
   name: 'DashboardView',
   components: {
     ViewLayout,
     DashboardContent
   },
-  data: () => ({}),
   methods: {
-    ...mapActions('dashboard', ['updateTopics', 'unselectAllTopics']),
+    ...mapActions('dashboard', ['unselectAllTopics']),
     ...mapActions('assess', ['deselectAllNewsItems']),
     ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
-    ...mapActions('topicsFilter', ['resetTopicsFilter']),
-    ...mapGetters('dummyData', [
-      'getDummyTopics',
-      'getDummySharingSets',
-      'getDummyNewsItems'
-    ])
+    ...mapActions('topicsFilter', ['resetTopicsFilter'])
   },
   computed: {},
   mounted () {
