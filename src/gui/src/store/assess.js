@@ -46,6 +46,10 @@ const actions = {
     context.commit('DESELECT_NEWSITEM', id)
   },
 
+  deselectAllNewsItems(context) {
+    context.commit('DESELECT_ALL_NEWSITEMS')
+  },
+
   multiSelect(context, data) {
     context.commit('setMultiSelect', data)
   },
@@ -119,6 +123,11 @@ const mutations = {
     state.newsItemsSelection = state.newsItemsSelection.filter((x) => x !== id)
   },
 
+  DESELECT_ALL_NEWSITEMS(state) {
+    state.newsItems.forEach((newsItem) => { newsItem.selected = false })
+    state.newsItemsSelection = []
+  },
+
   REMOVE_TOPIC_FROM_NEWSITEM(state, data) {
     const newsItem = state.newsItems.find(({ id }) => id === data.newsItemId)
     newsItem.topics = newsItem.topics.filter(
@@ -129,10 +138,9 @@ const mutations = {
   ASSIGN_SHARINGSET(state, data) {
     data.items.forEach((item) => {
       const index = state.newsItems.findIndex((x) => x.id === item)
-      console.log(state.newsItems[index].sharingSets)
+      state.newsItems[index].shared = true
       state.newsItems[index].topics.push(data.sharingSet)
       state.newsItems[index].sharingSets.push(data.sharingSet)
-      console.log(state.newsItems[index].sharingSets)
     })
   },
 
