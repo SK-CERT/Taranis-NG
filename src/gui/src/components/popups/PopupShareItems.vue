@@ -66,12 +66,7 @@
 
       <v-container class="pb-0 mb-0">
         <v-row class="mt-4">
-          <v-col
-            cols="12"
-            sm="6"
-            @mouseover="appendToSharingSet = false"
-            class="pr-5"
-          >
+          <v-col cols="12" sm="6" @mouseover="appendMode = false" class="pr-5">
             <!---------------------------->
             <!-- Create new sharing set -->
             <!---------------------------->
@@ -118,7 +113,7 @@
               color="primary"
               dark
               depressed
-              :disabled="appendToSharingSet || !validCreateSettings"
+              :disabled="appendMode || !validCreateSettings"
               class="text-lowercase selection-toolbar-btn pr-4 sharing-sumbit-btn mt-4"
               @click="createSharingSet()"
             >
@@ -129,12 +124,7 @@
 
           <v-divider class="d-none d-sm-flex" vertical></v-divider>
 
-          <v-col
-            cols="12"
-            sm="6"
-            @mouseover="appendToSharingSet = true"
-            class="pl-5"
-          >
+          <v-col cols="12" sm="6" @mouseover="appendMode = true" class="pl-5">
             <!--------------------------->
             <!-- Append to sharing set -->
             <!--------------------------->
@@ -176,12 +166,13 @@
               color="primary"
               dark
               depressed
-              :disabled="!appendToSharingSet || !validAppendSettings"
+              :disabled="!appendMode || !validAppendSettings"
               class="text-lowercase selection-toolbar-btn pr-4 sharing-sumbit-btn"
+              @click="appendToSharingSet()"
             >
               <!-- @click="mergeSelectedTopics()" -->
               <v-icon left>$awakeShareOutline</v-icon>
-              share via selected sharing set
+              append to sharing set
             </v-btn>
           </v-col>
         </v-row>
@@ -206,38 +197,33 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 
 export default {
   name: 'PopupShareItems',
   components: {},
   props: {
-    dialog: true,
+    dialog: Boolean,
     selection: []
   },
   data: () => ({
     valid: true,
-    appendToSharingSet: true,
+    appendMode: true,
     existingSharingSet: null,
     autogenerateSummary: true,
     sharingSetTitle: '',
     sharingSetSummary: ''
   }),
   methods: {
-    ...mapActions('dashboard', [
-      'pinTopic',
-      'unselectAllTopics',
-      'removeTopicById',
-      'createNewTopic'
-    ]),
+    ...mapActions('dashboard', ['createNewTopic']),
+    ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
     ...mapActions('assess', [
-      'replaceLinkedTopics',
       'deselectNewsItem',
+      'deselectAllNewsItems',
       'assignSharingSet'
     ]),
     ...mapGetters('assess', ['getNewsItemById']),
-
-    ...mapGetters('dashboard', ['getSharingSetSelectionList']),
+    ...mapGetters('dashboard', ['getTopicById', 'getSharingSetSelectionList']),
 
     getItemDetails (id) {
       return this.getNewsItemById()(parseInt(id))
@@ -246,6 +232,16 @@ export default {
     // removeItemFromSelection(newsItemId) {
     //   this.deselectNewsItem(newsItemId)
     // },
+
+    appendToSharingSet () {
+      console.log(this.existingSharingSet.id)
+      this.assignSharingSet({
+        items: this.selection,
+        sharingSet: this.existingSharingSet.id
+      })
+
+      this.leavePopup(this.existingSharingSet.id)
+    },
 
     createSharingSet () {
       const newSharingSet = this.topicPrototype
@@ -261,10 +257,27 @@ export default {
         sharingSet: newSharingSet.id
       })
 
+      this.leavePopup(newSharingSet.id)
+    },
+
+    leavePopup (id) {
+      this.deselectAllNewsItems()
+      this.resetNewsItemsFilter()
+
+      const topic = this.getTopicById()(id)
+      this.filter.scope.sharingSets = [{ id: topic.id, title: topic.title }]
+      this.filter.scope.topics = []
+
+      this.$router.replace({
+        path: '/assess',
+        query: { topic: id }
+      })
+
       this.$emit('input', false)
     }
   },
   computed: {
+    ...mapState('newsItemsFilter', ['filter']),
     validAppendSettings () {
       return this.existingSharingSet !== null
     },

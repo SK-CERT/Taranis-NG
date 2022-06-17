@@ -17,6 +17,76 @@
     <v-container class="py-1">
       <v-row>
         <v-col class="py-0">
+          <!--------------------->
+          <!-- append to topic -->
+          <!--------------------->
+
+          <v-dialog v-model="appendToTopicDialog" width="1024">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                :ripple="false"
+                text
+                class="text-lowercase selection-toolbar-btn mr-1 mt-1"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <v-icon left>mdi-folder-open-outline</v-icon>
+                append to topic
+              </v-btn>
+            </template>
+
+            <v-card>
+              <h2>append to topic</h2>
+            </v-card>
+          </v-dialog>
+
+          <!------------------>
+          <!-- create topic -->
+          <!------------------>
+
+          <v-dialog v-model="createTopicDialog" width="1024">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                :ripple="false"
+                text
+                class="text-lowercase selection-toolbar-btn mr-1 mt-1"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <v-icon left>mdi-folder-plus-outline</v-icon>
+                create topic
+              </v-btn>
+            </template>
+
+            <v-card>
+              <h2>create topic</h2>
+            </v-card>
+          </v-dialog>
+
+          <!------------------>
+          <!-- share -->
+          <!------------------>
+
+          <v-dialog v-model="shareDialog" width="1024">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                :ripple="false"
+                text
+                class="text-lowercase selection-toolbar-btn mr-1 mt-1"
+                v-bind="attrs"
+                v-on="on"
+              >
+                <v-icon left>$awakeShareOutline</v-icon>
+                share
+              </v-btn>
+            </template>
+
+            <popup-share-items
+              v-model:dialog="shareDialog"
+              :selection="selection"
+            />
+          </v-dialog>
+
           <v-btn
             v-for="button in actionButtons"
             :key="button.label"
@@ -28,30 +98,6 @@
             {{ button.label }}
           </v-btn>
         </v-col>
-
-        <!------------------>
-        <!-- Merge Topics -->
-        <!------------------>
-
-        <v-dialog v-model="shareDialog" width="1024">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              :ripple="false"
-              text
-              class="text-lowercase selection-toolbar-btn mr-1 mt-1"
-              v-bind="attrs"
-              v-on="on"
-            >
-              <v-icon left>$awakeShareOutline</v-icon>
-              share
-            </v-btn>
-          </template>
-
-          <popup-share-items
-            v-model:dialog="shareDialog"
-            :selection="selection"
-          />
-        </v-dialog>
 
         <!-- <v-spacer></v-spacer> -->
 
@@ -84,18 +130,6 @@ export default {
   data: () => ({
     actionButtons: [
       {
-        label: 'append to topic',
-        icon: 'mdi-folder-open-outline'
-      },
-      {
-        label: 'create topic',
-        icon: 'mdi-folder-plus-outline'
-      },
-      {
-        label: 'share',
-        icon: '$awakeShareOutline'
-      },
-      {
         label: 'create report',
         icon: '$awakeReport'
       },
@@ -108,7 +142,9 @@ export default {
         icon: '$awakeDelete'
       }
     ],
-    shareDialog: false
+    shareDialog: false,
+    appendToTopicDialog: false,
+    createTopicDialog: false
   }),
   methods: {},
   computed: {},
