@@ -87,7 +87,7 @@ export default {
     newSummary: ''
   }),
   methods: {
-    ...mapGetters('dashboard', ['updateTopic']),
+    ...mapActions('dashboard', ['updateTopic']),
 
     submit () {
       const updatedTopic = this.topic

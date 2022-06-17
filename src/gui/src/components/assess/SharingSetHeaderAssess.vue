@@ -67,13 +67,29 @@
                     cols="12"
                     class="mx-0 px-0 d-flex justify-start flex-wrap py-1"
                   >
-                    <v-btn
-                      depressed
-                      class="text-lowercase topic-header-btn mr-2 mt-1"
-                    >
-                      <v-icon left>$awakeEdit</v-icon>
-                      edit
-                    </v-btn>
+                    <!------------------>
+                    <!-- Edit Topics -->
+                    <!------------------>
+
+                    <v-dialog v-model="editDialog" width="600">
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-btn
+                          depressed
+                          class="text-lowercase topic-header-btn mr-2 mt-1"
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          <v-icon left>$awakeEdit</v-icon>
+                          edit
+                        </v-btn>
+                      </template>
+
+                      <popup-edit-topic
+                        v-model:dialog="editDialog"
+                        :topic="topic"
+                        v-on:update:title="topic.title = $event"
+                      />
+                    </v-dialog>
 
                     <v-btn
                       depressed
@@ -193,6 +209,7 @@ import TagMini from '@/components/common/tags/TagMini'
 import TagNorm from '@/components/common/tags/TagNorm'
 import { CalendarHeatmap } from 'vue-calendar-heatmap'
 import { mapActions, mapGetters, mapState } from 'vuex'
+import PopupEditTopic from '@/components/popups/PopupEditTopic'
 
 // import { mapState } from 'vuex'
 
@@ -201,12 +218,15 @@ export default {
   components: {
     TagMini,
     TagNorm,
-    CalendarHeatmap
+    CalendarHeatmap,
+    PopupEditTopic
   },
   props: {
     // topic: {}
   },
-  data: () => ({}),
+  data: () => ({
+    editDialog: false
+  }),
   methods: {
     ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
     ...mapGetters('assess', ['getNewsItemsByTopicId'])
