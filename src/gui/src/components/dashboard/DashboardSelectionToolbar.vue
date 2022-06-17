@@ -21,7 +21,7 @@
           <!-- Merge Topics -->
           <!------------------>
 
-          <v-dialog v-model="mergeDialog" width="600">
+          <v-dialog v-model="mergeDialog" width="1024">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 :ripple="false"
