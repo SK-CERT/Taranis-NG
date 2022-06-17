@@ -1,4 +1,5 @@
-export function filterSearch (fields, searchString) {
+export function filterSearch(fields, searchString) {
+
   let match = false
 
   const regexStr = searchString
@@ -25,7 +26,7 @@ export function filterSearch (fields, searchString) {
   const searchRegEx = new RegExp(regexStr, 'gi')
 
   for (let i = 0; i < fields.length; i++) {
-    if ([...fields[0].matchAll(searchRegEx)].length > 0) {
+    if ([...fields[i].matchAll(searchRegEx)].length > 0) {
       match = true
       break
     }
@@ -34,7 +35,7 @@ export function filterSearch (fields, searchString) {
   return match
 }
 
-export function filterDateRange (publishedDate, selectedType, dateRange) {
+export function filterDateRange(publishedDate, selectedType, dateRange) {
   let range = []
   const today = new Date()
   switch (selectedType) {
@@ -61,7 +62,7 @@ export function filterDateRange (publishedDate, selectedType, dateRange) {
   return publishedDate >= range[0] && publishedDate <= range[1]
 }
 
-export function filterTags (itemTags, selectedTags, andOperator) {
+export function filterTags(itemTags, selectedTags, andOperator) {
   const selectedTagExists = (selectedTag) =>
     itemTags.some((itemTag) => itemTag.label === selectedTag)
 

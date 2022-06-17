@@ -12,7 +12,7 @@
       color="cx-drawer-bg"
       v-if="isAuthenticated()"
       class="sidebar"
-      style="max-height: 100% !important; height: calc(100vh - 48px) !important;"
+      style="max-height: 100% !important; height: calc(100vh - 48px) !important"
     >
       <router-view name="nav"></router-view>
     </v-navigation-drawer>
@@ -42,11 +42,14 @@ export default {
   }),
   mixins: [AuthMixin],
   methods: {
-
-    ...mapActions('dashboard', ['updateTopics']),    
+    ...mapActions('dashboard', ['updateTopics']),
     ...mapActions('assess', ['updateNewsItems']),
     ...mapActions('dummyData', ['init']),
-    ...mapGetters('dummyData', ['getDummyTopics', 'getDummySharingSets', 'getDummyNewsItems']),
+    ...mapGetters('dummyData', [
+      'getDummyTopics',
+      'getDummySharingSets',
+      'getDummyNewsItems'
+    ]),
 
     connectSSE () {
       this.$sse(
@@ -87,7 +90,6 @@ export default {
     this.$root.$emit('app-updated')
   },
   mounted () {
-
     if (this.$cookies.isKey('jwt')) {
       this.$store.dispatch('setToken', this.$cookies.get('jwt')).then(() => {
         this.$cookies.remove('jwt')
@@ -133,11 +135,11 @@ export default {
       this.connectSSE()
     })
   },
-  created () {    
+  created () {
     // Generate Dummy Data
     this.init()
-    let topics = this.getDummyTopics()
-    let sharingSets = this.getDummySharingSets()
+    const topics = this.getDummyTopics()
+    const sharingSets = this.getDummySharingSets()
     this.updateTopics(topics.concat(sharingSets))
     this.updateNewsItems(this.getDummyNewsItems())
   }
@@ -148,5 +150,5 @@ export default {
 <style src="./assets/centralize.css"></style>
 
 <style lang="scss">
-@import "@/styles/awake.scss";
+@import '@/styles/awake.scss';
 </style>

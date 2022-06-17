@@ -13,7 +13,7 @@ const state = {
 
 const actions = {
 
-  init (context) {
+  init(context) {
     context.commit('INIT_DUMMYDATA')
   }
 
@@ -23,9 +23,9 @@ const mutations = {
 
   updateField,
 
-  INIT_DUMMYDATA (state) {
+  INIT_DUMMYDATA(state) {
     const numberOfDummyTopics = 12
-    const numberOfDummySharingSets = 6
+    const numberOfDummySharingSets = 0
     const numberOfDummyNewsItem = 100 // 1000
     state.dummyTopics = generateTopics(numberOfDummyTopics, false, 0)
     state.dummyNewsItems = generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics)
@@ -73,13 +73,13 @@ const getters = {
 
   getField,
 
-  getDummyTopics (state) {
+  getDummyTopics(state) {
     return state.dummyTopics
   },
-  getDummySharingSets (state) {
+  getDummySharingSets(state) {
     return state.dummySharingSets
   },
-  getDummyNewsItems (state) {
+  getDummyNewsItems(state) {
     return state.dummyNewsItems
   }
 
@@ -121,7 +121,7 @@ var dummySourceTypes = [
   'Atom'
 ]
 
-function generateTopics (numberOfDummyTopics, sharingSet, offset) {
+function generateTopics(numberOfDummyTopics, sharingSet, offset) {
   const dummyData = []
 
   for (let i = 1; i < numberOfDummyTopics; i++) {
@@ -177,7 +177,7 @@ function generateTopics (numberOfDummyTopics, sharingSet, offset) {
   return dummyData
 }
 
-function generateNewsItems (numberOfDummyNewsItem, numberOfDummyTopics) {
+function generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics) {
   var dummyData = []
 
   for (var i = 1; i < numberOfDummyNewsItem; i++) {

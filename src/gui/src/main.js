@@ -20,7 +20,7 @@ import SmoothScrollbar from 'vue-smooth-scrollbar'
 import VueCalendarHeatmap from 'vue-calendar-heatmap'
 
 const CSL = {
-  install (Vue) {
+  install(Vue) {
     Vue.prototype.UI = layout_config
     this.UI = () => { }
   }

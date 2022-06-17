@@ -31,50 +31,54 @@ const state = {
 
 const actions = {
 
-  setUser (context, userData) {
+  setUser(context, userData) {
     context.commit('setUser', userData)
   },
 
-  updateItemCount (context, itemCount) {
+  updateItemCount(context, itemCount) {
     context.commit('updateItemCount', itemCount)
   },
 
-  logout (context) {
+  logout(context) {
     context.commit('clearJwtToken')
   }
 }
 
 const mutations = {
 
-  setUser (state, userData) {
+  setUser(state, userData) {
     state.user = userData
   },
 
-  updateItemCount (state, itemCount) {
+  updateItemCount(state, itemCount) {
     state.itemCount = itemCount
-  }
+  },
 }
 
 const getters = {
 
-  getUserId (state) {
+  getUserId(state) {
     return state.user.id
   },
 
-  getUserName (state) {
+  getUserName(state) {
     return state.user.name
   },
 
-  getOrganizationName (state) {
+  getOrganizationName(state) {
     return state.user.organization_name
   },
 
-  getPermissions (state) {
+  getPermissions(state) {
     return state.user.permissions
   },
 
-  getSelection (state) {
+  getSelection(state) {
     return state.selection
+  },
+
+  getLoadingState(state) {
+    return state.loading
   }
 }
 

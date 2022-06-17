@@ -28,7 +28,7 @@ export const newsItemsFilter = {
     }
   },
   actions: {
-    resetNewsItemsFilter (context) {
+    resetNewsItemsFilter(context) {
       context.commit('RESET_NEWSITEMS_FILTERS')
     }
   },
@@ -38,7 +38,7 @@ export const newsItemsFilter = {
   mutations: {
     updateField,
 
-    RESET_NEWSITEMS_FILTERS (state) {
+    RESET_NEWSITEMS_FILTERS(state) {
       state.filter = {
         search: '',
         attributes: {
