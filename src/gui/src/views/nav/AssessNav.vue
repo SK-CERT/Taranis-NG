@@ -8,189 +8,30 @@
         </v-col>
 
         <v-col cols="12">
-          <v-combobox
+          <dropdown-selection
             v-model="filter.scope.topics"
             :items="getTopicSelectionList()"
             label="Topics"
             placeholder="all Topics"
-            return-object
-            item-text="title"
-            multiple
-            outlined
-            dense
-            hide-selected
-            append-icon="mdi-chevron-down"
-            class="pl-0"
-            hide-details
-            search-input
-          >
-            <template v-slot:item="{ item }">
-              <span class="dropdown-list-item">
-                {{ item.title }}
-              </span>
-            </template>
-            <template v-slot:selection="{ parent, item, index }">
-              <v-chip
-                small
-                v-if="index < 1 && !parent.isMenuActive"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-                @click:close="parent.selectItem(item)"
-              >
-                <span class="text-truncate text-capitalize topics-chip">{{
-                  item.title
-                }}</span>
-              </v-chip>
-
-              <v-chip
-                small
-                v-else-if="parent.isMenuActive"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-                @click:close="parent.selectItem(item)"
-              >
-                <span class="text-truncate text-capitalize topics-chip">
-                  {{ item.title }}
-                </span>
-              </v-chip>
-              <span
-                v-if="index === 1 && !parent.isMenuActive"
-                class="grey--text text-caption"
-              >
-                (+{{ filter.scope.topics.length - 1 }})
-              </span>
-            </template>
-          </v-combobox>
+          />
         </v-col>
 
         <v-col cols="12" class="pt-0">
-          <v-combobox
+          <dropdown-selection
             v-model="filter.scope.sharingSets"
             :items="getSharingSetSelectionList()"
             label="Sharing Sets"
             placeholder="all Sharing Sets"
-            return-object
-            item-text="title"
-            multiple
-            outlined
-            dense
-            hide-selected
-            append-icon="mdi-chevron-down"
-            class="pl-0"
-            hide-details
-            search-input
-          >
-            <template v-slot:item="{ item }">
-              <span class="dropdown-list-item">
-                {{ item.title }}
-              </span>
-            </template>
-            <template v-slot:selection="{ parent, item, index }">
-              <v-chip
-                small
-                v-if="index < 1 && !parent.isMenuActive"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-                @click:close="parent.selectItem(item)"
-              >
-                <span class="text-truncate text-capitalize topics-chip">{{
-                  item.title
-                }}</span>
-              </v-chip>
-
-              <v-chip
-                small
-                v-else-if="parent.isMenuActive"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-                @click:close="parent.selectItem(item)"
-              >
-                <span class="text-truncate text-capitalize topics-chip">
-                  {{ item.title }}
-                </span>
-              </v-chip>
-              <span
-                v-if="index === 1 && !parent.isMenuActive"
-                class="grey--text text-caption"
-              >
-                (+{{ filter.scope.sharingSets.length - 1 }})
-              </span>
-            </template>
-          </v-combobox>
+          />
         </v-col>
 
         <v-col cols="12" class="pt-0">
-          <v-combobox
+          <dropdown-selection
             v-model="filter.scope.sources"
             :items="sourcesList"
             label="Sources"
             placeholder="all Sources"
-            return-object
-            item-text="title"
-            multiple
-            outlined
-            dense
-            hide-selected
-            append-icon="mdi-chevron-down"
-            class="pl-0"
-            hide-details
-            search-input
-          >
-            <template v-slot:item="{ item }">
-              <span class="dropdown-list-item">
-                {{ item.title }}
-              </span>
-            </template>
-            <template v-slot:selection="{ parent, item, index }">
-              <v-chip
-                small
-                v-if="index < 1 && !parent.isMenuActive"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-                @click:close="parent.selectItem(item)"
-              >
-                <span class="text-truncate text-capitalize topics-chip">{{
-                  item.title
-                }}</span>
-              </v-chip>
-
-              <v-chip
-                small
-                v-else-if="parent.isMenuActive"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-                @click:close="parent.selectItem(item)"
-              >
-                <span class="text-truncate text-capitalize topics-chip">
-                  {{ item.title }}
-                </span>
-              </v-chip>
-              <span
-                v-if="index === 1 && !parent.isMenuActive"
-                class="grey--text text-caption"
-              >
-                (+{{ filter.scope.sources.length - 1 }})
-              </span>
-            </template>
-          </v-combobox>
+          />
         </v-col>
       </v-row>
 
@@ -225,7 +66,7 @@
 
         <!-- date picker -->
         <v-col cols="12">
-          <date-range v-model="datePicker" :dateValue="filter.date" />
+          <date-range v-model="filter.date" />
         </v-col>
 
         <!-- tags -->
@@ -276,6 +117,7 @@ import tagFilter from '@/components/inputs/tagFilter'
 import logicalAnd from '@/components/inputs/logicalAnd'
 import filterSelectList from '@/components/inputs/filterSelectList'
 import filterSortList from '@/components/inputs/filterSortList'
+import dropdownSelection from '@/components/inputs/dropdownSelection'
 
 export default {
   name: 'AssessNav',
@@ -286,14 +128,10 @@ export default {
     tagFilter,
     logicalAnd,
     filterSelectList,
-    filterSortList
+    filterSortList,
+    dropdownSelection
   },
   data: () => ({
-    links: [],
-    datePicker: false,
-    sources: {
-      selected: ['all']
-    },
     filterAttributeOptions: [
       { type: 'unread', label: 'unread', icon: '$awakeUnread' },
       {
@@ -349,56 +187,16 @@ export default {
     ]
   }),
   computed: {
-    dateRangeText () {
-      return this.filter.date.range.join(' – ')
-    },
-    getData () {
-      return this.$store.getters.getDashboardData
-    },
-
     ...mapState('newsItemsFilter', ['filter', 'order'])
+    // getData () {
+    //   return this.$store.getters.getDashboardData
+    // }
   },
   methods: {
     ...mapGetters('dashboard', [
-      'getTopicTitleById',
       'getTopicSelectionList',
       'getSharingSetSelectionList'
-    ]),
-
-    getTopicTitle (item) {
-      return this.getTopicTitleById()(parseInt(item.id))
-    },
-
-    defaultDate (event) {
-      if (!this.filter.date.selected) {
-        this.filter.date.selected = 'all'
-      }
-    },
-    defaultTag () {
-      if (!this.filter.tags.selected.length) {
-        this.filter.tags.selected = ['all']
-      } else if (this.filter.tags.selected !== ['all']) {
-        this.filter.tags.selected = this.filter.tags.selected.filter(
-          (item) => item !== 'all'
-        )
-      }
-    },
-    removeSelectedTag (chip) {
-      this.filter.tags.selected = this.filter.tags.selected.filter(
-        (c) => c !== chip
-      )
-      this.defaultTag()
-    },
-    changeDirection (event, index) {
-      event.preventDefault()
-      var newDirection =
-        this.orderOptions[index].direction === 'desc' ? 'asc' : 'desc'
-      this.orderOptions = this.orderOptions.map((item) => ({
-        ...item,
-        direction: ''
-      }))
-      this.orderOptions[index].direction = newDirection
-    }
+    ])
   }
 }
 </script>
