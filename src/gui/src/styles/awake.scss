@@ -7,6 +7,17 @@ a {
   text-decoration: none !important;
 }
 
+textarea {
+  font-size: 0.915rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.4 !important;
+}
+
+.edit-summary textarea {
+  min-height: calc(1.4 * 0.915rem * 8 + 2px) !important;
+}
+
 .v-application .v-card.elevation-4 {
   -webkit-box-shadow: 2px 4px 7px rgba(0, 0, 0, 0.15) !important;
   box-shadow: 2px 4px 7px rgba(0, 0, 0, 0.15) !important;
@@ -63,9 +74,9 @@ a {
 }
 
 .v-application .v-btn.burger-menu {
-  min-width: $app-bar-height  !important;
-  width: $app-bar-height  !important;
-  height: $app-bar-height  !important;
+  min-width: $app-bar-height !important;
+  width: $app-bar-height !important;
+  height: $app-bar-height !important;
   display: block;
 }
 
@@ -79,7 +90,7 @@ a {
   }
 
   input {
-    color: $dark-grey  !important;
+    color: $dark-grey !important;
   }
 }
 
@@ -92,18 +103,18 @@ a {
 }
 
 .v-list .v-icon.filter-icon {
-  color: $light-grey-1  !important;
+  color: $light-grey-1 !important;
 
   & svg {
-    fill: $light-grey-1  !important;
+    fill: $light-grey-1 !important;
   }
 }
 
 .v-list .v-list-item--active.selected .v-icon.filter-icon {
-  color: $primary  !important;
+  color: $primary !important;
 
   & svg {
-    fill: $primary  !important;
+    fill: $primary !important;
   }
 }
 
@@ -132,7 +143,7 @@ a {
 }
 
 .text-field-active fieldset {
-  border: 2px solid $primary  !important;
+  border: 2px solid $primary !important;
 }
 
 .v-select__selections {
@@ -174,7 +185,7 @@ a {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey  !important;
+  color: $dark-grey !important;
   padding: 16px 12px !important;
 
   & svg {
@@ -268,7 +279,7 @@ a {
   color: white;
 
   &.ai {
-    background-color: $accent  !important;
+    background-color: $accent !important;
   }
 
   &.shared {
@@ -294,14 +305,18 @@ a {
 }
 
 .v-application input::placeholder {
-  color: $light-grey-2  !important;
+  color: $light-grey-2 !important;
 }
 
 .v-application .v-input__icon svg {
-  fill: $dark-grey  !important;
+  fill: $dark-grey !important;
 }
 
-.v-application .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)>.v-input__control>.v-input__slot fieldset {
+.v-application
+  .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)
+  > .v-input__control
+  > .v-input__slot
+  fieldset {
   border-color: $light-grey-2;
 }
 
@@ -310,8 +325,8 @@ a {
   position: relative;
 }
 
-.news-items-grid-container>div,
-.topics-grid-container>div {
+.news-items-grid-container > div,
+.topics-grid-container > div {
   min-width: 240px;
 }
 
@@ -403,7 +418,6 @@ a {
   }
 }
 
-
 .date-filter-group,
 .date-filter-group .v-slide-group__wrapper,
 .date-filter-group .v-slide-group__content {
@@ -423,7 +437,7 @@ a {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey  !important;
+  color: $dark-grey !important;
   flex-grow: 1 !important;
   padding: 19px 10px;
   margin: 0;
@@ -432,7 +446,7 @@ a {
   &.clicked,
   &.selected,
   &.v-chip--outlined.selected {
-    background-color: $primary  !important;
+    background-color: $primary !important;
     border-color: $primary;
     fill: white;
 
@@ -462,7 +476,7 @@ a {
 }
 
 .v-application .v-label {
-  color: $dark-grey  !important;
+  color: $dark-grey !important;
   font-size: 14px;
 }
 
@@ -483,7 +497,6 @@ a {
   margin-left: -4px;
 }
 
-
 .news-item-summary {
   font-size: 13px;
   overflow: hidden;
@@ -496,7 +509,7 @@ a {
 }
 
 .news-item-meta-infos.row {
-  margin-top: 0px;
+  margin-top: 12px;
   min-height: 20px;
 
   & .col {
@@ -504,7 +517,7 @@ a {
     padding-bottom: 0px;
   }
 
-  &>div {
+  & > div {
     font-size: 0.78rem;
   }
 
@@ -599,7 +612,7 @@ a {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey  !important;
+  color: $dark-grey !important;
   padding: 14px 12px !important;
   height: 32px;
 
@@ -621,7 +634,7 @@ a {
 .status-important.status-error,
 .status-unread.status-error,
 .status-error {
-  background-color: $status-error  !important;
+  background-color: $status-error !important;
 }
 
 // .status-unread {
@@ -646,7 +659,6 @@ a {
   & .selection-indicator {
     font-size: 0.875rem;
   }
-
 }
 
 .selection-toolbar-btn {
@@ -682,6 +694,8 @@ a {
 .sharingset-header-container {
   & .card-alignment {
     padding-left: 20px !important;
+    padding-right: 48px !important;
+    margin-right: -20px;
   }
 
   & .card-padding {
@@ -711,13 +725,14 @@ a {
 
   & .topic-header-meta-infos.row {
     margin-top: 0px;
+    margin-bottom: 0px;
 
     & .col {
       padding-top: 4px;
       padding-bottom: 4px;
     }
 
-    &>div {
+    & > div {
       font-size: 0.78rem;
     }
 
@@ -840,7 +855,6 @@ a {
           fill: $primary;
         }
       }
-
     }
 
     & .new-indicator {
@@ -852,7 +866,7 @@ a {
 .news-item.corner-tag-restricted,
 .news-item.corner-tag-shared {
   &:after {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
@@ -882,13 +896,13 @@ a {
 
 .news-item.corner-tag-restricted {
   &:after {
-    background-color: $light-grey-2  !important;
+    background-color: $light-grey-2 !important;
   }
 }
 
 .news-item.corner-tag-shared {
   &:after {
-    background-color: $accent  !important;
+    background-color: $accent !important;
   }
 }
 
@@ -909,7 +923,7 @@ a {
 .topic.corner-tag-ai,
 .topic.corner-tag-shared {
   &:after {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
@@ -936,7 +950,7 @@ a {
 
 .topic.corner-tag-shared {
   &:after {
-    background-color: $accent  !important;
+    background-color: $accent !important;
   }
 }
 
@@ -951,7 +965,6 @@ a {
     fill: $dark-grey;
   }
 }
-
 
 .calendar-heatmap {
   max-width: 740px;
