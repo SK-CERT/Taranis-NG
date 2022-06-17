@@ -230,67 +230,10 @@
 
         <!-- tags -->
         <v-col cols="10" class="pr-0">
-          <v-combobox
-            v-model="filter.tags.selected"
-            :items="tagList"
-            label="tags"
-            multiple
-            outlined
-            dense
-            append-icon="mdi-chevron-down"
-            class="pl-0"
-            hide-details
-            deletable-chips
-            @change="defaultTag"
-          >
-            <template v-slot:selection="{ parent, item, index }">
-              <v-chip
-                small
-                v-if="index < 1 && !parent.isMenuActive"
-                @click:close="removeSelectedTag(item)"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-              >
-                <span>{{ item }}</span>
-              </v-chip>
-              <v-chip
-                small
-                v-else-if="parent.isMenuActive"
-                @click:close="removeSelectedTag(item)"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-              >
-                <span>{{ item }}</span>
-              </v-chip>
-              <span
-                v-if="index === 1 && !parent.isMenuActive"
-                class="grey--text text-caption"
-              >
-                (+{{ filter.tags.selected.length - 1 }})
-              </span>
-            </template>
-          </v-combobox>
+          <tag-filter v-model="filter.tags.selected" :items="tagList" />
         </v-col>
         <v-col cols="2" class="pl-1 d-flex tags-logic-operator">
-          <v-btn
-            outlined
-            dark
-            @click="filter.tags.andOperator = !filter.tags.andOperator"
-            :class="[
-              'text-lowercase',
-              'px-0',
-              { selected: filter.tags.andOperator },
-            ]"
-          >
-            <span v-if="filter.tags.andOperator"> & </span>
-            <span v-else> or </span>
-          </v-btn>
+          <logical-and v-model="filter.tags.andOperator" />
         </v-col>
       </v-row>
 
@@ -302,50 +245,10 @@
         </v-col>
 
         <v-col cols="12" class="pt-2">
-          <v-list dense class="py-0">
-            <v-list-item-group
-              active-class="selected"
-              v-model="filter.attributes.selected"
-              multiple
-              class="filter-list"
-            >
-              <template>
-                <v-list-item
-                  v-for="item in filterAttributeOptions"
-                  :key="item.type"
-                  class="extra-dense"
-                  :ripple="false"
-                  :value="item.type"
-                >
-                  <template v-slot:default="{ active }">
-                    <v-list-item-icon class="mr-2">
-                      <v-icon
-                        small
-                        color="grey"
-                        class="filter-icon mt-auto mb-auto"
-                      >
-                        {{ item.icon }}
-                      </v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content class="py-1 mt-auto mb-auto">
-                      {{ item.label }}
-                    </v-list-item-content>
-
-                    <v-list-item-action>
-                      <v-icon
-                        v-if="active"
-                        small
-                        class="mt-auto mb-auto dark-grey--text text--lighten-3"
-                      >
-                        mdi-check-bold
-                      </v-icon>
-                    </v-list-item-action>
-                  </template>
-                </v-list-item>
-              </template>
-            </v-list-item-group>
-          </v-list>
+          <filter-selectList
+            v-model="filter.attributes.selected"
+            :items="filterAttributeOptions"
+          />
         </v-col>
       </v-row>
 
@@ -357,59 +260,7 @@
         </v-col>
 
         <v-col cols="12" class="pt-2">
-          <v-list dense class="py-0">
-            <v-list-item-group
-              v-model="order.selected"
-              active-class="selected"
-              class="filter-list"
-              mandatory
-            >
-              <template>
-                <v-list-item
-                  v-for="(item, index) in orderOptions"
-                  :key="item.title"
-                  class="extra-dense"
-                  :ripple="false"
-                  :value="{ type: item.type, direction: item.direction }"
-                  @click.native.capture="changeDirection($event, index)"
-                >
-                  <template v-slot:default="{ active }">
-                    <v-list-item-icon class="mr-2">
-                      <v-icon
-                        small
-                        color="grey"
-                        class="filter-icon mt-auto mb-auto"
-                      >
-                        {{ item.icon }}
-                      </v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content class="py-1 mt-auto mb-auto">
-                      {{ item.label }}
-                    </v-list-item-content>
-
-                    <v-list-item-action>
-                      <v-icon
-                        v-if="active"
-                        :class="[
-                          'mt-auto',
-                          'mb-auto',
-                          'dark-grey--text',
-                          'text--lighten-3',
-                          {
-                            asc: item.direction === 'asc',
-                            desc: item.direction === 'desc',
-                          },
-                        ]"
-                      >
-                        mdi-chevron-up
-                      </v-icon>
-                    </v-list-item-action>
-                  </template>
-                </v-list-item>
-              </template>
-            </v-list-item-group>
-          </v-list>
+          <filter-sort-list v-model="order.selected" :items="orderOptions" />
         </v-col>
       </v-row>
     </v-container>
@@ -421,13 +272,21 @@ import { mapState, mapGetters } from 'vuex'
 import searchField from '@/components/inputs/searchField'
 import dateChips from '@/components/inputs/dateChips'
 import dateRange from '@/components/inputs/dateRange'
+import tagFilter from '@/components/inputs/tagFilter'
+import logicalAnd from '@/components/inputs/logicalAnd'
+import filterSelectList from '@/components/inputs/filterSelectList'
+import filterSortList from '@/components/inputs/filterSortList'
 
 export default {
   name: 'AssessNav',
   components: {
     searchField,
     dateChips,
-    dateRange
+    dateRange,
+    tagFilter,
+    logicalAnd,
+    filterSelectList,
+    filterSortList
   },
   data: () => ({
     links: [],
@@ -468,7 +327,6 @@ export default {
       }
     ],
     tagList: [
-      'all',
       'State',
       'Cyberwar',
       'Threat',
