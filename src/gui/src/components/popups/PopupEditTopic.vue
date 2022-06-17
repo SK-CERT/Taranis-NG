@@ -5,7 +5,13 @@
         <v-row>
           <v-col cols="12">
             <h2
-              class="font-weight-bold headline dark-grey--text text-capitalize pt-3"
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-3
+              "
             >
               Edit Topic
             </h2>
@@ -17,14 +23,7 @@
           <!----------->
 
           <v-col class="py-2">
-            <v-text-field
-              hide-details
-              dense
-              label="Title"
-              outlined
-              required
-              v-model="newTitle"
-            ></v-text-field>
+            <text-field v-model="newTitle" label="Title" />
           </v-col>
         </v-row>
         <v-row>
@@ -34,6 +33,7 @@
 
           <v-col cols="12" class="py-0 pt-2">
             <v-textarea
+              class="edit-summary"
               v-model="newSummary"
               label="Summary"
               hide-details
@@ -73,12 +73,15 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import textField from '@/components/inputs/textField'
 
 export default {
   name: 'PopupEditTopic',
-  components: {},
+  components: {
+    textField
+  },
   props: {
-    dialog: true,
+    value: Boolean,
     topic: {}
   },
   data: () => ({
