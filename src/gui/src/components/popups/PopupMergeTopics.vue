@@ -23,7 +23,7 @@
                   class="d-flex pa-1"
                 >
                   <v-card
-                    elevation="2"
+                    elevation="0"
                     tile
                     height="100%"
                     class="align-self-stretch d-flex flex-column merge-topic-details"
@@ -257,7 +257,12 @@ export default {
       'removeTopicById',
       'createNewTopic'
     ]),
-    ...mapActions('assess', ['replaceLinkedTopics']),
+    ...mapActions('assess', [
+      'deselectNewsItem',
+      'deselectAllNewsItems',
+      'assignSharingSet',
+      'replaceLinkedTopics'
+    ]),
     ...mapGetters('dashboard', ['getTopicById']),
 
     getTopicDetails (id) {
