@@ -756,9 +756,8 @@ a {
 .v-card.merge-topic-details {
   height: 100%;
   width: 100%;
-  border: 3px solid $primary;
-  background-color: white;
-  caret-color: $topic-selected-bg;
+  border: 3px solid white;
+  background-color: lighten($accent, 30);
 }
 
 .v-card.share-items-details {
