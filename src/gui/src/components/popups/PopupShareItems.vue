@@ -319,26 +319,25 @@ export default {
         keywords: []
       }
 
-      console.log(this.selection)
+      this.selection.forEach((id) => {
+        const selectedNewsItem = this.getNewsItemById()(id)
+        newTopic.items.total += selectedNewsItem.read ? 1 : 0
+        newTopic.items.new += selectedNewsItem.read ? 0 : 1
 
-      // this.selection.forEach((id) => {
-      //   newTopic.items.total += this.getTopicById()(id).items.total
-      //   newTopic.items.new += this.getTopicById()(id).items.new
+        // newTopic.comments.total += this.mergeDiscussion
+        //   ? this.getTopicById()(id).comments.total
+        //   : 0
+        // newTopic.comments.new += this.mergeDiscussion
+        //   ? this.getTopicById()(id).comments.new
+        //   : 0
 
-      //   newTopic.comments.total += this.mergeDiscussion
-      //     ? this.getTopicById()(id).comments.total
-      //     : 0
-      //   newTopic.comments.new += this.mergeDiscussion
-      //     ? this.getTopicById()(id).comments.new
-      //     : 0
-
-      //   newTopic.votes.up += this.mergeVotes
-      //     ? this.getTopicById()(id).votes.up
-      //     : 0
-      //   newTopic.votes.down += this.mergeVotes
-      //     ? this.getTopicById()(id).votes.down
-      //     : 0
-      // })
+        // newTopic.votes.up += this.mergeVotes
+        //   ? this.getTopicById()(id).votes.up
+        //   : 0
+        // newTopic.votes.down += this.mergeVotes
+        //   ? this.getTopicById()(id).votes.down
+        //   : 0
+      })
 
       return newTopic
     }
