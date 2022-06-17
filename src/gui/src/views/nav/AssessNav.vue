@@ -203,14 +203,7 @@
         </v-col>
 
         <v-col cols="12">
-          <v-text-field
-            v-model="filter.search"
-            label="search"
-            outlined
-            dense
-            hide-details
-            append-icon="$awakeSearch"
-          ></v-text-field>
+          <search-field v-model="filter.search" />
         </v-col>
       </v-row>
 
@@ -224,74 +217,15 @@
 
         <!-- time tags -->
         <v-col cols="12" class="pb-0">
-          <v-chip-group
+          <date-chips
             v-model="filter.date.selected"
-            active-class="selected"
-            class="date-filter-group d-flex"
-            @change="
-              filter.date.range = []
-              defaultDate($event)
-            "
-          >
-            <v-chip label outlined dark value="all">all</v-chip>
-            <v-chip label outlined dark value="today">today</v-chip>
-            <v-chip label outlined dark value="week">one week</v-chip>
-          </v-chip-group>
+            @input="filter.date.range = []"
+          />
         </v-col>
 
         <!-- date picker -->
         <v-col cols="12">
-          <v-menu
-            ref="datePicker"
-            v-model="datePicker"
-            :close-on-content-click="false"
-            :return-value.sync="filter.date"
-            transition="scale-transition"
-            offset-y
-            min-width="auto"
-            @change="defaultDate($event)"
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-text-field
-                readonly
-                outlined
-                dense
-                append-icon="mdi-calendar-range-outline"
-                v-model="dateRangeText"
-                v-bind="attrs"
-                v-on="on"
-                placeholder="Date range"
-                hide-details
-                :class="[{ 'text-field-active': filter.date.range.length }]"
-              ></v-text-field>
-            </template>
-            <v-date-picker
-              v-model="filter.date.range"
-              range
-              no-title
-              scrollable
-              color="primary"
-              @change="filter.date.selected = 'range'"
-            >
-              <v-spacer></v-spacer>
-              <v-btn
-                text
-                outlined
-                class="text-lowercase grey--text text--darken-2"
-                @click="datePicker = false"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                text
-                outlined
-                color="primary"
-                @click="$refs.datePicker.save(filter.date)"
-              >
-                OK
-              </v-btn>
-            </v-date-picker>
-          </v-menu>
+          <date-range v-model="datePicker" :dateValue="filter.date" />
         </v-col>
 
         <!-- tags -->
@@ -351,7 +285,7 @@
             :class="[
               'text-lowercase',
               'px-0',
-              { selected: filter.tags.andOperator }
+              { selected: filter.tags.andOperator },
             ]"
           >
             <span v-if="filter.tags.andOperator"> & </span>
@@ -464,8 +398,8 @@
                           'text--lighten-3',
                           {
                             asc: item.direction === 'asc',
-                            desc: item.direction === 'desc'
-                          }
+                            desc: item.direction === 'desc',
+                          },
                         ]"
                       >
                         mdi-chevron-up
@@ -484,10 +418,17 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
+import searchField from '@/components/inputs/searchField'
+import dateChips from '@/components/inputs/dateChips'
+import dateRange from '@/components/inputs/dateRange'
 
 export default {
   name: 'AssessNav',
-  components: {},
+  components: {
+    searchField,
+    dateChips,
+    dateRange
+  },
   data: () => ({
     links: [],
     datePicker: false,
