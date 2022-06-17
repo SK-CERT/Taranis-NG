@@ -268,12 +268,14 @@ export default {
       let filteredData = this.getTopics()
 
       // SEARCH
-      filteredData = filteredData.filter((item) => {
-        return (
-          !this.filter.search ||
-          filterSearch([item.title, item.summary], this.filter.search)
-        )
-      })
+      if (this.filter.search.length > 2) {
+        filteredData = filteredData.filter((item) => {
+          return (
+            !this.filter.search ||
+            filterSearch([item.title, item.summary], this.filter.search)
+          )
+        })
+      }
 
       // DATE
       filteredData = filteredData.filter((item) => {
