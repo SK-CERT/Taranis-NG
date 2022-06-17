@@ -1,13 +1,12 @@
 <template>
   <v-menu
     ref="datePicker"
-    :value="value"
-    :return-value.sync="dateValue"
+    v-model="datePickerOpen"
+    :return-value.sync="value"
     :close-on-content-click="false"
     transition="scale-transition"
     offset-y
     min-width="auto"
-    @change="defaultDate($event)"
   >
     <!-- formatted display in textfield -->
     <template v-slot:activator="{ on, attrs }">
@@ -21,18 +20,18 @@
         v-on="on"
         placeholder="Date range"
         hide-details
-        :class="[{ 'text-field-active': dateValue.range.length }]"
+        :class="[{ 'text-field-active': value.range.length }]"
       ></v-text-field>
     </template>
 
     <!-- datepicker -->
     <v-date-picker
-      v-model="dateValue.range"
+      v-model="value.range"
       range
       no-title
       scrollable
       color="primary"
-      @change="dateValue.selected = 'range'"
+      @change="value.selected = 'range'"
     >
       <v-spacer></v-spacer>
 
@@ -41,7 +40,7 @@
         text
         outlined
         class="text-lowercase grey--text text--darken-2"
-        @click="dateValue.range = []"
+        @click="clearAndFallback()"
       >
         Cancel
       </v-btn>
@@ -50,7 +49,7 @@
         text
         outlined
         color="primary"
-        @click="$refs.datePicker.save(dateValue)"
+        @click="$refs.datePicker.save(value)"
       >
         OK
       </v-btn>
@@ -62,12 +61,21 @@
 export default {
   name: 'dateRange',
   props: {
-    value: Boolean,
-    dateValue: {}
+    value: {}
+  },
+  data: () => ({
+    datePickerOpen: false
+  }),
+  methods: {
+    clearAndFallback () {
+      this.value.range = []
+      this.value.selected = 'all'
+      this.datePickerOpen = false
+    }
   },
   computed: {
     formattedDateRange () {
-      return this.dateValue.range.join(' – ')
+      return this.value.range.join(' – ')
     }
   }
 }
