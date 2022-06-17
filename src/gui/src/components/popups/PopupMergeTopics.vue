@@ -14,13 +14,13 @@
         </v-row>
         <v-row no-gutters>
           <v-col>
-            <v-container fluid>
+            <v-container fluid style="padding: 18px 5px">
               <v-row>
                 <v-col
-                  :sm="getColSize"
                   v-for="topicId in selection"
                   :key="topicId"
                   class="d-flex pa-1"
+                  align-self="start"
                 >
                   <v-card
                     elevation="0"
@@ -233,12 +233,13 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import { xorConcat } from '@/utils/helpers'
 
 export default {
   name: 'PopupMergeTopics',
   components: {},
   props: {
-    dialog: true,
+    dialog: Boolean,
     selection: []
   },
   data: () => ({
@@ -298,16 +299,6 @@ export default {
     }
   },
   computed: {
-    getColSize () {
-      if (this.selection.length === 2) {
-        return 6
-      } else if (this.selection.length >= 3) {
-        return 4
-      } else {
-        return 12
-      }
-    },
-
     topicPrototype () {
       const newTopic = {
         id: null,
@@ -341,27 +332,29 @@ export default {
       }
 
       this.selection.forEach((id) => {
-        newTopic.items.total += this.getTopicById()(id).items.total
-        newTopic.items.new += this.getTopicById()(id).items.new
+        const selectedTopic = this.getTopicById()(id)
+        newTopic.items.total += selectedTopic.items.total
+        newTopic.items.new += selectedTopic.items.new
+
+        newTopic.tags = xorConcat(newTopic.tags, selectedTopic.tags)
 
         newTopic.comments.total += this.mergeDiscussion
-          ? this.getTopicById()(id).comments.total
+          ? selectedTopic.comments.total
           : 0
         newTopic.comments.new += this.mergeDiscussion
-          ? this.getTopicById()(id).comments.new
+          ? selectedTopic.comments.new
           : 0
 
         newTopic.votes.up += this.mergeVotes
-          ? this.getTopicById()(id).votes.up
+          ? selectedTopic.votes.up
           : 0
         newTopic.votes.down += this.mergeVotes
-          ? this.getTopicById()(id).votes.down
+          ? selectedTopic.votes.down
           : 0
       })
 
       return newTopic
     }
-  },
-  mounted () {}
+  }
 }
 </script>

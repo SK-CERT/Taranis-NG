@@ -756,6 +756,7 @@ a {
 .v-card.merge-topic-details {
   height: 100%;
   width: 100%;
+  min-width: 200px;
   border: 3px solid white;
   background-color: lighten($accent, 30);
 }
