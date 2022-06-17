@@ -35,53 +35,7 @@
 
         <!-- tags -->
         <v-col cols="10" class="pr-0">
-          <v-combobox
-            v-model="filter.tags.selected"
-            :items="tagList"
-            label="tags"
-            multiple
-            outlined
-            dense
-            append-icon="mdi-chevron-down"
-            class="pl-0"
-            hide-details
-            hide-selected
-            deletable-chips
-            @change="defaultTag"
-          >
-            <template v-slot:selection="{ parent, item, index }">
-              <v-chip
-                small
-                v-if="index < 1 && !parent.isMenuActive"
-                @click:close="removeSelectedTag(item)"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-              >
-                <span>{{ item }}</span>
-              </v-chip>
-              <v-chip
-                small
-                v-else-if="parent.isMenuActive"
-                @click:close="removeSelectedTag(item)"
-                label
-                color="grey--lighten-4"
-                close
-                close-icon="$newsItemActionRemove"
-                class="pa-2 ml-0 mt-1"
-              >
-                <span>{{ item }}</span>
-              </v-chip>
-              <span
-                v-if="index === 1 && !parent.isMenuActive"
-                class="grey--text text-caption"
-              >
-                (+{{ filter.tags.selected.length - 1 }})
-              </span>
-            </template>
-          </v-combobox>
+          <tag-filter v-model="filter.tags.selected" :items="tagList" />
         </v-col>
         <v-col cols="2" class="pl-1 d-flex tags-logic-operator">
           <v-btn
@@ -241,13 +195,15 @@ import { mapState } from 'vuex'
 import searchField from '@/components/inputs/searchField'
 import dateChips from '@/components/inputs/dateChips'
 import dateRange from '@/components/inputs/dateRange'
+import tagFilter from '@/components/inputs/tagFilter'
 
 export default {
   name: 'DashboardNav',
   components: {
     searchField,
     dateChips,
-    dateRange
+    dateRange,
+    tagFilter
   },
   data: () => ({
     links: [],

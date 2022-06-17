@@ -10,7 +10,7 @@ export const topicsFilter = {
       },
       tags: {
         andOperator: true,
-        selected: ['all']
+        selected: []
       },
       date: {
         range: [],
@@ -41,7 +41,7 @@ export const topicsFilter = {
         },
         tags: {
           andOperator: true,
-          selected: ['all']
+          selected: []
         },
         date: {
           range: [],
