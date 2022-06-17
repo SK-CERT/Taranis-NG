@@ -25,6 +25,8 @@
             :key="newsItem.id"
             :newsItem="newsItem"
             :position="index"
+            :scopeSharingSet="scopeSharingSet"
+            :scopeTopic="scopeTopic"
             @deleteItem="deleteItem"
           ></card-news-item>
         </transition-group>
@@ -73,83 +75,83 @@ export default {
       'getNewsItemsByTopicList'
     ]),
 
-    infiniteScrolling (entries, observer, isIntersecting) {
-      if (this.newsItems_loaded && isIntersecting) {
-        this.updateData(true, false)
-      }
-    },
+    // infiniteScrolling (entries, observer, isIntersecting) {
+    //   if (this.newsItems_loaded && isIntersecting) {
+    //     this.updateData(true, false)
+    //   }
+    // }
 
     // showItemDetail (news_item) {
     //   this.$root.$emit('change-state', 'SHOW_ITEM')
     //   this.$refs.newsItemDetail.open(news_item)
     // },
 
-    updateData (append, reload_all) {
-      this.newsItems_loaded = false
+    // updateData (append, reload_all) {
+    //   this.newsItems_loaded = false
 
-      if (append === false) {
-        this.newsItems = []
-      }
+    //   if (append === false) {
+    //     this.newsItems = []
+    //   }
 
-      let offset = this.newsItems.length
-      let limit = 20
-      if (reload_all) {
-        offset = 0
-        if (this.newsItems.length > limit) {
-          limit = this.newsItems.length
-        }
-        this.newsItems = []
-      }
+    //   let offset = this.newsItems.length
+    //   let limit = 20
+    //   if (reload_all) {
+    //     offset = 0
+    //     if (this.newsItems.length > limit) {
+    //       limit = this.newsItems.length
+    //     }
+    //     this.newsItems = []
+    //   }
 
-      let group = ''
+    //   let group = ''
 
-      if (this.analyze_selector) {
-        group = this.$store.getters.getCurrentGroup
-      } else {
-        if (window.location.pathname.includes('/group/')) {
-          const i = window.location.pathname.indexOf('/group/')
-          const len = window.location.pathname.length
-          group = window.location.pathname.substring(i + 7, len)
-          this.$store.dispatch('changeCurrentGroup', group)
-        }
-      }
+    //   if (this.analyze_selector) {
+    //     group = this.$store.getters.getCurrentGroup
+    //   } else {
+    //     if (window.location.pathname.includes('/group/')) {
+    //       const i = window.location.pathname.indexOf('/group/')
+    //       const len = window.location.pathname.length
+    //       group = window.location.pathname.substring(i + 7, len)
+    //       this.$store.dispatch('changeCurrentGroup', group)
+    //     }
+    //   }
 
-      this.$store
-        .dispatch('getNewsItemsByGroup', {
-          group_id: group,
-          data: {
-            filter: this.news_items_filter,
-            offset: offset,
-            limit: limit
-          }
-        })
-        .then(() => {
-          this.newsItems = this.newsItems.concat(
-            this.$store.getters.getNewsItems.items
-          )
-          this.$emit(
-            'new-data-loaded',
-            this.$store.getters.getNewsItems.total_count
-          )
-          setTimeout(() => {
-            this.$emit('card-items-reindex')
-          }, 200)
-          setTimeout(() => {
-            this.newsItems_loaded = true
-          }, 1000)
-        })
-    },
+    //   this.$store
+    //     .dispatch('getNewsItemsByGroup', {
+    //       group_id: group,
+    //       data: {
+    //         filter: this.news_items_filter,
+    //         offset: offset,
+    //         limit: limit
+    //       }
+    //     })
+    //     .then(() => {
+    //       this.newsItems = this.newsItems.concat(
+    //         this.$store.getters.getNewsItems.items
+    //       )
+    //       this.$emit(
+    //         'new-data-loaded',
+    //         this.$store.getters.getNewsItems.total_count
+    //       )
+    //       setTimeout(() => {
+    //         this.$emit('card-items-reindex')
+    //       }, 200)
+    //       setTimeout(() => {
+    //         this.newsItems_loaded = true
+    //       }, 1000)
+    //     })
+    // },
 
-    checkFocus (pos) {
-      this.$root.$emit('check-focus', pos)
-    },
+    // checkFocus (pos) {
+    //   this.$root.$emit('check-focus', pos)
+    // },
 
-    news_items_updated () {
-      // only update items when not in selection mode
-      if (!this.activeSelection) {
-        this.updateData(false, true)
-      }
-    },
+    // news_items_updated () {
+    //   // only update items when not in selection mode
+    //   if (!this.activeSelection) {
+    //     this.updateData(false, true)
+    //   }
+    // },
 
     deleteItem (id) {
       this.deleteNewsItem(id)
@@ -159,6 +161,16 @@ export default {
   computed: {
     ...mapState('newsItemsFilter', ['filter', 'order']),
     ...mapState('assess', ['newsItems']),
+
+    scopeSharingSet () {
+      return (
+        this.filter.scope.sharingSets.length === 1 &&
+        this.filter.scope.topics.length === 0
+      )
+    },
+    scopeTopic () {
+      return this.filter.scope.topics.length === 1
+    },
 
     filteredNewsItems () {
       let filteredData = []
@@ -189,8 +201,6 @@ export default {
       } else {
         filteredData = this.getNewsItems()
       }
-
-      console.log(filteredData.length)
 
       // SEARCH
       filteredData = filteredData.filter((item) => {
