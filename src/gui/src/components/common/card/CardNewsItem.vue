@@ -43,7 +43,7 @@
               class="news-item-topic-action"
               v-bind="attrs"
               v-on="on"
-              v-if="isTopic"
+              v-if="scopeTopic"
               @click.native.capture="removeFromTopic($event)"
             >
               <v-icon> $newsItemActionRemove </v-icon>
@@ -60,7 +60,7 @@
               class="news-item-sharing-set-action"
               v-bind="attrs"
               v-on="on"
-              v-if="isSharingSet"
+              v-if="scopeSharingSet"
               @click.native.capture="removeFromTopic($event)"
             >
               <v-icon> $newsItemActionRemove </v-icon>
@@ -131,7 +131,7 @@
                       mdi-alert-octagon-outline
                     </v-icon>
                     <span class="awake-red-color--text">
-                      Delete News Item:
+                      Delete News Item: <br />
                     </span>
                     "{{ newsItem.title }}"
                   </h2>
@@ -399,7 +399,9 @@ export default {
     TagNorm
   },
   props: {
-    newsItem: {}
+    newsItem: {},
+    scopeSharingSet: Boolean,
+    scopeTopic: Boolean
   },
   data: () => ({
     deleteDialog: false
@@ -407,16 +409,16 @@ export default {
   computed: {
     ...mapState('newsItemsFilter', ['filter']),
 
-    isSharingSet () {
-      return (
-        this.filter.scope.sharingSets.length === 1 &&
-        this.filter.scope.topics.length === 0
-      )
-    },
+    // isSharingSet () {
+    //   return (
+    //     this.filter.scope.sharingSets.length === 1 &&
+    //     this.filter.scope.topics.length === 0
+    //   )
+    // },
 
-    isTopic () {
-      return this.filter.scope.topics.length === 1
-    },
+    // scopeTopic () {
+    //   return this.filter.scope.topics.length === 1
+    // },
 
     publishedDate () {
       return moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss')
@@ -455,7 +457,7 @@ export default {
     },
     removeFromTopic: function (event) {
       event.stopPropagation()
-      const topicId = this.isSharingSet
+      const topicId = this.scopeSharingSet
         ? this.filter.scope.sharingSets[0].id
         : this.filter.scope.topics[0].id
       this.removeTopicFromNewsItem({
