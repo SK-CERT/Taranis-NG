@@ -23,6 +23,9 @@ export default {
   data: () => ({}),
   methods: {
     ...mapActions('dashboard', ['updateTopics', 'unselectAllTopics']),
+    ...mapActions('assess', ['deselectAllNewsItems']),
+    ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
+    ...mapActions('topicsFilter', ['resetTopicsFilter']),
     ...mapGetters('dummyData', [
       'getDummyTopics',
       'getDummySharingSets',
@@ -32,6 +35,9 @@ export default {
   computed: {},
   mounted () {
     this.unselectAllTopics()
+    this.resetTopicsFilter()
+    this.deselectAllNewsItems()
+    this.resetNewsItemsFilter()
   }
 }
 </script>
