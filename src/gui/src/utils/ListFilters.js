@@ -63,6 +63,9 @@ export function filterDateRange(publishedDate, selectedType, dateRange) {
 }
 
 export function filterTags(itemTags, selectedTags, andOperator) {
+
+  if (!selectedTags.length) return true
+
   const selectedTagExists = (selectedTag) =>
     itemTags.some((itemTag) => itemTag.label === selectedTag)
 
