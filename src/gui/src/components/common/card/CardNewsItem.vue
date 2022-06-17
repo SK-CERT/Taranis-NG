@@ -15,21 +15,29 @@
           'corner-tag-shared': newsItem.shared && !newsItem.restricted,
           'corner-tag-restricted': newsItem.restricted,
           'status-important': newsItem.important,
-          'status-unread': !newsItem.read
-        }
+          'status-unread': !newsItem.read,
+        },
       ]"
       @click="toggleSelection"
     >
       <div
         v-if="newsItem.shared && !newsItem.restricted"
-        class="news-item-corner-tag text-caption text-weight-bold text-uppercase white--text"
+        class="
+          news-item-corner-tag
+          text-caption text-weight-bold text-uppercase
+          white--text
+        "
       >
         <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
       </div>
 
       <div
         v-if="newsItem.restricted"
-        class="news-item-corner-tag text-caption text-weight-bold text-uppercase white--text"
+        class="
+          news-item-corner-tag
+          text-caption text-weight-bold text-uppercase
+          white--text
+        "
       >
         <v-icon x-small>mdi-lock-outline</v-icon>
       </div>
@@ -125,7 +133,12 @@
               <v-row>
                 <v-col cols="12">
                   <h2
-                    class="font-weight-bold dark-grey--text text-capitalize pt-3"
+                    class="
+                      font-weight-bold
+                      dark-grey--text
+                      text-capitalize
+                      pt-3
+                    "
                   >
                     <v-icon color="awake-red-color" class="mb-1">
                       mdi-alert-octagon-outline
@@ -204,8 +217,8 @@
                     :class="[
                       'news-item-title',
                       {
-                        'status-unread': !newsItem.read
-                      }
+                        'status-unread': !newsItem.read,
+                      },
                     ]"
                   >
                     <sup v-if="!newsItem.read" class="new-indicator"> * </sup>
@@ -217,7 +230,12 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
                   <p
-                    class="font-weight-light dark-grey--text news-item-summary mb-0"
+                    class="
+                      font-weight-light
+                      dark-grey--text
+                      news-item-summary
+                      mb-0
+                    "
                   >
                     {{ newsItem.summary }}
                   </p>
@@ -264,7 +282,12 @@
                       >mdi-arrow-up-circle-outline</v-icon
                     >
                     <span
-                      class="text-caption font-weight-light dark-grey--text align-self-center"
+                      class="
+                        text-caption
+                        font-weight-light
+                        dark-grey--text
+                        align-self-center
+                      "
                       >{{ newsItem.votes.up }}</span
                     >
                   </div>
@@ -278,7 +301,12 @@
                       >mdi-arrow-down-circle-outline</v-icon
                     >
                     <span
-                      class="text-caption font-weight-light dark-grey--text align-self-center"
+                      class="
+                        text-caption
+                        font-weight-light
+                        dark-grey--text
+                        align-self-center
+                      "
                       >{{ newsItem.votes.down }}</span
                     >
                   </div>
@@ -298,7 +326,7 @@
             align-self="start"
             style="height: 100%"
           >
-            <v-container column style="height: 100%">
+            <v-container column style="height: 100%" class="pb-5">
               <v-row class="news-item-meta-infos">
                 <v-col class="news-item-meta-infos-label">
                   <strong>Published:</strong>

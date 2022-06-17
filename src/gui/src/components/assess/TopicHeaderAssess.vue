@@ -10,7 +10,7 @@
         </v-col>
       </v-row>
       <v-row class="card-padding mt-5" no-gutters>
-        <v-col cols="12" sm="12" md="7" class="pr-5 card-alignment">
+        <v-col cols="12" sm="12" md="7" class="card-alignment">
           <v-container column class="pt-0" style="height: 100%">
             <v-row no-gutters style="height: 100%">
               <v-col class="d-flex flex-column pt-2" style="height: 100%">
@@ -28,7 +28,16 @@
                 <v-row class="flex-grow-0">
                   <v-col
                     cols="12"
-                    class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-0 dark-grey--text"
+                    class="
+                      mx-0
+                      px-0
+                      d-flex
+                      justify-start
+                      flex-wrap
+                      pt-1
+                      pb-0
+                      dark-grey--text
+                    "
                   >
                     <h3>Activity over time</h3>
                   </v-col>
@@ -48,7 +57,7 @@
                         '#e9c645',
                         '#db993f',
                         '#bc482b',
-                        '#8f0429'
+                        '#8f0429',
                       ]"
                     />
                   </v-col>
@@ -67,27 +76,25 @@
                     cols="12"
                     class="mx-0 px-0 d-flex justify-start flex-wrap py-1"
                   >
-
                     <!------------------>
                     <!-- Edit Topics -->
                     <!------------------>
 
                     <v-dialog v-model="editDialog" width="600">
                       <template v-slot:activator="{ on, attrs }">
-
                         <v-btn
                           depressed
                           class="text-lowercase topic-header-btn mr-2 mt-1"
                           v-bind="attrs"
                           v-on="on"
-                          >
-                            <v-icon left>$awakeEdit</v-icon>
-                            edit
-                          </v-btn>
+                        >
+                          <v-icon left>$awakeEdit</v-icon>
+                          edit
+                        </v-btn>
                       </template>
 
                       <popup-edit-topic
-                        v-model:dialog="editDialog"
+                        v-model="editDialog"
                         :topic="topic"
                         v-on:update:title="topic.title = $event"
                       />
@@ -262,9 +269,6 @@ export default {
     TagNorm,
     CalendarHeatmap,
     PopupEditTopic
-  },
-  props: {
-    // topic: {}
   },
   data: () => ({
     editDialog: false

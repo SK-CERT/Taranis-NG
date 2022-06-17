@@ -30,7 +30,7 @@
 
         <!-- date picker -->
         <v-col cols="12">
-          <date-range v-model="datePicker" :dateValue="filter.date" />
+          <date-range v-model="filter.date" />
         </v-col>
 
         <!-- tags -->
@@ -66,60 +66,6 @@
 
         <v-col cols="12" class="pt-2">
           <filter-sort-list v-model="order.selected" :items="orderOptions" />
-
-          <!--  <v-list dense class="py-0">
-            <v-list-item-group
-              v-model="order.selected"
-              active-class="selected"
-              class="filter-list"
-              mandatory
-            >
-              <template>
-                <v-list-item
-                  v-for="(item, index) in orderOptions"
-                  :key="item.title"
-                  class="extra-dense"
-                  :ripple="false"
-                  :value="{ type: item.type, direction: item.direction }"
-                  @click.native.capture="changeDirection($event, index)"
-                >
-                  <template v-slot:default="{ active }">
-                    <v-list-item-icon class="mr-2">
-                      <v-icon
-                        small
-                        color="grey"
-                        class="filter-icon mt-auto mb-auto"
-                      >
-                        {{ item.icon }}
-                      </v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content class="py-1 mt-auto mb-auto">
-                      {{ item.label }}
-                    </v-list-item-content>
-
-                    <v-list-item-action>
-                      <v-icon
-                        v-if="active"
-                        :class="[
-                          'mt-auto',
-                          'mb-auto',
-                          'dark-grey--text',
-                          'text--lighten-3',
-                          {
-                            asc: item.direction === 'asc',
-                            desc: item.direction === 'desc',
-                          },
-                        ]"
-                      >
-                        mdi-chevron-up
-                      </v-icon>
-                    </v-list-item-action>
-                  </template>
-                </v-list-item>
-              </template>
-            </v-list-item-group>
-          </v-list> -->
         </v-col>
       </v-row>
 
@@ -161,16 +107,6 @@ export default {
     filterSortList
   },
   data: () => ({
-    links: [],
-    datePicker: false,
-    date: {
-      range: [],
-      selected: 'all'
-    },
-    tags: {
-      andOperator: true,
-      selected: ['all']
-    },
     filterAttributeOptions: [
       { type: 'active', label: 'active topics', icon: 'mdi-message-outline' },
       { type: 'pinned', label: 'pinned topics', icon: '$awakePin' },
@@ -235,55 +171,10 @@ export default {
     ]
   }),
   computed: {
-    ...mapState('topicsFilter', ['filter', 'order']),
-
-    dateRangeText () {
-      return this.date.range.join(' – ')
-    },
-    getData () {
-      return this.$store.getters.getDashboardData
-    }
-  },
-  methods: {
-    defaultDate (event) {
-      if (!this.filter.date.selected) {
-        this.filter.date.selected = 'all'
-      }
-    },
-    defaultSource () {
-      if (!this.sources.selected.length) {
-        this.sources.selected = ['all']
-      } else if (this.sources.selected !== ['all']) {
-        this.sources.selected = this.sources.selected.filter(
-          (item) => item !== 'all'
-        )
-      }
-    },
-    defaultTag () {
-      if (!this.filter.tags.selected.length) {
-        this.filter.tags.selected = ['all']
-      } else if (this.filter.tags.selected !== ['all']) {
-        this.filter.tags.selected = this.filter.tags.selected.filter(
-          (item) => item !== 'all'
-        )
-      }
-    },
-    removeSelectedTag (chip) {
-      this.filter.tags.selected = this.filter.tags.selected.filter(
-        (c) => c !== chip
-      )
-      this.defaultTag()
-    },
-    changeDirection (event, index) {
-      event.preventDefault()
-      var newDirection =
-        this.orderOptions[index].direction === 'desc' ? 'asc' : 'desc'
-      this.orderOptions = this.orderOptions.map((item) => ({
-        ...item,
-        direction: ''
-      }))
-      this.orderOptions[index].direction = newDirection
-    }
+    ...mapState('topicsFilter', ['filter', 'order'])
+    // getData () {
+    //   return this.$store.getters.getDashboardData
+    // }
   }
 }
 </script>
