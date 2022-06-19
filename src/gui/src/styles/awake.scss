@@ -205,6 +205,7 @@ textarea {
 
   & .last-activity {
     font-size: 0.65rem !important;
+    color: $dark-grey;
   }
 }
 
@@ -941,6 +942,9 @@ textarea {
     z-index: 10;
     margin: 6px;
     font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+    font-size: 11px;
 
     & svg {
       fill: white !important;

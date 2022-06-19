@@ -11,26 +11,21 @@
       'topic',
       'primary--text',
       {
-        'pinned-topic': topic.pinned,
         selected: topic.selected,
+        'pinned-topic': topic.pinned,
+        'hot-topic': topic.hot,
         'corner-tag-ai': topic.ai,
         'corner-tag-shared': topic.isSharingSet,
-        'hot-topic': topic.hot,
-        'shared-topic': topic.isSharingSet
-      }
+        'shared-topic': topic.isSharingSet,
+      },
     ]"
     @click="toggleSelection"
   >
-    <div
-      v-if="topic.ai && !topic.isSharingSet"
-      class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
-    >
+    <!-- Corner Tags -->
+    <div v-if="topic.ai && !topic.isSharingSet" class="topic-corner-tag">
       AI
     </div>
-    <div
-      v-if="topic.isSharingSet"
-      class="topic-corner-tag text-caption text-weight-bold text-uppercase white--text"
-    >
+    <div v-if="topic.isSharingSet" class="topic-corner-tag">
       <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
     </div>
 
@@ -46,42 +41,28 @@
           <v-row class="flex-grow-0">
             <v-col cols="10" class="mr-auto mt-1 activity-row">
               <div v-if="topic.isSharingSet">
-                <span class="last-activity font-weight-light dark-grey--text"
-                  >Shared on:
-                </span>
-                <span class="last-activity font-weight-bold dark-grey--text">
+                <span class="last-activity font-weight-light">Shared on: </span>
+                <span class="last-activity font-weight-bold">
                   {{ lastActivity }} </span
                 ><br />
-                <span class="last-activity font-weight-light dark-grey--text"
-                  >Shared by:
-                </span>
-                <span class="last-activity font-weight-bold dark-grey--text">
+                <span class="last-activity font-weight-light">Shared by: </span>
+                <span class="last-activity font-weight-bold">
                   {{ topic.originator }}
                 </span>
               </div>
 
               <div v-else>
-                <span class="last-activity font-weight-light dark-grey--text"
+                <span class="last-activity font-weight-light"
                   >Last activity:
                 </span>
-                <span class="last-activity font-weight-bold dark-grey--text">
+                <span class="last-activity font-weight-bold">
                   {{ lastActivity }}
                 </span>
               </div>
             </v-col>
 
             <v-col cols="2" class="text-right">
-              <v-btn
-                fab
-                depressed
-                outlined
-                x-small
-                color="grey"
-                :class="['fab-pin', { pinned: topic.pinned }]"
-                @click.native.capture="pinToTop($event)"
-              >
-                <v-icon>$awakePin</v-icon>
-              </v-btn>
+              <pin :value="topic.pinned" @input="pinTopic(topic.id)" />
             </v-col>
           </v-row>
 
@@ -90,7 +71,13 @@
           <v-row class="flex-grow-0 mt-0">
             <v-col class="py-3">
               <h2
-                class="font-weight-bold headline topic-title dark-grey--text text-capitalize"
+                class="
+                  font-weight-bold
+                  headline
+                  topic-title
+                  dark-grey--text
+                  text-capitalize
+                "
               >
                 {{ topic.title }}
               </h2>
@@ -184,7 +171,7 @@
                 class="text-lowercase btn-view-topic mt-1"
                 :to="{
                   path: '/assess',
-                  query: { topic: topic.id }
+                  query: { topic: topic.id },
                 }"
               >
                 <!-- @click.native.capture="viewTopic($event)" -->
@@ -201,6 +188,7 @@
 
 <script>
 import TagNorm from '@/components/common/tags/TagNorm'
+import pin from '@/components/inputs/pin'
 import moment from 'moment'
 
 import { mapActions } from 'vuex'
@@ -208,7 +196,8 @@ import { mapActions } from 'vuex'
 export default {
   name: 'CardTopic',
   components: {
-    TagNorm
+    TagNorm,
+    pin
   },
   props: {
     topic: {}
@@ -230,10 +219,6 @@ export default {
     toggleSelection: function () {
       this.topic.selected = !this.topic.selected
       this.selectTopic(this.topic.id)
-    },
-    pinToTop: function (event) {
-      event.stopPropagation()
-      this.pinTopic(this.topic.id)
     },
     upvote: function (event) {
       event.stopPropagation()
