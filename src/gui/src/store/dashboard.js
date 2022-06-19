@@ -1,6 +1,6 @@
 import { getDashboardData } from '@/api/dashboard'
 import { getField, updateField } from 'vuex-map-fields'
-import { xor } from 'lodash'
+import { xorConcat } from '@/utils/helpers'
 
 const state = {
   dashboard_data: {
@@ -77,23 +77,34 @@ const mutations = {
   },
 
   PIN_TOPIC(state, id) {
-    const index = state.topics.findIndex((x) => x.id === id)
-    state.topics[index].pinned =
-      !state.topics[index].pinned
+    for (const topic of state.topics) {
+      if (topic.id === id) {
+        topic.pinned = !topic.pinned;
+        break;
+      }
+    }
   },
 
   UPVOTE_TOPIC(state, id) {
-    const index = state.topics.findIndex((x) => x.id === id)
-    state.topics[index].votes.up += 1
+    for (const topic of state.topics) {
+      if (topic.id === id) {
+        topic.votes.up += 1
+        break;
+      }
+    }
   },
 
   DOWNVOTE_TOPIC(state, id) {
-    const index = state.topics.findIndex((x) => x.id === id)
-    state.topics[index].votes.down += 1
+    for (const topic of state.topics) {
+      if (topic.id === id) {
+        topic.votes.down += 1
+        break;
+      }
+    }
   },
 
   SELECT_TOPIC(state, id) {
-    state.topicSelection = xor(state.topicSelection, [id])
+    state.topicSelection = xorConcat(state.topicSelection, [id])
   },
 
   UNSELECT_ALL_TOPICS(state) {
