@@ -102,7 +102,6 @@ export default {
       this.$emit('input', false)
     }
   },
-  computed: {},
   mounted () {
     this.newTitle = this.topic.title
     this.newSummary = this.topic.summary
