@@ -27,6 +27,8 @@ const mutations = {
     const numberOfDummyTopics = 12
     const numberOfDummySharingSets = 0
     const numberOfDummyNewsItem = 100 // 1000
+    const numberOfDummyUsers = 20
+    state.dummyUsers = generateUsers(numberOfDummyUsers)
     state.dummyTopics = generateTopics(numberOfDummyTopics, false, 0)
     state.dummyNewsItems = generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics)
 
@@ -73,6 +75,9 @@ const getters = {
 
   getField,
 
+  getDummyUsers(state) {
+    return state.dummyUsers
+  },
   getDummyTopics(state) {
     return state.dummyTopics
   },
@@ -121,6 +126,25 @@ let dummySourceTypes = [
   'Atom'
 ]
 
+function generateUsers(numberOfDummyUsers) {
+  const dummyData = []
+
+  for (let i = 0; i < (numberOfDummyUsers + 2); i++) {
+    const fname = faker.name.firstName()
+    const lname = faker.name.lastName()
+    const entry = {
+      id: i,
+      firstName: fname,
+      lastName: lname,
+      username: faker.internet.userName(fname, lname)
+    }
+
+    dummyData.push(entry)
+  }
+
+  return dummyData
+}
+
 function generateTopics(numberOfDummyTopics, sharingSet, offset) {
   const dummyData = []
 
@@ -134,7 +158,7 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
         Math.floor(Math.random() * (5 - 2 + 1)) + 2
       ),
       ai: Math.random() < 0.25,
-      originator: `${faker.name.firstName()} ${faker.name.lastName()}`,
+      originator: Math.floor(Math.random() * (20 + 1)), // random user ID
       hot: Math.random() < 0.15,
       pinned: Math.random() < 0.05,
       lastActivity: new Date(String(faker.date.recent(10))),
@@ -153,6 +177,9 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
       },
       hasSharedItems: false,
       isSharingSet: sharingSet,
+      sharingState: '',
+      sharedBy: '',
+      sharedWith: [],
       sharingSets: [],
       relatedTopics: [],
       keywords: faker.random
@@ -200,7 +227,7 @@ function generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics) {
         ).format('YYYY/MM/DD')}/${faker.internet.password(20)}`,
         type: dummySourceTypes[Math.floor(Math.random() * 7)]
       },
-      addedBy: faker.lorem.words(1),
+      addedBy: Math.floor(Math.random() * (20 + 1)), // random user ID
       topics: [],
       votes: {
         up: parseInt(faker.commerce.price(0, 50, 0)),
