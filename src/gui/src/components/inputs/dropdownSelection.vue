@@ -6,7 +6,7 @@
     :placeholder="placeholder"
     @input="setValue"
     return-object
-    item-text="title"
+    :item-text="getAttributeName()"
     multiple
     outlined
     dense
@@ -18,7 +18,7 @@
   >
     <template v-slot:item="{ item }">
       <span class="dropdown-list-item">
-        {{ item.title }}
+        {{ item[getAttributeName()] }}
       </span>
     </template>
     <template v-slot:selection="{ parent, item, index }">
@@ -33,7 +33,7 @@
         @click:close="parent.selectItem(item)"
       >
         <span class="text-truncate text-capitalize topics-chip">{{
-          item.title
+          item[getAttributeName()]
         }}</span>
       </v-chip>
 
@@ -48,7 +48,7 @@
         @click:close="parent.selectItem(item)"
       >
         <span class="text-truncate text-capitalize topics-chip">
-          {{ item.title }}
+          {{ item[getAttributeName()] }}
         </span>
       </v-chip>
       <span
@@ -67,12 +67,16 @@ export default {
   props: {
     label: String,
     placeholder: String,
+    attribute: String,
     value: [],
     items: []
   },
   methods: {
     setValue (newValue) {
       this.$emit('input', newValue)
+    },
+    getAttributeName () {
+      return this.attribute ? this.attribute : 'title'
     }
   }
 }
