@@ -13,6 +13,7 @@
             :items="getTopicSelectionList()"
             label="Topics"
             placeholder="all Topics"
+            @input="updateQuery()"
           />
         </v-col>
 
@@ -22,6 +23,7 @@
             :items="getSharingSetSelectionList()"
             label="Sharing Sets"
             placeholder="all Sharing Sets"
+            @input="updateQuery()"
           />
         </v-col>
 
@@ -31,6 +33,7 @@
             :items="sourcesList"
             label="Sources"
             placeholder="all Sources"
+            @input="updateQuery()"
           />
         </v-col>
       </v-row>
@@ -196,7 +199,19 @@ export default {
     ...mapGetters('dashboard', [
       'getTopicSelectionList',
       'getSharingSetSelectionList'
-    ])
+    ]),
+
+    updateQuery () {
+      if (this.filter.scope.topics.length === 1) {
+        this.$router.push({ query: { topic: this.filter.scope.topics[0].id } })
+      } else if (this.filter.scope.sharingSets.length === 1) {
+        this.$router.push({
+          query: { topic: this.filter.scope.sharingSets[0].id }
+        })
+      } else {
+        this.$router.push({ query: '' })
+      }
+    }
   }
 }
 </script>
