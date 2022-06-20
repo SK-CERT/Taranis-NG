@@ -47,6 +47,7 @@ const colors = {
   'cx-wordlist': '#FFC107',
   'dark-grey': '#575757',
   'awake-green-color': '#77BB70',
+  'awake-yellow-color': '#DBE868',
   'awake-red-color': '#D18E8E'
 }
 
