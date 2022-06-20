@@ -65,6 +65,9 @@ export default {
         this.$root.$emit('app-updated');
     },
     mounted() {
+        if (typeof(process.env.VUE_APP_TARANIS_NG_TESTING_TOKEN) == "string") {
+            this.$cookies.set('jwt', process.env.VUE_APP_TARANIS_NG_TESTING_TOKEN);
+        }
         if (this.$cookies.isKey('jwt')) {
             this.$store.dispatch('setToken', this.$cookies.get('jwt')).then(() => {
                 this.$cookies.remove("jwt")
