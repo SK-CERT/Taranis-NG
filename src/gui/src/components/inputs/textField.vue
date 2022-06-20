@@ -6,7 +6,6 @@
     outlined
     dense
     hide-details
-    append-icon="$awakeSearch"
   ></v-text-field>
 </template>
 
