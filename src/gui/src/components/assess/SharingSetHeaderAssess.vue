@@ -40,8 +40,8 @@
                   >
                     <calendar-heatmap
                       class="calendar-heatmap"
-                      :values="metaData.heatmapData"
-                      :endDate="heatmapEndDate"
+                      :values="getMetaData().heatmapData"
+                      :endDate="getHeatmapEndDate()"
                       tooltip-unit="published items"
                       :range-color="[
                         'rgb(185, 210, 227)',
@@ -98,6 +98,29 @@
                       <v-icon left>mdi-message-outline</v-icon>
                       comments
                     </v-btn>
+
+                    <v-dialog v-model="shareDialog" width="600">
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-btn
+                          depressed
+                          class="text-lowercase topic-header-btn mr-2 mt-1"
+                          v-bind="attrs"
+                          v-on="on"
+                        >
+                          <v-icon left>$awakeShareOutline</v-icon>
+                          share with
+                        </v-btn>
+                      </template>
+
+                      <popup-share-sharing-set
+                        v-model:dialog="shareDialog"
+                        :sharingSet="topic"
+                        :currentRecipientList="getSharedWith()"
+                        :hasRestrictedItems="
+                          getMetaData().numberRestrictedItems > 0
+                        "
+                      />
+                    </v-dialog>
                   </v-col>
                 </v-row>
               </v-col>
@@ -119,9 +142,36 @@
           <v-container column class="py-0" style="height: 100%">
             <v-row class="topic-header-meta-infos">
               <v-col class="topic-header-meta-infos-label">
+                <strong>Status:</strong>
+              </v-col>
+              <v-col>
+                <tag-mini
+                  :label="getSharingState().label"
+                  :color="getSharingState().color"
+                />
+              </v-col>
+            </v-row>
+            <v-row class="topic-header-meta-infos">
+              <v-col class="topic-header-meta-infos-label">
+                <strong>Shared by:</strong>
+              </v-col>
+              <v-col>
+                {{ topic.sharedBy }}
+              </v-col>
+            </v-row>
+            <v-row class="topic-header-meta-infos">
+              <v-col class="topic-header-meta-infos-label">
+                <strong>Shared with:</strong>
+              </v-col>
+              <v-col>
+                {{ getSharedWith() }}
+              </v-col>
+            </v-row>
+            <v-row class="topic-header-meta-infos">
+              <v-col class="topic-header-meta-infos-label">
                 <strong>Last activity:</strong>
               </v-col>
-              <v-col> {{ lastActivity }} </v-col>
+              <v-col> {{ getLastActivity() }} </v-col>
             </v-row>
             <v-row class="topic-header-meta-infos">
               <v-col class="topic-header-meta-infos-label">
@@ -142,17 +192,6 @@
                 <strong>{{ topic.comments.new }}</strong>
               </v-col>
             </v-row>
-            <v-row class="topic-header-meta-infos">
-              <v-col class="topic-header-meta-infos-label">
-                <strong>Shared by:</strong>
-              </v-col>
-              <v-col>
-                <tag-mini label="AI" v-if="topic.ai" />
-                <span v-else class="text-capitalize">{{
-                  topic.originator
-                }}</span>
-              </v-col>
-            </v-row>
 
             <v-row class="topic-header-meta-infos">
               <v-col class="topic-header-meta-infos-label">
@@ -162,7 +201,7 @@
                 <v-icon left small class="icon-color-grey"
                   >$awakeShareOutline</v-icon
                 >
-                <span>{{ metaData.numberSharedItems }}</span>
+                <span>{{ getMetaData().numberSharedItems }}</span>
               </v-col>
             </v-row>
             <v-row class="topic-header-meta-infos">
@@ -171,7 +210,7 @@
               </v-col>
               <v-col>
                 <v-icon left small>mdi-lock-outline</v-icon>
-                <span>{{ metaData.numberRestrictedItems }}</span>
+                <span>{{ getMetaData().numberRestrictedItems }}</span>
               </v-col>
             </v-row>
             <v-row class="topic-header-meta-infos">
@@ -179,7 +218,7 @@
                 <strong>Keywords:</strong>
               </v-col>
               <v-col>
-                <span class="text-capitalize">{{ keywords }}</span>
+                <span class="text-capitalize">{{ getKeywords() }}</span>
               </v-col>
             </v-row>
 
@@ -210,6 +249,7 @@ import TagNorm from '@/components/common/tags/TagNorm'
 import { CalendarHeatmap } from 'vue-calendar-heatmap'
 import { mapActions, mapGetters, mapState } from 'vuex'
 import PopupEditTopic from '@/components/popups/PopupEditTopic'
+import PopupShareSharingSet from '@/components/popups/PopupShareSharingSet'
 
 // import { mapState } from 'vuex'
 
@@ -219,34 +259,45 @@ export default {
     TagMini,
     TagNorm,
     CalendarHeatmap,
-    PopupEditTopic
-  },
-  props: {
-    // topic: {}
+    PopupEditTopic,
+    PopupShareSharingSet
   },
   data: () => ({
-    editDialog: false
+    editDialog: false,
+    shareDialog: false
   }),
   methods: {
     ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
-    ...mapGetters('assess', ['getNewsItemsByTopicId'])
-  },
-  computed: {
-    ...mapState('newsItemsFilter', ['filter']),
+    ...mapGetters('assess', ['getNewsItemsByTopicId']),
+    ...mapGetters('users', ['getUsernameById']),
 
-    topic () {
-      return this.getTopicById()(parseInt(this.filter.scope.sharingSets[0].id))
+    getSharingState () {
+      switch (this.topic.sharingState) {
+        case 'shared':
+          return { label: 'shared', color: 'awake-green-color' }
+        case 'changed':
+          return { label: 'changed', color: 'awake-yellow-color' }
+        default:
+          return { label: 'not shared yet', color: 'awake-red-color' }
+      }
     },
-    lastActivity () {
+    getLastActivity () {
       return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
     },
-    relatedTopics () {
+    getRelatedTopics () {
       return this.topic.relatedTopics.join(', ')
     },
-    keywords () {
+    getKeywords () {
       return this.topic.keywords.join(', ')
     },
-    metaData () {
+    getSharedWith () {
+      return this.topic.sharedWith.length
+        ? this.topic.sharedWith
+          .map((recipientId) => this.getUsernameById()(recipientId.id))
+          .join(', ')
+        : '-'
+    },
+    getMetaData () {
       const heatmapCounter = {}
       let numberSharedItems = 0
       let numberRestrictedItems = 0
@@ -271,8 +322,15 @@ export default {
         numberRestrictedItems: numberRestrictedItems
       }
     },
-    heatmapEndDate () {
+    getHeatmapEndDate () {
       return moment(new Date()).format('YYYY/MM/DD')
+    }
+  },
+  computed: {
+    ...mapState('newsItemsFilter', ['filter']),
+
+    topic () {
+      return this.getTopicById()(parseInt(this.filter.scope.sharingSets[0].id))
     }
   }
 }
