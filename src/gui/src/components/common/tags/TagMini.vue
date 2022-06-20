@@ -5,7 +5,7 @@
     dark
     left
     class="mr-1 px-1 text-caption text-weight-bold text-uppercase tag-mini"
-    color="accent"
+    :color="color ? color : 'accent'"
   >
     {{ label }}
   </v-chip>
@@ -15,7 +15,8 @@
 export default {
   name: 'TagMini',
   props: {
-    label: String
+    label: String,
+    color: String
   },
   data: () => ({}),
   computed: {}
