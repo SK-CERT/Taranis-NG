@@ -9,6 +9,7 @@ import { publish } from '@/store/publish'
 import { settings } from '@/store/settings'
 import { assets } from '@/store/assets'
 import { dashboard } from '@/store/dashboard'
+import { users } from '@/store/users'
 import { osint_source } from '@/store/osint_source'
 import { newsItemsFilter } from '@/store/newsItemsFilter'
 import { topicsFilter } from '@/store/topicsFilter'
@@ -96,6 +97,7 @@ export const store = new Vuex.Store({
     settings,
     assets,
     dashboard,
+    users,
     osint_source,
     newsItemsFilter,
     topicsFilter,
