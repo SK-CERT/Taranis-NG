@@ -74,9 +74,9 @@ textarea {
 }
 
 .v-application .v-btn.burger-menu {
-  min-width: $app-bar-height !important;
-  width: $app-bar-height !important;
-  height: $app-bar-height !important;
+  min-width: $app-bar-height  !important;
+  width: $app-bar-height  !important;
+  height: $app-bar-height  !important;
   display: block;
 }
 
@@ -90,7 +90,7 @@ textarea {
   }
 
   input {
-    color: $dark-grey !important;
+    color: $dark-grey  !important;
   }
 }
 
@@ -103,18 +103,18 @@ textarea {
 }
 
 .v-list .v-icon.filter-icon {
-  color: $light-grey-1 !important;
+  color: $light-grey-1  !important;
 
   & svg {
-    fill: $light-grey-1 !important;
+    fill: $light-grey-1  !important;
   }
 }
 
 .v-list .v-list-item--active.selected .v-icon.filter-icon {
-  color: $primary !important;
+  color: $primary  !important;
 
   & svg {
-    fill: $primary !important;
+    fill: $primary  !important;
   }
 }
 
@@ -143,7 +143,7 @@ textarea {
 }
 
 .text-field-active fieldset {
-  border: 2px solid $primary !important;
+  border: 2px solid $primary  !important;
 }
 
 .v-select__selections {
@@ -185,7 +185,7 @@ textarea {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   padding: 16px 12px !important;
 
   & svg {
@@ -280,7 +280,7 @@ textarea {
   color: white;
 
   &.ai {
-    background-color: $accent !important;
+    background-color: $accent  !important;
   }
 
   &.shared {
@@ -306,18 +306,14 @@ textarea {
 }
 
 .v-application input::placeholder {
-  color: $light-grey-2 !important;
+  color: $light-grey-2  !important;
 }
 
 .v-application .v-input__icon svg {
-  fill: $dark-grey !important;
+  fill: $dark-grey  !important;
 }
 
-.v-application
-  .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)
-  > .v-input__control
-  > .v-input__slot
-  fieldset {
+.v-application .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)>.v-input__control>.v-input__slot fieldset {
   border-color: $light-grey-2;
 }
 
@@ -326,8 +322,8 @@ textarea {
   position: relative;
 }
 
-.news-items-grid-container > div,
-.topics-grid-container > div {
+.news-items-grid-container>div,
+.topics-grid-container>div {
   min-width: 240px;
 }
 
@@ -438,7 +434,7 @@ textarea {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   flex-grow: 1 !important;
   padding: 19px 10px;
   margin: 0;
@@ -447,7 +443,7 @@ textarea {
   &.clicked,
   &.selected,
   &.v-chip--outlined.selected {
-    background-color: $primary !important;
+    background-color: $primary  !important;
     border-color: $primary;
     fill: white;
 
@@ -477,7 +473,7 @@ textarea {
 }
 
 .v-application .v-label {
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   font-size: 14px;
 }
 
@@ -518,7 +514,7 @@ textarea {
     padding-bottom: 0px;
   }
 
-  & > div {
+  &>div {
     font-size: 0.78rem;
   }
 
@@ -613,7 +609,7 @@ textarea {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   padding: 14px 12px !important;
   height: 32px;
 
@@ -635,7 +631,7 @@ textarea {
 .status-important.status-error,
 .status-unread.status-error,
 .status-error {
-  background-color: $status-error !important;
+  background-color: $status-error  !important;
 }
 
 // .status-unread {
@@ -693,6 +689,8 @@ textarea {
 
 .topic-header-container,
 .sharingset-header-container {
+  width: 100%;
+
   & .card-alignment {
     padding-left: 20px !important;
     padding-right: 48px !important;
@@ -733,7 +731,7 @@ textarea {
       padding-bottom: 4px;
     }
 
-    & > div {
+    &>div {
       font-size: 0.78rem;
     }
 
@@ -897,13 +895,13 @@ textarea {
 
 .news-item.corner-tag-restricted {
   &:after {
-    background-color: $light-grey-2 !important;
+    background-color: $light-grey-2  !important;
   }
 }
 
 .news-item.corner-tag-shared {
   &:after {
-    background-color: $accent !important;
+    background-color: $accent  !important;
   }
 }
 
@@ -954,7 +952,7 @@ textarea {
 
 .topic.corner-tag-shared {
   &:after {
-    background-color: $accent !important;
+    background-color: $accent  !important;
   }
 }
 
