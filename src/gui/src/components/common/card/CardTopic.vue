@@ -16,8 +16,8 @@
         'hot-topic': topic.hot,
         'corner-tag-ai': topic.ai,
         'corner-tag-shared': topic.isSharingSet,
-        'shared-topic': topic.isSharingSet,
-      },
+        'shared-topic': topic.isSharingSet
+      }
     ]"
     @click="toggleSelection"
   >
@@ -71,13 +71,7 @@
           <v-row class="flex-grow-0 mt-0">
             <v-col class="py-3">
               <h2
-                class="
-                  font-weight-bold
-                  headline
-                  topic-title
-                  dark-grey--text
-                  text-capitalize
-                "
+                class="font-weight-bold headline topic-title dark-grey--text text-capitalize"
               >
                 {{ topic.title }}
               </h2>
@@ -171,10 +165,9 @@
                 class="text-lowercase btn-view-topic mt-1"
                 :to="{
                   path: '/assess',
-                  query: { topic: topic.id },
+                  query: { topic: topic.id }
                 }"
               >
-                <!-- @click.native.capture="viewTopic($event)" -->
                 <v-icon left>$awakeEye</v-icon>
                 view topic
               </v-btn>
@@ -202,7 +195,6 @@ export default {
   props: {
     topic: {}
   },
-  data: () => ({}),
   computed: {
     lastActivity () {
       return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
@@ -228,10 +220,6 @@ export default {
       event.stopPropagation()
       this.downvoteTopic(this.topic.id)
     }
-    // viewTopic: function (event) {
-    //   event.stopPropagation()
-    //   console.log('view Topics clicked')
-    // }
   }
 }
 </script>
