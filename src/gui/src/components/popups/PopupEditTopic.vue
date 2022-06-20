@@ -5,13 +5,7 @@
         <v-row>
           <v-col cols="12">
             <h2
-              class="
-                font-weight-bold
-                headline
-                dark-grey--text
-                text-capitalize
-                pt-3
-              "
+              class="font-weight-bold headline dark-grey--text text-capitalize pt-3"
             >
               Edit Topic
             </h2>
@@ -96,6 +90,7 @@ export default {
       const updatedTopic = this.topic
       updatedTopic.title = this.newTitle
       updatedTopic.summary = this.newSummary
+      updatedTopic.sharingState = 'changed'
       this.updateTopic(updatedTopic)
 
       // Close Popup

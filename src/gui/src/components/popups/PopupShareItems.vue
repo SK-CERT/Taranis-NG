@@ -36,7 +36,7 @@
                     class="font-weight-bold merge-topics-details-title text-capitalize my-1"
                   >
                     <span
-                      class="awake-red-color--text"
+                      class="awake-red-color--text pr-3"
                       v-if="getItemDetails(newsItemId).restricted"
                     >
                       <v-icon color="awake-red-color" class="mb-1 mt-0">
@@ -178,7 +178,7 @@
         </v-row>
       </v-container>
 
-      <v-divider></v-divider>
+      <v-divider class="mt-3"></v-divider>
 
       <v-card-actions class="mt-1">
         <v-spacer></v-spacer>
@@ -215,7 +215,7 @@ export default {
     sharingSetSummary: ''
   }),
   methods: {
-    ...mapActions('dashboard', ['createNewTopic']),
+    ...mapActions('dashboard', ['createNewTopic', 'updateTopic']),
     ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
     ...mapActions('assess', [
       'deselectNewsItem',
@@ -234,11 +234,14 @@ export default {
     // },
 
     appendToSharingSet () {
-      console.log(this.existingSharingSet.id)
       this.assignSharingSet({
         items: this.selection,
         sharingSet: this.existingSharingSet.id
       })
+
+      const sharingSet = this.getTopicById()(this.existingSharingSet.id)
+      sharingSet.sharingState = 'changed'
+      this.updateTopic(sharingSet)
 
       this.leavePopup(this.existingSharingSet.id)
     },
@@ -268,7 +271,7 @@ export default {
       this.filter.scope.sharingSets = [{ id: topic.id, title: topic.title }]
       this.filter.scope.topics = []
 
-      this.$router.replace({
+      this.$router.push({
         path: '/assess',
         query: { topic: id }
       })
@@ -297,7 +300,7 @@ export default {
         originator: '',
         hot: false,
         pinned: true,
-        lastActivity: null,
+        lastActivity: new Date(),
         summary: '',
         items: {
           total: 0,
@@ -314,6 +317,9 @@ export default {
         selected: false,
         hasSharedItems: true,
         isSharingSet: true,
+        sharingState: 'not shared',
+        sharedBy: 'current user',
+        sharedWith: [],
         sharingSets: [],
         relatedTopics: [],
         keywords: []
