@@ -15,29 +15,21 @@
           'corner-tag-shared': newsItem.shared && !newsItem.restricted,
           'corner-tag-restricted': newsItem.restricted,
           'status-important': newsItem.important,
-          'status-unread': !newsItem.read,
-        },
+          'status-unread': !newsItem.read
+        }
       ]"
       @click="toggleSelection"
     >
       <div
         v-if="newsItem.shared && !newsItem.restricted"
-        class="
-          news-item-corner-tag
-          text-caption text-weight-bold text-uppercase
-          white--text
-        "
+        class="news-item-corner-tag text-caption text-weight-bold text-uppercase white--text"
       >
         <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
       </div>
 
       <div
         v-if="newsItem.restricted"
-        class="
-          news-item-corner-tag
-          text-caption text-weight-bold text-uppercase
-          white--text
-        "
+        class="news-item-corner-tag text-caption text-weight-bold text-uppercase white--text"
       >
         <v-icon x-small>mdi-lock-outline</v-icon>
       </div>
@@ -51,7 +43,7 @@
               class="news-item-topic-action"
               v-bind="attrs"
               v-on="on"
-              v-if="scopeTopic"
+              v-show="scopeTopic"
               @click.native.capture="removeFromTopic($event)"
             >
               <v-icon> $newsItemActionRemove </v-icon>
@@ -68,7 +60,7 @@
               class="news-item-sharing-set-action"
               v-bind="attrs"
               v-on="on"
-              v-if="scopeSharingSet"
+              v-show="scopeSharingSet"
               @click.native.capture="removeFromTopic($event)"
             >
               <v-icon> $newsItemActionRemove </v-icon>
@@ -77,7 +69,13 @@
           <span>remove from sharing Set</span>
         </v-tooltip>
 
-        <v-tooltip open-delay="1000" bottom>
+        <news-item-action
+          :active="newsItem.read"
+          @input="markAsRead()"
+          tooltip="mark as read/unread"
+        />
+
+        <!-- <v-tooltip open-delay="1000" bottom>
           <template v-slot:activator="{ on, attrs }">
             <v-btn
               v-bind="attrs"
@@ -92,7 +90,7 @@
             </v-btn>
           </template>
           <span>mark as read/unread</span>
-        </v-tooltip>
+        </v-tooltip> -->
 
         <v-tooltip open-delay="1000" bottom>
           <template v-slot:activator="{ on, attrs }">
@@ -133,12 +131,7 @@
               <v-row>
                 <v-col cols="12">
                   <h2
-                    class="
-                      font-weight-bold
-                      dark-grey--text
-                      text-capitalize
-                      pt-3
-                    "
+                    class="font-weight-bold dark-grey--text text-capitalize pt-3"
                   >
                     <v-icon color="awake-red-color" class="mb-1">
                       mdi-alert-octagon-outline
@@ -217,8 +210,8 @@
                     :class="[
                       'news-item-title',
                       {
-                        'status-unread': !newsItem.read,
-                      },
+                        'status-unread': !newsItem.read
+                      }
                     ]"
                   >
                     <sup v-if="!newsItem.read" class="new-indicator"> * </sup>
@@ -230,12 +223,7 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
                   <p
-                    class="
-                      font-weight-light
-                      dark-grey--text
-                      news-item-summary
-                      mb-0
-                    "
+                    class="font-weight-light dark-grey--text news-item-summary mb-0"
                   >
                     {{ newsItem.summary }}
                   </p>
@@ -282,12 +270,7 @@
                       >mdi-arrow-up-circle-outline</v-icon
                     >
                     <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
+                      class="text-caption font-weight-light dark-grey--text align-self-center"
                       >{{ newsItem.votes.up }}</span
                     >
                   </div>
@@ -301,12 +284,7 @@
                       >mdi-arrow-down-circle-outline</v-icon
                     >
                     <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
+                      class="text-caption font-weight-light dark-grey--text align-self-center"
                       >{{ newsItem.votes.down }}</span
                     >
                   </div>
@@ -332,7 +310,7 @@
                   <strong>Published:</strong>
                 </v-col>
                 <v-col>
-                  {{ publishedDate }}
+                  {{ getPublishedDate() }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -340,7 +318,7 @@
                   <strong>Collected:</strong>
                 </v-col>
                 <v-col>
-                  {{ collectedDate }}
+                  {{ getCollectedDate() }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -374,7 +352,7 @@
                 </v-col>
                 <v-col>
                   <span :class="[{ decorateSource: newsItem.decorateSource }]">
-                    {{ newsItem.addedBy }}
+                    {{ getAddedByUser() }}
                     <v-icon
                       right
                       small
@@ -391,7 +369,7 @@
                 </v-col>
                 <v-col>
                   <span class="news-item-meta-topics-list text-capitalize">
-                    {{ topicsList }}
+                    {{ getTopicsList() }}
                   </span>
                 </v-col>
               </v-row>
@@ -418,18 +396,18 @@
 <script>
 import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
+import newsItemAction from '@/components/inputs/newsItemAction'
 
 import { mapActions, mapGetters, mapState } from 'vuex'
 
 export default {
   name: 'CardNewsItem',
   components: {
-    TagNorm
+    TagNorm,
+    newsItemAction
   },
   props: {
-    newsItem: {},
-    scopeSharingSet: Boolean,
-    scopeTopic: Boolean
+    newsItem: {}
   },
   data: () => ({
     deleteDialog: false
@@ -437,37 +415,19 @@ export default {
   computed: {
     ...mapState('newsItemsFilter', ['filter']),
 
-    // isSharingSet () {
-    //   return (
-    //     this.filter.scope.sharingSets.length === 1 &&
-    //     this.filter.scope.topics.length === 0
-    //   )
-    // },
-
-    // scopeTopic () {
-    //   return this.filter.scope.topics.length === 1
-    // },
-
-    publishedDate () {
-      return moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss')
+    scopeSharingSet () {
+      return (
+        this.filter.scope.sharingSets.length === 1 &&
+        this.filter.scope.topics.length === 0
+      )
     },
-    collectedDate () {
-      return moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss')
-    },
-    topicsList () {
-      const topicTitles = []
-      this.newsItem.topics.forEach((id) => {
-        const newTopicTitle = this.getTopicTitleById()(id)
-        if (topicTitles.indexOf(newTopicTitle) === -1) {
-          topicTitles.push(newTopicTitle)
-        }
-      })
-
-      return topicTitles.length ? topicTitles.join(', ') : '-'
+    scopeTopic () {
+      return this.filter.scope.topics.length === 1
     }
   },
   methods: {
     ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
+    ...mapGetters('users', ['getUsernameById']),
 
     ...mapActions('assess', [
       'selectNewsItem',
@@ -493,8 +453,7 @@ export default {
         topicId: topicId
       })
     },
-    markAsRead: function (event) {
-      event.stopPropagation()
+    markAsRead: function () {
       this.newsItem.read = !this.newsItem.read
     },
     markAsImportant: function (event) {
@@ -520,6 +479,26 @@ export default {
     viewTopic: function (event) {
       event.stopPropagation()
       console.log('view Topics clicked')
+    },
+    getAddedByUser: function () {
+      return this.getUsernameById()(this.newsItem.addedBy)
+    },
+    getPublishedDate () {
+      return moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss')
+    },
+    getCollectedDate () {
+      return moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss')
+    },
+    getTopicsList () {
+      const topicTitles = []
+      this.newsItem.topics.forEach((id) => {
+        const newTopicTitle = this.getTopicTitleById()(id)
+        if (topicTitles.indexOf(newTopicTitle) === -1) {
+          topicTitles.push(newTopicTitle)
+        }
+      })
+
+      return topicTitles.length ? topicTitles.join(', ') : '-'
     }
   }
 }

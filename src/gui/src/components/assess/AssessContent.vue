@@ -25,8 +25,6 @@
             :key="newsItem.id"
             :newsItem="newsItem"
             :position="index"
-            :scopeSharingSet="scopeSharingSet"
-            :scopeTopic="scopeTopic"
             @deleteItem="deleteItem"
           ></card-news-item>
         </transition-group>
@@ -35,6 +33,7 @@
 
     <v-expand-transition>
       <assess-selection-toolbar
+        class="px-1 pt-2 pb-3"
         v-if="activeSelection"
         :selection="getNewsItemsSelection()"
       ></assess-selection-toolbar>
@@ -161,16 +160,6 @@ export default {
   computed: {
     ...mapState('newsItemsFilter', ['filter', 'order']),
     ...mapState('assess', ['newsItems']),
-
-    scopeSharingSet () {
-      return (
-        this.filter.scope.sharingSets.length === 1 &&
-        this.filter.scope.topics.length === 0
-      )
-    },
-    scopeTopic () {
-      return this.filter.scope.topics.length === 1
-    },
 
     filteredNewsItems () {
       let filteredData = []
