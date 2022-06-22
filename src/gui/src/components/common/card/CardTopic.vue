@@ -16,8 +16,9 @@
         'hot-topic': topic.hot,
         'corner-tag-ai': topic.ai,
         'corner-tag-shared': topic.isSharingSet,
-        'shared-topic': topic.isSharingSet
-      }
+        'sharing-set-topic': topic.isSharingSet,
+        'sharing-set-topic-shared': topic.sharingState === 'shared',
+      },
     ]"
     @click="toggleSelection"
   >
@@ -25,8 +26,29 @@
     <div v-if="topic.ai && !topic.isSharingSet" class="topic-corner-tag">
       AI
     </div>
-    <div v-if="topic.isSharingSet" class="topic-corner-tag">
-      <v-icon x-small class="flipped-icon">$awakeShare</v-icon>
+    <div
+      v-if="topic.isSharingSet && topic.sharingDirection === 'outgoing'"
+      class="topic-corner-tag"
+    >
+      <v-icon x-small left v-if="topic.sharingState === 'shared'"
+        >$awakeShare</v-icon
+      >
+      <v-icon x-small left v-else>$awakeShareOutline</v-icon>
+    </div>
+    <div
+      v-if="topic.isSharingSet && topic.sharingDirection === 'incoming'"
+      class="topic-corner-tag"
+    >
+      <v-icon
+        x-small
+        left
+        class="flipped-icon"
+        v-if="topic.sharingState === 'shared'"
+        >$awakeShare</v-icon
+      >
+      <v-icon x-small left class="flipped-icon" v-else
+        >$awakeShareOutline</v-icon
+      >
     </div>
 
     <v-container column style="height: 100%">
@@ -71,7 +93,13 @@
           <v-row class="flex-grow-0 mt-0">
             <v-col class="py-3">
               <h2
-                class="font-weight-bold headline topic-title dark-grey--text text-capitalize"
+                class="
+                  font-weight-bold
+                  headline
+                  topic-title
+                  dark-grey--text
+                  text-capitalize
+                "
               >
                 {{ topic.title }}
               </h2>
@@ -163,10 +191,7 @@
               <v-btn
                 outlined
                 class="text-lowercase btn-view-topic mt-1"
-                :to="{
-                  path: '/assess',
-                  query: { topic: topic.id }
-                }"
+                @click.native.capture="viewTopic($event)"
               >
                 <v-icon left>$awakeEye</v-icon>
                 view topic
@@ -208,17 +233,21 @@ export default {
       'selectTopic'
     ]),
 
-    toggleSelection: function () {
+    toggleSelection () {
       this.topic.selected = !this.topic.selected
       this.selectTopic(this.topic.id)
     },
-    upvote: function (event) {
+    upvote (event) {
       event.stopPropagation()
       this.upvoteTopic(this.topic.id)
     },
-    downvote: function (event) {
+    downvote (event) {
       event.stopPropagation()
       this.downvoteTopic(this.topic.id)
+    },
+    viewTopic (event) {
+      event.stopPropagation()
+      this.$router.push({ path: '/assess', query: { topic: this.topic.id } })
     }
   }
 }
