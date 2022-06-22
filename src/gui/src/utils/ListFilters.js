@@ -43,12 +43,10 @@ export function filterDateRange(publishedDate, selectedType, dateRange) {
       range = [today.setHours(0, 0, 0, 0), today.setHours(23, 59, 59, 999)]
       break
     case 'week': {
-      const oneWeekAgo = (d) => {
-        d.setDate(d.getDate() - 7)
-        d.setHours(0, 0, 0, 0)
-        return Math.floor(d.getTime())
-      }
-      range = [oneWeekAgo(today), today.setHours(23, 59, 59, 999)]
+      let currentDate = new Date()
+      let timediff = today.getDate() - 7;
+      let oneWeekAgo = currentDate.setDate(timediff);
+      range = [new Date(oneWeekAgo), new Date(today.setHours(23, 59, 59, 999))]
       break
     }
     case 'range':
