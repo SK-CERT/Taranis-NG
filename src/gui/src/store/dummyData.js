@@ -25,7 +25,7 @@ const mutations = {
 
   INIT_DUMMYDATA(state) {
     const numberOfDummyTopics = 12
-    const numberOfDummySharingSets = 0
+    const numberOfDummySharingSets = 2
     const numberOfDummyNewsItem = 100 // 1000
     const numberOfDummyUsers = 20
     state.dummyUsers = generateUsers(numberOfDummyUsers)
@@ -47,6 +47,13 @@ const mutations = {
 
     // Assign Items to Sharingsets
     state.dummySharingSets.forEach(sharingSet => {
+      const user = faker.random.arrayElement(state.dummyUsers)
+      sharingSet.relevanceScore = 0
+      sharingSet.sharedBy = user.username
+      sharingSet.sharedWith = faker.random.arrayElements(state.dummyUsers, Math.floor(Math.random() * (5 - 2 + 1)) + 2)
+      sharingSet.originator = user.id
+      sharingSet.sharingState = 'shared'
+      sharingSet.sharingDirection = 'incoming'
       const items = faker.random.arrayElements(
         state.dummyNewsItems,
         sharingSet.items.total
@@ -178,6 +185,7 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
       hasSharedItems: false,
       isSharingSet: sharingSet,
       sharingState: '',
+      sharingDirection: '',
       sharedBy: '',
       sharedWith: [],
       sharingSets: [],
@@ -234,14 +242,13 @@ function generateNewsItems(numberOfDummyNewsItem, numberOfDummyTopics) {
         down: parseInt(faker.commerce.price(0, 50, 0))
       },
       important: Math.random() < 0.2,
-      read: Math.random() < 0.2,
+      read: Math.random() < 0.5,
       decorateSource: Math.random() < 0.2,
       recommended: Math.random() < 0.2,
       inAnalysis: Math.random() < 0.2,
       shared: false,
       sharingSets: [],
-      restricted: Math.random() < 0.2,
-      selected: false
+      restricted: Math.random() < 0.2
     }
 
     dummyData.push(entry)
