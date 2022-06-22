@@ -40,7 +40,6 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.core
-<<<<<<< HEAD
       args:
         HTTP_PROXY: "${HTTP_PROXY}"
         HTTPS_PROXY: "${HTTPS_PROXY}"
@@ -48,10 +47,6 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     ports: 
       - "${CORE_PORT}:80"
-=======
-    ports: 
-      - "5000:80"
->>>>>>> origin/dashboard_cards
     environment: 
       REDIS_URL: "redis://redis"
       DB_URL: "database"
