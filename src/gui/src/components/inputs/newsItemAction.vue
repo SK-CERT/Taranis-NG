@@ -7,10 +7,10 @@
         icon
         tile
         class="news-item-action"
-        :class="[{ active: active }]"
+        :class="[{ active: active ? active : false }, extraClass]"
         @click.native.capture="execute($event)"
       >
-        <v-icon> $newsItemActionRead </v-icon>
+        <v-icon> {{ icon }} </v-icon>
       </v-btn>
     </template>
     <span>{{ tooltip }}</span>
@@ -22,6 +22,8 @@ export default {
   name: 'newsItemAction',
   props: {
     active: Boolean,
+    icon: String,
+    extraClass: String,
     tooltip: String
   },
   methods: {
