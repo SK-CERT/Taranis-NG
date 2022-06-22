@@ -122,10 +122,8 @@ export default {
     // If topic is given in query set it as filter
     const topicId = parseInt(this.$route.query.topic)
     if (topicId) {
-      console.log(topicId)
       const topic = this.getTopicById()(topicId)
       if (topic) {
-        console.log(topic)
         if (topic.isSharingSet) {
           this.filter.scope.sharingSets = [{ id: topicId, title: topic.title }]
           this.filter.scope.topics = []
