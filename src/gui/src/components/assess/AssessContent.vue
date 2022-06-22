@@ -191,53 +191,99 @@ export default {
         filteredData = this.getNewsItems()
       }
 
-      // SEARCH
-      filteredData = filteredData.filter((item) => {
-        return (
-          !this.filter.search ||
-          filterSearch([item.title, item.summary], this.filter.search)
-        )
-      })
+      // ---------------------------------------------------------------------------------------
 
-      // DATE
       filteredData = filteredData.filter((item) => {
-        return (
+        // Only show
+        const onlyShowAttr = this.filter.attributes.selected
+        if (onlyShowAttr.includes('unread') && item.read) return false
+        if (onlyShowAttr.includes('important') && !item.important) return false
+        if (onlyShowAttr.includes('shared') && !item.shared) return false
+        if (
+          onlyShowAttr.includes('selected') &&
+          !this.getNewsItemsSelection().includes(item.id)
+        ) {
+          return false
+        }
+
+        // Tags filter
+        const tagsResult =
+          !this.filter.tags.selected.length ||
+          filterTags(
+            item.tags,
+            this.filter.tags.selected,
+            this.filter.tags.andOperator
+          )
+        if (!tagsResult) return false
+
+        // Date filter
+        const dateResult =
           this.filter.date.selected === 'all' ||
           filterDateRange(
             item.published,
             this.filter.date.selected,
             this.filter.date.range
           )
-        )
+        if (!dateResult) return false
+
+        // Search filter
+        const searchResult =
+          !this.filter.search ||
+          filterSearch([item.title, item.summary], this.filter.search)
+        if (!searchResult) return false
+
+        return true
       })
 
-      // TAGS
-      filteredData = filteredData.filter((item) => {
-        return (
-          this.filter.tags.selected.includes('all') ||
-          filterTags(
-            item.tags,
-            this.filter.tags.selected,
-            this.filter.tags.andOperator
-          )
-        )
-      })
+      // ---------------------------------------------------------------------------------------
+
+      // // SEARCH
+      // filteredData = filteredData.filter((item) => {
+      //   return (
+      //     !this.filter.search ||
+      //     filterSearch([item.title, item.summary], this.filter.search)
+      //   )
+      // })
+
+      // // DATE
+      // filteredData = filteredData.filter((item) => {
+      //   return (
+      //     this.filter.date.selected === 'all' ||
+      //     filterDateRange(
+      //       item.published,
+      //       this.filter.date.selected,
+      //       this.filter.date.range
+      //     )
+      //   )
+      // })
+
+      // // TAGS
+      // filteredData = filteredData.filter((item) => {
+      //   return (
+      //     this.filter.tags.selected.includes('all') ||
+      //     filterTags(
+      //       item.tags,
+      //       this.filter.tags.selected,
+      //       this.filter.tags.andOperator
+      //     )
+      //   )
+      // })
 
       // ONLY SHOW
-      this.filter.attributes.selected.forEach((type) => {
-        filteredData = filteredData.filter((item) => {
-          switch (type) {
-            case 'unread':
-              return !item.read
-            case 'important':
-              return item.important
-            case 'shared':
-              return item.shared
-            case 'selected':
-              return item.selected
-          }
-        })
-      })
+      // this.filter.attributes.selected.forEach((type) => {
+      //   filteredData = filteredData.filter((item) => {
+      //     switch (type) {
+      //       case 'unread':
+      //         return !item.read
+      //       case 'important':
+      //         return item.important
+      //       case 'shared':
+      //         return item.shared
+      //       case 'selected':
+      //         return item.selected
+      //     }
+      //   })
+      // })
 
       // SORTING
       filteredData.sort((x, y) => {
