@@ -4,6 +4,7 @@
       <v-row class="card-padding my-4" no-gutters>
         <v-col class="headline card-alignment mb-4" cols="12" sm="12" md="7">
           <h3 class="pl-3">Sharing Set</h3>
+
           <h1 class="pl-3 text-capitalize">
             {{ topic.title }}
           </h1>
@@ -28,7 +29,16 @@
                 <v-row class="flex-grow-0">
                   <v-col
                     cols="12"
-                    class="mx-0 px-0 d-flex justify-start flex-wrap pt-1 pb-0 dark-grey--text"
+                    class="
+                      mx-0
+                      px-0
+                      d-flex
+                      justify-start
+                      flex-wrap
+                      pt-1
+                      pb-0
+                      dark-grey--text
+                    "
                   >
                     <h3>Activity over time</h3>
                   </v-col>
@@ -48,7 +58,7 @@
                         '#e9c645',
                         '#db993f',
                         '#bc482b',
-                        '#8f0429'
+                        '#8f0429',
                       ]"
                     />
                   </v-col>
@@ -149,6 +159,26 @@
                   :label="getSharingState().label"
                   :color="getSharingState().color"
                 />
+              </v-col>
+            </v-row>
+            <v-row class="topic-header-meta-infos">
+              <v-col class="topic-header-meta-infos-label">
+                <strong>Direction:</strong>
+              </v-col>
+              <v-col>
+                <span v-if="topic.sharingDirection === 'outgoing'">
+                  <v-icon small left class="icon-color-grey"
+                    >$awakeShareOutline</v-icon
+                  >
+                  outgoing
+                </span>
+
+                <span v-else>
+                  <v-icon small left class="flipped-icon icon-color-grey"
+                    >$awakeShare</v-icon
+                  >
+                  incoming
+                </span>
               </v-col>
             </v-row>
             <v-row class="topic-header-meta-infos">
@@ -275,8 +305,8 @@ export default {
       switch (this.topic.sharingState) {
         case 'shared':
           return { label: 'shared', color: 'awake-green-color' }
-        case 'changed':
-          return { label: 'changed', color: 'awake-yellow-color' }
+        case 'pending':
+          return { label: 'pending', color: 'awake-yellow-color' }
         default:
           return { label: 'not shared yet', color: 'awake-red-color' }
       }
