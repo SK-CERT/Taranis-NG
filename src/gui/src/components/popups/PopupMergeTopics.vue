@@ -5,7 +5,13 @@
         <v-row>
           <v-col cols="12">
             <h2
-              class="font-weight-bold headline dark-grey--text text-capitalize pt-3"
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-3
+              "
             >
               Merge Topics
             </h2>
@@ -26,12 +32,22 @@
                     elevation="0"
                     tile
                     height="100%"
-                    class="align-self-stretch d-flex flex-column merge-topic-details"
+                    class="
+                      align-self-stretch
+                      d-flex
+                      flex-column
+                      merge-topic-details
+                    "
                   >
                     <v-row justify="start" no-gutters class="flex-grow-0">
                       <v-col>
                         <h4
-                          class="font-weight-bold merge-topics-details-title text-capitalize my-2"
+                          class="
+                            font-weight-bold
+                            merge-topics-details-title
+                            text-capitalize
+                            my-2
+                          "
                         >
                           {{ getTopicDetails(topicId).title }}
                         </h4>
@@ -84,7 +100,13 @@
         <v-row>
           <v-col class="py-1">
             <h4
-              class="font-weight-bold merge-topics-details-title dark-grey--text text-capitalize my-0"
+              class="
+                font-weight-bold
+                merge-topics-details-title
+                dark-grey--text
+                text-capitalize
+                my-0
+              "
             >
               Merge Options
             </h4>
@@ -234,6 +256,7 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
 import { xorConcat } from '@/utils/helpers'
+import { faker } from '@faker-js/faker'
 
 export default {
   name: 'PopupMergeTopics',
@@ -262,7 +285,7 @@ export default {
       'deselectNewsItem',
       'deselectAllNewsItems',
       'assignSharingSet',
-      'replaceLinkedTopics'
+      'changeMergeAttr'
     ]),
     ...mapGetters('dashboard', ['getTopicById']),
 
@@ -279,8 +302,8 @@ export default {
       mergedTopic.title = this.mergeTitle
       mergedTopic.summary = this.mergeSummary
         ? this.mergeSummary
-        : 'this is an AI created summary ...' // should be replaced by NLP algorithm
-      mergedTopic.id = 999
+        : 'this is an AI created summary ... ' + faker.lorem.paragraph(10) // should be replaced by NLP algorithm
+      mergedTopic.id = Math.floor(Math.random() * (1000 - 800 + 1)) + 800
 
       // reset selection
       this.unselectAllTopics()
@@ -291,9 +314,7 @@ export default {
       }
 
       this.createNewTopic(mergedTopic)
-      this.replaceLinkedTopics({ src: oldTopics, dest: mergedTopic.id })
-
-      console.log(mergedTopic)
+      this.changeMergeAttr({ src: oldTopics, dest: mergedTopic.id })
 
       this.$emit('input', false)
     }
@@ -345,12 +366,8 @@ export default {
           ? selectedTopic.comments.new
           : 0
 
-        newTopic.votes.up += this.mergeVotes
-          ? selectedTopic.votes.up
-          : 0
-        newTopic.votes.down += this.mergeVotes
-          ? selectedTopic.votes.down
-          : 0
+        newTopic.votes.up += this.mergeVotes ? selectedTopic.votes.up : 0
+        newTopic.votes.down += this.mergeVotes ? selectedTopic.votes.down : 0
       })
 
       return newTopic

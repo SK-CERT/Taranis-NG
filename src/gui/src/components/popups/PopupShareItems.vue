@@ -5,7 +5,13 @@
         <v-row>
           <v-col cols="12">
             <h2
-              class="font-weight-bold headline dark-grey--text text-capitalize pt-3"
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-3
+              "
             >
               Share Items
             </h2>
@@ -26,14 +32,19 @@
               :class="[
                 'align-self-stretch d-flex flex-column share-items-details py-1 pr-1',
                 {
-                  restricted: getItemDetails(newsItemId).restricted
-                }
+                  restricted: getItemDetails(newsItemId).restricted,
+                },
               ]"
             >
               <v-row justify="start" no-gutters class="flex-grow-0">
                 <v-col cols="11" class="py-1">
                   <h4
-                    class="font-weight-bold merge-topics-details-title text-capitalize my-1"
+                    class="
+                      font-weight-bold
+                      merge-topics-details-title
+                      text-capitalize
+                      my-1
+                    "
                   >
                     <span
                       class="awake-red-color--text pr-3"
@@ -71,7 +82,13 @@
             <!-- Create new sharing set -->
             <!---------------------------->
             <h2
-              class="font-weight-bold headline dark-grey--text text-capitalize pt-0"
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-0
+              "
             >
               Create new Sharing Set
             </h2>
@@ -114,7 +131,13 @@
               dark
               depressed
               :disabled="appendMode || !validCreateSettings"
-              class="text-lowercase selection-toolbar-btn pr-4 sharing-sumbit-btn mt-4"
+              class="
+                text-lowercase
+                selection-toolbar-btn
+                pr-4
+                sharing-sumbit-btn
+                mt-4
+              "
               @click="createSharingSet()"
             >
               <v-icon left>$awakeShareOutline</v-icon>
@@ -129,7 +152,13 @@
             <!-- Append to sharing set -->
             <!--------------------------->
             <h2
-              class="font-weight-bold headline dark-grey--text text-capitalize pt-0"
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-0
+              "
             >
               Select Sharing Set
             </h2>
@@ -167,7 +196,12 @@
               dark
               depressed
               :disabled="!appendMode || !validAppendSettings"
-              class="text-lowercase selection-toolbar-btn pr-4 sharing-sumbit-btn"
+              class="
+                text-lowercase
+                selection-toolbar-btn
+                pr-4
+                sharing-sumbit-btn
+              "
               @click="appendToSharingSet()"
             >
               <!-- @click="mergeSelectedTopics()" -->
@@ -198,6 +232,7 @@
 
 <script>
 import { mapActions, mapGetters, mapState } from 'vuex'
+import { faker } from '@faker-js/faker'
 
 export default {
   name: 'PopupShareItems',
@@ -240,7 +275,7 @@ export default {
       })
 
       const sharingSet = this.getTopicById()(this.existingSharingSet.id)
-      sharingSet.sharingState = 'changed'
+      sharingSet.sharingState = 'pending'
       this.updateTopic(sharingSet)
 
       this.leavePopup(this.existingSharingSet.id)
@@ -251,8 +286,8 @@ export default {
       newSharingSet.title = this.sharingSetTitle
       newSharingSet.summary = this.sharingSetSummary
         ? this.sharingSetSummary
-        : 'this is an AI created summary ...' // should be replaced by NLP algorithm
-      newSharingSet.id = 888 // get ID from creation
+        : 'this is an AI created summary ... ' + faker.lorem.paragraph(10) // should be replaced by NLP algorithm
+      newSharingSet.id = Math.floor(Math.random() * (700 - 500 + 1)) + 500 // get ID from creation
 
       this.createNewTopic(newSharingSet)
       this.assignSharingSet({
@@ -297,7 +332,7 @@ export default {
         title: '',
         tags: [],
         ai: false,
-        originator: '',
+        originator: 'current user',
         hot: false,
         pinned: true,
         lastActivity: new Date(),
@@ -318,6 +353,7 @@ export default {
         hasSharedItems: true,
         isSharingSet: true,
         sharingState: 'not shared',
+        sharingDirection: 'outgoing',
         sharedBy: 'current user',
         sharedWith: [],
         sharingSets: [],
@@ -327,7 +363,7 @@ export default {
 
       this.selection.forEach((id) => {
         const selectedNewsItem = this.getNewsItemById()(id)
-        newTopic.items.total += selectedNewsItem.read ? 1 : 0
+        newTopic.items.total++
         newTopic.items.new += selectedNewsItem.read ? 0 : 1
 
         // newTopic.comments.total += this.mergeDiscussion
