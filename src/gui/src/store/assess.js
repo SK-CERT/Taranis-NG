@@ -66,8 +66,8 @@ const actions = {
     context.commit('setCurrentGroup', data)
   },
 
-  replaceLinkedTopics(context, { src, dest }) {
-    context.commit('REPLACE_LINKED_TOPICS', { src, dest })
+  changeMergeAttr(context, { src, dest }) {
+    context.commit('CHANGE_MERGE_ATTR', { src, dest })
   },
 
   assignSharingSet(context, { items, sharingSet }) {
@@ -144,15 +144,17 @@ const mutations = {
     })
   },
 
-  REPLACE_LINKED_TOPICS(state, replacement) {
+  CHANGE_MERGE_ATTR(state, replacement) {
     replacement.src.forEach(topicToReplace => {
-      state.newsItems = [...state.newsItems].map(({ topics, ...rest }) => ({
+      state.newsItems = [...state.newsItems].map(({ topics, sharingSets, shared, ...rest }) => ({
         topics: topics.map(element => {
           if (topicToReplace === element) {
             return replacement.dest
           }
           return element
         }),
+        sharingSets: sharingSets.filter(element => topicToReplace !== element),
+        shared: Boolean(sharingSets.length),
         ...rest
       }))
     })
