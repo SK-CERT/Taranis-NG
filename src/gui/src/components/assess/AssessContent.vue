@@ -5,7 +5,7 @@
         <v-row v-if="!filteredNewsItems.length">
           <v-col cols="12" class="empty-list-notification">
             <v-icon x-large> mdi-circle-off-outline </v-icon>
-            <span v-if="getNewsItems().length">
+            <span v-if="getTotalNumber().length">
               The currently selected filters do not yield any results. Try
               changing the filters.
             </span>
@@ -25,6 +25,7 @@
             :key="newsItem.id"
             :newsItem="newsItem"
             :position="index"
+            :topicsList="getTopicSelectionList()"
             @deleteItem="deleteItem"
           ></card-news-item>
         </transition-group>
@@ -48,6 +49,7 @@ import AssessSelectionToolbar from '@/components/assess/AssessSelectionToolbar'
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
 import moment from 'moment'
+import { cloneDeep, isEqual } from 'lodash-es'
 
 export default {
   name: 'AssessContent',
@@ -68,11 +70,14 @@ export default {
   methods: {
     ...mapActions('assess', ['deleteNewsItem']),
     ...mapGetters('assess', [
+      'getTotalNumber',
       'getNewsItems',
+      'getNewsItemById',
       'getNewsItemsSelection',
       'getNewsItemsByTopicId',
       'getNewsItemsByTopicList'
     ]),
+    ...mapGetters('dashboard', ['getTopicSelectionList', 'getNewsItemIds']),
 
     // infiniteScrolling (entries, observer, isIntersecting) {
     //   if (this.newsItems_loaded && isIntersecting) {
@@ -159,37 +164,47 @@ export default {
 
   computed: {
     ...mapState('newsItemsFilter', ['filter', 'order']),
-    ...mapState('assess', ['newsItems']),
+    // ...mapState('assess', ['newsItems']),
 
     filteredNewsItems () {
-      let filteredData = []
-      if (
-        this.filter.scope.topics.length &&
-        this.filter.scope.sharingSets.length
-      ) {
-        const scopedData = this.getNewsItemsByTopicList()(
-          this.filter.scope.topics
+      const topics = this.filter.scope.topics
+      const sharingSets = this.filter.scope.sharingSets
+
+      let totalTopicItems = []
+      topics.forEach((topic) => {
+        const topicItems = this.getNewsItemIds()(topic.id)
+        totalTopicItems = [...new Set([...totalTopicItems, ...topicItems])]
+      })
+
+      let totalSharingSetItems = []
+      sharingSets.forEach((sharingSet) => {
+        const sharingSetItems = this.getNewsItemIds()(sharingSet.id)
+        totalSharingSetItems = [
+          ...new Set([...totalSharingSetItems, ...sharingSetItems])
+        ]
+      })
+
+      let scopedItems = []
+      if (topics.length && sharingSets.length) {
+        scopedItems = totalTopicItems.filter((id) =>
+          totalSharingSetItems.includes(id)
         )
-
-        const sharingSetList = this.filter.scope.sharingSets
-
-        filteredData = scopedData.filter((newsItem) => {
-          return newsItem.sharingSets.some(
-            (itemSharingSet) =>
-              sharingSetList
-                .map((sharingSet) => sharingSet.id)
-                .indexOf(itemSharingSet) >= 0
-          )
-        })
-      } else if (this.filter.scope.topics.length) {
-        filteredData = this.getNewsItemsByTopicList()(this.filter.scope.topics)
+      } else if (topics.length) {
+        scopedItems = totalTopicItems
       } else if (this.filter.scope.sharingSets.length) {
-        filteredData = this.getNewsItemsByTopicList()(
-          this.filter.scope.sharingSets
-        )
+        scopedItems = totalSharingSetItems
+      }
+
+      let filteredData = []
+      if (scopedItems.length) {
+        scopedItems.forEach((itemId) => {
+          filteredData.push(this.getNewsItemById()(itemId))
+        })
       } else {
         filteredData = this.getNewsItems()
       }
+
+      console.log(filteredData.length)
 
       // ---------------------------------------------------------------------------------------
 
@@ -235,56 +250,6 @@ export default {
         return true
       })
 
-      // ---------------------------------------------------------------------------------------
-
-      // // SEARCH
-      // filteredData = filteredData.filter((item) => {
-      //   return (
-      //     !this.filter.search ||
-      //     filterSearch([item.title, item.summary], this.filter.search)
-      //   )
-      // })
-
-      // // DATE
-      // filteredData = filteredData.filter((item) => {
-      //   return (
-      //     this.filter.date.selected === 'all' ||
-      //     filterDateRange(
-      //       item.published,
-      //       this.filter.date.selected,
-      //       this.filter.date.range
-      //     )
-      //   )
-      // })
-
-      // // TAGS
-      // filteredData = filteredData.filter((item) => {
-      //   return (
-      //     this.filter.tags.selected.includes('all') ||
-      //     filterTags(
-      //       item.tags,
-      //       this.filter.tags.selected,
-      //       this.filter.tags.andOperator
-      //     )
-      //   )
-      // })
-
-      // ONLY SHOW
-      // this.filter.attributes.selected.forEach((type) => {
-      //   filteredData = filteredData.filter((item) => {
-      //     switch (type) {
-      //       case 'unread':
-      //         return !item.read
-      //       case 'important':
-      //         return item.important
-      //       case 'shared':
-      //         return item.shared
-      //       case 'selected':
-      //         return item.selected
-      //     }
-      //   })
-      // })
-
       // SORTING
       filteredData.sort((x, y) => {
         const directionModifier =
@@ -307,7 +272,7 @@ export default {
       })
 
       this.$store.dispatch('updateItemCount', {
-        total: this.newsItems.length,
+        total: this.getTotalNumber(),
         filtered: filteredData.length
       })
 
@@ -322,6 +287,9 @@ export default {
   mounted () {
     // this.$root.$on('news-items-updated', this.news_items_updated)
     // this.$root.$on('force-reindex', this.forceReindex)
+  },
+  updated () {
+    console.log('component re-rendered!')
   }
 
   // beforeDestroy () {

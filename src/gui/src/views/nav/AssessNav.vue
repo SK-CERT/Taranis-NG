@@ -47,7 +47,7 @@
         </v-col>
 
         <v-col cols="12">
-          <search-field v-model="filter.search" />
+          <search-field v-model="searchQuery" />
         </v-col>
       </v-row>
 
@@ -135,6 +135,8 @@ export default {
     dropdownSelection
   },
   data: () => ({
+    searchQuery: '',
+    awaitingSearch: false,
     filterAttributeOptions: [
       { type: 'unread', label: 'unread', icon: '$awakeUnread' },
       {
@@ -211,6 +213,17 @@ export default {
       } else {
         this.$router.push({ query: '' })
       }
+    }
+  },
+  watch: {
+    searchQuery: function () {
+      if (!this.awaitingSearch) {
+        setTimeout(() => {
+          this.filter.search = this.searchQuery
+          this.awaitingSearch = false
+        }, 500)
+      }
+      this.awaitingSearch = true
     }
   }
 }

@@ -151,6 +151,10 @@ const getters = {
     return state.dashboard_data
   },
 
+  getNewsItemIds: (state) => (id) => {
+    return state.topics.find(topic => topic.id === id).items.ids
+  },
+
   getTopicById: (state) => (id) => {
     return state.topics.find(topic => topic.id === id)
   },

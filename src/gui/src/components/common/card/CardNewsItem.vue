@@ -341,7 +341,8 @@ export default {
     PopupDeleteItem
   },
   props: {
-    newsItem: {}
+    newsItem: {},
+    topicsList: []
   },
   data: () => ({
     deleteDialog: false
@@ -421,7 +422,9 @@ export default {
     getTopicsList () {
       const topicTitles = []
       this.newsItem.topics.forEach((id) => {
-        const newTopicTitle = this.getTopicTitleById()(id)
+        const newTopicTitle = this.topicsList.find(
+          (topic) => topic.id === id
+        ).title
         if (topicTitles.indexOf(newTopicTitle) === -1) {
           topicTitles.push(newTopicTitle)
         }
@@ -429,6 +432,9 @@ export default {
 
       return topicTitles.length ? topicTitles.join(', ') : '-'
     }
+  },
+  updated () {
+    console.log('card re-rendered!')
   }
 }
 </script>
