@@ -203,6 +203,10 @@ const getters = {
     return state.newsItems
   },
 
+  getTotalNumber(state) {
+    return state.newsItems.length
+  },
+
   getNewsItemsByTopicId: (state) => (id) => {
     return state.newsItems.filter(newsItem => newsItem.topics.includes(id))
   },

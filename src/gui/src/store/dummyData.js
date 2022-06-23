@@ -24,7 +24,7 @@ const mutations = {
   updateField,
 
   INIT_DUMMYDATA(state) {
-    const numberOfDummyTopics = 12
+    const numberOfDummyTopics = 20
     const numberOfDummySharingSets = 2
     const numberOfDummyNewsItem = 100 // 1000
     const numberOfDummyUsers = 20
@@ -40,6 +40,7 @@ const mutations = {
       )
       items.forEach(item => {
         item.topics.push(topic.id)
+        topic.items.ids.push(item.id)
       })
     })
 
@@ -70,9 +71,10 @@ const mutations = {
             }
           }
         })
-        item.topics.push(sharingSet.id)
+        // item.topics.push(sharingSet.id)
         item.shared = true
         item.sharingSets.push(sharingSet.id)
+        sharingSet.items.ids.push(item.id)
       })
     })
   }
@@ -171,7 +173,8 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
       lastActivity: new Date(String(faker.date.recent(10))),
       summary: sharingSet ? faker.lorem.paragraph(10) : faker.lorem.paragraph(20),
       items: {
-        total: sharingSet ? parseInt(faker.commerce.price(6, 16, 0)) : parseInt(faker.commerce.price(40, 80, 0)),
+        ids: [],
+        total: sharingSet ? parseInt(faker.commerce.price(6, 16, 0)) : parseInt(faker.commerce.price(20, 50, 0)),
         new: parseInt(faker.commerce.price(0, 6, 0))
       },
       comments: {
@@ -198,8 +201,8 @@ function generateTopics(numberOfDummyTopics, sharingSet, offset) {
 
     if (!sharingSet) {
       // Add related topics
-      for (let y = 1; y < Math.floor(Math.random() * (4)); y++) {
-        const newTopicLink = Math.floor(Math.random() * (numberOfDummyTopics))
+      for (let y = 1; y < Math.floor(Math.random() * (3)); y++) {
+        const newTopicLink = Math.floor(Math.random() * (numberOfDummyTopics - 2))
         if (!entry.relatedTopics.includes(newTopicLink)) {
           entry.relatedTopics.push(newTopicLink)
         }
