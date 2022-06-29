@@ -11,9 +11,8 @@ import { assets } from '@/store/assets'
 import { dashboard } from '@/store/dashboard'
 import { users } from '@/store/users'
 import { osint_source } from '@/store/osint_source'
-import { newsItemsFilter } from '@/store/newsItemsFilter'
-import { topicsFilter } from '@/store/topicsFilter'
 import { dummyData } from '@/store/dummyData'
+import { filter } from '@/store/filter'
 
 Vue.use(Vuex)
 
@@ -99,8 +98,7 @@ export const store = new Vuex.Store({
     dashboard,
     users,
     osint_source,
-    newsItemsFilter,
-    topicsFilter,
+    filter,
     dummyData
   }
 })
