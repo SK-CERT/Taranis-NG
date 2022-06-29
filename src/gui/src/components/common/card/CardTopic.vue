@@ -65,7 +65,7 @@
               <div v-if="topic.isSharingSet">
                 <span class="last-activity font-weight-light">Shared on: </span>
                 <span class="last-activity font-weight-bold">
-                  {{ lastActivity }} </span
+                  {{ getLastActivity }} </span
                 ><br />
                 <span class="last-activity font-weight-light">Shared by: </span>
                 <span class="last-activity font-weight-bold">
@@ -78,7 +78,7 @@
                   >Last activity:
                 </span>
                 <span class="last-activity font-weight-bold">
-                  {{ lastActivity }}
+                  {{ getLastActivity }}
                 </span>
               </div>
             </v-col>
@@ -220,11 +220,6 @@ export default {
   props: {
     topic: {}
   },
-  computed: {
-    lastActivity () {
-      return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
-    }
-  },
   methods: {
     ...mapActions('dashboard', [
       'pinTopic',
@@ -232,6 +227,10 @@ export default {
       'downvoteTopic',
       'selectTopic'
     ]),
+
+    getLastActivity () {
+      return moment(this.topic.lastActivity).format('DD/MM/YYYY hh:mm:ss')
+    },
 
     toggleSelection () {
       this.topic.selected = !this.topic.selected
@@ -249,6 +248,9 @@ export default {
       event.stopPropagation()
       this.$router.push({ path: '/assess', query: { topic: this.topic.id } })
     }
+  },
+  mounted () {
+    this.$emit('init')
   }
 }
 </script>

@@ -45,7 +45,7 @@
       <!-- Topic Actions -->
 
       <div class="news-item-action-bar">
-        <div v-show="scopeTopic">
+        <div v-show="topicView">
           <news-item-action
             icon="$newsItemActionRemove"
             tooltip="remove from topic"
@@ -54,7 +54,7 @@
           />
         </div>
 
-        <div v-show="scopeSharingSet">
+        <div v-show="sharingSetView">
           <news-item-action
             icon="$newsItemActionRemove"
             tooltip="remove from sharing set"
@@ -235,6 +235,7 @@
             class="d-flex flex-column"
             align-self="start"
             style="height: 100%"
+            v-if="metaData"
           >
             <v-container column style="height: 100%" class="pb-5">
               <v-row class="news-item-meta-infos">
@@ -242,7 +243,7 @@
                   <strong>Published:</strong>
                 </v-col>
                 <v-col>
-                  {{ getPublishedDate() }}
+                  {{ metaData.publishedDate }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -250,7 +251,7 @@
                   <strong>Collected:</strong>
                 </v-col>
                 <v-col>
-                  {{ getCollectedDate() }}
+                  {{ metaData.collectedDate }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -284,7 +285,7 @@
                 </v-col>
                 <v-col>
                   <span :class="[{ decorateSource: newsItem.decorateSource }]">
-                    {{ getAddedByUser() }}
+                    {{ metaData.addedBy }}
                     <v-icon
                       right
                       small
@@ -301,7 +302,7 @@
                 </v-col>
                 <v-col>
                   <span class="news-item-meta-topics-list text-capitalize">
-                    {{ getTopicsList() }}
+                    {{ metaData.topicsList }}
                   </span>
                 </v-col>
               </v-row>
@@ -342,53 +343,45 @@ export default {
   },
   props: {
     newsItem: {},
-    topicsList: []
+    topicsList: [],
+    topicView: Boolean,
+    sharingSetView: Boolean,
+    selected: Boolean
   },
   data: () => ({
-    deleteDialog: false
+    deleteDialog: false,
+    metaData: null
   }),
-  computed: {
-    ...mapState('newsItemsFilter', ['filter']),
-
-    scopeSharingSet () {
-      return (
-        this.filter.scope.sharingSets.length === 1 &&
-        this.filter.scope.topics.length === 0
-      )
-    },
-    scopeTopic () {
-      return this.filter.scope.topics.length === 1
-    },
-    selected () {
-      return this.getNewsItemsSelection().includes(this.newsItem.id)
-    }
-  },
   methods: {
-    ...mapGetters('dashboard', ['getTopicById', 'getTopicTitleById']),
     ...mapGetters('users', ['getUsernameById']),
-    ...mapGetters('assess', ['getNewsItemsSelection']),
+    // ...mapGetters('assess', ['getNewsItemsSelection']),
+    
+    // sharingSetView () {
+    //   return (
+    //     this.filter.scope.sharingSets.length === 1 &&
+    //     this.filter.scope.topics.length === 0
+    //   )
+    // },
+    // topicView () {
+    //   return this.filter.scope.topics.length === 1
+    // },
+    // selected () {
+    //   return this.getNewsItemsSelection().includes(this.newsItem.id)
+    // },
 
-    ...mapActions('assess', [
-      'selectNewsItem',
-      'upvoteNewsItem',
-      'downvoteNewsItem',
-      'removeTopicFromNewsItem'
-    ]),
-
-    getTopicTitle (topicId) {
-      return this.getTopicTitleById()(topicId)
-    },
     toggleSelection () {
-      this.selectNewsItem(this.newsItem.id)
+      this.$emit('selectItem', this.newsItem.id)
+      // this.selectNewsItem(this.newsItem.id)
     },
     removeFromTopic () {
-      const topicId = this.scopeSharingSet
-        ? this.filter.scope.sharingSets[0].id
-        : this.filter.scope.topics[0].id
-      this.removeTopicFromNewsItem({
-        newsItemId: this.newsItem.id,
-        topicId: topicId
-      })
+      console.log("implement remove from topic")
+      // const topicId = this.sharingSetView
+      //   ? this.filter.scope.sharingSets[0].id
+      //   : this.filter.scope.topics[0].id
+      // this.removeTopicFromNewsItem({
+      //   newsItemId: this.newsItem.id,
+      //   topicId: topicId
+      // })
     },
     markAsRead () {
       this.newsItem.read = !this.newsItem.read
@@ -404,20 +397,22 @@ export default {
     },
     upvote (event) {
       event.stopPropagation()
-      this.upvoteNewsItem(this.newsItem.id)
+      this.$emit('upvoteItem', this.newsItem.id)
+      // this.upvoteNewsItem(this.newsItem.id)
     },
     downvote (event) {
       event.stopPropagation()
-      this.downvoteNewsItem(this.newsItem.id)
+      this.$emit('downvoteItem', this.newsItem.id)
+      // this.downvoteNewsItem(this.newsItem.id)
     },
-    getAddedByUser () {
-      return this.getUsernameById()(this.newsItem.addedBy)
-    },
-    getPublishedDate () {
-      return moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss')
-    },
-    getCollectedDate () {
-      return moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss')
+
+    getMetaDate() {
+      this.metaData = {
+        addedBy: this.getUsernameById()(this.newsItem.addedBy),
+        publishedDate: moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss'),
+        collectedDate: moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss'),
+        topicsList: this.getTopicsList ()
+      }
     },
     getTopicsList () {
       const topicTitles = []
@@ -434,7 +429,14 @@ export default {
     }
   },
   updated () {
-    console.log('card re-rendered!')
+    // console.log('card rendered!')
+  },
+  mounted () {
+    this.$emit('init')
+    this.getMetaDate()
   }
+  // beforeCreate () {
+  //   console.log("starting")
+  // }
 }
 </script>
