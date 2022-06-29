@@ -9,7 +9,7 @@
 
         <v-col cols="12">
           <dropdown-selection
-            v-model="filter.scope.topics"
+            v-model="scope.topics"
             :items="getTopicSelectionList()"
             label="Topics"
             placeholder="all Topics"
@@ -19,7 +19,7 @@
 
         <v-col cols="12" class="pt-0">
           <dropdown-selection
-            v-model="filter.scope.sharingSets"
+            v-model="scope.sharingSets"
             :items="getSharingSetSelectionList()"
             label="Sharing Sets"
             placeholder="all Sharing Sets"
@@ -29,7 +29,7 @@
 
         <v-col cols="12" class="pt-0">
           <dropdown-selection
-            v-model="filter.scope.sources"
+            v-model="scope.sources"
             :items="sourcesList"
             label="Sources"
             placeholder="all Sources"
@@ -192,7 +192,14 @@ export default {
     ]
   }),
   computed: {
-    ...mapState('newsItemsFilter', ['filter', 'order'])
+    ...mapState('filter',
+      {
+        scope: state => state.newsItemsFilter.scope,
+        filter: state => state.newsItemsFilter.filter,
+        order: state => state.newsItemsFilter.order
+      }
+    )
+    // ...mapState('filter', ['newsItemsFilter'])
     // getData () {
     //   return this.$store.getters.getDashboardData
     // }
@@ -204,11 +211,11 @@ export default {
     ]),
 
     updateQuery () {
-      if (this.filter.scope.topics.length === 1) {
-        this.$router.push({ query: { topic: this.filter.scope.topics[0].id } })
-      } else if (this.filter.scope.sharingSets.length === 1) {
+      if (this.scope.topics.length === 1) {
+        this.$router.push({ query: { topic: this.scope.topics[0].id } })
+      } else if (this.scope.sharingSets.length === 1) {
         this.$router.push({
-          query: { topic: this.filter.scope.sharingSets[0].id }
+          query: { topic: this.scope.sharingSets[0].id }
         })
       } else {
         this.$router.push({ query: '' })

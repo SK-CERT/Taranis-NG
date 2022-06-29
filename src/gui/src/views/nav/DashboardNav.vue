@@ -171,10 +171,12 @@ export default {
     ]
   }),
   computed: {
-    ...mapState('topicsFilter', ['filter', 'order'])
-    // getData () {
-    //   return this.$store.getters.getDashboardData
-    // }
+    ...mapState('filter',
+      {
+        filter: state => state.topicsFilter.filter,
+        order: state => state.topicsFilter.order
+      }
+    ),
   }
 }
 </script>
