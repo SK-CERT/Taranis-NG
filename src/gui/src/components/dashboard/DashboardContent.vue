@@ -30,9 +30,9 @@
             v-for="topic in filteredTopics"
             :key="topic.id"
           >
-            <card-topic 
+            <card-topic
             :topic="topic"
-            @init="test()"
+            @init="topicsLoaded.push(topic.id)"
             ></card-topic>
           </v-col>
         </transition-group>
@@ -76,12 +76,7 @@ export default {
     ...mapActions('dashboard', ['updateTopics', 'unselectAllTopics']),
     ...mapGetters('dashboard', ['getTopics', 'getTopicSelection']),
 
-    test() {
-      console.log("test: " + this.topicsLoaded)
-      this.topicsLoaded.push(topic.id)
-    },
-
-    getTopicsData() {
+    getTopicsData () {
       this.topics = this.getTopics()
     },
 
