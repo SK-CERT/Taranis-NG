@@ -1,7 +1,10 @@
 <template>
   <v-col class="overflow-hidden">
     <v-container fluid>
-      <loader v-if="itemsLoaded.length < items.length" label="loading news items" />
+      <loader
+        v-if="itemsLoaded.length < items.length"
+        label="loading news items"
+      />
 
       <transition name="empty-list-transition" mode="out-in">
         <v-row v-if="!filteredItems.length">
@@ -81,7 +84,12 @@ export default {
     items: []
   }),
   methods: {
-    ...mapActions('assess', ['deleteNewsItem', 'selectNewsItem', 'upvoteNewsItem', 'downvoteNewsItem']),
+    ...mapActions('assess', [
+      'deleteNewsItem',
+      'selectNewsItem',
+      'upvoteNewsItem',
+      'downvoteNewsItem'
+    ]),
     ...mapGetters('assess', [
       'getTotalNumber',
       'getNewsItems',
@@ -134,15 +142,19 @@ export default {
 
       let limit = 10
 
-      let chunkedData = [...this.items].filter((item) => scopedItems.includes(item.id))
+      let chunkedData = [...this.items].filter((item) =>
+        scopedItems.includes(item.id)
+      )
 
       if (scopedItems.length) {
         scopedItems.forEach((itemId) => {
           if (!this.itemsLoaded.includes(itemId)) {
             if (limit === 0) return false
-            chunkedData.push(this.getNewsItemById()(itemId))
             limit--
           }
+          chunkedData = [
+            ...new Set([...chunkedData, this.getNewsItemById()(itemId)])
+          ]
         })
       } else {
         chunkedData = this.getNewsItems()
@@ -152,13 +164,11 @@ export default {
   },
 
   computed: {
-    ...mapState('filter',
-      {
-        scope: state => state.newsItemsFilter.scope,
-        filter: state => state.newsItemsFilter.filter,
-        order: state => state.newsItemsFilter.order
-      }
-    ),
+    ...mapState('filter', {
+      scope: (state) => state.newsItemsFilter.scope,
+      filter: (state) => state.newsItemsFilter.filter,
+      order: (state) => state.newsItemsFilter.order
+    }),
 
     filteredItems () {
       let filteredData = [...this.items]
