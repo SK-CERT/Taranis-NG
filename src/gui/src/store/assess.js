@@ -14,7 +14,6 @@ const state = {
 }
 
 const actions = {
-
   getNewsItemsByGroup(context, data) {
     return getNewsItemsByGroup(data.group_id, data.data)
       .then(response => {
@@ -200,6 +199,7 @@ const getters = {
   getField,
 
   getNewsItems(state) {
+    console.log("triggered")
     return state.newsItems
   },
 
