@@ -55,4 +55,4 @@ def run_scheduler():
     return scheduler_event
 
 
-scheduler_stop_handler = run_scheduler()
+# scheduler_stop_handler = run_scheduler()
