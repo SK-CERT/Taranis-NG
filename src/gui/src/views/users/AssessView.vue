@@ -4,20 +4,27 @@
       <template v-slot:panel>
         <!-- Display Topic Header -->
         <v-expand-transition style="width: 100%">
-          <topic-header-assess v-if="topicView" :topic="getTopicById()(scope.topics[0].id)" />
+          <topic-header-assess
+            v-if="topicView"
+            :topic="getTopicById()(scope.topics[0].id)"
+          />
         </v-expand-transition>
 
         <!-- Display Sharing Set Header Header -->
         <v-expand-transition style="width: 100%">
-          <sharing-set-header-assess v-if="sharingSetView" :topic="getTopicById()(scope.sharingSets[0].id)" />
+          <sharing-set-header-assess
+            v-if="sharingSetView"
+            :topic="getTopicById()(scope.sharingSets[0].id)"
+          />
         </v-expand-transition>
       </template>
       <template v-slot:content>
         <!-- Load News Items -->
         <AssessContent
-        :topicView="topicView"
-        :sharingSetView="sharingSetView"
-     ref="contentData" />
+          :topicView="topicView"
+          :sharingSetView="sharingSetView"
+          ref="contentData"
+        />
       </template>
     </ViewLayout>
   </div>
@@ -43,13 +50,11 @@ export default {
   },
   mixins: [KeyboardMixin('assess')],
   computed: {
-    ...mapState('filter',
-      {
-        scope: state => state.newsItemsFilter.scope,
-        filter: state => state.newsItemsFilter.filter,
-        order: state => state.newsItemsFilter.order
-      }
-    ),
+    ...mapState('filter', {
+      scope: (state) => state.newsItemsFilter.scope,
+      filter: (state) => state.newsItemsFilter.filter,
+      order: (state) => state.newsItemsFilter.order
+    }),
 
     topicView () {
       return this.scope.topics.length === 1
@@ -57,13 +62,12 @@ export default {
 
     sharingSetView () {
       return (
-        this.scope.topics.length === 0 &&
-        this.scope.sharingSets.length === 1
+        this.scope.topics.length === 0 && this.scope.sharingSets.length === 1
       )
-    },
+    }
   },
   methods: {
-    ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
+    ...mapActions('filter', ['resetNewsItemsFilter']),
     ...mapGetters('dashboard', ['getTopicById'])
   },
   created () {

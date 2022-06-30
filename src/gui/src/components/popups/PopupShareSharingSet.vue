@@ -4,7 +4,13 @@
       <v-row>
         <v-col cols="12">
           <h2
-            class="font-weight-bold headline dark-grey--text text-capitalize pt-3"
+            class="
+              font-weight-bold
+              headline
+              dark-grey--text
+              text-capitalize
+              pt-3
+            "
           >
             Share Sharing Set
           </h2>
@@ -94,7 +100,7 @@ export default {
   }),
   methods: {
     ...mapActions('dashboard', ['createNewTopic', 'updateTopic']),
-    ...mapActions('newsItemsFilter', ['resetNewsItemsFilter']),
+    ...mapActions('filter', ['resetNewsItemsFilter']),
     ...mapActions('assess', [
       'deselectNewsItem',
       'deselectAllNewsItems',
