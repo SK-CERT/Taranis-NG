@@ -61,9 +61,9 @@
             </v-col>
         </v-row>
 
-        <NewsItemSingleDetail ref="newsItemSingleDetail"/>
-        <NewsItemDetail ref="newsItemDetail"/>
-        <NewsItemAggregateDetail ref="newsItemAggregateDetail"/>
+        <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" />
+        <NewsItemDetail ref="newsItemDetail" :attach="attach" />
+        <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" />
     </v-row>
 </template>
 
@@ -95,7 +95,8 @@
             analyze_selector: Boolean,
             report_item_id: Number,
             edit: Boolean,
-            modify: Boolean
+            modify: Boolean,
+            attach: undefined
         },
         data: () => ({
             dialog: false,
