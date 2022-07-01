@@ -87,5 +87,9 @@ export const vm = new Vue({
     store,
     router,
     render: h => h(App),
+    beforeCreate() {
+        const val = localStorage.getItem('TNGVericalView') == 'true';
+        this.$store.commit('setVerticalView', val);
+    }
 
 }).$mount('#app');
