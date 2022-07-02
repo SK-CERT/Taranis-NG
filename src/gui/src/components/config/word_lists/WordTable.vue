@@ -154,7 +154,7 @@
                         </div>
 
                         <v-card-actions>
-                            <v-checkbox class="ml-2" v-model="csv_delete_exist_list" label="Delete existing Attribute values"></v-checkbox>
+                            <v-checkbox class="ml-2" v-model="csv_delete_exist_list" label="Delete existing words"></v-checkbox>
                             <v-spacer></v-spacer>
                             <v-btn color="primary" dark @click="importCSV">
                                 {{$t('word_list.import')}}
