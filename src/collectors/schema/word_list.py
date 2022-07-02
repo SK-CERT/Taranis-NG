@@ -15,6 +15,7 @@ class WordListEntrySchema(Schema):
 class WordListCategorySchema(Schema):
     name = fields.Str()
     description = fields.Str()
+    link = fields.Str()
     entries = fields.Nested(WordListEntrySchema, many=True)
 
     @post_load
