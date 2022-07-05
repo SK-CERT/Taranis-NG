@@ -1,7 +1,7 @@
 """added link attribute to word list category
 
 Revision ID: ff127a2a95f4
-Revises: ac311a84207a
+Revises: e46b55f712f9
 Create Date: 2022-07-01 23:33:11.395700
 
 """
