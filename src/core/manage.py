@@ -359,29 +359,11 @@ class DictionaryManagement(Command):
             app.logger.critical("Upload failed!")
             abort()
 
-class SampleData(Command):
-    def run(self):
-        with app.app_context():
-            from scripts import permissions
-            from scripts import sample_data
-
-            data, count = user.User.get(None, None)
-            if count:
-                app.logger.error("Sample data already installed.")
-                exit()
-
-            app.logger.error("Installing sample data...")
-            permissions.run(db_manager.db)
-            sample_data.run(db_manager.db)
-            app.logger.error("Sample data installed.")
-        exit()
-
 
 manager.add_command('account', AccountManagement)
 manager.add_command('role', RoleManagement)
 manager.add_command('collector', CollectorManagement)
 manager.add_command('dictionary', DictionaryManagement)
-manager.add_command('sample-data', SampleData)
 
 if __name__ == '__main__':
     manager.run()
