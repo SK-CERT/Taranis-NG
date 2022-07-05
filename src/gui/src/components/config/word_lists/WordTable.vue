@@ -112,6 +112,59 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
+
+                <v-dialog v-if="!disabled && link" v-model="dialog_download" max-width="700px">
+                    <template v-slot:activator="{ on }">
+                        <v-btn color="primary" dark class="mb-2 ml-2" v-on="on">
+                            <v-icon left>mdi-download</v-icon>
+                            <span>{{$t('word_list.download_from_link')}}</span>
+                        </v-btn>
+                    </template>
+                    <v-card>
+                        <v-card-title>
+                            <span class="headline">{{$t('word_list.download_from_link')}}</span>
+                        </v-card-title>
+
+                        <v-row class="mr-5">
+                            <VueCsvDownload v-model="csv" :link="link" :map-fields="['value', 'description']"></VueCsvDownload>
+                        </v-row>
+
+                        <div v-if="csv_preview" class="mt-2 px-4">
+                            <v-row class="pa-0 ma-0 grey white--text">
+                                <v-col class="pa-0 ma-0">
+                                    <span class="heading">Value</span>
+                                </v-col>
+                                <v-col class="pa-0 ma-0">
+                                    <span class="heading">Description</span>
+                                </v-col>
+                            </v-row>
+
+                            <v-card-text class="ma-0 pa-0" v-for="parse in csv" :key="parse.value">
+
+                                <v-row class="pa-0 ma-0">
+                                    <v-col class="pa-0 ma-0">
+                                        {{parse.value}}
+                                    </v-col>
+                                    <v-col class="pa-0 ma-0">
+                                        {{parse.description}}
+                                    </v-col>
+                                </v-row>
+
+                            </v-card-text>
+                        </div>
+
+                        <v-card-actions>
+                            <v-checkbox class="ml-2" v-model="csv_delete_exist_list" label="Delete existing words"></v-checkbox>
+                            <v-spacer></v-spacer>
+                            <v-btn color="primary" dark @click="importCSV">
+                                {{$t('word_list.import')}}
+                            </v-btn>
+                            <v-btn color="primary" text @click="closeDownload">
+                                {{$t('word_list.cancel')}}
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
             </v-toolbar>
         </template>
         <template v-slot:item.action="{ item }">
@@ -134,14 +187,17 @@
 
 <script>
     import VueCsvImport from '@/components/common/ImportCSV';
+    import VueCsvDownload from '@/components/common/DownloadCSV';
 
     export default {
 
         name: "WordTable",
         components: {
-            VueCsvImport
+            VueCsvImport,
+            VueCsvDownload
         },
         props: {
+            link: String,
             words: Array,
             id: null,
             word_templates: Array,
@@ -158,6 +214,7 @@
             ],
             dialog: false,
             dialog_csv: false,
+            dialog_download: false,
             selected_word: null,
             edited_index: -1,
             edited_word: {
@@ -226,6 +283,7 @@
                 }
 
                 this.dialog_csv = false;
+                this.dialog_download = false;
                 this.csv = null;
                 this.csv_delete_exist_list = false;
                 this.$root.$emit('reset-csv-dialog');
@@ -233,6 +291,13 @@
 
             closeCSV() {
                 this.dialog_csv = false;
+                this.csv = null;
+                this.csv_delete_exist_list = false;
+                this.$root.$emit('reset-csv-dialog');
+            },
+
+            closeDownload() {
+                this.dialog_download = false;
                 this.csv = null;
                 this.csv_delete_exist_list = false;
                 this.$root.$emit('reset-csv-dialog');
