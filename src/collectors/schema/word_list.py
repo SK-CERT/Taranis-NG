@@ -54,9 +54,10 @@ class WordList:
 
 class WordListCategory:
 
-    def __init__(self, name, description, entries):
+    def __init__(self, name, description, link, entries):
         self.name = name
         self.description = description
+        self.link = link
         self.entries = entries
 
 
