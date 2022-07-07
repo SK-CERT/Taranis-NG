@@ -21,17 +21,7 @@
             <!----------------------->
             <!-- Remove from Topic -->
             <!----------------------->
-            <h2
-              class="
-                font-weight-bold
-                headline
-                dark-grey--text
-                text-capitalize
-                pt-0
-              "
-            >
-              Remove from topic
-            </h2>
+            <h2 class="popup-title mb-3">Remove from topic</h2>
             <p>
               This action will only remove the item from the topic. The item
               still exists and remains in the other topics.
@@ -65,17 +55,7 @@
             <!----------------->
             <!-- Delete item -->
             <!----------------->
-            <h2
-              class="
-                font-weight-bold
-                headline
-                dark-grey--text
-                text-capitalize
-                pt-0
-              "
-            >
-              Delete item
-            </h2>
+            <h2 class="popup-title mb-3">Delete item</h2>
 
             <p>
               This action deletes the item permanently. This also removes the
