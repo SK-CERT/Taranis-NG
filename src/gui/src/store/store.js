@@ -23,6 +23,7 @@ const state = {
     organization_name: '',
     permissions: []
   },
+  vertical_view: false,
   itemCount: {
     total: 0,
     filtered: 0
@@ -41,6 +42,10 @@ const actions = {
 
   logout(context) {
     context.commit('clearJwtToken')
+  },
+
+  setVerticalView(context, data) {
+    context.commit('setVerticalView', data)
   }
 }
 
@@ -53,6 +58,11 @@ const mutations = {
   updateItemCount(state, itemCount) {
     state.itemCount = itemCount
   },
+
+  setVerticalView(state, data) {
+    state.vertical_view = data
+    localStorage.setItem('TNGVericalView', data)
+  }
 }
 
 const getters = {
@@ -79,8 +89,12 @@ const getters = {
 
   getLoadingState(state) {
     return state.loading
+  },
+
+  getVerticalView() {
+      return state.vertical_view
   }
-}
+};
 
 export const store = new Vuex.Store({
   state,
