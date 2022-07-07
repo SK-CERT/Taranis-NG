@@ -65,7 +65,7 @@
               <div v-if="topic.isSharingSet">
                 <span class="last-activity font-weight-light">Shared on: </span>
                 <span class="last-activity font-weight-bold">
-                  {{ getLastActivity }} </span
+                  {{ getLastActivity() }} </span
                 ><br />
                 <span class="last-activity font-weight-light">Shared by: </span>
                 <span class="last-activity font-weight-bold">
@@ -78,7 +78,7 @@
                   >Last activity:
                 </span>
                 <span class="last-activity font-weight-bold">
-                  {{ getLastActivity }}
+                  {{ getLastActivity() }}
                 </span>
               </div>
             </v-col>
@@ -92,15 +92,7 @@
 
           <v-row class="flex-grow-0 mt-0">
             <v-col class="py-3">
-              <h2
-                class="
-                  font-weight-bold
-                  headline
-                  topic-title
-                  dark-grey--text
-                  text-capitalize
-                "
-              >
+              <h2 class="topic-card-title">
                 {{ topic.title }}
               </h2>
             </v-col>
@@ -120,7 +112,7 @@
 
           <v-row class="flex-grow-0 mt-0 mb-0">
             <v-col>
-              <p class="font-weight-light dark-grey--text topic-summary mb-0">
+              <p class="topic-card-summary">
                 {{ topic.summary }}
               </p>
             </v-col>
@@ -188,14 +180,7 @@
               </v-container>
             </v-col>
             <v-col cols="12" md="4" class="mx-0 d-flex justify-end">
-              <v-btn
-                outlined
-                class="text-lowercase btn-view-topic mt-1"
-                @click.native.capture="viewTopic($event)"
-              >
-                <v-icon left>$awakeEye</v-icon>
-                view topic
-              </v-btn>
+              <button-outlined label="view topic" icon="$awakeEye" extraClass="mt-1" @input="viewTopic($event)" />
             </v-col>
           </v-row>
         </v-col>
@@ -206,6 +191,7 @@
 
 <script>
 import TagNorm from '@/components/common/tags/TagNorm'
+import buttonOutlined from '@/components/inputs/buttonOutlined'
 import pin from '@/components/inputs/pin'
 import moment from 'moment'
 
@@ -215,6 +201,7 @@ export default {
   name: 'CardTopic',
   components: {
     TagNorm,
+    buttonOutlined,
     pin
   },
   props: {
