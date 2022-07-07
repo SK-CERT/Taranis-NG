@@ -70,8 +70,7 @@ class OSINTSource(db.Model):
 
     @classmethod
     def find(cls, source_id):
-        source = cls.query.get(source_id)
-        return source
+        return cls.query.get(source_id)
 
     @classmethod
     def get_all(cls):
@@ -96,7 +95,7 @@ class OSINTSource(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = '%' + search.lower() + '%'
+            search_string = f'%{search.lower()}%'
             query = query.join(Collector, OSINTSource.collector_id == Collector.id).filter(or_(
                 func.lower(OSINTSource.name).like(search_string),
                 func.lower(OSINTSource.description).like(search_string),
@@ -264,8 +263,7 @@ class OSINTSourceGroup(db.Model):
 
     @classmethod
     def find(cls, group_id):
-        group = cls.query.get(group_id)
-        return group
+        return cls.query.get(group_id)
 
     @classmethod
     def get_all(cls):
@@ -279,7 +277,7 @@ class OSINTSourceGroup(db.Model):
 
     @classmethod
     def get_default(cls):
-        return cls.query.filter(OSINTSourceGroup.default == True).first()
+        return cls.query.filter(OSINTSourceGroup.default).first()
 
     @classmethod
     def allowed_with_acl(cls, group_id, user, see, access, modify):
@@ -304,7 +302,7 @@ class OSINTSourceGroup(db.Model):
             query = ACLEntry.apply_query(query, user, True, False, False)
 
         if search is not None:
-            search_string = '%' + search.lower() + '%'
+            search_string = f'%{search.lower()}%'
             query = query.filter(or_(
                 func.lower(OSINTSourceGroup.name).like(search_string),
                 func.lower(OSINTSourceGroup.description).like(search_string)))
@@ -339,37 +337,36 @@ class OSINTSourceGroup(db.Model):
     @classmethod
     def delete(cls, osint_source_group_id):
         osint_source_group = cls.query.get(osint_source_group_id)
-        if osint_source_group.default is False:
-            db.session.delete(osint_source_group)
-            db.session.commit()
-            return "", 200
-        else:
+        if osint_source_group.default is not False:
             return {'message': 'could_not_delete_default_group'}, 400
+        db.session.delete(osint_source_group)
+        db.session.commit()
+        return "", 200
 
     @classmethod
     def update(cls, osint_source_group_id, data):
         new_osint_source_group_schema = NewOSINTSourceGroupSchema()
         updated_osint_source_group = new_osint_source_group_schema.load(data)
         osint_source_group = cls.query.get(osint_source_group_id)
-        if osint_source_group.default is False:
-            osint_source_group.name = updated_osint_source_group.name
-            osint_source_group.description = updated_osint_source_group.description
-            osint_source_group.osint_sources = updated_osint_source_group.osint_sources
-
-            sources_in_default_group = set()
-            for source in osint_source_group.osint_sources:
-                current_groups = OSINTSourceGroup.get_for_osint_source(source.id)
-                for current_group in current_groups:
-                    if current_group.default:
-                        current_group.osint_sources.remove(source)
-                        sources_in_default_group.add(source)
-                        break
-
-            db.session.commit()
-
-            return sources_in_default_group, "", 200
-        else:
+        if osint_source_group.default:
             return None, {'message': 'could_not_modify_default_group'}, 400
+
+        osint_source_group.name = updated_osint_source_group.name
+        osint_source_group.description = updated_osint_source_group.description
+        osint_source_group.osint_sources = updated_osint_source_group.osint_sources
+
+        sources_in_default_group = set()
+        for source in osint_source_group.osint_sources:
+            current_groups = OSINTSourceGroup.get_for_osint_source(source.id)
+            for current_group in current_groups:
+                if current_group.default:
+                    current_group.osint_sources.remove(source)
+                    sources_in_default_group.add(source)
+                    break
+
+        db.session.commit()
+
+        return sources_in_default_group, "", 200
 
 
 class OSINTSourceGroupOSINTSource(db.Model):

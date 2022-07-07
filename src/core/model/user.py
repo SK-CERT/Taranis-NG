@@ -49,7 +49,7 @@ class User(db.Model):
         for permission in permissions:
             self.permissions.append(Permission.find(permission.id))
 
-        self.profile = UserProfile(True, False, [], [])
+        self.profile = UserProfile(True, False, [])
         self.title = ""
         self.subtitle = ""
         self.tag = ""

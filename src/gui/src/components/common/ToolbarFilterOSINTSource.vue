@@ -206,7 +206,7 @@ export default {
     exportSources () {
       exportOSINTSources(this.selected)
     },
-    filterSearch: function () {
+    filterSearch () {
       clearTimeout(this.timeout)
 
       const self = this
@@ -226,7 +226,7 @@ export default {
     },
     openImportDialog () {
       this.dialog_import = true
-      this.$refs.form.reset()
+      // this.$refs.form.reset()
       // this.$refs.form.resetValidation();
       this.$validator.reset()
     }

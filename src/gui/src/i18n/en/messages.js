@@ -242,6 +242,7 @@ const messages_en = {
     error: 'Could not save this OSINT source group',
     name: 'Name',
     description: 'Description',
+    default: 'Default',
     successful: 'New OSINT source group was successfully added',
     successful_edit: 'OSINT source group was successfully updated',
     removed: 'OSINT source group was successfully removed',
