@@ -95,8 +95,9 @@
                       </template>
 
                       <popup-edit-topic
-                        v-model:dialog="editDialog"
+                        :dialog="editDialog"
                         :topic="topic"
+                        @close="editDialog = false"
                         v-on:update:title="topic.title = $event"
                       />
                     </v-dialog>

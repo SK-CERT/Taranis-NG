@@ -94,8 +94,9 @@
                       </template>
 
                       <popup-edit-topic
-                        v-model="editDialog"
+                        :dialog="editDialog"
                         :topic="topic"
+                        @close="editDialog = false"
                         v-on:update:title="topic.title = $event"
                       />
                     </v-dialog>
@@ -190,7 +191,9 @@
                 <strong>Sharing Sets:</strong>
               </v-col>
               <v-col>
-                <span class="text-capitalize">{{ getMetaData().sharingSets }}</span>
+                <span class="text-capitalize">{{
+                  getMetaData().sharingSets
+                }}</span>
               </v-col>
             </v-row>
             <v-row class="topic-header-meta-infos">
