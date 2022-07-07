@@ -196,8 +196,8 @@
 
 <script>
 import TagNorm from '@/components/common/tags/TagNorm'
-import buttonOutlined from '@/components/inputs/buttonOutlined'
-import pin from '@/components/inputs/pin'
+import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
+import pin from '@/components/_subcomponents/pin'
 import moment from 'moment'
 
 import { mapActions } from 'vuex'

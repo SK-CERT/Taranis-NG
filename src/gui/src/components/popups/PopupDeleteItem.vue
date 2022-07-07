@@ -102,8 +102,8 @@
 </template>
 
 <script>
-import buttonSolid from '@/components/inputs/buttonSolid'
-import buttonOutlined from '@/components/inputs/buttonOutlined'
+import buttonSolid from '@/components/_subcomponents/buttonSolid'
+import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
 
 export default {
   name: 'PopupDeleteItem',

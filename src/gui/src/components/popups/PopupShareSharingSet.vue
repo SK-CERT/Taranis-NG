@@ -82,7 +82,7 @@
 <script>
 import { mapActions, mapGetters, mapState } from 'vuex'
 import { xorConcat } from '@/utils/helpers'
-import dropdownSelection from '@/components/inputs/dropdownSelection'
+import dropdownSelection from '@/components/_subcomponents/dropdownSelection'
 
 export default {
   name: 'PopupShareSharingSet',

@@ -264,14 +264,14 @@
 </template>
 
 <script>
-import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
-import newsItemAction from '@/components/inputs/newsItemAction'
-import newsItemActionDialog from '@/components/inputs/newsItemActionDialog'
+import TagNorm from '@/components/common/tags/TagNorm'
+import newsItemAction from '@/components/_subcomponents/newsItemAction'
+import newsItemActionDialog from '@/components/_subcomponents/newsItemActionDialog'
 import PopupDeleteItem from '@/components/popups/PopupDeleteItem'
-import buttonOutlined from '@/components/inputs/buttonOutlined'
-import itemTitle from '@/components/inputs/itemTitle'
-import votes from '@/components/inputs/votes'
+import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
+import itemTitle from '@/components/_subcomponents/itemTitle'
+import votes from '@/components/_subcomponents/votes'
 
 import { mapGetters } from 'vuex'
 
