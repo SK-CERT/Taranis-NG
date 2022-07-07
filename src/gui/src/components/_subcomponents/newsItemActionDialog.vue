@@ -1,11 +1,10 @@
 <template>
   <v-dialog v-model="dialog" width="600">
-    <template #activator="{ on: dialog }">
-      <v-tooltip>
-        <template #activator="{ on: tooltip, attrs }">
+    <template v-slot:activator="{ on: dialog }">
+      <v-tooltip open-delay="1000" bottom :disabled="!tooltip">
+        <template v-slot:activator="{ on: tooltip }">
           <v-btn
             v-on="{ ...tooltip, ...dialog }"
-            v-bind="attrs"
             icon
             tile
             class="news-item-action"
