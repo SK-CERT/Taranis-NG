@@ -45,81 +45,37 @@
       <!-- Topic Actions -->
 
       <div class="news-item-action-bar">
-        <news-item-action-dialog 
+        <news-item-action-dialog
           icon="$newsItemActionRemove"
           tooltip="remove item"
           ref="deleteDialog"
         >
           <popup-delete-item
             :newsItem="newsItem"
-            @deleteItem="$emit('deleteItem', newsItem.id)"
+            @deleteItem="deleteNewsItem()"
+            @removeFromTopic="removeFromTopic()"
             @close="$refs.deleteDialog.close()"
           />
         </news-item-action-dialog>
-        
-        <!-- <div v-show="topicView">
-          <news-item-action
-            icon="$newsItemActionRemove"
-            tooltip="remove from topic"
-            extraClass="news-item-topic-action"
-            @input="removeFromTopic()"
-          />
-        </div>
-
-        <div v-show="sharingSetView">
-          <news-item-action
-            icon="$newsItemActionRemove"
-            tooltip="remove from sharing set"
-            extraClass="news-item-sharing-set-action"
-            @input="removeFromTopic()"
-          />
-        </div> -->
-
-        <!-- News Items Actions -->
 
         <news-item-action
           :active="newsItem.read"
           icon="$newsItemActionRead"
-          @input="markAsRead()"
+          @click="markAsRead()"
           tooltip="mark as read/unread"
         />
 
         <news-item-action
           :active="newsItem.important"
           icon="$newsItemActionImportant"
-          @input="markAsImportant()"
+          @click="markAsImportant()"
           tooltip="mark as important"
         />
-        
-
-        <v-dialog v-model="deleteDialog" width="600">
-          <template #activator="{ on: deleteDialog }">
-            <v-tooltip>
-              <template #activator="{ on: tooltip }">
-                <v-btn
-                  v-on="{ ...tooltip, ...deleteDialog }"
-                  icon
-                  tile
-                  class="news-item-action"
-                >
-                  <v-icon> $newsItemActionDelete </v-icon>
-                </v-btn>
-              </template>
-              <span>delete item</span>
-            </v-tooltip>
-          </template>
-
-          <popup-delete-item
-            v-model="deleteDialog"
-            :newsItem="newsItem"
-            @deleteItem="$emit('deleteItem', newsItem.id)"
-          />
-        </v-dialog>
 
         <news-item-action
           :active="newsItem.decorateSource"
           icon="$newsItemActionRibbon"
-          @input="decorateSource()"
+          @click="decorateSource()"
           tooltip="emphasise originator"
         />
       </div>
@@ -153,15 +109,38 @@
                   cols="12"
                   class="mx-0 d-flex justify-start flex-wrap py-1"
                 >
-                  <button-outlined label="view details" icon="$awakeEye" extraClass="mr-1 mt-1" @input="viewTopic($event)" />
-                  <button-outlined label="create report" icon="$awakeReport" extraClass="mr-1 mt-1" @input="viewTopic($event)" />
-                  <button-outlined label="show related items" icon="$awakeRelated" extraClass="mr-1 mt-1" @input="viewTopic($event)" />
+                  <button-outlined
+                    label="view details"
+                    icon="$awakeEye"
+                    extraClass="mr-1 mt-1"
+                    @click="viewDetails($event)"
+                  />
+                  <button-outlined
+                    label="create report"
+                    icon="$awakeReport"
+                    extraClass="mr-1 mt-1"
+                    @click="createReport($event)"
+                  />
+                  <button-outlined
+                    label="show related items"
+                    icon="$awakeRelated"
+                    extraClass="mr-1 mt-1"
+                    @click="showRelated($event)"
+                  />
 
                   <div class="d-flex align-start justify-center mr-3 ml-2 mt-1">
-                    <votes :count="newsItem.votes.up" type="up" @input="upvote($event)" />
+                    <votes
+                      :count="newsItem.votes.up"
+                      type="up"
+                      @input="upvote($event)"
+                    />
                   </div>
                   <div class="d-flex align-start justify-center mr-3 mt-1">
-                    <votes :count="newsItem.votes.down" type="down" @input="downvote($event)" />
+                    <votes
+                      :count="newsItem.votes.down"
+                      type="down"
+                      @input="downvote($event)"
+                    />
                   </div>
                 </v-col>
               </v-row>
@@ -209,7 +188,9 @@
                     icon
                     class="meta-link d-flex"
                   >
-                    <v-icon left x-small color="primary" class="mr-1">mdi-open-in-new</v-icon>
+                    <v-icon left x-small color="primary" class="mr-1"
+                      >mdi-open-in-new</v-icon
+                    >
                     <span class="label">{{ newsItem.source.url }}</span>
                   </a>
                 </v-col>
@@ -279,7 +260,7 @@ import buttonOutlined from '@/components/inputs/buttonOutlined'
 import itemTitle from '@/components/inputs/itemTitle'
 import votes from '@/components/inputs/votes'
 
-import { mapActions, mapGetters, mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'CardNewsItem',
@@ -300,40 +281,13 @@ export default {
     selected: Boolean
   },
   data: () => ({
-    deleteDialog: false,
-    deleteDialogTest: false,
     metaData: null
   }),
   methods: {
     ...mapGetters('users', ['getUsernameById']),
-    // ...mapGetters('assess', ['getNewsItemsSelection']),
-    
-    // sharingSetView () {
-    //   return (
-    //     this.filter.scope.sharingSets.length === 1 &&
-    //     this.filter.scope.topics.length === 0
-    //   )
-    // },
-    // topicView () {
-    //   return this.filter.scope.topics.length === 1
-    // },
-    // selected () {
-    //   return this.getNewsItemsSelection().includes(this.newsItem.id)
-    // },
 
     toggleSelection () {
       this.$emit('selectItem', this.newsItem.id)
-      // this.selectNewsItem(this.newsItem.id)
-    },
-    removeFromTopic () {
-      console.log("implement remove from topic")
-      // const topicId = this.sharingSetView
-      //   ? this.filter.scope.sharingSets[0].id
-      //   : this.filter.scope.topics[0].id
-      // this.removeTopicFromNewsItem({
-      //   newsItemId: this.newsItem.id,
-      //   topicId: topicId
-      // })
     },
     markAsRead () {
       this.newsItem.read = !this.newsItem.read
@@ -343,6 +297,9 @@ export default {
     },
     decorateSource () {
       this.newsItem.decorateSource = !this.newsItem.decorateSource
+    },
+    removeFromTopic () {
+      this.$emit('removeFromTopic', this.newsItem.id)
     },
     deleteNewsItem () {
       this.$emit('deleteItem', this.newsItem.id)
@@ -354,12 +311,26 @@ export default {
       this.$emit('downvoteItem', this.newsItem.id)
     },
 
-    getMetaDate() {
+    viewDetails (event) {
+      console.log('not yet implemented')
+    },
+    createReport (event) {
+      console.log('not yet implemented')
+    },
+    showRelated (event) {
+      console.log('not yet implemented')
+    },
+
+    getMetaDate () {
       this.metaData = {
         addedBy: this.getUsernameById()(this.newsItem.addedBy),
-        publishedDate: moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss'),
-        collectedDate: moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss'),
-        topicsList: this.getTopicsList ()
+        publishedDate: moment(this.newsItem.published).format(
+          'DD/MM/YYYY hh:mm:ss'
+        ),
+        collectedDate: moment(this.newsItem.collected).format(
+          'DD/MM/YYYY hh:mm:ss'
+        ),
+        topicsList: this.getTopicsList()
       }
     },
     getTopicsList () {
