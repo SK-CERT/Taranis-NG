@@ -35,6 +35,7 @@
             :topicView="topicView"
             :sharingSetView="sharingSetView"
             @deleteItem="removeAndDeleteNewsItem(newsItem.id)"
+            @removeFromTopic="removeFromTopic(newsItem.id)"
             @selectItem="selectNewsItem(newsItem.id)"
             @upvoteItem="upvoteNewsItem(newsItem.id)"
             @downvoteItem="downvoteNewsItem(newsItem.id)"
@@ -88,7 +89,8 @@ export default {
       'deleteNewsItem',
       'selectNewsItem',
       'upvoteNewsItem',
-      'downvoteNewsItem'
+      'downvoteNewsItem',
+      'removeTopicFromNewsItem'
     ]),
     ...mapGetters('assess', [
       'getTotalNumber',
@@ -100,9 +102,19 @@ export default {
     ]),
     ...mapGetters('dashboard', ['getTopicSelectionList', 'getNewsItemIds']),
 
-    removeAndDeleteNewsItem(id) {
+    removeAndDeleteNewsItem (id) {
       this.items = this.items.filter((x) => x.id !== id)
       this.deleteNewsItem(id)
+    },
+
+    removeFromTopic (newsItemId) {
+      if (this.topicView || this.sharingSetView) {
+        const topic = this.scope.topics
+        const sharingSet = this.scope.sharingSets
+        const topicId = topic ? topic[0].id : sharingSet[0].id
+        this.removeTopicFromNewsItem({ newsItemId, topicId })
+        this.items = this.items.filter((x) => x.id !== newsItemId)
+      }
     },
 
     infiniteScrolling (entries, observer, isIntersecting) {
