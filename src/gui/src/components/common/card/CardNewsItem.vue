@@ -45,7 +45,19 @@
       <!-- Topic Actions -->
 
       <div class="news-item-action-bar">
-        <div v-show="topicView">
+        <news-item-action-dialog 
+          icon="$newsItemActionRemove"
+          tooltip="remove item"
+          ref="deleteDialog"
+        >
+          <popup-delete-item
+            :newsItem="newsItem"
+            @deleteItem="$emit('deleteItem', newsItem.id)"
+            @close="$refs.deleteDialog.close()"
+          />
+        </news-item-action-dialog>
+        
+        <!-- <div v-show="topicView">
           <news-item-action
             icon="$newsItemActionRemove"
             tooltip="remove from topic"
@@ -61,7 +73,7 @@
             extraClass="news-item-sharing-set-action"
             @input="removeFromTopic()"
           />
-        </div>
+        </div> -->
 
         <!-- News Items Actions -->
 
@@ -78,6 +90,7 @@
           @input="markAsImportant()"
           tooltip="mark as important"
         />
+        
 
         <v-dialog v-model="deleteDialog" width="600">
           <template #activator="{ on: deleteDialog }">
@@ -123,30 +136,13 @@
             <v-container column style="height: 100%">
               <v-row class="flex-grow-0 mt-0">
                 <v-col class="pb-1">
-                  <h2
-                    :class="[
-                      'news-item-title',
-                      {
-                        'status-unread': !newsItem.read,
-                      },
-                    ]"
-                  >
-                    <sup v-if="!newsItem.read" class="new-indicator"> * </sup>
-                    {{ newsItem.title }}
-                  </h2>
+                  <item-title :title="newsItem.title" :read="newsItem.read" />
                 </v-col>
               </v-row>
 
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
-                  <p
-                    class="
-                      font-weight-light
-                      dark-grey--text
-                      news-item-summary
-                      mb-0
-                    "
-                  >
+                  <p class="news-item-summary">
                     {{ newsItem.summary }}
                   </p>
                 </v-col>
@@ -157,68 +153,15 @@
                   cols="12"
                   class="mx-0 d-flex justify-start flex-wrap py-1"
                 >
-                  <v-btn
-                    outlined
-                    class="text-lowercase news-item-btn mr-1 mt-1"
-                    @click.native.capture="viewTopic($event)"
-                  >
-                    <v-icon left>$awakeEye</v-icon>
-                    view details
-                  </v-btn>
+                  <button-outlined label="view details" icon="$awakeEye" extraClass="mr-1 mt-1" @input="viewTopic($event)" />
+                  <button-outlined label="create report" icon="$awakeReport" extraClass="mr-1 mt-1" @input="viewTopic($event)" />
+                  <button-outlined label="show related items" icon="$awakeRelated" extraClass="mr-1 mt-1" @input="viewTopic($event)" />
 
-                  <v-btn
-                    outlined
-                    class="text-lowercase news-item-btn mr-1 mt-1"
-                    @click.native.capture="viewTopic($event)"
-                  >
-                    <v-icon left>$awakeReport</v-icon>
-                    create report
-                  </v-btn>
-                  <v-btn
-                    outlined
-                    class="text-lowercase news-item-btn mr-1 mt-1"
-                    @click.native.capture="viewTopic($event)"
-                  >
-                    <v-icon left>$awakeRelated</v-icon>
-                    show related items
-                  </v-btn>
                   <div class="d-flex align-start justify-center mr-3 ml-2 mt-1">
-                    <v-icon
-                      left
-                      small
-                      color="awake-green-color"
-                      class="align-self-center mr-1"
-                      @click.native.capture="upvote($event)"
-                      >mdi-arrow-up-circle-outline</v-icon
-                    >
-                    <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
-                      >{{ newsItem.votes.up }}</span
-                    >
+                    <votes :count="newsItem.votes.up" type="up" @input="upvote($event)" />
                   </div>
                   <div class="d-flex align-start justify-center mr-3 mt-1">
-                    <v-icon
-                      left
-                      small
-                      color="awake-red-color"
-                      class="align-self-center mr-1"
-                      @click.native.capture="downvote($event)"
-                      >mdi-arrow-down-circle-outline</v-icon
-                    >
-                    <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
-                      >{{ newsItem.votes.down }}</span
-                    >
+                    <votes :count="newsItem.votes.down" type="down" @input="downvote($event)" />
                   </div>
                 </v-col>
               </v-row>
@@ -266,7 +209,7 @@
                     icon
                     class="meta-link d-flex"
                   >
-                    <v-icon left x-small class="mr-1">mdi-open-in-new</v-icon>
+                    <v-icon left x-small color="primary" class="mr-1">mdi-open-in-new</v-icon>
                     <span class="label">{{ newsItem.source.url }}</span>
                   </a>
                 </v-col>
@@ -330,7 +273,11 @@
 import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
 import newsItemAction from '@/components/inputs/newsItemAction'
+import newsItemActionDialog from '@/components/inputs/newsItemActionDialog'
 import PopupDeleteItem from '@/components/popups/PopupDeleteItem'
+import buttonOutlined from '@/components/inputs/buttonOutlined'
+import itemTitle from '@/components/inputs/itemTitle'
+import votes from '@/components/inputs/votes'
 
 import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -339,7 +286,11 @@ export default {
   components: {
     TagNorm,
     newsItemAction,
-    PopupDeleteItem
+    newsItemActionDialog,
+    PopupDeleteItem,
+    buttonOutlined,
+    itemTitle,
+    votes
   },
   props: {
     newsItem: {},
@@ -350,6 +301,7 @@ export default {
   },
   data: () => ({
     deleteDialog: false,
+    deleteDialogTest: false,
     metaData: null
   }),
   methods: {
@@ -396,14 +348,10 @@ export default {
       this.$emit('deleteItem', this.newsItem.id)
     },
     upvote (event) {
-      event.stopPropagation()
       this.$emit('upvoteItem', this.newsItem.id)
-      // this.upvoteNewsItem(this.newsItem.id)
     },
     downvote (event) {
-      event.stopPropagation()
       this.$emit('downvoteItem', this.newsItem.id)
-      // this.downvoteNewsItem(this.newsItem.id)
     },
 
     getMetaDate() {
