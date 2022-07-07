@@ -1,6 +1,6 @@
 <template>
   <v-col class="overflow-hidden">
-    <v-container fluid>
+    <v-container fluid style="min-height: 100vh">
       <loader
         v-if="itemsLoaded.length < items.length"
         label="loading news items"
