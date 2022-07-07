@@ -74,9 +74,9 @@ textarea {
 }
 
 .v-application .v-btn.burger-menu {
-  min-width: $app-bar-height !important;
-  width: $app-bar-height !important;
-  height: $app-bar-height !important;
+  min-width: $app-bar-height  !important;
+  width: $app-bar-height  !important;
+  height: $app-bar-height  !important;
   display: block;
 }
 
@@ -90,7 +90,7 @@ textarea {
   }
 
   input {
-    color: $dark-grey !important;
+    color: $dark-grey  !important;
   }
 }
 
@@ -103,18 +103,18 @@ textarea {
 }
 
 .v-list .v-icon.filter-icon {
-  color: $light-grey-1 !important;
+  color: $light-grey-1  !important;
 
   & svg {
-    fill: $light-grey-1 !important;
+    fill: $light-grey-1  !important;
   }
 }
 
 .v-list .v-list-item--active.selected .v-icon.filter-icon {
-  color: $primary !important;
+  color: $primary  !important;
 
   & svg {
-    fill: $primary !important;
+    fill: $primary  !important;
   }
 }
 
@@ -143,7 +143,7 @@ textarea {
 }
 
 .text-field-active fieldset {
-  border: 2px solid $primary !important;
+  border: 2px solid $primary  !important;
 }
 
 .v-select__selections {
@@ -185,13 +185,72 @@ textarea {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   padding: 16px 12px !important;
 
   & svg {
     fill: $dark-grey;
   }
 }
+
+.buttonOutlined {
+  text-transform: lowercase;
+  background-color: white;
+  letter-spacing: normal;
+  font-weight: 400;
+  caret-color: $light-grey-2;
+  border-color: $light-grey-2;
+  color: $dark-grey;
+  padding: 16px 12px !important;
+  transition: all 400ms ease;
+
+  &.v-btn--disabled {
+    background-color: lighten($light-grey-1, 20) !important;
+    color: white !important;
+
+    & span {
+      color: white !important;
+    }
+  }
+
+  & svg {
+    fill: $dark-grey;
+  }
+
+  &.red-button {
+    caret-color: darken($awake-red-color, 10);
+    border-color: darken($awake-red-color, 10);
+
+    & svg {
+      fill: darken($awake-red-color, 10);
+    }
+  }
+}
+
+.buttonSolid {
+  text-transform: lowercase;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: white !important;
+  padding: 16px 12px !important;
+  transition: all 400ms ease;
+  border: 0 !important;
+  outline: none !important;
+
+  &.v-btn--disabled {
+    background-color: lighten($light-grey-1, 20) !important;
+    color: white !important;
+
+    & span {
+      color: white !important;
+    }
+  }
+
+  & svg {
+    fill: white;
+  }
+}
+
 
 .v-chip.topic-label {
   font-size: 12px !important;
@@ -280,7 +339,7 @@ textarea {
   color: white;
 
   &.ai {
-    background-color: $accent !important;
+    background-color: $accent  !important;
   }
 
   &.shared {
@@ -306,18 +365,14 @@ textarea {
 }
 
 .v-application input::placeholder {
-  color: $light-grey-2 !important;
+  color: $light-grey-2  !important;
 }
 
 .v-application .v-input__icon svg {
-  fill: $dark-grey !important;
+  fill: $dark-grey  !important;
 }
 
-.v-application
-  .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)
-  > .v-input__control
-  > .v-input__slot
-  fieldset {
+.v-application .v-text-field--outlined:not(.v-input--is-focused):not(.v-input--has-state)>.v-input__control>.v-input__slot fieldset {
   border-color: $light-grey-2;
 }
 
@@ -326,8 +381,8 @@ textarea {
   position: relative;
 }
 
-.news-items-grid-container > div,
-.topics-grid-container > div {
+.news-items-grid-container>div,
+.topics-grid-container>div {
   min-width: 240px;
 }
 
@@ -438,7 +493,7 @@ textarea {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   flex-grow: 1 !important;
   padding: 19px 10px;
   margin: 0;
@@ -447,7 +502,7 @@ textarea {
   &.clicked,
   &.selected,
   &.v-chip--outlined.selected {
-    background-color: $primary !important;
+    background-color: $primary  !important;
     border-color: $primary;
     fill: white;
 
@@ -477,7 +532,7 @@ textarea {
 }
 
 .v-application .v-label {
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   font-size: 14px;
 }
 
@@ -499,7 +554,12 @@ textarea {
 }
 
 .news-item-summary {
+  color: $dark-grey;
+  margin-bottom: 0px !important;
+  font-weight: 300;
   font-size: 13px;
+
+  // Clipping
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -518,7 +578,7 @@ textarea {
     padding-bottom: 0px;
   }
 
-  & > div {
+  &>div {
     font-size: 0.78rem;
   }
 
@@ -613,7 +673,7 @@ textarea {
   font-weight: 400;
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
-  color: $dark-grey !important;
+  color: $dark-grey  !important;
   padding: 14px 12px !important;
   height: 32px;
 
@@ -635,7 +695,7 @@ textarea {
 .status-important.status-error,
 .status-unread.status-error,
 .status-error {
-  background-color: $status-error !important;
+  background-color: $status-error  !important;
 }
 
 // .status-unread {
@@ -735,7 +795,7 @@ textarea {
       padding-bottom: 4px;
     }
 
-    & > div {
+    &>div {
       font-size: 0.78rem;
     }
 
@@ -899,13 +959,13 @@ textarea {
 
 .news-item.corner-tag-restricted {
   &:after {
-    background-color: $light-grey-2 !important;
+    background-color: $light-grey-2  !important;
   }
 }
 
 .news-item.corner-tag-shared {
   &:after {
-    background-color: $accent !important;
+    background-color: $accent  !important;
   }
 }
 
@@ -959,13 +1019,16 @@ textarea {
     background-color: lighten($accent, 10) !important;
   }
 }
+
 .topic.corner-tag-shared.sharing-set-topic-outgoing,
 .topic.corner-tag-shared.sharing-set-topic-shared.sharing-set-topic-outgoing {
   background-color: lighten($accent, 30) !important;
 }
+
 .topic.corner-tag-shared.sharing-set-topic-shared {
   // background-color: lighten($awake-green-color, 35) !important;
   background-color: white !important;
+
   &:after {
     background-color: darken($accent, 10) !important;
     // background-color: lighten($awake-green-color, 10) !important;
@@ -1011,4 +1074,41 @@ textarea {
       color: white !important;
     }
   }
+}
+
+.topic-card-title {
+  color: $dark-grey;
+  text-transform: capitalize;
+  font-weight: 700;
+  font-family: $heading-font-family;
+  line-height: 1.2;
+  letter-spacing: normal;
+  font-size: 1.5rem !important;
+
+  // Clipping
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  height: calc(1.5rem * 1.2 * 2);
+}
+
+.topic-card-summary {
+  color: $dark-grey;
+  font-family: $body-font-family;
+  font-size: $font-size-root;
+  line-height: 1.5;
+  font-weight: 300;
+  margin-bottom: 0px !important;
+
+  // Clipping
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  height: calc(1.5em * 4);
 }
