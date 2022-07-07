@@ -31,7 +31,7 @@
             :selected="getNewsItemsSelection().includes(newsItem.id)"
             :topicView="topicView"
             :sharingSetView="sharingSetView"
-            @deleteItem="deleteNewsItem(newsItem.id)"
+            @deleteItem="removeAndDeleteNewsItem(newsItem.id)"
             @selectItem="selectNewsItem(newsItem.id)"
             @upvoteItem="upvoteNewsItem(newsItem.id)"
             @downvoteItem="downvoteNewsItem(newsItem.id)"
@@ -91,6 +91,11 @@ export default {
       'getNewsItemsByTopicList'
     ]),
     ...mapGetters('dashboard', ['getTopicSelectionList', 'getNewsItemIds']),
+
+    removeAndDeleteNewsItem(id) {
+      this.items = this.items.filter((x) => x.id !== id)
+      this.deleteNewsItem(id)
+    },
 
     infiniteScrolling (entries, observer, isIntersecting) {
       if (this.itemsLoaded.length >= this.items.length && isIntersecting) {
