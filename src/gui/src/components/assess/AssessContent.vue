@@ -129,7 +129,11 @@ export default {
     },
 
     infiniteScrolling (entries, observer, isIntersecting) {
-      if (this.itemsLoaded.length >= this.items.length && isIntersecting) {
+      if (
+        this.itemsLoaded.length >= this.items.length &&
+        isIntersecting &&
+        this.itemsToLoad > this.itemsLoaded.length
+      ) {
         this.reloading = true
         // TODO: Make it async
         this.updateNewsItems()
