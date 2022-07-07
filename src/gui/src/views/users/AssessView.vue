@@ -23,6 +23,7 @@
         <AssessContent
           :topicView="topicView"
           :sharingSetView="sharingSetView"
+          :itemsToLoad="itemsToLoad"
           ref="contentData"
         />
       </template>
@@ -49,6 +50,9 @@ export default {
     SharingSetHeaderAssess
   },
   mixins: [KeyboardMixin('assess')],
+  data: () => ({
+    itemsToLoad: 0
+  }),
   computed: {
     ...mapState('filter', {
       scope: (state) => state.newsItemsFilter.scope,
@@ -68,7 +72,8 @@ export default {
   },
   methods: {
     ...mapActions('filter', ['resetNewsItemsFilter']),
-    ...mapGetters('dashboard', ['getTopicById'])
+    ...mapGetters('dashboard', ['getTopicById']),
+    ...mapGetters('assess', ['getTotalNumber'])
   },
   created () {
     // Clear all news items filter
@@ -78,6 +83,7 @@ export default {
     const topicId = parseInt(this.$route.query.topic)
     if (topicId) {
       const topic = this.getTopicById()(topicId)
+      this.itemsToLoad = topic.items.total
       if (topic) {
         if (topic.isSharingSet) {
           this.scope.sharingSets = [{ id: topicId, title: topic.title }]
@@ -87,6 +93,8 @@ export default {
           this.scope.topics = [{ id: topicId, title: topic.title }]
         }
       }
+    } else {
+      this.itemsToLoad = this.getTotalNumber()
     }
   }
 }

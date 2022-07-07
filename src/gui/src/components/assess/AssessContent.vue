@@ -46,7 +46,17 @@
     </v-container>
 
     <!-- TODO: Loader not working -->
-    <!-- <loader v-show="loading" label="loading further news items" /> -->
+    <loader
+      v-if="itemsToLoad > itemsLoaded.length"
+      label="loading further news items"
+    />
+    <div
+      v-else
+      class="text-subtitle-1 text-center dark-grey--text text--lighten-2 mt-3"
+    >
+      <v-icon left color="primary">mdi-checkbox-marked-circle-outline</v-icon>
+      All items loaded.
+    </div>
     <div v-intersect.quiet="infiniteScrolling"></div>
 
     <v-expand-transition>
@@ -77,7 +87,8 @@ export default {
   },
   props: {
     topicView: Boolean,
-    sharingSetView: Boolean
+    sharingSetView: Boolean,
+    itemsToLoad: Number
   },
   data: () => ({
     itemsLoaded: [],
