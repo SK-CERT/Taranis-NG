@@ -12,7 +12,12 @@
 
       <v-row>
         <v-row class="mt-4 mb-0">
-          <v-col cols="12" sm="6" class="pr-5 d-flex flex-column align-start">
+          <v-col
+            v-if="topicView"
+            cols="12"
+            sm="6"
+            class="pr-5 d-flex flex-column align-start"
+          >
             <!----------------------->
             <!-- Remove from Topic -->
             <!----------------------->
@@ -41,13 +46,22 @@
             />
           </v-col>
 
-          <v-divider class="d-none d-sm-flex" vertical></v-divider>
+          <v-divider
+            v-if="topicView"
+            class="d-none d-sm-flex"
+            vertical
+          ></v-divider>
+
           <v-divider
             class="mr-3 ml-3 d-flex d-sm-none"
             style="border: 0.5px solid rgba(0, 0, 0, 0.12); border-bottom: none"
           ></v-divider>
 
-          <v-col cols="12" sm="6" class="pl-5 d-flex flex-column align-start">
+          <v-col
+            cols="12"
+            :sm="topicView ? 6 : 12"
+            class="pl-5 d-flex flex-column align-start"
+          >
             <!----------------->
             <!-- Delete item -->
             <!----------------->
@@ -112,7 +126,8 @@ export default {
     buttonOutlined
   },
   props: {
-    newsItem: {}
+    newsItem: {},
+    topicView: Boolean
   },
   methods: {
     emitDeleteAction () {

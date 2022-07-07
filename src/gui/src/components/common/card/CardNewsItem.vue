@@ -52,6 +52,7 @@
         >
           <popup-delete-item
             :newsItem="newsItem"
+            :topicView="topicView || sharingSetView"
             @deleteItem="deleteNewsItem()"
             @removeFromTopic="removeFromTopic()"
             @close="$refs.deleteDialog.close()"
@@ -84,7 +85,7 @@
           tooltip="manage tags"
           ref="manageTagsDialog"
         >
-          <popup-delete-item
+          <popup-manage-tags
             :newsItem="newsItem"
             @deleteItem="deleteNewsItem()"
             @removeFromTopic="removeFromTopic()"
@@ -105,7 +106,10 @@
             <v-container column style="height: 100%">
               <v-row class="flex-grow-0 mt-0">
                 <v-col class="pb-1">
-                  <item-title :title="newsItem.title" :read="newsItem.read" />
+                  <news-item-title
+                    :title="newsItem.title"
+                    :read="newsItem.read"
+                  />
                 </v-col>
               </v-row>
 
@@ -269,8 +273,9 @@ import TagNorm from '@/components/common/tags/TagNorm'
 import newsItemAction from '@/components/_subcomponents/newsItemAction'
 import newsItemActionDialog from '@/components/_subcomponents/newsItemActionDialog'
 import PopupDeleteItem from '@/components/popups/PopupDeleteItem'
+import PopupManageTags from '@/components/popups/PopupManageTags'
 import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
-import itemTitle from '@/components/_subcomponents/itemTitle'
+import newsItemTitle from '@/components/_subcomponents/newsItemTitle'
 import votes from '@/components/_subcomponents/votes'
 
 import { mapGetters } from 'vuex'
@@ -282,8 +287,9 @@ export default {
     newsItemAction,
     newsItemActionDialog,
     PopupDeleteItem,
+    PopupManageTags,
     buttonOutlined,
-    itemTitle,
+    newsItemTitle,
     votes
   },
   props: {
