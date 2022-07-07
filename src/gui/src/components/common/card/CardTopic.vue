@@ -84,7 +84,7 @@
             </v-col>
 
             <v-col cols="2" class="text-right">
-              <pin :value="topic.pinned" @input="pinTopic(topic.id)" />
+              <pin :value="topic.pinned" @click="pinTopic(topic.id)" />
             </v-col>
           </v-row>
 
@@ -180,7 +180,12 @@
               </v-container>
             </v-col>
             <v-col cols="12" md="4" class="mx-0 d-flex justify-end">
-              <button-outlined label="view topic" icon="$awakeEye" extraClass="mt-1" @input="viewTopic($event)" />
+              <button-outlined
+                label="view topic"
+                icon="$awakeEye"
+                extraClass="mt-1"
+                @click="viewTopic($event)"
+              />
             </v-col>
           </v-row>
         </v-col>
