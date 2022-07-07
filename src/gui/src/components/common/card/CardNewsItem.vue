@@ -78,6 +78,19 @@
           @click="decorateSource()"
           tooltip="emphasise originator"
         />
+
+        <news-item-action-dialog
+          icon="mdi-tag-outline"
+          tooltip="manage tags"
+          ref="manageTagsDialog"
+        >
+          <popup-delete-item
+            :newsItem="newsItem"
+            @deleteItem="deleteNewsItem()"
+            @removeFromTopic="removeFromTopic()"
+            @close="$refs.manageTagsDialog.close()"
+          />
+        </news-item-action-dialog>
       </div>
 
       <v-container no-gutters class="ma-0 pa-0">
