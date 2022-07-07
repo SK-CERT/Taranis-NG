@@ -14,7 +14,7 @@
 
 <script>
 export default {
-  name: 'itemTitle',
+  name: 'newsItemTitle',
   props: {
     title: String,
     read: Boolean
