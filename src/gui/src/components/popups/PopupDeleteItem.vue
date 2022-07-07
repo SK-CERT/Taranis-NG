@@ -3,19 +3,81 @@
     <v-container>
       <v-row>
         <v-col cols="12">
-          <h2 class="font-weight-bold dark-grey--text text-capitalize pt-3">
-            <v-icon color="awake-red-color" class="mb-1">
-              mdi-alert-octagon-outline
-            </v-icon>
-            <span class="awake-red-color--text">
-              Delete News Item: <br />
-            </span>
+          <h2 class="font-weight-regular dark-grey--text text-capitalize pt-3">
             "{{ newsItem.title }}"
           </h2>
-          This action deletes the news item completely and it will no longer
-          appear in other topics. Would you like to continue and delete the item
-          permanently?
         </v-col>
+      </v-row>
+
+      <v-row>
+        <v-row class="mt-4 mb-0">
+          <v-col cols="12" sm="6" class="pr-5 d-flex flex-column align-start">
+            <!----------------------->
+            <!-- Remove from Topic -->
+            <!----------------------->
+            <h2
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-0
+              "
+            >
+              Remove from topic
+            </h2>
+            <p>
+              This action will only remove the item from the topic. The item
+              still exists and remains in the other topics.
+            </p>
+
+            <v-spacer></v-spacer>
+
+            <button-solid
+              label="remove from topic"
+              icon="$awakeClose"
+              @input="removeFromTopic()"
+            />
+          </v-col>
+
+          <v-divider class="d-none d-sm-flex" vertical></v-divider>
+
+          <v-col cols="12" sm="6" class="pl-5 d-flex flex-column align-start">
+            <!----------------->
+            <!-- Delete item -->
+            <!----------------->
+            <h2
+              class="
+                font-weight-bold
+                headline
+                dark-grey--text
+                text-capitalize
+                pt-0
+              "
+            >
+              Delete item
+            </h2>
+
+            <p>
+              This action deletes the item permanently. This also removes the
+              item from other topics.
+            </p>
+
+            <p class="awake-red-color--text">
+              <v-icon color="awake-red-color" class="mb-1">
+                mdi-alert-octagon-outline
+              </v-icon>
+              This action cannot be undone.
+            </p>
+
+            <button-solid
+              label="delete item"
+              icon="$awakeDelete"
+              color="awake-red-color"
+              @input="deleteItem()"
+            />
+          </v-col>
+        </v-row>
       </v-row>
     </v-container>
 
@@ -23,45 +85,36 @@
 
     <v-card-actions class="mt-3">
       <v-spacer></v-spacer>
-      <v-btn
-        color="awake-red-color darken-1"
-        outlined
-        @click="$emit('input', false)"
-        class="text-lowercase pr-4"
-      >
-        <v-icon left class="red-icon">$awakeClose</v-icon>
-        abort
-      </v-btn>
-      <v-btn
-        color="primary"
-        dark
-        depressed
-        @click="emitDeleteAction()"
-        class="text-lowercase selection-toolbar-btn pr-4"
-      >
-        <v-icon left>mdi-check</v-icon>
-        delete
-      </v-btn>
+
+            <button-outlined
+              label="cancel"
+              icon="$awakeClose"
+              color="awake-red-color darken-1"
+              extraClass="red-button"
+              @click="$emit('close')"
+            />
+
     </v-card-actions>
   </v-card>
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import buttonSolid from '@/components/inputs/buttonSolid'
+import buttonOutlined from '@/components/inputs/buttonOutlined'
 
 export default {
   name: 'PopupDeleteItem',
+  components: {
+    buttonSolid,
+    buttonOutlined
+  },
   props: {
-    value: Boolean,
     newsItem: {}
   },
   methods: {
-    ...mapActions('assess', ['deleteNewsItem']),
-
     emitDeleteAction () {
       this.$emit('deleteItem')
-      // Close Popup
-      this.$emit('input', false)
+      this.$emit('close')
     }
   }
 }
