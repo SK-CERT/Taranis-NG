@@ -3,7 +3,8 @@
     <v-container>
       <v-row>
         <v-col cols="12">
-          <h2 class="font-weight-regular dark-grey--text text-capitalize pt-3">
+          <strong class="pt-3">Item:</strong>
+          <h2 class="font-weight-regular dark-grey--text text-capitalize pt-0">
             "{{ newsItem.title }}"
           </h2>
         </v-col>
@@ -41,6 +42,10 @@
           </v-col>
 
           <v-divider class="d-none d-sm-flex" vertical></v-divider>
+          <v-divider
+            class="mr-3 ml-3 d-flex d-sm-none"
+            style="border: 0.5px solid rgba(0, 0, 0, 0.12); border-bottom: none"
+          ></v-divider>
 
           <v-col cols="12" sm="6" class="pl-5 d-flex flex-column align-start">
             <!----------------->
