@@ -308,6 +308,7 @@ textarea {
     background-color: lighten($primary, 28);
 
     & .news-item-action.v-size--default .v-icon svg {
+      color: lighten($dark-grey, 30);
       fill: lighten($dark-grey, 30);
     }
 
@@ -642,6 +643,7 @@ textarea {
   font-size: 18px;
   width: 36px;
   height: 36px;
+  color: $light-grey-2;
   fill: $light-grey-2;
 }
 
