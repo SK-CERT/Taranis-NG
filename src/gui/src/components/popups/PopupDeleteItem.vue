@@ -36,7 +36,7 @@
             <button-solid
               label="remove from topic"
               icon="$awakeClose"
-              @input="removeFromTopic()"
+              @click="emitRemoveFromTopicAction()"
             />
           </v-col>
 
@@ -74,7 +74,7 @@
               label="delete item"
               icon="$awakeDelete"
               color="awake-red-color"
-              @input="deleteItem()"
+              @click="emitDeleteAction()"
             />
           </v-col>
         </v-row>
@@ -86,14 +86,12 @@
     <v-card-actions class="mt-3">
       <v-spacer></v-spacer>
 
-            <button-outlined
-              label="cancel"
-              icon="$awakeClose"
-              color="awake-red-color darken-1"
-              extraClass="red-button"
-              @click="$emit('close')"
-            />
-
+      <button-outlined
+        label="cancel"
+        icon="$awakeClose"
+        color="awake-red-color"
+        @click="$emit('close')"
+      />
     </v-card-actions>
   </v-card>
 </template>
@@ -114,6 +112,10 @@ export default {
   methods: {
     emitDeleteAction () {
       this.$emit('deleteItem')
+      this.$emit('close')
+    },
+    emitRemoveFromTopicAction () {
+      this.$emit('removeFromTopic')
       this.$emit('close')
     }
   }
