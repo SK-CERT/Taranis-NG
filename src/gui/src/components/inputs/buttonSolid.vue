@@ -1,7 +1,5 @@
 <template>
-  
   <v-tooltip open-delay="1000" bottom :disabled="!tooltip">
-
     <template v-slot:activator="{ on, attrs }">
       <!-- BUTTON -->
       <v-btn
@@ -22,9 +20,7 @@
     </template>
 
     <span>{{ tooltip }}</span>
-  
   </v-tooltip>
-
 </template>
 
 <script>
@@ -40,7 +36,7 @@ export default {
   methods: {
     execute (event) {
       event.stopPropagation()
-      this.$emit('input', event)
+      this.$emit('click', event)
     }
   }
 }
