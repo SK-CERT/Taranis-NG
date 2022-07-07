@@ -193,6 +193,64 @@ textarea {
   }
 }
 
+.buttonOutlined {
+  text-transform: lowercase;
+  background-color: white;
+  letter-spacing: normal;
+  font-weight: 400;
+  caret-color: $light-grey-2;
+  border-color: $light-grey-2;
+  color: $dark-grey;
+  padding: 16px 12px !important;
+  transition: all 400ms ease;
+
+  &.v-btn--disabled {
+    background-color: lighten($light-grey-1, 20) !important;
+    color: white !important;
+
+    & span {
+      color: white !important;
+    }
+  }
+
+  & svg {
+    fill: inherit;
+  }
+
+  &.red-button {
+    caret-color: darken($awake-red-color, 10);
+    border-color: darken($awake-red-color, 10);
+
+    & svg {
+      fill: darken($awake-red-color, 10);
+    }
+  }
+}
+
+.buttonSolid {
+  text-transform: lowercase;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: white !important;
+  padding: 16px 12px !important;
+  transition: all 400ms ease;
+  border: 0 !important;
+  outline: none !important;
+
+  &.v-btn--disabled {
+    background-color: lighten($light-grey-1, 20) !important;
+    color: white !important;
+
+    & span {
+      color: white !important;
+    }
+  }
+
+  & svg {
+    fill: white;
+  }
+}
+
 .v-chip.topic-label {
   font-size: 12px !important;
   padding: 12px 8px !important;
@@ -250,6 +308,7 @@ textarea {
     background-color: lighten($primary, 28);
 
     & .news-item-action.v-size--default .v-icon svg {
+      color: lighten($dark-grey, 30);
       fill: lighten($dark-grey, 30);
     }
 
@@ -499,7 +558,12 @@ textarea {
 }
 
 .news-item-summary {
+  color: $dark-grey;
+  margin-bottom: 0px !important;
+  font-weight: 300;
   font-size: 13px;
+
+  // Clipping
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -579,6 +643,7 @@ textarea {
   font-size: 18px;
   width: 36px;
   height: 36px;
+  color: $light-grey-2;
   fill: $light-grey-2;
 }
 
@@ -959,13 +1024,16 @@ textarea {
     background-color: lighten($accent, 10) !important;
   }
 }
+
 .topic.corner-tag-shared.sharing-set-topic-outgoing,
 .topic.corner-tag-shared.sharing-set-topic-shared.sharing-set-topic-outgoing {
   background-color: lighten($accent, 30) !important;
 }
+
 .topic.corner-tag-shared.sharing-set-topic-shared {
   // background-color: lighten($awake-green-color, 35) !important;
   background-color: white !important;
+
   &:after {
     background-color: darken($accent, 10) !important;
     // background-color: lighten($awake-green-color, 10) !important;
@@ -1011,4 +1079,41 @@ textarea {
       color: white !important;
     }
   }
+}
+
+.topic-card-title {
+  color: $dark-grey;
+  text-transform: capitalize;
+  font-weight: 700;
+  font-family: $heading-font-family;
+  line-height: 1.2;
+  letter-spacing: normal;
+  font-size: 1.5rem !important;
+
+  // Clipping
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  height: calc(1.5rem * 1.2 * 2);
+}
+
+.topic-card-summary {
+  color: $dark-grey;
+  font-family: $body-font-family;
+  font-size: $font-size-root;
+  line-height: 1.5;
+  font-weight: 300;
+  margin-bottom: 0px !important;
+
+  // Clipping
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  height: calc(1.5em * 4);
 }

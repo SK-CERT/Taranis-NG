@@ -73,7 +73,7 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
-import textField from '@/components/inputs/textField'
+import textField from '@/components/_subcomponents/textField'
 
 export default {
   name: 'PopupEditTopic',

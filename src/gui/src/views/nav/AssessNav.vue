@@ -113,14 +113,14 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
-import searchField from '@/components/inputs/searchField'
-import dateChips from '@/components/inputs/dateChips'
-import dateRange from '@/components/inputs/dateRange'
-import tagFilter from '@/components/inputs/tagFilter'
-import logicalAnd from '@/components/inputs/logicalAnd'
-import filterSelectList from '@/components/inputs/filterSelectList'
-import filterSortList from '@/components/inputs/filterSortList'
-import dropdownSelection from '@/components/inputs/dropdownSelection'
+import searchField from '@/components/_subcomponents/searchField'
+import dateChips from '@/components/_subcomponents/dateChips'
+import dateRange from '@/components/_subcomponents/dateRange'
+import tagFilter from '@/components/_subcomponents/tagFilter'
+import logicalAnd from '@/components/_subcomponents/logicalAnd'
+import filterSelectList from '@/components/_subcomponents/filterSelectList'
+import filterSortList from '@/components/_subcomponents/filterSortList'
+import dropdownSelection from '@/components/_subcomponents/dropdownSelection'
 
 export default {
   name: 'AssessNav',
@@ -192,13 +192,11 @@ export default {
     ]
   }),
   computed: {
-    ...mapState('filter',
-      {
-        scope: state => state.newsItemsFilter.scope,
-        filter: state => state.newsItemsFilter.filter,
-        order: state => state.newsItemsFilter.order
-      }
-    )
+    ...mapState('filter', {
+      scope: (state) => state.newsItemsFilter.scope,
+      filter: (state) => state.newsItemsFilter.filter,
+      order: (state) => state.newsItemsFilter.order
+    })
     // ...mapState('filter', ['newsItemsFilter'])
     // getData () {
     //   return this.$store.getters.getDashboardData

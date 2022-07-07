@@ -1,6 +1,6 @@
 <template>
   <v-col class="overflow-hidden">
-    <v-container fluid>
+    <v-container fluid style="min-height: 100vh">
       <loader
         v-if="itemsLoaded.length < items.length"
         label="loading news items"
@@ -34,7 +34,8 @@
             :selected="getNewsItemsSelection().includes(newsItem.id)"
             :topicView="topicView"
             :sharingSetView="sharingSetView"
-            @deleteItem="deleteNewsItem(newsItem.id)"
+            @deleteItem="removeAndDeleteNewsItem(newsItem.id)"
+            @removeFromTopic="removeFromTopic(newsItem.id)"
             @selectItem="selectNewsItem(newsItem.id)"
             @upvoteItem="upvoteNewsItem(newsItem.id)"
             @downvoteItem="downvoteNewsItem(newsItem.id)"
@@ -45,7 +46,17 @@
     </v-container>
 
     <!-- TODO: Loader not working -->
-    <!-- <loader v-show="loading" label="loading further news items" /> -->
+    <loader
+      v-if="itemsToLoad > itemsLoaded.length"
+      label="loading further news items"
+    />
+    <div
+      v-else
+      class="text-subtitle-1 text-center dark-grey--text text--lighten-2 mt-3"
+    >
+      <v-icon left color="primary">mdi-checkbox-marked-circle-outline</v-icon>
+      All items loaded.
+    </div>
     <div v-intersect.quiet="infiniteScrolling"></div>
 
     <v-expand-transition>
@@ -76,7 +87,8 @@ export default {
   },
   props: {
     topicView: Boolean,
-    sharingSetView: Boolean
+    sharingSetView: Boolean,
+    itemsToLoad: Number
   },
   data: () => ({
     itemsLoaded: [],
@@ -88,7 +100,8 @@ export default {
       'deleteNewsItem',
       'selectNewsItem',
       'upvoteNewsItem',
-      'downvoteNewsItem'
+      'downvoteNewsItem',
+      'removeTopicFromNewsItem'
     ]),
     ...mapGetters('assess', [
       'getTotalNumber',
@@ -100,8 +113,27 @@ export default {
     ]),
     ...mapGetters('dashboard', ['getTopicSelectionList', 'getNewsItemIds']),
 
+    removeAndDeleteNewsItem (id) {
+      this.items = this.items.filter((x) => x.id !== id)
+      this.deleteNewsItem(id)
+    },
+
+    removeFromTopic (newsItemId) {
+      if (this.topicView || this.sharingSetView) {
+        const topic = this.scope.topics
+        const sharingSet = this.scope.sharingSets
+        const topicId = topic ? topic[0].id : sharingSet[0].id
+        this.removeTopicFromNewsItem({ newsItemId, topicId })
+        this.items = this.items.filter((x) => x.id !== newsItemId)
+      }
+    },
+
     infiniteScrolling (entries, observer, isIntersecting) {
-      if (this.itemsLoaded.length >= this.items.length && isIntersecting) {
+      if (
+        this.itemsLoaded.length >= this.items.length &&
+        isIntersecting &&
+        this.itemsToLoad > this.itemsLoaded.length
+      ) {
         this.reloading = true
         // TODO: Make it async
         this.updateNewsItems()

@@ -45,70 +45,53 @@
       <!-- Topic Actions -->
 
       <div class="news-item-action-bar">
-        <div v-show="topicView">
-          <news-item-action
-            icon="$newsItemActionRemove"
-            tooltip="remove from topic"
-            extraClass="news-item-topic-action"
-            @input="removeFromTopic()"
+        <news-item-action-dialog
+          icon="$newsItemActionRemove"
+          tooltip="remove item"
+          ref="deleteDialog"
+        >
+          <popup-delete-item
+            :newsItem="newsItem"
+            :topicView="topicView || sharingSetView"
+            @deleteItem="deleteNewsItem()"
+            @removeFromTopic="removeFromTopic()"
+            @close="$refs.deleteDialog.close()"
           />
-        </div>
-
-        <div v-show="sharingSetView">
-          <news-item-action
-            icon="$newsItemActionRemove"
-            tooltip="remove from sharing set"
-            extraClass="news-item-sharing-set-action"
-            @input="removeFromTopic()"
-          />
-        </div>
-
-        <!-- News Items Actions -->
+        </news-item-action-dialog>
 
         <news-item-action
           :active="newsItem.read"
           icon="$newsItemActionRead"
-          @input="markAsRead()"
+          @click="markAsRead()"
           tooltip="mark as read/unread"
         />
 
         <news-item-action
           :active="newsItem.important"
           icon="$newsItemActionImportant"
-          @input="markAsImportant()"
+          @click="markAsImportant()"
           tooltip="mark as important"
         />
-
-        <v-dialog v-model="deleteDialog" width="600">
-          <template #activator="{ on: deleteDialog }">
-            <v-tooltip>
-              <template #activator="{ on: tooltip }">
-                <v-btn
-                  v-on="{ ...tooltip, ...deleteDialog }"
-                  icon
-                  tile
-                  class="news-item-action"
-                >
-                  <v-icon> $newsItemActionDelete </v-icon>
-                </v-btn>
-              </template>
-              <span>delete item</span>
-            </v-tooltip>
-          </template>
-
-          <popup-delete-item
-            v-model="deleteDialog"
-            :newsItem="newsItem"
-            @deleteItem="$emit('deleteItem', newsItem.id)"
-          />
-        </v-dialog>
 
         <news-item-action
           :active="newsItem.decorateSource"
           icon="$newsItemActionRibbon"
-          @input="decorateSource()"
+          @click="decorateSource()"
           tooltip="emphasise originator"
         />
+
+        <news-item-action-dialog
+          icon="mdi-tag-outline"
+          tooltip="manage tags"
+          ref="manageTagsDialog"
+        >
+          <popup-manage-tags
+            :newsItem="newsItem"
+            @deleteItem="deleteNewsItem()"
+            @removeFromTopic="removeFromTopic()"
+            @close="$refs.manageTagsDialog.close()"
+          />
+        </news-item-action-dialog>
       </div>
 
       <v-container no-gutters class="ma-0 pa-0">
@@ -123,30 +106,16 @@
             <v-container column style="height: 100%">
               <v-row class="flex-grow-0 mt-0">
                 <v-col class="pb-1">
-                  <h2
-                    :class="[
-                      'news-item-title',
-                      {
-                        'status-unread': !newsItem.read,
-                      },
-                    ]"
-                  >
-                    <sup v-if="!newsItem.read" class="new-indicator"> * </sup>
-                    {{ newsItem.title }}
-                  </h2>
+                  <news-item-title
+                    :title="newsItem.title"
+                    :read="newsItem.read"
+                  />
                 </v-col>
               </v-row>
 
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
-                  <p
-                    class="
-                      font-weight-light
-                      dark-grey--text
-                      news-item-summary
-                      mb-0
-                    "
-                  >
+                  <p class="news-item-summary">
                     {{ newsItem.summary }}
                   </p>
                 </v-col>
@@ -157,68 +126,38 @@
                   cols="12"
                   class="mx-0 d-flex justify-start flex-wrap py-1"
                 >
-                  <v-btn
-                    outlined
-                    class="text-lowercase news-item-btn mr-1 mt-1"
-                    @click.native.capture="viewTopic($event)"
-                  >
-                    <v-icon left>$awakeEye</v-icon>
-                    view details
-                  </v-btn>
+                  <button-outlined
+                    label="view details"
+                    icon="$awakeEye"
+                    extraClass="mr-1 mt-1"
+                    @click="viewDetails($event)"
+                  />
+                  <button-outlined
+                    label="create report"
+                    icon="$awakeReport"
+                    extraClass="mr-1 mt-1"
+                    @click="createReport($event)"
+                  />
+                  <button-outlined
+                    label="show related items"
+                    icon="$awakeRelated"
+                    extraClass="mr-1 mt-1"
+                    @click="showRelated($event)"
+                  />
 
-                  <v-btn
-                    outlined
-                    class="text-lowercase news-item-btn mr-1 mt-1"
-                    @click.native.capture="viewTopic($event)"
-                  >
-                    <v-icon left>$awakeReport</v-icon>
-                    create report
-                  </v-btn>
-                  <v-btn
-                    outlined
-                    class="text-lowercase news-item-btn mr-1 mt-1"
-                    @click.native.capture="viewTopic($event)"
-                  >
-                    <v-icon left>$awakeRelated</v-icon>
-                    show related items
-                  </v-btn>
                   <div class="d-flex align-start justify-center mr-3 ml-2 mt-1">
-                    <v-icon
-                      left
-                      small
-                      color="awake-green-color"
-                      class="align-self-center mr-1"
-                      @click.native.capture="upvote($event)"
-                      >mdi-arrow-up-circle-outline</v-icon
-                    >
-                    <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
-                      >{{ newsItem.votes.up }}</span
-                    >
+                    <votes
+                      :count="newsItem.votes.up"
+                      type="up"
+                      @input="upvote($event)"
+                    />
                   </div>
                   <div class="d-flex align-start justify-center mr-3 mt-1">
-                    <v-icon
-                      left
-                      small
-                      color="awake-red-color"
-                      class="align-self-center mr-1"
-                      @click.native.capture="downvote($event)"
-                      >mdi-arrow-down-circle-outline</v-icon
-                    >
-                    <span
-                      class="
-                        text-caption
-                        font-weight-light
-                        dark-grey--text
-                        align-self-center
-                      "
-                      >{{ newsItem.votes.down }}</span
-                    >
+                    <votes
+                      :count="newsItem.votes.down"
+                      type="down"
+                      @input="downvote($event)"
+                    />
                   </div>
                 </v-col>
               </v-row>
@@ -266,7 +205,9 @@
                     icon
                     class="meta-link d-flex"
                   >
-                    <v-icon left x-small class="mr-1">mdi-open-in-new</v-icon>
+                    <v-icon left x-small color="primary" class="mr-1"
+                      >mdi-open-in-new</v-icon
+                    >
                     <span class="label">{{ newsItem.source.url }}</span>
                   </a>
                 </v-col>
@@ -327,19 +268,29 @@
 </template>
 
 <script>
-import TagNorm from '@/components/common/tags/TagNorm'
 import moment from 'moment'
-import newsItemAction from '@/components/inputs/newsItemAction'
+import TagNorm from '@/components/common/tags/TagNorm'
+import newsItemAction from '@/components/_subcomponents/newsItemAction'
+import newsItemActionDialog from '@/components/_subcomponents/newsItemActionDialog'
 import PopupDeleteItem from '@/components/popups/PopupDeleteItem'
+import PopupManageTags from '@/components/popups/PopupManageTags'
+import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
+import newsItemTitle from '@/components/_subcomponents/newsItemTitle'
+import votes from '@/components/_subcomponents/votes'
 
-import { mapActions, mapGetters, mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'CardNewsItem',
   components: {
     TagNorm,
     newsItemAction,
-    PopupDeleteItem
+    newsItemActionDialog,
+    PopupDeleteItem,
+    PopupManageTags,
+    buttonOutlined,
+    newsItemTitle,
+    votes
   },
   props: {
     newsItem: {},
@@ -349,39 +300,13 @@ export default {
     selected: Boolean
   },
   data: () => ({
-    deleteDialog: false,
     metaData: null
   }),
   methods: {
     ...mapGetters('users', ['getUsernameById']),
-    // ...mapGetters('assess', ['getNewsItemsSelection']),
-    
-    // sharingSetView () {
-    //   return (
-    //     this.filter.scope.sharingSets.length === 1 &&
-    //     this.filter.scope.topics.length === 0
-    //   )
-    // },
-    // topicView () {
-    //   return this.filter.scope.topics.length === 1
-    // },
-    // selected () {
-    //   return this.getNewsItemsSelection().includes(this.newsItem.id)
-    // },
 
     toggleSelection () {
       this.$emit('selectItem', this.newsItem.id)
-      // this.selectNewsItem(this.newsItem.id)
-    },
-    removeFromTopic () {
-      console.log("implement remove from topic")
-      // const topicId = this.sharingSetView
-      //   ? this.filter.scope.sharingSets[0].id
-      //   : this.filter.scope.topics[0].id
-      // this.removeTopicFromNewsItem({
-      //   newsItemId: this.newsItem.id,
-      //   topicId: topicId
-      // })
     },
     markAsRead () {
       this.newsItem.read = !this.newsItem.read
@@ -392,26 +317,39 @@ export default {
     decorateSource () {
       this.newsItem.decorateSource = !this.newsItem.decorateSource
     },
+    removeFromTopic () {
+      this.$emit('removeFromTopic', this.newsItem.id)
+    },
     deleteNewsItem () {
       this.$emit('deleteItem', this.newsItem.id)
     },
     upvote (event) {
-      event.stopPropagation()
       this.$emit('upvoteItem', this.newsItem.id)
-      // this.upvoteNewsItem(this.newsItem.id)
     },
     downvote (event) {
-      event.stopPropagation()
       this.$emit('downvoteItem', this.newsItem.id)
-      // this.downvoteNewsItem(this.newsItem.id)
     },
 
-    getMetaDate() {
+    viewDetails (event) {
+      console.log('not yet implemented')
+    },
+    createReport (event) {
+      console.log('not yet implemented')
+    },
+    showRelated (event) {
+      console.log('not yet implemented')
+    },
+
+    getMetaDate () {
       this.metaData = {
         addedBy: this.getUsernameById()(this.newsItem.addedBy),
-        publishedDate: moment(this.newsItem.published).format('DD/MM/YYYY hh:mm:ss'),
-        collectedDate: moment(this.newsItem.collected).format('DD/MM/YYYY hh:mm:ss'),
-        topicsList: this.getTopicsList ()
+        publishedDate: moment(this.newsItem.published).format(
+          'DD/MM/YYYY hh:mm:ss'
+        ),
+        collectedDate: moment(this.newsItem.collected).format(
+          'DD/MM/YYYY hh:mm:ss'
+        ),
+        topicsList: this.getTopicsList()
       }
     },
     getTopicsList () {
