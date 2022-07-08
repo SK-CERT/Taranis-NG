@@ -30,7 +30,7 @@
         <v-col cols="12" class="pt-0">
           <dropdown-selection
             v-model="scope.sources"
-            :items="getOSINTSourceGroupList()"
+            :items="getSourceNames(getOSINTSourceGroupList())"
             label="Sources"
             placeholder="all Sources"
             @input="updateQuery()"
@@ -184,7 +184,6 @@ export default {
       'APT',
       'MitM'
     ],
-    sourcesList: []
   }),
   computed: {
     ...mapState('filter', {
@@ -215,10 +214,13 @@ export default {
         this.$router.push({ query: '' })
       }
     },
+    getSourceNames (data) {
+      return data.items.map(value => ({ id: value.id, title: value.name }))
+    },
     mounted () {
-      this.$store.dispatch('updateOSINTSourceGroupsList')
-      this.sourcesList = this.$store.getters.getOSINTSourceGroupList
-      console.log(this.sourcesList)
+      // this.$store.dispatch('updateOSINTSourceGroupsList')
+      const sourcesList = this.$store.getters.getOSINTSourceGroupList.items
+      console.log(sourcesList)
     }
   },
   watch: {
