@@ -9,14 +9,18 @@ from model.permission import Permission
 
 
 class OSINTSourceGroupsAssess(Resource):
-
     @auth_required('ASSESS_ACCESS')
     def get(self):
         return osint_source.OSINTSourceGroup.get_all_json(None, auth_manager.get_user_from_jwt(), True)
 
 
-class ManualOSINTSources(Resource):
+class OSINTSourceGroupsList(Resource):
+    @auth_required('ASSESS_ACCESS')
+    def get(self):
+        return osint_source.OSINTSourceGroup.get_list_json(auth_manager.get_user_from_jwt(), True)
 
+
+class ManualOSINTSources(Resource):
     @auth_required(['ASSESS_ACCESS'])
     def get(self):
         return osint_source.OSINTSource.get_all_manual_json(auth_manager.get_user_from_jwt())
@@ -160,6 +164,7 @@ class DownloadAttachment(Resource):
 
 def initialize(api):
     api.add_resource(OSINTSourceGroupsAssess, "/api/v1/assess/osint-source-groups")
+    api.add_resource(OSINTSourceGroupsList, "/api/v1/assess/osint-source-group-list")
     api.add_resource(ManualOSINTSources, "/api/v1/assess/manual-osint-sources")
     api.add_resource(AddNewsItem, "/api/v1/assess/news-items")
     api.add_resource(NewsItemsByGroup, "/api/v1/assess/news-item-aggregates-by-group/<string:group_id>")

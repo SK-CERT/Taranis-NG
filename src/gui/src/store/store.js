@@ -11,7 +11,6 @@ import { assets } from '@/store/assets'
 import { dashboard } from '@/store/dashboard'
 import { users } from '@/store/users'
 import { osint_source } from '@/store/osint_source'
-import { dummyData } from '@/store/dummyData'
 import { filter } from '@/store/filter'
 
 Vue.use(Vuex)
@@ -92,9 +91,9 @@ const getters = {
   },
 
   getVerticalView() {
-      return state.vertical_view
+    return state.vertical_view
   }
-};
+}
 
 export const store = new Vuex.Store({
   state,
@@ -112,7 +111,6 @@ export const store = new Vuex.Store({
     dashboard,
     users,
     osint_source,
-    filter,
-    dummyData
+    filter
   }
 })

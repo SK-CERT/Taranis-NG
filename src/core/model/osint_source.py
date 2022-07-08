@@ -12,7 +12,7 @@ from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
 from schema.acl_entry import ItemType
 from schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
-    OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema, OSINTSourceGroupIdSchema
+    OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema, OSINTSourceGroupIdSchema, OSINTSourceGroupSchemaBase
 from schema.word_list import WordListIdSchema
 
 
@@ -313,6 +313,12 @@ class OSINTSourceGroup(db.Model):
     def get_all_json(cls, search, user, acl_check):
         groups, count = cls.get(search, user, acl_check)
         group_schema = OSINTSourceGroupPresentationSchema(many=True)
+        return {'total_count': count, 'items': group_schema.dump(groups)}
+
+    @classmethod
+    def get_list_json(cls, user, acl_check):
+        groups, count = cls.get(None, user, acl_check)
+        group_schema = OSINTSourceGroupSchemaBase(many=True)
         return {'total_count': count, 'items': group_schema.dump(groups)}
 
     @classmethod

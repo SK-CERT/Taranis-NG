@@ -30,7 +30,7 @@
         <v-col cols="12" class="pt-0">
           <dropdown-selection
             v-model="scope.sources"
-            :items="sourcesList"
+            :items="getOSINTSourceGroupList()"
             label="Sources"
             placeholder="all Sources"
             @input="updateQuery()"
@@ -184,12 +184,7 @@ export default {
       'APT',
       'MitM'
     ],
-    sourcesList: [
-      { id: 1, title: 'Source 1' },
-      { id: 2, title: 'Source 2' },
-      { id: 3, title: 'Source 3' },
-      { id: 4, title: 'Source 4' }
-    ]
+    sourcesList: []
   }),
   computed: {
     ...mapState('filter', {
@@ -207,6 +202,7 @@ export default {
       'getTopicSelectionList',
       'getSharingSetSelectionList'
     ]),
+    ...mapGetters('assess', ['getOSINTSourceGroupList']),
 
     updateQuery () {
       if (this.scope.topics.length === 1) {
@@ -218,6 +214,11 @@ export default {
       } else {
         this.$router.push({ query: '' })
       }
+    },
+    mounted () {
+      this.$store.dispatch('updateOSINTSourceGroupsList')
+      this.sourcesList = this.$store.getters.getOSINTSourceGroupList
+      console.log(this.sourcesList)
     }
   },
   watch: {
@@ -228,6 +229,7 @@ export default {
           this.awaitingSearch = false
         }, 500)
       }
+
       this.awaitingSearch = true
     }
   }

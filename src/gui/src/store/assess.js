@@ -1,4 +1,4 @@
-import { getManualOSINTSources, getNewsItemsByGroup } from '@/api/assess'
+import { getManualOSINTSources, getNewsItemsByGroup, getOSINTSourceGroupsList } from '@/api/assess'
 import { getField, updateField } from 'vuex-map-fields'
 import { xor } from 'lodash'
 
@@ -8,6 +8,7 @@ const state = {
   selection: [],
   current_group_id: '',
   manual_osint_sources: [],
+  osint_source_groups: [],
   filter: {},
   newsItems: [],
   newsItemsSelection: []
@@ -81,6 +82,13 @@ const actions = {
     return getManualOSINTSources()
       .then(response => {
         context.commit('setManualOSINTSources', response.data)
+      })
+  },
+
+  updateOSINTSourceGroupsList (context) {
+    return getOSINTSourceGroupsList()
+      .then(response => {
+        context.commit('setOSINTSourceGroups', response.data)
       })
   },
 
@@ -189,6 +197,10 @@ const mutations = {
     state.manual_osint_sources = new_manual_osint_sources
   },
 
+  setOSINTSourceGroups(state, osint_source_groups) {
+    state.osint_source_groups = osint_source_groups
+  },
+
   setFilter(state, data) {
     state.filter = data
   }
@@ -199,12 +211,15 @@ const getters = {
   getField,
 
   getNewsItems(state) {
-    console.log("triggered")
     return state.newsItems
   },
 
   getTotalNumber(state) {
     return state.newsItems.length
+  },
+
+  getOSINTSourceGroupList(state) {
+    return state.osint_source_groups
   },
 
   getNewsItemsByTopicId: (state) => (id) => {
@@ -243,7 +258,7 @@ const getters = {
 
   getFilter(state) {
     return state.filter
-  },
+  }
 }
 
 export const assess = {

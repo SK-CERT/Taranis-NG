@@ -44,14 +44,7 @@ export default {
   methods: {
     ...mapActions('dashboard', ['updateTopics']),
     ...mapActions('users', ['updateUsers']),
-    ...mapActions('assess', ['updateNewsItems']),
-    ...mapActions('dummyData', ['init']),
-    ...mapGetters('dummyData', [
-      'getDummyTopics',
-      'getDummySharingSets',
-      'getDummyNewsItems',
-      'getDummyUsers'
-    ]),
+    ...mapActions('assess', ['updateNewsItems', 'updateOSINTSourceGroupsList']),
 
     connectSSE () {
       this.$sse(
@@ -138,14 +131,7 @@ export default {
     })
   },
   created () {
-    // Generate Dummy Data
-    this.init()
-    const users = this.getDummyUsers()
-    const topics = this.getDummyTopics()
-    const sharingSets = this.getDummySharingSets()
-    this.updateUsers(users)
-    this.updateTopics(topics.concat(sharingSets))
-    this.updateNewsItems(this.getDummyNewsItems())
+    this.updateOSINTSourceGroupsList()
   }
 }
 </script>

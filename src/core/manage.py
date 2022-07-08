@@ -329,19 +329,3 @@ def dictonary_management(opt_cve, opt_cpe):
             abort()
 
     app.logger.error("Dictionary was uploaded.")
-    exit()
-
-
-@app.cli.command("sample-data")
-def sample_data():
-    from scripts import permissions, sample_data
-
-    # data, count = user.User.get(None, None)
-    # if count:
-    #     app.logger.error("Sample data already installed.")
-    #     exit()
-
-    app.logger.info("Installing sample data...")
-    permissions.run(db_manager.db)
-    sample_data.run(db_manager.db)
-    app.logger.info("Sample data installed.")

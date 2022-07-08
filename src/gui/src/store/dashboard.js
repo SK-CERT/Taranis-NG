@@ -79,8 +79,8 @@ const mutations = {
   PIN_TOPIC(state, id) {
     for (const topic of state.topics) {
       if (topic.id === id) {
-        topic.pinned = !topic.pinned;
-        break;
+        topic.pinned = !topic.pinned
+        break
       }
     }
   },
@@ -89,7 +89,7 @@ const mutations = {
     for (const topic of state.topics) {
       if (topic.id === id) {
         topic.votes.up += 1
-        break;
+        break
       }
     }
   },
@@ -98,7 +98,7 @@ const mutations = {
     for (const topic of state.topics) {
       if (topic.id === id) {
         topic.votes.down += 1
-        break;
+        break
       }
     }
   },
