@@ -1,13 +1,15 @@
 <template>
   <div>
       <v-chip
-        v-for="tag in tags" :key="tag"
+        v-for="(tag, i) in tags.slice(0, limit)"
+        :key="i"
         label
         class="mr-1 mb-1 topic-label"
         dark
-        :color="labelcolor(tag.color)"
+        x-small
+        :color="labelcolor(i)"
         >
-          {{ tag.label }}
+          {{ tag }}
       </v-chip>
   </div>
 </template>
@@ -16,7 +18,8 @@
 export default {
   name: 'TagList',
   props: {
-    tags: {}
+    tags: [],
+    limit: 5
   },
   data: () => ({
   }),

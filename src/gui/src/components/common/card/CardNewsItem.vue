@@ -251,10 +251,10 @@
                   <strong>Tags:</strong>
                 </v-col>
                 <v-col>
-                  <tag-norm
-                    v-for="tag in getTags"
-                    :key="tag.label"
-                    :tag="tag"
+                  <tag-list
+                    key="tags"
+                    limit=5
+                    :tags="getTags()"
                   />
                 </v-col>
               </v-row>
@@ -268,7 +268,7 @@
 
 <script>
 import moment from 'moment'
-import TagNorm from '@/components/common/tags/TagNorm'
+import TagList from '@/components/common/tags/TagList'
 import newsItemAction from '@/components/_subcomponents/newsItemAction'
 import newsItemActionDialog from '@/components/_subcomponents/newsItemActionDialog'
 import PopupDeleteItem from '@/components/popups/PopupDeleteItem'
@@ -283,7 +283,7 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'CardNewsItem',
   components: {
-    TagNorm,
+    TagList,
     newsItemAction,
     newsItemActionDialog,
     PopupDeleteItem,
