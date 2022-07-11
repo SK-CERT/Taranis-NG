@@ -116,7 +116,7 @@
               <v-row class="flex-grow-0 mt-0">
                 <v-col>
                   <p class="news-item-summary">
-                    {{ newsItem.summary }}
+                    {{ getDescription() }}
                   </p>
                 </v-col>
               </v-row>
@@ -198,9 +198,9 @@
                   <strong>Source:</strong>
                 </v-col>
                 <v-col>
-                  {{ newsItem.news_item_data.source }} <br />
+                  {{ metaData.source }} <br />
                   <a
-                    :href="newsItem.news_item_data.source"
+                    :href="metaData.sourceLink"
                     target="_blank"
                     icon
                     class="meta-link d-flex"
@@ -208,7 +208,7 @@
                     <v-icon left x-small color="primary" class="mr-1"
                       >mdi-open-in-new</v-icon
                     >
-                    <span class="label">{{ newsItem.news_item_data.source }}</span>
+                    <span class="label">{{ metaData.sourceLink }}</span>
                   </a>
                 </v-col>
               </v-row>
@@ -217,16 +217,16 @@
                   <strong>Source Type:</strong>
                 </v-col>
                 <v-col>
-                  {{ newsItem.source.type }}
+                  {{ metaData.sourceType }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
                 <v-col class="news-item-meta-infos-label">
-                  <strong>Added by:</strong>
+                  <strong>Author:</strong>
                 </v-col>
                 <v-col>
                   <span :class="[{ decorateSource: newsItem.decorateSource }]">
-                    {{ metaData.addedBy }}
+                    {{ metaData.author }}
                     <v-icon
                       right
                       small
@@ -237,7 +237,7 @@
                   </span>
                 </v-col>
               </v-row>
-              <v-row class="news-item-meta-infos">
+              <!-- <v-row class="news-item-meta-infos">
                 <v-col class="news-item-meta-infos-label">
                   <strong>Topics:</strong>
                 </v-col>
@@ -246,7 +246,7 @@
                     {{ metaData.topicsList }}
                   </span>
                 </v-col>
-              </v-row>
+              </v-row> -->
               <v-row class="news-item-meta-infos">
                 <v-col class="news-item-meta-infos-label d-flex align-center">
                   <strong>Tags:</strong>
@@ -277,6 +277,7 @@ import PopupManageTags from '@/components/popups/PopupManageTags'
 import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
 import newsItemTitle from '@/components/_subcomponents/newsItemTitle'
 import votes from '@/components/_subcomponents/votes'
+import { isValidUrl, stripHtml } from '@/utils/helpers'
 
 import { mapGetters } from 'vuex'
 
@@ -305,54 +306,88 @@ export default {
   methods: {
     ...mapGetters('users', ['getUsernameById']),
 
-    toggleSelection () {
+    toggleSelection() {
       this.$emit('selectItem', this.newsItem.id)
     },
-    markAsRead () {
+    markAsRead() {
       this.newsItem.read = !this.newsItem.read
     },
-    markAsImportant () {
+    markAsImportant() {
       this.newsItem.important = !this.newsItem.important
     },
-    decorateSource () {
+    decorateSource() {
       this.newsItem.decorateSource = !this.newsItem.decorateSource
     },
-    removeFromTopic () {
+    removeFromTopic() {
       this.$emit('removeFromTopic', this.newsItem.id)
     },
-    deleteNewsItem () {
+    deleteNewsItem() {
       this.$emit('deleteItem', this.newsItem.id)
     },
-    upvote (event) {
+    upvote(event) {
       this.$emit('upvoteItem', this.newsItem.id)
     },
-    downvote (event) {
+    downvote(event) {
       this.$emit('downvoteItem', this.newsItem.id)
     },
 
-    viewDetails (event) {
+    viewDetails(event) {
       console.log('not yet implemented')
     },
-    createReport (event) {
+    createReport(event) {
       console.log('not yet implemented')
     },
-    showRelated (event) {
+    showRelated(event) {
       console.log('not yet implemented')
     },
 
-    getMetaDate () {
+    getDescription() {
+      return stripHtml(this.newsItem.description)
+    },
+
+    getMetaDate() {
+      let trueCollected = false
+      let truePublished = false
+
+      let collected = this.newsItem.created
+      if (collected) {
+        trueCollected = true
+        collected = moment(collected, 'DD.MM.YYYY - hh:mm').format(
+          'DD/MM/YYYY hh:mm:ss'
+        )
+      } else {
+        collected = moment(newDate()).format('DD/MM/YYYY hh:mm:ss')
+      }
+
+      let published = this.newsItem.news_items[0].news_item_data.published
+      if (published) {
+        truePublished = true
+        published = moment(published).format('DD/MM/YYYY hh:mm:ss')
+      } else {
+        published = collected
+      }
+
+      let source = this.newsItem.news_items[0].news_item_data.source
+      if (isValidUrl(source)) {
+        source = new URL(source).hostname.replace('www.', '')
+      }
+
+      let author = this.newsItem.news_items[0].news_item_data.author
+      if (!author) {
+        author = '** no author given **'
+      }
+
       this.metaData = {
-        // addedBy: this.getUsernameById()(this.newsItem.addedBy),
-        // publishedDate: moment(this.newsItem.published).format(
-        //   'DD/MM/YYYY hh:mm:ss'
-        // ),
-        // collectedDate: moment(this.newsItem.collected).format(
-        //   'DD/MM/YYYY hh:mm:ss'
-        // ),
-        // topicsList: this.getTopicsList()
+        author: author,
+        publishedDate: truePublished ? published : '** no published date **',
+        collectedDate: trueCollected ? collected : '** ' + collected,
+        source: source,
+        sourceLink: this.newsItem.news_items[0].news_item_data.link,
+        sourceType: this.newsItem.news_items[0].news_item_data.osint_source_id
       }
     },
-    getTopicsList () {
+
+    getTopicsList() {
       const topicTitles = []
       this.newsItem.topics.forEach((id) => {
         const newTopicTitle = this.topicsList.find(
@@ -366,10 +401,10 @@ export default {
       return topicTitles.length ? topicTitles.join(', ') : '-'
     }
   },
-  updated () {
+  updated() {
     // console.log('card rendered!')
   },
-  mounted () {
+  mounted() {
     this.$emit('init')
     this.getMetaDate()
   }
