@@ -282,8 +282,7 @@ export default {
 
   created () {
     this.unsubscribe = this.$store.subscribe((mutation, state) => {
-      if (mutation.type === 'UPDATE_NEWSITEMS') {
-        console.log(`Updating to ${state.status}`)
+      if (mutation.type === 'assess/UPDATE_NEWSITEMS') {
         this.getNewsItemsFromStore()
       }
     });

@@ -212,7 +212,7 @@ export default {
       var filter
       this.scope.sources.forEach(function(source) {
         filter = { 'group_id': source.id, 
-          'data': { 'offset': 0, 'limit': 20, 'filter': { 
+          'data': { 'offset': 20, 'limit': 40, 'filter': { 
           'search': '',
           'sort': '',
           'range': '',

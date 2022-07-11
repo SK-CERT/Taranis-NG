@@ -78,7 +78,7 @@ class RSSCollector(BaseCollector):
 
         try:
             if proxy_handler:
-                feed = feedparser.parse(feed_url, handlers = [proxy_handler])
+                feed = feedparser.parse(feed_url, handlers=[proxy_handler])
             else:
                 feed = feedparser.parse(feed_url)
 

@@ -137,7 +137,7 @@ const mutations = {
   },
 
   DESELECT_ALL_NEWSITEMS(state) {
-    state.newsItems.forEach((newsItem) => { newsItem.selected = false })
+    state.newsItems.items.forEach((newsItem) => { newsItem.selected = false })
     state.newsItemsSelection = []
   },
 

@@ -23,17 +23,6 @@ class NewsItemAttribute:
         self.binary_value = binary_value
 
 
-class NewsItemTagsSchema(Schema):
-    tag = fields.Str()
-    category = fields.Str()
-
-
-class NewsItemTags:
-    def __init__(self, tag, category):
-        self.tag = tag
-        self.category = category
-
-
 class NewsItemDataBaseSchema(Schema):
     class Meta:
         unknown = EXCLUDE
@@ -48,7 +37,7 @@ class NewsItemDataBaseSchema(Schema):
     author = fields.Str()
     collected = fields.DateTime('%d.%m.%Y - %H:%M')
     osint_source_id = fields.Str(missing=None)
-    tags = fields.Nested(NewsItemTagsSchema, many=True)
+    tags = fields.List(fields.String(), required=False)
 
 
 class NewsItemDataSchema(NewsItemDataBaseSchema):
@@ -131,7 +120,7 @@ class NewsItemAggregateSchema(Schema):
     me_like = fields.Bool()
     me_dislike = fields.Bool()
     in_reports_count = fields.Int()
-    tags = fields.Nested(NewsItemTagsSchema, many=True)
+    tags = fields.List(fields.String(), required=False)
     news_items = fields.Nested(NewsItemPresentationSchema, many=True)
 
 

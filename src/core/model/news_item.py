@@ -77,10 +77,7 @@ class NewsItemData(db.Model):
         attributes,
         tags,
     ):
-        if id is None:
-            self.id = str(uuid.uuid4())
-        else:
-            self.id = id
+        self.id = str(uuid.uuid4()) if id is None else id
         self.hash = hash
         self.title = title
         self.review = review
@@ -194,9 +191,7 @@ class NewsItemData(db.Model):
     def update_news_item_tags(cls, news_item_id, tags):
         try:
             n_i_d = NewsItemData.get_news_item_data(news_item_id).first()
-            # log_manager.log_debug(f"NID: {n_i_d.id}, title: {n_i_d.title}, tags: {n_i_d.tags}")
             n_i_d.tags = tags
-            log_manager.log_debug(f"NID: {n_i_d.id}, title: {n_i_d.title}, tags: {n_i_d.tags}")
             db.session.commit()
         except Exception as e:
             log_manager.log_debug_trace(e)

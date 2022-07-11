@@ -217,9 +217,17 @@ export default {
       return this.topicSelection.length > 0
     }
   },
-  mounted () {
-    this.getTopicsData()
-    this.unselectAllTopics()
+  created () {
+    this.unsubscribe = this.$store.subscribe((mutation, state) => {
+      if (mutation.type === 'dashboard/UPDATE_TOPICS') {
+        // this.getTopicsData()
+        // this.unselectAllTopics()
+      }
+    });
+  },
+
+  beforeDestroy() {
+    this.unsubscribe();
   }
 }
 </script>

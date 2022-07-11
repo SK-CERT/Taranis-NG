@@ -78,8 +78,6 @@ class NLPBot(BaseBot):
             BaseBot.print_exception(preset, error)
 
     def generateKeywords(self, language, kw_model, text):
-      
-
         if language == 'en':
             keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 2), stop_words='english', use_mmr=True,
                                                  diversity=0.8, top_n=15)
