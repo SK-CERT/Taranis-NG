@@ -1,24 +1,30 @@
-import { getManualOSINTSources, getNewsItemsByGroup, getOSINTSourceGroupsList } from '@/api/assess'
+import { getManualOSINTSources, getNewsItemsByGroup, getOSINTSourceGroupsList, getNewsItemAggregate } from '@/api/assess'
 import { getField, updateField } from 'vuex-map-fields'
 import { xor } from 'lodash'
 
 const state = {
-  // newsitems: { total_count: 0, items: [] },
   multi_select: false,
   selection: [],
-  current_group_id: '',
   manual_osint_sources: [],
   osint_source_groups: [],
   filter: {},
-  newsItems: [],
+  newsItems: { total_count: 0, items: [] },
   newsItemsSelection: []
 }
 
 const actions = {
-  getNewsItemsByGroup(context, data) {
+
+  updateAggregateByID(context, id) {
+    return getNewsItemAggregate(id)
+      .then(response => {
+        context.commit('', response.data)
+      })
+  },
+
+  updateNewsItemsByGroup(context, data) {
     return getNewsItemsByGroup(data.group_id, data.data)
       .then(response => {
-        context.commit('setNewsItems', response.data)
+        context.commit('UPDATE_NEWSITEMS', response.data)
       })
   },
 
@@ -167,10 +173,6 @@ const mutations = {
     })
   },
 
-  setNewsItems(state, news_items) {
-    state.newsitems = news_items
-  },
-
   setMultiSelect(state, enable) {
     state.multi_select = enable
     state.selection = []
@@ -187,10 +189,6 @@ const mutations = {
         break
       }
     }
-  },
-
-  setCurrentGroup(state, group_id) {
-    state.current_group_id = group_id
   },
 
   setManualOSINTSources(state, new_manual_osint_sources) {
@@ -212,10 +210,6 @@ const getters = {
 
   getNewsItems(state) {
     return state.newsItems
-  },
-
-  getTotalNumber(state) {
-    return state.newsItems.length
   },
 
   getOSINTSourceGroupList(state) {
@@ -246,10 +240,6 @@ const getters = {
 
   getSelection(state) {
     return state.selection
-  },
-
-  getCurrentGroup(state) {
-    return state.current_group_id
   },
 
   getManualOSINTSources(state) {

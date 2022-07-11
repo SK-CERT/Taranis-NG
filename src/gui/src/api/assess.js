@@ -30,6 +30,10 @@ export function addNewsItem (data) {
   return ApiService.post('/assess/news-items', data)
 }
 
+export function getNewsItemAggregate (group_id, aggregate_id) {
+  return ApiService.get(`/assess/news-item-aggregates/${aggregate_id}`)
+}
+
 export function voteNewsItemAggregate (group_id, aggregate_id, vote) {
   return ApiService.put(`/assess/news-item-aggregates/${aggregate_id}`, { group_id: group_id, vote: vote })
 }

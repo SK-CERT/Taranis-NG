@@ -96,6 +96,10 @@ class NewsItem(Resource):
 
 class NewsItemAggregate(Resource):
 
+    @auth_required('ASSESS_ACCESS')
+    def get(self, aggregate_id):
+        return news_item.NewsItemAggregate.find(aggregate_id)
+
     @auth_required('ASSESS_UPDATE')
     def put(self, aggregate_id):
         user = auth_manager.get_user_from_jwt()

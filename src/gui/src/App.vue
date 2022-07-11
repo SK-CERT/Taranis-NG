@@ -46,7 +46,7 @@ export default {
     ...mapActions('users', ['updateUsers']),
     ...mapActions('assess', ['updateNewsItems', 'updateOSINTSourceGroupsList']),
 
-    connectSSE () {
+    connectSSE () { // TODO: unsubscribe
       this.$sse(
         (typeof process.env.VUE_APP_TARANIS_NG_CORE_SSE === 'undefined'
           ? '$VUE_APP_TARANIS_NG_CORE_SSE'
@@ -131,6 +131,7 @@ export default {
     })
   },
   created () {
+    console.log("update SourceList")
     this.updateOSINTSourceGroupsList()
   }
 }

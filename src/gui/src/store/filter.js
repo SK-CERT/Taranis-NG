@@ -60,7 +60,11 @@ export const filter = {
   },
 
   getters: {
-    getField
+    getField,
+
+    getState(filter) {
+      return filter.state
+    }
   },
 
   mutations: {

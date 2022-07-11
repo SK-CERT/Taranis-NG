@@ -33,7 +33,7 @@
             :items="getSourceNames(getOSINTSourceGroupList())"
             label="Sources"
             placeholder="all Sources"
-            @input="updateQuery()"
+            @input="updateScope()"
           />
         </v-col>
       </v-row>
@@ -112,7 +112,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 import searchField from '@/components/_subcomponents/searchField'
 import dateChips from '@/components/_subcomponents/dateChips'
 import dateRange from '@/components/_subcomponents/dateRange'
@@ -183,7 +183,7 @@ export default {
       'Social',
       'APT',
       'MitM'
-    ],
+    ]
   }),
   computed: {
     ...mapState('filter', {
@@ -201,7 +201,30 @@ export default {
       'getTopicSelectionList',
       'getSharingSetSelectionList'
     ]),
-    ...mapGetters('assess', ['getOSINTSourceGroupList']),
+    ...mapGetters('assess', [
+      'getOSINTSourceGroupList'
+    ]),
+    ...mapActions('assess', [
+      'updateNewsItemsByGroup'
+    ]),
+
+    updateScope () {
+      var filter
+      this.scope.sources.forEach(function(source) {
+        filter = { 'group_id': source.id, 
+          'data': { 'offset': 0, 'limit': 20, 'filter': { 
+          'search': '',
+          'sort': '',
+          'range': '',
+          'in_analyze': false,
+          'relevant': false,
+          'important': false
+        }}}
+      })
+      if (filter) {
+        this.updateNewsItemsByGroup(filter)
+      }
+    },
 
     updateQuery () {
       if (this.scope.topics.length === 1) {
@@ -210,17 +233,15 @@ export default {
         this.$router.push({
           query: { topic: this.scope.sharingSets[0].id }
         })
-      } else {
-        this.$router.push({ query: '' })
       }
     },
     getSourceNames (data) {
+      if (!data.items) {
+        this.getOSINTSourceGroupList()
+      }
       return data.items.map(value => ({ id: value.id, title: value.name }))
     },
     mounted () {
-      // this.$store.dispatch('updateOSINTSourceGroupsList')
-      const sourcesList = this.$store.getters.getOSINTSourceGroupList.items
-      console.log(sourcesList)
     }
   },
   watch: {

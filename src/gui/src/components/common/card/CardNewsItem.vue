@@ -147,14 +147,14 @@
 
                   <div class="d-flex align-start justify-center mr-3 ml-2 mt-1">
                     <votes
-                      :count="newsItem.votes.up"
+                      :count="newsItem.likes"
                       type="up"
                       @input="upvote($event)"
                     />
                   </div>
                   <div class="d-flex align-start justify-center mr-3 mt-1">
                     <votes
-                      :count="newsItem.votes.down"
+                      :count="newsItem.dislikes"
                       type="down"
                       @input="downvote($event)"
                     />
@@ -198,9 +198,9 @@
                   <strong>Source:</strong>
                 </v-col>
                 <v-col>
-                  {{ newsItem.source.domain }} <br />
+                  {{ newsItem.news_item_data.source }} <br />
                   <a
-                    :href="newsItem.source.url"
+                    :href="newsItem.news_item_data.source"
                     target="_blank"
                     icon
                     class="meta-link d-flex"
@@ -208,7 +208,7 @@
                     <v-icon left x-small color="primary" class="mr-1"
                       >mdi-open-in-new</v-icon
                     >
-                    <span class="label">{{ newsItem.source.url }}</span>
+                    <span class="label">{{ newsItem.news_item_data.source }}</span>
                   </a>
                 </v-col>
               </v-row>
@@ -342,14 +342,14 @@ export default {
 
     getMetaDate () {
       this.metaData = {
-        addedBy: this.getUsernameById()(this.newsItem.addedBy),
-        publishedDate: moment(this.newsItem.published).format(
-          'DD/MM/YYYY hh:mm:ss'
-        ),
-        collectedDate: moment(this.newsItem.collected).format(
-          'DD/MM/YYYY hh:mm:ss'
-        ),
-        topicsList: this.getTopicsList()
+        // addedBy: this.getUsernameById()(this.newsItem.addedBy),
+        // publishedDate: moment(this.newsItem.published).format(
+        //   'DD/MM/YYYY hh:mm:ss'
+        // ),
+        // collectedDate: moment(this.newsItem.collected).format(
+        //   'DD/MM/YYYY hh:mm:ss'
+        // ),
+        // topicsList: this.getTopicsList()
       }
     },
     getTopicsList () {

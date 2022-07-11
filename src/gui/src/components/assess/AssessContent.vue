@@ -1,16 +1,12 @@
 <template>
   <v-col class="overflow-hidden">
     <v-container fluid style="min-height: 100vh">
-      <loader
-        v-if="itemsLoaded.length < items.length"
-        label="loading news items"
-      />
 
       <transition name="empty-list-transition" mode="out-in">
-        <v-row v-if="!filteredItems.length">
+        <v-row v-if="!filteredItems">
           <v-col cols="12" class="empty-list-notification">
             <v-icon x-large> mdi-circle-off-outline </v-icon>
-            <span v-if="getTotalNumber().length">
+            <span v-if="items.total_count">
               The currently selected filters do not yield any results. Try
               changing the filters.
             </span>
@@ -46,12 +42,7 @@
     </v-container>
 
     <!-- TODO: Loader not working -->
-    <loader
-      v-if="itemsToLoad > itemsLoaded.length"
-      label="loading further news items"
-    />
     <div
-      v-else
       class="text-subtitle-1 text-center dark-grey--text text--lighten-2 mt-3"
     >
       <v-icon left color="primary">mdi-checkbox-marked-circle-outline</v-icon>
@@ -104,8 +95,9 @@ export default {
       'removeTopicFromNewsItem'
     ]),
     ...mapGetters('assess', [
-      'getTotalNumber',
+      'getFakeItems',
       'getNewsItems',
+      'getNewsItemList',
       'getNewsItemById',
       'getNewsItemsSelection',
       'getNewsItemsByTopicId',
@@ -136,63 +128,68 @@ export default {
       ) {
         this.reloading = true
         // TODO: Make it async
-        this.updateNewsItems()
+        this.getNewsItemsFromStore()
         this.reloading = false
       }
     },
 
     // TODO: Call API via Store
     // + pass filter parameter for presorting
-    updateNewsItems () {
-      const topics = this.scope.topics
-      const sharingSets = this.scope.sharingSets
+    getNewsItemsFromStore () {
+      this.items = this.getNewsItems().items
+      console.log("number of newsitems: " + this.getNewsItems().total_count)
+    },
+  
+  //   updateNewsItems () {
+  //     const topics = this.scope.topics
+  //     const sharingSets = this.scope.sharingSets
 
-      let totalTopicItems = []
-      topics.forEach((topic) => {
-        const topicItems = this.getNewsItemIds()(topic.id)
-        totalTopicItems = [...new Set([...totalTopicItems, ...topicItems])]
-      })
+  //     let totalTopicItems = []
+  //     topics.forEach((topic) => {
+  //       const topicItems = this.getNewsItemIds()(topic.id)
+  //       totalTopicItems = [...new Set([...totalTopicItems, ...topicItems])]
+  //     })
 
-      let totalSharingSetItems = []
-      sharingSets.forEach((sharingSet) => {
-        const sharingSetItems = this.getNewsItemIds()(sharingSet.id)
-        totalSharingSetItems = [
-          ...new Set([...totalSharingSetItems, ...sharingSetItems])
-        ]
-      })
+  //     let totalSharingSetItems = []
+  //     sharingSets.forEach((sharingSet) => {
+  //       const sharingSetItems = this.getNewsItemIds()(sharingSet.id)
+  //       totalSharingSetItems = [
+  //         ...new Set([...totalSharingSetItems, ...sharingSetItems])
+  //       ]
+  //     })
 
-      let scopedItems = []
-      if (topics.length && sharingSets.length) {
-        scopedItems = totalTopicItems.filter((id) =>
-          totalSharingSetItems.includes(id)
-        )
-      } else if (topics.length) {
-        scopedItems = totalTopicItems
-      } else if (this.scope.sharingSets.length) {
-        scopedItems = totalSharingSetItems
-      }
+  //     let scopedItems = []
+  //     if (topics.length && sharingSets.length) {
+  //       scopedItems = totalTopicItems.filter((id) =>
+  //         totalSharingSetItems.includes(id)
+  //       )
+  //     } else if (topics.length) {
+  //       scopedItems = totalTopicItems
+  //     } else if (this.scope.sharingSets.length) {
+  //       scopedItems = totalSharingSetItems
+  //     }
 
-      let limit = 10
+  //     let limit = 10
 
-      let chunkedData = [...this.items].filter((item) =>
-        scopedItems.includes(item.id)
-      )
+  //     let chunkedData = [...this.items].filter((item) =>
+  //       scopedItems.includes(item.id)
+  //     )
 
-      if (scopedItems.length) {
-        scopedItems.forEach((itemId) => {
-          if (!this.itemsLoaded.includes(itemId)) {
-            if (limit === 0) return false
-            limit--
-          }
-          chunkedData = [
-            ...new Set([...chunkedData, this.getNewsItemById()(itemId)])
-          ]
-        })
-      } else {
-        chunkedData = this.getNewsItems()
-      }
-      this.items = chunkedData
-    }
+  //     if (scopedItems.length) {
+  //       scopedItems.forEach((itemId) => {
+  //         if (!this.itemsLoaded.includes(itemId)) {
+  //           if (limit === 0) return false
+  //           limit--
+  //         }
+  //         chunkedData = [
+  //           ...new Set([...chunkedData, this.getNewsItemById()(itemId)])
+  //         ]
+  //       })
+  //     } else {
+  //       chunkedData = this.getNewsItems()
+  //     }
+  //     this.items = chunkedData
+  //   }
   },
 
   computed: {
@@ -271,7 +268,7 @@ export default {
       })
 
       this.$store.dispatch('updateItemCount', {
-        total: this.getTotalNumber(),
+        total: this.items.total_count,
         filtered: filteredData.length
       })
 
@@ -283,9 +280,17 @@ export default {
     }
   },
 
-  mounted () {
-    // Once this component is loaded load the initial data
-    this.updateNewsItems(false)
+  created () {
+    this.unsubscribe = this.$store.subscribe((mutation, state) => {
+      if (mutation.type === 'UPDATE_NEWSITEMS') {
+        console.log(`Updating to ${state.status}`)
+        this.getNewsItemsFromStore()
+      }
+    });
+  },
+
+  beforeDestroy() {
+    this.unsubscribe();
   },
 
   updated () {
@@ -296,7 +301,7 @@ export default {
     scope: {
       handler () {
         // Update news items based on the selected scope
-        this.updateNewsItems()
+        this.getNewsItemsFromStore()
       },
       deep: true
     }

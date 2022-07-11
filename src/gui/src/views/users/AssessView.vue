@@ -73,7 +73,6 @@ export default {
   methods: {
     ...mapActions('filter', ['resetNewsItemsFilter']),
     ...mapGetters('dashboard', ['getTopicById']),
-    ...mapGetters('assess', ['getTotalNumber'])
   },
   created () {
     // Clear all news items filter
@@ -93,8 +92,6 @@ export default {
           this.scope.topics = [{ id: topicId, title: topic.title }]
         }
       }
-    } else {
-      this.itemsToLoad = this.getTotalNumber()
     }
   }
 }
