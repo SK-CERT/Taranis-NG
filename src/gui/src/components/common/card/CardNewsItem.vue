@@ -100,7 +100,7 @@
             cols="12"
             sm="12"
             md="7"
-            class="d-flex flex-column"
+            class="d-flex flex-column pr-3"
             align-self="start"
           >
             <v-container column style="height: 100%">
@@ -124,7 +124,7 @@
               <v-row class="flex-grow-0 mt-1">
                 <v-col
                   cols="12"
-                  class="mx-0 d-flex justify-start flex-wrap py-1"
+                  class="mx-0 d-flex justify-start flex-wrap pt-1 pb-4"
                 >
                   <button-outlined
                     label="view details"
@@ -174,7 +174,6 @@
             class="d-flex flex-column"
             align-self="start"
             style="height: 100%"
-            v-if="metaData"
           >
             <v-container column style="height: 100%" class="pb-5">
               <v-row class="news-item-meta-infos">
@@ -182,7 +181,7 @@
                   <strong>Published:</strong>
                 </v-col>
                 <v-col>
-                  {{ metaData.publishedDate }}
+                  {{ getPublishedDate() }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -190,7 +189,7 @@
                   <strong>Collected:</strong>
                 </v-col>
                 <v-col>
-                  {{ metaData.collectedDate }}
+                  {{ getCollectedDate() }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -198,9 +197,9 @@
                   <strong>Source:</strong>
                 </v-col>
                 <v-col>
-                  {{ metaData.source }} <br />
+                  {{ getSource().name }} <br />
                   <a
-                    :href="metaData.sourceLink"
+                    :href="getSource().link"
                     target="_blank"
                     icon
                     class="meta-link d-flex"
@@ -208,7 +207,7 @@
                     <v-icon left x-small color="primary" class="mr-1"
                       >mdi-open-in-new</v-icon
                     >
-                    <span class="label">{{ metaData.sourceLink }}</span>
+                    <span class="label">{{ getSource().link }}</span>
                   </a>
                 </v-col>
               </v-row>
@@ -217,7 +216,7 @@
                   <strong>Source Type:</strong>
                 </v-col>
                 <v-col>
-                  {{ metaData.sourceType }}
+                  {{ getSource().type }}
                 </v-col>
               </v-row>
               <v-row class="news-item-meta-infos">
@@ -226,7 +225,7 @@
                 </v-col>
                 <v-col>
                   <span :class="[{ decorateSource: newsItem.decorateSource }]">
-                    {{ metaData.author }}
+                    {{ getAuthor() }}
                     <v-icon
                       right
                       small
@@ -253,7 +252,7 @@
                 </v-col>
                 <v-col>
                   <tag-norm
-                    v-for="tag in newsItem.tags"
+                    v-for="tag in getTags"
                     :key="tag.label"
                     :tag="tag"
                   />
@@ -300,9 +299,6 @@ export default {
     sharingSetView: Boolean,
     selected: Boolean
   },
-  data: () => ({
-    metaData: null
-  }),
   methods: {
     ...mapGetters('users', ['getUsernameById']),
 
@@ -345,45 +341,46 @@ export default {
       return stripHtml(this.newsItem.description)
     },
 
-    getMetaDate() {
-      let trueCollected = false
-      let truePublished = false
+    getTags() {
+      return this.newsItem.news_items[0].news_item_data.tags
+    },
 
-      let collected = this.newsItem.created
+    getPublishedDate() {
+      const published = this.newsItem.news_items[0].news_item_data.published
+      if (published) return moment(published).format('DD/MM/YYYY hh:mm:ss')
+      return '** no published date **'
+    },
+
+    getCollectedDate() {
+      const collected = this.newsItem.news_items[0].news_item_data.collected
       if (collected) {
-        trueCollected = true
-        collected = moment(collected, 'DD.MM.YYYY - hh:mm').format(
+        return moment(collected, 'DD.MM.YYYY - hh:mm').format(
           'DD/MM/YYYY hh:mm:ss'
         )
-      } else {
-        collected = moment(newDate()).format('DD/MM/YYYY hh:mm:ss')
       }
+      return moment(this.newsItem.created, 'DD.MM.YYYY - hh:mm').format(
+        'DD/MM/YYYY hh:mm:ss'
+      )
+    },
 
-      let published = this.newsItem.news_items[0].news_item_data.published
-      if (published) {
-        truePublished = true
-        published = moment(published).format('DD/MM/YYYY hh:mm:ss')
-      } else {
-        published = collected
-      }
+    getAuthor() {
+      const author = this.newsItem.news_items[0].news_item_data.author
+      if (author) return author
+      return '** no author given **'
+    },
 
+    getSource() {
       let source = this.newsItem.news_items[0].news_item_data.source
       if (isValidUrl(source)) {
         source = new URL(source).hostname.replace('www.', '')
       }
 
-      let author = this.newsItem.news_items[0].news_item_data.author
-      if (!author) {
-        author = '** no author given **'
-      }
+      // TODO: get Type (e.g. RSS, Web, Email, ...)
 
-      this.metaData = {
-        author: author,
-        publishedDate: truePublished ? published : '** no published date **',
-        collectedDate: trueCollected ? collected : '** ' + collected,
-        source: source,
-        sourceLink: this.newsItem.news_items[0].news_item_data.link,
-        sourceType: this.newsItem.news_items[0].news_item_data.osint_source_id
+      return {
+        name: source,
+        link: this.newsItem.news_items[0].news_item_data.link,
+        type: this.newsItem.news_items[0].news_item_data.osint_source_id
       }
     },
 
@@ -406,7 +403,6 @@ export default {
   },
   mounted() {
     this.$emit('init')
-    this.getMetaDate()
   }
   // beforeCreate () {
   //   console.log("starting")
