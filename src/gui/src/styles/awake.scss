@@ -201,7 +201,7 @@ textarea {
   caret-color: $light-grey-2;
   border-color: $light-grey-2;
   color: $dark-grey;
-  padding: 16px 12px !important;
+  padding: 16px 16px 16px 12px !important;
   transition: all 400ms ease;
 
   &.v-btn--disabled {
@@ -232,7 +232,7 @@ textarea {
   letter-spacing: normal;
   font-weight: 400;
   color: white !important;
-  padding: 16px 12px !important;
+  padding: 16px 16px 16px 12px !important;
   transition: all 400ms ease;
   border: 0 !important;
   outline: none !important;
@@ -842,6 +842,11 @@ textarea {
   min-width: 200px;
   border: 3px solid white;
   background-color: lighten($accent, 30);
+  flex-grow: 0 !important;
+  justify-content: flex-end !important;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
 }
 
 .v-card.share-items-details {
@@ -864,6 +869,10 @@ textarea {
 .merge-topics-details-title {
   font-family: $heading-font-family;
   color: $dark-grey;
+  font-weight: 700;
+  text-transform: capitalize;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .merge-topics-details-meta {
@@ -1116,4 +1125,14 @@ textarea {
   line-clamp: 4;
   -webkit-box-orient: vertical;
   height: calc(1.5em * 4);
+}
+
+.popup-title {
+  color: $dark-grey;
+  text-transform: capitalize;
+  font-weight: 700;
+  font-family: $heading-font-family;
+  line-height: 1.2;
+  letter-spacing: normal;
+  font-size: 1.5rem !important;
 }
