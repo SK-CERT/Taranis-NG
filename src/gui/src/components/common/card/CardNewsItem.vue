@@ -404,8 +404,5 @@ export default {
   mounted() {
     this.$emit('init')
   }
-  // beforeCreate () {
-  //   console.log("starting")
-  // }
 }
 </script>

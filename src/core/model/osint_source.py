@@ -12,7 +12,8 @@ from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
 from schema.acl_entry import ItemType
 from schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
-    OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema, OSINTSourceGroupIdSchema, OSINTSourceGroupSchemaBase
+    OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema, OSINTSourceGroupIdSchema, \
+    OSINTSourceGroupSchemaBase, OSINTSourceCollectorSchema
 from schema.word_list import WordListIdSchema
 
 
@@ -91,7 +92,7 @@ class OSINTSource(db.Model):
         return query.order_by(db.asc(OSINTSource.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search=None):
         query = cls.query
 
         if search is not None:
@@ -113,6 +114,16 @@ class OSINTSource(db.Model):
         for source in sources:
             source.osint_source_groups = OSINTSourceGroup.get_for_osint_source(source.id)
         sources_schema = OSINTSourcePresentationSchema(many=True)
+        return {'total_count': count, 'items': sources_schema.dump(sources)}
+
+    @classmethod
+    def get_all_with_type(cls):
+        query = cls.query
+
+        sources, count = query.join(Collector, OSINTSource.collector_id == Collector.id).with_entities(
+          Collector.type.label('collector_type'), OSINTSource.id, OSINTSource.name, OSINTSource.description).order_by(
+          db.asc(OSINTSource.name)).all(), query.count()
+        sources_schema = OSINTSourceCollectorSchema(many=True)
         return {'total_count': count, 'items': sources_schema.dump(sources)}
 
     @classmethod

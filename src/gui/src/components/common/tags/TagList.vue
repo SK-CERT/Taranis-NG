@@ -23,7 +23,8 @@ export default {
     tags: []
   },
   data: () => ({
-    limit: 5
+    limit: 5,
+    colorStart: Math.floor(Math.random() * 9)
   }),
   methods: {
     labelcolor: function (i) {
@@ -38,7 +39,7 @@ export default {
         '#B0309A',
         '#9752CB'
       ]
-      return colorList[i % colorList.length]
+      return colorList[(this.colorStart + i) % colorList.length]
     }
   }
 }
