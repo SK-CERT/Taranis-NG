@@ -13,7 +13,9 @@
         @click.native.capture="execute($event)"
       >
         <!-- ICON -->
-        <v-icon v-if="icon" left>{{ icon }}</v-icon>
+        <v-icon v-if="icon"
+        :left="label"
+        >{{ icon }}</v-icon>
         <!-- LABEL -->
         {{ label }}
       </v-btn>

@@ -1137,3 +1137,20 @@ textarea {
   letter-spacing: normal;
   font-size: 1.5rem !important;
 }
+
+.corner-close {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 0;
+  border-top: 0;
+  border-right: 0;
+  padding: 8px 3px 8px 3px !important;
+  min-width: 42px !important;
+
+  & .v-icon svg {
+    height: 18px;
+    width: 18px;
+  }
+}

@@ -1,5 +1,13 @@
 <template>
   <v-card>
+
+    <button-outlined
+      icon="$awakeClose"
+      color="awake-red-color"
+      extraClass="corner-close"
+      @click="$emit('close')"
+    />
+
     <v-container>
       <v-row>
         <v-col cols="12">
@@ -10,7 +18,7 @@
         </v-col>
       </v-row>
 
-      <v-row>
+      <v-row class="pb-4">
         <v-row class="mt-4 mb-0">
           <v-col
             v-if="topicView"
@@ -80,7 +88,7 @@
       </v-row>
     </v-container>
 
-    <v-divider></v-divider>
+    <!-- <v-divider></v-divider>
 
     <v-card-actions class="mt-3">
       <v-spacer></v-spacer>
@@ -91,7 +99,7 @@
         color="awake-red-color"
         @click="$emit('close')"
       />
-    </v-card-actions>
+    </v-card-actions> -->
   </v-card>
 </template>
 
