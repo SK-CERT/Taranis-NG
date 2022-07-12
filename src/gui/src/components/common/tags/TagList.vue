@@ -9,7 +9,9 @@
         x-small
         :color="labelcolor(i)"
         >
+        <span class="text-truncate text-capitalize">
           {{ tag }}
+        </span>
       </v-chip>
   </div>
 </template>
@@ -18,10 +20,10 @@
 export default {
   name: 'TagList',
   props: {
-    tags: [],
-    limit: 5
+    tags: []
   },
   data: () => ({
+    limit: 5
   }),
   methods: {
     labelcolor: function (i) {
