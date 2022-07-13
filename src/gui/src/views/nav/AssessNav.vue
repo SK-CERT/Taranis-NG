@@ -30,7 +30,7 @@
         <v-col cols="12" class="pt-0">
           <dropdown-selection
             v-model="scope.sources"
-            :items="getSourceNames(getOSINTSourceGroupList())"
+            :items="sourcesList"
             label="Sources"
             placeholder="all Sources"
             @input="updateScope()"
@@ -183,14 +183,16 @@ export default {
       'Social',
       'APT',
       'MitM'
-    ]
+    ],
+    sourcesList: []
+
   }),
   computed: {
     ...mapState('filter', {
       scope: (state) => state.newsItemsFilter.scope,
       filter: (state) => state.newsItemsFilter.filter,
       order: (state) => state.newsItemsFilter.order
-    })
+    }),
     // ...mapState('filter', ['newsItemsFilter'])
     // getData () {
     //   return this.$store.getters.getDashboardData
@@ -208,11 +210,14 @@ export default {
       'updateNewsItemsByGroup'
     ]),
 
+    updateSourcesList () {
+      this.sourcesList = this.getSourceNames(this.getOSINTSourceGroupList())
+    },
     updateScope () {
       var filter
       this.scope.sources.forEach(function(source) {
         filter = { 'group_id': source.id, 
-          'data': { 'offset': 20, 'limit': 40, 'filter': { 
+          'data': { 'offset': 10, 'limit': 15, 'filter': { 
           'search': '',
           'sort': '',
           'range': '',
@@ -237,12 +242,22 @@ export default {
     },
     getSourceNames (data) {
       if (!data.items) {
-        this.getOSINTSourceGroupList()
+        return {}
       }
       return data.items.map(value => ({ id: value.id, title: value.name }))
-    },
-    mounted () {
     }
+  },
+  created () {
+  this.updateSourcesList()
+  this.unsubscribe = this.$store.subscribe((mutation, state) => {
+    if (mutation.type === 'assess/setOSINTSourceGroups') {
+      this.updateSourcesList()
+    }
+  });
+  },
+
+  beforeDestroy () {
+    this.unsubscribe();
   },
   watch: {
     searchQuery: function () {

@@ -139,57 +139,7 @@ export default {
       this.items = this.getNewsItems().items
       console.log("number of newsitems: " + this.getNewsItems().total_count)
     },
-  
-  //   updateNewsItems () {
-  //     const topics = this.scope.topics
-  //     const sharingSets = this.scope.sharingSets
 
-  //     let totalTopicItems = []
-  //     topics.forEach((topic) => {
-  //       const topicItems = this.getNewsItemIds()(topic.id)
-  //       totalTopicItems = [...new Set([...totalTopicItems, ...topicItems])]
-  //     })
-
-  //     let totalSharingSetItems = []
-  //     sharingSets.forEach((sharingSet) => {
-  //       const sharingSetItems = this.getNewsItemIds()(sharingSet.id)
-  //       totalSharingSetItems = [
-  //         ...new Set([...totalSharingSetItems, ...sharingSetItems])
-  //       ]
-  //     })
-
-  //     let scopedItems = []
-  //     if (topics.length && sharingSets.length) {
-  //       scopedItems = totalTopicItems.filter((id) =>
-  //         totalSharingSetItems.includes(id)
-  //       )
-  //     } else if (topics.length) {
-  //       scopedItems = totalTopicItems
-  //     } else if (this.scope.sharingSets.length) {
-  //       scopedItems = totalSharingSetItems
-  //     }
-
-  //     let limit = 10
-
-  //     let chunkedData = [...this.items].filter((item) =>
-  //       scopedItems.includes(item.id)
-  //     )
-
-  //     if (scopedItems.length) {
-  //       scopedItems.forEach((itemId) => {
-  //         if (!this.itemsLoaded.includes(itemId)) {
-  //           if (limit === 0) return false
-  //           limit--
-  //         }
-  //         chunkedData = [
-  //           ...new Set([...chunkedData, this.getNewsItemById()(itemId)])
-  //         ]
-  //       })
-  //     } else {
-  //       chunkedData = this.getNewsItems()
-  //     }
-  //     this.items = chunkedData
-  //   }
   },
 
   computed: {

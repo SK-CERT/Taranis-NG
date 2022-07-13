@@ -44,7 +44,9 @@ export default {
   methods: {
     ...mapActions('dashboard', ['updateTopics']),
     ...mapActions('users', ['updateUsers']),
-    ...mapActions('assess', ['updateNewsItems', 'updateOSINTSourceGroupsList']),
+    ...mapActions('assess', ['updateNewsItems',
+                            'updateOSINTSourceGroupsList'
+                  ]),
 
     connectSSE () { // TODO: unsubscribe
       this.$sse(
@@ -83,6 +85,7 @@ export default {
   },
   updated () {
     this.$root.$emit('app-updated')
+
   },
   mounted () {
     if (this.$cookies.isKey('jwt')) {
@@ -126,9 +129,7 @@ export default {
       this.visible = !this.visible
     })
 
-    this.$root.$on('logged-in', () => {
-      this.connectSSE()
-    })
+    this.updateOSINTSourceGroupsList()
   },
   created () {
     console.log("update SourceList")

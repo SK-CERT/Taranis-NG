@@ -243,7 +243,6 @@ export default {
       })
   },
   beforeDestroy () {
-    this.$store.commit('setMultiSelect', false)
   }
 }
 </script>

@@ -7,6 +7,7 @@ const state = {
   selection: [],
   manual_osint_sources: [],
   osint_source_groups: [],
+  default_source_group_id: '',
   filter: {},
   newsItems: { total_count: 0, items: [] },
   newsItemsSelection: []
@@ -95,6 +96,7 @@ const actions = {
     return getOSINTSourceGroupsList()
       .then(response => {
         context.commit('setOSINTSourceGroups', response.data)
+        context.commit('setDefaultOSINTSourceGroup', response.data)
       })
   },
 
@@ -197,6 +199,10 @@ const mutations = {
 
   setOSINTSourceGroups(state, osint_source_groups) {
     state.osint_source_groups = osint_source_groups
+  },
+
+  setDefaultOSINTSourceGroup(state, osint_source_groups) {
+    state.default_source_group_id = osint_source_groups.items.filter(value => value.default)[0].id
   },
 
   setFilter(state, data) {

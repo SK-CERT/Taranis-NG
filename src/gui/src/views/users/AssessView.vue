@@ -72,7 +72,7 @@ export default {
   },
   methods: {
     ...mapActions('filter', ['resetNewsItemsFilter']),
-    ...mapGetters('dashboard', ['getTopicById']),
+    ...mapGetters('dashboard', ['getTopicById'])
   },
   created () {
     // Clear all news items filter

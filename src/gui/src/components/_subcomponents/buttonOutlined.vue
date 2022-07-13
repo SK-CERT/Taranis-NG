@@ -16,7 +16,6 @@
         <v-icon
           v-if="icon"
           :style="color ? { fill: colorValue } : { fill: '#575757' }"
-          :left="label"
           >
           {{ icon }}
           </v-icon>
