@@ -4,7 +4,7 @@ from flask_restful import Resource, reqparse
 from managers import sse_manager, log_manager
 from managers.auth_manager import api_key_required
 from model import bot_preset, news_item, word_list
-import datetime
+from datetime import datetime, timedelta
 
 
 class BotPresetsForBots(Resource):
@@ -34,7 +34,7 @@ class NewsItemData(Resource):
     @api_key_required
     def get(self):
         try:
-            limit = datetime.strftime(datetime.datetime.now() - datetime.timedelta(weeks=1), "%d.%m.%Y - %H:%M")
+            limit = datetime.strftime(datetime.now() - timedelta(weeks=1), "%d.%m.%Y - %H:%M")
             if 'limit' in request.args:
                 limit = request.args['limit']
         except Exception as ex:
