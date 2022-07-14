@@ -34,7 +34,7 @@ class NewsItemData(Resource):
     @api_key_required
     def get(self):
         try:
-            limit = datetime.strftime(datetime.datetime.now() - datetime.timedelta(weeks=1), "%Y-%m-%d - %H:%M")
+            limit = datetime.strftime(datetime.datetime.now() - datetime.timedelta(weeks=1), "%d.%m.%Y - %H:%M")
             if 'limit' in request.args:
                 limit = request.args['limit']
         except Exception as ex:
