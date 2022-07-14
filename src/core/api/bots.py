@@ -64,8 +64,15 @@ class GetNewsItemsAggregate(Resource):
     def get(self, group_id):
         import json
         resp_str = news_item.NewsItemAggregate.get_news_items_aggregate(group_id, request.json)
-        resp = json.loads(resp_str)
-        return resp
+        return json.loads(resp_str)
+
+
+class GetDefaultNewsItemsAggregate(Resource):
+    @api_key_required
+    def get(self):
+        import json
+        resp_str = news_item.NewsItemAggregate.get_news_items_aggregate('3c8ef48d-411a-42ce-a0d6-7fd971676ff3', request.json)
+        return json.loads(resp_str)
 
 
 class Categories(Resource):
@@ -97,5 +104,6 @@ def initialize(api):
     api.add_resource(UpdateNewsItemAttributes, "/api/v1/bots/news-item-data/<string:news_item_data_id>/attributes")
     api.add_resource(BotGroupAction, "/api/v1/bots/news-item-aggregates-group-action")
     api.add_resource(GetNewsItemsAggregate, "/api/v1/bots/news-item-aggregates-by-group/<string:group_id>")
+    api.add_resource(GetDefaultNewsItemsAggregate, "/api/v1/bots/news-item-aggregates")
     api.add_resource(Categories, "/api/v1/bots/word-list-categories/<int:category_id>")
     api.add_resource(Entries, "/api/v1/bots/word-list-categories/<int:category_id>/entries/<string:entry_name>")
