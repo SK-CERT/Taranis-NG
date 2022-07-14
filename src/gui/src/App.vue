@@ -45,7 +45,8 @@ export default {
     ...mapActions('dashboard', ['updateTopics']),
     ...mapActions('users', ['updateUsers']),
     ...mapActions('assess', ['updateNewsItems',
-                            'updateOSINTSourceGroupsList'
+                            'updateOSINTSourceGroupsList',
+                            'updateOSINTSources'
                   ]),
 
     connectSSE () { // TODO: unsubscribe
@@ -134,6 +135,7 @@ export default {
   created () {
     console.log("update SourceList")
     this.updateOSINTSourceGroupsList()
+    this.updateOSINTSources()
   }
 }
 </script>

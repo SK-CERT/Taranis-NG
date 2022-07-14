@@ -8,6 +8,10 @@ export function getOSINTSourceGroupsList () {
   return ApiService.get('/assess/osint-source-group-list')
 }
 
+export function getOSINTSourcesList () {
+  return ApiService.get('/assess/osint-sources-list')
+}
+
 export function getManualOSINTSources () {
   return ApiService.get('/assess/manual-osint-sources')
 }

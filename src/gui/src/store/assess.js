@@ -1,11 +1,11 @@
-import { getManualOSINTSources, getNewsItemsByGroup, getOSINTSourceGroupsList, getNewsItemAggregate } from '@/api/assess'
+import { getManualOSINTSources, getNewsItemsByGroup, getOSINTSourceGroupsList, getNewsItemAggregate, getOSINTSourcesList } from '@/api/assess'
 import { getField, updateField } from 'vuex-map-fields'
 import { xor } from 'lodash'
 
 const state = {
   multi_select: false,
   selection: [],
-  manual_osint_sources: [],
+  osint_sources: [],
   osint_source_groups: [],
   default_source_group_id: '',
   filter: {},
@@ -26,6 +26,21 @@ const actions = {
     return getNewsItemsByGroup(data.group_id, data.data)
       .then(response => {
         context.commit('UPDATE_NEWSITEMS', response.data)
+      })
+  },
+
+  updateOSINTSources(context) {
+    return getOSINTSourcesList()
+      .then(response => {
+        context.commit('UPDATE_OSINTSOURCES', response.data)
+      })
+  },
+
+  updateOSINTSourceGroupsList(context) {
+    return getOSINTSourceGroupsList()
+      .then(response => {
+        context.commit('setOSINTSourceGroups', response.data)
+        context.commit('setDefaultOSINTSourceGroup', response.data)
       })
   },
 
@@ -85,21 +100,6 @@ const actions = {
     context.commit('REMOVE_TOPIC_FROM_NEWSITEM', { newsItemId, topicId })
   },
 
-  getManualOSINTSources(context) {
-    return getManualOSINTSources()
-      .then(response => {
-        context.commit('setManualOSINTSources', response.data)
-      })
-  },
-
-  updateOSINTSourceGroupsList (context) {
-    return getOSINTSourceGroupsList()
-      .then(response => {
-        context.commit('setOSINTSourceGroups', response.data)
-        context.commit('setDefaultOSINTSourceGroup', response.data)
-      })
-  },
-
   filter(context, data) {
     context.commit('setFilter', data)
   }
@@ -111,6 +111,10 @@ const mutations = {
 
   UPDATE_NEWSITEMS(state, newsItems) {
     state.newsItems = newsItems
+  },
+
+  UPDATE_OSINTSOURCES(state, osint_sources) {
+    state.osint_sources = osint_sources
   },
 
   SELECT_NEWSITEM(state, id) {
@@ -193,10 +197,6 @@ const mutations = {
     }
   },
 
-  setManualOSINTSources(state, new_manual_osint_sources) {
-    state.manual_osint_sources = new_manual_osint_sources
-  },
-
   setOSINTSourceGroups(state, osint_source_groups) {
     state.osint_source_groups = osint_source_groups
   },
@@ -248,8 +248,8 @@ const getters = {
     return state.selection
   },
 
-  getManualOSINTSources(state) {
-    return state.manual_osint_sources
+  getOSINTSources(state) {
+    return state.osint_sources
   },
 
   getFilter(state) {
