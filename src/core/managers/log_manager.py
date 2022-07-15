@@ -17,16 +17,19 @@ gunicorn_logger.setLevel(logging.INFO)
 sys_logger = logging.getLogger('SysLogger')
 sys_logger.setLevel(logging.INFO)
 
-if "MODULE_ID" in os.environ:
-    module_id = os.environ.get("MODULE_ID")
-else:
-    module_id = None
+module_id = os.getenv("MODULE_ID", None)
 
 # increase logging level
-if "DEBUG" in os.environ and os.environ.get("DEBUG").lower() == "true":
+if os.getenv("DEBUG", "false").lower() == "true":
     gunicorn_logger.setLevel(logging.DEBUG)
     sys_logger.setLevel(logging.DEBUG)
 
+# send a debug message
+def log_exception(message=""):
+    formatted_message = "[{}] {}".format(module_id,message)
+    gunicorn_logger.exception(formatted_message)
+    if sys_logger:
+        sys_logger.exception(formatted_message)
 
 # send a debug message
 def log_debug(message):

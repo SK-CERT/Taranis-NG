@@ -61,8 +61,8 @@ class NewsItemsByGroup(Resource):
             limit = 50
             if 'limit' in request.args and request.args['limit']:
                 limit = min(int(request.args['limit']), 200)
-        except Exception as ex:
-            log_manager.log_debug(ex)
+        except Exception:
+            log_manager.log_exception("Failed to GET NewsItemsByGroup")
             return "", 400
 
         return news_item.NewsItemAggregate.get_by_group_json(group_id, filter, offset, limit, user)

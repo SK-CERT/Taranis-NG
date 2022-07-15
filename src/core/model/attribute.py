@@ -288,11 +288,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        log_manager.log_debug("Processed CVE items: " + str(item_count))
+                        log_manager.log_debug(f"Processed CVE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        log_manager.log_debug("Processed CVE items: " + str(item_count))
+        log_manager.log_debug(f"Processed CVE items: {item_count}")
         db.session.commit()
 
     @classmethod
@@ -318,11 +318,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        log_manager.log_debug("Processed CPE items: " + str(item_count))
+                        log_manager.log_debug(f"Processed CPE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        log_manager.log_debug("Processed CPE items: " + str(item_count))
+        log_manager.log_debug(f"Processed CPE items: {item_count}")
         db.session.commit()
 
     @classmethod

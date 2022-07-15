@@ -18,8 +18,8 @@ class Dashboard(Resource):
             tag_cloud_day = 0
             if 'tag_cloud_day' in request.args and request.args['tag_cloud_day']:
                 tag_cloud_day = min(int(request.args['tag_cloud_days']), 7)
-        except Exception as ex:
-            log_manager.log_debug(ex)
+        except Exception:
+            log_manager.log_exception()
             return "", 400
 
         total_news_items = NewsItemData.count_all()

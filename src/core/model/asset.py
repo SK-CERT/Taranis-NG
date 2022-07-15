@@ -47,9 +47,9 @@ class Asset(db.Model):
     asset_group_id = db.Column(db.String, db.ForeignKey('asset_group.id'))
     asset_group = db.relationship("AssetGroup")
 
-    asset_cpes = db.relationship("AssetCpe", cascade="all, delete-orphan")
+    asset_cpes = db.relationship("AssetCpe", cascade="all, delete-orphan", back_populates="asset")
 
-    vulnerabilities = db.relationship("AssetVulnerability", cascade="all, delete-orphan")
+    vulnerabilities = db.relationship("AssetVulnerability", cascade="all, delete-orphan", back_populates="asset")
     vulnerabilities_count = db.Column(db.Integer, default=0)
 
     def __init__(self, id, name, serial, description, asset_group_id, asset_cpes):
