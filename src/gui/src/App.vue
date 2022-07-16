@@ -44,10 +44,7 @@ export default {
   methods: {
     ...mapActions('dashboard', ['updateTopics']),
     ...mapActions('users', ['updateUsers']),
-    ...mapActions('assess', ['updateNewsItems',
-                            'updateOSINTSourceGroupsList',
-                            'updateOSINTSources'
-                  ]),
+    ...mapActions('assess', ['updateNewsItems',]),
 
     connectSSE () { // TODO: unsubscribe
       this.$sse(
@@ -129,13 +126,9 @@ export default {
     this.$root.$on('nav-clicked', () => {
       this.visible = !this.visible
     })
-
-    this.updateOSINTSourceGroupsList()
   },
   created () {
-    console.log("update SourceList")
-    this.updateOSINTSourceGroupsList()
-    this.updateOSINTSources()
+
   }
 }
 </script>

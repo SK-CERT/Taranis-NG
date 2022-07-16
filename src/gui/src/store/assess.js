@@ -23,10 +23,12 @@ const actions = {
   },
 
   updateNewsItemsByGroup(context, data) {
+    if (data.group_id) {
     return getNewsItemsByGroup(data.group_id, data.data)
       .then(response => {
         context.commit('UPDATE_NEWSITEMS', response.data)
       })
+    }
   },
 
   updateOSINTSources(context) {

@@ -72,9 +72,17 @@ export default {
   },
   methods: {
     ...mapActions('filter', ['resetNewsItemsFilter']),
-    ...mapGetters('dashboard', ['getTopicById'])
+    ...mapGetters('dashboard', ['getTopicById']),
+    ...mapActions('assess', ['updateNewsItems',
+      'updateOSINTSourceGroupsList',
+      'updateOSINTSources'
+    ])
   },
   created () {
+    console.log('update SourceLise')
+    this.updateOSINTSourceGroupsList()
+    this.updateOSINTSources()
+
     // Clear all news items filter
     this.resetNewsItemsFilter()
 

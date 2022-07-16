@@ -212,6 +212,7 @@ export default {
 
     updateSourcesList () {
       this.sourcesList = this.getSourceNames(this.getOSINTSourceGroupList())
+      console.log(this.sourcesList)
     },
     updateScope () {
       var filter
@@ -242,7 +243,7 @@ export default {
     },
     getSourceNames (data) {
       if (!data.items) {
-        return {}
+        return []
       }
       return data.items.map(value => ({ id: value.id, title: value.name }))
     }
