@@ -781,6 +781,7 @@ const messages_en = {
         description: "Description",
         download: "Download",
         total_count: "News items count: ",
+        selected_count: "Selected news items count: ",
         tooltip: {
             filter_read: "Show/hide unread news items",
             filter_important: "Show/hide important news items",
