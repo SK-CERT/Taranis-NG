@@ -11,7 +11,16 @@ const keyboardMixin = targetId => ({
         shortcuts: [],
         card: null,
         first_dialog: null,
-        keyboard_state: 'DEFAULT'
+        keyboard_state: 'DEFAULT',
+        view_href_map: [
+            {key: 'dashboard_view', href: '/dashboard'},
+            {key: 'global_configuration_view', href: '/config'},
+            {key: 'aggregate_open', href: '/assess'},
+            {key: 'analyze_view', href: '/analyze/local'},
+            {key: 'publish_view', href: '/publish'},
+            {key: 'my_assets_view', href: '/myassets'},
+            {key: 'configuration_view', href: '/config/external'},
+        ],
     }),
 
     computed: {
@@ -83,8 +92,13 @@ const keyboardMixin = targetId => ({
             card.show = this.card_items[this.pos].querySelector(".card");
             card.id = this.card_items[this.pos].dataset.id;
             card.close = document.querySelector("[data-dialog='" + dialog + "-detail'] [data-btn='close']");
-            // Link is always extracted from the news item newdial button, does not work for opening all selected items, but also with opened items
-            card.link = this.card_items[this.pos].querySelector(".v-card button[data-btn='link'] a");
+            // In multi select mode the buttons are not availale in the list and SHOW_ITEM mode, extract the URL from the span element for the active element instead
+            let card_link = this.card_items[this.pos].querySelector(".col-11 .info--text");
+            if (card_link) {
+                card.link_url = card_link.textContent.trim();
+            } else {
+                card.link_url = undefined;
+            }
 
             // Speed Dial Toolbar
             card.group = temp.querySelector(which + "[data-btn='group']");
@@ -187,6 +201,13 @@ const keyboardMixin = targetId => ({
                                     //this.keyRemaper();
                                     this.cardReindex();
                                 }, 150);
+                            } else {
+                                this.$root.$emit('notification',
+                                    {
+                                        type: 'error',
+                                        loc: 'assess.shortcuts.aggregate_no_group'
+                                    }
+                                );
                             }
                             break;
 
@@ -301,10 +322,8 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'open_item_source':
-                            console.log('this.card.link:', this.card.link) //eslint-disable-line
-                            // opening all selected news items' sources is not yet supprted
-                            if (! this.multiSelectActive) {
-                                this.card.link.click()
+                            if (this.card.link_url) {
+                                window.open(this.card.link_url, undefined, "noreferrer");
                             }
                             break;
 
@@ -325,6 +344,16 @@ const keyboardMixin = targetId => ({
 
                         case 'reload':
                             this.$root.$emit('news-items-updated')
+                            break;
+
+                        case 'enter_view_mode':
+                            this.keyboard_state = 'VIEW';
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'success',
+                                    loc: 'assess.shortcuts.enter_view_mode'
+                                }
+                            )
                             break;
 
                     }
@@ -383,8 +412,9 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'open_item_source':
-                            console.log('this.card.link:', this.card.link) //eslint-disable-line
-                            this.card.link.click()
+                            if (this.card.link_url) {
+                                window.open(this.card.link_url, undefined, "noreferrer");
+                            }
                             break;
 
                         default:
@@ -427,6 +457,34 @@ const keyboardMixin = targetId => ({
                             // exit mode
                             this.keyboard_state = 'DEFAULT';
                             break;
+                    }
+                    if (this.keyboard_state = 'DEFAULT') {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'success',
+                                loc: 'assess.shortcuts.default_mode'
+                            }
+                        )
+                    }
+                } else if (this.keyboard_state === 'VIEW') {
+                    for (let i = 0; i < this.view_href_map.length; i++) {
+                        if (this.view_href_map[i].key === keyAlias) {
+                            this.keyboard_state = 'DEFAULT';
+                            document.querySelector("a[href='" + this.view_href_map[i].href + "']").click();
+                            break;
+                        }
+                    }
+                    if (keyAlias === 'close_item') {
+                        // exit mode
+                        this.keyboard_state = 'DEFAULT';
+                    }
+                    if (this.keyboard_state === 'DEFAULT') {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'success',
+                                loc: 'assess.shortcuts.default_mode'
+                            }
+                        );
                     }
                 }
                 this.scrollPos();

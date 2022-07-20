@@ -3,10 +3,19 @@ import {updateProfile} from "@/api/user";
 
 const state = {
     hotkeys: [
-        // source group navigation
+        // switch views
+        {character: 'v', alias: 'enter_view_mode'},
+        {character: 'd', alias: 'dashboard_view'},
+        {character: 'C', alias: 'global_configuration_view'},
+        // assess = aggregate_open
+        {character: 'z', alias: 'analyze_view'},
+        {character: 'p', alias: 'publish_view'},
+        {character: 'm', alias: 'my_assets_view'},
+        {character: 'c', alias: 'configuration_view'},
+        // assess: source group navigation
         {character: 'K', alias: 'source_group_up', icon: 'mdi-arrow-up-bold-box-outline'},
         {character: 'J', alias: 'source_group_down', icon: 'mdi-arrow-up-bold-box-outline'},
-        // new item navigation
+        // assess: new item navigation
         {key_code: 38, key: 'ArrowUp', alias: 'collection_up', icon: 'mdi-arrow-up-bold-box-outline'},
         {key_code: 40, key: 'ArrowDown', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
         {key_code: 37, key: 'ArrowLeft', alias: 'close_item', icon: 'mdi-close-circle-outline'},
@@ -19,7 +28,7 @@ const state = {
         {key_code: 27, key: 'Escape', alias: 'close_item', icon: 'mdi-close-circle-outline'},
         {key_code: 35, key: 'End', alias: 'end'},
         {key_code: 36, key: 'Home', alias: 'home'},
-        // news item actions
+        // assess: news item actions
         {character: 'r', alias: 'read_item', icon: 'mdi-eye'},
         {character: 'i', alias: 'important_item', icon: 'mdi-star'},
         {character: 'u', alias: 'like_item', icon: 'mdi-thumb-up'},
@@ -33,7 +42,7 @@ const state = {
         {character: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app'},
         {key_code: 191, key: 'Slash', alias: 'open_search', icon: 'mdi-card-search'},
         {character: 'R', alias: 'reload'},
-        // filter actions
+        // assess: filter actions
         {character: 'f', alias: 'enter_filter_mode'},
     ],
     spellcheck: true,
