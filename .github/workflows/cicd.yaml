@@ -30,5 +30,46 @@ jobs:
         with:
           file: docker/Dockerfile.core
           push: true
-          tags: ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-core:latest
-
+          tags: |
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-core:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-core:${{ github.ref_name }}
+      - name: Build and push bots
+        uses: docker/build-push-action@v3
+        with:
+          file: docker/Dockerfile.bots
+          push: true
+          tags: |
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-bots:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-bots:${{ github.ref_name }}
+      - name: Build and push gui
+        uses: docker/build-push-action@v3
+        with:
+          file: docker/Dockerfile.gui
+          push: true
+          tags: |
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-gui:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-gui:${{ github.ref_name }}
+      - name: Build and push collectors
+        uses: docker/build-push-action@v3
+        with:
+          file: docker/Dockerfile.collectors
+          push: true
+          tags: |
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-collectors:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-collectors:${{ github.ref_name }}
+      - name: Build and push publishers
+        uses: docker/build-push-action@v3
+        with:
+          file: docker/Dockerfile.publishers
+          push: true
+          tags: |
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-publishers:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-publishers:${{ github.ref_name }}
+      - name: Build and push presenters
+        uses: docker/build-push-action@v3
+        with:
+          file: docker/Dockerfile.presenters
+          push: true
+          tags: |
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-presenters:latest
+            ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-presenters:${{ github.ref_name }}
