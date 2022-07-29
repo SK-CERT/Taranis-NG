@@ -9,7 +9,7 @@ RUN python -m pip install --upgrade pip
 RUN \
     apk add --no-cache \
     firefox \
-    unzip \
+    curl \
     libexif \
     udev \
     harfbuzz \
@@ -22,8 +22,7 @@ RUN \
     ttf-freefont \
     tar && \
     curl -fsSL https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz | \
-    tar -xzC /usr/local/bin/ && \
-    apk --purge del .build-deps
+    tar -xzC /usr/local/bin/
 
 COPY ./src/collectors/requirements.txt /app/requirements.txt
 
