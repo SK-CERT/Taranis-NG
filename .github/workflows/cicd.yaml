@@ -19,10 +19,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: get ghcr owner repository
+        run: |
+          echo "GHCR_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
       - name: Build and push core
         uses: docker/build-push-action@v3
         with:
           file: docker/Dockerfile.core
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/taranis-ng-core:latest
+          tags: ghcr.io/${{ env.GHCR_OWNER }}/taranis-ng-core:latest
 
