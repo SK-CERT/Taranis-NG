@@ -7,7 +7,6 @@ on:
     - awake
     tags:
     - '**'
-  pull_request:
 jobs:
   build:
     name: build docker

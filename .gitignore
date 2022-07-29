@@ -6,6 +6,7 @@ __pycache__/
 node_modules/
 dist/
 build/
+.envrc
 
 # temporary files of editors
 .DS_Store

@@ -1,0 +1,19 @@
+name: linting
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    name: lint & check formatting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8']
+    steps:
+      - uses: actions/checkout@v2
+      - name: lint with black
+        uses: rickstaa/action-black@v1
+        with:
+          black_args: "src --check"
+          fail_on_error: false
