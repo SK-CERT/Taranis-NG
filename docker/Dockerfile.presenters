@@ -27,12 +27,6 @@ RUN apt-get install --no-install-recommends -y \
     apt-get autoremove -y --purge &&\
     apt-get clean
 
-COPY ./docker/start.sh /start.sh
-RUN chmod +x /start.sh
-
-COPY ./docker/prestart.sh /app/prestart.sh
-RUN chmod +x /app/prestart.sh
-
 COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
@@ -52,4 +46,3 @@ ENV WORKERS_PER_CORE 8
 VOLUME ["/app/templates"]
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/start.sh"]
