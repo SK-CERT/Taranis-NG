@@ -1,19 +1,25 @@
 from flask import Flask
 from flask_cors import CORS
 
-from managers import *
+from managers import (
+    db_manager,
+    auth_manager,
+    api_manager,
+    sse_manager,
+    remote_manager,
+    tagcloud_manager,
+)
 from model import *  # just until all new model classes are used regularly
 
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('config.Config')
+    app.config.from_object("config.Config")
 
     with app.app_context():
         CORS(app)
 
         db_manager.initialize(app)
-        db_manager.create_tables()
 
         auth_manager.initialize(app)
         api_manager.initialize(app)
