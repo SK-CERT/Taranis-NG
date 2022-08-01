@@ -91,8 +91,15 @@
                                                 v-model="category.description"
                                                 :spellcheck="$store.state.settings.spellcheck"
                                     ></v-textarea>
+                                    
+                                    <v-text-field :disabled="!canUpdate"
+                                        :label="$t('word_list.link')"
+                                        name="category_link"
+                                        v-model="category.link"
+                                    ></v-text-field>
 
                                     <WordTable :disabled="!canUpdate"
+                                               :link="word_list.categories[index].link"
                                                :words="word_list.categories[index].entries"
                                                :id="index"
                                                @update-categories="update"
@@ -170,6 +177,7 @@
                 this.word_list.categories.push({
                     name: "",
                     description: "",
+                    link: "",
                     entries: []
                 })
             },
@@ -251,6 +259,7 @@
                     let category = {
                         name: data.categories[i].name,
                         description: data.categories[i].description,
+                        link: data.categories[i].link,
                         entries: []
                     }
 

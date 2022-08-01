@@ -330,7 +330,7 @@ router.beforeEach((to, from, next) => {
                 })
             } else {
 
-                window.location = encodeURI(store.getters.getLoginURL + "?gotoUrl=" + encodeURIComponent(((typeof(process.env.VUE_APP_TARANIS_NG_URL) == "undefined") ? "$VUE_APP_TARANIS_NG_URL" : process.env.VUE_APP_TARANIS_NG_URL) + to.path));
+                window.location = store.getters.getLoginURL;
             }
         } else if (to.path === "/") {
             if (AuthService.hasPermission(Permissions.ASSESS_ACCESS)) {

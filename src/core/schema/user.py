@@ -57,8 +57,8 @@ class HotkeySchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    key_code = fields.Int()
-    key = fields.Str()
+    key_code = fields.Int(missing=None)
+    key = fields.Str(missing=None)
     alias = fields.Str()
 
 
