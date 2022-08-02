@@ -8,7 +8,6 @@ from managers.auth_manager import no_auth, jwt_required
 
 
 class Login(Resource):
-
     @no_auth
     def get(self):
         response = auth_manager.authenticate(None)
@@ -16,7 +15,7 @@ class Login(Resource):
         if not isinstance(response, ResponseBase):
             if "gotoUrl" in request.args and "access_token" in response:
                 redirect_response = make_response(redirect(request.args["gotoUrl"]))
-                redirect_response.set_cookie('jwt', response["access_token"])
+                redirect_response.set_cookie("jwt", response["access_token"])
                 return redirect_response
 
         return response
@@ -31,30 +30,27 @@ class Login(Resource):
 
 
 class Refresh(Resource):
-
     @jwt_required
     def get(self):
         return auth_manager.refresh(auth_manager.get_user_from_jwt())
 
 
 class Logout(Resource):
-
     @no_auth
     def get(self):
-        token = None
-        if "jwt" in request.args:
-            if auth_manager.decode_user_from_jwt(request.args["jwt"]) is not None:
-                token = request.args["jwt"]
-
+        token = request.args["jwt"] if "jwt" in request.args else None
         response = auth_manager.logout(token)
 
-        if not isinstance(response, ResponseBase):
-            if "gotoUrl" in request.args:
-                if Config.OPENID_LOGOUT_URL:
-                    url = Config.OPENID_LOGOUT_URL.replace('GOTO_URL', urllib.parse.quote(request.args["gotoUrl"]))
-                    return redirect(url)
-                else:
-                    return redirect(request.args["gotoUrl"])
+        if not isinstance(response, ResponseBase) and "gotoUrl" in request.args:
+            goto_url = request.args["gotoUrl"]
+            url = (
+                Config.OPENID_LOGOUT_URL.replace(
+                    "GOTO_URL", urllib.parse.quote(goto_url)
+                )
+                if Config.OPENID_LOGOUT_URL
+                else goto_url
+            )
+            return redirect(url)
 
         return response
 

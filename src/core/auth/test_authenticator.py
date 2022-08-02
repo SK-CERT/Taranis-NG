@@ -6,6 +6,11 @@ users = {"user": "user", "user2": "user", "admin": "admin", "customer": "custome
 
 
 class TestAuthenticator(BaseAuthenticator):
+    def get_authenticator_name(self):
+        return "TestAuthenticator"
+
+    def __str__(self):
+        return f"Authenticator: {self.get_authenticator_name()} Users: {users}"
 
     def get_required_credentials(self):
         return ["username", "password"]
@@ -16,10 +21,10 @@ class TestAuthenticator(BaseAuthenticator):
             return BaseAuthenticator.generate_error()
         if "username" not in credentials or "password" not in credentials:
             return BaseAuthenticator.generate_error()
-        if credentials["username"] in users:
-            if users[credentials["username"]] == credentials["password"]:
-                return BaseAuthenticator.generate_jwt(credentials["username"])
+        if users[credentials["username"]] == credentials["password"]:
+            return BaseAuthenticator.generate_jwt(credentials["username"])
 
-        log_manager.store_auth_error_activity("Authentication failed with credentials: " + str(credentials))
-
+        log_manager.store_auth_error_activity(
+            f"Authentication failed with credentials: {str(credentials)}"
+        )
         return BaseAuthenticator.generate_error()

@@ -9,7 +9,8 @@ from managers import (
     remote_manager,
     tagcloud_manager,
 )
-from model import *  # just until all new model classes are used regularly
+
+# from model import *  # just until all new model classes are used regularly
 
 
 def create_app():
