@@ -10,8 +10,6 @@ from managers import (
     tagcloud_manager,
 )
 
-# from model import *  # just until all new model classes are used regularly
-
 
 def create_app():
     app = Flask(__name__)
