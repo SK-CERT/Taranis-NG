@@ -3,7 +3,10 @@ version: "3.9"
 services:
   redis:
     image: "redis:${REDIS_TAG}"
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     volumes:
       - "redis_conf:/usr/local/etc/redis"
     logging:
@@ -14,7 +17,12 @@ services:
 
   database:
     image: "postgres:${POSTGRES_TAG}"
-    restart: unless-stopped
+    ports:
+     - 6543:5432
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     environment:
       POSTGRES_DB: "${DB_DATABASE}"
       POSTGRES_USER: "${DB_USER}"
@@ -32,7 +40,10 @@ services:
     depends_on:
       - "redis"
       - "database"
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-core:${TARANIS_NG_TAG}"
 #   ports:
 #     - "5000:80"
@@ -54,7 +65,7 @@ services:
       CVE_UPDATE_FILE: "${CVE_UPDATE_FILE}"
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
 
-      DEBUG: "true"
+      DEBUG: "${DEBUG}"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
@@ -83,6 +94,10 @@ services:
     depends_on:
       core:
         condition: service_healthy
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-bots:${TARANIS_NG_TAG}"
     environment:
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
@@ -99,7 +114,10 @@ services:
     depends_on:
       core:
         condition: service_healthy
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-collectors:${TARANIS_NG_TAG}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
@@ -120,7 +138,10 @@ services:
     depends_on:
       core:
         condition: service_healthy
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-presenters:${TARANIS_NG_TAG}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
@@ -140,7 +161,10 @@ services:
     depends_on:
       core:
         condition: service_healthy
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-publishers:${TARANIS_NG_TAG}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
@@ -157,7 +181,10 @@ services:
   gui:
     depends_on:
       - "core"
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "${DOCKER_IMAGE_NAMESPACE}/taranis-ng-gui:${TARANIS_NG_TAG}"
 #    ports:
 #      - "8080:80"
@@ -195,7 +222,10 @@ services:
     depends_on:
       - "gui"
       - "core"
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
     image: "traefik:latest"
     ports:
       - "${TARANIS_NG_HTTP_PORT}:80"

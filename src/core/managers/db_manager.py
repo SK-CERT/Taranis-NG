@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate, upgrade
+from flask_migrate import Migrate
+from managers.log_manager import logger
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -8,21 +9,28 @@ migrate = Migrate()
 def initialize(app):
     db.init_app(app)
     migrate.init_app(app, db)
-    create_tables()
-
-
-def create_tables():
     db.create_all()
-    upgrade()
-    pre_seed()
+    try:
+        pre_seed()
+    except Exception:
+        logger.log_debug_trace("Pre Seed failed")
 
 
 def pre_seed():
+    logger.log_info("Start Source groups")
     pre_seed_source_groups()
+    logger.log_debug("Source groups seeded")
     pre_seed_roles()
+    logger.log_debug("Roles seeded")
+
     pre_seed_attributes()
+    logger.log_debug("Attributes seeded")
+
     pre_seed_report_items()
+    logger.log_debug("Report items seeded")
+
     pre_seed_wordlists()
+    logger.log_debug("Wordlists seeded")
 
 
 def pre_seed_source_groups():
@@ -46,47 +54,71 @@ def pre_seed_roles():
     from model.permission import Permission
 
     default_user_permissions = [
-        "ASSESS_ACCESS",
-        "ASSESS_CREATE",
-        "ASSESS_UPDATE",
-        "ASSESS_DELETE",
-        "ANALYZE_ACCESS",
-        "ANALYZE_CREATE",
-        "ANALYZE_UPDATE",
-        "ANALYZE_DELETE",
-        "PUBLISH_ACCESS",
-        "PUBLISH_CREATE",
-        "PUBLISH_UPDATE",
-        "PUBLISH_DELETE",
-        "PUBLISH_PRODUCT",
+        {"id": "ASSESS_ACCESS"},
+        {"id": "ASSESS_CREATE"},
+        {"id": "ASSESS_UPDATE"},
+        {"id": "ASSESS_DELETE"},
+        {"id": "ANALYZE_ACCESS"},
+        {"id": "ANALYZE_CREATE"},
+        {"id": "ANALYZE_UPDATE"},
+        {"id": "ANALYZE_DELETE"},
+        {"id": "PUBLISH_ACCESS"},
+        {"id": "PUBLISH_CREATE"},
+        {"id": "PUBLISH_UPDATE"},
+        {"id": "PUBLISH_DELETE"},
+        {"id": "PUBLISH_PRODUCT"},
     ]
+    admin_permissions = [{"id": perm.id} for perm in Permission.get_all()]
 
     if not db.session.query(Role).filter_by(name="Admin").first():
-        admin_role = Role(
-            "Admin", "Administrator role", db.session.query(Permission).all()
+        Role.add_new(
+            {
+                "id": "",
+                "name": "Admin",
+                "description": "Administrator role",
+                "permissions": admin_permissions,
+            }
         )
-        db.session.add(admin_role)
     if not db.session.query(Role).filter_by(name="User").first():
-        user_role = Role("User", "Basic user role", default_user_permissions)
-        db.session.add(user_role)
-    db.session.commit()
+        Role.add_new(
+            {
+                "id": "",
+                "name": "User",
+                "description": "Basic user role",
+                "permissions": default_user_permissions,
+            }
+        )
 
 
 def pre_seed_attributes():
     from model.attribute import Attribute, AttributeEnum
     from schema.attribute import AttributeType
 
+    attr = {
+        "id": -1,
+        "name": "Text",
+        "description": "Simple text box",
+        "type": "STRING",
+        "default_value": "",
+        "validator": "NONE",
+        "validator_parameter": "",
+        "attribute_enums": [],
+        "attribute_enums_total_count": 0,
+    }
+
     if not db.session.query(Attribute).filter_by(name="Text").first():
-        attr_string = Attribute(
-            "Text", "Simple text box", AttributeType.STRING, None, None, None
-        )
-        db.session.add(attr_string)
+        attr["name"] = "Text"
+        attr["description"] = "Simple text box"
+        attr["type"] = "STRING"
+
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Text Area").first():
-        attr_text = Attribute(
-            "Text Area", "Simple text area", AttributeType.TEXT, None, None, None
-        )
-        db.session.add(attr_text)
+        attr["name"] = "Text Area"
+        attr["description"] = "Simple text area"
+        attr["type"] = "TEXT"
+
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="TLP").first():
         attr_tlp = Attribute(
@@ -998,3 +1030,61 @@ def pre_seed_wordlists():
     )
     db.session.add(highlighting_wordlist_category)
     db.session.commit()
+
+
+# def pre_seed_default_user():
+#     from model.address import Address
+#     from model.organization import Organization
+
+#     address = Address("29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom")
+#     session.add(address)
+#     session.commit()
+
+#     organization = Organization(
+#         "The Earth",
+#         "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
+#         address.id,
+#     )
+#     session.add(organization)
+#     session.commit()
+
+#     profile = UserProfile(True, False)
+#     session.add(profile)
+#     session.commit()
+
+#     user = User("admin", "Arthur Dent", profile.id)
+#     session.add(user)
+#     session.commit()
+
+#     session.add(UserOrganization(user.id, organization.id))
+#     session.add(UserRole(user.id, role.id))
+#     session.commit()
+
+#     address = Address(
+#         "Cherry Tree Rd",
+#         "Beaconsfield, Buckinghamshire",
+#         "HP9 1BH",
+#         "United Kingdom",
+#     )
+#     session.add(address)
+#     session.commit()
+
+#     organization = Organization(
+#         "The Clacks",
+#         "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
+#         address.id,
+#     )
+#     session.add(organization)
+#     session.commit()
+
+#     profile = UserProfile(True, False)
+#     session.add(profile)
+#     session.commit()
+
+#     user = User("user", "Terry Pratchett", profile.id)
+#     session.add(user)
+#     session.commit()
+
+#     session.add(UserOrganization(user.id, organization.id))
+#     session.add(UserRole(user.id, role.id))
+#     session.commit()

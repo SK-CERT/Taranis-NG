@@ -4,85 +4,60 @@ import logging
 import logging.handlers
 import traceback
 
-# setup Flask logger
-gunicorn_logger = logging.getLogger('gunicorn.error')
-gunicorn_logger.setLevel(logging.INFO)
 
-# setup syslog logger
-sys_logger = logging.getLogger('SysLogger')
-sys_logger.setLevel(logging.INFO)
-
-# custom module ID to append to log messages
 module_id = os.environ.get("MODULE_ID", None)
+logger = None
 
-# increase logging level
-if os.environ.get("DEBUG", "false").lower() == "true":
-    gunicorn_logger.setLevel(logging.DEBUG)
-    sys_logger.setLevel(logging.DEBUG)
 
-# send a debug message
+def initialize(app):
+    sys_log_handler = None
+    if "SYSLOG_ADDRESS" in os.environ:
+        try:
+            syslog_address = os.getenv("SYSLOG_ADDRESS")
+            syslog_port = int(os.getenv("SYSLOG_PORT"), 514)
+            sys_log_handler = logging.handlers.SysLogHandler(
+                address=(syslog_address, syslog_port), socktype=socket.SOCK_STREAM
+            )
+        except Exception as ex:
+            log_debug("Unable to connect to syslog server!")
+            log_debug(ex)
+
+    for logger in (
+        app.logger,
+        logging.getLogger("gunicorn.error"),
+        logging.getLogger("sqlalchemy"),
+    ):
+        logger.setLevel(logging.INFO)
+
+        if os.environ.get("DEBUG", "false").lower() == "true":
+            logger.setLevel(logging.DEBUG)
+
+        if sys_log_handler:
+            logger.addHandler(sys_log_handler)
+
+    app.logger.handlers = logging.getLogger("gunicorn.error").handlers
+    logger = app.logger
+
+
 def log_debug(message):
-    formatted_message = "[{}] {}".format(module_id,message)
-    gunicorn_logger.debug(formatted_message)
-    if sys_logger:
-        sys_logger.debug(formatted_message)
+    formatted_message = f"[{module_id}] {message}"
+    logger.debug(formatted_message)
 
-# send a debug message
-def log_debug_trace(message = None):
-    formatted_message1 = "[{}] {}".format(module_id,message)
-    formatted_message2 = "[{}] {}".format(module_id,traceback.format_exc())
+
+def log_debug_trace(message=None):
+    formatted_message = f"[{module_id}] {message}"
+    formatted_message_exc = f"[{module_id}] {traceback.format_exc()}"
 
     if message:
-        gunicorn_logger.debug(formatted_message1)
-    gunicorn_logger.debug(formatted_message2)
-    if sys_logger:
-        if message:
-            sys_logger.debug(formatted_message1)
-        sys_logger.debug(formatted_message2)
+        logger.debug(formatted_message)
+    logger.debug(formatted_message_exc)
 
-# send an info message
+
 def log_info(message):
-    formatted_message = "[{}] {}".format(module_id,message)
-    gunicorn_logger.info(formatted_message)
-    if sys_logger:
-        sys_logger.info(formatted_message)
+    formatted_message = f"[{module_id}] {message}"
+    logger.info(formatted_message)
 
-# send a critical message
+
 def log_critical(message):
-    formatted_message = "[{}] {}".format(module_id,message)
-    gunicorn_logger.critical(formatted_message)
-    if sys_logger:
-        sys_logger.critical(formatted_message)
-
-# try to connect syslog logger
-if "SYSLOG_URL" in os.environ and "SYSLOG_PORT" in os.environ:
-    try:
-        sys_log_handler = logging.handlers.SysLogHandler(
-            address=(os.environ["SYSLOG_URL"], int(os.environ["SYSLOG_PORT"])),
-            socktype=socket.SOCK_STREAM)
-        sys_logger.addHandler(sys_log_handler)
-    except Exception as ex:
-        sys_logger = None
-        log_debug("Unable to connect to syslog server!")
-        log_debug(ex)
-elif "SYSLOG_ADDRESS" in os.environ:
-    try:
-        sys_log_handler = logging.handlers.SysLogHandler(address=os.environ["SYSLOG_ADDRESS"])
-        sys_logger.addHandler(sys_log_handler)
-    except Exception as ex:
-        sys_logger = None
-        log_debug("Unable to connect to syslog server!")
-        log_debug(ex)
-
-
-def log_system_activity(module, message):
-    log_info("[{}] {}".format(module, message))
-
-
-def log_collector_activity(collector_type, collector, message):
-    log_text = "COLLECTOR {}/{}: {}".format(
-        collector_type,
-        collector,
-        message
-    )
-    log_info(log_text)
+    formatted_message = f"[{module_id}] {message}"
+    logger.critical(formatted_message)

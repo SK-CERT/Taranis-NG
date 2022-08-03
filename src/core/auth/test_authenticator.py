@@ -1,4 +1,4 @@
-from managers import log_manager
+from managers.log_manager import logger
 from auth.base_authenticator import BaseAuthenticator
 
 
@@ -16,7 +16,7 @@ class TestAuthenticator(BaseAuthenticator):
         return ["username", "password"]
 
     def authenticate(self, credentials):
-        log_manager.log_debug(f"TEST AUTH with {credentials}")
+        logger.log_debug(f"TEST AUTH with {credentials}")
         if credentials is None:
             return BaseAuthenticator.generate_error()
         if "username" not in credentials or "password" not in credentials:
@@ -24,7 +24,7 @@ class TestAuthenticator(BaseAuthenticator):
         if users[credentials["username"]] == credentials["password"]:
             return BaseAuthenticator.generate_jwt(credentials["username"])
 
-        log_manager.store_auth_error_activity(
+        logger.store_auth_error_activity(
             f"Authentication failed with credentials: {str(credentials)}"
         )
         return BaseAuthenticator.generate_error()

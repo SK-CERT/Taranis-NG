@@ -1,6 +1,6 @@
 from flask_jwt_extended import create_access_token
 
-from managers import log_manager
+from managers.log_manager import logger
 from model.token_blacklist import TokenBlacklist
 from model.user import User
 
@@ -39,12 +39,12 @@ class BaseAuthenticator:
 
         user = User.find(username)
         if not user:
-            log_manager.store_auth_error_activity(
+            logger.store_auth_error_activity(
                 "User not exists after authentication: " + username
             )
             return BaseAuthenticator.generate_error()
         else:
-            log_manager.store_user_activity(user, "LOGIN", "Successful")
+            logger.store_user_activity(user, "LOGIN", "Successful")
             access_token = create_access_token(
                 identity=user.username,
                 user_claims={

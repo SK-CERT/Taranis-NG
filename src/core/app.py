@@ -8,6 +8,7 @@ from managers import (
     sse_manager,
     remote_manager,
     tagcloud_manager,
+    log_manager,
 )
 
 
@@ -19,6 +20,7 @@ def create_app():
         CORS(app)
 
         db_manager.initialize(app)
+        log_manager.logger.log_info("DB Done")
 
         auth_manager.initialize(app)
         api_manager.initialize(app)
@@ -26,7 +28,7 @@ def create_app():
         sse_manager.initialize(app)
         remote_manager.initialize(app)
         tagcloud_manager.initialize(app)
-
+        log_manager.logger.log_info("All Done")
         # import test
 
     return app

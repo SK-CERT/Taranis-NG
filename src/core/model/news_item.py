@@ -6,7 +6,7 @@ from marshmallow import post_load, fields
 from sqlalchemy import orm, and_, or_, func
 
 from managers.db_manager import db
-from managers import log_manager
+from managers.log_manager import logger
 from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSourceGroup, OSINTSource
 from model.tag_cloud import TagCloud
@@ -188,8 +188,8 @@ class NewsItemData(db.Model):
             n_i_d = NewsItemData.get_news_item_data(news_item_id).first()
             n_i_d.tags = tags
             db.session.commit()
-        except Exception as e:
-            log_manager.log_debug_trace(e)
+        except Exception:
+            logger.log_debug_trace("Update News Item Tags Failed")
 
     @classmethod
     def get_for_sync(cls, last_synced, osint_sources):
