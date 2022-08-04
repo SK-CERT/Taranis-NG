@@ -6,7 +6,6 @@ from managers import auth_manager, sse_manager
 from managers.log_manager import logger
 from managers.auth_manager import ACLCheck, auth_required
 from model import news_item, osint_source
-from model.permission import Permission
 
 
 class OSINTSourceGroupsAssess(Resource):
@@ -217,8 +216,3 @@ def initialize(api):
         DownloadAttachment,
         "/api/v1/assess/news-item-data/<string:item_data_id>/attributes/<int:attribute_id>/file",
     )
-
-    Permission.add("ASSESS_ACCESS", "Assess access", "Access to Assess module")
-    Permission.add("ASSESS_CREATE", "Assess create", "Create news item")
-    Permission.add("ASSESS_UPDATE", "Assess update", "Update news item")
-    Permission.add("ASSESS_DELETE", "Assess delete", "Delete news item")

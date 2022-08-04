@@ -7,7 +7,6 @@ from managers import auth_manager, presenters_manager, publishers_manager
 from managers.log_manager import logger
 from managers.auth_manager import auth_required, ACLCheck
 from model import product, product_type, publisher_preset
-from model.permission import Permission
 
 
 class Products(Resource):
@@ -116,9 +115,3 @@ def initialize(api):
         PublishProduct,
         "/api/v1/publish/products/<int:product_id>/publishers/<string:publisher_id>",
     )
-
-    Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")
-    Permission.add("PUBLISH_CREATE", "Publish create", "Create product")
-    Permission.add("PUBLISH_UPDATE", "Publish update", "Update product")
-    Permission.add("PUBLISH_DELETE", "Publish delete", "Delete product")
-    Permission.add("PUBLISH_PRODUCT", "Publish product", "Publish product")

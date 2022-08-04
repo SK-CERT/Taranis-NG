@@ -6,7 +6,6 @@ from managers import asset_manager, auth_manager, sse_manager
 from managers.log_manager import logger
 from managers.auth_manager import auth_required, ACLCheck
 from model import attribute, report_item, report_item_type
-from model.permission import Permission
 
 
 class ReportItemTypes(Resource):
@@ -314,8 +313,3 @@ def initialize(api):
         ReportItemDownloadAttachment,
         "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes/<int:attribute_id>/file",
     )
-
-    Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
-    Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")
-    Permission.add("ANALYZE_UPDATE", "Analyze update", "Update report item")
-    Permission.add("ANALYZE_DELETE", "Analyze delete", "Delete report item")

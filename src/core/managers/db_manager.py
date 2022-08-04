@@ -17,6 +17,9 @@ def initialize(app):
 
 
 def pre_seed():
+    pre_seed_permissions()
+    logger.log_debug("Permissions seeded")
+
     pre_seed_source_groups()
     logger.log_debug("Source groups seeded")
 
@@ -52,28 +55,459 @@ def pre_seed_source_groups():
     db.session.commit()
 
 
+def pre_seed_permissions():
+    from model.permission import Permission
+
+    Permission.add("ASSESS_ACCESS", "Assess access", "Access to Assess module")
+    Permission.add("ASSESS_CREATE", "Assess create", "Create news item")
+    Permission.add("ASSESS_UPDATE", "Assess update", "Update news item")
+    Permission.add("ASSESS_DELETE", "Assess delete", "Delete news item")
+
+    Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
+    Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")
+    Permission.add("ANALYZE_UPDATE", "Analyze update", "Update report item")
+    Permission.add("ANALYZE_DELETE", "Analyze delete", "Delete report item")
+
+    Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")
+    Permission.add("PUBLISH_CREATE", "Publish create", "Create product")
+    Permission.add("PUBLISH_UPDATE", "Publish update", "Update product")
+    Permission.add("PUBLISH_DELETE", "Publish delete", "Delete product")
+    Permission.add("PUBLISH_PRODUCT", "Publish product", "Publish product")
+
+    Permission.add(
+        "CONFIG_ACCESS", "Configuration access", "Access to Configuration module"
+    )
+
+    Permission.add(
+        "CONFIG_ORGANIZATION_ACCESS",
+        "Config organizations access",
+        "Access to attributes configuration",
+    )
+    Permission.add(
+        "CONFIG_ORGANIZATION_CREATE",
+        "Config organization create",
+        "Create organization configuration",
+    )
+    Permission.add(
+        "CONFIG_ORGANIZATION_UPDATE",
+        "Config organization update",
+        "Update organization configuration",
+    )
+    Permission.add(
+        "CONFIG_ORGANIZATION_DELETE",
+        "Config organization delete",
+        "Delete organization configuration",
+    )
+
+    Permission.add(
+        "CONFIG_USER_ACCESS", "Config users access", "Access to users configuration"
+    )
+    Permission.add(
+        "CONFIG_USER_CREATE", "Config user create", "Create user configuration"
+    )
+    Permission.add(
+        "CONFIG_USER_UPDATE", "Config user update", "Update user configuration"
+    )
+    Permission.add(
+        "CONFIG_USER_DELETE", "Config user delete", "Delete user configuration"
+    )
+
+    Permission.add(
+        "CONFIG_ROLE_ACCESS", "Config roles access", "Access to roles configuration"
+    )
+    Permission.add(
+        "CONFIG_ROLE_CREATE", "Config role create", "Create role configuration"
+    )
+    Permission.add(
+        "CONFIG_ROLE_UPDATE", "Config role update", "Update role configuration"
+    )
+    Permission.add(
+        "CONFIG_ROLE_DELETE", "Config role delete", "Delete role configuration"
+    )
+
+    Permission.add(
+        "CONFIG_ACL_ACCESS", "Config acls access", "Access to acls configuration"
+    )
+    Permission.add("CONFIG_ACL_CREATE", "Config acl create", "Create acl configuration")
+    Permission.add("CONFIG_ACL_UPDATE", "Config acl update", "Update acl configuration")
+    Permission.add("CONFIG_ACL_DELETE", "Config acl delete", "Delete acl configuration")
+
+    Permission.add(
+        "CONFIG_PRODUCT_TYPE_ACCESS",
+        "Config product types access",
+        "Access to product types configuration",
+    )
+    Permission.add(
+        "CONFIG_PRODUCT_TYPE_CREATE",
+        "Config product type create",
+        "Create product type configuration",
+    )
+    Permission.add(
+        "CONFIG_PRODUCT_TYPE_UPDATE",
+        "Config product type update",
+        "Update product type configuration",
+    )
+    Permission.add(
+        "CONFIG_PRODUCT_TYPE_DELETE",
+        "Config product type delete",
+        "Delete product type configuration",
+    )
+
+    Permission.add(
+        "CONFIG_ATTRIBUTE_ACCESS",
+        "Config attributes access",
+        "Access to attributes configuration",
+    )
+    Permission.add(
+        "CONFIG_ATTRIBUTE_CREATE",
+        "Config attribute create",
+        "Create attribute configuration",
+    )
+    Permission.add(
+        "CONFIG_ATTRIBUTE_UPDATE",
+        "Config attribute update",
+        "Update attribute configuration",
+    )
+    Permission.add(
+        "CONFIG_ATTRIBUTE_DELETE",
+        "Config attribute delete",
+        "Delete attribute configuration",
+    )
+
+    Permission.add(
+        "CONFIG_REPORT_TYPE_ACCESS",
+        "Config report item types access",
+        "Access to report item types configuration",
+    )
+    Permission.add(
+        "CONFIG_REPORT_TYPE_CREATE",
+        "Config report item type create",
+        "Create report item type configuration",
+    )
+    Permission.add(
+        "CONFIG_REPORT_TYPE_UPDATE",
+        "Config report item type update",
+        "Update report item type configuration",
+    )
+    Permission.add(
+        "CONFIG_REPORT_TYPE_DELETE",
+        "Config report item type delete",
+        "Delete report item type configuration",
+    )
+
+    Permission.add(
+        "CONFIG_WORD_LIST_ACCESS",
+        "Config word lists access",
+        "Access to word lists configuration",
+    )
+    Permission.add(
+        "CONFIG_WORD_LIST_CREATE",
+        "Config word list create",
+        "Create word list configuration",
+    )
+    Permission.add(
+        "CONFIG_WORD_LIST_UPDATE",
+        "Config word list update",
+        "Update word list configuration",
+    )
+    Permission.add(
+        "CONFIG_WORD_LIST_DELETE",
+        "Config word list delete",
+        "Delete word list configuration",
+    )
+
+    Permission.add(
+        "CONFIG_COLLECTORS_NODE_ACCESS",
+        "Config collectors nodes access",
+        "Access to collectors nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_COLLECTORS_NODE_CREATE",
+        "Config collectors node create",
+        "Create collectors node configuration",
+    )
+    Permission.add(
+        "CONFIG_COLLECTORS_NODE_UPDATE",
+        "Config collectors node update",
+        "Update collectors node configuration",
+    )
+    Permission.add(
+        "CONFIG_COLLECTORS_NODE_DELETE",
+        "Config collectors node delete",
+        "Delete collectors node configuration",
+    )
+
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_ACCESS",
+        "Config OSINT source access",
+        "Access to OSINT sources configuration",
+    )
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_CREATE",
+        "Config OSINT source create",
+        "Create OSINT source configuration",
+    )
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_UPDATE",
+        "Config OSINT source update",
+        "Update OSINT source configuration",
+    )
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_DELETE",
+        "Config OSINT source delete",
+        "Delete OSINT source configuration",
+    )
+
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_GROUP_ACCESS",
+        "Config OSINT source group access",
+        "Access to OSINT sources groups configuration",
+    )
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_GROUP_CREATE",
+        "Config OSINT source group create",
+        "Create OSINT source group configuration",
+    )
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_GROUP_UPDATE",
+        "Config OSINT source group update",
+        "Update OSINT source group configuration",
+    )
+    Permission.add(
+        "CONFIG_OSINT_SOURCE_GROUP_DELETE",
+        "Config OSINT source group delete",
+        "Delete OSINT source group configuration",
+    )
+
+    Permission.add(
+        "CONFIG_REMOTE_ACCESS_ACCESS",
+        "Config remote access access",
+        "Access to remote access configuration",
+    )
+    Permission.add(
+        "CONFIG_REMOTE_ACCESS_CREATE",
+        "Config remote access create",
+        "Create remote access configuration",
+    )
+    Permission.add(
+        "CONFIG_REMOTE_ACCESS_UPDATE",
+        "Config remote access update",
+        "Update remote access configuration",
+    )
+    Permission.add(
+        "CONFIG_REMOTE_ACCESS_DELETE",
+        "Config remote access delete",
+        "Delete remote access configuration",
+    )
+
+    Permission.add(
+        "CONFIG_REMOTE_NODE_ACCESS",
+        "Config remote nodes access",
+        "Access to remote nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_REMOTE_NODE_CREATE",
+        "Config remote node create",
+        "Create remote node configuration",
+    )
+    Permission.add(
+        "CONFIG_REMOTE_NODE_UPDATE",
+        "Config remote node update",
+        "Update remote node configuration",
+    )
+    Permission.add(
+        "CONFIG_REMOTE_NODE_DELETE",
+        "Config remote node delete",
+        "Delete remote node configuration",
+    )
+
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_ACCESS",
+        "Config presenters nodes access",
+        "Access to presenters nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_CREATE",
+        "Config presenters node create",
+        "Create presenters node configuration",
+    )
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_UPDATE",
+        "Config presenters node update",
+        "Update presenters node configuration",
+    )
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_DELETE",
+        "Config presenters node delete",
+        "Delete presenters node configuration",
+    )
+
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_ACCESS",
+        "Config publishers nodes access",
+        "Access to publishers nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_CREATE",
+        "Config publishers node create",
+        "Create publishers node configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_UPDATE",
+        "Config publishers node update",
+        "Update publishers node configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_DELETE",
+        "Config publishers node delete",
+        "Delete publishers node configuration",
+    )
+
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_ACCESS",
+        "Config publisher presets access",
+        "Access to publisher presets configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_CREATE",
+        "Config publisher preset create",
+        "Create publisher preset configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_UPDATE",
+        "Config publisher preset update",
+        "Update publisher preset configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_DELETE",
+        "Config publisher preset delete",
+        "Delete publisher preset configuration",
+    )
+
+    Permission.add(
+        "CONFIG_BOTS_NODE_ACCESS",
+        "Config bots nodes access",
+        "Access to bots nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_BOTS_NODE_CREATE",
+        "Config bots node create",
+        "Create bots node configuration",
+    )
+    Permission.add(
+        "CONFIG_BOTS_NODE_UPDATE",
+        "Config bots node update",
+        "Update bots node configuration",
+    )
+    Permission.add(
+        "CONFIG_BOTS_NODE_DELETE",
+        "Config bots node delete",
+        "Delete bots node configuration",
+    )
+
+    Permission.add(
+        "CONFIG_BOT_PRESET_ACCESS",
+        "Config bot presets access",
+        "Access to bot presets configuration",
+    )
+    Permission.add(
+        "CONFIG_BOT_PRESET_CREATE",
+        "Config bot preset create",
+        "Create bot preset configuration",
+    )
+    Permission.add(
+        "CONFIG_BOT_PRESET_UPDATE",
+        "Config bot preset update",
+        "Update bot preset configuration",
+    )
+    Permission.add(
+        "CONFIG_BOT_PRESET_DELETE",
+        "Config bot preset delete",
+        "Delete bot preset configuration",
+    )
+
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_ACCESS",
+        "Config publishers nodes access",
+        "Access to publishers nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_CREATE",
+        "Config publishers node create",
+        "Create publishers node configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_UPDATE",
+        "Config publishers node update",
+        "Update publishers node configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHERS_NODE_DELETE",
+        "Config publishers node delete",
+        "Delete publishers node configuration",
+    )
+
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_ACCESS",
+        "Config publisher presets access",
+        "Access to publisher presets configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_CREATE",
+        "Config publisher preset create",
+        "Create publisher preset configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_UPDATE",
+        "Config publisher preset update",
+        "Update publisher preset configuration",
+    )
+    Permission.add(
+        "CONFIG_PUBLISHER_PRESET_DELETE",
+        "Config publisher preset delete",
+        "Delete publisher preset configuration",
+    )
+
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_ACCESS",
+        "Config presenters nodes access",
+        "Access to presenters nodes configuration",
+    )
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_CREATE",
+        "Config presenters node create",
+        "Create presenters node configuration",
+    )
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_UPDATE",
+        "Config presenters node update",
+        "Update presenters node configuration",
+    )
+    Permission.add(
+        "CONFIG_PRESENTERS_NODE_DELETE",
+        "Config presenters node delete",
+        "Delete presenters node configuration",
+    )
+
+    Permission.add("MY_ASSETS_ACCESS", "My Assets access", "Access to My Assets module")
+    Permission.add(
+        "MY_ASSETS_CREATE",
+        "My Assets create",
+        "Creation of products in My Assets module",
+    )
+    Permission.add(
+        "MY_ASSETS_CONFIG",
+        "My Assets config",
+        "Configuration of access and groups in My Assets module",
+    )
+
+
 def pre_seed_roles():
     from model.role import Role
     from model.permission import Permission
 
-    default_user_permissions = [
-        {"id": "ASSESS_ACCESS"},
-        {"id": "ASSESS_CREATE"},
-        {"id": "ASSESS_UPDATE"},
-        {"id": "ASSESS_DELETE"},
-        {"id": "ANALYZE_ACCESS"},
-        {"id": "ANALYZE_CREATE"},
-        {"id": "ANALYZE_UPDATE"},
-        {"id": "ANALYZE_DELETE"},
-        {"id": "PUBLISH_ACCESS"},
-        {"id": "PUBLISH_CREATE"},
-        {"id": "PUBLISH_UPDATE"},
-        {"id": "PUBLISH_DELETE"},
-        {"id": "PUBLISH_PRODUCT"},
-    ]
-    admin_permissions = [{"id": perm.id} for perm in Permission.get_all()]
-
     if not db.session.query(Role).filter_by(name="Admin").first():
+        admin_permissions = [{"id": perm.id} for perm in Permission.get_all()]
         Role.add_new(
             {
                 "id": "",
@@ -83,6 +517,21 @@ def pre_seed_roles():
             }
         )
     if not db.session.query(Role).filter_by(name="User").first():
+        default_user_permissions = [
+            {"id": "ASSESS_ACCESS"},
+            {"id": "ASSESS_CREATE"},
+            {"id": "ASSESS_UPDATE"},
+            {"id": "ASSESS_DELETE"},
+            {"id": "ANALYZE_ACCESS"},
+            {"id": "ANALYZE_CREATE"},
+            {"id": "ANALYZE_UPDATE"},
+            {"id": "ANALYZE_DELETE"},
+            {"id": "PUBLISH_ACCESS"},
+            {"id": "PUBLISH_CREATE"},
+            {"id": "PUBLISH_UPDATE"},
+            {"id": "PUBLISH_DELETE"},
+            {"id": "PUBLISH_PRODUCT"},
+        ]
         Role.add_new(
             {
                 "id": "",
@@ -110,78 +559,79 @@ def pre_seed_attributes():
 
     if not db.session.query(Attribute).filter_by(name="Text").first():
         attr = {
-            **{"name": "Text", "description": "Simple text box", "type": "STRING"},
             **base_attr,
+            **{"name": "Text", "description": "Simple text box", "type": "STRING"},
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Text Area").first():
         attr = {
-            **{"name": "Text Area", "description": "Simple text area", "type": "TEXT"},
             **base_attr,
+            **{"name": "Text Area", "description": "Simple text area", "type": "TEXT"},
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="TLP").first():
         attr = {
+            **base_attr,
             **{
                 "name": "TLP",
                 "description": "Traffic Light Protocol element",
                 "type": "TLP",
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="CPE").first():
         attr = {
+            **base_attr,
             **{
                 "name": "CPE",
                 "description": "Common Platform Enumeration element",
                 "type": "CPE",
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="CVSS").first():
         attr = {
+            **base_attr,
             **{
                 "name": "CVSS",
                 "description": "Common Vulnerability Scoring System element",
                 "type": "CVSS",
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="CVE").first():
         attr = {
+            **base_attr,
             **{
                 "name": "CVE",
                 "description": "Common Vulnerabilities and Exposures element",
                 "type": "CVE",
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Date").first():
         attr = {
-            **{"name": "Date", "description": "Date picker", "type": "DATE"},
             **base_attr,
+            **{"name": "Date", "description": "Date picker", "type": "DATE"},
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Confidentiality").first():
         attr_enum = [
-            {"id": 0, "name": "UNRESTRICTED", "description": ""},
-            {"id": 1, "name": "CLASSIFIED", "description": ""},
-            {"id": 2, "name": "CONFIDENTIAL", "description": ""},
-            {"id": 3, "name": "SECRET", "description": ""},
-            {"id": 4, "name": "TOP SECRET", "description": ""},
+            {"index": 0, "value": "UNRESTRICTED", "description": ""},
+            {"index": 1, "value": "CLASSIFIED", "description": ""},
+            {"index": 2, "value": "CONFIDENTIAL", "description": ""},
+            {"index": 3, "value": "SECRET", "description": ""},
+            {"index": 4, "value": "TOP SECRET", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "Confidentiality",
                 "description": "Radio box for confidentiality level",
@@ -189,25 +639,29 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Impact").first():
         attr_enum = [
             {
-                "id": 0,
-                "name": "Malicious code execution affecting overall confidentiality, integrity, and availability of the system",
+                "index": 0,
+                "value": "Malicious code execution affecting overall confidentiality, integrity, and availability of the system",
                 "description": "",
-            },  # noqa
-            {"id": 1, "name": "Malicious code execution", "description": ""},
-            {"id": 2, "name": "Denial of service", "description": ""},
-            {"id": 3, "name": "Privilege escalation", "description": ""},
-            {"id": 4, "name": "Information exposure", "description": ""},
-            {"id": 5, "name": "Unauthorized access to the system", "description": ""},
-            {"id": 6, "name": "Unauthorized change in system", "description": ""},
+            },
+            {"index": 1, "value": "Malicious code execution", "description": ""},
+            {"index": 2, "value": "Denial of service", "description": ""},
+            {"index": 3, "value": "Privilege escalation", "description": ""},
+            {"index": 4, "value": "Information exposure", "description": ""},
+            {
+                "index": 5,
+                "value": "Unauthorized access to the system",
+                "description": "",
+            },
+            {"index": 6, "value": "Unauthorized change in system", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "Impact",
                 "description": "Combo box for impact level",
@@ -215,16 +669,16 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Additional Data").first():
         attr_enum = [
-            {"id": 0, "name": "For Intrusion Detection System", "description": ""},
-            {"id": 1, "name": "Disable Correlation", "description": ""},
+            {"index": 0, "value": "For Intrusion Detection System", "description": ""},
+            {"index": 1, "value": "Disable Correlation", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "Additional Data",
                 "description": "Radio box for MISP additional data",
@@ -232,7 +686,6 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
@@ -242,12 +695,13 @@ def pre_seed_attributes():
         .first()
     ):
         attr_enum = [
-            {"id": 0, "name": "Your organisation only", "description": ""},
-            {"id": 1, "name": "This community only", "description": ""},
-            {"id": 2, "name": "Connected communities", "description": ""},
-            {"id": 3, "name": "All communities", "description": ""},
+            {"index": 0, "value": "Your organisation only", "description": ""},
+            {"index": 1, "value": "This community only", "description": ""},
+            {"index": 2, "value": "Connected communities", "description": ""},
+            {"index": 3, "value": "All communities", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "MISP Event Distribution",
                 "description": "Combo box for MISP event distribution",
@@ -255,7 +709,6 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
@@ -265,12 +718,13 @@ def pre_seed_attributes():
         .first()
     ):
         attr_enum = [
-            {"id": 0, "name": "High", "description": ""},
-            {"id": 1, "name": "Medium", "description": ""},
-            {"id": 2, "name": "Low", "description": ""},
-            {"id": 3, "name": "Undefined", "description": ""},
+            {"index": 0, "value": "High", "description": ""},
+            {"index": 1, "value": "Medium", "description": ""},
+            {"index": 2, "value": "Low", "description": ""},
+            {"index": 3, "value": "Undefined", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "MISP Event Threat Level",
                 "description": "Combo box for MISP event threat level",
@@ -278,17 +732,17 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="MISP Event Analysis").first():
         attr_enum = [
-            {"id": 0, "name": "Initial", "description": ""},
-            {"id": 1, "name": "Ongoing", "description": ""},
-            {"id": 2, "name": "Completed", "description": ""},
+            {"index": 0, "value": "Initial", "description": ""},
+            {"index": 1, "value": "Ongoing", "description": ""},
+            {"index": 2, "value": "Completed", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "MISP Event Analysis",
                 "description": "Combo box for MISP event analysis",
@@ -296,7 +750,6 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
@@ -306,24 +759,25 @@ def pre_seed_attributes():
         .first()
     ):
         attr_enum = [
-            {"id": 0, "name": "Internal reference", "description": ""},
-            {"id": 1, "name": "Targeting data", "description": ""},
-            {"id": 2, "name": "Antivirus detection", "description": ""},
-            {"id": 3, "name": "Payload delivery", "description": ""},
-            {"id": 4, "name": "Artifacts dropped", "description": ""},
-            {"id": 5, "name": "Payload installation", "description": ""},
-            {"id": 6, "name": "Persistence mechanism", "description": ""},
-            {"id": 7, "name": "Network activity", "description": ""},
-            {"id": 8, "name": "Payload type", "description": ""},
-            {"id": 9, "name": "Attribution", "description": ""},
-            {"id": 10, "name": "External analysis", "description": ""},
-            {"id": 11, "name": "Financial fraud", "description": ""},
-            {"id": 12, "name": "Support Tool", "description": ""},
-            {"id": 13, "name": "Social network", "description": ""},
-            {"id": 14, "name": "Person", "description": ""},
-            {"id": 15, "name": "Other", "description": ""},
+            {"index": 0, "value": "Internal reference", "description": ""},
+            {"index": 1, "value": "Targeting data", "description": ""},
+            {"index": 2, "value": "Antivirus detection", "description": ""},
+            {"index": 3, "value": "Payload delivery", "description": ""},
+            {"index": 4, "value": "Artifacts dropped", "description": ""},
+            {"index": 5, "value": "Payload installation", "description": ""},
+            {"index": 6, "value": "Persistence mechanism", "description": ""},
+            {"index": 7, "value": "Network activity", "description": ""},
+            {"index": 8, "value": "Payload type", "description": ""},
+            {"index": 9, "value": "Attribution", "description": ""},
+            {"index": 10, "value": "External analysis", "description": ""},
+            {"index": 11, "value": "Financial fraud", "description": ""},
+            {"index": 12, "value": "Support Tool", "description": ""},
+            {"index": 13, "value": "Social network", "description": ""},
+            {"index": 14, "value": "Person", "description": ""},
+            {"index": 15, "value": "Other", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "MISP Attribute Category",
                 "description": "Combo box for MISP attribute category",
@@ -331,180 +785,180 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="MISP Attribute Type").first():
         attr_enum = [
-            {"id": 0, "name": "md5", "description": ""},
-            {"id": 1, "name": "sha1", "description": ""},
-            {"id": 2, "name": "sha256", "description": ""},
-            {"id": 3, "name": "filename", "description": ""},
-            {"id": 4, "name": "pbd", "description": ""},
-            {"id": 5, "name": "filename|md5", "description": ""},
-            {"id": 6, "name": "filename|sha1", "description": ""},
-            {"id": 7, "name": "filename|sha256", "description": ""},
-            {"id": 8, "name": "ip-src", "description": ""},
-            {"id": 9, "name": "ip-dst", "description": ""},
-            {"id": 10, "name": "hostname", "description": ""},
-            {"id": 11, "name": "domain", "description": ""},
-            {"id": 12, "name": "domain|ip", "description": ""},
-            {"id": 13, "name": "email-src", "description": ""},
-            {"id": 14, "name": "eppn", "description": ""},
-            {"id": 15, "name": "email-dst", "description": ""},
-            {"id": 16, "name": "email-subject", "description": ""},
-            {"id": 17, "name": "email-attachment", "description": ""},
-            {"id": 18, "name": "email-body", "description": ""},
-            {"id": 19, "name": "float", "description": ""},
-            {"id": 20, "name": "url", "description": ""},
-            {"id": 21, "name": "http-method", "description": ""},
-            {"id": 22, "name": "user-agent", "description": ""},
-            {"id": 23, "name": "ja3-fingerprint-md5", "description": ""},
-            {"id": 24, "name": "hassh-md5", "description": ""},
-            {"id": 25, "name": "hasshserver-md5", "description": ""},
-            {"id": 26, "name": "reg-key", "description": ""},
-            {"id": 27, "name": "regkey|value", "description": ""},
-            {"id": 28, "name": "AS", "description": ""},
-            {"id": 29, "name": "snort", "description": ""},
-            {"id": 30, "name": "bro", "description": ""},
-            {"id": 31, "name": "zeek", "description": ""},
-            {"id": 32, "name": "community-id", "description": ""},
-            {"id": 33, "name": "pattern-in-traffic", "description": ""},
-            {"id": 34, "name": "pattern-in-memory", "description": ""},
-            {"id": 35, "name": "yara", "description": ""},
-            {"id": 36, "name": "stix2-pattern", "description": ""},
-            {"id": 37, "name": "sigma", "description": ""},
-            {"id": 38, "name": "gene", "description": ""},
-            {"id": 39, "name": "kusto-query", "description": ""},
-            {"id": 40, "name": "mime-type", "description": ""},
-            {"id": 41, "name": "identity-card-number", "description": ""},
-            {"id": 42, "name": "cookie", "description": ""},
-            {"id": 43, "name": "vulnerability", "description": ""},
-            {"id": 44, "name": "weakness", "description": ""},
-            {"id": 45, "name": "link", "description": ""},
-            {"id": 46, "name": "comment", "description": ""},
-            {"id": 47, "name": "text", "description": ""},
-            {"id": 48, "name": "hex", "description": ""},
-            {"id": 49, "name": "other", "description": ""},
-            {"id": 50, "name": "named pipe", "description": ""},
-            {"id": 51, "name": "mutex", "description": ""},
-            {"id": 52, "name": "target-user", "description": ""},
-            {"id": 53, "name": "target-email", "description": ""},
-            {"id": 54, "name": "target-machine", "description": ""},
-            {"id": 55, "name": "target-org", "description": ""},
-            {"id": 56, "name": "target-location", "description": ""},
-            {"id": 57, "name": "target-external", "description": ""},
-            {"id": 58, "name": "btc", "description": ""},
-            {"id": 59, "name": "dash", "description": ""},
-            {"id": 60, "name": "xmr", "description": ""},
-            {"id": 61, "name": "iban", "description": ""},
-            {"id": 62, "name": "bic", "description": ""},
-            {"id": 63, "name": "bank-account-nr", "description": ""},
-            {"id": 64, "name": "aba-rtn", "description": ""},
-            {"id": 65, "name": "bin", "description": ""},
-            {"id": 66, "name": "cc-number", "description": ""},
-            {"id": 67, "name": "prtn", "description": ""},
-            {"id": 68, "name": "phone-number", "description": ""},
-            {"id": 69, "name": "threat-actor", "description": ""},
-            {"id": 70, "name": "campaign-name", "description": ""},
-            {"id": 71, "name": "campaign-id", "description": ""},
-            {"id": 72, "name": "malware-type", "description": ""},
-            {"id": 73, "name": "uri", "description": ""},
-            {"id": 74, "name": "authentihash", "description": ""},
-            {"id": 75, "name": "ssdeep", "description": ""},
-            {"id": 76, "name": "implash", "description": ""},
-            {"id": 77, "name": "pahash", "description": ""},
-            {"id": 78, "name": "impfuzzy", "description": ""},
-            {"id": 79, "name": "sha224", "description": ""},
-            {"id": 80, "name": "sha384", "description": ""},
-            {"id": 81, "name": "sha512", "description": ""},
-            {"id": 82, "name": "sha512/224", "description": ""},
-            {"id": 83, "name": "sha512/256", "description": ""},
-            {"id": 84, "name": "tlsh", "description": ""},
-            {"id": 85, "name": "cdhash", "description": ""},
-            {"id": 86, "name": "filename|authentihash", "description": ""},
-            {"id": 87, "name": "filename|ssdeep", "description": ""},
-            {"id": 88, "name": "filename|implash", "description": ""},
-            {"id": 89, "name": "filename|impfuzzy", "description": ""},
-            {"id": 90, "name": "filename|pehash", "description": ""},
-            {"id": 91, "name": "filename|sha224", "description": ""},
-            {"id": 92, "name": "filename|sha384", "description": ""},
-            {"id": 93, "name": "filename|sha512", "description": ""},
-            {"id": 94, "name": "filename|sha512/224", "description": ""},
-            {"id": 95, "name": "filename|sha512/256", "description": ""},
-            {"id": 96, "name": "filename|tlsh", "description": ""},
-            {"id": 97, "name": "windows-scheduled-task", "description": ""},
-            {"id": 98, "name": "windows-service-name", "description": ""},
-            {"id": 99, "name": "windows-service-displayname", "description": ""},
-            {"id": 100, "name": "whois-registrant-email", "description": ""},
-            {"id": 101, "name": "whois-registrant-phone", "description": ""},
-            {"id": 102, "name": "whois-registrant-name", "description": ""},
-            {"id": 103, "name": "whois-registrant-org", "description": ""},
-            {"id": 104, "name": "whois-registrar", "description": ""},
-            {"id": 105, "name": "whois-creation-date", "description": ""},
-            {"id": 106, "name": "x509-fingerprint-sha1", "description": ""},
-            {"id": 107, "name": "x509-fingerprint-md5", "description": ""},
-            {"id": 108, "name": "x509-fingerprint-sha256", "description": ""},
-            {"id": 109, "name": "dns-soa-email", "description": ""},
-            {"id": 110, "name": "size-in-bytes", "description": ""},
-            {"id": 111, "name": "counter", "description": ""},
-            {"id": 112, "name": "datetime", "description": ""},
-            {"id": 113, "name": "cpe", "description": ""},
-            {"id": 114, "name": "port", "description": ""},
-            {"id": 115, "name": "ip-dist|port", "description": ""},
-            {"id": 116, "name": "ip-src|port", "description": ""},
-            {"id": 117, "name": "hostname|port", "description": ""},
-            {"id": 118, "name": "mac-address", "description": ""},
-            {"id": 119, "name": "mac-eui-64", "description": ""},
-            {"id": 120, "name": "email-dst-display-name", "description": ""},
-            {"id": 121, "name": "email-src-display-name", "description": ""},
-            {"id": 122, "name": "email-header", "description": ""},
-            {"id": 123, "name": "email-reply-to", "description": ""},
-            {"id": 124, "name": "email-x-mailer", "description": ""},
-            {"id": 125, "name": "email-mime-boundary", "description": ""},
-            {"id": 126, "name": "email-thread-index", "description": ""},
-            {"id": 127, "name": "email-message-id", "description": ""},
-            {"id": 128, "name": "github-username", "description": ""},
-            {"id": 129, "name": "github-repository", "description": ""},
-            {"id": 130, "name": "githzb-organisation", "description": ""},
-            {"id": 131, "name": "jabber-id", "description": ""},
-            {"id": 132, "name": "twitter-id", "description": ""},
-            {"id": 133, "name": "first-name", "description": ""},
-            {"id": 134, "name": "middle-name", "description": ""},
-            {"id": 135, "name": "last-name", "description": ""},
-            {"id": 136, "name": "date-of-birth", "description": ""},
-            {"id": 137, "name": "gender", "description": ""},
-            {"id": 138, "name": "passport-number", "description": ""},
-            {"id": 139, "name": "passport-country", "description": ""},
-            {"id": 140, "name": "passport-expiration", "description": ""},
-            {"id": 141, "name": "redress-number", "description": ""},
-            {"id": 142, "name": "nationality", "description": ""},
-            {"id": 143, "name": "visa-number", "description": ""},
-            {"id": 144, "name": "issue-date-of-the-visa", "description": ""},
-            {"id": 145, "name": "primary-residence", "description": ""},
-            {"id": 146, "name": "country-of-residence", "description": ""},
-            {"id": 147, "name": "special-service-request", "description": ""},
-            {"id": 148, "name": "frequent-flyer-number", "description": ""},
-            {"id": 149, "name": "travel-details", "description": ""},
-            {"id": 150, "name": "payments-details", "description": ""},
+            {"index": 0, "value": "md5", "description": ""},
+            {"index": 1, "value": "sha1", "description": ""},
+            {"index": 2, "value": "sha256", "description": ""},
+            {"index": 3, "value": "filename", "description": ""},
+            {"index": 4, "value": "pbd", "description": ""},
+            {"index": 5, "value": "filename|md5", "description": ""},
+            {"index": 6, "value": "filename|sha1", "description": ""},
+            {"index": 7, "value": "filename|sha256", "description": ""},
+            {"index": 8, "value": "ip-src", "description": ""},
+            {"index": 9, "value": "ip-dst", "description": ""},
+            {"index": 10, "value": "hostname", "description": ""},
+            {"index": 11, "value": "domain", "description": ""},
+            {"index": 12, "value": "domain|ip", "description": ""},
+            {"index": 13, "value": "email-src", "description": ""},
+            {"index": 14, "value": "eppn", "description": ""},
+            {"index": 15, "value": "email-dst", "description": ""},
+            {"index": 16, "value": "email-subject", "description": ""},
+            {"index": 17, "value": "email-attachment", "description": ""},
+            {"index": 18, "value": "email-body", "description": ""},
+            {"index": 19, "value": "float", "description": ""},
+            {"index": 20, "value": "url", "description": ""},
+            {"index": 21, "value": "http-method", "description": ""},
+            {"index": 22, "value": "user-agent", "description": ""},
+            {"index": 23, "value": "ja3-fingerprint-md5", "description": ""},
+            {"index": 24, "value": "hassh-md5", "description": ""},
+            {"index": 25, "value": "hasshserver-md5", "description": ""},
+            {"index": 26, "value": "reg-key", "description": ""},
+            {"index": 27, "value": "regkey|value", "description": ""},
+            {"index": 28, "value": "AS", "description": ""},
+            {"index": 29, "value": "snort", "description": ""},
+            {"index": 30, "value": "bro", "description": ""},
+            {"index": 31, "value": "zeek", "description": ""},
+            {"index": 32, "value": "community-id", "description": ""},
+            {"index": 33, "value": "pattern-in-traffic", "description": ""},
+            {"index": 34, "value": "pattern-in-memory", "description": ""},
+            {"index": 35, "value": "yara", "description": ""},
+            {"index": 36, "value": "stix2-pattern", "description": ""},
+            {"index": 37, "value": "sigma", "description": ""},
+            {"index": 38, "value": "gene", "description": ""},
+            {"index": 39, "value": "kusto-query", "description": ""},
+            {"index": 40, "value": "mime-type", "description": ""},
+            {"index": 41, "value": "identity-card-number", "description": ""},
+            {"index": 42, "value": "cookie", "description": ""},
+            {"index": 43, "value": "vulnerability", "description": ""},
+            {"index": 44, "value": "weakness", "description": ""},
+            {"index": 45, "value": "link", "description": ""},
+            {"index": 46, "value": "comment", "description": ""},
+            {"index": 47, "value": "text", "description": ""},
+            {"index": 48, "value": "hex", "description": ""},
+            {"index": 49, "value": "other", "description": ""},
+            {"index": 50, "value": "named pipe", "description": ""},
+            {"index": 51, "value": "mutex", "description": ""},
+            {"index": 52, "value": "target-user", "description": ""},
+            {"index": 53, "value": "target-email", "description": ""},
+            {"index": 54, "value": "target-machine", "description": ""},
+            {"index": 55, "value": "target-org", "description": ""},
+            {"index": 56, "value": "target-location", "description": ""},
+            {"index": 57, "value": "target-external", "description": ""},
+            {"index": 58, "value": "btc", "description": ""},
+            {"index": 59, "value": "dash", "description": ""},
+            {"index": 60, "value": "xmr", "description": ""},
+            {"index": 61, "value": "iban", "description": ""},
+            {"index": 62, "value": "bic", "description": ""},
+            {"index": 63, "value": "bank-account-nr", "description": ""},
+            {"index": 64, "value": "aba-rtn", "description": ""},
+            {"index": 65, "value": "bin", "description": ""},
+            {"index": 66, "value": "cc-number", "description": ""},
+            {"index": 67, "value": "prtn", "description": ""},
+            {"index": 68, "value": "phone-number", "description": ""},
+            {"index": 69, "value": "threat-actor", "description": ""},
+            {"index": 70, "value": "campaign-name", "description": ""},
+            {"index": 71, "value": "campaign-id", "description": ""},
+            {"index": 72, "value": "malware-type", "description": ""},
+            {"index": 73, "value": "uri", "description": ""},
+            {"index": 74, "value": "authentihash", "description": ""},
+            {"index": 75, "value": "ssdeep", "description": ""},
+            {"index": 76, "value": "implash", "description": ""},
+            {"index": 77, "value": "pahash", "description": ""},
+            {"index": 78, "value": "impfuzzy", "description": ""},
+            {"index": 79, "value": "sha224", "description": ""},
+            {"index": 80, "value": "sha384", "description": ""},
+            {"index": 81, "value": "sha512", "description": ""},
+            {"index": 82, "value": "sha512/224", "description": ""},
+            {"index": 83, "value": "sha512/256", "description": ""},
+            {"index": 84, "value": "tlsh", "description": ""},
+            {"index": 85, "value": "cdhash", "description": ""},
+            {"index": 86, "value": "filename|authentihash", "description": ""},
+            {"index": 87, "value": "filename|ssdeep", "description": ""},
+            {"index": 88, "value": "filename|implash", "description": ""},
+            {"index": 89, "value": "filename|impfuzzy", "description": ""},
+            {"index": 90, "value": "filename|pehash", "description": ""},
+            {"index": 91, "value": "filename|sha224", "description": ""},
+            {"index": 92, "value": "filename|sha384", "description": ""},
+            {"index": 93, "value": "filename|sha512", "description": ""},
+            {"index": 94, "value": "filename|sha512/224", "description": ""},
+            {"index": 95, "value": "filename|sha512/256", "description": ""},
+            {"index": 96, "value": "filename|tlsh", "description": ""},
+            {"index": 97, "value": "windows-scheduled-task", "description": ""},
+            {"index": 98, "value": "windows-service-name", "description": ""},
+            {"index": 99, "value": "windows-service-displayname", "description": ""},
+            {"index": 100, "value": "whois-registrant-email", "description": ""},
+            {"index": 101, "value": "whois-registrant-phone", "description": ""},
+            {"index": 102, "value": "whois-registrant-name", "description": ""},
+            {"index": 103, "value": "whois-registrant-org", "description": ""},
+            {"index": 104, "value": "whois-registrar", "description": ""},
+            {"index": 105, "value": "whois-creation-date", "description": ""},
+            {"index": 106, "value": "x509-fingerprint-sha1", "description": ""},
+            {"index": 107, "value": "x509-fingerprint-md5", "description": ""},
+            {"index": 108, "value": "x509-fingerprint-sha256", "description": ""},
+            {"index": 109, "value": "dns-soa-email", "description": ""},
+            {"index": 110, "value": "size-in-bytes", "description": ""},
+            {"index": 111, "value": "counter", "description": ""},
+            {"index": 112, "value": "datetime", "description": ""},
+            {"index": 113, "value": "cpe", "description": ""},
+            {"index": 114, "value": "port", "description": ""},
+            {"index": 115, "value": "ip-dist|port", "description": ""},
+            {"index": 116, "value": "ip-src|port", "description": ""},
+            {"index": 117, "value": "hostname|port", "description": ""},
+            {"index": 118, "value": "mac-address", "description": ""},
+            {"index": 119, "value": "mac-eui-64", "description": ""},
+            {"index": 120, "value": "email-dst-display-name", "description": ""},
+            {"index": 121, "value": "email-src-display-name", "description": ""},
+            {"index": 122, "value": "email-header", "description": ""},
+            {"index": 123, "value": "email-reply-to", "description": ""},
+            {"index": 124, "value": "email-x-mailer", "description": ""},
+            {"index": 125, "value": "email-mime-boundary", "description": ""},
+            {"index": 126, "value": "email-thread-index", "description": ""},
+            {"index": 127, "value": "email-message-id", "description": ""},
+            {"index": 128, "value": "github-username", "description": ""},
+            {"index": 129, "value": "github-repository", "description": ""},
+            {"index": 130, "value": "githzb-organisation", "description": ""},
+            {"index": 131, "value": "jabber-id", "description": ""},
+            {"index": 132, "value": "twitter-id", "description": ""},
+            {"index": 133, "value": "first-name", "description": ""},
+            {"index": 134, "value": "middle-name", "description": ""},
+            {"index": 135, "value": "last-name", "description": ""},
+            {"index": 136, "value": "date-of-birth", "description": ""},
+            {"index": 137, "value": "gender", "description": ""},
+            {"index": 138, "value": "passport-number", "description": ""},
+            {"index": 139, "value": "passport-country", "description": ""},
+            {"index": 140, "value": "passport-expiration", "description": ""},
+            {"index": 141, "value": "redress-number", "description": ""},
+            {"index": 142, "value": "nationality", "description": ""},
+            {"index": 143, "value": "visa-number", "description": ""},
+            {"index": 144, "value": "issue-date-of-the-visa", "description": ""},
+            {"index": 145, "value": "primary-residence", "description": ""},
+            {"index": 146, "value": "country-of-residence", "description": ""},
+            {"index": 147, "value": "special-service-request", "description": ""},
+            {"index": 148, "value": "frequent-flyer-number", "description": ""},
+            {"index": 149, "value": "travel-details", "description": ""},
+            {"index": 150, "value": "payments-details", "description": ""},
             {
-                "id": 151,
-                "name": "place-port-of-original-embarkation",
+                "index": 151,
+                "value": "place-port-of-original-embarkation",
                 "description": "",
             },
             {
-                "id": 152,
-                "name": "passenger-name-record-locator-number",
+                "index": 152,
+                "value": "passenger-name-record-locator-number",
                 "description": "",
             },
-            {"id": 153, "name": "mobile-application-id", "description": ""},
-            {"id": 154, "name": "chrome-extension-id", "description": ""},
-            {"id": 155, "name": "cortex", "description": ""},
-            {"id": 156, "name": "boolean", "description": ""},
-            {"id": 157, "name": "anonymised", "description": ""},
+            {"index": 153, "value": "mobile-application-id", "description": ""},
+            {"index": 154, "value": "chrome-extension-id", "description": ""},
+            {"index": 155, "value": "cortex", "description": ""},
+            {"index": 156, "value": "boolean", "description": ""},
+            {"index": 157, "value": "anonymised", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "MISP Attribute Type",
                 "description": "Combo box for MISP attribute type",
@@ -512,7 +966,6 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
@@ -522,13 +975,14 @@ def pre_seed_attributes():
         .first()
     ):
         attr_enum = [
-            {"id": 0, "name": "Your organisation only", "description": ""},
-            {"id": 1, "name": "This community only", "description": ""},
-            {"id": 2, "name": "Connected communities", "description": ""},
-            {"id": 3, "name": "All communities", "description": ""},
-            {"id": 4, "name": "Inherit event", "description": ""},
+            {"index": 0, "value": "Your organisation only", "description": ""},
+            {"index": 1, "value": "This community only", "description": ""},
+            {"index": 2, "value": "Connected communities", "description": ""},
+            {"index": 3, "value": "All communities", "description": ""},
+            {"index": 4, "value": "Inherit event", "description": ""},
         ]
         attr = {
+            **base_attr,
             **{
                 "name": "MISP Attribute Distribution",
                 "description": "Combo box for MISP attribute type",
@@ -536,7 +990,6 @@ def pre_seed_attributes():
                 "attribute_enums": attr_enum,
                 "attribute_enums_total_count": len(attr_enum),
             },
-            **base_attr,
         }
         Attribute.add_attribute(attr)
 
@@ -559,289 +1012,269 @@ def pre_seed_report_items():
         )
         db.session.add(report_item_type)
         db.session.commit()
-        report_item_type_id = (
-            db.session.query(ReportItemType)
-            .filter_by(title="Vulnerability Report")
-            .first()
-            .id
+
+        cvss_item = AttributeGroupItem(
+            None,
+            "CVSS",
+            "",
+            0,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="CVSS").first().id,
+        )
+        tlp_item = AttributeGroupItem(
+            None,
+            "TLP",
+            "",
+            1,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="TLP").first().id,
+        )
+        confidentiality_item = AttributeGroupItem(
+            None,
+            "Confidentiality",
+            "",
+            2,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="Confidentiality").first().id,
+        )
+        description_item = AttributeGroupItem(
+            None,
+            "Description",
+            "",
+            3,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="Text Area").first().id,
+        )
+        exposure_date_item = AttributeGroupItem(
+            None,
+            "Exposure Date",
+            "",
+            4,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="Date").first().id,
+        )
+        update_date_item = AttributeGroupItem(
+            None,
+            "Update Date",
+            "",
+            5,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="Date").first().id,
+        )
+        cve_item = AttributeGroupItem(
+            None,
+            "CVE",
+            "",
+            6,
+            0,
+            1000,
+            db.session.query(Attribute).filter_by(name="CVE").first().id,
+        )
+        impact_item = AttributeGroupItem(
+            None,
+            "Impact",
+            "",
+            7,
+            0,
+            1000,
+            db.session.query(Attribute).filter_by(name="Impact").first().id,
         )
 
         group1 = AttributeGroup(
-            None, "Vulnerability", "", 0, "", 0, [report_item_type_id]
+            None,
+            "Vulnerability",
+            "",
+            0,
+            "",
+            0,
+            [
+                cvss_item,
+                tlp_item,
+                confidentiality_item,
+                description_item,
+                exposure_date_item,
+                update_date_item,
+                cve_item,
+                impact_item,
+            ],
+        )
+        db.session.add(group1)
+        db.session.commit()
+
+        affected_systems_item = AttributeGroupItem(
+            None,
+            "Affected systems",
+            "",
+            0,
+            0,
+            1000,
+            db.session.query(Attribute).filter_by(name="CPE").first().id,
+        )
+        ioc_item = AttributeGroupItem(
+            None,
+            "IOC",
+            "",
+            1,
+            0,
+            1000,
+            db.session.query(Attribute).filter_by(name="Text").first().id,
+        )
+        recommendations_item = AttributeGroupItem(
+            None,
+            "Recommendations",
+            "",
+            2,
+            1,
+            1,
+            db.session.query(Attribute).filter_by(name="Text Area").first().id,
         )
         group2 = AttributeGroup(
-            None, "Identify and Act", "", 0, "", 0, [report_item_type_id]
+            None,
+            "Identify and Act",
+            "",
+            0,
+            "",
+            0,
+            [affected_systems_item, ioc_item, recommendations_item],
         )
-        group3 = AttributeGroup(None, "Resources", "", 0, "", 0, [report_item_type_id])
-        db.session.add(group1)
         db.session.add(group2)
-        db.session.add(group3)
         db.session.commit()
 
-        db.session.add(
-            AttributeGroupItem(
-                "CVSS",
-                "",
-                0,
-                1,
-                1,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="CVSS").first().id,
-            )
+        links_item = AttributeGroupItem(
+            None,
+            "Links",
+            "",
+            0,
+            0,
+            1000,
+            db.session.query(Attribute).filter_by(name="Text").first().id,
         )
-        db.session.add(
-            AttributeGroupItem(
-                "TLP",
-                "",
-                1,
-                1,
-                1,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="TLP").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "Confidentiality",
-                "",
-                2,
-                1,
-                1,
-                group1.id,
-                db.session.query(Attribute)
-                .filter_by(name="Confidentiality")
-                .first()
-                .id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "Description",
-                "",
-                3,
-                1,
-                1,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="Text Area").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "Exposure Date",
-                "",
-                4,
-                1,
-                1,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="Date").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "Update Date",
-                "",
-                5,
-                1,
-                1,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="Date").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "CVE",
-                "",
-                6,
-                0,
-                1000,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="CVE").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "Impact",
-                "",
-                7,
-                0,
-                1000,
-                group1.id,
-                db.session.query(Attribute).filter_by(name="Impact").first().id,
-            )
-        )
-        db.session.commit()
-
-        db.session.add(
-            AttributeGroupItem(
-                "Affected systems",
-                "",
-                0,
-                0,
-                1000,
-                group2.id,
-                db.session.query(Attribute).filter_by(name="CPE").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "IOC",
-                "",
-                1,
-                0,
-                1000,
-                group2.id,
-                db.session.query(Attribute).filter_by(name="Text").first().id,
-            )
-        )
-        db.session.add(
-            AttributeGroupItem(
-                "Recommendations",
-                "",
-                2,
-                1,
-                1,
-                group2.id,
-                db.session.query(Attribute).filter_by(name="Text Area").first().id,
-            )
-        )
-        db.session.commit()
-
-        db.session.add(
-            AttributeGroupItem(
-                "Links",
-                "",
-                0,
-                0,
-                1000,
-                group3.id,
-                db.session.query(Attribute).filter_by(name="Text").first().id,
-            )
-        )
+        db.session.add(AttributeGroup(None, "Resources", "", 0, "", 0, [links_item]))
         db.session.commit()
 
     if not db.session.query(ReportItemType).filter_by(title="MISP Report").first():
-        print("Adding default MISP report type.", flush=True)
         report_item_type = ReportItemType(None, "MISP Report", "MISP report type", [])
         db.session.add(report_item_type)
         db.session.commit()
 
-        group4 = AttributeGroup(None, "Event", "", None, None, 0, [report_item_type.id])
-        group5 = AttributeGroup(
-            None, "Attribute", "", None, None, 0, [report_item_type.id]
-        )
-        db.session.add(group4)
-        db.session.add(group5)
-        db.session.commit()
-
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Event distribution",
                 "",
                 0,
                 1,
                 1,
-                group4.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Event threat level",
                 "",
                 1,
                 1,
                 1,
-                group4.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Event analysis",
                 "",
                 2,
                 1,
                 1,
-                group4.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Event info",
                 "",
                 2,
                 1,
                 1,
-                group4.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
+
+        group4 = AttributeGroup(None, "Event", "", None, None, 0, [])
+        db.session.add(group4)
         db.session.commit()
 
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Attribute category",
                 "",
                 0,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Attribute type",
                 "",
                 1,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Attribute distribution",
                 "",
                 2,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Attribute value",
                 "",
                 3,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Text Area").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Attribute contextual comment",
                 "",
                 4,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Text").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Attribute additional information",
                 "",
                 5,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute)
                 .filter_by(name="Additional Data")
                 .first()
@@ -850,26 +1283,29 @@ def pre_seed_report_items():
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "First seen date",
                 "",
                 6,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Date").first().id,
             )
         )
         db.session.add(
             AttributeGroupItem(
+                None,
                 "Last seen date",
                 "",
                 7,
                 1,
                 1,
-                group5.id,
                 db.session.query(Attribute).filter_by(name="Date").first().id,
             )
         )
+        group5 = AttributeGroup(None, "Attribute", "", None, None, 0, [])
+        db.session.add(group5)
+
         db.session.commit()
 
 
@@ -942,7 +1378,7 @@ def pre_seed_default_user():
     from model.address import Address
     from model.organization import Organization
     from model.role import Role
-    from model.user import User, UserProfile, UserRole, UserOrganization
+    from model.user import User
 
     address = Address(
         "29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom"
@@ -954,22 +1390,22 @@ def pre_seed_default_user():
         None,
         "The Earth",
         "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
-        address.id,
+        address,
     )
     db.session.add(organization)
     db.session.commit()
 
-    profile = UserProfile(True, False, [])
-    db.session.add(profile)
-    db.session.commit()
-
-    user = User("admin", "Arthur Dent", profile.id)
-    db.session.add(user)
-    db.session.commit()
-
     admin_role = db.session.query(Role).filter_by(name="Admin").first()
-    db.session.add(UserOrganization(user.id, organization.id))
-    db.session.add(UserRole(user.id, admin_role))
+
+    user = User(
+        id=None,
+        username="admin",
+        name="Arthur Dent",
+        organizations=[organization],
+        roles=[admin_role],
+        permissions=[],
+    )
+    db.session.add(user)
     db.session.commit()
 
     address = Address(
@@ -982,22 +1418,22 @@ def pre_seed_default_user():
     db.session.commit()
 
     organization = Organization(
+        None,
         "The Clacks",
         "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
-        address.id,
+        address,
     )
     db.session.add(organization)
     db.session.commit()
-
-    profile = UserProfile(True, False)
-    db.session.add(profile)
-    db.session.commit()
-
-    user = User("user", "Terry Pratchett", profile.id)
-    db.session.add(user)
-    db.session.commit()
-
     user_role = db.session.query(Role).filter_by(name="User").first()
-    db.session.add(UserOrganization(user.id, organization.id))
-    db.session.add(UserRole(user.id, user_role))
+
+    user = User(
+        id=None,
+        username="user",
+        name="Terry Pratchett",
+        organizations=[organization],
+        roles=[user_role],
+        permissions=[],
+    )
+    db.session.add(user)
     db.session.commit()
