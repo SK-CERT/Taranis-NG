@@ -17,9 +17,9 @@ def initialize(app):
 
 
 def pre_seed():
-    logger.log_info("Start Source groups")
     pre_seed_source_groups()
     logger.log_debug("Source groups seeded")
+
     pre_seed_roles()
     logger.log_debug("Roles seeded")
 
@@ -31,6 +31,9 @@ def pre_seed():
 
     pre_seed_wordlists()
     logger.log_debug("Wordlists seeded")
+
+    pre_seed_default_user()
+    logger.log_debug("Default users seeded")
 
 
 def pre_seed_source_groups():
@@ -935,59 +938,66 @@ def pre_seed_wordlists():
     db.session.commit()
 
 
-# def pre_seed_default_user():
-#     from model.address import Address
-#     from model.organization import Organization
+def pre_seed_default_user():
+    from model.address import Address
+    from model.organization import Organization
+    from model.role import Role
+    from model.user import User, UserProfile, UserRole, UserOrganization
 
-#     address = Address("29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom")
-#     session.add(address)
-#     session.commit()
+    address = Address(
+        "29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom"
+    )
+    db.session.add(address)
+    db.session.commit()
 
-#     organization = Organization(
-#         "The Earth",
-#         "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
-#         address.id,
-#     )
-#     session.add(organization)
-#     session.commit()
+    organization = Organization(
+        None,
+        "The Earth",
+        "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
+        address.id,
+    )
+    db.session.add(organization)
+    db.session.commit()
 
-#     profile = UserProfile(True, False)
-#     session.add(profile)
-#     session.commit()
+    profile = UserProfile(True, False, [])
+    db.session.add(profile)
+    db.session.commit()
 
-#     user = User("admin", "Arthur Dent", profile.id)
-#     session.add(user)
-#     session.commit()
+    user = User("admin", "Arthur Dent", profile.id)
+    db.session.add(user)
+    db.session.commit()
 
-#     session.add(UserOrganization(user.id, organization.id))
-#     session.add(UserRole(user.id, role.id))
-#     session.commit()
+    admin_role = db.session.query(Role).filter_by(name="Admin").first()
+    db.session.add(UserOrganization(user.id, organization.id))
+    db.session.add(UserRole(user.id, admin_role))
+    db.session.commit()
 
-#     address = Address(
-#         "Cherry Tree Rd",
-#         "Beaconsfield, Buckinghamshire",
-#         "HP9 1BH",
-#         "United Kingdom",
-#     )
-#     session.add(address)
-#     session.commit()
+    address = Address(
+        "Cherry Tree Rd",
+        "Beaconsfield, Buckinghamshire",
+        "HP9 1BH",
+        "United Kingdom",
+    )
+    db.session.add(address)
+    db.session.commit()
 
-#     organization = Organization(
-#         "The Clacks",
-#         "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
-#         address.id,
-#     )
-#     session.add(organization)
-#     session.commit()
+    organization = Organization(
+        "The Clacks",
+        "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
+        address.id,
+    )
+    db.session.add(organization)
+    db.session.commit()
 
-#     profile = UserProfile(True, False)
-#     session.add(profile)
-#     session.commit()
+    profile = UserProfile(True, False)
+    db.session.add(profile)
+    db.session.commit()
 
-#     user = User("user", "Terry Pratchett", profile.id)
-#     session.add(user)
-#     session.commit()
+    user = User("user", "Terry Pratchett", profile.id)
+    db.session.add(user)
+    db.session.commit()
 
-#     session.add(UserOrganization(user.id, organization.id))
-#     session.add(UserRole(user.id, role.id))
-#     session.commit()
+    user_role = db.session.query(Role).filter_by(name="User").first()
+    db.session.add(UserOrganization(user.id, organization.id))
+    db.session.add(UserRole(user.id, user_role))
+    db.session.commit()
