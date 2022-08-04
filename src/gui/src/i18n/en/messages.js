@@ -890,6 +890,7 @@ const messages_en = {
         error: "Could not save this word list",
         name: "Name",
         description: "Description",
+        link: "URL",
         use_for_stop_words: "Use as stop word list",
         successful: "New word list was successfully added",
         successful_edit: "Word list was successfully updated",
@@ -903,6 +904,7 @@ const messages_en = {
         file_has_header: "File has header",
         import_from_csv: "Import from CSV",
         load_csv_file: "Load CSV file",
+        download_from_link: "Download from URL",
         import: "Import",
         close: "Close"
     },

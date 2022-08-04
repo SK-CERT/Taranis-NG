@@ -1,7 +1,7 @@
 <template>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate"
-               @click="addReportItem">
+                @click="addReportItem">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
             <span>{{ $t('analyze.add_new') }}</span>
         </v-btn>
@@ -69,6 +69,10 @@
                             </v-card-actions>
                         </v-card>
                     </v-dialog>
+                    <v-switch style="padding-top:25px"
+                              v-model="verticalView"
+                              label="Side-by-side view"
+                    ></v-switch>
                     <v-switch :disabled="!canModify"
                               style="padding-top:25px"
                               v-model="report_item.completed"
@@ -82,129 +86,154 @@
 
                 </v-toolbar>
 
-                <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
-                    <v-row no-gutters>
-                        <v-col cols="12" v-if="edit">
-                            <span class="caption grey--text">ID: {{ report_item.uuid }}</span>
-                        </v-col>
-                        <v-col cols="4" class="pr-3">
-                            <v-combobox v-on:change="reportSelected" :disabled="edit"
-                                        v-model="selected_type"
-                                        :items="report_types"
-                                        item-text="title"
-                                        :label="$t('report_item.report_type')"
-                            />
-                        </v-col>
-                        <v-col cols="4" class="pr-3">
-                            <v-text-field @focus="onFocus('title_prefix')"
-                                          @blur="onBlur('title_prefix')"
-                                          @keyup="onKeyUp('title_prefix')"
-                                          :class="getLockedStyle('title_prefix')"
-                                          :disabled="field_locks.title_prefix || !canModify"
-                                          :label="$t('report_item.title_prefix')"
-                                          name="title_prefix"
-                                          v-model="report_item.title_prefix"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
-                        </v-col>
-                        <v-col cols="4" class="pr-3">
-                            <v-text-field @focus="onFocus('title')" @blur="onBlur('title')"
-                                          @keyup="onKeyUp('title')"
-                                          :class="getLockedStyle('title')"
-                                          :disabled="field_locks.title || !canModify"
-                                          :label="$t('report_item.title')"
-                                          name="title"
-                                          type="text"
-                                          v-model="report_item.title"
-                                          v-validate="'required'"
-                                          data-vv-name="title"
-                                          :error-messages="errors.collect('title')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
-                        </v-col>
-                    </v-row>
-                    <v-row no-gutters class="pb-4">
-                        <v-col cols="12">
-                            <v-btn v-bind="UI.BUTTON.ADD_NEW_IN" v-if="canModify"
-                                   @click="$refs.new_item_selector.openSelector()">
-                                <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                                <span>{{$t('assess.add_news_item')}}</span>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <NewsItemSelector ref="new_item_selector" analyze_selector
-                                              :values="news_item_aggregates"
-                                              :modify="modify"
-                                              :collections="collections"
-                                              :report_item_id="this.report_item.id"
-                                              :edit="edit"/>
-                        </v-col>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <RemoteReportItemSelector :values="remote_report_items" :modify="modify" :edit="edit"
-                                                      :report_item_id="this.report_item.id"
-                                                      @remote-report-items-changed="updateRemoteAttributes"/>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col cols="12" class="pa-0 ma-0">
-                            <v-expansion-panels class="mb-1"
-                                                v-for="(attribute_group, i) in attribute_groups"
-                                                :key="attribute_group.id"
-                                                v-model="expandPanelGroups"
-                                                multiple
-                            >
-                                <v-expansion-panel>
-                                    <v-expansion-panel-header color="primary--text" class="body-1 text-uppercase pa-3">
-                                        {{ attribute_group.title }}
-                                    </v-expansion-panel-header>
-                                    <v-expansion-panel-content>
-                                        <!--TYPES-->
-                                        <v-expansion-panels multiple focusable class="items" v-model="expand_group_items[i].values">
-                                            <v-expansion-panel v-for="attribute_item in attribute_group.attribute_group_items"
-                                                               :key="attribute_item.id"
-                                                               class="item-panel"
-                                            >
-                                                <v-expansion-panel-header class="pa-2 font-weight-bold primary--text rounded-0">
-                                                    <v-row>
-                                                        <!--<v-icon small left>mdi-account</v-icon>-->
-                                                        <span>{{attribute_item.attribute_group_item.title}}</span>
-                                                    </v-row>
-                                                </v-expansion-panel-header>
-                                                <v-expansion-panel-content class="pt-0">
-                                                    <AttributeContainer
-                                                        :attribute_item="attribute_item" :edit="edit" :modify="modify"
-                                                        :report_item_id="report_item.id"
-                                                    />
-                                                </v-expansion-panel-content>
-                                            </v-expansion-panel>
-                                        </v-expansion-panels>
-                                    </v-expansion-panel-content>
-                                </v-expansion-panel>
-                            </v-expansion-panels>
-                        </v-col>
-                    </v-row>
 
-                    <v-row no-gutters class="pt-2">
-                        <v-col cols="12">
-                            <v-alert v-if="show_validation_error" dense type="error" text>
-                                {{ $t('report_item.validation_error') }}
-                            </v-alert>
-                            <v-alert v-if="show_error" dense type="error" text>
-                                {{ $t('report_item.error') }}
-                            </v-alert>
-                        </v-col>
-                    </v-row>
-                </v-form>
+                <v-row>
+                    <v-col :cols="verticalView ? 6 : 12" :style="verticalView ? 'height:calc(100vh - 3em); overflow-y: auto;' : ''">
+                        <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
+                            <v-row no-gutters>
+                                <v-col cols="12" v-if="edit">
+                                    <span class="caption grey--text">ID: {{ report_item.uuid }}</span>
+                                </v-col>
+                                <v-col cols="4" class="pr-3">
+                                    <v-combobox v-on:change="reportSelected" :disabled="edit"
+                                                v-model="selected_type"
+                                                :items="report_types"
+                                                item-text="title"
+                                                :label="$t('report_item.report_type')"
+                                    />
+                                </v-col>
+                                <v-col cols="4" class="pr-3">
+                                    <v-text-field @focus="onFocus('title_prefix')"
+                                                  @blur="onBlur('title_prefix')"
+                                                  @keyup="onKeyUp('title_prefix')"
+                                                  :class="getLockedStyle('title_prefix')"
+                                                  :disabled="field_locks.title_prefix || !canModify"
+                                                  :label="$t('report_item.title_prefix')"
+                                                  name="title_prefix"
+                                                  v-model="report_item.title_prefix"
+                                                  :spellcheck="$store.state.settings.spellcheck"
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="4" class="pr-3">
+                                    <v-text-field @focus="onFocus('title')"
+                                                  @blur="onBlur('title')"
+                                                  @keyup="onKeyUp('title')"
+                                                  :class="getLockedStyle('title')"
+                                                  :disabled="field_locks.title || !canModify"
+                                                  :label="$t('report_item.title')"
+                                                  name="title"
+                                                  type="text"
+                                                  v-model="report_item.title"
+                                                  v-validate="'required'"
+                                                  data-vv-name="title"
+                                                  :error-messages="errors.collect('title')"
+                                                  :spellcheck="$store.state.settings.spellcheck"
+                                    ></v-text-field>
+                                </v-col>
+                            </v-row>
+                            <v-row no-gutters class="pb-4">
+                                <v-col cols="12">
+                                    <v-btn v-bind="UI.BUTTON.ADD_NEW_IN" v-if="canModify"
+                                           @click="$refs.new_item_selector.openSelector()">
+                                        <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
+                                        <span>{{$t('assess.add_news_item')}}</span>
+                                    </v-btn>
+                                </v-col>
+                            </v-row>
+                            <v-row no-gutters>
+                                <v-col cols="12">
+                                    <NewsItemSelector v-if="!verticalView"
+                                                      ref="new_item_selector" analyze_selector
+                                                      :attach="false"
+                                                      :values="news_item_aggregates"
+                                                      :modify="modify"
+                                                      :collections="collections"
+                                                      :report_item_id="this.report_item.id"
+                                                      :edit="edit"/>
+                                </v-col>
+                            </v-row>
+                            <v-row no-gutters>
+                                <v-col cols="12">
+                                    <RemoteReportItemSelector :values="remote_report_items" :modify="modify" :edit="edit"
+                                                              :report_item_id="this.report_item.id"
+                                                              @remote-report-items-changed="updateRemoteAttributes"/>
+                                </v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col cols="12" class="pa-0 ma-0">
+                                    <v-expansion-panels class="mb-1"
+                                                        v-for="(attribute_group, i) in attribute_groups"
+                                                        :key="attribute_group.id"
+                                                        v-model="expandPanelGroups"
+                                                        multiple
+                                    >
+                                        <v-expansion-panel>
+                                            <v-expansion-panel-header color="primary--text" class="body-1 text-uppercase pa-3">
+                                                {{ attribute_group.title }}
+                                            </v-expansion-panel-header>
+                                            <v-expansion-panel-content>
+                                                <!--TYPES-->
+                                                <v-expansion-panels multiple focusable class="items" v-model="expand_group_items[i].values">
+                                                    <v-expansion-panel v-for="attribute_item in attribute_group.attribute_group_items"
+                                                                       :key="attribute_item.id"
+                                                                       class="item-panel"
+                                                    >
+                                                        <v-expansion-panel-header class="pa-2 font-weight-bold primary--text rounded-0">
+                                                            <v-row>
+                                                                <!--<v-icon small left>mdi-account</v-icon>-->
+                                                                <span>{{attribute_item.attribute_group_item.title}}</span>
+                                                            </v-row>
+                                                        </v-expansion-panel-header>
+                                                        <v-expansion-panel-content class="pt-0">
+                                                            <AttributeContainer
+                                                                :attribute_item="attribute_item" :edit="edit" :modify="modify"
+                                                                :report_item_id="report_item.id"
+                                                            />
+                                                        </v-expansion-panel-content>
+                                                    </v-expansion-panel>
+                                                </v-expansion-panels>
+                                            </v-expansion-panel-content>
+                                        </v-expansion-panel>
+                                    </v-expansion-panels>
+                                </v-col>
+                            </v-row>
+
+                            <v-row no-gutters class="pt-2">
+                                <v-col cols="12">
+                                    <v-alert v-if="show_validation_error" dense type="error" text>
+                                        {{ $t('report_item.validation_error') }}
+                                    </v-alert>
+                                    <v-alert v-if="show_error" dense type="error" text>
+                                        {{ $t('report_item.error') }}
+                                    </v-alert>
+                                </v-col>
+                            </v-row>
+                        </v-form>
+                    </v-col>
+                    <v-col v-if="verticalView" :cols="verticalView ? 6 : 0"
+                        style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
+                        <NewsItemSelector ref="new_item_selector" analyze_selector attach=".taranis-ng-vertical-view"
+                            :values="news_item_aggregates" :modify="modify" :collections="collections"
+                            :report_item_id="this.report_item.id" :edit="edit" />
+                    </v-col>
+                </v-row>
 
 
             </v-card>
         </v-dialog>
     </v-row>
 </template>
+
+<style>
+.taranis-ng-vertical-view {
+    position: relative;
+}
+
+.v-dialog__content,
+.v-dialog--fullscreen {
+    position: absolute;
+}
+</style>
 
 <script>
 import AuthMixin from "@/services/auth/auth_mixin";
@@ -275,7 +304,23 @@ export default {
             attributes: []
         }
     }),
+    watch: {
+        // remove scrollbars when a report item is open
+        dialog(val) {
+            if (val) { document.getElementsByName('hmtl').style.overflow = 'hidden' }
+            else { document.getElementsByName('hmtl').style.overflow = 'auto' }
+        }
+    },
     computed: {
+        verticalView: {
+            get() {
+                return this.$store.getters.getVerticalView;
+            },
+            set(val) {
+                this.$store.commit("setVerticalView", val);
+            }
+        },
+
         canCreate() {
             return this.checkPermission(Permissions.ANALYZE_CREATE) && this.local_reports === true
         },
