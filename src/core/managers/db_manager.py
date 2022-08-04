@@ -91,10 +91,9 @@ def pre_seed_roles():
 
 
 def pre_seed_attributes():
-    from model.attribute import Attribute, AttributeEnum
-    from schema.attribute import AttributeType
+    from model.attribute import Attribute
 
-    attr = {
+    base_attr = {
         "id": -1,
         "name": "Text",
         "description": "Simple text box",
@@ -107,550 +106,436 @@ def pre_seed_attributes():
     }
 
     if not db.session.query(Attribute).filter_by(name="Text").first():
-        attr["name"] = "Text"
-        attr["description"] = "Simple text box"
-        attr["type"] = "STRING"
-
+        attr = {
+            **{"name": "Text", "description": "Simple text box", "type": "STRING"},
+            **base_attr,
+        }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Text Area").first():
-        attr["name"] = "Text Area"
-        attr["description"] = "Simple text area"
-        attr["type"] = "TEXT"
-
+        attr = {
+            **{"name": "Text Area", "description": "Simple text area", "type": "TEXT"},
+            **base_attr,
+        }
         Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="TLP").first():
-        attr_tlp = Attribute(
-            "TLP", "Traffic Light Protocol element", AttributeType.TLP, None, None, None
-        )
-        db.session.add(attr_tlp)
+        attr = {
+            **{
+                "name": "TLP",
+                "description": "Traffic Light Protocol element",
+                "type": "TLP",
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="CPE").first():
-        attr_cpe = Attribute(
-            "CPE",
-            "Common Platform Enumeration element",
-            AttributeType.CPE,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_cpe)
+        attr = {
+            **{
+                "name": "CPE",
+                "description": "Common Platform Enumeration element",
+                "type": "CPE",
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="CVSS").first():
-        attr_cvss = Attribute(
-            "CVSS",
-            "Common Vulnerability Scoring System element",
-            AttributeType.CVSS,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_cvss)
+        attr = {
+            **{
+                "name": "CVSS",
+                "description": "Common Vulnerability Scoring System element",
+                "type": "CVSS",
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="CVE").first():
-        attr_cve = Attribute(
-            "CVE",
-            "Common Vulnerabilities and Exposures element",
-            AttributeType.CVE,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_cve)
+        attr = {
+            **{
+                "name": "CVE",
+                "description": "Common Vulnerabilities and Exposures element",
+                "type": "CVE",
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Date").first():
-        attr_date = Attribute(
-            "Date", "Date picker", AttributeType.DATE, None, None, None
-        )
-        db.session.add(attr_date)
-
-    db.session.commit()
+        attr = {
+            **{"name": "Date", "description": "Date picker", "type": "DATE"},
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Confidentiality").first():
-        attr_conf = Attribute(
-            "Confidentiality",
-            "Radio box for confidentiality level",
-            AttributeType.RADIO,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_conf)
-        db.session.commit()
-        db.session.add(AttributeEnum(0, "UNRESTRICTED", "", attr_conf.id))
-        db.session.add(AttributeEnum(1, "CLASSIFIED", "", attr_conf.id))
-        db.session.add(AttributeEnum(2, "CONFIDENTIAL", "", attr_conf.id))
-        db.session.add(AttributeEnum(3, "SECRET", "", attr_conf.id))
-        db.session.add(AttributeEnum(4, "TOP SECRET", "", attr_conf.id))
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "UNRESTRICTED", "description": ""},
+            {"id": 1, "name": "CLASSIFIED", "description": ""},
+            {"id": 2, "name": "CONFIDENTIAL", "description": ""},
+            {"id": 3, "name": "SECRET", "description": ""},
+            {"id": 4, "name": "TOP SECRET", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "Confidentiality",
+                "description": "Radio box for confidentiality level",
+                "type": "RADIO",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Impact").first():
-        attr_impact = Attribute(
-            "Impact", "Combo box for impact level", AttributeType.ENUM, None, None, None
-        )
-        db.session.add(attr_impact)
-        db.session.commit()
-        db.session.add(
-            AttributeEnum(
-                0,
-                "Malicious code execution affecting overall confidentiality, integrity, and availability of the system",
-                "",
-                attr_impact.id,
-            )
-        )
-        db.session.add(AttributeEnum(1, "Malicious code execution", "", attr_impact.id))
-        db.session.add(AttributeEnum(2, "Denial of service", "", attr_impact.id))
-        db.session.add(AttributeEnum(3, "Privilege escalation", "", attr_impact.id))
-        db.session.add(AttributeEnum(4, "Information exposure", "", attr_impact.id))
-        db.session.add(
-            AttributeEnum(5, "Unauthorized access to the system", "", attr_impact.id)
-        )
-        db.session.add(
-            AttributeEnum(6, "Unauthorized change in system", "", attr_impact.id)
-        )
-        db.session.commit()
+        attr_enum = [
+            {
+                "id": 0,
+                "name": "Malicious code execution affecting overall confidentiality, integrity, and availability of the system",
+                "description": "",
+            },  # noqa
+            {"id": 1, "name": "Malicious code execution", "description": ""},
+            {"id": 2, "name": "Denial of service", "description": ""},
+            {"id": 3, "name": "Privilege escalation", "description": ""},
+            {"id": 4, "name": "Information exposure", "description": ""},
+            {"id": 5, "name": "Unauthorized access to the system", "description": ""},
+            {"id": 6, "name": "Unauthorized change in system", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "Impact",
+                "description": "Combo box for impact level",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="Additional Data").first():
-        attr_attribute_data = Attribute(
-            "Additional Data",
-            "Radio box for MISP additional data",
-            AttributeType.RADIO,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_attribute_data)
-        db.session.commit()
-        db.session.add(
-            AttributeEnum(
-                0, "For Intrusion Detection System", "", attr_attribute_data.id
-            )
-        )
-        db.session.add(
-            AttributeEnum(1, "Disable Correlation", "", attr_attribute_data.id)
-        )
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "For Intrusion Detection System", "description": ""},
+            {"id": 1, "name": "Disable Correlation", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "Additional Data",
+                "description": "Radio box for MISP additional data",
+                "type": "RADIO",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if (
         not db.session.query(Attribute)
         .filter_by(name="MISP Event Distribution")
         .first()
     ):
-        attr_event_distribution = Attribute(
-            "MISP Event Distribution",
-            "Combo box for MISP event distribution",
-            AttributeType.ENUM,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_event_distribution)
-        db.session.commit()
-        db.session.add(
-            AttributeEnum(0, "Your organisation only", "", attr_event_distribution.id)
-        )
-        db.session.add(
-            AttributeEnum(1, "This community only", "", attr_event_distribution.id)
-        )
-        db.session.add(
-            AttributeEnum(2, "Connected communities", "", attr_event_distribution.id)
-        )
-        db.session.add(
-            AttributeEnum(3, "All communities", "", attr_event_distribution.id)
-        )
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "Your organisation only", "description": ""},
+            {"id": 1, "name": "This community only", "description": ""},
+            {"id": 2, "name": "Connected communities", "description": ""},
+            {"id": 3, "name": "All communities", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "MISP Event Distribution",
+                "description": "Combo box for MISP event distribution",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if (
         not db.session.query(Attribute)
         .filter_by(name="MISP Event Threat Level")
         .first()
     ):
-        attr_event_threat_level = Attribute(
-            "MISP Event Threat Level",
-            "Combo box for MISP event threat level",
-            AttributeType.ENUM,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_event_threat_level)
-        db.session.commit()
-        db.session.add(AttributeEnum(0, "High", "", attr_event_threat_level.id))
-        db.session.add(AttributeEnum(1, "Medium", "", attr_event_threat_level.id))
-        db.session.add(AttributeEnum(2, "Low", "", attr_event_threat_level.id))
-        db.session.add(AttributeEnum(3, "Undefined", "", attr_event_threat_level.id))
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "High", "description": ""},
+            {"id": 1, "name": "Medium", "description": ""},
+            {"id": 2, "name": "Low", "description": ""},
+            {"id": 3, "name": "Undefined", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "MISP Event Threat Level",
+                "description": "Combo box for MISP event threat level",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="MISP Event Analysis").first():
-        attr_event_analysis = Attribute(
-            "MISP Event Analysis",
-            "Combo box for MISP event analysis",
-            AttributeType.ENUM,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_event_analysis)
-        db.session.commit()
-        db.session.add(AttributeEnum(0, "Initial", "", attr_event_analysis.id))
-        db.session.add(AttributeEnum(1, "Ongoing", "", attr_event_analysis.id))
-        db.session.add(AttributeEnum(2, "Completed", "", attr_event_analysis.id))
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "Initial", "description": ""},
+            {"id": 1, "name": "Ongoing", "description": ""},
+            {"id": 2, "name": "Completed", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "MISP Event Analysis",
+                "description": "Combo box for MISP event analysis",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if (
         not db.session.query(Attribute)
         .filter_by(name="MISP Attribute Category")
         .first()
     ):
-        attr_attribute_category = Attribute(
-            "MISP Attribute Category",
-            "Combo box for MISP attribute category",
-            AttributeType.ENUM,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_attribute_category)
-        db.session.commit()
-        db.session.add(
-            AttributeEnum(0, "Internal reference", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(1, "Targeting data", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(2, "Antivirus detection", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(3, "Payload delivery", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(4, "Artifacts dropped", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(5, "Payload installation", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(6, "Persistence mechanism", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(7, "Network activity", "", attr_attribute_category.id)
-        )
-        db.session.add(AttributeEnum(8, "Payload type", "", attr_attribute_category.id))
-        db.session.add(AttributeEnum(9, "Attribution", "", attr_attribute_category.id))
-        db.session.add(
-            AttributeEnum(10, "External analysis", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(11, "Financial fraud", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(12, "Support Tool", "", attr_attribute_category.id)
-        )
-        db.session.add(
-            AttributeEnum(13, "Social network", "", attr_attribute_category.id)
-        )
-        db.session.add(AttributeEnum(14, "Person", "", attr_attribute_category.id))
-        db.session.add(AttributeEnum(15, "Other", "", attr_attribute_category.id))
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "Internal reference", "description": ""},
+            {"id": 1, "name": "Targeting data", "description": ""},
+            {"id": 2, "name": "Antivirus detection", "description": ""},
+            {"id": 3, "name": "Payload delivery", "description": ""},
+            {"id": 4, "name": "Artifacts dropped", "description": ""},
+            {"id": 5, "name": "Payload installation", "description": ""},
+            {"id": 6, "name": "Persistence mechanism", "description": ""},
+            {"id": 7, "name": "Network activity", "description": ""},
+            {"id": 8, "name": "Payload type", "description": ""},
+            {"id": 9, "name": "Attribution", "description": ""},
+            {"id": 10, "name": "External analysis", "description": ""},
+            {"id": 11, "name": "Financial fraud", "description": ""},
+            {"id": 12, "name": "Support Tool", "description": ""},
+            {"id": 13, "name": "Social network", "description": ""},
+            {"id": 14, "name": "Person", "description": ""},
+            {"id": 15, "name": "Other", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "MISP Attribute Category",
+                "description": "Combo box for MISP attribute category",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if not db.session.query(Attribute).filter_by(name="MISP Attribute Type").first():
-        attr_attribute_type = Attribute(
-            "MISP Attribute Type",
-            "Combo box for MISP attribute type",
-            AttributeType.ENUM,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_attribute_type)
-        db.session.commit()
-        db.session.add(AttributeEnum(0, "md5", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(1, "sha1", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(2, "sha256", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(3, "filename", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(4, "pbd", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(5, "filename|md5", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(6, "filename|sha1", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(7, "filename|sha256", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(8, "ip-src", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(9, "ip-dst", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(10, "hostname", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(11, "domain", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(12, "domain|ip", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(13, "email-src", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(14, "eppn", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(15, "email-dst", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(16, "email-subject", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(17, "email-attachment", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(18, "email-body", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(19, "float", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(20, "url", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(21, "http-method", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(22, "user-agent", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(23, "ja3-fingerprint-md5", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(24, "hassh-md5", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(25, "hasshserver-md5", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(26, "reg-key", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(27, "regkey|value", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(28, "AS", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(29, "snort", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(30, "bro", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(31, "zeek", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(32, "community-id", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(33, "pattern-in-traffic", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(34, "pattern-in-memory", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(35, "yara", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(36, "stix2-pattern", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(37, "sigma", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(38, "gene", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(39, "kusto-query", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(40, "mime-type", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(41, "identity-card-number", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(42, "cookie", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(43, "vulnerability", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(44, "weakness", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(45, "link", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(46, "comment", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(47, "text", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(48, "hex", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(49, "other", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(50, "named pipe", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(51, "mutex", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(52, "target-user", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(53, "target-email", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(54, "target-machine", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(55, "target-org", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(56, "target-location", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(57, "target-external", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(58, "btc", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(59, "dash", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(60, "xmr", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(61, "iban", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(62, "bic", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(63, "bank-account-nr", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(64, "aba-rtn", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(65, "bin", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(66, "cc-number", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(67, "prtn", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(68, "phone-number", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(69, "threat-actor", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(70, "campaign-name", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(71, "campaign-id", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(72, "malware-type", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(73, "uri", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(74, "authentihash", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(75, "ssdeep", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(76, "implash", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(77, "pahash", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(78, "impfuzzy", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(79, "sha224", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(80, "sha384", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(81, "sha512", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(82, "sha512/224", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(83, "sha512/256", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(84, "tlsh", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(85, "cdhash", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(86, "filename|authentihash", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(87, "filename|ssdeep", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(88, "filename|implash", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(89, "filename|impfuzzy", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(90, "filename|pehash", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(91, "filename|sha224", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(92, "filename|sha384", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(93, "filename|sha512", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(94, "filename|sha512/224", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(95, "filename|sha512/256", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(96, "filename|tlsh", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(97, "windows-scheduled-task", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(98, "windows-service-name", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(99, "windows-service-displayname", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(100, "whois-registrant-email", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(101, "whois-registrant-phone", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(102, "whois-registrant-name", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(103, "whois-registrant-org", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(104, "whois-registrar", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(105, "whois-creation-date", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(106, "x509-fingerprint-sha1", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(107, "x509-fingerprint-md5", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(108, "x509-fingerprint-sha256", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(109, "dns-soa-email", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(110, "size-in-bytes", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(111, "counter", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(112, "datetime", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(113, "cpe", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(114, "port", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(115, "ip-dist|port", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(116, "ip-src|port", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(117, "hostname|port", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(118, "mac-address", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(119, "mac-eui-64", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(120, "email-dst-display-name", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(121, "email-src-display-name", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(122, "email-header", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(123, "email-reply-to", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(124, "email-x-mailer", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(125, "email-mime-boundary", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(126, "email-thread-index", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(127, "email-message-id", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(128, "github-username", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(129, "github-repository", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(130, "githzb-organisation", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(131, "jabber-id", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(132, "twitter-id", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(133, "first-name", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(134, "middle-name", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(135, "last-name", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(136, "date-of-birth", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(137, "gender", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(138, "passport-number", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(139, "passport-country", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(140, "passport-expiration", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(141, "redress-number", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(142, "nationality", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(143, "visa-number", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(144, "issue-date-of-the-visa", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(145, "primary-residence", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(146, "country-of-residence", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(147, "special-service-request", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(148, "frequent-flyer-number", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(149, "travel-details", "", attr_attribute_type.id))
-        db.session.add(
-            AttributeEnum(150, "payments-details", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(
-                151, "place-port-of-original-embarkation", "", attr_attribute_type.id
-            )
-        )
-        db.session.add(
-            AttributeEnum(
-                152, "passenger-name-record-locator-number", "", attr_attribute_type.id
-            )
-        )
-        db.session.add(
-            AttributeEnum(153, "mobile-application-id", "", attr_attribute_type.id)
-        )
-        db.session.add(
-            AttributeEnum(154, "chrome-extension-id", "", attr_attribute_type.id)
-        )
-        db.session.add(AttributeEnum(155, "cortex", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(156, "boolean", "", attr_attribute_type.id))
-        db.session.add(AttributeEnum(157, "anonymised", "", attr_attribute_type.id))
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "md5", "description": ""},
+            {"id": 1, "name": "sha1", "description": ""},
+            {"id": 2, "name": "sha256", "description": ""},
+            {"id": 3, "name": "filename", "description": ""},
+            {"id": 4, "name": "pbd", "description": ""},
+            {"id": 5, "name": "filename|md5", "description": ""},
+            {"id": 6, "name": "filename|sha1", "description": ""},
+            {"id": 7, "name": "filename|sha256", "description": ""},
+            {"id": 8, "name": "ip-src", "description": ""},
+            {"id": 9, "name": "ip-dst", "description": ""},
+            {"id": 10, "name": "hostname", "description": ""},
+            {"id": 11, "name": "domain", "description": ""},
+            {"id": 12, "name": "domain|ip", "description": ""},
+            {"id": 13, "name": "email-src", "description": ""},
+            {"id": 14, "name": "eppn", "description": ""},
+            {"id": 15, "name": "email-dst", "description": ""},
+            {"id": 16, "name": "email-subject", "description": ""},
+            {"id": 17, "name": "email-attachment", "description": ""},
+            {"id": 18, "name": "email-body", "description": ""},
+            {"id": 19, "name": "float", "description": ""},
+            {"id": 20, "name": "url", "description": ""},
+            {"id": 21, "name": "http-method", "description": ""},
+            {"id": 22, "name": "user-agent", "description": ""},
+            {"id": 23, "name": "ja3-fingerprint-md5", "description": ""},
+            {"id": 24, "name": "hassh-md5", "description": ""},
+            {"id": 25, "name": "hasshserver-md5", "description": ""},
+            {"id": 26, "name": "reg-key", "description": ""},
+            {"id": 27, "name": "regkey|value", "description": ""},
+            {"id": 28, "name": "AS", "description": ""},
+            {"id": 29, "name": "snort", "description": ""},
+            {"id": 30, "name": "bro", "description": ""},
+            {"id": 31, "name": "zeek", "description": ""},
+            {"id": 32, "name": "community-id", "description": ""},
+            {"id": 33, "name": "pattern-in-traffic", "description": ""},
+            {"id": 34, "name": "pattern-in-memory", "description": ""},
+            {"id": 35, "name": "yara", "description": ""},
+            {"id": 36, "name": "stix2-pattern", "description": ""},
+            {"id": 37, "name": "sigma", "description": ""},
+            {"id": 38, "name": "gene", "description": ""},
+            {"id": 39, "name": "kusto-query", "description": ""},
+            {"id": 40, "name": "mime-type", "description": ""},
+            {"id": 41, "name": "identity-card-number", "description": ""},
+            {"id": 42, "name": "cookie", "description": ""},
+            {"id": 43, "name": "vulnerability", "description": ""},
+            {"id": 44, "name": "weakness", "description": ""},
+            {"id": 45, "name": "link", "description": ""},
+            {"id": 46, "name": "comment", "description": ""},
+            {"id": 47, "name": "text", "description": ""},
+            {"id": 48, "name": "hex", "description": ""},
+            {"id": 49, "name": "other", "description": ""},
+            {"id": 50, "name": "named pipe", "description": ""},
+            {"id": 51, "name": "mutex", "description": ""},
+            {"id": 52, "name": "target-user", "description": ""},
+            {"id": 53, "name": "target-email", "description": ""},
+            {"id": 54, "name": "target-machine", "description": ""},
+            {"id": 55, "name": "target-org", "description": ""},
+            {"id": 56, "name": "target-location", "description": ""},
+            {"id": 57, "name": "target-external", "description": ""},
+            {"id": 58, "name": "btc", "description": ""},
+            {"id": 59, "name": "dash", "description": ""},
+            {"id": 60, "name": "xmr", "description": ""},
+            {"id": 61, "name": "iban", "description": ""},
+            {"id": 62, "name": "bic", "description": ""},
+            {"id": 63, "name": "bank-account-nr", "description": ""},
+            {"id": 64, "name": "aba-rtn", "description": ""},
+            {"id": 65, "name": "bin", "description": ""},
+            {"id": 66, "name": "cc-number", "description": ""},
+            {"id": 67, "name": "prtn", "description": ""},
+            {"id": 68, "name": "phone-number", "description": ""},
+            {"id": 69, "name": "threat-actor", "description": ""},
+            {"id": 70, "name": "campaign-name", "description": ""},
+            {"id": 71, "name": "campaign-id", "description": ""},
+            {"id": 72, "name": "malware-type", "description": ""},
+            {"id": 73, "name": "uri", "description": ""},
+            {"id": 74, "name": "authentihash", "description": ""},
+            {"id": 75, "name": "ssdeep", "description": ""},
+            {"id": 76, "name": "implash", "description": ""},
+            {"id": 77, "name": "pahash", "description": ""},
+            {"id": 78, "name": "impfuzzy", "description": ""},
+            {"id": 79, "name": "sha224", "description": ""},
+            {"id": 80, "name": "sha384", "description": ""},
+            {"id": 81, "name": "sha512", "description": ""},
+            {"id": 82, "name": "sha512/224", "description": ""},
+            {"id": 83, "name": "sha512/256", "description": ""},
+            {"id": 84, "name": "tlsh", "description": ""},
+            {"id": 85, "name": "cdhash", "description": ""},
+            {"id": 86, "name": "filename|authentihash", "description": ""},
+            {"id": 87, "name": "filename|ssdeep", "description": ""},
+            {"id": 88, "name": "filename|implash", "description": ""},
+            {"id": 89, "name": "filename|impfuzzy", "description": ""},
+            {"id": 90, "name": "filename|pehash", "description": ""},
+            {"id": 91, "name": "filename|sha224", "description": ""},
+            {"id": 92, "name": "filename|sha384", "description": ""},
+            {"id": 93, "name": "filename|sha512", "description": ""},
+            {"id": 94, "name": "filename|sha512/224", "description": ""},
+            {"id": 95, "name": "filename|sha512/256", "description": ""},
+            {"id": 96, "name": "filename|tlsh", "description": ""},
+            {"id": 97, "name": "windows-scheduled-task", "description": ""},
+            {"id": 98, "name": "windows-service-name", "description": ""},
+            {"id": 99, "name": "windows-service-displayname", "description": ""},
+            {"id": 100, "name": "whois-registrant-email", "description": ""},
+            {"id": 101, "name": "whois-registrant-phone", "description": ""},
+            {"id": 102, "name": "whois-registrant-name", "description": ""},
+            {"id": 103, "name": "whois-registrant-org", "description": ""},
+            {"id": 104, "name": "whois-registrar", "description": ""},
+            {"id": 105, "name": "whois-creation-date", "description": ""},
+            {"id": 106, "name": "x509-fingerprint-sha1", "description": ""},
+            {"id": 107, "name": "x509-fingerprint-md5", "description": ""},
+            {"id": 108, "name": "x509-fingerprint-sha256", "description": ""},
+            {"id": 109, "name": "dns-soa-email", "description": ""},
+            {"id": 110, "name": "size-in-bytes", "description": ""},
+            {"id": 111, "name": "counter", "description": ""},
+            {"id": 112, "name": "datetime", "description": ""},
+            {"id": 113, "name": "cpe", "description": ""},
+            {"id": 114, "name": "port", "description": ""},
+            {"id": 115, "name": "ip-dist|port", "description": ""},
+            {"id": 116, "name": "ip-src|port", "description": ""},
+            {"id": 117, "name": "hostname|port", "description": ""},
+            {"id": 118, "name": "mac-address", "description": ""},
+            {"id": 119, "name": "mac-eui-64", "description": ""},
+            {"id": 120, "name": "email-dst-display-name", "description": ""},
+            {"id": 121, "name": "email-src-display-name", "description": ""},
+            {"id": 122, "name": "email-header", "description": ""},
+            {"id": 123, "name": "email-reply-to", "description": ""},
+            {"id": 124, "name": "email-x-mailer", "description": ""},
+            {"id": 125, "name": "email-mime-boundary", "description": ""},
+            {"id": 126, "name": "email-thread-index", "description": ""},
+            {"id": 127, "name": "email-message-id", "description": ""},
+            {"id": 128, "name": "github-username", "description": ""},
+            {"id": 129, "name": "github-repository", "description": ""},
+            {"id": 130, "name": "githzb-organisation", "description": ""},
+            {"id": 131, "name": "jabber-id", "description": ""},
+            {"id": 132, "name": "twitter-id", "description": ""},
+            {"id": 133, "name": "first-name", "description": ""},
+            {"id": 134, "name": "middle-name", "description": ""},
+            {"id": 135, "name": "last-name", "description": ""},
+            {"id": 136, "name": "date-of-birth", "description": ""},
+            {"id": 137, "name": "gender", "description": ""},
+            {"id": 138, "name": "passport-number", "description": ""},
+            {"id": 139, "name": "passport-country", "description": ""},
+            {"id": 140, "name": "passport-expiration", "description": ""},
+            {"id": 141, "name": "redress-number", "description": ""},
+            {"id": 142, "name": "nationality", "description": ""},
+            {"id": 143, "name": "visa-number", "description": ""},
+            {"id": 144, "name": "issue-date-of-the-visa", "description": ""},
+            {"id": 145, "name": "primary-residence", "description": ""},
+            {"id": 146, "name": "country-of-residence", "description": ""},
+            {"id": 147, "name": "special-service-request", "description": ""},
+            {"id": 148, "name": "frequent-flyer-number", "description": ""},
+            {"id": 149, "name": "travel-details", "description": ""},
+            {"id": 150, "name": "payments-details", "description": ""},
+            {
+                "id": 151,
+                "name": "place-port-of-original-embarkation",
+                "description": "",
+            },
+            {
+                "id": 152,
+                "name": "passenger-name-record-locator-number",
+                "description": "",
+            },
+            {"id": 153, "name": "mobile-application-id", "description": ""},
+            {"id": 154, "name": "chrome-extension-id", "description": ""},
+            {"id": 155, "name": "cortex", "description": ""},
+            {"id": 156, "name": "boolean", "description": ""},
+            {"id": 157, "name": "anonymised", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "MISP Attribute Type",
+                "description": "Combo box for MISP attribute type",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
     if (
         not db.session.query(Attribute)
         .filter_by(name="MISP Attribute Distribution")
         .first()
     ):
-        attr_attribute_distribution = Attribute(
-            "MISP Attribute Distribution",
-            "Combo box for MISP attribute type",
-            AttributeType.ENUM,
-            None,
-            None,
-            None,
-        )
-        db.session.add(attr_attribute_distribution)
-        db.session.commit()
-        db.session.add(
-            AttributeEnum(
-                0, "Your organisation only", "", attr_attribute_distribution.id
-            )
-        )
-        db.session.add(
-            AttributeEnum(1, "This community only", "", attr_attribute_distribution.id)
-        )
-        db.session.add(
-            AttributeEnum(
-                2, "Connected communities", "", attr_attribute_distribution.id
-            )
-        )
-        db.session.add(
-            AttributeEnum(3, "All communities", "", attr_attribute_distribution.id)
-        )
-        db.session.add(
-            AttributeEnum(4, "Inherit event", "", attr_attribute_distribution.id)
-        )
-        db.session.commit()
+        attr_enum = [
+            {"id": 0, "name": "Your organisation only", "description": ""},
+            {"id": 1, "name": "This community only", "description": ""},
+            {"id": 2, "name": "Connected communities", "description": ""},
+            {"id": 3, "name": "All communities", "description": ""},
+            {"id": 4, "name": "Inherit event", "description": ""},
+        ]
+        attr = {
+            **{
+                "name": "MISP Attribute Distribution",
+                "description": "Combo box for MISP attribute type",
+                "type": "ENUM",
+                "attribute_enums": attr_enum,
+                "attribute_enums_total_count": len(attr_enum),
+            },
+            **base_attr,
+        }
+        Attribute.add_attribute(attr)
 
 
 def pre_seed_report_items():
@@ -666,17 +551,27 @@ def pre_seed_report_items():
         .filter_by(title="Vulnerability Report")
         .first()
     ):
-        report_item_type = ReportItemType("Vulnerability Report", "Basic report type")
+        report_item_type = ReportItemType(
+            None, "Vulnerability Report", "Basic report type", []
+        )
         db.session.add(report_item_type)
         db.session.commit()
-
-        group1 = AttributeGroup("Vulnerability", "", None, None, 0, report_item_type.id)
-        db.session.add(group1)
-        group2 = AttributeGroup(
-            "Identify and Act", "", None, None, 0, report_item_type.id
+        report_item_type_id = (
+            db.session.query(ReportItemType)
+            .filter_by(title="Vulnerability Report")
+            .first()
+            .id
         )
+
+        group1 = AttributeGroup(
+            None, "Vulnerability", "", 0, "", 0, [report_item_type_id]
+        )
+        group2 = AttributeGroup(
+            None, "Identify and Act", "", 0, "", 0, [report_item_type_id]
+        )
+        group3 = AttributeGroup(None, "Resources", "", 0, "", 0, [report_item_type_id])
+        db.session.add(group1)
         db.session.add(group2)
-        group3 = AttributeGroup("Resources", "", None, None, 0, report_item_type.id)
         db.session.add(group3)
         db.session.commit()
 
@@ -823,13 +718,15 @@ def pre_seed_report_items():
 
     if not db.session.query(ReportItemType).filter_by(title="MISP Report").first():
         print("Adding default MISP report type.", flush=True)
-        report_item_type = ReportItemType("MISP Report", "MISP report type")
+        report_item_type = ReportItemType(None, "MISP Report", "MISP report type", [])
         db.session.add(report_item_type)
         db.session.commit()
 
-        group4 = AttributeGroup("Event", "", None, None, 0, report_item_type.id)
+        group4 = AttributeGroup(None, "Event", "", None, None, 0, [report_item_type.id])
+        group5 = AttributeGroup(
+            None, "Attribute", "", None, None, 0, [report_item_type.id]
+        )
         db.session.add(group4)
-        group5 = AttributeGroup("Attribute", "", None, None, 0, report_item_type.id)
         db.session.add(group5)
         db.session.commit()
 
@@ -976,59 +873,65 @@ def pre_seed_report_items():
 def pre_seed_wordlists():
     from model.word_list import WordList, WordListCategory
 
+    en_wordlist_category = WordListCategory(
+        name="Default EN stop list",
+        description="Source: https://www.maxqda.de/hilfe-mx20-dictio/stopp-listen",
+        entries=[],
+        link="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/en_complete.csv",
+    )
+    db.session.add(en_wordlist_category)
+    db.session.commit()
+
     en_wordlist = WordList(
+        None,
         "Default EN stop list",
         "English stop-word list packed with the standard Taranis NG installation.",
+        [en_wordlist_category],
         True,
     )
     db.session.add(en_wordlist)
     db.session.commit()
 
-    en_wordlist_category = WordListCategory(
-        "Default EN stop list",
-        "Source: https://www.maxqda.de/hilfe-mx20-dictio/stopp-listen",
-        en_wordlist.id,
-        "https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/en_complete.csv",
-    )
-    db.session.add(en_wordlist_category)
-    db.session.commit()
-
     # Slovak
 
+    sk_wordlist_category = WordListCategory(
+        name="Default SK stop list",
+        description="Source: https://github.com/stopwords-iso/stopwords-sk/blob/master/stopwords-sk.txt",
+        entries=[],
+        link="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/sk_complete.csv",
+    )
+    db.session.add(sk_wordlist_category)
+    db.session.commit()
+
     sk_wordlist = WordList(
+        None,
         "Default SK stop list",
         "Slovak stop-word list packed with the standard Taranis NG installation.",
+        [sk_wordlist_category],
         True,
     )
     db.session.add(sk_wordlist)
     db.session.commit()
 
-    sk_wordlist_category = WordListCategory(
-        "Default SK stop list",
-        "Source: https://github.com/stopwords-iso/stopwords-sk/blob/master/stopwords-sk.txt",
-        sk_wordlist.id,
-        "https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/sk_complete.csv",
-    )
-    db.session.add(sk_wordlist_category)
-    db.session.commit()
-
     # Highlighting
 
+    highlighting_wordlist_category = WordListCategory(
+        name="Default highlighting wordlist",
+        description="Sources: https://www.allot.com/100-plus-cybersecurity-terms-definitions/, https://content.teamascend.com/cybersecurity-glossary",  # noqa
+        entries=[],
+        link="https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/highlighting.csv",
+    )
+    db.session.add(highlighting_wordlist_category)
+    db.session.commit()
+
     highlighting_wordlist = WordList(
+        None,
         "Default highlighting wordlist",
         "Default highlighting list packed with the standard Taranis NG installation.",
+        [highlighting_wordlist_category],
         False,
     )
     db.session.add(highlighting_wordlist)
-    db.session.commit()
-
-    highlighting_wordlist_category = WordListCategory(
-        "Default highlighting wordlist",
-        "Sources: https://www.allot.com/100-plus-cybersecurity-terms-definitions/, https://content.teamascend.com/cybersecurity-glossary",
-        highlighting_wordlist.id,
-        "https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/highlighting.csv",
-    )
-    db.session.add(highlighting_wordlist_category)
     db.session.commit()
 
 
