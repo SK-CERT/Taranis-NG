@@ -1,6 +1,6 @@
 from flask_restful import Api
 
-from api import *
+from publishers.api import *
 
 
 def initialize(app):

@@ -1,10 +1,10 @@
 from marshmallow import Schema, fields, post_load
 
-from schema.parameter import ParameterSchema
+from publishers.schema.parameter import ParameterSchema
 
 
 class ParameterValueSchema(Schema):
-    value = fields.Str(missing='')
+    value = fields.Str(load_default='')
     parameter = fields.Nested(ParameterSchema)
 
     @post_load
