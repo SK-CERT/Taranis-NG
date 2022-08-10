@@ -1,27 +1,10 @@
-[project]
-name = "taranis-ng_publishers"
-version = "0.1.0"
-description = "Taranis-NG Publishers"
-authors = [
-    "SK-CERT"
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
 ]
-license = "EUPL"
-readme = "README.md"
-python = "^3.7"
-homepage = "https://github.com/SK-CERT/Taranis-NG/"
-repository = "https://github.com/SK-CERT/Taranis-NG/"
-documentation = "https://github.com/SK-CERT/Taranis-NG/"
+build-backend = "setuptools.build_meta"
 
-keywords = ["packaging", "dependency", "infer", "pyproject.toml"]
-
-classifiers = [
-    "Topic :: Security"
-]
-
-# Requirements
-[dependencies]
-Click = "^7.0"
-Flask = "^2.0.2"
-
-[dev-dependencies]
-black = { version = "^18.3-alpha.0", python = "^3.6" }
+[tool.black]
+line-length = 142
+target-version = ["py38","py310"]

@@ -5,13 +5,13 @@ WORKDIR /app/
 # upgrade pip
 RUN python -m pip install --upgrade pip wheel
 
-COPY ./src/publishers/requirements.txt /app/requirements.txt
+COPY ./src/publishers/setup.cfg ./src/publishers/setup.py /app/
 
 # install dependencies
-RUN apt-get update && apt-get upgrade && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
       build-essential \
       python3-dev && \
-    pip install --no-cache-dir -r /app/requirements.txt && \
+    pip install -e /app/ && \
     apt-get purge -y build-essential python3-dev && \
     apt-get autoremove -y --purge &&\
     apt-get clean

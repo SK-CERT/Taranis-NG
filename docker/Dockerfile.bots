@@ -7,7 +7,7 @@ RUN python -m pip install --upgrade pip wheel
 COPY ./src/bots/requirements.txt /app/requirements.txt
 
 # install dependencies
-RUN apt-get update; apt-get upgrade
+RUN apt-get update && apt-get upgrade -y
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY ./docker/entrypoint.sh /entrypoint.sh

@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 
-from managers import api_manager, publishers_manager
+from publishers.managers import api_manager, publishers_manager
 
 
 def create_app():
