@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, post_load
 
-from schema import parameter
-from schema.parameter_value import ParameterValueSchema
+from publishers.schema import parameter
+from publishers.schema.parameter_value import ParameterValueSchema
 
 
 class PublisherSchema(Schema):

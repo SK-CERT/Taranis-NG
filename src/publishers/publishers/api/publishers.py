@@ -1,8 +1,8 @@
 from flask_restful import Resource
 from flask import request
 
-from managers import publishers_manager
-from managers.auth_manager import api_key_required
+from publishers.managers import publishers_manager
+from publishers.managers.auth_manager import api_key_required
 
 
 class Publishers(Resource):
