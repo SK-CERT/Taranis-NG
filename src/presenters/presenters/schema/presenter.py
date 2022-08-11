@@ -34,7 +34,9 @@ class PresenterInput:
 
         self.parameter_values_map = dict()
         for parameter_value in parameter_values:
-            self.parameter_values_map.update({parameter_value.parameter.key: parameter_value.value})
+            self.parameter_values_map.update(
+                {parameter_value.parameter.key: parameter_value.value}
+            )
 
 
 class PresenterOutputSchema(Schema):

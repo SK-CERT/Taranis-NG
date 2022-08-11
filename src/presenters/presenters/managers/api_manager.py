@@ -1,6 +1,5 @@
 from flask_restful import Api
-
-from api import *
+from presenters.api import isalive, presenters
 
 
 def initialize(app):
