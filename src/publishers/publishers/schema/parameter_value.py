@@ -4,7 +4,7 @@ from publishers.schema.parameter import ParameterSchema
 
 
 class ParameterValueSchema(Schema):
-    value = fields.Str(load_default='')
+    value = fields.Str(load_default="")
     parameter = fields.Nested(ParameterSchema)
 
     @post_load
@@ -13,7 +13,6 @@ class ParameterValueSchema(Schema):
 
 
 class ParameterValue:
-
     def __init__(self, value, parameter):
         self.value = value
         self.parameter = parameter
