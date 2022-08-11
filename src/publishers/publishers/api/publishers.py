@@ -6,7 +6,6 @@ from publishers.managers.auth_manager import api_key_required
 
 
 class Publishers(Resource):
-
     @api_key_required
     def get(self):
         return publishers_manager.get_registered_publishers_info()

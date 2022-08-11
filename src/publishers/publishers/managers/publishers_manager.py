@@ -21,11 +21,7 @@ def register_publisher(publisher):
 
 
 def get_registered_publishers_info():
-    publishers_info = []
-    for key in publishers:
-        publishers_info.append(publishers[key].get_info())
-
-    return publishers_info
+    return [publishers[key].get_info() for key in publishers]
 
 
 def publish(publisher_input_json):

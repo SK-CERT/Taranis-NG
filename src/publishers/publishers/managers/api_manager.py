@@ -1,6 +1,6 @@
 from flask_restful import Api
 
-from publishers.api import *
+from publishers.api import isalive, publishers
 
 
 def initialize(app):

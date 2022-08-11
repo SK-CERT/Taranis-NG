@@ -9,6 +9,7 @@ build/
 .installed.cfg
 *.egg
 .pytest_cache/
+.envrc
 
 # temporary files of editors
 .DS_Store

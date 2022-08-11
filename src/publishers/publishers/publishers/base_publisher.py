@@ -1,5 +1,6 @@
 from publishers.schema.publisher import PublisherSchema
-from managers import log_manager
+from publishers.managers.log_manager import logger
+
 
 class BasePublisher:
     type = "BASE_PUBLISHER"
@@ -16,4 +17,4 @@ class BasePublisher:
         pass
 
     def print_exception(self, error):
-        log_manager.log_debug_trace("[{0}] {1}".format(self.name, error))
+        logger.log_debug_trace("[{0}] {1}".format(self.name, error))

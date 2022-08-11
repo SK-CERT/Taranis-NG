@@ -22,7 +22,6 @@ class ParameterSchema(Schema):
 
 
 class Parameter:
-
     def __init__(self, id, key, name, description, type):
         self.id = id
         self.key = key
