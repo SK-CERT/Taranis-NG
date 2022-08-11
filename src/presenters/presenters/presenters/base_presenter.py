@@ -1,5 +1,5 @@
 from presenters.schema.presenter import PresenterSchema
-from managers import log_manager
+from presenters.managers.log_manager import logger
 import json
 import datetime
 
@@ -16,7 +16,7 @@ class BasePresenter:
         return info_schema.dump(self)
 
     def print_exception(self, error):
-        log_manager.log_debug_trace("[{0}] {1}".format(self.name, error))
+        logger.log_debug_trace("[{0}] {1}".format(self.name, error))
 
     @staticmethod
     def generate_input_data(presenter_input):
@@ -28,9 +28,7 @@ class BasePresenter:
                     return value.__dict__
 
             def toJSON(self):
-                return json.dumps(
-                    self, default=InputDataObject.json_default, sort_keys=True, indent=4
-                )
+                return json.dumps(self, default=InputDataObject.json_default, sort_keys=True, indent=4)
 
             def __init__(self):
                 attribute_map = dict()
@@ -73,41 +71,23 @@ class BasePresenter:
 
                             for attribute in report_item.attributes:
                                 if attribute.value is not None:
-                                    attr_type = attribute_map[
-                                        attribute.attribute_group_item_id
-                                    ]
+                                    attr_type = attribute_map[attribute.attribute_group_item_id]
                                     attr_key = attr_type.title.lower().replace(" ", "_")
                                     if hasattr(self.attrs, attr_key):
-                                        if (
-                                            attribute_map[
-                                                attribute.attribute_group_item_id
-                                            ].max_occurrence
-                                            > 1
-                                        ):
+                                        if attribute_map[attribute.attribute_group_item_id].max_occurrence > 1:
                                             attr = getattr(self.attrs, attr_key)
                                             attr.append(attribute.value)
                                     else:
-                                        if (
-                                            attribute_map[
-                                                attribute.attribute_group_item_id
-                                            ].max_occurrence
-                                            == 1
-                                        ):
-                                            setattr(
-                                                self.attrs, attr_key, attribute.value
-                                            )
+                                        if attribute_map[attribute.attribute_group_item_id].max_occurrence == 1:
+                                            setattr(self.attrs, attr_key, attribute.value)
                                         else:
-                                            setattr(
-                                                self.attrs, attr_key, [attribute.value]
-                                            )
+                                            setattr(self.attrs, attr_key, [attribute.value])
 
                     self.report_items.append(ReportItemObject(report))
 
         data = InputDataObject()
         data_json = data.toJSON()
-        log_manager.log_info(
-            "=== TEMPLATING FROM THE FOLLOWING INPUT ===\n" + data_json
-        )
+        logger.log_info("=== TEMPLATING FROM THE FOLLOWING INPUT ===\n" + data_json)
         data_obj = json.loads(data_json)
         return data_obj
 

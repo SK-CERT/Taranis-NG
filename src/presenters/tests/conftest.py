@@ -1,5 +1,5 @@
 import pytest
-from publishers.__init__ import create_app
+from presenters.__init__ import create_app
 
 
 @pytest.fixture()

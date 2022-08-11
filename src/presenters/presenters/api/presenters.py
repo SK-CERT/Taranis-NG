@@ -1,8 +1,8 @@
 from flask import request
 from flask_restful import Resource
 
-from managers import presenters_manager
-from managers.auth_manager import api_key_required
+from presenters.managers import presenters_manager
+from presenters.managers.auth_manager import api_key_required
 
 
 class Presenters(Resource):

@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, post_load
 
-from schema.parameter import ParameterSchema
+from presenters.schema.parameter import ParameterSchema
 
 
 class ParameterValueSchema(Schema):

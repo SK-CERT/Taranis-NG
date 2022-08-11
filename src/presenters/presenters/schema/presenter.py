@@ -1,9 +1,7 @@
 from marshmallow import Schema, fields, post_load
 
-from schema.parameter import ParameterSchema
-from schema.parameter_value import ParameterValueSchema
-from schema.report_item import ReportItemSchema
-from schema.report_item_type import ReportItemTypeSchema
+from presenters.schema.parameter import ParameterSchema
+from presenters.schema.parameter_value import ParameterValueSchema
 
 
 class PresenterSchema(Schema):
@@ -17,8 +15,8 @@ class PresenterSchema(Schema):
 class PresenterInputSchema(Schema):
     type = fields.Str()
     parameter_values = fields.List(fields.Nested(ParameterValueSchema))
-    reports = fields.List(fields.Nested(ReportItemSchema))
-    report_type = fields.Nested(ReportItemTypeSchema)
+    # reports = fields.List(fields.Nested(ReportItemSchema))
+    # report_type = fields.Nested(ReportItemTypeSchema)
 
     @post_load
     def make(self, data, **kwargs):
@@ -34,9 +32,7 @@ class PresenterInput:
 
         self.parameter_values_map = dict()
         for parameter_value in parameter_values:
-            self.parameter_values_map.update(
-                {parameter_value.parameter.key: parameter_value.value}
-            )
+            self.parameter_values_map.update({parameter_value.parameter.key: parameter_value.value})
 
 
 class PresenterOutputSchema(Schema):
