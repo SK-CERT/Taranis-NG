@@ -36,8 +36,8 @@ class AttributeEnumSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    id = fields.Integer(missing=-1)
-    index = fields.Integer(missing=-1)
+    id = fields.Integer(load_default=-1)
+    index = fields.Integer(load_default=-1)
     value = fields.Str()
     description = fields.Str()
 

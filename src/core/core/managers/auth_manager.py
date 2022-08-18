@@ -15,9 +15,9 @@ from flask_jwt_extended.exceptions import JWTExtendedException
 
 from core.managers import time_manager
 from core.managers.log_manager import logger
-from auth.keycloak_authenticator import KeycloakAuthenticator
-from auth.openid_authenticator import OpenIDAuthenticator
-from auth.test_authenticator import TestAuthenticator
+from core.auth.keycloak_authenticator import KeycloakAuthenticator
+from core.auth.openid_authenticator import OpenIDAuthenticator
+from core.auth.test_authenticator import TestAuthenticator
 from core.model.collectors_node import CollectorsNode
 from core.model.news_item import NewsItem
 from core.model.osint_source import OSINTSourceGroup

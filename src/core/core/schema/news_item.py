@@ -27,7 +27,7 @@ class NewsItemDataBaseSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    id = fields.Str(missing=None)
+    id = fields.Str(load_default=None)
     hash = fields.Str()
     title = fields.Str()
     review = fields.Str()
@@ -36,7 +36,7 @@ class NewsItemDataBaseSchema(Schema):
     published = fields.Str()
     author = fields.Str()
     collected = fields.DateTime("%d.%m.%Y - %H:%M")
-    osint_source_id = fields.Str(missing=None)
+    osint_source_id = fields.Str(load_default=None)
     tags = fields.List(fields.String(), required=False)
 
 

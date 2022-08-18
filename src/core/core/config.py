@@ -28,7 +28,7 @@ class Config(object):
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     JWT_IDENTITY_CLAIM = "sub"
     JWT_ACCESS_TOKEN_EXPIRES = 14400
-    DEBUG = os.getenv("DEBUG").lower() == "true"
+    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
     SECRET_KEY = "OKdbmczZKFiteHVgKXiwFXZxKsLyRNvt"
 

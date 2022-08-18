@@ -5,15 +5,15 @@ from core.schema.presentation import PresentationSchema
 
 
 class CollectorsNodeSchema(Schema):
-    id = fields.Str(missing=None)
+    id = fields.Str(load_default=None)
     name = fields.Str()
     description = fields.Str()
     api_url = fields.Str()
     api_key = fields.Str()
-    collectors = fields.List(fields.Nested(CollectorSchema), missing=[])
-    status = fields.Str(missing=None)
-    created = fields.DateTime("%d.%m.%Y - %H:%M", missing=None)
-    last_seen = fields.DateTime("%d.%m.%Y - %H:%M", missing=None)
+    collectors = fields.List(fields.Nested(CollectorSchema), load_default=[])
+    status = fields.Str(load_default=None)
+    created = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
+    last_seen = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
 
     @post_load
     def make_collectors_node(self, data, **kwargs):

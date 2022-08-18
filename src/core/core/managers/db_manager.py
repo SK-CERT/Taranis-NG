@@ -1335,58 +1335,63 @@ def pre_seed_default_user():
     from core.model.role import Role
     from core.model.user import User
 
-    address = Address("29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom")
-    db.session.add(address)
-    db.session.commit()
+    if not db.session.query(Organization).filter_by(name="The Earth").first():
+        address = Address("29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom")
+        db.session.add(address)
+        db.session.commit()
 
-    organization = Organization(
-        None,
-        "The Earth",
-        "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
-        address,
-    )
-    db.session.add(organization)
-    db.session.commit()
+        organization = Organization(
+            id=None,
+            name="The Earth",
+            description="Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
+            address=address,
+        )
+        db.session.add(organization)
+        db.session.commit()
 
-    admin_role = db.session.query(Role).filter_by(name="Admin").first()
+    if not db.session.query(User).filter_by(username="admin").first():
+        admin_role = db.session.query(Role).filter_by(name="Admin").first()
 
-    user = User(
-        id=None,
-        username="admin",
-        name="Arthur Dent",
-        organizations=[organization],
-        roles=[admin_role],
-        permissions=[],
-    )
-    db.session.add(user)
-    db.session.commit()
+        user = User(
+            id=None,
+            username="admin",
+            name="Arthur Dent",
+            organizations=[organization],
+            roles=[admin_role],
+            permissions=[],
+        )
+        db.session.add(user)
+        db.session.commit()
 
-    address = Address(
-        "Cherry Tree Rd",
-        "Beaconsfield, Buckinghamshire",
-        "HP9 1BH",
-        "United Kingdom",
-    )
-    db.session.add(address)
-    db.session.commit()
+    if not db.session.query(Organization).filter_by(name="The Clacks").first():
+        address = Address(
+            "Cherry Tree Rd",
+            "Beaconsfield, Buckinghamshire",
+            "HP9 1BH",
+            "United Kingdom",
+        )
+        db.session.add(address)
+        db.session.commit()
 
-    organization = Organization(
-        None,
-        "The Clacks",
-        "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
-        address,
-    )
-    db.session.add(organization)
-    db.session.commit()
-    user_role = db.session.query(Role).filter_by(name="User").first()
+        organization = Organization(
+            None,
+            "The Clacks",
+            "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
+            address,
+        )
+        db.session.add(organization)
+        db.session.commit()
 
-    user = User(
-        id=None,
-        username="user",
-        name="Terry Pratchett",
-        organizations=[organization],
-        roles=[user_role],
-        permissions=[],
-    )
-    db.session.add(user)
-    db.session.commit()
+    if not db.session.query(User).filter_by(username="user").first():
+        user_role = db.session.query(Role).filter_by(name="User").first()
+
+        user = User(
+            id=None,
+            username="user",
+            name="Terry Pratchett",
+            organizations=[organization],
+            roles=[user_role],
+            permissions=[],
+        )
+        db.session.add(user)
+        db.session.commit()

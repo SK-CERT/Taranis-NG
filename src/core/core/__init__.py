@@ -33,3 +33,6 @@ def create_app(dotenv_path="."):
         # import test
 
     return app
+
+
+app = create_app()

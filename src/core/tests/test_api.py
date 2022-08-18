@@ -8,21 +8,26 @@ def test_is_alive_fail(client):
     assert b'"isalive": false' not in response.data
 
 
-def test_is_not_authorized(client):
-    response = client.get("/api/v1/publishers")
+def test_auth_login(client):
+    response = client.get("/api/v1/auth/login")
     assert response.status_code == 401
 
 
-def test_is_authorized(client):
-    response = client.get("/api/v1/publishers", headers={"Authorization": "Bearer test_key"})
+def test_auth_refresh(client):
+    response = client.get("/api/v1/auth/refresh", headers={"Authorization": "Bearer test_key"})
     assert response.status_code == 200
 
 
-def test_get_publishers(client):
-    response = client.get("/api/v1/publishers", headers={"Authorization": "Bearer test_key"})
-    response_json = response.json
-    from publishers.managers.publishers_manager import publishers
-
-    for i, key in enumerate(publishers):
-        assert response_json[i]["type"] == key
+def test_auth_logout(client):
+    response = client.get("/api/v1/auth/logout")
     assert response.status_code == 200
+
+
+# def test_auth_login(client):
+#     response = client.get("/api/v1/publishers", headers={"Authorization": "Bearer test_key"})
+#     response_json = response.json
+#     from publishers.managers.publishers_manager import publishers
+
+#     for i, key in enumerate(publishers):
+#         assert response_json[i]["type"] == key
+#     assert response.status_code == 200

@@ -4,7 +4,7 @@ from core.schema.parameter import ParameterSchema, ParameterExportSchema
 
 
 class ParameterValueSchema(Schema):
-    value = fields.Str(missing="")
+    value = fields.Str(load_default="")
     parameter = fields.Nested(ParameterSchema)
 
     @post_load
@@ -19,7 +19,7 @@ class ParameterValue:
 
 
 class ParameterValueExportSchema(Schema):
-    value = fields.Str(missing="")
+    value = fields.Str(load_default="")
     parameter = fields.Nested(ParameterExportSchema)
 
     @post_load

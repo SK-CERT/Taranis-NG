@@ -12,13 +12,11 @@ class Login(Resource):
     @no_auth
     def get(self):
         response = auth_manager.authenticate(None)
-
-        if not isinstance(response, ResponseBase):
-            if "gotoUrl" in request.args and "access_token" in response:
-                redirect_response = make_response(redirect(request.args["gotoUrl"]))
-                redirect_response.set_cookie("jwt", response["access_token"])
-                return redirect_response
-
+        if not isinstance(response, ResponseBase) and "access_token" in response:
+            goto_url = request.args.get(key="gotoUrl", default="/")
+            redirect_response = make_response(redirect(goto_url))
+            redirect_response.set_cookie("jwt", response["access_token"])
+            return redirect_response
         return response
 
     def post(self):

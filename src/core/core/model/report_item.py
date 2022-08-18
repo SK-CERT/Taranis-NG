@@ -75,8 +75,7 @@ class ReportItemAttribute(db.Model):
 
     @classmethod
     def find(cls, attribute_id):
-        report_item_attribute = cls.query.get(attribute_id)
-        return report_item_attribute
+        return cls.query.get(attribute_id)
 
     @staticmethod
     def sort(report_item_attribute):
@@ -84,8 +83,8 @@ class ReportItemAttribute(db.Model):
 
 
 class NewReportItemSchema(ReportItemBaseSchema):
-    news_item_aggregates = fields.Nested(NewsItemAggregateIdSchema, many=True, missing=[])
-    remote_report_items = fields.Nested(ReportItemIdSchema, many=True, missing=[])
+    news_item_aggregates = fields.Nested(NewsItemAggregateIdSchema, many=True, load_default=[])
+    remote_report_items = fields.Nested(ReportItemIdSchema, many=True, load_default=[])
     attributes = fields.Nested(NewReportItemAttributeSchema, many=True)
 
     @post_load

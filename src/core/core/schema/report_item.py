@@ -10,13 +10,13 @@ class ReportItemAttributeBaseSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    id = fields.Int(missing=None)
+    id = fields.Int(load_default=None)
     value = fields.Str()
-    binary_mime_type = fields.Str(missing=None)
-    binary_size = fields.Int(missing=0)
-    binary_description = fields.Str(missing=None)
-    attribute_group_item_title = fields.Str(missing=None)
-    attribute_group_item_id = fields.Integer(missing=None)
+    binary_mime_type = fields.Str(load_default=None)
+    binary_size = fields.Int(load_default=0)
+    binary_description = fields.Str(load_default=None)
+    attribute_group_item_title = fields.Str(load_default=None)
+    attribute_group_item_id = fields.Integer(load_default=None)
 
 
 class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
@@ -65,14 +65,14 @@ class ReportItemBaseSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    id = fields.Int(allow_none=True, missing=None)
+    id = fields.Int(allow_none=True, load_default=None)
     uuid = fields.Str(allow_none=True)
     title = fields.Str()
     title_prefix = fields.Str()
     created = fields.DateTime("%d.%m.%Y - %H:%M")
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
     completed = fields.Bool()
-    report_item_type_id = fields.Int(missing=None)
+    report_item_type_id = fields.Int(load_default=None)
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):
