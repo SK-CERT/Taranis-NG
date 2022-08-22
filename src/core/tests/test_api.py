@@ -13,11 +13,6 @@ def test_auth_login(client):
     assert response.status_code == 401
 
 
-def test_auth_refresh(client):
-    response = client.get("/api/v1/auth/refresh", headers={"Authorization": "Bearer test_key"})
-    assert response.status_code == 200
-
-
 def test_auth_logout(client):
     response = client.get("/api/v1/auth/logout")
     assert response.status_code == 200

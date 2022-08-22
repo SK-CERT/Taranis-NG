@@ -34,6 +34,22 @@ class NewNewsItemDataSchema(NewsItemDataSchema):
         return NewsItemData(**data)
 
 
+news_item_data_news_item_tag = db.Table(
+    db.Column(
+        "news_item_data_id",
+        db.String,
+        db.ForeignKey("news_item_data.id"),
+        primary_key=True,
+    ),
+    db.Column(
+        "news_item_tag_id",
+        db.Integer,
+        db.ForeignKey("news_item_tag.id"),
+        primary_key=True,
+    ),
+)
+
+
 class NewsItemData(db.Model):
     id = db.Column(db.String(64), primary_key=True)
     hash = db.Column(db.String())
@@ -45,14 +61,17 @@ class NewsItemData(db.Model):
     link = db.Column(db.String())
     language = db.Column(db.String())
     content = db.Column(db.String())
-    tags = db.Column(db.ARRAY(db.String()))
     collected = db.Column(db.DateTime)
     published = db.Column(db.String())
     updated = db.Column(db.DateTime, default=datetime.now())
 
-    attributes = db.relationship("NewsItemAttribute", secondary="news_item_data_news_item_attribute")
+    attributes = db.relationship(
+        "NewsItemAttribute", secondary="news_item_data_news_item_attribute"
+    )
 
-    osint_source_id = db.Column(db.String, db.ForeignKey("osint_source.id"), nullable=True)
+    osint_source_id = db.Column(
+        db.String, db.ForeignKey("osint_source.id"), nullable=True
+    )
     osint_source = db.relationship("OSINTSource")
     remote_source = db.Column(db.String())
 
@@ -92,7 +111,12 @@ class NewsItemData(db.Model):
         news_item_data = cls.query.get(news_item_data_id)
         if news_item_data.remote_source is not None:
             return True
-        query = db.session.query(NewsItemData.id).distinct().group_by(NewsItemData.id).filter(NewsItemData.id == news_item_data_id)
+        query = (
+            db.session.query(NewsItemData.id)
+            .distinct()
+            .group_by(NewsItemData.id)
+            .filter(NewsItemData.id == news_item_data_id)
+        )
 
         query = query.join(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
 
@@ -128,7 +152,9 @@ class NewsItemData(db.Model):
 
     @classmethod
     def latest_collected(cls):
-        news_item_data = cls.query.order_by(db.desc(NewsItemData.collected)).limit(1).all()
+        news_item_data = (
+            cls.query.order_by(db.desc(NewsItemData.collected)).limit(1).all()
+        )
         if len(news_item_data) > 0:
             return news_item_data[0].collected.strftime("%d.%m.%Y - %H:%M")
         else:
@@ -210,6 +236,14 @@ class NewsItemData(db.Model):
         return items, last_sync_time
 
 
+class NewsItemTag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    tag_type = db.Column(db.String(255))
+    n_i_d_id = db.Column(db.ForeignKey(NewsItemData.id), nullable=False)
+    n_i_d = db.relationship(NewsItemData, backref="tags")
+
+
 class NewsItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -223,7 +257,9 @@ class NewsItem(db.Model):
     news_item_data_id = db.Column(db.String, db.ForeignKey("news_item_data.id"))
     news_item_data = db.relationship("NewsItemData")
 
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"))
+    news_item_aggregate_id = db.Column(
+        db.Integer, db.ForeignKey("news_item_aggregate.id")
+    )
 
     @classmethod
     def find(cls, news_item_id):
@@ -241,7 +277,9 @@ class NewsItem(db.Model):
 
     @classmethod
     def get_total_relevance(cls, news_item_data_id):
-        query = db.session.query(NewsItem.relevance).filter(NewsItem.news_item_data_id == news_item_data_id)
+        query = db.session.query(NewsItem.relevance).filter(
+            NewsItem.news_item_data_id == news_item_data_id
+        )
         result = query.all()
         total_relevance = 0
         for row in result:
@@ -251,12 +289,16 @@ class NewsItem(db.Model):
 
     @classmethod
     def get_all_by_group_and_source_query(cls, group_id, source_id, time_limit):
-        query = cls.query.join(NewsItemData, NewsItemData.id == NewsItem.news_item_data_id)
+        query = cls.query.join(
+            NewsItemData, NewsItemData.id == NewsItem.news_item_data_id
+        )
         query = query.filter(
             NewsItemData.osint_source_id == source_id,
             NewsItemData.collected >= time_limit,
         )
-        query = query.join(NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id)
+        query = query.join(
+            NewsItemAggregate, NewsItemAggregate.id == NewsItem.news_item_aggregate_id
+        )
         query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
         return query
 
@@ -266,7 +308,12 @@ class NewsItem(db.Model):
         news_item = cls.query.get(news_item_id)
         if news_item.news_item_data.remote_source is not None:
             return True
-        query = db.session.query(NewsItem.id).distinct().group_by(NewsItem.id).filter(NewsItem.id == news_item_id)
+        query = (
+            db.session.query(NewsItem.id)
+            .distinct()
+            .group_by(NewsItem.id)
+            .filter(NewsItem.id == news_item_id)
+        )
 
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
         query = query.join(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
@@ -309,7 +356,9 @@ class NewsItem(db.Model):
         )
 
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
-        query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+        query = query.outerjoin(
+            OSINTSource, NewsItemData.osint_source_id == OSINTSource.id
+        )
 
         query = query.outerjoin(
             ACLEntry,
@@ -395,7 +444,12 @@ class NewsItem(db.Model):
     @classmethod
     def delete(cls, news_item_id):
         news_item = cls.find(news_item_id)
-        if NewsItemAggregate.action_allowed([{"type": "AGGREGATE", "id": news_item.news_item_aggregate_id}]) is False:
+        if (
+            NewsItemAggregate.action_allowed(
+                [{"type": "AGGREGATE", "id": news_item.news_item_aggregate_id}]
+            )
+            is False
+        ):
             return "aggregate_in_use", 500
         aggregate_id = news_item.news_item_aggregate_id
         aggregate = NewsItemAggregate.find(aggregate_id)
@@ -420,7 +474,9 @@ class NewsItemVote(db.Model):
     news_item_id = db.Column(db.Integer, db.ForeignKey("news_item.id"))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
 
-    remote_node_id = db.Column(db.Integer, db.ForeignKey("remote_node.id"), nullable=True)
+    remote_node_id = db.Column(
+        db.Integer, db.ForeignKey("remote_node.id"), nullable=True
+    )
     remote_user = db.Column(db.String())
 
     def __init__(self, news_item_id, user_id):
@@ -442,7 +498,9 @@ class NewsItemVote(db.Model):
 
     @classmethod
     def delete_for_remote_node(cls, news_item_id, remote_node_id):
-        vote = cls.query.filter_by(news_item_id=news_item_id, remote_node_id=remote_node_id).first()
+        vote = cls.query.filter_by(
+            news_item_id=news_item_id, remote_node_id=remote_node_id
+        ).first()
         if vote is None:
             return 0
         db.session.delete(vote)
@@ -469,7 +527,9 @@ class NewsItemAggregate(db.Model):
 
     news_items = db.relationship("NewsItem")
 
-    news_item_attributes = db.relationship("NewsItemAttribute", secondary="news_item_aggregate_news_item_attribute")
+    news_item_attributes = db.relationship(
+        "NewsItemAttribute", secondary="news_item_aggregate_news_item_attribute"
+    )
 
     @classmethod
     def find(cls, news_item_aggregate_id):
@@ -481,9 +541,13 @@ class NewsItemAggregate(db.Model):
 
         query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
 
-        query = query.join(NewsItem, NewsItem.news_item_aggregate_id == NewsItemAggregate.id)
+        query = query.join(
+            NewsItem, NewsItem.news_item_aggregate_id == NewsItemAggregate.id
+        )
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
-        query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
+        query = query.outerjoin(
+            OSINTSource, NewsItemData.osint_source_id == OSINTSource.id
+        )
 
         query = query.outerjoin(
             ACLEntry,
@@ -505,7 +569,8 @@ class NewsItemAggregate(db.Model):
             search_string = "%" + filter["search"].lower() + "%"
             query = query.join(
                 NewsItemAggregateSearchIndex,
-                NewsItemAggregate.id == NewsItemAggregateSearchIndex.news_item_aggregate_id,
+                NewsItemAggregate.id
+                == NewsItemAggregateSearchIndex.news_item_aggregate_id,
             ).filter(NewsItemAggregateSearchIndex.data.like(search_string))
 
         if "read" in filter and filter["read"].lower() == "true":
@@ -520,11 +585,14 @@ class NewsItemAggregate(db.Model):
         if "in_analyze" in filter and filter["in_analyze"].lower() == "true":
             query = query.join(
                 ReportItemNewsItemAggregate,
-                NewsItemAggregate.id == ReportItemNewsItemAggregate.news_item_aggregate_id,
+                NewsItemAggregate.id
+                == ReportItemNewsItemAggregate.news_item_aggregate_id,
             )
 
         if "range" in filter and filter["range"] != "ALL":
-            date_limit = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            date_limit = datetime.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
 
             if filter["range"] == "WEEK":
                 date_limit -= timedelta(days=date_limit.weekday())
@@ -536,22 +604,32 @@ class NewsItemAggregate(db.Model):
 
         if "sort" in filter:
             if filter["sort"] == "DATE_DESC":
-                query = query.order_by(db.desc(NewsItemAggregate.created), db.desc(NewsItemAggregate.id))
+                query = query.order_by(
+                    db.desc(NewsItemAggregate.created), db.desc(NewsItemAggregate.id)
+                )
 
             elif filter["sort"] == "DATE_ASC":
-                query = query.order_by(db.asc(NewsItemAggregate.created), db.asc(NewsItemAggregate.id))
+                query = query.order_by(
+                    db.asc(NewsItemAggregate.created), db.asc(NewsItemAggregate.id)
+                )
 
             elif filter["sort"] == "RELEVANCE_DESC":
-                query = query.order_by(db.desc(NewsItemAggregate.relevance), db.desc(NewsItemAggregate.id))
+                query = query.order_by(
+                    db.desc(NewsItemAggregate.relevance), db.desc(NewsItemAggregate.id)
+                )
 
             elif filter["sort"] == "RELEVANCE_ASC":
-                query = query.order_by(db.asc(NewsItemAggregate.relevance), db.asc(NewsItemAggregate.id))
+                query = query.order_by(
+                    db.asc(NewsItemAggregate.relevance), db.asc(NewsItemAggregate.id)
+                )
 
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
     def get_by_group_json(cls, group_id, filter, offset, limit, user):
-        news_item_aggregates, count = cls.get_by_group(group_id, filter, offset, limit, user)
+        news_item_aggregates, count = cls.get_by_group(
+            group_id, filter, offset, limit, user
+        )
         for news_item_aggregate in news_item_aggregates:
             news_item_aggregate.me_like = False
             news_item_aggregate.me_dislike = False
@@ -574,7 +652,9 @@ class NewsItemAggregate(db.Model):
                 if news_item.me_dislike is True:
                     news_item_aggregate.me_dislike = True
 
-            news_item_aggregate.in_reports_count = ReportItemNewsItemAggregate.count(news_item_aggregate.id)
+            news_item_aggregate.in_reports_count = ReportItemNewsItemAggregate.count(
+                news_item_aggregate.id
+            )
 
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         items = news_item_aggregate_schema.dump(news_item_aggregates)
@@ -655,7 +735,9 @@ class NewsItemAggregate(db.Model):
     @classmethod
     def reassign_to_new_groups(cls, osint_source_id, default_group_id):
         time_limit = datetime.now() - timedelta(days=7)
-        news_items_query = NewsItem.get_all_by_group_and_source_query(default_group_id, osint_source_id, time_limit)
+        news_items_query = NewsItem.get_all_by_group_and_source_query(
+            default_group_id, osint_source_id, time_limit
+        )
         for news_item in news_items_query:
             news_item_data = news_item.news_item_data
             aggregate = NewsItemAggregate.find(news_item.news_item_aggregate_id)
@@ -667,7 +749,9 @@ class NewsItemAggregate(db.Model):
             db.session.commit()
 
     @classmethod
-    def add_remote_news_items(cls, news_items_data_list, remote_node, osint_source_group_id):
+    def add_remote_news_items(
+        cls, news_items_data_list, remote_node, osint_source_group_id
+    ):
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
 
@@ -701,7 +785,9 @@ class NewsItemAggregate(db.Model):
         for news_item_data_id in news_item_data_ids:
             news_items = NewsItem.get_all_with_data(news_item_data_id)
             for news_item in news_items:
-                had_relevance = NewsItemVote.delete_for_remote_node(news_item.id, remote_node.id)
+                had_relevance = NewsItemVote.delete_for_remote_node(
+                    news_item.id, remote_node.id
+                )
                 news_item.relevance -= had_relevance
                 if had_relevance > 0:
                     news_item.likes -= 1
@@ -837,7 +923,9 @@ class NewsItemAggregate(db.Model):
 
             news_items = list(news_items)
             for news_item in news_items[:]:
-                if not NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                if not NewsItem.allowed_with_acl(
+                    news_item.id, user, False, False, True
+                ):
                     news_items.remove(news_item)
 
             status_data = {}
@@ -878,15 +966,21 @@ class NewsItemAggregate(db.Model):
                 if item["type"] == "AGGREGATE":
                     aggregate = NewsItemAggregate.find(item["id"])
                     for news_item in aggregate.news_items:
-                        if NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                        if NewsItem.allowed_with_acl(
+                            news_item.id, user, False, False, True
+                        ):
                             aggregate.news_items.remove(news_item)
                             NewsItem.delete_only(news_item)
 
                     processed_aggregates.add(aggregate)
                 else:
                     news_item = NewsItem.find(item["id"])
-                    if NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
-                        aggregate = NewsItemAggregate.find(news_item.news_item_aggregate_id)
+                    if NewsItem.allowed_with_acl(
+                        news_item.id, user, False, False, True
+                    ):
+                        aggregate = NewsItemAggregate.find(
+                            news_item.news_item_aggregate_id
+                        )
                         aggregate.news_items.remove(news_item)
                         NewsItem.delete_only(news_item)
                         processed_aggregates.add(aggregate)
@@ -912,14 +1006,18 @@ class NewsItemAggregate(db.Model):
                     new_aggregate.created = aggregate.created
 
                 for news_item in aggregate.news_items[:]:
-                    if user is None or NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                    if user is None or NewsItem.allowed_with_acl(
+                        news_item.id, user, False, False, True
+                    ):
                         new_aggregate.news_items.append(news_item)
                         aggregate.news_items.remove(news_item)
 
                 processed_aggregates.add(aggregate)
             else:
                 news_item = NewsItem.find(item["id"])
-                if user is None or NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                if user is None or NewsItem.allowed_with_acl(
+                    news_item.id, user, False, False, True
+                ):
                     aggregate = NewsItemAggregate.find(news_item.news_item_aggregate_id)
                     group_id = aggregate.osint_source_group_id
                     if new_aggregate.title is None:
@@ -949,7 +1047,9 @@ class NewsItemAggregate(db.Model):
                 aggregate = NewsItemAggregate.find(item["id"])
                 group_id = aggregate.osint_source_group_id
                 for news_item in aggregate.news_items[:]:
-                    if NewsItem.allowed_with_acl(news_item.id, user, False, False, True):
+                    if NewsItem.allowed_with_acl(
+                        news_item.id, user, False, False, True
+                    ):
                         aggregate.news_items.remove(news_item)
                         cls.create_single_aggregate(news_item, group_id)
 
@@ -1023,7 +1123,11 @@ class NewsItemAggregate(db.Model):
             limit = datetime.now() - timedelta(weeks=8)
 
         # TODO: Change condition in query to >
-        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit).all()
+        news_item_aggregates = (
+            cls.query.filter(cls.osint_source_group_id == source_group)
+            .filter(cls.created > limit)
+            .all()
+        )
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         return news_item_aggregate_schema.dumps(news_item_aggregates)
 
@@ -1031,7 +1135,9 @@ class NewsItemAggregate(db.Model):
 class NewsItemAggregateSearchIndex(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.String)
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"))
+    news_item_aggregate_id = db.Column(
+        db.Integer, db.ForeignKey("news_item_aggregate.id")
+    )
 
     @classmethod
     def remove(cls, aggregate):
@@ -1078,7 +1184,9 @@ class NewsItemAttribute(db.Model):
     binary_data = orm.deferred(db.Column(db.LargeBinary))
     created = db.Column(db.DateTime, default=datetime.now)
 
-    remote_node_id = db.Column(db.Integer, db.ForeignKey("remote_node.id"), nullable=True)
+    remote_node_id = db.Column(
+        db.Integer, db.ForeignKey("remote_node.id"), nullable=True
+    )
     remote_user = db.Column(db.String())
 
     def __init__(self, key, value, binary_mime_type, binary_value):
@@ -1097,27 +1205,45 @@ class NewsItemAttribute(db.Model):
 
 
 class NewsItemDataNewsItemAttribute(db.Model):
-    news_item_data_id = db.Column(db.String, db.ForeignKey("news_item_data.id"), primary_key=True)
-    news_item_attribute_id = db.Column(db.Integer, db.ForeignKey("news_item_attribute.id"), primary_key=True)
+    news_item_data_id = db.Column(
+        db.String, db.ForeignKey("news_item_data.id"), primary_key=True
+    )
+    news_item_attribute_id = db.Column(
+        db.Integer, db.ForeignKey("news_item_attribute.id"), primary_key=True
+    )
 
     @classmethod
     def find(cls, attribute_id):
-        news_item_attribute = cls.query.filter(NewsItemDataNewsItemAttribute.news_item_attribute_id == attribute_id).scalar()
+        news_item_attribute = cls.query.filter(
+            NewsItemDataNewsItemAttribute.news_item_attribute_id == attribute_id
+        ).scalar()
         return news_item_attribute
 
 
 class NewsItemAggregateNewsItemAttribute(db.Model):
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"), primary_key=True)
-    news_item_attribute_id = db.Column(db.Integer, db.ForeignKey("news_item_attribute.id"), primary_key=True)
+    news_item_aggregate_id = db.Column(
+        db.Integer, db.ForeignKey("news_item_aggregate.id"), primary_key=True
+    )
+    news_item_attribute_id = db.Column(
+        db.Integer, db.ForeignKey("news_item_attribute.id"), primary_key=True
+    )
 
 
 class ReportItemNewsItemAggregate(db.Model):
-    report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), primary_key=True)
-    news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey("news_item_aggregate.id"), primary_key=True)
+    report_item_id = db.Column(
+        db.Integer, db.ForeignKey("report_item.id"), primary_key=True
+    )
+    news_item_aggregate_id = db.Column(
+        db.Integer, db.ForeignKey("news_item_aggregate.id"), primary_key=True
+    )
 
     @classmethod
     def assigned(cls, aggregate_id):
-        return db.session.query(db.exists().where(ReportItemNewsItemAggregate.news_item_aggregate_id == aggregate_id)).scalar()
+        return db.session.query(
+            db.exists().where(
+                ReportItemNewsItemAggregate.news_item_aggregate_id == aggregate_id
+            )
+        ).scalar()
 
     @classmethod
     def count(cls, aggregate_id):

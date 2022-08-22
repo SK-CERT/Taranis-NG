@@ -1,10 +1,10 @@
 import pytest
-from publishers.__init__ import create_app
+from core.__init__ import create_app
 
 
 @pytest.fixture()
 def app():
-    yield create_app()
+    yield create_app("tests/.env")
 
 
 @pytest.fixture
