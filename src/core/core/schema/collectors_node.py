@@ -1,7 +1,6 @@
 from marshmallow import Schema, fields, post_load
 
-from core.schema.collector import CollectorSchema
-from core.schema.presentation import PresentationSchema
+from core.schema.collector import CollectorSchemaWithOutParameters
 
 
 class CollectorsNodeSchema(Schema):
@@ -10,7 +9,7 @@ class CollectorsNodeSchema(Schema):
     description = fields.Str()
     api_url = fields.Str()
     api_key = fields.Str()
-    collectors = fields.List(fields.Nested(CollectorSchema), load_default=[])
+    collectors = fields.List(fields.Nested(CollectorSchemaWithOutParameters), load_default=[])
     status = fields.Str(load_default=None)
     created = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
     last_seen = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
@@ -18,10 +17,6 @@ class CollectorsNodeSchema(Schema):
     @post_load
     def make_collectors_node(self, data, **kwargs):
         return CollectorsNode(**data)
-
-
-class CollectorsNodePresentationSchema(CollectorsNodeSchema, PresentationSchema):
-    pass
 
 
 class CollectorsNode:

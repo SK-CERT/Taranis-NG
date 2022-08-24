@@ -1,10 +1,11 @@
 import json
 import requests
 from bots.managers.log_manager import logger
+from flask import current_app as app
 
 
 class CoreApi:
-    def __init__(self, app):
+    def __init__(self):
         self.api_url = app.config.get("TARANIS_NG_CORE_URL")
         self.api_key = app.config.get("API_KEY")
         self.headers = {"Authorization": f"Bearer {self.api_key}"}

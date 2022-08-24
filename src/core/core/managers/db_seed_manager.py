@@ -32,18 +32,8 @@ def pre_seed(app):
 
 def pre_seed_source_groups():
     from core.model.osint_source import OSINTSourceGroup
-    import uuid
 
-    default_group = OSINTSourceGroup(
-        str(uuid.uuid4()),
-        "Default",
-        "Default group for uncategorized OSINT sources",
-        True,
-        [],
-    )
-
-    db.session.add(default_group)
-    db.session.commit()
+    OSINTSourceGroup.create(group_id="default", name="Default", description="Default group for uncategorized sources", default=True)
 
 
 def pre_seed_permissions():
@@ -65,9 +55,7 @@ def pre_seed_permissions():
     Permission.add("PUBLISH_DELETE", "Publish delete", "Delete product")
     Permission.add("PUBLISH_PRODUCT", "Publish product", "Publish product")
 
-    Permission.add(
-        "CONFIG_ACCESS", "Configuration access", "Access to Configuration module"
-    )
+    Permission.add("CONFIG_ACCESS", "Configuration access", "Access to Configuration module")
 
     Permission.add(
         "CONFIG_ORGANIZATION_ACCESS",
@@ -90,35 +78,17 @@ def pre_seed_permissions():
         "Delete organization configuration",
     )
 
-    Permission.add(
-        "CONFIG_USER_ACCESS", "Config users access", "Access to users configuration"
-    )
-    Permission.add(
-        "CONFIG_USER_CREATE", "Config user create", "Create user configuration"
-    )
-    Permission.add(
-        "CONFIG_USER_UPDATE", "Config user update", "Update user configuration"
-    )
-    Permission.add(
-        "CONFIG_USER_DELETE", "Config user delete", "Delete user configuration"
-    )
+    Permission.add("CONFIG_USER_ACCESS", "Config users access", "Access to users configuration")
+    Permission.add("CONFIG_USER_CREATE", "Config user create", "Create user configuration")
+    Permission.add("CONFIG_USER_UPDATE", "Config user update", "Update user configuration")
+    Permission.add("CONFIG_USER_DELETE", "Config user delete", "Delete user configuration")
 
-    Permission.add(
-        "CONFIG_ROLE_ACCESS", "Config roles access", "Access to roles configuration"
-    )
-    Permission.add(
-        "CONFIG_ROLE_CREATE", "Config role create", "Create role configuration"
-    )
-    Permission.add(
-        "CONFIG_ROLE_UPDATE", "Config role update", "Update role configuration"
-    )
-    Permission.add(
-        "CONFIG_ROLE_DELETE", "Config role delete", "Delete role configuration"
-    )
+    Permission.add("CONFIG_ROLE_ACCESS", "Config roles access", "Access to roles configuration")
+    Permission.add("CONFIG_ROLE_CREATE", "Config role create", "Create role configuration")
+    Permission.add("CONFIG_ROLE_UPDATE", "Config role update", "Update role configuration")
+    Permission.add("CONFIG_ROLE_DELETE", "Config role delete", "Delete role configuration")
 
-    Permission.add(
-        "CONFIG_ACL_ACCESS", "Config acls access", "Access to acls configuration"
-    )
+    Permission.add("CONFIG_ACL_ACCESS", "Config acls access", "Access to acls configuration")
     Permission.add("CONFIG_ACL_CREATE", "Config acl create", "Create acl configuration")
     Permission.add("CONFIG_ACL_UPDATE", "Config acl update", "Update acl configuration")
     Permission.add("CONFIG_ACL_DELETE", "Config acl delete", "Delete acl configuration")
@@ -680,11 +650,7 @@ def pre_seed_attributes():
         }
         Attribute.add_attribute(attr)
 
-    if (
-        not db.session.query(Attribute)
-        .filter_by(name="MISP Event Distribution")
-        .first()
-    ):
+    if not db.session.query(Attribute).filter_by(name="MISP Event Distribution").first():
         attr_enum = [
             {"index": 0, "value": "Your organisation only", "description": ""},
             {"index": 1, "value": "This community only", "description": ""},
@@ -703,11 +669,7 @@ def pre_seed_attributes():
         }
         Attribute.add_attribute(attr)
 
-    if (
-        not db.session.query(Attribute)
-        .filter_by(name="MISP Event Threat Level")
-        .first()
-    ):
+    if not db.session.query(Attribute).filter_by(name="MISP Event Threat Level").first():
         attr_enum = [
             {"index": 0, "value": "High", "description": ""},
             {"index": 1, "value": "Medium", "description": ""},
@@ -744,11 +706,7 @@ def pre_seed_attributes():
         }
         Attribute.add_attribute(attr)
 
-    if (
-        not db.session.query(Attribute)
-        .filter_by(name="MISP Attribute Category")
-        .first()
-    ):
+    if not db.session.query(Attribute).filter_by(name="MISP Attribute Category").first():
         attr_enum = [
             {"index": 0, "value": "Internal reference", "description": ""},
             {"index": 1, "value": "Targeting data", "description": ""},
@@ -960,11 +918,7 @@ def pre_seed_attributes():
         }
         Attribute.add_attribute(attr)
 
-    if (
-        not db.session.query(Attribute)
-        .filter_by(name="MISP Attribute Distribution")
-        .first()
-    ):
+    if not db.session.query(Attribute).filter_by(name="MISP Attribute Distribution").first():
         attr_enum = [
             {"index": 0, "value": "Your organisation only", "description": ""},
             {"index": 1, "value": "This community only", "description": ""},
@@ -993,14 +947,8 @@ def pre_seed_report_items():
     )
     from core.model.attribute import Attribute
 
-    if (
-        not db.session.query(ReportItemType)
-        .filter_by(title="Vulnerability Report")
-        .first()
-    ):
-        report_item_type = ReportItemType(
-            None, "Vulnerability Report", "Basic report type", []
-        )
+    if not db.session.query(ReportItemType).filter_by(title="Vulnerability Report").first():
+        report_item_type = ReportItemType(None, "Vulnerability Report", "Basic report type", [])
         db.session.add(report_item_type)
         db.session.commit()
 
@@ -1266,10 +1214,7 @@ def pre_seed_report_items():
                 5,
                 1,
                 1,
-                db.session.query(Attribute)
-                .filter_by(name="Additional Data")
-                .first()
-                .id,
+                db.session.query(Attribute).filter_by(name="Additional Data").first().id,
             )
         )
         db.session.add(
@@ -1372,9 +1317,7 @@ def pre_seed_default_user():
     from core.model.user import User
 
     if not db.session.query(Organization).filter_by(name="The Earth").first():
-        address = Address(
-            "29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom"
-        )
+        address = Address("29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom")
         db.session.add(address)
         db.session.commit()
 

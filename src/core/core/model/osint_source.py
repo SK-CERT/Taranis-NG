@@ -300,8 +300,8 @@ class OSINTSourceGroup(db.Model):
 
     osint_sources = db.relationship("OSINTSource", secondary="osint_source_group_osint_source")
 
-    def __init__(self, id, name, description, default, osint_sources):
-        self.id = str(uuid.uuid4())
+    def __init__(self, group_id, name, description, default, osint_sources):
+        self.id = group_id or str(uuid.uuid4())
         self.name = name
         self.description = description
         self.default = False
@@ -408,6 +408,17 @@ class OSINTSourceGroup(db.Model):
         new_osint_source_group_schema = NewOSINTSourceGroupSchema()
         osint_source_group = new_osint_source_group_schema.load(data)
         db.session.add(osint_source_group)
+        db.session.commit()
+
+    @classmethod
+    def create(cls, group_id, name, description, default=False):
+        osint_source_group = cls.find(group_id)
+        if osint_source_group is None:
+            osint_source_group = OSINTSourceGroup(group_id, name, description, default, [])
+            db.session.add(osint_source_group)
+        else:
+            osint_source_group.name = name
+            osint_source_group.description = description
         db.session.commit()
 
     @classmethod

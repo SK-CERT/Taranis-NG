@@ -14,7 +14,7 @@ class MISPPublisher(BasePublisher):
 
     parameters = [
         Parameter(0, "MISP_URL", "MISP url", "MISP server https url", ParameterType.STRING),
-        Parameter(0, "MISP_API_KEY", "MISP API key", "User MISP API key", ParameterType.STRING)
+        Parameter(0, "MISP_API_KEY", "MISP API key", "User MISP API key", ParameterType.STRING),
     ]
 
     parameters.extend(BasePublisher.parameters)
@@ -22,8 +22,8 @@ class MISPPublisher(BasePublisher):
     def publish(self, publisher_input):
 
         try:
-            misp_url = publisher_input.parameter_values_map['MISP_URL']
-            misp_key = publisher_input.parameter_values_map['MISP_API_KEY']
+            misp_url = publisher_input.parameter_values_map["MISP_URL"]
+            misp_key = publisher_input.parameter_values_map["MISP_API_KEY"]
             misp_verifycert = False
 
             data = publisher_input.data[:]

@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_cors import CORS
-from dotenv import dotenv_values
 from core.managers import (
     db_manager,
     auth_manager,
@@ -12,10 +11,9 @@ from core.managers import (
 )
 
 
-def create_app(dotenv_path="."):
+def create_app():
     app = Flask(__name__)
     app.config.from_object("core.config.Config")
-    app.config.from_mapping(dotenv_values(dotenv_path=dotenv_path))
 
     with app.app_context():
         CORS(app)

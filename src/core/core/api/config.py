@@ -72,9 +72,7 @@ class AttributeEnums(Resource):
         search = request.args.get(key="search", default=None)
         offset = request.args.get(key="offset", default=0)
         limit = request.args.get(key="limit", default=10)
-        return attribute.AttributeEnum.get_for_attribute_json(
-            attribute_id, search, offset, limit
-        )
+        return attribute.AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
     def post(self, attribute_id):
@@ -95,9 +93,7 @@ class ReportItemTypesConfig(Resource):
     @auth_required("CONFIG_REPORT_TYPE_ACCESS")
     def get(self):
         search = request.args.get(key="search", default=None)
-        return report_item_type.ReportItemType.get_all_json(
-            search, auth_manager.get_user_from_jwt(), False
-        )
+        return report_item_type.ReportItemType.get_all_json(search, auth_manager.get_user_from_jwt(), False)
 
     @auth_required("CONFIG_REPORT_TYPE_CREATE")
     def post(self):
@@ -118,9 +114,7 @@ class ProductTypes(Resource):
     @auth_required("CONFIG_PRODUCT_TYPE_ACCESS")
     def get(self):
         search = request.args.get(key="search", default=None)
-        return product_type.ProductType.get_all_json(
-            search, auth_manager.get_user_from_jwt(), False
-        )
+        return product_type.ProductType.get_all_json(search, auth_manager.get_user_from_jwt(), False)
 
     @auth_required("CONFIG_PRODUCT_TYPE_CREATE")
     def post(self):
@@ -230,9 +224,7 @@ class Users(Resource):
             external_auth_manager.create_user(request.json)
         except Exception as ex:
             logger.log_debug(ex)
-            logger.store_data_error_activity(
-                get_user_from_jwt(), "Could not create user in external auth system"
-            )
+            logger.store_data_error_activity(get_user_from_jwt(), "Could not create user in external auth system")
             return "", 400
 
         user.User.add_new(request.json)
@@ -248,9 +240,7 @@ class User(Resource):
             external_auth_manager.update_user(request.json, original_username)
         except Exception as ex:
             logger.log_debug(ex)
-            logger.store_data_error_activity(
-                get_user_from_jwt(), "Could not update user in external auth system"
-            )
+            logger.store_data_error_activity(get_user_from_jwt(), "Could not update user in external auth system")
             return "", 400
 
         user.User.update(user_id, request.json)
@@ -266,9 +256,7 @@ class User(Resource):
             external_auth_manager.delete_user(original_username)
         except Exception as ex:
             logger.log_debug(ex)
-            logger.store_data_error_activity(
-                get_user_from_jwt(), "Could not delete user in external auth system"
-            )
+            logger.store_data_error_activity(get_user_from_jwt(), "Could not delete user in external auth system")
             return "", 400
 
 
@@ -281,18 +269,14 @@ class ExternalUsers(Resource):
     @auth_required("MY_ASSETS_CONFIG")
     def post(self):
         permissions = auth_manager.get_external_permissions_ids()
-        user.User.add_new_external(
-            auth_manager.get_user_from_jwt(), permissions, request.json
-        )
+        user.User.add_new_external(auth_manager.get_user_from_jwt(), permissions, request.json)
 
 
 class ExternalUser(Resource):
     @auth_required("MY_ASSETS_CONFIG")
     def put(self, user_id):
         permissions = auth_manager.get_external_permissions_ids()
-        user.User.update_external(
-            auth_manager.get_user_from_jwt(), permissions, user_id, request.json
-        )
+        user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, user_id):
@@ -303,9 +287,7 @@ class WordLists(Resource):
     @auth_required("CONFIG_WORD_LIST_ACCESS")
     def get(self):
         search = request.args.get(key="search", default=None)
-        return word_list.WordList.get_all_json(
-            search, auth_manager.get_user_from_jwt(), False
-        )
+        return word_list.WordList.get_all_json(search, auth_manager.get_user_from_jwt(), False)
 
     @auth_required("CONFIG_WORD_LIST_CREATE")
     def post(self):
@@ -357,13 +339,9 @@ class OSINTSources(Resource):
 class OSINTSource(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
     def put(self, source_id):
-        updated_osint_source, default_group = collectors_manager.update_osint_source(
-            source_id, request.json
-        )
+        updated_osint_source, default_group = collectors_manager.update_osint_source(source_id, request.json)
         if default_group is not None:
-            NewsItemAggregate.reassign_to_new_groups(
-                updated_osint_source.id, default_group.id
-            )
+            NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
 
     @auth_required("CONFIG_OSINT_SOURCE_DELETE")
     def delete(self, source_id):
@@ -395,9 +373,7 @@ class OSINTSourceGroups(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_ACCESS")
     def get(self):
         search = request.args.get(key="search", default=None)
-        return osint_source.OSINTSourceGroup.get_all_json(
-            search, auth_manager.get_user_from_jwt(), False
-        )
+        return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), False)
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_CREATE")
     def post(self):
@@ -407,9 +383,7 @@ class OSINTSourceGroups(Resource):
 class OSINTSourceGroup(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_UPDATE")
     def put(self, group_id):
-        sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(
-            group_id, request.json
-        )
+        sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(group_id, request.json)
         if sources_in_default_group is not None:
             default_group = osint_source.OSINTSourceGroup.get_default()
             for source in sources_in_default_group:
@@ -436,9 +410,7 @@ class RemoteAccesses(Resource):
 class RemoteAccess(Resource):
     @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
     def put(self, remote_access_id):
-        event_id, disconnect = remote.RemoteAccess.update(
-            remote_access_id, request.json
-        )
+        event_id, disconnect = remote.RemoteAccess.update(remote_access_id, request.json)
         if disconnect:
             sse_manager.remote_access_disconnect([event_id])
 
@@ -588,9 +560,7 @@ def initialize(api):
     )
     api.add_resource(Attributes, "/api/v1/config/attributes")
     api.add_resource(Attribute, "/api/v1/config/attributes/<int:attribute_id>")
-    api.add_resource(
-        AttributeEnums, "/api/v1/config/attributes/<int:attribute_id>/enums"
-    )
+    api.add_resource(AttributeEnums, "/api/v1/config/attributes/<int:attribute_id>/enums")
     api.add_resource(
         AttributeEnum,
         "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>",
@@ -628,20 +598,14 @@ def initialize(api):
     api.add_resource(OSINTSourcesExport, "/api/v1/config/export-osint-sources")
     api.add_resource(OSINTSourcesImport, "/api/v1/config/import-osint-sources")
     api.add_resource(OSINTSourceGroups, "/api/v1/config/osint-source-groups")
-    api.add_resource(
-        OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>"
-    )
+    api.add_resource(OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>")
 
     api.add_resource(RemoteAccesses, "/api/v1/config/remote-accesses")
-    api.add_resource(
-        RemoteAccess, "/api/v1/config/remote-accesses/<int:remote_access_id>"
-    )
+    api.add_resource(RemoteAccess, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
     api.add_resource(RemoteNodes, "/api/v1/config/remote-nodes")
     api.add_resource(RemoteNode, "/api/v1/config/remote-nodes/<int:remote_node_id>")
-    api.add_resource(
-        RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect"
-    )
+    api.add_resource(RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
 
     api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes")
     api.add_resource(PresentersNode, "/api/v1/config/presenters-nodes/<string:node_id>")
@@ -650,9 +614,7 @@ def initialize(api):
     api.add_resource(PublishersNode, "/api/v1/config/publishers-nodes/<string:node_id>")
 
     api.add_resource(PublisherPresets, "/api/v1/config/publishers-presets")
-    api.add_resource(
-        PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>"
-    )
+    api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>")
 
     api.add_resource(BotNodes, "/api/v1/config/bots-nodes")
     api.add_resource(BotsNode, "/api/v1/config/bots-nodes/<string:node_id>")

@@ -8,7 +8,6 @@ from core.managers.db_manager import db
 from core.managers.log_manager import logger
 from core.schema.collectors_node import (
     CollectorsNodeSchema,
-    CollectorsNodePresentationSchema,
 )
 
 
@@ -89,7 +88,7 @@ class CollectorsNode(db.Model):
     @classmethod
     def get_all_json(cls, search):
         nodes, count = cls.get(search)
-        node_schema = CollectorsNodePresentationSchema(many=True)
+        node_schema = CollectorsNodeSchema(many=True)
         items = node_schema.dump(nodes)
 
         for i in range(len(items)):

@@ -47,18 +47,12 @@ class TaggingBot(BaseBot):
                     findings = {}
                     for news_item in aggregate["news_items"]:
                         content = news_item["news_item_data"]["content"]
-                        existing_tags = (
-                            news_item["news_item_data"]["tags"]
-                            if news_item["news_item_data"]["tags"] is not None
-                            else []
-                        )
+                        existing_tags = news_item["news_item_data"]["tags"] if news_item["news_item_data"]["tags"] is not None else []
 
                         for keyword in keywords:
                             if keyword in content and keyword not in existing_tags:
                                 if news_item["id"] in findings:
-                                    findings[news_item["id"]] = findings[
-                                        news_item["id"]
-                                    ].add(keyword)
+                                    findings[news_item["id"]] = findings[news_item["id"]].add(keyword)
                                 else:
                                     findings[news_item["id"]] = {keyword}
                     for news_id, keyword in findings.items():

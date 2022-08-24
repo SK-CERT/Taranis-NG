@@ -33,9 +33,7 @@ class WordlistUpdaterBot(BaseBot):
             "Source for words",
             ParameterType.STRING,
         ),
-        Parameter(
-            0, "FORMAT", "Data format", "Format of words source", ParameterType.STRING
-        ),
+        Parameter(0, "FORMAT", "Data format", "Format of words source", ParameterType.STRING),
         Parameter(
             0,
             "DELETE",
@@ -71,9 +69,7 @@ class WordlistUpdaterBot(BaseBot):
 
             categories = self.core_api.get_categories(word_list_id)
 
-            if not any(
-                category["name"] == word_list_category_name for category in categories
-            ):
+            if not any(category["name"] == word_list_category_name for category in categories):
 
                 name = word_list_category_name
                 description = "Stop word list category created by Updater Bot."
@@ -82,14 +78,10 @@ class WordlistUpdaterBot(BaseBot):
                 category = word_list.WordListCategory(name, description, "", entries)
                 word_list_category_schema = word_list.WordListCategorySchema()
 
-                self.core_api.add_word_list_category(
-                    word_list_id, word_list_category_schema.dump(category)
-                )
+                self.core_api.add_word_list_category(word_list_id, word_list_category_schema.dump(category))
 
             if delete_word_entries == "yes":
-                self.core_api.delete_word_list_category_entries(
-                    word_list_id, word_list_category_name
-                )
+                self.core_api.delete_word_list_category_entries(word_list_id, word_list_category_name)
 
             entries = []
 

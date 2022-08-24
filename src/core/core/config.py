@@ -1,7 +1,9 @@
 import os
+from dotenv import load_dotenv
 
 
 class Config(object):
+    load_dotenv()
     REDIS_URL = os.getenv("REDIS_URL")
 
     DB_URL = os.getenv("DB_URL")

@@ -65,14 +65,8 @@ class AnalystBot(BaseBot):
                     content = item["content"]
 
                     analyzed_text = "".join([title, preview, content]).split()
-                    analyzed_text = [
-                        item.replace(".", "") if item.endswith(".") else item
-                        for item in analyzed_text
-                    ]
-                    analyzed_text = [
-                        item.replace(",", "") if item.endswith(",") else item
-                        for item in analyzed_text
-                    ]
+                    analyzed_text = [item.replace(".", "") if item.endswith(".") else item for item in analyzed_text]
+                    analyzed_text = [item.replace(",", "") if item.endswith(",") else item for item in analyzed_text]
 
                     for element in analyzed_text:
 
@@ -88,15 +82,11 @@ class AnalystBot(BaseBot):
                                 binary_mime_type = ""
                                 binary_value = ""
 
-                                news_attribute = news_item.NewsItemAttribute(
-                                    key, value, binary_mime_type, binary_value
-                                )
+                                news_attribute = news_item.NewsItemAttribute(key, value, binary_mime_type, binary_value)
 
                                 attributes.append(news_attribute)
 
-                                news_item_attributes_schema = (
-                                    news_item.NewsItemAttributeSchema(many=True)
-                                )
+                                news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
                                 self.core_api.update_news_item_attributes(
                                     news_item_id,
                                     news_item_attributes_schema.dump(attributes),

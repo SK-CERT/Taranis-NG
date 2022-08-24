@@ -26,9 +26,7 @@ class TEXTPresenter(BasePresenter):
     def generate(self, presenter_input):
 
         try:
-            head, tail = os.path.split(
-                presenter_input.parameter_values_map["TEXT_TEMPLATE_PATH"]
-            )
+            head, tail = os.path.split(presenter_input.parameter_values_map["TEXT_TEMPLATE_PATH"])
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 

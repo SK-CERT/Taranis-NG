@@ -95,39 +95,27 @@ def check_acl(item_id, acl_check, user):
 
     if acl_check == ACLCheck.OSINT_SOURCE_GROUP_ACCESS:
         item_type = "OSINT Source Group"
-        allowed = OSINTSourceGroup.allowed_with_acl(
-            item_id, user, check_see, check_access, check_modify
-        )
+        allowed = OSINTSourceGroup.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if acl_check in [ACLCheck.NEWS_ITEM_ACCESS, ACLCheck.NEWS_ITEM_MODIFY]:
         item_type = "News Item"
-        allowed = NewsItem.allowed_with_acl(
-            item_id, user, check_see, check_access, check_modify
-        )
+        allowed = NewsItem.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if acl_check in [ACLCheck.REPORT_ITEM_ACCESS, ACLCheck.REPORT_ITEM_MODIFY]:
         item_type = "Report Item"
-        allowed = ReportItem.allowed_with_acl(
-            item_id, user, check_see, check_access, check_modify
-        )
+        allowed = ReportItem.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if acl_check in [ACLCheck.PRODUCT_TYPE_ACCESS, ACLCheck.PRODUCT_TYPE_MODIFY]:
         item_type = "Product Type"
-        allowed = ProductType.allowed_with_acl(
-            item_id, user, check_see, check_access, check_modify
-        )
+        allowed = ProductType.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if not allowed:
         if check_access:
-            logger.store_user_auth_error_activity(
-                user, "Unauthorized access attempt to {}: {}".format(item_type, item_id)
-            )
+            logger.store_user_auth_error_activity(user, "Unauthorized access attempt to {}: {}".format(item_type, item_id))
         else:
             logger.store_user_auth_error_activity(
                 user,
-                "Unauthorized modification attempt to {}: {}".format(
-                    item_type, item_id
-                ),
+                "Unauthorized modification attempt to {}: {}".format(item_type, item_id),
             )
 
     return allowed
@@ -174,9 +162,7 @@ def auth_required(permissions, *acl_args):
             # does it encode an identity?
             identity = get_jwt_identity()
             if not identity:
-                logger.store_auth_error_activity(
-                    "Missing identity in JWT: " + get_raw_jwt()
-                )
+                logger.store_auth_error_activity("Missing identity in JWT: " + get_raw_jwt())
                 return error
 
             user = User.find(identity)
@@ -184,9 +170,7 @@ def auth_required(permissions, *acl_args):
             # does it include permissions?
             claims = get_jwt_claims()
             if not claims or "permissions" not in claims:
-                logger.store_user_auth_error_activity(
-                    user, "Missing permissions in JWT for identity: {}".format(identity)
-                )
+                logger.store_user_auth_error_activity(user, "Missing permissions in JWT for identity: {}".format(identity))
                 return error
 
             # is there at least one match with the permissions required by the call?
@@ -198,9 +182,7 @@ def auth_required(permissions, *acl_args):
                 return error
 
             # if the object does have an ACL, do we match it?
-            if len(acl_args) > 0 and not check_acl(
-                kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user
-            ):
+            if len(acl_args) > 0 and not check_acl(kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user):
                 logger.store_user_auth_error_activity(
                     user,
                     "Access denied by ACL in JWT for identity: {}".format(identity),
@@ -223,26 +205,18 @@ def api_key_required(fn):
 
         # do we have the authorization header?
         if not request.headers.has_key("Authorization"):
-            logger.store_auth_error_activity(
-                "Missing Authorization header for external access"
-            )
+            logger.store_auth_error_activity("Missing Authorization header for external access")
             return error
 
         # is it properly encoded?
         auth_header = request.headers["Authorization"]
         if not auth_header.startswith("Bearer"):
-            logger.store_auth_error_activity(
-                "Missing Authorization Bearer for external access"
-            )
+            logger.store_auth_error_activity("Missing Authorization Bearer for external access")
             return error
 
         # does it match some of our collector's keys?
         if not CollectorsNode.exists_by_api_key(auth_header.replace("Bearer ", "")):
-            logger.store_auth_error_activity(
-                "Incorrect api key: "
-                + auth_header.replace("Bearer ", "")
-                + " for external access"
-            )
+            logger.store_auth_error_activity("Incorrect api key: " + auth_header.replace("Bearer ", "") + " for external access")
             return error
 
         # allow
@@ -258,26 +232,18 @@ def access_key_required(fn):
 
         # do we have the authorization header?
         if not request.headers.has_key("Authorization"):
-            logger.store_auth_error_activity(
-                "Missing Authorization header for remote access"
-            )
+            logger.store_auth_error_activity("Missing Authorization header for remote access")
             return error
 
         # is it properly encoded?
         auth_header = request.headers["Authorization"]
         if not auth_header.startswith("Bearer"):
-            logger.store_auth_error_activity(
-                "Missing Authorization Bearer for remote access"
-            )
+            logger.store_auth_error_activity("Missing Authorization Bearer for remote access")
             return error
 
         # does it match some of our remote peer's access keys?
         if not RemoteAccess.exists_by_access_key(auth_header.replace("Bearer ", "")):
-            logger.store_auth_error_activity(
-                "Incorrect access key: "
-                + auth_header.replace("Bearer ", "")
-                + " for remote access"
-            )
+            logger.store_auth_error_activity("Incorrect access key: " + auth_header.replace("Bearer ", "") + " for remote access")
             return error
 
         # allow
@@ -298,9 +264,7 @@ def jwt_required(fn):
 
         identity = get_jwt_identity()
         if not identity:
-            logger.store_auth_error_activity(
-                "Missing identity in JWT: {}".format(get_raw_jwt())
-            )
+            logger.store_auth_error_activity("Missing identity in JWT: {}".format(get_raw_jwt()))
             return {"error": "authorization failed"}, 401
 
         user = User.find(identity)

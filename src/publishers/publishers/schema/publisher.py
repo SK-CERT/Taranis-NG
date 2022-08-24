@@ -45,7 +45,4 @@ class PublisherInput:
         self.message_body = message_body
         self.recipients = recipients
 
-        self.parameter_values_map = {
-            parameter_value.parameter.key: parameter_value.value
-            for parameter_value in parameter_values
-        }
+        self.parameter_values_map = {parameter_value.parameter.key: parameter_value.value for parameter_value in parameter_values}

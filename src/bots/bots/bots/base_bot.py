@@ -62,14 +62,10 @@ class BaseBot:
         elif int(interval) > 60:
             hours = int(interval) // 60
             minutes = int(interval) - hours * 60
-            limit = datetime.datetime.now() - datetime.timedelta(
-                days=0, hours=hours, minutes=minutes
-            )
+            limit = datetime.datetime.now() - datetime.timedelta(days=0, hours=hours, minutes=minutes)
 
         else:
-            limit = datetime.datetime.now() - datetime.timedelta(
-                days=0, hours=0, minutes=int(interval)
-            )
+            limit = datetime.datetime.now() - datetime.timedelta(days=0, hours=0, minutes=int(interval))
 
         limit = limit.strftime("%d.%m.%Y - %H:%M")
         return limit

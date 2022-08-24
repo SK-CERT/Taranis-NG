@@ -58,9 +58,7 @@ class NLPBot(BaseBot):
                 for news_item in aggregate["news_items"]:
                     content = news_item["news_item_data"]["content"]
 
-                    findings[news_item["id"]] = self.generateKeywords(
-                        language, kw_model, content
-                    )
+                    findings[news_item["id"]] = self.generateKeywords(language, kw_model, content)
 
                 for news_id, keywords in findings.items():
                     keyword = [i[0] for i in keywords]

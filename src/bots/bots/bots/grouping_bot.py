@@ -51,14 +51,8 @@ class GroupingBot(BaseBot):
                         content = news_item["news_item_data"]["content"]
 
                         analyzed_content = "".join(content).split()
-                        analyzed_content = [
-                            item.replace(".", "") if item.endswith(".") else item
-                            for item in analyzed_content
-                        ]
-                        analyzed_content = [
-                            item.replace(",", "") if item.endswith(",") else item
-                            for item in analyzed_content
-                        ]
+                        analyzed_content = [item.replace(".", "") if item.endswith(".") else item for item in analyzed_content]
+                        analyzed_content = [item.replace(",", "") if item.endswith(",") else item for item in analyzed_content]
 
                         analyzed_content = set(analyzed_content)
 
