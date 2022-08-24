@@ -4,7 +4,7 @@ from datetime import datetime
 import requests
 
 from .base_publisher import BasePublisher
-from publishers.schema.parameter import Parameter, ParameterType
+from core.schema.parameter import Parameter, ParameterType
 
 
 class WORDPRESSPublisher(BasePublisher):
