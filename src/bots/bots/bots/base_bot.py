@@ -4,6 +4,7 @@ from bots.managers import time_manager
 from bots.managers.log_manager import logger
 from bots.schema import bot, bot_preset
 from bots.schema.parameter import Parameter, ParameterType
+from bots.remote.core_api import CoreApi
 
 
 class BaseBot:
@@ -21,12 +22,12 @@ class BaseBot:
         )
     ]
 
-    def __init__(self, core_api):
-        response, code = core_api.get_bots_presets(self.type)
+    def __init__(self):
+        self.core_api = CoreApi()
+        response, code = self.core_api.get_bots_presets(self.type)
         logger.log_debug(f"response: {response} type: {self.type}")
         if code != 200 or response is None:
             return
-        self.core_api = core_api
         preset_schema = bot_preset.BotPresetSchemaBase(many=True)
         self.bot_presets = preset_schema.load(response)
         for preset in self.bot_presets:

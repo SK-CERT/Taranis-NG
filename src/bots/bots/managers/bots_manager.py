@@ -4,22 +4,22 @@ import bots.bots as bots
 bots_dict = {}
 
 
-def initialize(core_api):
+def initialize():
     global bots_dict
 
-    bot = bots.analyst_bot.AnalystBot(core_api)
+    bot = bots.analyst_bot.AnalystBot()
     bots_dict[bot.type] = bot
 
-    bot = bots.grouping_bot.GroupingBot(core_api)
+    bot = bots.grouping_bot.GroupingBot()
     bots_dict[bot.type] = bot
 
-    bot = bots.wordlist_updater_bot.WordlistUpdaterBot(core_api)
+    bot = bots.wordlist_updater_bot.WordlistUpdaterBot()
     bots_dict[bot.type] = bot
 
-    bot = bots.tagging_bot.TaggingBot(core_api)
+    bot = bots.tagging_bot.TaggingBot()
     bots_dict[bot.type] = bot
 
-    bot = bots.nlp_bot.NLPBot(core_api)
+    bot = bots.nlp_bot.NLPBot()
     bots_dict[bot.type] = bot
 
 

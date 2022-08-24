@@ -15,6 +15,7 @@ def test_is_not_authorized(client):
 
 def test_is_authorized(client):
     response = client.get("/api/v1/publishers", headers={"Authorization": "Bearer test_key"})
+    print(response.data)
     assert response.status_code == 200
 
 

@@ -1,11 +1,11 @@
 from functools import wraps
 from flask import request
 import ssl
-from flask import current_app
+from publishers.config import Config
 
 
 def initialize(app):
-    if app.config.get("SSL_VERIFICATION") == "False":
+    if Config.SSL_VERIFICATION == "False":
         try:
             _create_unverified_https_context = ssl._create_unverified_context
         except AttributeError:
@@ -18,7 +18,7 @@ def api_key_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         user_key = request.headers.get("Authorization", "")
-        api_key = current_app.config.get("API_KEY")
+        api_key = Config.API_KEY
 
         if user_key != f"Bearer {api_key}":
             return {"error": "not authorized"}, 401

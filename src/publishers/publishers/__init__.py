@@ -1,11 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
+from dotenv import load_dotenv
+
 from publishers.managers import api_manager, publishers_manager, auth_manager
 
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object("publishers.config.Config")
+    load_dotenv()
 
     with app.app_context():
         CORS(app)
