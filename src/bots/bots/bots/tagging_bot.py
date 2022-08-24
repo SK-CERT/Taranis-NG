@@ -1,6 +1,5 @@
 from .base_bot import BaseBot
 from bots.schema.parameter import Parameter, ParameterType
-from bots.remote.core_api import CoreApi
 from bots.managers.log_manager import logger
 import datetime
 
@@ -39,7 +38,7 @@ class TaggingBot(BaseBot):
             logger.log_debug(f"LIMIT: {limit}")
             logger.log_debug(f"KEYWORDKS: {keywords}")
 
-            data, status = CoreApi.get_news_items_aggregate(source_group, limit)
+            data, status = self.core_api.get_news_items_aggregate(source_group, limit)
             if status != 200:
                 return
 
@@ -48,19 +47,25 @@ class TaggingBot(BaseBot):
                     findings = {}
                     for news_item in aggregate["news_items"]:
                         content = news_item["news_item_data"]["content"]
-                        existing_tags = news_item["news_item_data"]["tags"] if news_item["news_item_data"]["tags"] is not None else []
+                        existing_tags = (
+                            news_item["news_item_data"]["tags"]
+                            if news_item["news_item_data"]["tags"] is not None
+                            else []
+                        )
 
                         for keyword in keywords:
                             if keyword in content and keyword not in existing_tags:
                                 if news_item["id"] in findings:
-                                    findings[news_item["id"]] = findings[news_item["id"]].add(keyword)
+                                    findings[news_item["id"]] = findings[
+                                        news_item["id"]
+                                    ].add(keyword)
                                 else:
                                     findings[news_item["id"]] = {keyword}
                     for news_id, keyword in findings.items():
                         logger.log_debug(f"news_id: {news_id}, keyword: {keyword}")
                         if keyword is None:
                             continue
-                        CoreApi.update_news_item_tags(news_id, list(keyword))
+                        self.core_api.update_news_item_tags(news_id, list(keyword))
 
         except Exception as error:
             BaseBot.print_exception(preset, error)

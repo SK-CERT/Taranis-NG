@@ -3,7 +3,7 @@ import requests
 from .base_bot import BaseBot
 from bots.schema import word_list
 from bots.schema.parameter import Parameter, ParameterType
-from bots.remote.core_api import CoreApi
+from bots.managers.log_manager import logger
 
 
 class WordlistUpdaterBot(BaseBot):
@@ -33,7 +33,9 @@ class WordlistUpdaterBot(BaseBot):
             "Source for words",
             ParameterType.STRING,
         ),
-        Parameter(0, "FORMAT", "Data format", "Format of words source", ParameterType.STRING),
+        Parameter(
+            0, "FORMAT", "Data format", "Format of words source", ParameterType.STRING
+        ),
         Parameter(
             0,
             "DELETE",
@@ -67,9 +69,11 @@ class WordlistUpdaterBot(BaseBot):
 
             source_word_list = load_file(data_url, data_format)
 
-            categories = CoreApi.get_categories(word_list_id)
+            categories = self.core_api.get_categories(word_list_id)
 
-            if not any(category["name"] == word_list_category_name for category in categories):
+            if not any(
+                category["name"] == word_list_category_name for category in categories
+            ):
 
                 name = word_list_category_name
                 description = "Stop word list category created by Updater Bot."
@@ -78,10 +82,14 @@ class WordlistUpdaterBot(BaseBot):
                 category = word_list.WordListCategory(name, description, "", entries)
                 word_list_category_schema = word_list.WordListCategorySchema()
 
-                CoreApi.add_word_list_category(word_list_id, word_list_category_schema.dump(category))
+                self.core_api.add_word_list_category(
+                    word_list_id, word_list_category_schema.dump(category)
+                )
 
             if delete_word_entries == "yes":
-                CoreApi.delete_word_list_category_entries(word_list_id, word_list_category_name)
+                self.core_api.delete_word_list_category_entries(
+                    word_list_id, word_list_category_name
+                )
 
             entries = []
 
@@ -94,7 +102,7 @@ class WordlistUpdaterBot(BaseBot):
                 entries.append(entry)
 
             word_list_entries_schema = word_list.WordListEntrySchema(many=True)
-            CoreApi.update_word_list_category_entries(
+            self.core_api.update_word_list_category_entries(
                 word_list_id,
                 word_list_category_name,
                 word_list_entries_schema.dump(entries),
@@ -105,8 +113,9 @@ class WordlistUpdaterBot(BaseBot):
 
     def execute_on_event(self, preset, event_type, data):
         try:
-            data_url = preset.parameter_values["DATA_URL"]
-            format = preset.parameter_values["FORMAT"]
+            data_url_preset = preset.parameter_values["DATA_URL"]
+            format_preset = preset.parameter_values["FORMAT"]
+            logger.log_debug(data_url_preset + format_preset)
 
         except Exception as error:
             BaseBot.print_exception(preset, error)

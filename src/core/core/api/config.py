@@ -48,9 +48,7 @@ class DictionariesReload(Resource):
 class Attributes(Resource):
     @auth_required("CONFIG_ATTRIBUTE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return attribute.Attribute.get_all_json(search)
 
     @auth_required("CONFIG_ATTRIBUTE_CREATE")
@@ -71,16 +69,12 @@ class Attribute(Resource):
 class AttributeEnums(Resource):
     @auth_required("CONFIG_ATTRIBUTE_ACCESS")
     def get(self, attribute_id):
-        search = None
-        offset = 0
-        limit = 10
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
-        if "offset" in request.args and request.args["offset"]:
-            offset = request.args["offset"]
-        if "limit" in request.args and request.args["limit"]:
-            limit = request.args["limit"]
-        return attribute.AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
+        search = request.args.get(key="search", default=None)
+        offset = request.args.get(key="offset", default=0)
+        limit = request.args.get(key="limit", default=10)
+        return attribute.AttributeEnum.get_for_attribute_json(
+            attribute_id, search, offset, limit
+        )
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
     def post(self, attribute_id):
@@ -100,10 +94,10 @@ class AttributeEnum(Resource):
 class ReportItemTypesConfig(Resource):
     @auth_required("CONFIG_REPORT_TYPE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
-        return report_item_type.ReportItemType.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        search = request.args.get(key="search", default=None)
+        return report_item_type.ReportItemType.get_all_json(
+            search, auth_manager.get_user_from_jwt(), False
+        )
 
     @auth_required("CONFIG_REPORT_TYPE_CREATE")
     def post(self):
@@ -123,10 +117,10 @@ class ReportItemType(Resource):
 class ProductTypes(Resource):
     @auth_required("CONFIG_PRODUCT_TYPE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
-        return product_type.ProductType.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        search = request.args.get(key="search", default=None)
+        return product_type.ProductType.get_all_json(
+            search, auth_manager.get_user_from_jwt(), False
+        )
 
     @auth_required("CONFIG_PRODUCT_TYPE_CREATE")
     def post(self):
@@ -146,9 +140,7 @@ class ProductType(Resource):
 class Permissions(Resource):
     @auth_required("CONFIG_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return Permission.get_all_json(search)
 
 
@@ -166,9 +158,7 @@ class ExternalPermissions(Resource):
 class Roles(Resource):
     @auth_required("CONFIG_ROLE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return role.Role.get_all_json(search)
 
     @auth_required("CONFIG_ROLE_CREATE")
@@ -189,9 +179,7 @@ class Role(Resource):
 class ACLEntries(Resource):
     @auth_required("CONFIG_ACL_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return acl_entry.ACLEntry.get_all_json(search)
 
     @auth_required("CONFIG_ACL_CREATE")
@@ -212,9 +200,7 @@ class ACLEntry(Resource):
 class Organizations(Resource):
     @auth_required("CONFIG_ORGANIZATION_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return organization.Organization.get_all_json(search)
 
     @auth_required("CONFIG_ORGANIZATION_CREATE")
@@ -235,9 +221,7 @@ class Organization(Resource):
 class Users(Resource):
     @auth_required("CONFIG_USER_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return user.User.get_all_json(search)
 
     @auth_required("CONFIG_USER_CREATE")
@@ -246,7 +230,9 @@ class Users(Resource):
             external_auth_manager.create_user(request.json)
         except Exception as ex:
             logger.log_debug(ex)
-            logger.store_data_error_activity(get_user_from_jwt(), "Could not create user in external auth system")
+            logger.store_data_error_activity(
+                get_user_from_jwt(), "Could not create user in external auth system"
+            )
             return "", 400
 
         user.User.add_new(request.json)
@@ -262,7 +248,9 @@ class User(Resource):
             external_auth_manager.update_user(request.json, original_username)
         except Exception as ex:
             logger.log_debug(ex)
-            logger.store_data_error_activity(get_user_from_jwt(), "Could not update user in external auth system")
+            logger.store_data_error_activity(
+                get_user_from_jwt(), "Could not update user in external auth system"
+            )
             return "", 400
 
         user.User.update(user_id, request.json)
@@ -278,29 +266,33 @@ class User(Resource):
             external_auth_manager.delete_user(original_username)
         except Exception as ex:
             logger.log_debug(ex)
-            logger.store_data_error_activity(get_user_from_jwt(), "Could not delete user in external auth system")
+            logger.store_data_error_activity(
+                get_user_from_jwt(), "Could not delete user in external auth system"
+            )
             return "", 400
 
 
 class ExternalUsers(Resource):
     @auth_required("MY_ASSETS_CONFIG")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return user.User.get_all_external_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
     def post(self):
         permissions = auth_manager.get_external_permissions_ids()
-        user.User.add_new_external(auth_manager.get_user_from_jwt(), permissions, request.json)
+        user.User.add_new_external(
+            auth_manager.get_user_from_jwt(), permissions, request.json
+        )
 
 
 class ExternalUser(Resource):
     @auth_required("MY_ASSETS_CONFIG")
     def put(self, user_id):
         permissions = auth_manager.get_external_permissions_ids()
-        user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
+        user.User.update_external(
+            auth_manager.get_user_from_jwt(), permissions, user_id, request.json
+        )
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, user_id):
@@ -310,10 +302,10 @@ class ExternalUser(Resource):
 class WordLists(Resource):
     @auth_required("CONFIG_WORD_LIST_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
-        return word_list.WordList.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        search = request.args.get(key="search", default=None)
+        return word_list.WordList.get_all_json(
+            search, auth_manager.get_user_from_jwt(), False
+        )
 
     @auth_required("CONFIG_WORD_LIST_CREATE")
     def post(self):
@@ -333,9 +325,7 @@ class WordList(Resource):
 class CollectorsNodes(Resource):
     @auth_required("CONFIG_COLLECTORS_NODE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return collectors_node.CollectorsNode.get_all_json(search)
 
     @auth_required("CONFIG_COLLECTORS_NODE_CREATE")
@@ -356,9 +346,7 @@ class CollectorsNode(Resource):
 class OSINTSources(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return osint_source.OSINTSource.get_all_json(search)
 
     @auth_required("CONFIG_OSINT_SOURCE_CREATE")
@@ -369,9 +357,13 @@ class OSINTSources(Resource):
 class OSINTSource(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
     def put(self, source_id):
-        updated_osint_source, default_group = collectors_manager.update_osint_source(source_id, request.json)
+        updated_osint_source, default_group = collectors_manager.update_osint_source(
+            source_id, request.json
+        )
         if default_group is not None:
-            NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
+            NewsItemAggregate.reassign_to_new_groups(
+                updated_osint_source.id, default_group.id
+            )
 
     @auth_required("CONFIG_OSINT_SOURCE_DELETE")
     def delete(self, source_id):
@@ -402,10 +394,10 @@ class OSINTSourcesImport(Resource):
 class OSINTSourceGroups(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
-        return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        search = request.args.get(key="search", default=None)
+        return osint_source.OSINTSourceGroup.get_all_json(
+            search, auth_manager.get_user_from_jwt(), False
+        )
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_CREATE")
     def post(self):
@@ -415,7 +407,9 @@ class OSINTSourceGroups(Resource):
 class OSINTSourceGroup(Resource):
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_UPDATE")
     def put(self, group_id):
-        sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(group_id, request.json)
+        sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(
+            group_id, request.json
+        )
         if sources_in_default_group is not None:
             default_group = osint_source.OSINTSourceGroup.get_default()
             for source in sources_in_default_group:
@@ -431,9 +425,7 @@ class OSINTSourceGroup(Resource):
 class RemoteAccesses(Resource):
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return remote.RemoteAccess.get_all_json(search)
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
@@ -444,7 +436,9 @@ class RemoteAccesses(Resource):
 class RemoteAccess(Resource):
     @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
     def put(self, remote_access_id):
-        event_id, disconnect = remote.RemoteAccess.update(remote_access_id, request.json)
+        event_id, disconnect = remote.RemoteAccess.update(
+            remote_access_id, request.json
+        )
         if disconnect:
             sse_manager.remote_access_disconnect([event_id])
 
@@ -456,9 +450,7 @@ class RemoteAccess(Resource):
 class RemoteNodes(Resource):
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return remote.RemoteNode.get_all_json(search)
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
@@ -487,9 +479,7 @@ class RemoteNodeConnect(Resource):
 class PresentersNodes(Resource):
     @auth_required("CONFIG_PRESENTERS_NODE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return presenters_node.PresentersNode.get_all_json(search)
 
     @auth_required("CONFIG_PRESENTERS_NODE_CREATE")
@@ -510,9 +500,7 @@ class PresentersNode(Resource):
 class PublisherNodes(Resource):
     @auth_required("CONFIG_PUBLISHERS_NODE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return publishers_node.PublishersNode.get_all_json(search)
 
     @auth_required("CONFIG_PUBLISHERS_NODE_CREATE")
@@ -533,9 +521,7 @@ class PublishersNode(Resource):
 class PublisherPresets(Resource):
     @auth_required("CONFIG_PUBLISHER_PRESET_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return publisher_preset.PublisherPreset.get_all_json(search)
 
     @auth_required("CONFIG_PUBLISHER_PRESET_CREATE")
@@ -556,14 +542,12 @@ class PublisherPreset(Resource):
 class BotNodes(Resource):
     @auth_required("CONFIG_BOTS_NODE_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return bots_node.BotsNode.get_all_json(search)
 
     @auth_required("CONFIG_BOTS_NODE_CREATE")
     def post(self):
-        return "", bots_manager.add_bots_node(request.json)
+        return bots_manager.add_bots_node(request.json)
 
 
 class BotsNode(Resource):
@@ -579,9 +563,7 @@ class BotsNode(Resource):
 class BotPresets(Resource):
     @auth_required("CONFIG_BOT_PRESET_ACCESS")
     def get(self):
-        search = None
-        if "search" in request.args and request.args["search"]:
-            search = request.args["search"]
+        search = request.args.get(key="search", default=None)
         return bot_preset.BotPreset.get_all_json(search)
 
     @auth_required("CONFIG_BOT_PRESET_CREATE")
@@ -606,7 +588,9 @@ def initialize(api):
     )
     api.add_resource(Attributes, "/api/v1/config/attributes")
     api.add_resource(Attribute, "/api/v1/config/attributes/<int:attribute_id>")
-    api.add_resource(AttributeEnums, "/api/v1/config/attributes/<int:attribute_id>/enums")
+    api.add_resource(
+        AttributeEnums, "/api/v1/config/attributes/<int:attribute_id>/enums"
+    )
     api.add_resource(
         AttributeEnum,
         "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>",
@@ -644,14 +628,20 @@ def initialize(api):
     api.add_resource(OSINTSourcesExport, "/api/v1/config/export-osint-sources")
     api.add_resource(OSINTSourcesImport, "/api/v1/config/import-osint-sources")
     api.add_resource(OSINTSourceGroups, "/api/v1/config/osint-source-groups")
-    api.add_resource(OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>")
+    api.add_resource(
+        OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>"
+    )
 
     api.add_resource(RemoteAccesses, "/api/v1/config/remote-accesses")
-    api.add_resource(RemoteAccess, "/api/v1/config/remote-accesses/<int:remote_access_id>")
+    api.add_resource(
+        RemoteAccess, "/api/v1/config/remote-accesses/<int:remote_access_id>"
+    )
 
     api.add_resource(RemoteNodes, "/api/v1/config/remote-nodes")
     api.add_resource(RemoteNode, "/api/v1/config/remote-nodes/<int:remote_node_id>")
-    api.add_resource(RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
+    api.add_resource(
+        RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect"
+    )
 
     api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes")
     api.add_resource(PresentersNode, "/api/v1/config/presenters-nodes/<string:node_id>")
@@ -660,7 +650,9 @@ def initialize(api):
     api.add_resource(PublishersNode, "/api/v1/config/publishers-nodes/<string:node_id>")
 
     api.add_resource(PublisherPresets, "/api/v1/config/publishers-presets")
-    api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>")
+    api.add_resource(
+        PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>"
+    )
 
     api.add_resource(BotNodes, "/api/v1/config/bots-nodes")
     api.add_resource(BotsNode, "/api/v1/config/bots-nodes/<string:node_id>")

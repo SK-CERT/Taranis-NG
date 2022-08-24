@@ -1,13 +1,13 @@
 from flask_restful import Resource
 
-from bots.managers import bots_manager
+from bots.managers.bots_manager import get_registered_bots_info
 from bots.managers.auth_manager import api_key_required
 
 
 class Bots(Resource):
     @api_key_required
     def get(self):
-        return bots_manager.get_registered_bots_info()
+        return get_registered_bots_info()
 
 
 def initialize(api):

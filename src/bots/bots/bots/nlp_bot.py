@@ -1,6 +1,5 @@
 from .base_bot import BaseBot
 from bots.schema.parameter import Parameter, ParameterType
-from bots.remote.core_api import CoreApi
 from bots.managers.log_manager import logger
 import datetime
 from keybert import KeyBERT
@@ -45,7 +44,7 @@ class NLPBot(BaseBot):
             limit = datetime.datetime.now() - datetime.timedelta(weeks=12)
             logger.log_debug(f"LIMIT: {limit}")
 
-            data, status = CoreApi.get_news_items_aggregate(source_group, limit)
+            data, status = self.core_api.get_news_items_aggregate(source_group, limit)
             if status != 200:
                 logger.log_error(f"Error getting news items: {status}")
                 return
@@ -59,12 +58,14 @@ class NLPBot(BaseBot):
                 for news_item in aggregate["news_items"]:
                     content = news_item["news_item_data"]["content"]
 
-                    findings[news_item["id"]] = self.generateKeywords(language, kw_model, content)
+                    findings[news_item["id"]] = self.generateKeywords(
+                        language, kw_model, content
+                    )
 
                 for news_id, keywords in findings.items():
                     keyword = [i[0] for i in keywords]
                     logger.log_debug(f"news_id: {news_id}, keyword: {keyword}")
-                    CoreApi.update_news_item_tags(news_id, keyword)
+                    self.core_api.update_news_item_tags(news_id, keyword)
 
         except Exception as error:
             BaseBot.print_exception(preset, error)

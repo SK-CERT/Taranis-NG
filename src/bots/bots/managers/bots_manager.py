@@ -1,16 +1,26 @@
 import bots.bots as bots
 
+
 bots_dict = {}
 
 
-def initialize():
-    for bot in bots.bot_list:
-        register_bot(bot)
+def initialize(core_api):
+    global bots_dict
 
-
-def register_bot(bot):
+    bot = bots.analyst_bot.AnalystBot(core_api)
     bots_dict[bot.type] = bot
-    bot.initialize()
+
+    bot = bots.grouping_bot.GroupingBot(core_api)
+    bots_dict[bot.type] = bot
+
+    bot = bots.wordlist_updater_bot.WordlistUpdaterBot(core_api)
+    bots_dict[bot.type] = bot
+
+    bot = bots.tagging_bot.TaggingBot(core_api)
+    bots_dict[bot.type] = bot
+
+    bot = bots.nlp_bot.NLPBot(core_api)
+    bots_dict[bot.type] = bot
 
 
 def get_registered_bots_info():

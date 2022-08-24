@@ -1,129 +1,117 @@
-import os
 import json
 import requests
 from bots.managers.log_manager import logger
 
 
 class CoreApi:
-    api_url = os.getenv("TARANIS_NG_CORE_URL")
-    if api_url.endswith("/"):
-        api_url = api_url[:-1]
-    api_key = os.getenv("API_KEY")
-    headers = {"Authorization": "Bearer " + api_key}
+    def __init__(self, app):
+        self.api_url = app.config.get("TARANIS_NG_CORE_URL")
+        self.api_key = app.config.get("API_KEY")
+        self.headers = {"Authorization": f"Bearer {self.api_key}"}
 
-    @classmethod
-    def get_bots_presets(cls, bot_type):
+    def get_bots_presets(self, bot_type):
         try:
             response = requests.post(
-                f"{cls.api_url}/api/v1/bots/bots-presets",
-                json={"api_key": cls.api_key, "bot_type": bot_type},
-                headers=cls.headers,
+                f"{self.api_url}/api/v1/bots/bots-presets",
+                json={"api_key": self.api_key, "bot_type": bot_type},
+                headers=self.headers,
             )
             return response.json(), response.status_code
         except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError):
             return {}, 503
 
-    @classmethod
-    def get_news_items_data(cls, limit):
+    def get_news_items_data(self, limit):
         try:
             response = requests.get(
-                f"{cls.api_url}/api/v1/bots/news-item-data?limit={limit}",
-                headers=cls.headers,
+                f"{self.api_url}/api/v1/bots/news-item-data?limit={limit}",
+                headers=self.headers,
             )
             return response.json()
         except Exception:
             return None, 400
 
-    @classmethod
-    def update_news_item_attributes(cls, id, attributes):
+    def update_news_item_attributes(self, id, attributes):
         try:
             response = requests.put(
-                f"{cls.api_url}/api/v1/bots/news-item-data/{id}/attributes",
+                f"{self.api_url}/api/v1/bots/news-item-data/{id}/attributes",
                 json=attributes,
-                headers=cls.headers,
+                headers=self.headers,
             )
             return response.status_code
         except Exception:
             return None, 400
 
-    @classmethod
-    def update_news_item_tags(cls, id, tags):
+    def update_news_item_tags(self, id, tags):
         try:
             response = requests.put(
-                f"{cls.api_url}/api/v1/bots/news-item-data/{id}/tags",
+                f"{self.api_url}/api/v1/bots/news-item-data/{id}/tags",
                 json=tags,
-                headers=cls.headers,
+                headers=self.headers,
             )
             return response.status_code
         except Exception:
             logger.log_debug_trace("update_news_item_tags failed")
             return None, 400
 
-    @classmethod
-    def delete_word_list_category_entries(cls, id, name):
+    def delete_word_list_category_entries(self, id, name):
         try:
             response = requests.delete(
-                f"{cls.api_url}/api/v1/bots/word-list-categories/{id}/entries/{name}",
-                headers=cls.headers,
+                f"{self.api_url}/api/v1/bots/word-list-categories/{id}/entries/{name}",
+                headers=self.headers,
             )
             return response.status_code
         except Exception:
             return None, 400
 
-    @classmethod
-    def update_word_list_category_entries(cls, id, name, entries):
+    def update_word_list_category_entries(self, id, name, entries):
         try:
             response = requests.put(
-                f"{cls.api_url}/api/v1/bots/word-list-categories/{id}/entries/{name}",
+                f"{self.api_url}/api/v1/bots/word-list-categories/{id}/entries/{name}",
                 json=entries,
-                headers=cls.headers,
+                headers=self.headers,
             )
             return response.status_code
         except Exception:
             return None, 400
 
-    @classmethod
-    def get_categories(cls, id):
+    def get_categories(self, id):
         try:
             response = requests.get(
-                f"{cls.api_url}/api/v1/bots/word-list-categories/{id}",
-                headers=cls.headers,
+                f"{self.api_url}/api/v1/bots/word-list-categories/{id}",
+                headers=self.headers,
             )
             return response.json()
         except Exception:
             return None, 400
 
-    @classmethod
-    def add_word_list_category(cls, id, category):
+    def add_word_list_category(self, id, category):
         try:
             response = requests.put(
-                f"{cls.api_url}/api/v1/bots/word-list-categories/{id}",
+                f"{self.api_url}/api/v1/bots/word-list-categories/{id}",
                 json=category,
-                headers=cls.headers,
+                headers=self.headers,
             )
             return response.status_code
         except Exception:
             return None, 400
 
-    @classmethod
-    def get_news_items_aggregate(cls, source_group, limit):
+    def get_news_items_aggregate(self, source_group, limit):
         try:
             response = requests.get(
-                f"{cls.api_url}/api/v1/bots/news-item-aggregates-by-group/{source_group}",
-                headers=cls.headers,
+                f"{self.api_url}/api/v1/bots/news-item-aggregates-by-group/{source_group}",
+                headers=self.headers,
             )
             return response.json(), response.status_code
         except Exception:
             logger.log_debug_trace("get_news_items_aggregate failed")
             return None, 400
 
-    @classmethod
-    def news_items_grouping(cls, data):
+    def news_items_grouping(self, data):
         try:
             response = requests.put(
-                f"{cls.api_url}/api/v1/bots/news-item-aggregates-group-action",
+                f"{self.api_url}/api/v1/bots/news-item-aggregates-group-action",
                 json=data,
-                headers=cls.headers,
+                headers=self.headers,
             )
             return response.status_code
         except Exception:
