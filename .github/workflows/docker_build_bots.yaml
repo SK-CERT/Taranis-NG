@@ -1,4 +1,4 @@
-name: CI/CD Bots
+name: CI Bots
 
 on:
   push:
