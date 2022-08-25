@@ -2,14 +2,12 @@ import os
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
-import jwt
 from flask import request
 from flask_jwt_extended import (
     JWTManager,
-    get_jwt_claims,
+    get_jwt,
     get_jwt_identity,
     verify_jwt_in_request,
-    get_raw_jwt,
 )
 from flask_jwt_extended.exceptions import JWTExtendedException
 
@@ -27,10 +25,11 @@ from core.model.remote import RemoteAccess
 from core.model.report_item import ReportItem
 from core.model.token_blacklist import TokenBlacklist
 from core.model.user import User
+from core.config import Config
 
 current_authenticator = None
 
-api_key = os.getenv("API_KEY")
+api_key = Config.API_KEY
 
 
 def cleanup_token_blacklist(app):
@@ -111,12 +110,9 @@ def check_acl(item_id, acl_check, user):
 
     if not allowed:
         if check_access:
-            logger.store_user_auth_error_activity(user, "Unauthorized access attempt to {}: {}".format(item_type, item_id))
+            logger.store_user_auth_error_activity(user, f"Unauthorized access attempt to {item_type}: {item_id}")
         else:
-            logger.store_user_auth_error_activity(
-                user,
-                "Unauthorized modification attempt to {}: {}".format(item_type, item_id),
-            )
+            logger.store_user_auth_error_activity(user, f"Unauthorized modification attempt to {item_type}: {item_id}")
 
     return allowed
 
@@ -162,13 +158,13 @@ def auth_required(permissions, *acl_args):
             # does it encode an identity?
             identity = get_jwt_identity()
             if not identity:
-                logger.store_auth_error_activity("Missing identity in JWT: " + get_raw_jwt())
+                logger.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
                 return error
 
             user = User.find(identity)
 
             # does it include permissions?
-            claims = get_jwt_claims()
+            claims = get_jwt()
             if not claims or "permissions" not in claims:
                 logger.store_user_auth_error_activity(user, "Missing permissions in JWT for identity: {}".format(identity))
                 return error
@@ -182,7 +178,7 @@ def auth_required(permissions, *acl_args):
                 return error
 
             # if the object does have an ACL, do we match it?
-            if len(acl_args) > 0 and not check_acl(kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user):
+            if acl_args and not check_acl(kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user):
                 logger.store_user_auth_error_activity(
                     user,
                     "Access denied by ACL in JWT for identity: {}".format(identity),
@@ -264,12 +260,12 @@ def jwt_required(fn):
 
         identity = get_jwt_identity()
         if not identity:
-            logger.store_auth_error_activity("Missing identity in JWT: {}".format(get_raw_jwt()))
+            logger.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
             return {"error": "authorization failed"}, 401
 
         user = User.find(identity)
         if user is None:
-            logger.store_auth_error_activity("Unknown identity: {}".format(identity))
+            logger.store_auth_error_activity(f"Unknown identity: {identity}")
             return {"error": "authorization failed"}, 401
 
         logger.store_user_activity(user, "API_ACCESS", "Access permitted")
@@ -287,18 +283,9 @@ def get_user_from_jwt():
         verify_jwt_in_request()
     except JWTExtendedException:
         return None
-
     identity = get_jwt_identity()
-    if not identity:
-        return None
 
-    return User.find(identity)
-
-
-def decode_user_from_jwt(jwt_token):
-    decoded = jwt.decode(jwt_token, os.getenv("JWT_SECRET_KEY"))
-    if decoded is not None:
-        return User.find(decoded["sub"])
+    return User.find(identity) if identity else None
 
 
 def get_external_permissions_ids():

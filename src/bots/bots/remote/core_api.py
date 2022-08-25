@@ -1,7 +1,7 @@
 import json
 import requests
 from bots.managers.log_manager import logger
-from collectors.config import Config
+from bots.config import Config
 
 
 class CoreApi:

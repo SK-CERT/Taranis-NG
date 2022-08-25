@@ -5,9 +5,11 @@ import logging.handlers
 import traceback
 import sys
 
+from collectors.config import Config
+
 
 class Logger:
-    module_id = os.environ.get("MODULE_ID", "Collectors")
+    module_id = Config.MODULE_ID
 
     def __init__(self):
         stream_handler = logging.StreamHandler(stream=sys.stdout)

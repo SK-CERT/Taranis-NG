@@ -1,5 +1,1 @@
-from collectors.__init__ import app
-
-
-def create_app():
-    return app
+from collectors.__init__ import create_app  # noqa

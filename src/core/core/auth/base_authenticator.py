@@ -41,7 +41,7 @@ class BaseAuthenticator:
             logger.store_user_activity(user, "LOGIN", "Successful")
             access_token = create_access_token(
                 identity=user.username,
-                user_claims={
+                additional_claims={
                     "id": user.id,
                     "name": user.name,
                     "organization_name": user.get_current_organization_name(),

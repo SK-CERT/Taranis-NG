@@ -13,6 +13,3 @@ def create_app():
         managers.api_manager.initialize(app)
         managers.bots_manager.initialize()
     return app
-
-
-app = create_app()

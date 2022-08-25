@@ -14,3 +14,11 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def session(client):
+    with client.session_transaction() as session:
+        session["cookie"] = {}
+
+    return session

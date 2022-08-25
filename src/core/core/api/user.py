@@ -47,14 +47,6 @@ class UserSetup(Resource):
             return {"User setup complete"}
         return {"Initial user setup required"}
 
-    def post(self):
-        if auth_manager.current_authenticator.get_authenticator_name() != "TestAuthenticator":
-            return
-        if User.get_all_json()["total_count"] > 0:
-            return
-        User.first_user_setup()
-        return
-
 
 def initialize(api):
     api.add_resource(UserProfile, "/api/v1/users/my-profile")

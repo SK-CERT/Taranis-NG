@@ -1,39 +1,45 @@
-import os
-from dotenv import load_dotenv
+from pydantic import BaseSettings
+from typing import Optional
 
 
-class Config(object):
-    load_dotenv()
-    REDIS_URL = os.getenv("REDIS_URL")
+class Settings(BaseSettings):
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
-    DB_URL = os.getenv("DB_URL")
-    DB_DATABASE = os.getenv("DB_DATABASE")
-    DB_USER = os.getenv("DB_USER")
-    DB_PASSWORD = os.getenv("DB_PASSWORD")
+    API_KEY: str
+    MODULE_ID: str = "Core"
+    DEBUG: bool = False
+    SECRET_KEY: str
 
-    SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", False)
-    SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_URL}/{DB_DATABASE}"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JWT_IDENTITY_CLAIM: str = "sub"
+    JWT_ACCESS_TOKEN_EXPIRES: int = 14400
+    REDIS_URL: str = "redis://localhost"
 
-    if "DB_POOL_SIZE" in os.environ:
-        DB_POOL_SIZE = os.getenv("DB_POOL_SIZE")
-        DB_POOL_RECYCLE = os.getenv("DB_POOL_RECYCLE")
-        DB_POOL_TIMEOUT = os.getenv("DB_POOL_TIMEOUT")
+    DB_URL: str = "localhost"
+    DB_DATABASE: str = "taranis"
+    DB_USER: str = "taranis"
+    DB_PASSWORD: str = "supersecret"
+    SQLALCHEMY_SCHEMA: str = "postgresql+psycopg2"
+    SQLALCHEMY_ECHO: bool = False
+    SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+    SQLALCHEMY_DATABASE_URI: str = f"{SQLALCHEMY_SCHEMA}://{DB_USER}:{DB_PASSWORD}@{DB_URL}/{DB_DATABASE}"
 
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            "pool_size": int(DB_POOL_SIZE),
-            "pool_recycle": int(DB_POOL_RECYCLE),
-            "pool_pre_ping": True,
-            "pool_timeout": int(DB_POOL_TIMEOUT),
-        }
+    # if "postgresql" in SQLALCHEMY_DATABASE_URI:
+    #     DB_POOL_SIZE: int = 10
+    #     DB_POOL_RECYCLE: int = 300
+    #     DB_POOL_TIMEOUT: int = 5
 
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_IDENTITY_CLAIM = "sub"
-    JWT_ACCESS_TOKEN_EXPIRES = 14400
-    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+    #     SQLALCHEMY_ENGINE_OPTIONS: dict = {
+    #         "pool_size": DB_POOL_SIZE,
+    #         "pool_recycle": DB_POOL_RECYCLE,
+    #         "pool_pre_ping": True,
+    #         "pool_timeout": DB_POOL_TIMEOUT,
+    #     }
 
-    SECRET_KEY = "OKdbmczZKFiteHVgKXiwFXZxKsLyRNvt"
+    OPENID_CLIENT_ID: Optional[str]
+    OPENID_CLIENT_SECRET: Optional[str]
+    OPENID_METADAT_URL: str = "http://keycloak/realms/master/.well-known/openid-configuration"
 
-    OPENID_CLIENT_ID = os.getenv("OPENID_CLIENT_ID")
-    OPENID_CLIENT_SECRET = os.getenv("OPENID_CLIENT_SECRET")
-    OPENID_METADAT_URL = "http://keycloak/realms/master/.well-known/openid-configuration"
+
+Config = Settings()

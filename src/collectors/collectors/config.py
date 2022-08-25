@@ -1,13 +1,18 @@
-import os
-from dotenv import load_dotenv
+from typing import List
+from pydantic import BaseSettings
 
 
-class Config(object):
-    load_dotenv()
-    API_KEY = os.getenv("API_KEY")
-    SSL_VERIFICATION = os.getenv("SSL_VERIFICATION", False)
-    TARANIS_NG_CORE_URL = os.getenv("TARANIS_NG_CORE_URL", "http://taranis")
-    MODULE_ID = os.getenv("MODULE_ID", "Collectors")
-    COLLECTOR_CONFIG_FILE = os.getenv("COLLECTOR_CONFIG_FILE")
-    CORE_STATUS_UPDATE_INTERVAL = os.getenv("CORE_STATUS_UPDATE_INTERVAL", 120)
-    COLLECTOR_LOADABLE_COLLECTORS = os.getenv("COLLECTOR_LOADABLE_COLLECTORS", default="RSS,Email,Slack,Twitter,Web,Atom,Manual").split(",")
+class Settings(BaseSettings):
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+    API_KEY: str
+    SSL_VERIFICATION: bool = False
+    TARANIS_NG_CORE_URL: str = "http://taranis"
+    MODULE_ID: str = "Collectors"
+    COLLECTOR_CONFIG_FILE: str
+    COLLECTOR_LOADABLE_COLLECTORS: List[str] = ["RSS", "Email", "Slack", "Twitter", "Web", "Atom", "Manual"]
+
+
+Config = Settings()

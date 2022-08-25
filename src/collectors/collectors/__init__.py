@@ -15,6 +15,3 @@ def create_app():
         collectors_manager.initialize()
 
     return app
-
-
-app = create_app()

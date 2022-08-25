@@ -465,6 +465,8 @@ def pre_seed_permissions():
 
 def pre_seed_roles():
     from core.model.role import Role
+    from core.model.user import User  # noqa
+    from core.model.organization import Organization  # noqa
     from core.model.permission import Permission
 
     if not db.session.query(Role).filter_by(name="Admin").first():

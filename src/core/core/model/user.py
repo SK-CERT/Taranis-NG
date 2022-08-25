@@ -204,29 +204,6 @@ class User(db.Model):
 
         return cls.get_profile_json(user)
 
-    @classmethod
-    def first_user_setup(cls):
-        role = Role.filter_by(name="Admin").first()
-        if not role:
-            role = Role.add_new(
-                {
-                    "name": "Admin",
-                    "description": "Administrator role",
-                    "persimssions": Permission.get_all(),
-                }
-            )
-        cls.add_new(
-            {
-                "id": -1,
-                "username": "admin",
-                "name": "Administrator",
-                "roles": [role],
-                "permissions": [],
-                "organizations": [],
-                "password": "admin",
-            }
-        )
-
 
 class UserOrganization(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)

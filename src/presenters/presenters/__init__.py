@@ -14,6 +14,3 @@ def create_app():
         api_manager.initialize(app)
         presenters_manager.initialize()
     return app
-
-
-app = create_app()

@@ -1,5 +1,5 @@
 from os import environ
-import jwt
+from flask_jwt_extended import get_jwt
 from flask_restful import request
 from requests import post
 from requests.auth import HTTPBasicAuth
@@ -44,7 +44,8 @@ class KeycloakAuthenticator(BaseAuthenticator):
 
         try:
             # decode token to get user data
-            data = jwt.decode(data["access_token"], verify=False)
+            data = get_jwt()["access_token"]
+            user = auth_manager.get_user_from_jwt()
         except Exception:
             logger.store_auth_error_activity("Keycloak returned invalid access_token.")
             return {"error": "Internal server error"}, 500

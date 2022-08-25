@@ -31,6 +31,3 @@ def create_app():
         # import test
 
     return app
-
-
-app = create_app()

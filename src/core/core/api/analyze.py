@@ -190,43 +190,40 @@ class ReportItemRemoveAttachment(Resource):
 
 class ReportItemDownloadAttachment(Resource):
     def get(self, report_item_id, attribute_id):
-        if "jwt" in request.args:
-            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
-            if user is not None:
-                permissions = user.get_permissions()
-                if "ANALYZE_ACCESS" in permissions:
-                    report_item_attribute = report_item.ReportItemAttribute.find(attribute_id)
-                    if (
-                        report_item_attribute is not None
-                        and report_item_attribute.report_item.id == report_item_id
-                        and report_item.ReportItem.allowed_with_acl(
-                            report_item_attribute.report_item.id,
-                            user,
-                            False,
-                            True,
-                            False,
-                        )
-                    ):
-                        logger.store_user_activity(
-                            user,
-                            "ANALYZE_ACCESS",
-                            str({"file": report_item_attribute.value}),
-                        )
+        user = auth_manager.get_user_from_jwt()
+        if user is not None:
+            permissions = user.get_permissions()
+            if "ANALYZE_ACCESS" in permissions:
+                report_item_attribute = report_item.ReportItemAttribute.find(attribute_id)
+                if (
+                    report_item_attribute is not None
+                    and report_item_attribute.report_item.id == report_item_id
+                    and report_item.ReportItem.allowed_with_acl(
+                        report_item_attribute.report_item.id,
+                        user,
+                        False,
+                        True,
+                        False,
+                    )
+                ):
+                    logger.store_user_activity(
+                        user,
+                        "ANALYZE_ACCESS",
+                        str({"file": report_item_attribute.value}),
+                    )
 
-                        return send_file(
-                            io.BytesIO(report_item_attribute.binary_data),
-                            attachment_filename=report_item_attribute.value,
-                            mimetype=report_item_attribute.binary_mime_type,
-                            as_attachment=True,
-                        )
-                    else:
-                        logger.store_auth_error_activity("Unauthorized access attempt to Report Item Attribute")
+                    return send_file(
+                        io.BytesIO(report_item_attribute.binary_data),
+                        attachment_filename=report_item_attribute.value,
+                        mimetype=report_item_attribute.binary_mime_type,
+                        as_attachment=True,
+                    )
                 else:
-                    logger.store_auth_error_activity("Insufficient permissions")
+                    logger.store_auth_error_activity("Unauthorized access attempt to Report Item Attribute")
             else:
-                logger.store_auth_error_activity("Invalid JWT")
+                logger.store_auth_error_activity("Insufficient permissions")
         else:
-            logger.store_auth_error_activity("Missing JWT")
+            logger.store_auth_error_activity("Invalid JWT")
 
 
 def initialize(api):

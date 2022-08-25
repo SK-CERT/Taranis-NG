@@ -1,5 +1,1 @@
-from bots.__init__ import app
-
-
-def create_app():
-    return app
+from bots.__init__ import create_app  # noqa

@@ -1,8 +1,8 @@
 import re
 
 from .base_bot import BaseBot
-from bots.schema import news_item
-from bots.schema.parameter import Parameter, ParameterType
+from core.schema import news_item
+from core.schema.parameter import Parameter, ParameterType
 from bots.managers.log_manager import logger
 
 

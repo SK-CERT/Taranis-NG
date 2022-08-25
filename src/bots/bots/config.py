@@ -1,10 +1,16 @@
-import os
-from dotenv import load_dotenv
+from pydantic import BaseSettings
 
 
-class Config:
-    load_dotenv()
-    API_KEY = os.getenv("API_KEY")
-    SSL_VERIFICATION = os.getenv("SSL_VERIFICATION", False)
-    TARANIS_NG_CORE_URL = os.getenv("TARANIS_NG_CORE_URL", "http://taranis")
-    MODULE_ID = os.getenv("MODULE_ID", "Bots")
+class Settings(BaseSettings):
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+    API_KEY: str
+    SSL_VERIFICATION: bool = False
+    TARANIS_NG_CORE_URL: str = "http://taranis"
+    MODULE_ID: str = "Bots"
+    # BOTS_LOADABLE_BOTS: List[str] = ["Analyst", "Grouping", "NLP", "Tagging", "Wordlist"]
+
+
+Config = Settings()
