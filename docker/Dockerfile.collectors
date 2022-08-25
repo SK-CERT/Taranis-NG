@@ -37,7 +37,7 @@ RUN \
     libxslt-dev \
     libxml2-dev \
     libffi-dev && \
-    pip install --no-cache-dir -r /app/requirements.txt && \
+    pip install -e /app/ && \
     apk --purge del .build-deps
 
 COPY ./docker/entrypoint.sh /entrypoint.sh
