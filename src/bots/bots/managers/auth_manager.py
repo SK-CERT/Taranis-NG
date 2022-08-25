@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import request
 import ssl
-from collectors.config import Config
+from bots.config import Config
 
 
 def initialize(app):

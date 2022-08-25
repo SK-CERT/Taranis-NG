@@ -1,4 +1,4 @@
-name: CI Publishers
+name: CI_Publishers
 
 on:
   push:

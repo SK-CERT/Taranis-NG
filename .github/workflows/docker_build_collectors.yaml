@@ -1,4 +1,4 @@
-name: CI Collectors
+name: CI_Collectors
 
 on:
   push:

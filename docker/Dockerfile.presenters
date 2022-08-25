@@ -17,7 +17,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
     libfreetype6 && \
     fc-cache -f
 
-COPY ./src/presenters/requirements.txt /app/requirements.txt
+COPY ./src/presenters/setup.cfg ./src/presenters/setup.py /app/
 
 RUN apt-get install --no-install-recommends -y \
       build-essential \
@@ -31,17 +31,15 @@ COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
-
 COPY ./src/presenters/. /app/
 
 EXPOSE 80
 
 # setup environment variables
 ENV PYTHONPATH=/app
-ENV MODULE_NAME run
-ENV VARIABLE_NAME app
+ENV APP_MODULE run:app
 ENV GUNICORN_CMD_ARGS --timeout 120
-ENV WORKERS_PER_CORE 8
+ENV WORKERS_PER_CORE 4
 
 VOLUME ["/app/templates"]
 
