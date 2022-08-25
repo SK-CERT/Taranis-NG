@@ -9,12 +9,12 @@ from core.model.user import User
 
 
 class UserProfile(Resource):
-    @jwt_required
+    @jwt_required()
     def get(self):
         user = auth_manager.get_user_from_jwt()
         return User.get_profile_json(user)
 
-    @jwt_required
+    @jwt_required()
     def put(self):
         user = auth_manager.get_user_from_jwt()
         return User.update_profile(user, request.json)

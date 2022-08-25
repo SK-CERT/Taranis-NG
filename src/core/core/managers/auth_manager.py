@@ -248,30 +248,30 @@ def access_key_required(fn):
     return wrapper
 
 
-def jwt_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
+# def jwt_required(fn):
+#     @wraps(fn)
+#     def wrapper(*args, **kwargs):
 
-        try:
-            verify_jwt_in_request()
-        except JWTExtendedException:
-            logger.store_auth_error_activity("Missing JWT")
-            return {"error": "authorization required"}, 401
+#         try:
+#             verify_jwt_in_request()
+#         except JWTExtendedException:
+#             logger.store_auth_error_activity("Missing JWT")
+#             return {"error": "authorization required"}, 401
 
-        identity = get_jwt_identity()
-        if not identity:
-            logger.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
-            return {"error": "authorization failed"}, 401
+#         identity = get_jwt_identity()
+#         if not identity:
+#             logger.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
+#             return {"error": "authorization failed"}, 401
 
-        user = User.find(identity)
-        if user is None:
-            logger.store_auth_error_activity(f"Unknown identity: {identity}")
-            return {"error": "authorization failed"}, 401
+#         user = User.find(identity)
+#         if user is None:
+#             logger.store_auth_error_activity(f"Unknown identity: {identity}")
+#             return {"error": "authorization failed"}, 401
 
-        logger.store_user_activity(user, "API_ACCESS", "Access permitted")
-        return fn(*args, **kwargs)
+#         logger.store_user_activity(user, "API_ACCESS", "Access permitted")
+#         return fn(*args, **kwargs)
 
-    return wrapper
+#     return wrapper
 
 
 def get_access_key():
@@ -284,6 +284,7 @@ def get_user_from_jwt():
     except JWTExtendedException:
         return None
     identity = get_jwt_identity()
+    logger.log_debug(identity)
 
     return User.find(identity) if identity else None
 

@@ -7,9 +7,11 @@ import logging
 import traceback
 from flask import request
 
+from core.config import Config
+
 
 class Logger:
-    module_id = os.environ.get("MODULE_ID", None)
+    module_id = Config.MODULE_ID
 
     def __init__(self):
         stream_handler = logging.StreamHandler(stream=sys.stdout)

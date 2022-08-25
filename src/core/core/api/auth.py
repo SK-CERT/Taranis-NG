@@ -1,11 +1,12 @@
 import urllib
 from flask import redirect, make_response
 from flask_restful import Resource, reqparse, request, ResponseBase
+from flask_jwt_extended import jwt_required
 
 from core.config import Config
 from core.managers import auth_manager
 from core.managers.log_manager import logger
-from core.managers.auth_manager import no_auth, jwt_required
+from core.managers.auth_manager import no_auth
 
 
 class Login(Resource):
@@ -29,7 +30,7 @@ class Login(Resource):
 
 
 class Refresh(Resource):
-    @jwt_required
+    @jwt_required()
     def get(self):
         return auth_manager.refresh(auth_manager.get_user_from_jwt())
 

@@ -10,7 +10,7 @@ from core.model.tag_cloud import TagCloud
 
 
 class Dashboard(Resource):
-    @jwt_required
+    @jwt_required()
     def get(self):
 
         try:

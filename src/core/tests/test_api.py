@@ -18,6 +18,11 @@ def test_auth_logout(client):
     assert response.status_code == 200
 
 
+def test_user_profile(client):
+    response = client.get("/api/v1/users/my-profile", headers={"Authorization": "Bearer test_key"})
+    assert response.status_code == 200
+
+
 # def test_auth_login(client):
 #     response = client.get("/api/v1/publishers", headers={"Authorization": "Bearer test_key"})
 #     response_json = response.json
