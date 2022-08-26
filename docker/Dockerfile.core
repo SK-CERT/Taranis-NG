@@ -7,7 +7,7 @@ RUN python -m pip install --upgrade pip
 
 # install common packages
 RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
-    libpq5 \
+    libpq-dev \
     curl \
     openssl
 
