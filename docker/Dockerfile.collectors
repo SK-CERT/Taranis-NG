@@ -15,7 +15,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
     chromium-driver \
     xvfb \
     dbus-x11 \
-    font-noto \
+    fonts-noto \
     libfreetype6 \
     tar && \
     curl -fsSL https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz | \
