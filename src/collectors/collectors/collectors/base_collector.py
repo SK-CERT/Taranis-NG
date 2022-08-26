@@ -8,8 +8,8 @@ import re
 from collectors.managers import time_manager
 from collectors.managers.log_manager import logger
 from collectors.remote.core_api import CoreApi
-from collectors.schema import collector, osint_source, news_item
-from collectors.schema.parameter import Parameter, ParameterType
+from core.schema import collector, osint_source, news_item
+from core.schema.parameter import Parameter, ParameterType
 
 
 class BaseCollector:
@@ -202,6 +202,3 @@ class BaseCollector:
                     source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
         except Exception:
             logger.log_debug_trace()
-
-    def initialize(self):
-        self.refresh()

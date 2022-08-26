@@ -12,8 +12,8 @@ import dateparser
 
 from .base_collector import BaseCollector
 from collectors.managers import log_manager
-from collectors.schema.news_item import NewsItemData
-from collectors.schema.parameter import Parameter, ParameterType
+from core.schema.news_item import NewsItemData
+from core.schema.parameter import Parameter, ParameterType
 
 
 class RSSCollector(BaseCollector):

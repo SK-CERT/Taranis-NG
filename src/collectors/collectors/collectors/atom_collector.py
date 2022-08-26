@@ -7,8 +7,8 @@ from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
 from .base_collector import BaseCollector
-from collectors.schema.news_item import NewsItemData
-from collectors.schema.parameter import Parameter, ParameterType
+from core.schema.news_item import NewsItemData
+from core.schema.parameter import Parameter, ParameterType
 
 
 class AtomCollector(BaseCollector):

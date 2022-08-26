@@ -15,6 +15,10 @@ class Collectors(Resource):
             return collectors_manager.get_registered_collectors_info()
         return "", 400
 
+    @api_key_required
+    def get(self):
+        return collectors_manager.get_registered_collectors_info()
+
 
 class Collector(Resource):
     @api_key_required

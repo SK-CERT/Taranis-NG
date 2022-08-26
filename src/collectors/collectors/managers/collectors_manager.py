@@ -42,14 +42,6 @@ def initialize():
 def register_collector(collector):
     collectors[collector.type] = collector
 
-    class InitializeThread(threading.Thread):
-        @classmethod
-        def run(cls):
-            collector.initialize()
-
-    initialize_thread = InitializeThread()
-    initialize_thread.start()
-
 
 def refresh_collector(collector_type):
     if collector_type not in collectors:
