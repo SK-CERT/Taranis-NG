@@ -13,7 +13,37 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  test:
+  name: pytest
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v2
+    - name: test
+      working-directory: src/core
+      run: |
+        python -m pip install --upgrade pytest
+        pytest
+
+  build_wheel:
+    name: build wheel
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          python -m build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        # if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/taranis_ng_core-*.whl
+            dist/taranis_ng_core-*.tar.gz
+
+
+  build_docker:
     name: build docker
     runs-on: ubuntu-latest
     steps:

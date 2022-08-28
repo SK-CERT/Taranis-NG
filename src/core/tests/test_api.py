@@ -8,7 +8,7 @@ def test_is_alive_fail(client):
     assert b'"isalive": false' not in response.data
 
 
-def test_auth_login(client):
+def test_auth_login_fail(client):
     response = client.get("/api/v1/auth/login")
     assert response.status_code == 401
 
@@ -18,16 +18,18 @@ def test_auth_logout(client):
     assert response.status_code == 200
 
 
-def test_user_profile(client):
-    response = client.get("/api/v1/users/my-profile", headers={"Authorization": "Bearer test_key"})
+def test_auth_login(client):
+    body = {"username": "admin", "password": "admin"}
+    response = client.post("/api/v1/auth/login", json=body)
     assert response.status_code == 200
 
 
-# def test_auth_login(client):
-#     response = client.get("/api/v1/publishers", headers={"Authorization": "Bearer test_key"})
-#     response_json = response.json
-#     from publishers.managers.publishers_manager import publishers
+def test_access_token(access_token):
+    assert access_token is not None
 
-#     for i, key in enumerate(publishers):
-#         assert response_json[i]["type"] == key
+
+# def test_user_profile(client, auth_header):
+#     response = client.get("/api/v1/users/my-profile", headers=auth_header)
+#     assert response.json
+#     assert response.data
 #     assert response.status_code == 200

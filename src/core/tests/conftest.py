@@ -17,8 +17,23 @@ def client(app):
 
 
 @pytest.fixture
-def session(client):
-    with client.session_transaction() as session:
-        session["cookie"] = {}
+def access_token(app):
+    from flask_jwt_extended import create_access_token
 
-    return session
+    with app.app_context():
+        return create_access_token(
+            identity="admin",
+            additional_claims={
+                "user_claims": {
+                    "id": "admin",
+                    "name": "admin",
+                    "organization_name": "TestOrg",
+                    "permissions": ["ASSESS_ACCESS", "PUBLISH_ACCESS"],
+                }
+            },
+        )
+
+
+@pytest.fixture
+def auth_header(access_token):
+    return {"Authorization": f"Bearer {access_token}"}
