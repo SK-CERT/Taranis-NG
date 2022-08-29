@@ -2,8 +2,8 @@ import datetime
 
 from bots.managers import time_manager
 from bots.managers.log_manager import logger
-from core.schema import bot, bot_preset
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema import bot, bot_preset
+from shared.schema.parameter import Parameter, ParameterType
 from bots.remote.core_api import CoreApi
 
 

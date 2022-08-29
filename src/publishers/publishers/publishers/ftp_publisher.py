@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 import paramiko
 
 from .base_publisher import BasePublisher
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class FTPPublisher(BasePublisher):

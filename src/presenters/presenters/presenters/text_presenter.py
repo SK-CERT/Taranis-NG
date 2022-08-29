@@ -3,7 +3,7 @@ from base64 import b64encode
 import jinja2
 
 from .base_presenter import BasePresenter
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class TEXTPresenter(BasePresenter):

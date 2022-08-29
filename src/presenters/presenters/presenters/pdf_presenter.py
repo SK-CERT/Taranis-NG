@@ -6,7 +6,7 @@ import jinja2
 import pdfkit
 
 from .base_presenter import BasePresenter
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class PDFPresenter(BasePresenter):

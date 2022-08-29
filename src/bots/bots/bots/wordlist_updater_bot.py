@@ -1,8 +1,8 @@
 import requests
 
 from .base_bot import BaseBot
-from core.schema import word_list
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema import word_list
+from shared.schema.parameter import Parameter, ParameterType
 from bots.managers.log_manager import logger
 
 
