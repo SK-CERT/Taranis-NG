@@ -14,15 +14,15 @@ permissions:
 
 jobs:
   test:
-  name: pytest
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v2
-    - name: test
-      working-directory: src/core
-      run: |
-        python -m pip install --upgrade pytest
-        pytest
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: test
+        working-directory: src/core
+        run: |
+          python -m pip install --upgrade pytest
+          pytest
 
   build_wheel:
     name: build wheel
@@ -41,7 +41,6 @@ jobs:
           files: |
             dist/taranis_ng_core-*.whl
             dist/taranis_ng_core-*.tar.gz
-
 
   build_docker:
     name: build docker
