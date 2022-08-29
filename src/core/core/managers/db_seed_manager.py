@@ -473,7 +473,7 @@ def pre_seed_roles():
         admin_permissions = [{"id": perm.id} for perm in Permission.get_all()]
         Role.add_new(
             {
-                "id": "",
+                "id": "1",
                 "name": "Admin",
                 "description": "Administrator role",
                 "permissions": admin_permissions,
@@ -497,7 +497,7 @@ def pre_seed_roles():
         ]
         Role.add_new(
             {
-                "id": "",
+                "id": "2",
                 "name": "User",
                 "description": "Basic user role",
                 "permissions": default_user_permissions,
@@ -1313,68 +1313,73 @@ def pre_seed_wordlists():
 
 
 def pre_seed_default_user():
-    from core.model.address import Address
     from core.model.organization import Organization
-    from core.model.role import Role
     from core.model.user import User
 
-    if not db.session.query(Organization).filter_by(name="The Earth").first():
-        address = Address("29 Arlington Avenue", "Islington, London", "N1 7BE", "United Kingdom")
-        db.session.add(address)
-        db.session.commit()
-
-        organization = Organization(
-            id=None,
-            name="The Earth",
-            description="Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
-            address=address,
+    admin_organization = db.session.query(Organization).filter_by(name="The Earth").first()
+    if not admin_organization:
+        Organization.add_new(
+            {
+                "id": 1,
+                "name": "The Earth",
+                "description": "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
+                "address": {"street": "29 Arlington Avenue", "city": "Islington, London", "zip": "N1 7BE", "country": "United Kingdom"},
+            }
         )
-        db.session.add(organization)
-        db.session.commit()
 
     if not db.session.query(User).filter_by(username="admin").first():
-        admin_role = db.session.query(Role).filter_by(name="Admin").first()
-
-        user = User(
-            id=None,
-            username="admin",
-            name="Arthur Dent",
-            organizations=[organization],
-            roles=[admin_role],
-            permissions=[],
+        User.add_new(
+            {
+                "id": -1,
+                "username": "admin",
+                "name": "Arthur Dent",
+                "roles": [
+                    {
+                        "id": "1",
+                    },
+                ],
+                "permissions": [],
+                "organizations": [
+                    {
+                        "id": 1,
+                    },
+                ],
+                "password": "admin",
+            }
         )
-        db.session.add(user)
-        db.session.commit()
 
     if not db.session.query(Organization).filter_by(name="The Clacks").first():
-        address = Address(
-            "Cherry Tree Rd",
-            "Beaconsfield, Buckinghamshire",
-            "HP9 1BH",
-            "United Kingdom",
+        Organization.add_new(
+            {
+                "id": 2,
+                "name": "The Clacks",
+                "description": "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
+                "address": {
+                    "street": "Cherry Tree Rd",
+                    "city": "Beaconsfield, Buckinghamshire",
+                    "zip": "HP9 1BH",
+                    "country": "United Kingdom",
+                },
+            }
         )
-        db.session.add(address)
-        db.session.commit()
-
-        organization = Organization(
-            None,
-            "The Clacks",
-            "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
-            address,
-        )
-        db.session.add(organization)
-        db.session.commit()
 
     if not db.session.query(User).filter_by(username="user").first():
-        user_role = db.session.query(Role).filter_by(name="User").first()
-
-        user = User(
-            id=None,
-            username="user",
-            name="Terry Pratchett",
-            organizations=[organization],
-            roles=[user_role],
-            permissions=[],
+        User.add_new(
+            {
+                "id": -1,
+                "username": "user",
+                "name": "Terry Pratchett",
+                "roles": [
+                    {
+                        "id": "2",
+                    },
+                ],
+                "permissions": [],
+                "organizations": [
+                    {
+                        "id": 2,
+                    },
+                ],
+                "password": "user",
+            }
         )
-        db.session.add(user)
-        db.session.commit()

@@ -172,14 +172,10 @@ class User(db.Model):
             db.session.commit()
 
     def get_permissions(self):
-        all_permissions = set()
-
-        for permission in self.permissions:
-            all_permissions.add(permission.id)
+        all_permissions = {permission.id for permission in self.permissions}
 
         for role in self.roles:
             all_permissions.update(role.get_permissions())
-
         return list(all_permissions)
 
     def get_current_organization_name(self):

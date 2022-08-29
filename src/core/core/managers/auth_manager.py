@@ -142,11 +142,7 @@ def auth_required(permissions, *acl_args):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             error = ({"error": "not authorized"}, 401)
-
-            if isinstance(permissions, list):
-                permissions_set = set(permissions)
-            else:
-                permissions_set = {permissions}
+            permissions_set = set(permissions) if isinstance(permissions, list) else {permissions}
 
             # do we have a JWT token?
             try:
@@ -165,12 +161,15 @@ def auth_required(permissions, *acl_args):
 
             # does it include permissions?
             claims = get_jwt()
-            if not claims or "permissions" not in claims:
+            user_claims = claims.get("user_claims")
+            if not user_claims:
                 logger.store_user_auth_error_activity(user, "Missing permissions in JWT for identity: {}".format(identity))
                 return error
 
+            permission_claims = set(user_claims.get("permissions"))
+
             # is there at least one match with the permissions required by the call?
-            if not permissions_set.intersection(set(claims["permissions"])):
+            if not permissions_set.intersection(permission_claims):
                 logger.store_user_auth_error_activity(
                     user,
                     "Insufficient permissions in JWT for identity: {}".format(identity),
@@ -185,8 +184,6 @@ def auth_required(permissions, *acl_args):
                 )
                 return error
 
-            # allow
-            logger.store_user_activity(user, str(permissions), str(request.json))
             return fn(*args, **kwargs)
 
         return wrapper

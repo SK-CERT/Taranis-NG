@@ -215,7 +215,7 @@ class Logger:
         pass
 
     def store_user_activity(self, user, activity_type, activity_detail):
-        pass
+        self.logger.debug(f"User: {user.name} activity_type: {activity_type} activity_detail: {activity_detail}")
 
 
 logger = Logger()
