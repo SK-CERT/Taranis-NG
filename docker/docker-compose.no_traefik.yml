@@ -66,6 +66,8 @@ services:
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
 
       DEBUG: "${DEBUG}"
+      SECRET_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
     volumes:
       - "core_data:/data"
     logging:
