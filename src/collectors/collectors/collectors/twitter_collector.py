@@ -4,8 +4,8 @@ import uuid
 import tweepy
 
 from .base_collector import BaseCollector
-from core.schema.news_item import NewsItemData
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema.news_item import NewsItemData
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class TwitterCollector(BaseCollector):

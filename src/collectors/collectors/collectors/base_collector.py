@@ -8,8 +8,8 @@ import re
 from collectors.managers import time_manager
 from collectors.managers.log_manager import logger
 from collectors.remote.core_api import CoreApi
-from core.schema import collector, osint_source, news_item
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema import collector, osint_source, news_item
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class BaseCollector:

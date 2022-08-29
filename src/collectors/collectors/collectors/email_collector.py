@@ -9,8 +9,8 @@ import email.utils
 import socket
 
 from .base_collector import BaseCollector
-from core.schema.news_item import NewsItemData, NewsItemAttribute
-from core.schema.parameter import Parameter, ParameterType
+from shared.schema.news_item import NewsItemData, NewsItemAttribute
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class EmailCollector(BaseCollector):
