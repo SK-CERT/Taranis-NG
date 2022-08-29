@@ -43,4 +43,4 @@ ENV WORKERS_PER_CORE 4
 
 VOLUME ["/app/templates"]
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/entrypoint.sh"]

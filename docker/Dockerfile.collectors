@@ -50,4 +50,4 @@ ENV COLLECTOR_CONFIG_FILE /app/storage/id.txt
 
 VOLUME ["/app/storage"]
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/entrypoint.sh"]

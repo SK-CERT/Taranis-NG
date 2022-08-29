@@ -31,4 +31,4 @@ ENV APP_MODULE run:app
 ENV GUNICORN_CMD_ARGS --timeout 120
 ENV WORKERS_PER_CORE 4
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/entrypoint.sh"]
