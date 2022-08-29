@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic import BaseSettings, validator
 from typing import Optional
 
 
@@ -23,7 +23,13 @@ class Settings(BaseSettings):
     SQLALCHEMY_SCHEMA: str = "postgresql+psycopg2"
     SQLALCHEMY_ECHO: bool = False
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
-    SQLALCHEMY_DATABASE_URI: str = f"{SQLALCHEMY_SCHEMA}://{DB_USER}:{DB_PASSWORD}@{DB_URL}/{DB_DATABASE}"
+    SQLALCHEMY_DATABASE_URI: Optional[str]
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True, always=True)
+    def set_sqlalchemy_uri(cls, value, values):
+        if value and len(value) > 1:
+            return value
+        return f"{values['SQLALCHEMY_SCHEMA']}://{values['DB_USER']}:{values['DB_PASSWORD']}@{values['DB_URL']}/{values['DB_DATABASE']}"
 
     # if "postgresql" in SQLALCHEMY_DATABASE_URI:
     #     DB_POOL_SIZE: int = 10

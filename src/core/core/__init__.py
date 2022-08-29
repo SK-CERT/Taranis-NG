@@ -18,6 +18,7 @@ def create_app():
     with app.app_context():
         CORS(app)
 
+        log_manager.logger.log_info(f"Connecting Database: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
         db_manager.initialize(app)
         log_manager.logger.log_info("DB Done")
 
