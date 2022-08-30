@@ -7,7 +7,6 @@
     <v-navigation-drawer
       clipped
       v-model="visible"
-      width="300px"
       app
       color="cx-drawer-bg"
       v-if="isAuthenticated()"
