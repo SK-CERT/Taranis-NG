@@ -28,7 +28,7 @@
 import MainMenu from './components/MainMenu'
 import AuthMixin from './services/auth/auth_mixin'
 import Notification from './components/common/Notification'
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'App',
@@ -43,7 +43,7 @@ export default {
   methods: {
     ...mapActions('dashboard', ['updateTopics']),
     ...mapActions('users', ['updateUsers']),
-    ...mapActions('assess', ['updateNewsItems',]),
+    ...mapActions('assess', ['updateNewsItems']),
 
     connectSSE () { // TODO: unsubscribe
       this.$sse(
@@ -82,7 +82,6 @@ export default {
   },
   updated () {
     this.$root.$emit('app-updated')
-
   },
   mounted () {
     if (this.$cookies.isKey('jwt')) {
