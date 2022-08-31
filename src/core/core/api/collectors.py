@@ -11,16 +11,20 @@ from shared.schema.osint_source import OSINTSourceUpdateStatusSchema
 class OSINTSourcesForCollectors(Resource):
     @api_key_required
     def get(self, collector_id):
-        parser = reqparse.RequestParser()
-        parser.add_argument("api_key")
-        parser.add_argument("collector_type")
-        parameters = parser.parse_args()
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument("collector_type", location="args", required=True)
+            parameters = parser.parse_args()
 
-        node = collectors_node.CollectorsNode.get_by_id(collector_id)
-        if not node:
-            return "", 404
+            logger.log_debug(f"Searching node: {parameters}")
+            node = collectors_node.CollectorsNode.get_by_id(collector_id)
+            logger.log_debug(f"Node found: {node}")
+            if not node:
+                return "", 404
 
-        node.updateLastSeen()
+            node.updateLastSeen()
+        except Exception:
+            logger.log_debug_trace()
 
         return osint_source.OSINTSource.get_all_for_collector_json(node, parameters.collector_type)
 

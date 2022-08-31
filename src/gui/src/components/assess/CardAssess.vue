@@ -396,7 +396,7 @@ export default {
       }
     },
     wordCheck (target) {
-      const parse = new Array()
+      const parse = []
       const message = this.escapeHtml(target).split(' ')
       const word_list = new RegExp(this.word_list_regex, 'gi')
 
@@ -440,7 +440,7 @@ export default {
       this.selected = false
     },
     setFocus (id) {
-      if (this.$el.dataset.id == id) {
+      if (this.$el.dataset.id === id) {
         this.toolbar = true
         this.$el.querySelector('.card .layout').classList.add('focus')
       } else {
