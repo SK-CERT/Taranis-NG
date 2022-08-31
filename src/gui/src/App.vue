@@ -99,7 +99,7 @@ export default {
         this.connectSSE()
       } else {
         if (this.$store.getters.getJWT) {
-            this.$store.dispatch('logout')
+          this.$store.dispatch('logout')
         }
       }
     }
