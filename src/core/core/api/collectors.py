@@ -32,7 +32,8 @@ class OSINTSourcesForCollectors(Resource):
 class AddNewsItems(Resource):
     @api_key_required
     def post(self):
-        osint_source_ids = news_item.NewsItemAggregate.add_news_items(request.json)
+        json_data = request.json
+        osint_source_ids = news_item.NewsItemAggregate.add_news_items(json_data)
         sse_manager.news_items_updated()
         sse_manager.remote_access_news_items_updated(osint_source_ids)
 
