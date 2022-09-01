@@ -346,7 +346,6 @@ class OSINTSourceGroup(db.Model):
                 ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP,
             ),
         )
-
         query = ACLEntry.apply_query(query, user, see, access, modify)
 
         return query.scalar() is not None

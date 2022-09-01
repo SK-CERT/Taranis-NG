@@ -109,10 +109,7 @@ def check_acl(item_id, acl_check, user):
         allowed = ProductType.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if not allowed:
-        if check_access:
-            logger.store_user_auth_error_activity(user, f"Unauthorized access attempt to {item_type}: {item_id}")
-        else:
-            logger.store_user_auth_error_activity(user, f"Unauthorized modification attempt to {item_type}: {item_id}")
+        logger.log_debug(f"Unauthorized '{check_access or check_modify}' attempt to {item_type}: {item_id}")
 
     return allowed
 
@@ -137,7 +134,7 @@ def get_id_name_by_acl(acl):
         return "product_id"
 
 
-def auth_required(permissions, *acl_args):
+def auth_required(permissions, acl=None):
     def auth_required_wrap(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -177,7 +174,7 @@ def auth_required(permissions, *acl_args):
                 return error
 
             # if the object does have an ACL, do we match it?
-            if acl_args and not check_acl(kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user):
+            if acl and not check_acl(kwargs[get_id_name_by_acl(acl)], acl, user):
                 logger.store_user_auth_error_activity(
                     user,
                     "Access denied by ACL in JWT for identity: {}".format(identity),
