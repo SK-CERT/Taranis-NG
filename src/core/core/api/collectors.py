@@ -1,7 +1,7 @@
 from flask import request
 from flask_restful import Resource, reqparse
 
-from core.managers import sse_manager
+from core.managers import sse_manager, collectors_manager
 from core.managers.auth_manager import api_key_required
 from core.managers.log_manager import logger
 from core.model import osint_source, collectors_node, news_item
@@ -36,6 +36,17 @@ class AddNewsItems(Resource):
         osint_source_ids = news_item.NewsItemAggregate.add_news_items(json_data)
         sse_manager.news_items_updated()
         sse_manager.remote_access_news_items_updated(osint_source_ids)
+
+
+class CollectorsNodes(Resource):
+    @api_key_required
+    def get(self):
+        search = request.args.get(key="search", default=None)
+        return collectors_node.CollectorsNode.get_all_json(search)
+
+    @api_key_required
+    def post(self):
+        return collectors_manager.add_collectors_node(request.json)
 
 
 class OSINTSourceStatusUpdate(Resource):
