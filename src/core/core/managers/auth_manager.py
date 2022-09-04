@@ -16,6 +16,7 @@ from core.managers.log_manager import logger
 from core.auth.keycloak_authenticator import KeycloakAuthenticator
 from core.auth.openid_authenticator import OpenIDAuthenticator
 from core.auth.test_authenticator import TestAuthenticator
+from core.auth.database_authenticator import DatabaseAuthenticator
 from core.model.collectors_node import CollectorsNode
 from core.model.news_item import NewsItem
 from core.model.osint_source import OSINTSourceGroup
@@ -47,6 +48,8 @@ def initialize(app):
         current_authenticator = OpenIDAuthenticator()
     elif which == "keycloak":
         current_authenticator = KeycloakAuthenticator()
+    elif which == "database":
+        current_authenticator = DatabaseAuthenticator()
     elif which == "test":
         current_authenticator = TestAuthenticator()
     else:
