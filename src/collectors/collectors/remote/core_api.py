@@ -1,6 +1,6 @@
 import urllib
 import requests
-import hashlib
+import base64
 from collectors.managers.log_manager import logger
 from collectors.config import Config
 
@@ -12,12 +12,12 @@ class CoreApi:
         self.headers = self.get_headers()
         self.collector_id = self.get_collector_id()
 
-    def get_headers(self):
+    def get_headers(self) -> dict:
         return {"Authorization": f"Bearer {self.api_key}", "Content-type": "application/json"}
 
-    def get_collector_id(self):
+    def get_collector_id(self) -> str:
         uid = self.api_url + self.api_key
-        return int(hashlib.sha1(uid.encode("utf-8")).hexdigest(), 16) % (10**16)
+        return base64.urlsafe_b64encode(uid.encode("utf-8")).decode("utf-8")
 
     def get_osint_sources(self, collector_type):
         try:
@@ -31,21 +31,33 @@ class CoreApi:
             )
             return response.json(), response.status_code
         except Exception:
-            logger.log_debug_trace("Cannot get OSINT Sources")
+            logger.log_debug_trace("Can't get OSINT Sources")
             return None, 400
 
-    def register_collector_node(self):
+    def register_collector_node(self, collectors_info):
         try:
-            collector_info = {"id": self.collector_id}
+            collector_info = {
+                "id": self.collector_id,
+                "name": "Test",
+                "description": "Test",
+                "api_url": Config.COLLECTOR_URL,
+                "api_key": Config.API_KEY,
+                "collectors_info": collectors_info,
+            }
             response = requests.post(
                 f"{self.api_url}/api/v1/collectors/node/{self.collector_id}",
                 json=collector_info,
                 headers=self.headers,
             )
 
+            if response.status_code != 200:
+                logger.log_debug(f"Can't register Collector node: {response.text}")
+                return None, 400
+
             return response.json(), response.status_code
-        except Exception:
-            logger.log_debug_trace("Cannot register Collector node")
+        except Exception as e:
+            logger.log_debug("Can't register Collector node")
+            logger.log_debug(str(e))
             return None, 400
 
     def update_collector_status(self):

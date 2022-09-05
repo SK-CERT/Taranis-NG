@@ -13,5 +13,6 @@ def create_app():
 
         api_manager.initialize(app)
         collectors_manager.initialize()
+        collectors_manager.register_collector_node()
 
     return app
