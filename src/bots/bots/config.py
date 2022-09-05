@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     SSL_VERIFICATION: bool = False
     TARANIS_NG_CORE_URL: str = "http://taranis"
     MODULE_ID: str = "Bots"
+    COLORED_LOGS: bool = True
+    DEBUG: bool = False
     # BOTS_LOADABLE_BOTS: List[str] = ["Analyst", "Grouping", "NLP", "Tagging", "Wordlist"]
 
 

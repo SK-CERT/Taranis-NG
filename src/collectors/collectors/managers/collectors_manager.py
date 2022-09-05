@@ -22,7 +22,7 @@ def register_collector_node():
 
 
 def initialize():
-    logger.log_system_activity(__name__, "Initializing collector...")
+    logger.log_info("Initializing collector...")
 
     # inform core that this collector node is alive
     # status_report_thread = threading.Thread(target=reportStatus)
@@ -34,7 +34,7 @@ def initialize():
         class_ = getattr(module_, f"{c}Collector")
         register_collector(class_())
 
-    logger.log_system_activity(__name__, "Collector initialized.")
+    logger.log_info("Collector initialized.")
 
     register_collector_node()
 
