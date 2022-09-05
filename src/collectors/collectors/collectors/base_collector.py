@@ -154,12 +154,12 @@ class BaseCollector:
         # get new node configuration
         response, code = self.core_api.get_osint_sources(self.type)
 
-        logger.log_debug(f"HTTP {code}: Got the following reply: {response}")
-
         if code != 200 or response is None:
+            logger.log_debug(f"HTTP {code}: Got the following reply: {response}")
             return
 
         try:
+            logger.log_debug(f"HTTP {code}: Got the following reply: {response}")
             source_schema = osint_source.OSINTSourceSchemaBase(many=True)
             self.osint_sources = source_schema.load(response)
 

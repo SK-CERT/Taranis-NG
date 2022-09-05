@@ -8,6 +8,8 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
     API_KEY: str
+    NODE_NAME: str = "MyCollector"
+    NODE_DESCRIPTION: str = ""
     SSL_VERIFICATION: bool = False
     TARANIS_NG_CORE_URL: str = "http://taranis"
     COLLECTOR_URL: str = "http://collectors"

@@ -36,16 +36,19 @@ class CoreApi:
 
     def register_collector_node(self, collectors_info):
         try:
+            response, status = self.get_collector_status()
+            if status == 200:
+                return response, status
             collector_info = {
                 "id": self.collector_id,
-                "name": "Test",
-                "description": "Test",
+                "name": Config.NODE_NAME,
+                "description": Config.NODE_DESCRIPTION,
                 "api_url": Config.COLLECTOR_URL,
                 "api_key": Config.API_KEY,
                 "collectors_info": collectors_info,
             }
             response = requests.post(
-                f"{self.api_url}/api/v1/collectors/node/{self.collector_id}",
+                f"{self.api_url}/api/v1/collectors/node",
                 json=collector_info,
                 headers=self.headers,
             )
@@ -60,7 +63,7 @@ class CoreApi:
             logger.log_debug(str(e))
             return None, 400
 
-    def update_collector_status(self):
+    def get_collector_status(self):
         try:
             response = requests.get(
                 f"{self.api_url}/api/v1/collectors/{self.collector_id}",
