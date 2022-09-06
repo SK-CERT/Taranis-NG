@@ -263,6 +263,7 @@
         </v-row>
       </v-container>
     </v-card>
+    <NewsItemDetail ref="newsItemDetail" />
   </v-col>
 </template>
 
@@ -275,6 +276,8 @@ import PopupDeleteItem from '@/components/popups/PopupDeleteItem'
 import PopupManageTags from '@/components/popups/PopupManageTags'
 import buttonOutlined from '@/components/_subcomponents/buttonOutlined'
 import newsItemTitle from '@/components/_subcomponents/newsItemTitle'
+import NewsItemDetail from '@/components/assess/NewsItemDetail'
+
 import votes from '@/components/_subcomponents/votes'
 import { isValidUrl, stripHtml } from '@/utils/helpers'
 
@@ -290,6 +293,7 @@ export default {
     PopupManageTags,
     buttonOutlined,
     newsItemTitle,
+    NewsItemDetail,
     votes
   },
   props: {
@@ -329,6 +333,7 @@ export default {
 
     viewDetails(event) {
       console.log('not yet implemented')
+      this.$refs.newsItemDetail.open(this.newsItem)
     },
     createReport(event) {
       console.log('not yet implemented')
