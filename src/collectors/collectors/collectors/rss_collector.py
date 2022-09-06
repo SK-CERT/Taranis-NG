@@ -8,7 +8,7 @@ import feedparser
 import requests
 from sockshandler import SocksiPyHandler
 from bs4 import BeautifulSoup
-import dateparser
+import dateutil.parser as dateparser
 
 from .base_collector import BaseCollector
 from collectors.managers.log_manager import logger
@@ -66,7 +66,7 @@ class RSSCollector(BaseCollector):
             if cl_list[0] == "xml" and cl_list[1] in feed_entry:
                 return feed_entry[cl_list[1]]
 
-        soup = BeautifulSoup(html_content.content, features="html.parser")
+        soup = BeautifulSoup(html_content, features="html.parser")
         if html_content:
             content_text = [p.text.strip() for p in soup.findAll(content_location)]
             if replaced_str := "\xa0":
@@ -106,7 +106,7 @@ class RSSCollector(BaseCollector):
 
                 # limit = BaseCollector.history(interval)
                 published = feed_entry["published"]
-                published = dateparser.parse(published, settings={"DATE_ORDER": "DMY"})
+                published = dateparser.parse(published)
 
                 # if published > limit: TODO: uncomment after testing, we need some initial data now
                 logger.log_collector_activity("rss", source.id, f"Processing entry [{feed_entry['link']}]")
