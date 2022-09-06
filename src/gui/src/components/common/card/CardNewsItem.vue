@@ -338,7 +338,7 @@ export default {
     },
 
     getDescription() {
-      return stripHtml(this.newsItem.description)
+      return stripHtml(this.newsItem.description + this.newsItem.news_items[0].news_item_data.content)
     },
 
     getTags() {

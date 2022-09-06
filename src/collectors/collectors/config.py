@@ -1,4 +1,5 @@
-from typing import List
+import os
+from typing import List, Tuple, Optional
 from pydantic import BaseSettings
 
 
@@ -17,6 +18,8 @@ class Settings(BaseSettings):
     COLORED_LOGS: bool = True
     DEBUG: bool = False
     COLLECTOR_LOADABLE_COLLECTORS: List[str] = ["RSS", "Email", "Slack", "Twitter", "Web", "Atom", "Manual"]
+    SYSLOG_ADDRESS: Optional[Tuple[str, int]]
+    GUNICORN: bool = "gunicorn" in os.environ.get("SERVER_SOFTWARE", "")
 
 
 Config = Settings()
