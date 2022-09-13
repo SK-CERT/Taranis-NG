@@ -314,8 +314,6 @@ class CollectorsNodes(Resource):
     def post(self):
         return collectors_manager.add_collectors_node(request.json)
 
-
-class CollectorsNode(Resource):
     @auth_required("CONFIG_COLLECTORS_NODE_UPDATE")
     def put(self, node_id):
         collectors_manager.update_collectors_node(node_id, request.json)
@@ -457,8 +455,6 @@ class PresentersNodes(Resource):
     def post(self):
         return "", presenters_manager.add_presenters_node(request.json)
 
-
-class PresentersNode(Resource):
     @auth_required("CONFIG_PRESENTERS_NODE_UPDATE")
     def put(self, node_id):
         presenters_manager.update_presenters_node(node_id, request.json)
@@ -478,8 +474,6 @@ class PublisherNodes(Resource):
     def post(self):
         return "", publishers_manager.add_publishers_node(request.json)
 
-
-class PublishersNode(Resource):
     @auth_required("CONFIG_PUBLISHERS_NODE_UPDATE")
     def put(self, node_id):
         publishers_manager.update_publishers_node(node_id, request.json)
@@ -520,8 +514,6 @@ class BotNodes(Resource):
     def post(self):
         return bots_manager.add_bots_node(request.json)
 
-
-class BotsNode(Resource):
     @auth_required("CONFIG_BOTS_NODE_UPDATE")
     def put(self, node_id):
         bots_manager.update_bots_node(node_id, request.json)
@@ -590,8 +582,7 @@ def initialize(api):
     api.add_resource(WordLists, "/api/v1/config/word-lists")
     api.add_resource(WordList, "/api/v1/config/word-lists/<int:word_list_id>")
 
-    api.add_resource(CollectorsNodes, "/api/v1/config/collectors-nodes")
-    api.add_resource(CollectorsNode, "/api/v1/config/collectors-nodes/<string:node_id>")
+    api.add_resource(CollectorsNodes, "/api/v1/config/collectors-nodes", "/api/v1/config/collectors-nodes/<string:node_id>")
     api.add_resource(OSINTSources, "/api/v1/config/osint-sources")
     api.add_resource(OSINTSource, "/api/v1/config/osint-sources/<string:source_id>")
     api.add_resource(OSINTSourcesExport, "/api/v1/config/export-osint-sources")
@@ -606,17 +597,13 @@ def initialize(api):
     api.add_resource(RemoteNode, "/api/v1/config/remote-nodes/<int:remote_node_id>")
     api.add_resource(RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
 
-    api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes")
-    api.add_resource(PresentersNode, "/api/v1/config/presenters-nodes/<string:node_id>")
-
-    api.add_resource(PublisherNodes, "/api/v1/config/publishers-nodes")
-    api.add_resource(PublishersNode, "/api/v1/config/publishers-nodes/<string:node_id>")
+    api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes", "/api/v1/config/presenters-nodes/<string:node_id>")
+    api.add_resource(PublisherNodes, "/api/v1/config/publishers-nodes", "/api/v1/config/publishers-nodes/<string:node_id>")
 
     api.add_resource(PublisherPresets, "/api/v1/config/publishers-presets")
     api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>")
 
-    api.add_resource(BotNodes, "/api/v1/config/bots-nodes")
-    api.add_resource(BotsNode, "/api/v1/config/bots-nodes/<string:node_id>")
+    api.add_resource(BotNodes, "/api/v1/config/bots-nodes", "/api/v1/config/bots-nodes/<string:node_id>")
 
     api.add_resource(BotPresets, "/api/v1/config/bots-presets")
     api.add_resource(BotPreset, "/api/v1/config/bots-presets/<string:preset_id>")

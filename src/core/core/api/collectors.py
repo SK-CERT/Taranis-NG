@@ -38,7 +38,7 @@ class AddNewsItems(Resource):
         sse_manager.remote_access_news_items_updated(osint_source_ids)
 
 
-class Node(Resource):
+class CollectorsNode(Resource):
     @api_key_required
     def get(self, node_id):
         return collectors_node.CollectorsNode.get_json_by_id(node_id)
@@ -101,4 +101,4 @@ def initialize(api):
     )
     api.add_resource(CollectorStatusUpdate, "/api/v1/collectors/<string:collector_id>")
     api.add_resource(AddNewsItems, "/api/v1/collectors/news-items")
-    api.add_resource(Node, "/api/v1/collectors/node/<string:node_id>", "/api/v1/collectors/node")
+    api.add_resource(CollectorsNode, "/api/v1/collectors/node/<string:node_id>", "/api/v1/collectors/node")
