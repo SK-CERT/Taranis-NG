@@ -1,5 +1,5 @@
 <template>
-  <v-col cols="12" xl="6">
+  <v-col cols="12">
     <v-card
       tile
       elevation="4"
@@ -124,7 +124,7 @@
               <v-row class="flex-grow-0 mt-1">
                 <v-col
                   cols="12"
-                  class="mx-0 d-flex justify-start flex-wrap pt-1 pb-4"
+                  class="mx-0 d-flex justify-start flex-wrap pt-1 pb-8"
                 >
                   <button-outlined
                     label="view details"

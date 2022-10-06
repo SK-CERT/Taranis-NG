@@ -175,7 +175,7 @@ export const router = new Router({
         nav: () => import('./views/nav/ConfigNav.vue')
 
       },
-      meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_COLLECTORS_NODE_ACCESS] }
+      meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_NODE_ACCESS] }
     },
     {
       path: '/config/collectors/nodes',

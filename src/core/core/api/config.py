@@ -504,6 +504,21 @@ class PublisherPreset(Resource):
         return publisher_preset.PublisherPreset.delete(preset_id)
 
 
+class Nodes(Resource):
+    @auth_required("CONFIG_NODE_ACCESS")
+    def get(self):
+        search = request.args.get(key="search", default=None)
+        publishers_nodes = publishers_node.PublishersNode.get_all_json(search)
+        bots_nodes = bots_node.BotsNode.get_all_json(search)
+        collectors_nodes = collectors_node.CollectorsNode.get_all_json(search)
+        presenters_nodes = presenters_node.PresentersNode.get_all_json(search)
+        total_count = (
+            publishers_nodes["total_count"] + bots_nodes["total_count"] + collectors_nodes["total_count"] + presenters_nodes["total_count"]
+        )
+        items = publishers_nodes["items"] + bots_nodes["items"] + collectors_nodes["items"] + presenters_nodes["items"]
+        return {"total_count": total_count, "items": items}
+
+
 class BotNodes(Resource):
     @auth_required("CONFIG_BOTS_NODE_ACCESS")
     def get(self):
@@ -599,11 +614,11 @@ def initialize(api):
 
     api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes", "/api/v1/config/presenters-nodes/<string:node_id>")
     api.add_resource(PublisherNodes, "/api/v1/config/publishers-nodes", "/api/v1/config/publishers-nodes/<string:node_id>")
-
     api.add_resource(PublisherPresets, "/api/v1/config/publishers-presets")
     api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>")
 
     api.add_resource(BotNodes, "/api/v1/config/bots-nodes", "/api/v1/config/bots-nodes/<string:node_id>")
-
     api.add_resource(BotPresets, "/api/v1/config/bots-presets")
     api.add_resource(BotPreset, "/api/v1/config/bots-presets/<string:preset_id>")
+
+    api.add_resource(Nodes, "/api/v1/config/nodes", "/api/v1/config/nodes/<string:node_id>")

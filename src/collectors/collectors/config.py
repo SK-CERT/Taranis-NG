@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     NODE_DESCRIPTION: str = ""
     SSL_VERIFICATION: bool = False
     TARANIS_NG_CORE_URL: str = "http://taranis"
-    COLLECTOR_URL: str = "http://collectors"
+    NODE_URL: str = "http://collectors"
     MODULE_ID: str = "Collectors"
     COLORED_LOGS: bool = True
     DEBUG: bool = False

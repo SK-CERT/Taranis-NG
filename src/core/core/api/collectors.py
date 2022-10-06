@@ -76,8 +76,8 @@ class OSINTSourceStatusUpdate(Resource):
 
 class CollectorStatusUpdate(Resource):
     @api_key_required
-    def get(self, collector_id):
-        collector = collectors_node.CollectorsNode.get_by_id(collector_id)
+    def get(self, node_id):
+        collector = collectors_node.CollectorsNode.get_by_id(node_id)
         if not collector:
             return "", 404
 
@@ -99,6 +99,6 @@ def initialize(api):
         OSINTSourceStatusUpdate,
         "/api/v1/collectors/osint-sources/<string:osint_source_id>",
     )
-    api.add_resource(CollectorStatusUpdate, "/api/v1/collectors/<string:collector_id>")
+    api.add_resource(CollectorStatusUpdate, "/api/v1/collectors/<string:node_id>")
     api.add_resource(AddNewsItems, "/api/v1/collectors/news-items")
     api.add_resource(CollectorsNode, "/api/v1/collectors/node/<string:node_id>", "/api/v1/collectors/node")
