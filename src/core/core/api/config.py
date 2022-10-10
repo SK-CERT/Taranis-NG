@@ -411,9 +411,9 @@ class RemoteAccess(Resource):
         if disconnect:
             sse_manager.remote_access_disconnect([event_id])
 
-        @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
-        def delete(self, remote_access_id):
-            return remote.RemoteAccess.delete(remote_access_id)
+    @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
+    def delete(self, remote_access_id):
+        return remote.RemoteAccess.delete(remote_access_id)
 
 
 class RemoteNodes(Resource):
