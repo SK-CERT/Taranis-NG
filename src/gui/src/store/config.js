@@ -19,6 +19,7 @@ import {
   getAllReportItemTypes,
   getAllRoles,
   getAllUsers,
+  getAllNodes,
   getAllWordLists
 } from '@/api/config'
 import { getAllUserProductTypes, getAllUserWordLists } from '@/api/user'
@@ -36,6 +37,7 @@ const state = {
   word_lists: { total_count: 0, items: [] },
   remote_access: { total_count: 0, items: [] },
   remote_nodes: { total_count: 0, items: [] },
+  nodes: { total_count: 0, items: [] },
   collectors_nodes: { total_count: 0, items: [] },
   osint_sources: { total_count: 0, items: [] },
   osint_source_groups: { total_count: 0, items: [] },
@@ -160,6 +162,13 @@ const actions = {
       })
   },
 
+  getAllNodes (context, data) {
+    return getAllNodes(data)
+      .then(response => {
+        context.commit('setNodes', response.data)
+      })
+  },
+
   getAllOSINTSources (context, data) {
     return getAllOSINTSources(data)
       .then(response => {
@@ -218,7 +227,6 @@ const actions = {
 }
 
 const mutations = {
-
   setAttributes (state, new_attributes) {
     state.attributes = new_attributes
   },
@@ -263,6 +271,10 @@ const mutations = {
     state.remote_nodes = new_remote_nodes
   },
 
+  setNodes (state, new_nodes) {
+    state.nodes = new_nodes
+  },
+
   setCollectorsNodes (state, new_collectors_nodes) {
     state.collectors_nodes = new_collectors_nodes
   },
@@ -297,7 +309,6 @@ const mutations = {
 }
 
 const getters = {
-
   getAttributes (state) {
     return state.attributes
   },
@@ -346,6 +357,10 @@ const getters = {
     return state.collectors_nodes
   },
 
+  getNodes (state) {
+    return state.nodes
+  },
+
   getOSINTSources (state) {
     return state.osint_sources
   },
@@ -376,6 +391,7 @@ const getters = {
 }
 
 export const config = {
+  namespaced: true,
   state,
   actions,
   mutations,

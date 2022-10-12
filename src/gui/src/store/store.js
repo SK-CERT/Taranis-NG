@@ -23,10 +23,9 @@ const state = {
     permissions: []
   },
   vertical_view: false,
-  itemCount: {
-    total: 0,
-    filtered: 0
-  }
+  itemCountTotal: 0,
+  itemCountFiltered: 0,
+  drawerVisible: true
 }
 
 const actions = {
@@ -35,8 +34,24 @@ const actions = {
     context.commit('setUser', userData)
   },
 
+  toggleDrawer(context) {
+    context.commit('toggleDrawer', !context.state.drawerVisible)
+  },
+
+  setDrawer(context, drawerState) {
+    context.commit('toggleDrawer', drawerState)
+  },
+
   updateItemCount(context, itemCount) {
     context.commit('updateItemCount', itemCount)
+  },
+
+  updateItemCountFiltered(context, filtered) {
+    context.commit('updateItemCountFiltered', filtered)
+  },
+
+  updateItemCountTotal(context, total) {
+    context.commit('updateItemCountTotal', total)
   },
 
   logout(context) {
@@ -54,8 +69,21 @@ const mutations = {
     state.user = userData
   },
 
+  toggleDrawer(state, drawerState) {
+    state.drawerVisible = drawerState
+  },
+
   updateItemCount(state, itemCount) {
-    state.itemCount = itemCount
+    state.itemCountFiltered = itemCount.filtered
+    state.itemCountTotal = itemCount.total
+  },
+
+  updateItemCountFiltered(state, filtered) {
+    state.itemCountFiltered = filtered
+  },
+
+  updateItemCountTotal(state, total) {
+    state.itemCountTotal = total
   },
 
   setVerticalView(state, data) {
@@ -72,6 +100,18 @@ const getters = {
 
   getUserName(state) {
     return state.user.name
+  },
+
+  getItemCount(state) {
+    return { total: state.itemCountTotal, filtered: state.itemCountFiltered }
+  },
+
+  getItemCountTotal(state) {
+    return state.itemCountTotal
+  },
+
+  getItemCountFilterd(state) {
+    return state.itemCountFiltered
   },
 
   getOrganizationName(state) {

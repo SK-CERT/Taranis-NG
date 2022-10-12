@@ -17,7 +17,7 @@
         <transition-group
           name="news-items-grid"
           tag="div"
-          class="row d-flex align-stretch row--dense topics-grid-container"
+          class="row d-flex align-stretch row--dense stories-grid-container"
           v-else
           appear
         >
@@ -26,12 +26,9 @@
             :key="newsItem.id"
             :newsItem="newsItem"
             :position="index"
-            :topicsList="getTopicSelectionList()"
+            :storiesList="getStorieSelectionList()"
             :selected="getNewsItemsSelection().includes(newsItem.id)"
-            :topicView="topicView"
-            :sharingSetView="sharingSetView"
             @deleteItem="removeAndDeleteNewsItem(newsItem.id)"
-            @removeFromTopic="removeFromTopic(newsItem.id)"
             @selectItem="selectNewsItem(newsItem.id)"
             @upvoteItem="upvoteNewsItem(newsItem.id)"
             @downvoteItem="downvoteNewsItem(newsItem.id)"
@@ -75,8 +72,6 @@ export default {
     AssessSelectionToolbar
   },
   props: {
-    topicView: Boolean,
-    sharingSetView: Boolean,
     itemsToLoad: Number
   },
   data: () => ({
@@ -90,31 +85,22 @@ export default {
       'selectNewsItem',
       'upvoteNewsItem',
       'downvoteNewsItem',
-      'removeTopicFromNewsItem'
+      'removeStoryFromNewsItem'
     ]),
+    ...mapActions(['updateItemCountTotal']),
     ...mapGetters('assess', [
       'getNewsItems',
       'getNewsItemList',
       'getNewsItemById',
       'getNewsItemsSelection',
-      'getNewsItemsByTopicId',
-      'getNewsItemsByTopicList'
+      'getNewsItemsByStoryId',
+      'getNewsItemsByStoryList'
     ]),
-    ...mapGetters('dashboard', ['getTopicSelectionList', 'getNewsItemIds']),
+    ...mapGetters('dashboard', ['getStorieSelectionList', 'getNewsItemIds']),
 
     removeAndDeleteNewsItem (id) {
       this.items = this.items.filter((x) => x.id !== id)
       this.deleteNewsItem(id)
-    },
-
-    removeFromTopic (newsItemId) {
-      if (this.topicView || this.sharingSetView) {
-        const topic = this.scope.topics
-        const sharingSet = this.scope.sharingSets
-        const topicId = topic ? topic[0].id : sharingSet[0].id
-        this.removeTopicFromNewsItem({ newsItemId, topicId })
-        this.items = this.items.filter((x) => x.id !== newsItemId)
-      }
     },
 
     infiniteScrolling (entries, observer, isIntersecting) {
@@ -134,6 +120,7 @@ export default {
     // + pass filter parameter for presorting
     getNewsItemsFromStore () {
       this.items = this.getNewsItems().items
+      this.updateItemCountTotal(this.getNewsItems().total_count)
       console.log('number of newsitems: ' + this.getNewsItems().total_count)
     }
 
@@ -214,10 +201,7 @@ export default {
         }
       })
 
-      this.$store.dispatch('updateItemCount', {
-        total: this.items.total_count,
-        filtered: filteredData.length
-      })
+      this.$store.dispatch('updateItemCountFiltered', filteredData.length)
 
       return filteredData
     },

@@ -53,6 +53,6 @@ class BaseAuthenticator:
 
             return {"access_token": access_token}, 200
         else:
-            logger.store_auth_error_activity(f"User not exists after authentication: {username}")
+            logger.store_auth_error_activity(f"User doesn't exists: {username}")
 
             return BaseAuthenticator.generate_error()

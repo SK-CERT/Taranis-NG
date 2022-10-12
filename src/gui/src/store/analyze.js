@@ -114,6 +114,7 @@ const getters = {
 }
 
 export const analyze = {
+  namespaced: true,
   state,
   actions,
   mutations,
