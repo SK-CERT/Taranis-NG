@@ -3,7 +3,7 @@
     <v-container fluid style="min-height: 100vh">
 
       <transition name="empty-list-transition" mode="out-in">
-        <v-row v-if="!filteredItems">
+        <v-row v-if="!items">
           <v-col cols="12" class="empty-list-notification">
             <v-icon x-large> mdi-circle-off-outline </v-icon>
             <span v-if="items.total_count">
@@ -22,7 +22,7 @@
           appear
         >
           <card-news-item
-            v-for="(newsItem, index) in filteredItems"
+            v-for="(newsItem, index) in items"
             :key="newsItem.id"
             :newsItem="newsItem"
             :position="index"
@@ -62,7 +62,6 @@ import CardNewsItem from '@/components/common/card/CardNewsItem'
 import AssessSelectionToolbar from '@/components/assess/AssessSelectionToolbar'
 
 import { mapState, mapGetters, mapActions } from 'vuex'
-import { filterSearch, filterDateRange, filterTags } from '@/utils/ListFilters'
 import moment from 'moment'
 
 export default {
@@ -70,9 +69,6 @@ export default {
   components: {
     CardNewsItem,
     AssessSelectionToolbar
-  },
-  props: {
-    itemsToLoad: Number
   },
   data: () => ({
     itemsLoaded: [],
@@ -87,7 +83,7 @@ export default {
       'downvoteNewsItem',
       'removeStoryFromNewsItem'
     ]),
-    ...mapActions(['updateItemCountTotal']),
+    ...mapActions(['updateItemCountTotal', 'updateItemCountFiltered']),
     ...mapGetters('assess', [
       'getNewsItems',
       'getNewsItemList',
@@ -104,11 +100,7 @@ export default {
     },
 
     infiniteScrolling (entries, observer, isIntersecting) {
-      if (
-        this.itemsLoaded.length >= this.items.length &&
-        isIntersecting &&
-        this.itemsToLoad > this.itemsLoaded.length
-      ) {
+      if (this.itemsLoaded.length >= this.items.length && isIntersecting) {
         this.reloading = true
         // TODO: Make it async
         this.getNewsItemsFromStore()
@@ -121,6 +113,7 @@ export default {
     getNewsItemsFromStore () {
       this.items = this.getNewsItems().items
       this.updateItemCountTotal(this.getNewsItems().total_count)
+      this.updateItemCountFiltered(this.items.length)
       console.log('number of newsitems: ' + this.getNewsItems().total_count)
     }
 
@@ -134,51 +127,7 @@ export default {
     }),
 
     filteredItems () {
-      let filteredData = [...this.items]
-
-      // TODO: Filtering should be done via API - only keep sorting on client
-
-      filteredData = filteredData.filter((item) => {
-        // Only show
-        const onlyShowAttr = this.filter.attributes.selected
-        if (onlyShowAttr.includes('unread') && item.read) return false
-        if (onlyShowAttr.includes('important') && !item.important) return false
-        if (onlyShowAttr.includes('shared') && !item.shared) return false
-        if (
-          onlyShowAttr.includes('selected') &&
-          !this.getNewsItemsSelection().includes(item.id)
-        ) {
-          return false
-        }
-
-        // Tags filter
-        const tagsResult =
-          !this.filter.tags.selected.length ||
-          filterTags(
-            item.tags,
-            this.filter.tags.selected,
-            this.filter.tags.andOperator
-          )
-        if (!tagsResult) return false
-
-        // Date filter
-        const dateResult =
-          this.filter.date.selected === 'all' ||
-          filterDateRange(
-            item.published,
-            this.filter.date.selected,
-            this.filter.date.range
-          )
-        if (!dateResult) return false
-
-        // Search filter
-        const searchResult =
-          !this.filter.search ||
-          filterSearch([item.title, item.summary], this.filter.search)
-        if (!searchResult) return false
-
-        return true
-      })
+      const filteredData = [...this.items]
 
       // SORTING
       filteredData.sort((x, y) => {

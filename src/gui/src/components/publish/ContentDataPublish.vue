@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import CardProduct from './CardProduct'
 
 export default {
@@ -25,6 +26,7 @@ export default {
     }
   }),
   methods: {
+    ...mapGetters('publish', ['getProducts']),
     infiniteScrolling (entries, observer, isIntersecting) {
       if (this.data_loaded && isIntersecting) {
         this.updateData(true, false)
@@ -49,7 +51,7 @@ export default {
       }
       this.$store.dispatch('getAllProducts', { filter: this.filter, offset: offset, limit: limit })
         .then(() => {
-          this.collections = this.collections.concat(this.$store.getters.getProducts.items)
+          this.collections = this.collections.concat(this.getProducts())
           setTimeout(() => {
             this.data_loaded = true
           }, 1000)

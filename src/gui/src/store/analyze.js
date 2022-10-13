@@ -11,21 +11,21 @@ const state = {
 
 const actions = {
 
-  getAllReportItemGroups (context, data) {
-    return getAllReportItemGroups(data)
+  loadReportItemGroups (context) {
+    return getAllReportItemGroups()
       .then(response => {
         context.commit('setReportItemGroups', response.data)
       })
   },
 
-  getAllReportItems (context, data) {
+  loadReportItems (context, data) {
     return getAllReportItems(data)
       .then(response => {
         context.commit('setReportItems', response.data)
       })
   },
 
-  getAllReportItemTypes (context, data) {
+  loadReportItemTypes (context, data) {
     return getAllReportItemTypes(data)
       .then(response => {
         context.commit('setReportItemTypes', response.data)

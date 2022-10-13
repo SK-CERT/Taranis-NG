@@ -31,7 +31,7 @@
             <ContentData
                     name="PresentersNodes"
                     cardItem="CardNode"
-                    action="config/getAllPresentersNodes"
+                    action="config/loadPresentersNodes"
                     getter="config/getPresentersNodes"
                     deletePermission="CONFIG_PRESENTERS_NODE_DELETE"
             />

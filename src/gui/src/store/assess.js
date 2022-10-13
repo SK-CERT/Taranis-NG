@@ -98,10 +98,6 @@ const actions = {
     context.commit('removeSelection', data)
   },
 
-  changeCurrentGroup(context, data) {
-    context.commit('setCurrentGroup', data)
-  },
-
   changeMergeAttr(context, { src, dest }) {
     context.commit('CHANGE_MERGE_ATTR', { src, dest })
   },

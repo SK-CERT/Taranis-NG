@@ -183,14 +183,11 @@ export default {
     ...mapActions('assess', [
       'updateNewsItems'
     ]),
-    ...mapActions(['updateItemCountFiltered']),
     ...mapActions('filter', ['setScope', 'setFilter', 'setOrder']),
     ...mapGetters('filter', ['getNewsItemsFilter']),
     updateScope (scope) {
-      console.log('INPUT TO updateScope: ' + this.getNewsItemsFilter())
       this.setScope(scope)
       this.updateNewsItems()
-      this.updateItemCountFiltered(15)
     }
   },
   created () {

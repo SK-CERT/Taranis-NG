@@ -253,7 +253,10 @@ export function exportOSINTSources (data) {
 }
 
 export function getAllOSINTSourceGroups (filter) {
-  return ApiService.get(`/config/osint-source-groups?search=${filter.search}`)
+  if (filter) {
+    return ApiService.get(`/config/osint-source-groups?search=${filter}`)
+  }
+  return ApiService.get('/config/osint-source-groups')
 }
 
 export function createNewOSINTSourceGroup (group) {

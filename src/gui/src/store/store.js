@@ -25,7 +25,8 @@ const state = {
   vertical_view: false,
   itemCountTotal: 0,
   itemCountFiltered: 0,
-  drawerVisible: true
+  drawerVisible: true,
+  coreAPIURL: process.env.VUE_APP_TARANIS_NG_CORE_API
 }
 
 const actions = {
@@ -132,6 +133,10 @@ const getters = {
 
   getVerticalView() {
     return state.vertical_view
+  },
+
+  getStoreAPIURL() {
+    return state.coreAPIURL
   }
 }
 

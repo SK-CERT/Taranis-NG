@@ -13,10 +13,7 @@
       </template>
       <template v-slot:content>
         <!-- Load News Items -->
-        <AssessContent
-          :itemsToLoad="itemsToLoad"
-          ref="contentData"
-        />
+        <AssessContent/>
       </template>
     </ViewLayout>
   </div>
@@ -41,7 +38,6 @@ export default {
   },
   mixins: [KeyboardMixin('assess')],
   data: () => ({
-    itemsToLoad: 0
   }),
   computed: {
     ...mapState('filter', {
@@ -66,9 +62,8 @@ export default {
     console.log('update SourceList')
     this.updateOSINTSourceGroupsList()
     this.updateOSINTSources()
-
-    // Clear all news items filter
     this.resetNewsItemsFilter()
+    this.updateNewsItems()
   }
 }
 </script>

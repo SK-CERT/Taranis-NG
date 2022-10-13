@@ -10,9 +10,9 @@ const state = {
       range: '',
       date: '',
       tags: [],
-      in_analyze: false,
-      relevant: false,
-      important: false
+      in_analyze: undefined,
+      relevant: undefined,
+      important: undefined
     }
   },
   newsItemsOrder: {
@@ -55,9 +55,9 @@ const mutations = {
         range: '',
         date: '',
         tags: [],
-        in_analyze: false,
-        relevant: false,
-        important: false
+        in_analyze: undefined,
+        relevant: undefined,
+        important: undefined
       }
     }
   },
