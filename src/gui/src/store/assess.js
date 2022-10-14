@@ -1,4 +1,4 @@
-import { getNewsItemAggregateByGroup, getOSINTSourceGroupsList, getTopStories, getNewsItemAggregate, getOSINTSourcesList } from '@/api/assess'
+import { getNewsItemsAggregates, getOSINTSourceGroupsList, getTopStories, getNewsItemAggregate, getOSINTSourcesList } from '@/api/assess'
 import { filter } from '@/store/filter'
 import { xor } from 'lodash'
 
@@ -23,14 +23,15 @@ const actions = {
       })
   },
 
-  updateNewsItemsByGroup(context, group_id, newsItemsFilter) {
-    return getNewsItemAggregateByGroup(group_id, newsItemsFilter)
+  updateNewsItemsByGroup(context, newsItemsFilter) {
+    return getNewsItemsAggregates(newsItemsFilter)
       .then(response => {
         context.commit('UPDATE_NEWSITEMS', response.data)
       })
   },
+
   updateNewsItems(context) {
-    return getNewsItemAggregateByGroup(filter.state.scope, filter.state.newsItemsFilter)
+    return getNewsItemsAggregates(filter.state.newsItemsFilter)
       .then(response => {
         context.commit('UPDATE_NEWSITEMS', response.data)
       })

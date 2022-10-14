@@ -22,7 +22,7 @@ const ApiService = {
   getQueryStringFromNestedObject (filterObject) {
     return Object.entries(filterObject).filter(([key, val]) => val != null).map(function ([key, val]) {
       if (typeof val === 'object') {
-        return getQueryStringFromObject(val)
+        return ApiService.getQueryStringFromObject(val)
       }
       return `${key}=${val}`
     }).join('&')

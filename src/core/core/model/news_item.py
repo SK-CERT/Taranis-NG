@@ -910,7 +910,6 @@ class NewsItemAggregate(db.Model):
 
     @classmethod
     def group_action(cls, data, user):
-
         osint_source_ids = set()
 
         if data["action"] == "GROUP":

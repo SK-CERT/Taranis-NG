@@ -29,10 +29,10 @@ export default {
     collections: [],
     data_loaded: false,
     filter: {
-      search: '',
+      search: undefined,
       range: 'ALL',
-      completed: false,
-      incompleted: false,
+      completed: undefined,
+      incompleted: undefined,
       sort: 'DATE_DESC'
     }
   }),
@@ -98,11 +98,8 @@ export default {
 
       this.loadReportItems({ group: group, filter: this.filter, offset: offset, limit: limit })
         .then(() => {
-          this.collections = this.collections.concat(this.getReportItems().items)
-          this.$emit('new-data-loaded', this.collections.length)
-          setTimeout(() => {
-            this.data_loaded = true
-          }, 1000)
+          this.collections = this.collections.concat(this.getReportItems())
+          this.data_loaded = true
         })
     },
 

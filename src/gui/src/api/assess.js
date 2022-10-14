@@ -16,46 +16,14 @@ export function getManualOSINTSources () {
   return ApiService.get('/assess/manual-osint-sources')
 }
 
-export function buildFilterQuery (group_id, filter_data) {
-  var filter = '?limit=' + filter_data.limit
-  if (typeof filter_data.filter.important !== 'undefined') {
-    filter += '&important=' + filter_data.filter.important
-  }
-  if (typeof filter_data.filter.in_analyze !== 'undefined') {
-    filter += '&in_analyze=' + filter_data.filter.in_analyze
-  }
-  if (typeof filter_data.filter.relevant !== 'undefined') {
-    filter += '&relevant=' + filter_data.filter.relevant
-  }
-
-  if (filter_data.offset !== 0) {
-    filter += '&offset=' + filter_data.offset
-  }
-  if (filter_data.filter.range !== '') {
-    filter += '&range=' + filter_data.filter.range
-  }
-  if (group_id !== '') {
-    filter += '&group=' + group_id
-  }
-  if (filter_data.filter.search !== '') {
-    filter += '&search=' + filter_data.filter.search
-  }
-  return filter
-}
-
-export function getNewsItemAggregateByGroup (group_id, filter_data) {
-  const filter = buildFilterQuery(group_id, filter_data)
-  return ApiService.get(`/assess/news-item-aggregates${filter}`)
-}
-
 export function getNewsItemsAggregates (filter_data) {
-  const filter = buildFilterQuery('', filter_data)
-  return ApiService.get(`/assess/news-item-aggregates${filter}`)
+  const filter = ApiService.getQueryStringFromNestedObject(filter_data)
+  return ApiService.get(`/assess/news-item-aggregates?${filter}`)
 }
 
 export function getNewsItems (filter_data) {
-  const filter = buildFilterQuery('', filter_data)
-  return ApiService.get(`/assess/news-items${filter}`)
+  const filter = ApiService.getQueryStringFromNestedObject(filter_data)
+  return ApiService.get(`/assess/news-items?${filter}`)
 }
 
 export function getTopStories () {

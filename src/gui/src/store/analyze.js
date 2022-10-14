@@ -97,7 +97,7 @@ const getters = {
   },
 
   getReportItems (state) {
-    return state.report_items
+    return state.report_items.items
   },
 
   getReportItemTypes (state) {

@@ -4,12 +4,13 @@ const state = {
   newsItemsFilter: {
     offset: 0,
     limit: 15,
+    group: undefined,
     filter: {
-      search: '',
-      sort: '',
-      range: '',
-      date: '',
-      tags: [],
+      search: undefined,
+      sort: undefined,
+      range: undefined,
+      date: undefined,
+      tags: undefined,
       in_analyze: undefined,
       relevant: undefined,
       important: undefined
@@ -49,12 +50,13 @@ const mutations = {
     state.newsItemsFilter = {
       offset: 0,
       limit: 15,
+      group: undefined,
       filter: {
-        search: '',
-        sort: '',
-        range: '',
-        date: '',
-        tags: [],
+        search: undefined,
+        sort: undefined,
+        range: undefined,
+        date: undefined,
+        tags: undefined,
         in_analyze: undefined,
         relevant: undefined,
         important: undefined
@@ -63,6 +65,7 @@ const mutations = {
   },
   SET_SCOPE(state, scope) {
     state.scope = scope
+    state.newsItemsFilter.group = scope
   },
   SET_FILTER(state, filter) {
     state.newsItemsFilter.filter = filter
