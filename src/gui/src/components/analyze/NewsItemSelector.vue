@@ -56,7 +56,6 @@
             <ToolbarFilterAssess
               analyze_selector
               total_count_title="assess.total_count"
-              @update-news-items-filter="updateFilter"
               ref="toolbarFilter"
             />
           </div>
@@ -66,10 +65,8 @@
             :selection="values"
             class="item-selector"
             card-item="CardAssess"
-            @update-news-items-filter="updateFilter"
             selfID="selector_assess_analyze"
             data_set="assess_news_item"
-            ref="contentData"
             @new-data-loaded="newDataLoaded"
           />
         </v-container>
@@ -117,6 +114,7 @@ import NewsItemSingleDetail from '@/components/assess/NewsItemSingleDetail'
 import NewsItemDetail from '@/components/assess/NewsItemDetail'
 import NewsItemAggregateDetail from '@/components/assess/NewsItemAggregateDetail'
 import { getReportItemData, updateReportItem } from '@/api/analyze'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'NewsItemSelector',
@@ -139,8 +137,8 @@ export default {
   data: () => ({
     dialog: false,
     value: '',
-    groups: [],
     links: [],
+    groups: [],
     selected_group_id: ''
   }),
   mixins: [AuthMixin],
@@ -154,22 +152,18 @@ export default {
     }
   },
   methods: {
+    ...mapGetters('config', ['getOSINTSourceGroups']),
+    ...mapActions('config', ['loadOSINTSourceGroups']),
     cardLayout: function () {
       return 'CardAssess'
     },
 
     changeGroup (e, group_id) {
       this.selected_group_id = group_id
-      this.$store.dispatch('changeCurrentGroup', group_id)
-      this.$refs.contentData.updateData(false, false)
     },
 
     openSelector () {
-      this.selected_group_id = this.$store.getters.getCurrentGroup
-      if (this.selected_group_id === '') {
-        this.selected_group_id = this.groups[0].id
-        this.$store.dispatch('changeCurrentGroup', this.selected_group_id)
-      }
+      this.selected_group_id = this.groups[0].id
       this.$store.dispatch('multiSelect', true)
       this.dialog = true
     },
@@ -220,10 +214,6 @@ export default {
 
     newDataLoaded (count) {
       this.$refs.toolbarFilter.updateDataCount(count)
-    },
-
-    updateFilter (filter) {
-      this.$refs.contentData.updateFilter(filter)
     },
 
     removeFromSelector (aggregate) {
@@ -282,17 +272,10 @@ export default {
     }
   },
 
-  updated () {
-    if (this.dialog === true) {
-      this.$refs.contentData.updateData(false, false)
-    }
-  },
-
   mounted () {
-    this.$store
-      .dispatch('getAllOSINTSourceGroupsAssess', { search: '' })
+    this.loadOSINTSourceGroups()
       .then(() => {
-        this.groups = this.$store.getters.getOSINTSourceGroups.items
+        this.groups = this.getOSINTSourceGroups()
         for (let i = 0; i < this.groups.length; i++) {
           this.links.push({
             icon: 'mdi-folder-multiple',
@@ -301,7 +284,6 @@ export default {
           })
         }
       })
-
     this.$root.$on('report-item-updated', this.report_item_updated)
   },
 
