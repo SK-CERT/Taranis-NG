@@ -17,6 +17,7 @@ gunicorn_logger.setLevel(logging.INFO)
 sys_logger = logging.getLogger('SysLogger')
 sys_logger.setLevel(logging.INFO)
 
+# custom module ID to append to log messages
 if "MODULE_ID" in os.environ:
     module_id = os.environ.get("MODULE_ID")
 else:
@@ -26,7 +27,6 @@ else:
 if "DEBUG" in os.environ and os.environ.get("DEBUG").lower() == "true":
     gunicorn_logger.setLevel(logging.DEBUG)
     sys_logger.setLevel(logging.DEBUG)
-
 
 # send a debug message
 def log_debug(message):
@@ -54,6 +54,13 @@ def log_info(message):
     gunicorn_logger.info(formatted_message)
     if sys_logger:
         sys_logger.info(formatted_message)
+
+# send an warning message
+def log_warning(message):
+    formatted_message = "[{}] {}".format(module_id,message)
+    gunicorn_logger.warning(formatted_message)
+    if sys_logger:
+        sys_logger.warning(formatted_message)
 
 # send a critical message
 def log_critical(message):
