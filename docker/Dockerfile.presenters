@@ -1,4 +1,14 @@
-FROM python:3.7-alpine3.14
+FROM python:3.7-alpine3.14 AS build_shared
+
+WORKDIR /build_shared/
+
+RUN pip install --no-cache-dir build
+COPY ./src/shared/. .
+RUN python -m build
+
+
+
+FROM python:3.7-alpine3.14 AS production
 
 WORKDIR /app/
 
@@ -73,9 +83,15 @@ RUN \
     update-ms-fonts && \
     rm -rf /var/cache/*
 
-COPY ./src/presenters/requirements.txt /app/requirements.txt
+# install "shared" package from build_shared stage
+# TODO: somehow squash the following two layers into one to conserve space
+
+COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl custom_packages/
+RUN pip install --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
 
 # install dependencies
+
+COPY ./src/presenters/requirements.txt /app/requirements.txt
 RUN \
     apk add --no-cache --virtual .build-deps \
     gcc \
