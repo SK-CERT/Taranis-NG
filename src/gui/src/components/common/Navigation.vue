@@ -1,6 +1,12 @@
 <template>
+  <v-navigation-drawer
+    clipped
+    app
+    color="cx-drawer-bg"
+    class="sidebar"
+    style="max-height: 100% !important; height: calc(100vh - 48px) !important"
+  >
     <v-layout class="navigation" fill-height justify-center>
-
         <v-list class="navigation-list pa-0">
             <v-list-item class="section-icon" dense>
                 <v-list-item-title>
@@ -18,10 +24,9 @@
                     <v-divider class="section-divider " color="white"></v-divider>
                 </v-list-item-content>
             </v-list-item>
-
         </v-list>
-
     </v-layout>
+  </v-navigation-drawer>
 </template>
 
 <script>

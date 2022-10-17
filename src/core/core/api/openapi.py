@@ -12,7 +12,7 @@ class OpenAPI(Resource):
             return send_from_directory(Config.OpenAPI, "openapi3_0.yaml")
         except Exception:
             logger.log_debug_trace(f"ERROR: Loading openapi3_0.yaml from: {Config.OpenAPI}")
-            return 404, "OpenAPI file not found"
+            return "OpenAPI file not found", 404
 
 
 def initialize(api):

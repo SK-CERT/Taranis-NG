@@ -16,10 +16,7 @@ class Logger(TaranisLogger):
 
     def resolve_resource(self):
         fp_len = len(request.full_path)
-        if request.full_path[fp_len - 1] == "?":
-            return request.full_path[: fp_len - 1]
-        else:
-            return request.full_path
+        return request.full_path[: fp_len - 1] if request.full_path[fp_len - 1] == "?" else request.full_path
 
     def resolve_data(self):
         if "application/json" not in request.headers.get("Content-Type", ""):

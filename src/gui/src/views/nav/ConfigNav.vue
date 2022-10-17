@@ -1,9 +1,9 @@
 <template>
-    <Navigation
-            :links  = "links"
-            :icon   = "'mdi-ballot-outline'"
-            filter
-    />
+  <Navigation
+    :links  = "links"
+    :icon   = "'mdi-ballot-outline'"
+    filter
+  />
 </template>
 
 <script>

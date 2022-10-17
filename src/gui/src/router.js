@@ -331,26 +331,8 @@ router.beforeEach((to, from, next) => {
         const loginURL = (store.getters.getLoginURL) ? store.getters.getLoginURL : '/login'
         window.location = encodeURI(loginURL)
       }
-    } else if (to.path === '/') {
-      if (AuthService.hasPermission(Permissions.ASSESS_ACCESS)) {
-        next({ path: '/dashboard' })
-      } else if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
-        next({ path: '/config' })
-      } else if (AuthService.hasPermission(Permissions.MY_ASSETS_ACCESS)) {
-        next({ path: '/myassets' })
-      } else if (AuthService.hasPermission(Permissions.MY_ASSETS_CONFIG)) {
-        next({ path: '/user' })
-      }
     } else {
-      if (to.meta.requiresPerm.length > 0) {
-        if (AuthService.hasAnyPermission(to.meta.requiresPerm)) {
-          next()
-        } else {
-          next({ path: '/' })
-        }
-      } else {
-        next()
-      }
+      next()
     }
   } else {
     next()
