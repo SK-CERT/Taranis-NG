@@ -53,6 +53,10 @@ jobs:
           files: |
             src/core/dist/taranis_ng_core-*.whl
             src/core/dist/taranis_ng_core-*.tar.gz
+      - name: Release to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN_CORE }}
 
   build_docker:
     name: build docker
