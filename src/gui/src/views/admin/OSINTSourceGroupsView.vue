@@ -2,7 +2,7 @@
     <ViewLayout>
         <template v-slot:panel>
             <ToolbarFilter title='nav_menu.osint_source_groups' total_count_title="osint_source_group.total_count"
-                           total_count_getter="getOSINTSourceGroups">
+                           total_count_getter="config/getOSINTSourceGroups">
                 <template v-slot:addbutton>
                     <NewOSINTSourceGroup/>
                 </template>
@@ -13,8 +13,8 @@
             <ContentData
                     name="OSINTSourceGroups"
                     cardItem="CardGroup"
-                    action="getAllOSINTSourceGroups"
-                    getter="getOSINTSourceGroups"
+                    action="config/getAllOSINTSourceGroups"
+                    getter="config/getOSINTSourceGroups"
                     deletePermission="CONFIG_OSINT_SOURCE_GROUP_DELETE"
             />
         </template>

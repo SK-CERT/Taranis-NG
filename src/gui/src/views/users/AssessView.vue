@@ -2,7 +2,6 @@
   <div>
     <ViewLayout>
       <template v-slot:panel>
-        <!-- Display Story Header -->
         <v-expand-transition style="width: 100%">
           <story-header-assess
             v-if="showStoryHeader"
@@ -12,7 +11,6 @@
 
       </template>
       <template v-slot:content>
-        <!-- Load News Items -->
         <AssessContent/>
       </template>
     </ViewLayout>

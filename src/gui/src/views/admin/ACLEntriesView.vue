@@ -2,7 +2,7 @@
     <ViewLayout>
         <template v-slot:panel>
             <ToolbarFilter title='acl.full_title' total_count_title="acl.total_count"
-                           total_count_getter="getACLEntries">
+                           total_count_getter="config/getACLEntries">
                 <template v-slot:addbutton>
                     <NewACL/>
                 </template>
@@ -11,11 +11,11 @@
         </template>
         <template v-slot:content>
             <ContentData
-                    name = "ACLEntries"
-                    cardItem="CardPreset"
-                    action="getAllACLEntries"
-                    getter="getACLEntries"
-                    deletePermission="CONFIG_ACL_DELETE"
+                name = "ACLEntries"
+                cardItem="CardPreset"
+                action="config/getAllACLEntries"
+                getter="config/getACLEntries"
+                deletePermission="CONFIG_ACL_DELETE"
             />
         </template>
     </ViewLayout>

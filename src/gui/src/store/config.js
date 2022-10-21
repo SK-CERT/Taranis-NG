@@ -346,6 +346,10 @@ const getters = {
   },
 
   getCollectorsNodes (state) {
+    state.collectors_nodes.items.map(function (item) {
+      item.type = 'Collector'
+      return item
+    })
     return state.collectors_nodes
   },
 
@@ -362,10 +366,18 @@ const getters = {
   },
 
   getPresentersNodes (state) {
+    state.presenters_nodes.items.map(function (item) {
+      item.type = 'Presenter'
+      return item
+    })
     return state.presenters_nodes
   },
 
   getPublishersNodes (state) {
+    state.publishers_nodes.items.map(function (item) {
+      item.type = 'Publisher'
+      return item
+    })
     return state.publishers_nodes
   },
 
@@ -374,6 +386,10 @@ const getters = {
   },
 
   getBotsNodes (state) {
+    state.bots_nodes.items.map(function (item) {
+      item.type = 'Bot'
+      return item
+    })
     return state.bots_nodes
   },
 

@@ -2,7 +2,7 @@
     <ViewLayout>
         <template v-slot:panel>
             <ToolbarFilter title='nav_menu.osint_sources' total_count_title="osint_source.total_count"
-                           total_count_getter="getOSINTSources">
+                           total_count_getter="config/getOSINTSources">
                 <template v-slot:addbutton>
                     <NewOSINTSource/>
                 </template>
@@ -13,8 +13,8 @@
             <ContentData
                     name = "OSINTSources"
                     cardItem="CardSource"
-                    action="getAllOSINTSources"
-                    getter="getOSINTSources"
+                    action="config/getAllOSINTSources"
+                    getter="config/getOSINTSources"
                     deletePermission="CONFIG_OSINT_SOURCE_DELETE"
             />
         </template>
