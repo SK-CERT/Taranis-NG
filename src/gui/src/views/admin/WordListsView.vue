@@ -12,7 +12,7 @@
             <ContentData
                     name="WordLists"
                     cardItem="CardCompact"
-                    action="config/getAllWordLists"
+                    action="config/loadWordLists"
                     getter="config/getWordLists"
                     deletePermission="CONFIG_WORD_LIST_DELETE"
             />

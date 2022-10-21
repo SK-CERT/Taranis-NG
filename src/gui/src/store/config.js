@@ -91,14 +91,14 @@ const actions = {
       })
   },
 
-  getAllRoles (context, data) {
+  loadRoles (context, data) {
     return getAllRoles(data)
       .then(response => {
         context.commit('setRoles', response.data)
       })
   },
 
-  getAllACLEntries (context, data) {
+  loadACLEntries (context, data) {
     return getAllACLEntries(data)
       .then(response => {
         context.commit('setACLEntries', response.data)
@@ -112,7 +112,7 @@ const actions = {
       })
   },
 
-  getAllUsers (context, data) {
+  loadUsers (context, data) {
     return getAllUsers(data)
       .then(response => {
         context.commit('setUsers', response.data)
@@ -126,7 +126,7 @@ const actions = {
       })
   },
 
-  getAllWordLists (context, data) {
+  loadWordLists (context, data) {
     return getAllWordLists(data)
       .then(response => {
         context.commit('setWordLists', response.data)
@@ -154,7 +154,7 @@ const actions = {
       })
   },
 
-  getAllCollectorsNodes (context, data) {
+  loadCollectorsNodes (context, data) {
     return getAllCollectorsNodes(data)
       .then(response => {
         context.commit('setCollectorsNodes', response.data)

@@ -13,7 +13,7 @@
             <ContentData
                     name = "Users"
                     cardItem="CardUser"
-                    action="config/getAllUsers"
+                    action="config/loadUsers"
                     getter="config/getUsers"
                     deletePermission="CONFIG_USER_DELETE"
             />

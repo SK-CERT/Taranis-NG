@@ -14,7 +14,7 @@
         <ContentData
                 name="CollectorsNodes"
                 cardItem="CardNode"
-                action="config/getAllCollectorsNodes"
+                action="config/loadCollectorsNodes"
                 getter="config/getCollectorsNodes"
                 deletePermission="CONFIG_COLLECTORS_NODE_DELETE"
         />

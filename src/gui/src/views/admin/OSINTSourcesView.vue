@@ -13,7 +13,7 @@
             <ContentData
                     name = "OSINTSources"
                     cardItem="CardSource"
-                    action="config/getAllOSINTSources"
+                    action="config/loadOSINTSources"
                     getter="config/getOSINTSources"
                     deletePermission="CONFIG_OSINT_SOURCE_DELETE"
             />
@@ -24,7 +24,7 @@
 <script>
 import ViewLayout from '../../components/layouts/ViewLayout'
 import NewOSINTSource from '../../components/config/osint_sources/NewOSINTSource'
-import ToolbarFilter from '../../components/common/ToolbarFilterOSINTSource'
+import ToolbarFilter from '../../components/common/ToolbarFilter'
 import ContentData from '../../components/common/content/ContentData'
 import { deleteOSINTSource } from '@/api/config'
 

@@ -13,7 +13,7 @@
             <ContentData
                     name="OSINTSourceGroups"
                     cardItem="CardGroup"
-                    action="config/getAllOSINTSourceGroups"
+                    action="config/loadOSINTSourceGroups"
                     getter="config/getOSINTSourceGroups"
                     deletePermission="CONFIG_OSINT_SOURCE_GROUP_DELETE"
             />

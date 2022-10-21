@@ -13,7 +13,7 @@
             <ContentData
                     name = "Roles"
                     cardItem="CardPreset"
-                    action="config/getAllRoles"
+                    action="config/loadRoles"
                     getter="config/getRoles"
                     deletePermission="CONFIG_ROLE_DELETE"
             />
