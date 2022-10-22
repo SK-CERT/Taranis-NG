@@ -46,8 +46,6 @@ class AccountManagement(Command):
     )
 
     def run(self, opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, opt_password, opt_roles):
-        from scripts import permissions
-        permissions.run(db_manager.db)
 
         if (opt_list):
             users = user.User.get_all()
@@ -144,8 +142,6 @@ class RoleManagement(Command):
     )
 
     def run(self, opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_id, opt_name, opt_description, opt_permissions):
-        from scripts import permissions
-        permissions.run(db_manager.db)
 
         if (opt_list):
             roles = None
