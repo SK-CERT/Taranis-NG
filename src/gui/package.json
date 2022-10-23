@@ -84,10 +84,7 @@
     },
     "parserOptions": {
       "parser": "babel-eslint"
-    },
-    "vue/valid-v-slot": ["error", {
-      "allowModifiers": true
-    }]
+    }
   },
   "postcss": {
     "plugins": {
