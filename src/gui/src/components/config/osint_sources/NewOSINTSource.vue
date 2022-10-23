@@ -329,13 +329,13 @@ export default {
 
     loadAllOSINTSourceGroups () {
       this.loadOSINTSourceGroups({ search: '' })
-      // .then(() => {
-      //   this.osint_source_groups = this.getOSINTSourceGroups().items.map(item => {
-      //     if (!item.default) {
-      //       return item
-      //     }
-      //   })
-      // })
+        .then(() => {
+          this.osint_source_groups = this.getOSINTSourceGroups().map(item => {
+            if (!item.default) {
+              return item
+            }
+          })
+        })
     }
   },
   mounted () {
