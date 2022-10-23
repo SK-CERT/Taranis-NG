@@ -73,6 +73,7 @@
     ],
     "rules": {
       "camelcase": "off",
+      "vue/multi-word-component-names": "off",
       "space-before-function-paren": 0,
       "quotes": [
         2,

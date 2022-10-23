@@ -5,7 +5,7 @@
         <v-expand-transition style="width: 100%">
           <story-header-assess
             v-if="showStoryHeader"
-            :story="showStoryHeader()"
+            :story="showStoryHeader"
           />
         </v-expand-transition>
 
