@@ -9,8 +9,8 @@ from managers.db_manager import db
 from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSourceGroup, OSINTSource
 from model.tag_cloud import TagCloud
-from schema.acl_entry import ItemType
-from schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, \
+from shared.schema.acl_entry import ItemType
+from shared.schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, \
     NewsItemRemoteSchema
 
 

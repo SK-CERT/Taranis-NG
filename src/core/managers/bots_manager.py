@@ -2,7 +2,7 @@ from model.bots_node import BotsNode
 from model.bot import Bot
 from model.bot_preset import BotPreset
 from remote.bots_api import BotsApi
-from schema.bots_node import BotsNode as BotsNodeSchema
+from shared.schema.bots_node import BotsNode as BotsNodeSchema
 
 
 def add_bots_node(data):

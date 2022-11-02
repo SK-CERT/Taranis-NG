@@ -5,7 +5,7 @@ import uuid
 from managers.db_manager import db
 from model.parameter_value import NewParameterValueSchema
 from model.publishers_node import PublishersNode
-from schema.publisher_preset import PublisherPresetSchema, PublisherPresetPresentationSchema
+from shared.schema.publisher_preset import PublisherPresetSchema, PublisherPresetPresentationSchema
 
 
 class NewPublisherPresetSchema(PublisherPresetSchema):

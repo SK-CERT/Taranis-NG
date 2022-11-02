@@ -6,7 +6,7 @@ from sqlalchemy.sql import label
 
 from managers.db_manager import db
 from model.word_list import WordListEntry
-from schema.tag_cloud import TagCloudSchema, GroupedWordsSchema
+from shared.schema.tag_cloud import TagCloudSchema, GroupedWordsSchema
 
 
 class NewTagCloudSchema(TagCloudSchema):

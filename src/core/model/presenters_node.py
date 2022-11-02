@@ -3,7 +3,7 @@ from sqlalchemy import func, or_, orm
 import uuid
 
 from managers.db_manager import db
-from schema.presenters_node import PresentersNodeSchema, PresentersNodePresentationSchema
+from shared.schema.presenters_node import PresentersNodeSchema, PresentersNodePresentationSchema
 
 
 class NewPresentersNodeSchema(PresentersNodeSchema):

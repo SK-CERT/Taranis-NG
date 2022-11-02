@@ -8,8 +8,8 @@ from managers.db_manager import db
 from model.product import Product
 from model.parameter_value import NewParameterValueSchema
 from model.acl_entry import ACLEntry
-from schema.acl_entry import ItemType
-from schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
+from shared.schema.acl_entry import ItemType
+from shared.schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
 
 
 class NewProductTypeSchema(ProductTypeSchema):
