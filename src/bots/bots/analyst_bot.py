@@ -1,8 +1,8 @@
 import re
 
 from .base_bot import BaseBot
-from schema import news_item
-from schema.parameter import Parameter, ParameterType
+from shared.schema import news_item
+from shared.schema.parameter import Parameter, ParameterType
 from remote.core_api import CoreApi
 
 
