@@ -50,6 +50,13 @@ def log_info(message):
     if sys_logger:
         sys_logger.info(formatted_message)
 
+# send an warning message
+def log_warning(message):
+    formatted_message = "[{}] {}".format(module_id,message)
+    gunicorn_logger.warning(formatted_message)
+    if sys_logger:
+        sys_logger.warning(formatted_message)
+
 # send a critical message
 def log_critical(message):
     formatted_message = "[{}] {}".format(module_id,message)

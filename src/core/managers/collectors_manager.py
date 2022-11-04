@@ -4,8 +4,8 @@ from model.collector import Collector
 from model.collectors_node import CollectorsNode
 from model.osint_source import OSINTSource
 from remote.collectors_api import CollectorsApi
-from schema.collectors_node import CollectorsNode as CollectorNodeSchema
-from schema.osint_source import OSINTSourceExportRootSchema, OSINTSourceExportRoot
+from shared.schema.collectors_node import CollectorsNode as CollectorNodeSchema
+from shared.schema.osint_source import OSINTSourceExportRootSchema, OSINTSourceExportRoot
 
 
 def add_collectors_node(data):

@@ -6,9 +6,9 @@ from managers.db_manager import db
 from model.report_item import ReportItem
 from model.user import User
 from model.notification_template import NotificationTemplate
-from schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
-from schema.user import UserIdSchema
-from schema.notification_template import NotificationTemplateIdSchema
+from shared.schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
+from shared.schema.user import UserIdSchema
+from shared.schema.notification_template import NotificationTemplateIdSchema
 
 
 class NewAssetCpeSchema(AssetCpeSchema):
@@ -21,9 +21,7 @@ class NewAssetCpeSchema(AssetCpeSchema):
 class AssetCpe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.String())
-
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'))
-    asset = db.relationship("Asset")
 
     def __init__(self, value):
         self.id = None
@@ -46,9 +44,7 @@ class Asset(db.Model):
 
     asset_group_id = db.Column(db.String, db.ForeignKey('asset_group.id'))
     asset_group = db.relationship("AssetGroup")
-
     asset_cpes = db.relationship("AssetCpe", cascade="all, delete-orphan")
-
     vulnerabilities = db.relationship("AssetVulnerability", cascade="all, delete-orphan")
     vulnerabilities_count = db.Column(db.Integer, default=0)
 
@@ -209,10 +205,7 @@ class Asset(db.Model):
 class AssetVulnerability(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     solved = db.Column(db.Boolean, default=False)
-
     asset_id = db.Column(db.Integer, db.ForeignKey('asset.id'))
-    asset = db.relationship("Asset")
-
     report_item_id = db.Column(db.Integer, db.ForeignKey('report_item.id'))
     report_item = db.relationship("ReportItem")
 

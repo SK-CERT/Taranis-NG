@@ -2,7 +2,7 @@
     <div>
         <ViewLayout>
             <template v-slot:panel>
-                <ToolbarFilterAssess title='nav_menu.newsitems' total_count_title="assess.total_count"
+                <ToolbarFilterAssess title='nav_menu.newsitems' total_count_title="assess.total_count" selected_count_title="assess.selected_count"
                                      @update-news-items-filter="updateFilter"
                                      ref="toolbarFilter">
                     <template v-slot:addbutton>

@@ -5,8 +5,8 @@ from sqlalchemy.sql.expression import cast
 
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
-from schema.acl_entry import ItemType
-from schema.word_list import WordListCategorySchema, WordListEntrySchema, WordListSchema, WordListPresentationSchema
+from shared.schema.acl_entry import ItemType
+from shared.schema.word_list import WordListCategorySchema, WordListEntrySchema, WordListSchema, WordListPresentationSchema
 
 
 class NewWordListEntrySchema(WordListEntrySchema):
@@ -144,18 +144,22 @@ class WordListCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
     description = db.Column(db.String(), nullable=False)
+    link = db.Column(db.String(), nullable=True, default=None)
 
     word_list_id = db.Column(db.Integer, db.ForeignKey('word_list.id'))
 
     entries = db.relationship("WordListEntry", cascade="all, delete-orphan")
 
-    def __init__(self, name, description, entries):
+    def __init__(self, name = None, description = None, link = None, entries = None):
         self.id = None
+        if name in (None, ''):
+            raise Exception("Empty category name!")
         self.name = name
         if description is None:
             self.description = ''
         else:
             self.description = description
+        self.link = link
         self.entries = entries
 
     @staticmethod

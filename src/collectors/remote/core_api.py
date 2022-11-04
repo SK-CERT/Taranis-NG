@@ -4,8 +4,11 @@ import urllib
 import requests
 
 logger = logging.getLogger('gunicorn.error')
-logger.level = logging.DEBUG
+logger.level = logging.INFO
 
+# increase logging level
+if "DEBUG" in os.environ and os.environ.get("DEBUG").lower() == "true":
+    logger.setLevel(logging.DEBUG)
 
 class CoreApi:
     api_url = os.getenv('TARANIS_NG_CORE_URL')

@@ -50,6 +50,13 @@ def log_info(message):
     if sys_logger:
         sys_logger.info(formatted_message)
 
+# send an warning message
+def log_warning(message):
+    formatted_message = "[{}] {}".format(module_id,message)
+    gunicorn_logger.warning(formatted_message)
+    if sys_logger:
+        sys_logger.warning(formatted_message)
+
 # send a critical message
 def log_critical(message):
     formatted_message = "[{}] {}".format(module_id,message)
@@ -66,16 +73,16 @@ if "SYSLOG_URL" in os.environ and "SYSLOG_PORT" in os.environ:
         sys_logger.addHandler(sys_log_handler)
     except Exception as ex:
         sys_logger = None
-        log_debug("Unable to connect to syslog server!")
-        log_debug(ex)
+        log_warning("Unable to connect to syslog server!")
+        log_warning(ex)
 elif "SYSLOG_ADDRESS" in os.environ:
     try:
         sys_log_handler = logging.handlers.SysLogHandler(address=os.environ["SYSLOG_ADDRESS"])
         sys_logger.addHandler(sys_log_handler)
     except Exception as ex:
         sys_logger = None
-        log_debug("Unable to connect to syslog server!")
-        log_debug(ex)
+        log_warning("Unable to connect to syslog server!")
+        log_warning(ex)
 
 def log_system_activity(module, message):
     log_info("[{}] {}".format(module, message))
@@ -86,4 +93,4 @@ def log_collector_activity(collector_type, collector, message):
         collector,
         message
     )
-    log_info(log_text)
+    log_debug(log_text)

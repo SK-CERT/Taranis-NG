@@ -3,7 +3,7 @@ import uuid
 
 from managers.db_manager import db
 from model.parameter import NewParameterSchema
-from schema.publisher import PublisherSchema
+from shared.schema.publisher import PublisherSchema
 
 
 class NewPublisherSchema(PublisherSchema):

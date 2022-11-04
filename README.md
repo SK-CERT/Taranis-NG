@@ -48,7 +48,7 @@ This is just a taste of its features:
 - use wordlists for filtering and highlighting
 - publish the self-service asset management portal to your constituency and allow them to set various notification profiles for those times when a vulnerability hits their product.
 
-Hardware requirements: make sure to have at least 2 GB of RAM and 5 GB of disk
+Hardware requirements: make sure to have at least 2 GB of RAM, 2 CPU cores and 5 GB of disk
 storage available for running, 20 GB of disk storage if you want to build the
 project from scratch.
 
@@ -155,12 +155,16 @@ gzcat allitems.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
 ```
 
-### Creating the stop list for better tag cloud
+### Using the default stop lists for better tag cloud
 
-1. Visit Configuration -> Word Lists. Click `Add new`.
-2. Fill in the name and description, check `Use as stop word list`.
-3. Add a new category and name it.
-4. Either enter the words directly, or use the `Import from CSV` button. You can use the file [doc/static/en\_complete.csv](./doc/static/en_complete.csv) as a starting point. Stop lists for other languages can be found [here](https://www.maxqda.de/hilfe-mx20-dictio/stopp-listen).
+1. Visit Configuration -> Word Lists.
+2. Open the default word lists (starting with `Default ...`).
+3. Choose a word list URL or use the default URL present in the standard installation.
+4. Under Words, click `Download from URL`.
+5. Check whether the CSV file has a header or not, then click `Download from URL`. Choose which column has the value and description.
+6. Optionally, you can check `Delete existing words` option to remove any previous words in the list.
+7. Finally, if you are satisfied with the configuration, click `Import`.
+8. The word list will be imported and you can now save it, to be applied.
 
 ## About...
 

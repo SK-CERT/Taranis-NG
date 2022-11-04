@@ -5,10 +5,10 @@ from managers.db_manager import db
 from model.role import Role
 from model.permission import Permission
 from model.organization import Organization
-from schema.user import UserSchemaBase, UserProfileSchema, HotkeySchema, UserPresentationSchema
-from schema.role import RoleIdSchema, PermissionIdSchema
-from schema.organization import OrganizationIdSchema
-from schema.word_list import WordListIdSchema
+from shared.schema.user import UserSchemaBase, UserProfileSchema, HotkeySchema, UserPresentationSchema
+from shared.schema.role import RoleIdSchema, PermissionIdSchema
+from shared.schema.organization import OrganizationIdSchema
+from shared.schema.word_list import WordListIdSchema
 
 
 class NewUserSchema(UserSchemaBase):

@@ -11,10 +11,10 @@ from model.news_item import NewsItemAggregate
 from model.report_item_type import AttributeGroupItem
 from model.report_item_type import ReportItemType
 from model.acl_entry import ACLEntry
-from schema.acl_entry import ItemType
-from schema.attribute import AttributeType
-from schema.news_item import NewsItemAggregateIdSchema, NewsItemAggregateSchema
-from schema.report_item import ReportItemAttributeBaseSchema, ReportItemBaseSchema, ReportItemIdSchema, RemoteReportItemSchema, ReportItemRemoteSchema, ReportItemSchema, ReportItemPresentationSchema
+from shared.schema.acl_entry import ItemType
+from shared.schema.attribute import AttributeType
+from shared.schema.news_item import NewsItemAggregateIdSchema, NewsItemAggregateSchema
+from shared.schema.report_item import ReportItemAttributeBaseSchema, ReportItemBaseSchema, ReportItemIdSchema, RemoteReportItemSchema, ReportItemRemoteSchema, ReportItemSchema, ReportItemPresentationSchema
 
 
 class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
@@ -570,9 +570,7 @@ class ReportItem(db.Model):
 class ReportItemCpe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.String())
-
     report_item_id = db.Column(db.Integer, db.ForeignKey('report_item.id'))
-    report_item = db.relationship("ReportItem")
 
     def __init__(self, value):
         self.id = None

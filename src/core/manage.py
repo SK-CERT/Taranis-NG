@@ -7,6 +7,7 @@ import logging
 from flask import Flask
 from flask_script import Manager,Command
 from flask_script.commands import Option
+import traceback
 
 from managers import db_manager
 from model import *
@@ -45,8 +46,6 @@ class AccountManagement(Command):
     )
 
     def run(self, opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, opt_password, opt_roles):
-        from scripts import permissions
-        permissions.run(db_manager.db)
 
         if (opt_list):
             users = user.User.get_all()
@@ -143,8 +142,6 @@ class RoleManagement(Command):
     )
 
     def run(self, opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_id, opt_name, opt_description, opt_permissions):
-        from scripts import permissions
-        permissions.run(db_manager.db)
 
         if (opt_list):
             roles = None
@@ -324,6 +321,7 @@ class DictionaryManagement(Command):
             try:
                 attribute.Attribute.load_dictionaries('cve')
             except Exception:
+                app.logger.debug(traceback.format_exc())
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
@@ -337,6 +335,7 @@ class DictionaryManagement(Command):
             try:
                 attribute.Attribute.load_dictionaries('cpe')
             except Exception:
+                app.logger.debug(traceback.format_exc())
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
@@ -352,32 +351,15 @@ class DictionaryManagement(Command):
                         break
                     out_file.write(chunk)
         except Exception:
+            app.logger.debug(traceback.format_exc())
             app.logger.critical("Upload failed!")
             abort()
-
-class SampleData(Command):
-    def run(self):
-        with app.app_context():
-            from scripts import permissions
-            from scripts import sample_data
-
-            data, count = user.User.get(None, None)
-            if count:
-                app.logger.error("Sample data already installed.")
-                exit()
-
-            app.logger.error("Installing sample data...")
-            permissions.run(db_manager.db)
-            sample_data.run(db_manager.db)
-            app.logger.error("Sample data installed.")
-        exit()
 
 
 manager.add_command('account', AccountManagement)
 manager.add_command('role', RoleManagement)
 manager.add_command('collector', CollectorManagement)
 manager.add_command('dictionary', DictionaryManagement)
-manager.add_command('sample-data', SampleData)
 
 if __name__ == '__main__':
     manager.run()

@@ -3,7 +3,7 @@ from sqlalchemy import func, or_, orm
 
 from managers.db_manager import db
 from model.permission import Permission
-from schema.role import RoleSchemaBase, PermissionIdSchema, RolePresentationSchema
+from shared.schema.role import RoleSchemaBase, PermissionIdSchema, RolePresentationSchema
 
 
 class NewRoleSchema(RoleSchemaBase):

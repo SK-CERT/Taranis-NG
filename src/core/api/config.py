@@ -11,7 +11,7 @@ from model import acl_entry, remote, presenters_node, publisher_preset, publishe
     report_item_type, role, user, word_list
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
-from schema.role import PermissionSchema
+from shared.schema.role import PermissionSchema
 
 
 class DictionariesReload(Resource):
@@ -33,18 +33,33 @@ class Attributes(Resource):
 
     @auth_required('CONFIG_ATTRIBUTE_CREATE')
     def post(self):
-        attribute.Attribute.add_attribute(request.json)
+        try:
+            attribute.Attribute.add_attribute(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create attribute")
+            return "", 400
 
 
 class Attribute(Resource):
 
     @auth_required('CONFIG_ATTRIBUTE_UPDATE')
     def put(self, attribute_id):
-        attribute.Attribute.update(attribute_id, request.json)
+        try:
+            attribute.Attribute.update(attribute_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update attribute")
+            return "", 400
 
     @auth_required('CONFIG_ATTRIBUTE_DELETE')
     def delete(self, attribute_id):
-        return attribute.Attribute.delete_attribute(attribute_id)
+        try:
+            return attribute.Attribute.delete_attribute(attribute_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete attribute")
+            return "", 400
 
 
 class AttributeEnums(Resource):
@@ -62,19 +77,34 @@ class AttributeEnums(Resource):
             limit = request.args['limit']
         return attribute.AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
 
-    @auth_required('CONFIG_ATTRIBUTE_UPDATE')
+    @auth_required('CONFIG_ATTRIBUTE_CREATE')
     def post(self, attribute_id):
-        attribute.AttributeEnum.add(attribute_id, request.json)
+        try:
+            attribute.AttributeEnum.add(attribute_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create attribute enum")
+            return "", 400
 
 
 class AttributeEnum(Resource):
     @auth_required('CONFIG_ATTRIBUTE_UPDATE')
     def put(self, attribute_id, enum_id):
-        attribute.AttributeEnum.update(enum_id, request.json)
+        try:
+            attribute.AttributeEnum.update(enum_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update attribute enum")
+            return "", 400
 
-    @auth_required('CONFIG_ATTRIBUTE_UPDATE')
+    @auth_required('CONFIG_ATTRIBUTE_DELETE')
     def delete(self, attribute_id, enum_id):
-        return attribute.AttributeEnum.delete(enum_id)
+        try:
+            return attribute.AttributeEnum.delete(enum_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete attribute enum")
+            return "", 400
 
 
 class ReportItemTypesConfig(Resource):
@@ -88,18 +118,33 @@ class ReportItemTypesConfig(Resource):
 
     @auth_required('CONFIG_REPORT_TYPE_CREATE')
     def post(self):
-        report_item_type.ReportItemType.add_report_item_type(request.json)
+        try:
+            report_item_type.ReportItemType.add_report_item_type(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create report type")
+            return "", 400
 
 
 class ReportItemType(Resource):
 
     @auth_required('CONFIG_REPORT_TYPE_UPDATE')
     def put(self, type_id):
-        report_item_type.ReportItemType.update(type_id, request.json)
+        try:
+            report_item_type.ReportItemType.update(type_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update report type")
+            return "", 400
 
     @auth_required('CONFIG_REPORT_TYPE_DELETE')
     def delete(self, type_id):
-        return report_item_type.ReportItemType.delete_report_item_type(type_id)
+        try:
+            return report_item_type.ReportItemType.delete_report_item_type(type_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete report type")
+            return "", 400
 
 
 class ProductTypes(Resource):
@@ -113,18 +158,33 @@ class ProductTypes(Resource):
 
     @auth_required('CONFIG_PRODUCT_TYPE_CREATE')
     def post(self):
-        product_type.ProductType.add_new(request.json)
+        try:
+            product_type.ProductType.add_new(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create product type")
+            return "", 400
 
 
 class ProductType(Resource):
 
     @auth_required('CONFIG_PRODUCT_TYPE_UPDATE')
     def put(self, type_id):
-        product_type.ProductType.update(type_id, request.json)
+        try:
+            product_type.ProductType.update(type_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update product type")
+            return "", 400
 
     @auth_required('CONFIG_PRODUCT_TYPE_DELETE')
     def delete(self, type_id):
-        return product_type.ProductType.delete(type_id)
+        try:
+            return product_type.ProductType.delete(type_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete product type")
+            return "", 400
 
 
 class Permissions(Resource):
@@ -157,18 +217,33 @@ class Roles(Resource):
 
     @auth_required('CONFIG_ROLE_CREATE')
     def post(self):
-        role.Role.add_new(request.json)
+        try:
+            role.Role.add_new(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create role")
+            return "", 400
 
 
 class Role(Resource):
 
     @auth_required('CONFIG_ROLE_UPDATE')
     def put(self, role_id):
-        role.Role.update(role_id, request.json)
+        try:
+            role.Role.update(role_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update role")
+            return "", 400
 
     @auth_required('CONFIG_ROLE_DELETE')
     def delete(self, role_id):
-        return role.Role.delete(role_id)
+        try:
+            return role.Role.delete(role_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete role")
+            return "", 400
 
 
 class ACLEntries(Resource):
@@ -182,18 +257,33 @@ class ACLEntries(Resource):
 
     @auth_required('CONFIG_ACL_CREATE')
     def post(self):
-        acl_entry.ACLEntry.add_new(request.json)
+        try:
+            acl_entry.ACLEntry.add_new(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create acl entry")
+            return "", 400
 
 
 class ACLEntry(Resource):
 
     @auth_required('CONFIG_ACL_UPDATE')
     def put(self, acl_id):
-        acl_entry.ACLEntry.update(acl_id, request.json)
+        try:
+            acl_entry.ACLEntry.update(acl_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update acl entry")
+            return "", 400
 
     @auth_required('CONFIG_ACL_DELETE')
     def delete(self, acl_id):
-        return acl_entry.ACLEntry.delete(acl_id)
+        try:
+            return acl_entry.ACLEntry.delete(acl_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete acl entry")
+            return "", 400
 
 
 class Organizations(Resource):
@@ -207,18 +297,33 @@ class Organizations(Resource):
 
     @auth_required('CONFIG_ORGANIZATION_CREATE')
     def post(self):
-        organization.Organization.add_new(request.json)
+        try:
+            organization.Organization.add_new(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create organization")
+            return "", 400
 
 
 class Organization(Resource):
 
     @auth_required('CONFIG_ORGANIZATION_UPDATE')
     def put(self, organization_id):
-        organization.Organization.update(organization_id, request.json)
+        try:
+            organization.Organization.update(organization_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update organization")
+            return "", 400
 
     @auth_required('CONFIG_ORGANIZATION_DELETE')
     def delete(self, organization_id):
-        return organization.Organization.delete(organization_id)
+        try:
+            return organization.Organization.delete(organization_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete organization")
+            return "", 400
 
 
 class Users(Resource):
@@ -235,7 +340,7 @@ class Users(Resource):
         try:
             external_auth_manager.create_user(request.json)
         except Exception as ex:
-            log_manager.debug_log(ex)
+            log_manager.log_critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create user in external auth system")
             return "", 400
 
@@ -252,7 +357,7 @@ class User(Resource):
         try:
             external_auth_manager.update_user(request.json, original_username)
         except Exception as ex:
-            log_manager.debug_log(ex)
+            log_manager.log_critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update user in external auth system")
             return "", 400
 
@@ -268,7 +373,7 @@ class User(Resource):
         try:
             external_auth_manager.delete_user(original_username)
         except Exception as ex:
-            log_manager.debug_log(ex)
+            log_manager.log_critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete user in external auth system")
             return "", 400
 
@@ -284,20 +389,35 @@ class ExternalUsers(Resource):
 
     @auth_required('MY_ASSETS_CONFIG')
     def post(self):
-        permissions = auth_manager.get_external_permissions_ids()
-        user.User.add_new_external(auth_manager.get_user_from_jwt(), permissions, request.json)
+        try:
+            permissions = auth_manager.get_external_permissions_ids()
+            user.User.add_new_external(auth_manager.get_user_from_jwt(), permissions, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create external user")
+            return "", 400
 
 
 class ExternalUser(Resource):
 
     @auth_required('MY_ASSETS_CONFIG')
     def put(self, user_id):
-        permissions = auth_manager.get_external_permissions_ids()
-        user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
+        try:
+            permissions = auth_manager.get_external_permissions_ids()
+            user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update external user")
+            return "", 400
 
     @auth_required('MY_ASSETS_CONFIG')
     def delete(self, user_id):
-        return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
+        try:
+            return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete external user")
+            return "", 400
 
 
 class WordLists(Resource):
@@ -311,18 +431,33 @@ class WordLists(Resource):
 
     @auth_required('CONFIG_WORD_LIST_CREATE')
     def post(self):
-        word_list.WordList.add_new(request.json)
+        try:
+            word_list.WordList.add_new(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create word list")
+            return "", 400
 
 
 class WordList(Resource):
 
     @auth_required('CONFIG_WORD_LIST_DELETE')
     def delete(self, word_list_id):
-        return word_list.WordList.delete(word_list_id)
+        try:
+            return word_list.WordList.delete(word_list_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete word list")
+            return "", 400
 
     @auth_required('CONFIG_WORD_LIST_UPDATE')
     def put(self, word_list_id):
-        word_list.WordList.update(word_list_id, request.json)
+        try:
+            word_list.WordList.update(word_list_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update word list")
+            return "", 400
 
 
 class CollectorsNodes(Resource):
@@ -336,18 +471,33 @@ class CollectorsNodes(Resource):
 
     @auth_required('CONFIG_COLLECTORS_NODE_CREATE')
     def post(self):
-        return '', collectors_manager.add_collectors_node(request.json)
+        try:
+            return '', collectors_manager.add_collectors_node(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create collectors node")
+            return "", 400
 
 
 class CollectorsNode(Resource):
 
     @auth_required('CONFIG_COLLECTORS_NODE_UPDATE')
     def put(self, node_id):
-        collectors_manager.update_collectors_node(node_id, request.json)
+        try:
+            collectors_manager.update_collectors_node(node_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update collectors node")
+            return "", 400
 
     @auth_required('CONFIG_COLLECTORS_NODE_DELETE')
     def delete(self, node_id):
-        collectors_node.CollectorsNode.delete(node_id)
+        try:
+            collectors_node.CollectorsNode.delete(node_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete collectors node")
+            return "", 400
 
 
 class OSINTSources(Resource):
@@ -361,43 +511,68 @@ class OSINTSources(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_CREATE')
     def post(self):
-        collectors_manager.add_osint_source(request.json)
+        try:
+            collectors_manager.add_osint_source(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create OSINT source")
+            return "", 400
 
 
 class OSINTSource(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_UPDATE')
     def put(self, source_id):
-        updated_osint_source, default_group = collectors_manager.update_osint_source(source_id, request.json)
-        if default_group is not None:
-            NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
+        try:
+            updated_osint_source, default_group = collectors_manager.update_osint_source(source_id, request.json)
+            if default_group is not None:
+                NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update OSINT source")
+            return "", 400
 
     @auth_required('CONFIG_OSINT_SOURCE_DELETE')
     def delete(self, source_id):
-        collectors_manager.delete_osint_source(source_id)
+        try:
+            collectors_manager.delete_osint_source(source_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete OSINT source")
+            return "", 400
 
 
 class OSINTSourcesExport(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_ACCESS')
     def post(self):
-        data = collectors_manager.export_osint_sources(request.json)
-        return send_file(
-            io.BytesIO(data),
-            attachment_filename="osint_sources_export.json",
-            mimetype="application/json",
-            as_attachment=True
-        )
+        try:
+            data = collectors_manager.export_osint_sources(request.json)
+            return send_file(
+                io.BytesIO(data),
+                attachment_filename="osint_sources_export.json",
+                mimetype="application/json",
+                as_attachment=True
+            )
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not export OSINT source")
+            return "", 400
 
 
 class OSINTSourcesImport(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_CREATE')
     def post(self):
-        file = request.files.get('file')
-        if file:
-            collectors_node_id = request.form['collectors_node_id']
-            collectors_manager.import_osint_sources(collectors_node_id, file)
+        try:
+            file = request.files.get('file')
+            if file:
+                collectors_node_id = request.form['collectors_node_id']
+                collectors_manager.import_osint_sources(collectors_node_id, file)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not import OSINT source")
+            return "", 400
 
 
 class OSINTSourceGroups(Resource):
@@ -411,24 +586,39 @@ class OSINTSourceGroups(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_CREATE')
     def post(self):
-        osint_source.OSINTSourceGroup.add(request.json)
+        try:
+            osint_source.OSINTSourceGroup.add(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create OSINT source group")
+            return "", 400
 
 
 class OSINTSourceGroup(Resource):
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_UPDATE')
     def put(self, group_id):
-        sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(group_id, request.json)
-        if sources_in_default_group is not None:
-            default_group = osint_source.OSINTSourceGroup.get_default()
-            for source in sources_in_default_group:
-                NewsItemAggregate.reassign_to_new_groups(source.id, default_group.id)
+        try:
+            sources_in_default_group, message, code = osint_source.OSINTSourceGroup.update(group_id, request.json)
+            if sources_in_default_group is not None:
+                default_group = osint_source.OSINTSourceGroup.get_default()
+                for source in sources_in_default_group:
+                    NewsItemAggregate.reassign_to_new_groups(source.id, default_group.id)
+            return message, code
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update OSINT source group")
+            return "", 400
 
-        return message, code
 
     @auth_required('CONFIG_OSINT_SOURCE_GROUP_DELETE')
     def delete(self, group_id):
-        return osint_source.OSINTSourceGroup.delete(group_id)
+        try:
+            return osint_source.OSINTSourceGroup.delete(group_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete OSINT source group")
+            return "", 400
 
 
 class RemoteAccesses(Resource):
@@ -442,20 +632,35 @@ class RemoteAccesses(Resource):
 
     @auth_required('CONFIG_REMOTE_ACCESS_CREATE')
     def post(self):
-        remote.RemoteAccess.add(request.json)
+        try:
+            remote.RemoteAccess.add(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create remmote access")
+            return "", 400
 
 
 class RemoteAccess(Resource):
 
     @auth_required('CONFIG_REMOTE_ACCESS_UPDATE')
     def put(self, remote_access_id):
-        event_id, disconnect = remote.RemoteAccess.update(remote_access_id, request.json)
-        if disconnect:
-            sse_manager.remote_access_disconnect([event_id])
+        try:
+            event_id, disconnect = remote.RemoteAccess.update(remote_access_id, request.json)
+            if disconnect:
+                sse_manager.remote_access_disconnect([event_id])
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remmote access")
+            return "", 400
 
         @auth_required('CONFIG_REMOTE_ACCESS_DELETE')
         def delete(self, remote_access_id):
-            return remote.RemoteAccess.delete(remote_access_id)
+            try:
+                return remote.RemoteAccess.delete(remote_access_id)
+            except Exception as ex:
+                log_manager.log_critical(ex)
+                log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remmote access")
+                return "", 400
 
 
 class RemoteNodes(Resource):
@@ -469,27 +674,48 @@ class RemoteNodes(Resource):
 
     @auth_required('CONFIG_REMOTE_ACCESS_CREATE')
     def post(self):
-        remote.RemoteNode.add(request.json)
+        try:
+            remote.RemoteNode.add(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create remmote node")
+            return "", 400
 
 
 class RemoteNode(Resource):
 
     @auth_required('CONFIG_REMOTE_ACCESS_UPDATE')
     def put(self, remote_node_id):
-        if remote.RemoteNode.update(id, request.json) is False:
-            remote_manager.disconnect_from_node(remote_node_id)
+        try:
+            if remote.RemoteNode.update(id, request.json) is False:
+                remote_manager.disconnect_from_node(remote_node_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remmote node")
+            return "", 400
+
 
     @auth_required('CONFIG_REMOTE_ACCESS_DELETE')
     def delete(self, remote_node_id):
-        remote_manager.disconnect_from_node(remote_node_id)
-        return remote.RemoteNode.delete(id)
+        try:
+            remote_manager.disconnect_from_node(remote_node_id)
+            return remote.RemoteNode.delete(id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remmote node")
+            return "", 400
 
 
 class RemoteNodeConnect(Resource):
 
     @auth_required('CONFIG_REMOTE_ACCESS_ACCESS')
     def get(self, remote_node_id):
-        return remote_manager.connect_to_node(remote_node_id)
+        try:
+            return remote_manager.connect_to_node(remote_node_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not connect to node")
+            return "", 400
 
 
 class PresentersNodes(Resource):
@@ -503,18 +729,33 @@ class PresentersNodes(Resource):
 
     @auth_required('CONFIG_PRESENTERS_NODE_CREATE')
     def post(self):
-        return '', presenters_manager.add_presenters_node(request.json)
+        try:
+            return '', presenters_manager.add_presenters_node(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create preseters node")
+            return "", 400
 
 
 class PresentersNode(Resource):
 
     @auth_required('CONFIG_PRESENTERS_NODE_UPDATE')
     def put(self, node_id):
-        presenters_manager.update_presenters_node(node_id, request.json)
+        try:
+            presenters_manager.update_presenters_node(node_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update preseters node")
+            return "", 400
 
     @auth_required('CONFIG_PRESENTERS_NODE_DELETE')
     def delete(self, node_id):
-        return presenters_node.PresentersNode.delete(node_id)
+        try:
+            return presenters_node.PresentersNode.delete(node_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete preseters node")
+            return "", 400
 
 
 class PublisherNodes(Resource):
@@ -528,18 +769,33 @@ class PublisherNodes(Resource):
 
     @auth_required('CONFIG_PUBLISHERS_NODE_CREATE')
     def post(self):
-        return '', publishers_manager.add_publishers_node(request.json)
+        try:
+            return '', publishers_manager.add_publishers_node(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create publishers node")
+            return "", 400
 
 
 class PublishersNode(Resource):
 
     @auth_required('CONFIG_PUBLISHERS_NODE_UPDATE')
     def put(self, node_id):
-        publishers_manager.update_publishers_node(node_id, request.json)
+        try:
+            publishers_manager.update_publishers_node(node_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update publishers node")
+            return "", 400
 
     @auth_required('CONFIG_PUBLISHERS_NODE_DELETE')
     def delete(self, node_id):
-        return publishers_node.PublishersNode.delete(node_id)
+        try:
+            return publishers_node.PublishersNode.delete(node_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete publishers node")
+            return "", 400
 
 
 class PublisherPresets(Resource):
@@ -553,18 +809,33 @@ class PublisherPresets(Resource):
 
     @auth_required('CONFIG_PUBLISHER_PRESET_CREATE')
     def post(self):
-        publishers_manager.add_publisher_preset(request.json)
+        try:
+            publishers_manager.add_publisher_preset(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create publishers preset")
+            return "", 400
 
 
 class PublisherPreset(Resource):
 
     @auth_required('CONFIG_PUBLISHER_PRESET_UPDATE')
     def put(self, preset_id):
-        publisher_preset.PublisherPreset.update(preset_id, request.json)
+        try:
+            publisher_preset.PublisherPreset.update(preset_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update publishers preset")
+            return "", 400
 
     @auth_required('CONFIG_PUBLISHER_PRESET_DELETE')
     def delete(self, preset_id):
-        return publisher_preset.PublisherPreset.delete(preset_id)
+        try:
+            return publisher_preset.PublisherPreset.delete(preset_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete publishers preset")
+            return "", 400
 
 
 class BotNodes(Resource):
@@ -578,18 +849,33 @@ class BotNodes(Resource):
 
     @auth_required('CONFIG_BOTS_NODE_CREATE')
     def post(self):
-        return '', bots_manager.add_bots_node(request.json)
+        try:
+            return '', bots_manager.add_bots_node(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create bots node")
+            return "", 400
 
 
 class BotsNode(Resource):
 
     @auth_required('CONFIG_BOTS_NODE_UPDATE')
     def put(self, node_id):
-        bots_manager.update_bots_node(node_id, request.json)
+        try:
+            bots_manager.update_bots_node(node_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update bots node")
+            return "", 400
 
     @auth_required('CONFIG_BOTS_NODE_DELETE')
     def delete(self, node_id):
-        return bots_node.BotsNode.delete(node_id)
+        try:
+            return bots_node.BotsNode.delete(node_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete bots node")
+            return "", 400
 
 
 class BotPresets(Resource):
@@ -603,18 +889,33 @@ class BotPresets(Resource):
 
     @auth_required('CONFIG_BOT_PRESET_CREATE')
     def post(self):
-        bots_manager.add_bot_preset(request.json)
+        try:
+            bots_manager.add_bot_preset(request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create bots preset")
+            return "", 400
 
 
 class BotPreset(Resource):
 
     @auth_required('CONFIG_BOT_PRESET_UPDATE')
     def put(self, preset_id):
-        bot_preset.BotPreset.update(preset_id, request.json)
+        try:
+            bot_preset.BotPreset.update(preset_id, request.json)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update bots preset")
+            return "", 400
 
     @auth_required('CONFIG_BOT_PRESET_DELETE')
     def delete(self, preset_id):
-        return bot_preset.BotPreset.delete(preset_id)
+        try:
+            return bot_preset.BotPreset.delete(preset_id)
+        except Exception as ex:
+            log_manager.log_critical(ex)
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete bots preset")
+            return "", 400
 
 
 def initialize(api):

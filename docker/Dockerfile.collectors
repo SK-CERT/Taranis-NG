@@ -1,4 +1,14 @@
-FROM python:3.7-alpine3.14
+FROM python:3.7-alpine3.14 AS build_shared
+
+WORKDIR /build_shared/
+
+RUN pip install --no-cache-dir build
+COPY ./src/shared/. .
+RUN python -m build
+
+
+
+FROM python:3.7-alpine3.14 AS production
 
 WORKDIR /app/
 
@@ -12,10 +22,13 @@ RUN \
     unzip \
     libexif \
     udev \
+    harfbuzz \
     chromium \
     chromium-chromedriver \
     xvfb \
     dbus-x11 \
+    font-noto-emoji \
+    freetype \
     ttf-freefont && \
     apk add --no-cache --virtual .build-deps \
     wget \
@@ -26,9 +39,15 @@ RUN \
     rm -f /tmp/geckodriver.tar.gz && \
     apk --purge del .build-deps
 
-COPY ./src/collectors/requirements.txt /app/requirements.txt
+# install "shared" package from build_shared stage
+# TODO: somehow squash the following two layers into one to conserve space
+
+COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl custom_packages/
+RUN pip install --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
 
 # install dependencies
+
+COPY ./src/collectors/requirements.txt /app/requirements.txt
 RUN \
     apk add --no-cache --virtual .build-deps \
     gcc \
@@ -61,7 +80,7 @@ EXPOSE 80
 ENV PYTHONPATH=/app
 ENV MODULE_NAME run
 ENV VARIABLE_NAME app
-ENV GUNICORN_CMD_ARGS --timeout 120 --preload
+ENV GUNICORN_CMD_ARGS --timeout 120
 ENV WORKERS_PER_CORE 8
 ENV COLLECTOR_CONFIG_FILE /app/storage/id.txt
 

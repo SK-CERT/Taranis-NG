@@ -10,10 +10,10 @@ from model.acl_entry import ACLEntry
 from model.collector import Collector
 from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
-from schema.acl_entry import ItemType
-from schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
+from shared.schema.acl_entry import ItemType
+from shared.schema.osint_source import OSINTSourceSchema, OSINTSourceGroupSchema, OSINTSourceIdSchema, \
     OSINTSourcePresentationSchema, OSINTSourceGroupPresentationSchema, OSINTSourceGroupIdSchema
-from schema.word_list import WordListIdSchema
+from shared.schema.word_list import WordListIdSchema
 
 
 class NewOSINTSourceSchema(OSINTSourceSchema):
