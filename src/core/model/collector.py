@@ -3,7 +3,7 @@ import uuid
 
 from managers.db_manager import db
 from model.parameter import NewParameterSchema
-from schema.collector import CollectorSchema
+from shared.schema.collector import CollectorSchema
 
 
 class NewCollectorSchema(CollectorSchema):

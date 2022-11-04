@@ -6,9 +6,9 @@ from managers.db_manager import db
 from model.report_item import ReportItem
 from model.user import User
 from model.notification_template import NotificationTemplate
-from schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
-from schema.user import UserIdSchema
-from schema.notification_template import NotificationTemplateIdSchema
+from shared.schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
+from shared.schema.user import UserIdSchema
+from shared.schema.notification_template import NotificationTemplateIdSchema
 
 
 class NewAssetCpeSchema(AssetCpeSchema):

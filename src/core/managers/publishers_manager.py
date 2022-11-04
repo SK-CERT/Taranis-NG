@@ -2,8 +2,8 @@ from model.publishers_node import PublishersNode
 from model.publisher import Publisher
 from model.publisher_preset import PublisherPreset
 from remote.publishers_api import PublishersApi
-from schema.publishers_node import PublishersNode as PublishersNodeSchema
-from schema.publisher import PublisherInput, PublisherInputSchema
+from shared.schema.publishers_node import PublishersNode as PublishersNodeSchema
+from shared.schema.publisher import PublisherInput, PublisherInputSchema
 
 
 def add_publishers_node(data):

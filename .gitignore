@@ -21,6 +21,7 @@ build/
 # sensitive data not to be commited
 .env.local
 .env.*.local
+src/.env
 *.pem
 *.key
 *.log

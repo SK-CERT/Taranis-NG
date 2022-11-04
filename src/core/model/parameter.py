@@ -1,7 +1,7 @@
 from marshmallow import post_load
 
 from managers.db_manager import db
-from schema.parameter import ParameterType, ParameterSchema
+from shared.schema.parameter import ParameterType, ParameterSchema
 
 
 class NewParameterSchema(ParameterSchema):

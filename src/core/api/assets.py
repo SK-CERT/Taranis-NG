@@ -5,7 +5,7 @@ from managers import auth_manager
 from managers.auth_manager import auth_required
 from model import asset, notification_template, attribute
 from model.permission import Permission
-from schema.attribute import AttributeType
+from shared.schema.attribute import AttributeType
 
 
 class AssetGroups(Resource):

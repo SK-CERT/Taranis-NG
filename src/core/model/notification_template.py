@@ -2,7 +2,7 @@ from sqlalchemy import orm, func, or_
 from marshmallow import post_load, fields
 
 from managers.db_manager import db
-from schema.notification_template import NotificationTemplatePresentationSchema, NotificationTemplateSchema, EmailRecipientSchema
+from shared.schema.notification_template import NotificationTemplatePresentationSchema, NotificationTemplateSchema, EmailRecipientSchema
 
 
 class NewEmailRecipientSchema(EmailRecipientSchema):
