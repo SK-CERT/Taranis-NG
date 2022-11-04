@@ -75,6 +75,7 @@
         <v-row v-bind="UI.TOOLBAR.ROW">
             <v-col v-bind="UI.TOOLBAR.COL.INFO">
                 <span>{{$t(total_count_title)}}<strong>{{totalCount}}</strong></span>
+                <span class="total-count-text mx-5" v-if="multiSelectActive">{{$t(selected_count_title)}}<strong>{{selectedCount}}</strong></span>
             </v-col>
             <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
                 <!-- Wordlist -->
@@ -101,11 +102,20 @@
             dialog: String,
             analyze_selector: Boolean,
             total_count_title: String,
+            selected_count_title: String,
         },
         computed: {
             totalCount() {
                 return this.data_count
-            }
+            },
+
+            selectedCount() {
+                return this.$store.getters.getSelection.length;
+            },
+
+            multiSelectActive() {
+                return this.$store.getters.getMultiSelect;
+            },
         },
         data: () => ({
             status: [],
