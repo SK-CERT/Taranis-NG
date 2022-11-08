@@ -2,7 +2,7 @@ from base64 import b64decode
 import tweepy
 
 from .base_publisher import BasePublisher
-from schema.parameter import Parameter, ParameterType
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class TWITTERPublisher(BasePublisher):

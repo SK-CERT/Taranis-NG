@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 import gnupg
 
 from .base_publisher import BasePublisher
-from schema.parameter import Parameter, ParameterType
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class EMAILPublisher(BasePublisher):
