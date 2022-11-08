@@ -9,8 +9,8 @@ from dateutil import tz
 from managers import time_manager
 from managers.log_manager import log_debug, log_info, log_debug_trace
 from remote.core_api import CoreApi
-from schema import collector, osint_source, news_item
-from schema.parameter import Parameter, ParameterType
+from shared.schema import collector, osint_source, news_item
+from shared.schema.parameter import Parameter, ParameterType
 
 class BaseCollector:
     type = "BASE_COLLECTOR"

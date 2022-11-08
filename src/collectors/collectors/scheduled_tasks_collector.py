@@ -6,8 +6,8 @@ import string
 import uuid
 
 from .base_collector import BaseCollector
-from schema.news_item import NewsItemData
-from schema.parameter import Parameter, ParameterType
+from shared.schema.news_item import NewsItemData
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class ScheduledTasksCollector(BaseCollector):
