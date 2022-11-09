@@ -238,10 +238,22 @@ class CollectorManagement(Command):
                 'api_url': opt_api_url,
                 'api_key': opt_api_key,
                 'collectors': [],
-                'status': 0
+                'status': '0'
             }
 
-            collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info("")
+            print('Trying to contact a new collector node...')
+            retries, max_retries = 0, 30
+            while retries < max_retries:
+                try:
+                    collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info("")
+                    break;
+                except:
+                    collectors_info = 'Collector unavailable'
+                    status_code = 0
+                    time.sleep(1)
+                retries += 1
+                print('Retrying [{}/{}]...'.format(retries, max_retries))
+
 
             if status_code != 200:
                 print('Cannot create a new collector node!')
