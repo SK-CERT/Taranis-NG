@@ -4,7 +4,7 @@ import urllib3
 from pymisp import ExpandedPyMISP, MISPEvent
 
 from .base_publisher import BasePublisher
-from schema.parameter import Parameter, ParameterType
+from shared.schema.parameter import Parameter, ParameterType
 
 
 class MISPPublisher(BasePublisher):
