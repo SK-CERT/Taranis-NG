@@ -2,7 +2,7 @@ from presenters.pdf_presenter import PDFPresenter
 from presenters.html_presenter import HTMLPresenter
 from presenters.text_presenter import TEXTPresenter
 from presenters.misp_presenter import MISPPresenter
-from schema.presenter import PresenterInputSchema, PresenterOutputSchema
+from shared.schema.presenter import PresenterInputSchema, PresenterOutputSchema
 
 presenters = {}
 

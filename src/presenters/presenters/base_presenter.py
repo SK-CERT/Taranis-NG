@@ -1,4 +1,4 @@
-from schema.presenter import PresenterSchema
+from shared.schema.presenter import PresenterSchema
 from managers import log_manager
 import json, datetime
 
