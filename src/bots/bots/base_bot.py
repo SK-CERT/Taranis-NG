@@ -1,8 +1,8 @@
 import datetime
 
 from managers import time_manager
-from schema import bot, bot_preset
-from schema.parameter import Parameter, ParameterType
+from shared.schema import bot, bot_preset
+from shared.schema.parameter import Parameter, ParameterType
 from remote.core_api import CoreApi
 
 
