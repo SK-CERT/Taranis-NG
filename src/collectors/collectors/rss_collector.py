@@ -98,6 +98,10 @@ class RSSCollector(BaseCollector):
 
                 # if published > limit: TODO: uncomment after testing, we need some initial data now
                 link_for_article = feed_entry['link']
+                if not link_for_article:
+                    log_manager.log_collector_activity("rss", source.id, "Skipping (empty link)")
+                    continue
+
                 log_manager.log_collector_activity('rss', source.id, 'Processing entry [{}]'.format(link_for_article))
 
                 html_content = ''
@@ -105,7 +109,7 @@ class RSSCollector(BaseCollector):
                 request.add_header('User-Agent', user_agent)
 
                 with opener(request) as response:
-                   html_content = response.read()
+                    html_content = response.read()
 
                 soup = BeautifulSoup(html_content, features='html.parser')
 
@@ -121,9 +125,9 @@ class RSSCollector(BaseCollector):
                 for_hash = feed_entry['author'] + feed_entry['title'] + feed_entry['link']
 
                 news_item = NewsItemData(uuid.uuid4(), hashlib.sha256(for_hash.encode()).hexdigest(),
-                                         feed_entry['title'], feed_entry['description'], feed_url, feed_entry['link'],
-                                         feed_entry['published'], feed_entry['author'], datetime.datetime.now(),
-                                         content, source.id, [])
+                                        feed_entry['title'], feed_entry['description'], feed_url, feed_entry['link'],
+                                        feed_entry['published'], feed_entry['author'], datetime.datetime.now(),
+                                        content, source.id, [])
 
                 news_items.append(news_item)
 
