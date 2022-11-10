@@ -11,6 +11,8 @@ COPY ./src/gui/src /app/src
 COPY ./src/gui/babel.config.js .
 COPY ./src/gui/package.json .
 COPY ./src/gui/package-lock.json .
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm run build
 
 # production stage
