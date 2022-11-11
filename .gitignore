@@ -29,8 +29,11 @@ src/.env
 # settings of editors
 .idea/
 .vscode/
+.vs/
 *.suo
 *.ntvs*
 *.njsproj
+*.pyproj
+*.pyproj.user
 *.sln
 *.sw?
