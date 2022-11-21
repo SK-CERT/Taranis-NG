@@ -21,7 +21,7 @@ def upgrade():
         sa.Column('name', sa.VARCHAR(), autoincrement=False, nullable=False),
         sa.Column('key', sa.VARCHAR(length=40), autoincrement=False, nullable=False),
         sa.Column('created_at', postgresql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), autoincrement=False, nullable=True),
-        sa.Column('user_id', sa.INTEGER(), autoincrement=False, nullable=True),
+        sa.Column('user_id', sa.INTEGER(), autoincrement=False, nullable=False),
         sa.Column('expires_at', postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
         sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='api_key_user_fkey', ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id', name='api_key_pkey'),

@@ -396,6 +396,10 @@ class ApiKeysManagement(Command):
                 app.logger.critical("Name already exists!")
                 abort()
 
+            if (not opt_user):
+                app.logger.critical("User not specified!")
+                abort()
+
             u = None
             if opt_user:
                 u = user.User.find(opt_user)
@@ -407,7 +411,7 @@ class ApiKeysManagement(Command):
                 #'id': None,
                 'name': opt_name,
                 'key': ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=40)),
-                'user_id': u.id if u else None,
+                'user_id': u.id,
                 'expires_at': opt_expires if opt_expires else None
             }
 

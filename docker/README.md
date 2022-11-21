@@ -303,7 +303,7 @@ manage.py apikey \
     --create \
     --name "My ApiKey" \
     --user "test_user" \
-    -expire "31.12.2022 - 16:55"
+    --expire "2022-12-31 16:55"
 ```
 
 Command output:

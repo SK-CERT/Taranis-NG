@@ -11,9 +11,9 @@ class ApiKeyBaseSchema(Schema):
     id = fields.Int()
     name = fields.Str()
     key = fields.Str() # length 40
-    created_at = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
+    created_at = fields.DateTime("%d.%m.%Y %H:%M:%S", load_default=None)
     user_id = fields.Int(load_default=None)
-    expires_at = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
+    expires_at = fields.DateTime("%Y-%m-%d %H:%M", load_default=None)
 
 
 class ApiKeySchema(ApiKeyBaseSchema):
@@ -32,7 +32,6 @@ class ApiKey:
         key,
         created_at,
         user_id,
-        #user, ????
         expires_at
     ):
         self.id = id
@@ -40,5 +39,4 @@ class ApiKey:
         self.key = key
         # created_at - database take care about it
         self.user_id = user_id
-        # self.user = user
         self.expires_at = expires_at
