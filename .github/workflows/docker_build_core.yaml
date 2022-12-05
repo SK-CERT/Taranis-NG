@@ -1,10 +1,14 @@
-name: CI_Core
+name: Core Docker image
 
 on:
   push:
     paths:
     - 'src/core/**'
-    - 'docker/**'
+    - 'docker/Dockerfile.core'
+    - 'docker/start.sh'
+    - 'docker/prestart_core.sh'
+    - 'docker/entrypoint.sh'
+    - 'docker/gunicorn_conf.py'
     branches:
     - master
     - awake

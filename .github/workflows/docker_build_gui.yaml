@@ -1,10 +1,11 @@
-name: CI_GUI
+name: GUI Docker image
 
 on:
   push:
     paths:
     - 'src/gui/**'
-    - 'docker/**'
+    - 'docker/Dockerfile.gui'
+    - 'VERSION.md'
     branches:
     - master
     - awake

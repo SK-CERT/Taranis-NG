@@ -1,10 +1,14 @@
-name: CI_Presenters
+name: Presenters Docker image
 
 on:
   push:
     paths:
     - 'src/presenters/**'
-    - 'docker/**'
+    - 'docker/Dockerfile.presenters'
+    - 'docker/start.sh'
+    - 'docker/prestart.sh'
+    - 'docker/entrypoint.sh'
+    - 'docker/gunicorn_conf.py'
     branches:
     - master
     - awake
