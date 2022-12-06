@@ -3,10 +3,6 @@
     <ViewLayout>
       <template v-slot:panel>
         <v-expand-transition style="width: 100%">
-          <story-header-assess
-            v-if="showStoryHeader"
-            :story="showStoryHeader"
-          />
         </v-expand-transition>
 
       </template>
@@ -20,7 +16,7 @@
 <script>
 import ViewLayout from '@/components/layouts/ViewLayout'
 import AssessContent from '@/components/assess/AssessContent'
-import StoryHeaderAssess from '@/components/assess/StoryHeaderAssess'
+// import StoryHeaderAssess from '@/components/assess/StoryHeaderAssess'
 // import SharingSetHeaderAssess from '@/components/assess/SharingSetHeaderAssess'
 
 import KeyboardMixin from '../../assets/keyboard_mixin'
@@ -31,8 +27,7 @@ export default {
   name: 'Assess',
   components: {
     ViewLayout,
-    AssessContent,
-    StoryHeaderAssess
+    AssessContent
   },
   mixins: [KeyboardMixin('assess')],
   data: () => ({
