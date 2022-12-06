@@ -92,31 +92,31 @@
 import AuthMixin from '../../services/auth/auth_mixin'
 import ToolbarGroupAssess from '@/components/assess/ToolbarGroupAssess'
 
-    export default {
-        name: "ToolbarFilterAssess",
-        components: {
-            ToolbarGroupAssess
-        },
-        props: {
-            title: String,
-            dialog: String,
-            analyze_selector: Boolean,
-            total_count_title: String,
-            selected_count_title: String,
-        },
-        computed: {
-            totalCount() {
-                return this.data_count
-            },
+export default {
+  name: 'ToolbarFilterAssess',
+  components: {
+    ToolbarGroupAssess
+  },
+  props: {
+    title: String,
+    dialog: String,
+    analyze_selector: Boolean,
+    total_count_title: String,
+    selected_count_title: String
+  },
+  computed: {
+    totalCount() {
+      return this.data_count
+    },
 
-            selectedCount() {
-                return this.$store.getters.getSelection.length;
-            },
+    selectedCount() {
+      return this.$store.getters.getSelection.length
+    },
 
-            multiSelectActive() {
-                return this.$store.getters.getMultiSelect;
-            },
-        },
+    multiSelectActive() {
+      return this.$store.getters.getMultiSelect
+    }
+  },
   data: () => ({
     status: [],
     days: [
