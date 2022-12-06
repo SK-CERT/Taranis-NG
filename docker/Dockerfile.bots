@@ -20,9 +20,11 @@ COPY ./src/bots/setup.cfg ./src/bots/setup.py /app/
 COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl custom_packages/
 RUN pip install --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
 
-RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
+RUN apt-get install --no-install-recommends -y \
       build-essential \
-      python3-dev && \
+      python3-dev \
+      git \
+      cmake && \
     pip install -e /app/ && \
     apt-get purge -y build-essential python3-dev && \
     apt-get autoremove -y --purge &&\
