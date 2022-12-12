@@ -429,7 +429,7 @@ class ApiKeysManagement(Command):
                 abort()
 
             apikey.ApiKey.delete(k.id)
-            print('ApiKey \'{}\' was deleted.'.format(opt_name))
+            print('ApiKey \'{}\' has been deleted.'.format(opt_name))
 
 
 manager.add_command('account', AccountManagement)
