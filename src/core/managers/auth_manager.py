@@ -139,7 +139,6 @@ def get_user_from_api_key():
         user: User object or None
     """
     try:
-        log_manager.store_auth_error_activity(">U>")
         if not request.headers.has_key('Authorization') or not request.headers['Authorization'].__contains__('Bearer '):
            return None
         key_string = request.headers['Authorization'].replace('Bearer ', '')
@@ -147,7 +146,6 @@ def get_user_from_api_key():
         if not api_key:
             return None
         user = User.find_by_id(api_key.user_id)
-        log_manager.store_auth_error_activity("OK")
         return user
     except Exception as ex:
         log_manager.store_auth_error_activity("Apikey check presence error: " + str(ex))
@@ -162,14 +160,12 @@ def get_perm_from_user(user):
         all_users_perms: set of user's Permissions or None
     """
     try:
-        log_manager.store_auth_error_activity(">P1>")
         all_users_perms = set()
         for perm in user.permissions:
             all_users_perms.add(perm.id)
         for role in user.roles:
             role_perms = set(perm.id for perm in role.permissions)
             all_users_perms = all_users_perms.union(role_perms)
-        log_manager.store_auth_error_activity("OK")
         return all_users_perms
     except Exception as ex:
         log_manager.store_auth_error_activity("Get permmision from user error: " + str(ex))
@@ -184,7 +180,6 @@ def get_user_from_jwt_token():
         user: User object or None
     """
     try:
-        log_manager.store_auth_error_activity(">J>")
         verify_jwt_in_request()
     except JWTExtendedException:
         log_manager.store_auth_error_activity("Missing JWT")
@@ -200,7 +195,6 @@ def get_user_from_jwt_token():
     if not user:
         log_manager.store_auth_error_activity("Unknown identity in JWT: {}".format(identity))
         return None
-    log_manager.store_auth_error_activity("OK")
     return user
 
 def get_perm_from_jwt_token(user):
@@ -213,14 +207,12 @@ def get_perm_from_jwt_token(user):
     """
     try:
         # does it include permissions?
-        log_manager.store_auth_error_activity(">P2>")
         claims = get_jwt_claims()
         if not claims or 'permissions' not in claims:
             log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT")
             return None
 
         all_users_perms = set(claims['permissions'])
-        log_manager.store_auth_error_activity("OK")
         return all_users_perms
     except Exception as ex:
         log_manager.store_auth_error_activity("Get permmision from JWT error: " + str(ex))
