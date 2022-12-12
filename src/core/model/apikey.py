@@ -25,7 +25,7 @@ class ApiKey(db.Model):
         #self.id = None
         self.name = name
         self.key = key
-        # created_at - database take care about it
+        # created_at - automatically populated by database
         self.user_id = user_id
         self.expires_at = expires_at
 

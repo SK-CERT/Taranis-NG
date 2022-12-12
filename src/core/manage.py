@@ -124,7 +124,7 @@ class AccountManagement(Command):
                 abort()
 
             user.User.delete(u.id)
-            print('User \'{}\' was deleted.'.format(opt_username))
+            print('The user \'{}\' has been deleted.'.format(opt_username))
 
 
 # role management
