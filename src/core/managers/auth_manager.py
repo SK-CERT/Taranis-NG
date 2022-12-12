@@ -20,6 +20,7 @@ from model.remote import RemoteAccess
 from model.report_item import ReportItem
 from model.token_blacklist import TokenBlacklist
 from model.user import User
+from model.apikey import ApiKey
 
 current_authenticator = None
 
@@ -129,54 +130,139 @@ def get_id_name_by_acl(acl):
         return "product_id"
 
 
-def auth_required(permissions, *acl_args):
+def get_user_from_api_key():
+    """
+    Try to authenticate the user by API key
+
+    Returns:
+        (user)
+        user: User object or None
+    """
+    try:
+        log_manager.store_auth_error_activity(">U>")
+        if not request.headers.has_key('Authorization') or not request.headers['Authorization'].__contains__('Bearer '):
+           return None
+        key_string = request.headers['Authorization'].replace('Bearer ', '')
+        api_key = ApiKey.find_by_key(key_string)
+        if not api_key:
+            return None
+        user = User.find_by_id(api_key.user_id)
+        log_manager.store_auth_error_activity("OK")
+        return user
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Apikey check presence error: " + str(ex))
+        return None
+
+def get_perm_from_user(user):
+    """
+    Get user permmisions
+
+    Returns:
+        (all_user_perms)
+        all_users_perms: set of user's Permissions or None
+    """
+    try:
+        log_manager.store_auth_error_activity(">P1>")
+        all_users_perms = set()
+        for perm in user.permissions:
+            all_users_perms.add(perm.id)
+        for role in user.roles:
+            role_perms = set(perm.id for perm in role.permissions)
+            all_users_perms = all_users_perms.union(role_perms)
+        log_manager.store_auth_error_activity("OK")
+        return all_users_perms
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Get permmision from user error: " + str(ex))
+        return None
+
+def get_user_from_jwt_token():
+    """
+    Try to authenticate the user by API key
+
+    Returns:
+        (user)
+        user: User object or None
+    """
+    try:
+        log_manager.store_auth_error_activity(">J>")
+        verify_jwt_in_request()
+    except JWTExtendedException:
+        log_manager.store_auth_error_activity("Missing JWT")
+        return None
+
+    # does it encode an identity?
+    identity = get_jwt_identity()
+    if not identity:
+        log_manager.store_auth_error_activity("Missing identity in JWT: " + get_raw_jwt())
+        return None
+
+    user = User.find(identity)
+    if not user:
+        log_manager.store_auth_error_activity("Unknown identity in JWT: {}".format(identity))
+        return None
+    log_manager.store_auth_error_activity("OK")
+    return user
+
+def get_perm_from_jwt_token(user):
+    """
+    Get user permmisions
+
+    Returns:
+        (all_user_perms)
+        all_users_perms: set of user's Permissions or None
+    """
+    try:
+        # does it include permissions?
+        log_manager.store_auth_error_activity(">P2>")
+        claims = get_jwt_claims()
+        if not claims or 'permissions' not in claims:
+            log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT")
+            return None
+
+        all_users_perms = set(claims['permissions'])
+        log_manager.store_auth_error_activity("OK")
+        return all_users_perms
+    except Exception as ex:
+        log_manager.store_auth_error_activity("Get permmision from JWT error: " + str(ex))
+        return None
+
+def auth_required(required_permissions, *acl_args):
     def auth_required_wrap(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             error = ({'error': 'not authorized'}, 401)
 
-            if isinstance(permissions, list):
-                permissions_set = set(permissions)
+            if isinstance(required_permissions, list):
+                required_permissions_set = set(required_permissions)
             else:
-                permissions_set = {permissions}
+                required_permissions_set = {required_permissions}
 
-            # do we have a JWT token?
-            try:
-                verify_jwt_in_request()
-            except JWTExtendedException:
-                log_manager.store_auth_error_activity("Missing JWT")
-                return error
-
-            # does it encode an identity?
-            identity = get_jwt_identity()
-            if not identity:
-                log_manager.store_auth_error_activity("Missing identity in JWT: " + get_raw_jwt())
-                return error
-
-            user = User.find(identity)
-
-            # does it include permissions?
-            claims = get_jwt_claims()
-            if not claims or 'permissions' not in claims:
-                log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT for identity: {}".format(identity))
+            # obtain the identity and current permissions of that identity
+            user = get_user_from_api_key()
+            if user is None:
+                user = get_user_from_jwt_token()
+                active_permissions_set = get_perm_from_jwt_token(user)
+            else:
+                active_permissions_set = get_perm_from_user(user)
+            if user is None:
+                log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
                 return error
 
             # is there at least one match with the permissions required by the call?
-            if not permissions_set.intersection(set(claims['permissions'])):
-                log_manager.store_user_auth_error_activity(user, "Insufficient permissions in JWT for identity: {}".format(identity))
+            if not required_permissions_set.intersection(active_permissions_set):
+                log_manager.store_user_auth_error_activity(user, "Insufficient permissions for user: {}".format(user.username))
                 return error
 
             # if the object does have an ACL, do we match it?
             if len(acl_args) > 0 and not check_acl(kwargs[get_id_name_by_acl(acl_args[0])], acl_args[0], user):
-                log_manager.store_user_auth_error_activity(user, "Access denied by ACL in JWT for identity: {}".format(identity))
+                log_manager.store_user_auth_error_activity(user, "Access denied by ACL for user: {}".format(user.username))
                 return error
 
             # allow
-            log_manager.store_user_activity(user, str(permissions), str(request.json))
+            log_manager.store_user_activity(user, str(required_permissions_set), str(request.json))
             return fn(*args, **kwargs)
 
         return wrapper
-
     return auth_required_wrap
 
 
@@ -269,16 +355,11 @@ def get_access_key():
 
 
 def get_user_from_jwt():
-    try:
-        verify_jwt_in_request()
-    except JWTExtendedException:
-        return None
-
-    identity = get_jwt_identity()
-    if not identity:
-        return None
-
-    return User.find(identity)
+    # obtain the identity and current permissions
+    user = get_user_from_api_key()
+    if user is None:
+        user = get_user_from_jwt_token()
+    return user
 
 
 def decode_user_from_jwt(jwt_token):

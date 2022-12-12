@@ -40,6 +40,11 @@ class ApiKey(db.Model):
         return apikey
 
     @classmethod
+    def find_by_key(cls, key_str):
+        apikey = cls.query.filter_by(key=key_str).first()
+        return apikey
+
+    @classmethod
     def get_all(cls):
         return cls.query.order_by(db.asc(ApiKey.name)).all()
 
