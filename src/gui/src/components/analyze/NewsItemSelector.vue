@@ -128,7 +128,7 @@ export default {
     NewsItemAggregateDetail
   },
   props: {
-    values: Array,
+    item_values: Array,
     analyze_selector: Boolean,
     report_item_id: Number,
     edit: Boolean,
@@ -136,6 +136,7 @@ export default {
   },
   data: () => ({
     dialog: false,
+    values: this.item_values,
     value: '',
     links: [],
     groups: [],
