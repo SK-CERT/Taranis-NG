@@ -29,7 +29,7 @@ class RemoteNodeSchema(Schema):
     enabled = fields.Bool()
     sync_news_items = fields.Bool()
     sync_report_items = fields.Bool()
-    osint_source_group_id = fields.Str(load_default=None)
+    osint_source_group_id = fields.Str(load_default=None, allow_none=True)
 
 
 class RemoteNodePresentationSchema(RemoteNodeSchema, PresentationSchema):
