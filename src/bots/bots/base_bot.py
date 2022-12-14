@@ -12,7 +12,7 @@ class BaseBot:
     description = "Base abstract type for all bots"
 
     parameters = [
-        Parameter(0, "REFRESH_INTERVAL", "Refresh Interval", "How often is this bot doing its job",
+        Parameter(0, "REFRESH_INTERVAL", "Refresh Interval", "How often and when is this bot doing its job. Examples:<ul><li>10 --- perform the task every 10 minutes</li><li>10:30 --- perform the task every day at 10:30</li><li>Tuesday,10:30 --- perform the task every Tuesday at 10:30</li></ul>",
                   ParameterType.NUMBER)
     ]
 
