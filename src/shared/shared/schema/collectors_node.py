@@ -11,9 +11,9 @@ class CollectorsNodeSchema(Schema):
     api_url = fields.Str()
     api_key = fields.Str()
     collectors = fields.List(fields.Nested(CollectorSchema), load_default=[])
-    status = fields.Str(load_default=None)
-    created = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
-    last_seen = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None)
+    status = fields.Str(load_default=None, allow_none=True)
+    created = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None, allow_none=True)
+    last_seen = fields.DateTime("%d.%m.%Y - %H:%M", load_default=None, allow_none=True)
 
     @post_load
     def make_collectors_node(self, data, **kwargs):
