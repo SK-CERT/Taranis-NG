@@ -160,7 +160,7 @@ export default {
         icon: 'mdi-chart-box',
         permission: 'ASSESS_ACCESS',
         route: '/dashboard',
-        show: true
+        show: false
       },
       {
         title: 'main_menu.enter',

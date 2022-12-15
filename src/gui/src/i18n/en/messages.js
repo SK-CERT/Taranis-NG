@@ -53,6 +53,7 @@ const messages_en = {
 
   main_menu: {
     enter: "Enter",
+    administration: "Administration",
     assess: "Assess",
     analyze: "Analyze",
     publish: "Publish",
@@ -86,6 +87,8 @@ const messages_en = {
     roles: "Roles",
     acls: "ACL",
     users: "Users",
+    user: "User",
+    nodes: "Nodes",
     organizations: "Organizations",
     word_lists: "Word Lists",
     asset_groups: "Asset Groups",
@@ -93,6 +96,24 @@ const messages_en = {
     remote_access: "Remote Access",
     remote_nodes: "Remote Nodes",
     local: "Local"
+  },
+
+  nodes: {
+    add_new: "Add node",
+    edit: "Edit node",
+    save: "Save",
+    add_btn: "Add New",
+    cancel: "Cancel",
+    validation_error: "Please fill in all required fields",
+    error: "Could not connect to node",
+    name: "Name",
+    description: "Description",
+    url: "URL",
+    key: "Key",
+    successful: "node added",
+    successful_edit: "node updated",
+    removed: "node removed",
+    removed_error: "node is in use and could not be deleted"
   },
 
   notification: {

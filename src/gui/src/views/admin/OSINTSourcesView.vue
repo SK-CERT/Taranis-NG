@@ -1,65 +1,58 @@
 <template>
-    <ViewLayout>
-        <template v-slot:panel>
-            <ToolbarFilter title='nav_menu.osint_sources' total_count_title="osint_source.total_count"
-                           total_count_getter="config/getOSINTSources">
-                <template v-slot:addbutton>
-                    <NewOSINTSource/>
-                </template>
-            </ToolbarFilter>
-
-        </template>
-        <template v-slot:content>
-            <ContentData
-                    name = "OSINTSources"
-                    cardItem="CardSource"
-                    action="config/loadOSINTSources"
-                    getter="config/getOSINTSources"
-                    deletePermission="CONFIG_OSINT_SOURCE_DELETE"
-            />
-        </template>
-    </ViewLayout>
+  <div>
+    <ConfigTable
+      :addButton="true"
+      :items="osint_sources"
+      groupByItem="collector_type"
+      @delete-item="deleteItem"
+      @edit-item="editItem"
+      @add-item="addItem"
+    />
+    <template v-if="false">
+      <NewOSINTSource></NewOSINTSource>
+    </template>
+  </div>
 </template>
 
 <script>
-import ViewLayout from '../../components/layouts/ViewLayout'
+import ConfigTable from '../../components/config/osint_sources/ConfigTable'
 import NewOSINTSource from '../../components/config/osint_sources/NewOSINTSource'
-import ToolbarFilter from '../../components/common/ToolbarFilter'
-import ContentData from '../../components/common/content/ContentData'
 import { deleteOSINTSource } from '@/api/config'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'OSINTSources',
   components: {
-    ViewLayout,
-    ToolbarFilter,
-    ContentData,
+    ConfigTable,
     NewOSINTSource
   },
   data: () => ({
+    osint_sources: [],
+    dialog: true
   }),
+  methods: {
+    ...mapActions('assess', ['updateOSINTSources']),
+    ...mapGetters('assess', ['getOSINTSources']),
+    ...mapActions(['updateItemCount']),
+    deleteItem(item) {
+      if (!item.default) {
+        deleteOSINTSource(item)
+      }
+    },
+    addItem() {
+      this.dialog = true
+    },
+    editItem(item) {
+      this.dialog = true
+    }
+  },
   mounted () {
-    this.$root.$on('delete-item', (item) => {
-      deleteOSINTSource(item).then(() => {
-        this.$root.$emit('notification',
-          {
-            type: 'success',
-            loc: 'osint_source.removed'
-          }
-        )
-      }).catch(() => {
-        this.$root.$emit('notification',
-          {
-            type: 'error',
-            loc: 'osint_source.removed_error'
-          }
-        )
-      })
+    this.updateOSINTSources().then(() => {
+      this.osint_sources = this.getOSINTSources().items
     })
   },
   beforeDestroy () {
     this.$root.$off('delete-item')
   }
 }
-
 </script>
