@@ -326,3 +326,9 @@
         }
     }
 </script>
+<style>
+.v-dialog--fullscreen {
+    position: fixed !important;
+    top: 0;
+}
+</style>
