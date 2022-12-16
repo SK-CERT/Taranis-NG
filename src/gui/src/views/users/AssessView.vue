@@ -1,5 +1,4 @@
 <template>
-    <div>
         <ViewLayout>
             <template v-slot:panel>
                 <ToolbarFilterAssess title='nav_menu.newsitems' total_count_title="assess.total_count" selected_count_title="assess.selected_count"
@@ -23,8 +22,6 @@
             </template>
 
         </ViewLayout>
-    </div>
-
 </template>
 
 <script>
