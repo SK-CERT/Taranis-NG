@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  core:
+    build:
+      x-bake:
+        platforms:
+        - linux/amd64
+        - linux/arm64
+  gui:
+    build:
+      x-bake:
+        platforms:
+        - linux/amd64
+        - linux/arm64
+  collectors:
+    build:
+      x-bake:
+        platforms:
+        - linux/amd64
+        - linux/arm64
+  presenters:
+    build:
+      x-bake:
+        platforms:
+        - linux/amd64
+        - linux/arm64
+  publishers:
+    build:
+      x-bake:
+        platforms:
+        - linux/amd64
+        - linux/arm64
+  bots:
+    build:
+      x-bake:
+        platforms:
+        - linux/amd64
+        - linux/arm64
