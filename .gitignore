@@ -25,6 +25,7 @@ src/.env
 *.pem
 *.key
 *.log
+local/
 
 # settings of editors
 .idea/
