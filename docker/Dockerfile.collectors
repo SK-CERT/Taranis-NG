@@ -25,6 +25,7 @@ RUN \
     harfbuzz \
     chromium \
     chromium-chromedriver \
+    tor \
     xvfb \
     dbus-x11 \
     font-noto-emoji \
