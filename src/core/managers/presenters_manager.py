@@ -31,8 +31,7 @@ def generate_product(product_id):
     presenter = product.product_type.presenter
     node = presenter.node
 
-    input_data = PresenterInput(presenter.type, product.product_type.parameter_values, product.report_items,
-                                product.report_items[0].report_item_type)
+    input_data = PresenterInput(presenter.type, product)
     input_schema = PresenterInputSchema()
 
     return PresentersApi(node.api_url, node.api_key).generate(input_schema.dump(input_data))
