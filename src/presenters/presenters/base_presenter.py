@@ -83,6 +83,7 @@ class BasePresenter:
                     for attribute_group_item in attribute_group.attribute_group_items:
                         attribute_map[attribute_group_item.id] = attribute_group_item
 
+            self.product = presenter_input.product
             self.report_items = list()
             for report in presenter_input.reports:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))

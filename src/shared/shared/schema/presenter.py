@@ -4,7 +4,6 @@ from shared.schema.parameter import ParameterSchema
 from shared.schema.parameter_value import ParameterValueSchema
 from shared.schema.report_item import ReportItemSchema
 from shared.schema.report_item_type import ReportItemTypeSchema
-from shared.schema.product import ProductSchemaBase
 
 
 class PresenterSchema(Schema):
@@ -14,17 +13,45 @@ class PresenterSchema(Schema):
     description = fields.Str()
     parameters = fields.List(fields.Nested(ParameterSchema))
 
+# schema for "presenter input product" - a dumbed down product suitable for presenters
+class PresenterInputProductSchema(Schema):
+    title = fields.Str()
+    description = fields.Str()
+    product_type = fields.Str()
+    product_type_description = fields.Str()
+
+    @post_load
+    def make(self, data, **kwargs):
+        return PresenterInputProduct(**data)
+
+# schema for "presenter input" - a complex package of data for presenters
 class PresenterInputSchema(Schema):
     type = fields.Str()
     parameter_values = fields.List(fields.Nested(ParameterValueSchema))
     reports = fields.List(fields.Nested(ReportItemSchema))
     report_types = fields.List(fields.Nested(ReportItemTypeSchema))
-    product = fields.Nested(ProductSchemaBase)
+    product = fields.Nested(PresenterInputProductSchema)
 
     @post_load
     def make(self, data, **kwargs):
         return PresenterInput(**data)
 
+# real data holding object presented by PresenterInputProductSchema
+class PresenterInputProduct:
+    def __init__(self, title, description, product_type, product_type_description):
+        self.title = title
+        self.description = description
+        self.product_type = product_type
+        self.product_type_description = product_type_description
+
+    @classmethod
+    def make_from_product(cls, product):
+        return PresenterInputProduct(
+            product.title,
+            product.description,
+            product.product_type.title,
+            product.product_type.description
+        )
 
 class PresenterInput:
     def __init__(self, type, product, parameter_values = None, reports = None, report_types = None):
@@ -50,7 +77,7 @@ class PresenterInput:
         self.report_types = list(report_types.values())
 
         # PRODUCT
-        self.product = product
+        self.product = PresenterInputProduct.make_from_product(product)
 
     def load(self, type, product, parameter_values, reports, report_types):
         self.type = type
