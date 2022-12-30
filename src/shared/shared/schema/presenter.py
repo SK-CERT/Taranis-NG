@@ -27,16 +27,18 @@ class PresenterInputSchema(Schema):
 
 
 class PresenterInput:
-    def __init__(self, type, product):
+    def __init__(self, type, product, parameter_values = None, reports = None, report_types = None):
+        # creating from JSON data
+        if parameter_values is not None:
+            self.load(type, product, parameter_values, reports, report_types)
+            return
+        # creating from OBJECTS
+
         # PRESENTER
         # - which presenter to use (e.g. PDF presenter)
         self.type = type
         # - arguments for the presenter (e.g. template path)
         self.parameter_values = product.product_type.parameter_values
-        # - the same arguments, parsed differently
-        self.parameter_values_map = dict()
-        for parameter_value in self.parameter_values:
-            self.parameter_values_map.update({parameter_value.parameter.key: parameter_value.value})
 
         # REPORT ITEMS
         # - report items themselves
@@ -48,6 +50,17 @@ class PresenterInput:
         self.report_types = list(report_types.values())
 
         # PRODUCT
+        self.product = product
+
+    def load(self, type, product, parameter_values, reports, report_types):
+        self.type = type
+        self.parameter_values = parameter_values
+        # - the same arguments, parsed differently
+        self.parameter_values_map = dict()
+        for parameter_value in self.parameter_values:
+            self.parameter_values_map.update({parameter_value.parameter.key: parameter_value.value})
+        self.reports = reports
+        self.report_types = report_types
         self.product = product
 
 

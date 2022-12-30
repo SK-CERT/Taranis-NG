@@ -22,15 +22,10 @@ class HTMLPresenter(BasePresenter):
 
         try:
             head, tail = os.path.split(presenter_input.parameter_values_map['HTML_TEMPLATE_PATH'])
-
             input_data = BasePresenter.generate_input_data(presenter_input)
-
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
-
             output_text = env.get_template(tail).render(data=input_data).encode()
-
             base64_bytes = b64encode(output_text)
-
             data = base64_bytes.decode('UTF-8')
 
             presenter_output = {
@@ -40,3 +35,8 @@ class HTMLPresenter(BasePresenter):
             return presenter_output
         except Exception as error:
             BasePresenter.print_exception(self, error)
+            presenter_output = {
+                'mime_type': 'text/plain',
+                'data': b64encode(("TEMPLATING ERROR\n"+str(error)).encode()).decode('UTF-8')
+            }
+            return presenter_output
