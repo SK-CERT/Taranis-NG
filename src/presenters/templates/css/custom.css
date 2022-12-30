@@ -23,7 +23,6 @@
     font-weight: 700
 }
 .th_data {
-    background-color: #BFD5ED;
     font-size: 12px;
     font-weight: 700
 }
@@ -37,10 +36,9 @@ input[type=checkbox] {
 input {
     font-size: 1rem;
     line-height: 1.5;
-    border: 1px solid rgba(0,0,0,.15);
+    border: 1px solid #256ec2;
     border-radius: 0;
     outline: 0;
-    background-color: transparent
 }
 .checkbox-button__input {
     opacity: 0;
@@ -55,7 +53,7 @@ input {
     margin-left: 5px;
     vertical-align: middle;
     background-color: inherit;
-    border: 1px solid gray
+    border: 1px solid #256ec2;
 }
 .checkbox-button__input:checked+.checkbox-button__control:after {
     content: "";
@@ -68,7 +66,7 @@ input {
     background-color: black
 }
 .checkbox-button__input:checked+.checkbox-button__control {
-    border-color: gray
+    border-color: #256ec2;
 }
 .checkbox-button__control {
     transform: scale(0.75)
@@ -79,7 +77,6 @@ input {
     font-size: 14px
 }
 .footer_color {
-    background-color: lightgray
 }
 .text_bold {
     font-weight: 700

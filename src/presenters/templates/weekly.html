@@ -642,17 +642,71 @@ QBRUARUAQUgUAIKEEJhJDuVwQUAUVAEVAEFIGYI6AEJeaQa4OKgCKgCCgCioAiEAgBJSiBENL9i
 oAioAgoAoqAIhBzBJSgxBxybVARUAQUAUVAEVAEAiGgBCUQQrpfEVAEFAFFQBFQBGKOgBKUmEOu
 DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
 </td>
-                    <td class="w60 text-center align-middle title">VULNERABILITY REPORT</td>
+                    <td class="w60 text-center align-middle title">WEEKLY SUMMARY</td>
 		    <td class="w20 number">{{ data.product.title }}</td>
                 </tr>
             </table>
             <br>
         </div>
 
+	<h1>Summary</h1>
+
+	<p>{{ data.product.description }}</p>
+
+	<p>In this week, we reported {{ data.report_items | selectattr("type", "equalto", "Vulnerability Report") | list | length }} vulnerabilities:</p>
+	<ul>
+            {% for report_item in data.report_items %}
+	    {% if report_item.type == "Vulnerability Report" %}
+	    <li><a href="#vuln-{{ loop.index }}">{{ report_item.name | e }}</a></li>
+	    {% endif %}
+	    {% endfor %}
+	</ul>
+
+	{% set available_sectors = (data.report_items | selectattr("type", "equalto", "News by Sector") | map(attribute='attrs.nis_sector')) | sum(start=[]) | unique | list %}
+
+	<p>We also published {{ data.report_items | selectattr("type", "equalto", "News by Sector") | list | length }} news item(s) for {{ available_sectors | length }} sector(s):</p>
+	<ul>
+            {% for sector in available_sectors %}
+	    <li><a href="#sect-{{ loop.index }}">{{ sector | e }}</a></li>
+	    {% endfor %}
+	</ul>
+
+	<p>If you have any questions or comments, please contact us.</p>
+
+	<h1>News by sectors</h1>
+
+	{% if (available_sectors | length) == 0 %}
+	This week, there were no sector-relevant news items.
+	{% endif %}
+
+	{% for sector in available_sectors %}
+	    <a id="sect-{{ loop.index }}"></a><h2>Sector: {{ sector | e }}</h2>
+
+		{% for report_item in data.report_items | selectattr("type", "equalto", "News by Sector") %}
+		{% for news_item_sector in report_item.attrs.nis_sector %}
+		{% if news_item_sector == sector %}
+
+		<h3>{{ report_item.attrs.headline | e }}</h3>
+		<table class="table table-bordered">
+		<tr class="table-row"><td>Date</td><td>{{ report_item.attrs.date | e }}</td></tr>
+		{% if report_item.attrs.date_updated is defined %}
+		<tr class="table-row"><td>Updated</td><td>{{ report_item.attrs.date_updated | e }}</td></tr>
+		{% endif %}
+		<tr class="table-row"><td>Report</td><td>{{ report_item.attrs.article | e }}</td></tr>
+		</table>
+		{% endif %}
+		{% endfor %}
+		{% endfor %}
+
+	{% endfor %}<!-- end sectors -->
+
+	<h1>Vulnerabilities</h1>
         <div>
 
             {% for report_item in data.report_items %}
-	    <h2>{{ report_item.name | e }}</h2>
+	    {% if report_item.type == "Vulnerability Report" %}
+	    <a id="vuln-{{ loop.index }}"></a><h2>{{ report_item.name | e }}</h2>
+
 
                 <table class="table table-bordered header_info" style="width: 100%">
             <tr class="table-row">
@@ -733,6 +787,7 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
 		    <td class="py-0" colspan="5">
                     <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss|e }} </span></div>
 	    </td></tr>
+
                 </table>
 
                 <br>
@@ -843,6 +898,7 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
 
                 </table>
 
+            {% endif %}
             {% endfor %}
 
         </div>
