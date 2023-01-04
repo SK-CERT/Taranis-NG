@@ -61,7 +61,7 @@
     <div class="item-count">
       <span>total items: <strong>{{ itemCount().total }}</strong></span>
 
-      <span v-if="getItemCount().filtered != getItemCount().total"> / displayed items: <strong>{{ getItemCount().filtered }}</strong></span>
+      <span v-if="isFiltered()"> / displayed items: <strong>{{ itemCount().filtered }}</strong></span>
     </div>
 
     <v-spacer></v-spacer>
@@ -212,6 +212,10 @@ export default {
 
     darkToggle () {
       this.$vuetify.theme.dark = this.darkTheme
+    },
+
+    isFiltered () {
+      return this.getItemCount().filtered === undefined ? false : this.getItemCount().filtered !== this.getItemCount().total
     },
 
     itemCount () {

@@ -3,52 +3,57 @@
     <ConfigTable
       :addButton="true"
       :items="osint_sources"
+      :headerFilter="['name', 'description', 'id']"
       groupByItem="collector_type"
       @delete-item="deleteItem"
       @edit-item="editItem"
       @add-item="addItem"
     />
-    <template v-if="false">
-      <NewOSINTSource></NewOSINTSource>
-    </template>
+    <v-snackbar v-model="message" rounded="pill" color="success" centered>
+      {{ message }}
+    </v-snackbar>
   </div>
 </template>
 
 <script>
-import ConfigTable from '../../components/config/osint_sources/ConfigTable'
-import NewOSINTSource from '../../components/config/osint_sources/NewOSINTSource'
-import { deleteOSINTSource } from '@/api/config'
+import ConfigTable from '../../components/config/ConfigTable'
+import { deleteOSINTSource, createNewOSINTSource, updateOSINTSource } from '@/api/config'
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'OSINTSources',
   components: {
-    ConfigTable,
-    NewOSINTSource
+    ConfigTable
   },
   data: () => ({
     osint_sources: [],
-    dialog: true
+    dialog: false,
+    message: ''
   }),
   methods: {
-    ...mapActions('assess', ['updateOSINTSources']),
-    ...mapGetters('assess', ['getOSINTSources']),
+    ...mapActions('config', ['loadOSINTSources']),
+    ...mapGetters('config', ['getOSINTSources']),
+    // ...mapGetters('assess', ['getOSINTSources']),
     ...mapActions(['updateItemCount']),
     deleteItem(item) {
       if (!item.default) {
         deleteOSINTSource(item)
       }
     },
-    addItem() {
+    addItem(item) {
+      createNewOSINTSource(item)
       this.dialog = true
     },
     editItem(item) {
-      this.dialog = true
+      updateOSINTSource(item)
+      this.message = `Successfully updated ${item.name} - ${item.id}`
     }
   },
   mounted () {
-    this.updateOSINTSources().then(() => {
-      this.osint_sources = this.getOSINTSources().items
+    this.loadOSINTSources().then(() => {
+      const sources = this.getOSINTSources()
+      this.osint_sources = sources.items
+      this.updateItemCount({ total: sources.total_count, filtered: sources.length })
     })
   },
   beforeDestroy () {

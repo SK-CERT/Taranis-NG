@@ -8,22 +8,21 @@
     @edit-item="editItem"
     @add-item="addItem"
   />
-  <template v-if="false">
-    <EditNode></EditNode>
-  </template>
+  <v-snackbar v-model="message" rounded="pill" color="success" centered>
+    {{ message }}
+  </v-snackbar>
 </div>
 </template>
 
 <script>
-import EditNode from '../../components/config/nodes/EditNode'
 import ConfigTable from '../../components/config/ConfigTable'
+import { deleteNode, createNode, updateNode } from '@/api/config'
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'Nodes',
   components: {
-    ConfigTable,
-    EditNode
+    ConfigTable
   },
   methods: {
     ...mapActions('config', [
@@ -32,23 +31,33 @@ export default {
     ...mapActions(['updateItemCount']),
     ...mapGetters('config', [
       'getNodes'
-    ])
+    ]),
+    deleteItem(item) {
+      deleteNode(item)
+    },
+    addItem(item) {
+      createNode(item)
+      this.message = `Successfully added ${item.name}`
+    },
+    editItem(item) {
+      updateNode(item)
+      this.message = `Successfully updated ${item.name} - ${item.id}`
+    }
   },
   data: () => ({
-    total_nodes: 0,
-    node_items: []
+    node_items: [],
+    message: ''
   }),
   mounted () {
     var filter = { search: '' }
     this.loadNodes(filter).then(() => {
-      this.node_items = this.getNodes().items
-      this.total_nodes = this.node_items.length
-      this.updateItemCount({ total: this.total_nodes, filtered: this.total_nodes })
+      var nodes = this.getNodes()
+      this.node_items = nodes.items
+      this.updateItemCount({ total: nodes.total_count, filtered: nodes.length })
     })
   },
   beforeDestroy () {
     this.$root.$off('delete-item')
   }
 }
-
 </script>

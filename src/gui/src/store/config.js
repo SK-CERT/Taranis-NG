@@ -104,7 +104,7 @@ const actions = {
       })
   },
 
-  getAllOrganizations (context, data) {
+  loadOrganizations (context, data) {
     return getAllOrganizations(data)
       .then(response => {
         context.commit('setOrganizations', response.data)
@@ -357,11 +357,11 @@ const getters = {
   },
 
   getOSINTSources (state) {
-    return state.osint_sources.items
+    return state.osint_sources
   },
 
   getOSINTSourceGroups (state) {
-    return state.osint_source_groups.items
+    return state.osint_source_groups
   },
 
   getPresentersNodes (state) {

@@ -1,6 +1,5 @@
 <template>
-<v-container fluid class="ma-5 mt-5 pa-5 pt-0">
-  <v-row>
+  <v-container fluid class="ma-5 mt-5 pa-5 pt-0">
     <v-col cols="12">
       <v-card>
         <v-card-title>
@@ -26,61 +25,69 @@
         ref="configTable"
         :headers="headers"
         :items="items"
-        :group-by="groupByItem"
-        :expanded.sync="expanded"
         :search="search"
-        show-expand
+        :group-by="groupByItem"
+        :sort-by="sortByItem"
         class="elevation-1"
         hide-default-footer
         @click:row="rowClick"
       >
+        <template v-slot:[`group.header`]="{ items }">
+          <th :colspan="headers.length" class="text-left">
+            {{ items[0].collector_type }}
+          </th>
+        </template>
 
-      <template v-slot:expanded-item="{ headers }">
-        <td :colspan="headers.length">
-          {{ selected_row }}
-        </td>
-      </template>
+        <template v-slot:[`item.default`]="{ item }">
+          <v-chip :color="getDefaultColor(item.default)" dark>
+            {{ item.default }}
+          </v-chip>
+        </template>
 
-      <template v-slot:[`item.default`]="{ item }">
-        <v-chip :color="getDefaultColor(item.default)" dark>
-          {{ item.default }}
-        </v-chip>
-      </template>
-      <template v-slot:[`item.actions`]="{ item }">
-      <v-icon
-        small
-        class="mr-2"
-        @click="editItem(item)"
-      >
-        mdi-pencil
-      </v-icon>
-      <v-icon
-        small
-        @click="deleteItem(item)"
-      >
-        mdi-delete
-      </v-icon>
-      </template>
-      <template v-slot:no-data>
-        <v-btn
-          color="primary"
-        >
-          Reset
-        </v-btn>
-      </template>
+        <template v-slot:[`item.tag`]="{ item }">
+          <v-icon small class="mr-2">
+            {{ item.tag }}
+          </v-icon>
+        </template>
+        <template v-slot:[`item.actions`]="{ item }">
+          <v-icon small class="mr-2" @click.stop="rowClick(item)">
+            mdi-pencil
+          </v-icon>
+          <v-icon small @click.stop="deleteItem(item)"> mdi-delete </v-icon>
+        </template>
+        <template v-slot:no-data>
+          <v-btn color="primary">Reset</v-btn>
+        </template>
       </v-data-table>
-    </v-card>
-   </v-col>
-  </v-row>
-</v-container>
+      </v-card>
+    </v-col>
+    <v-row>
+      <v-col cols="12">
+        <EditConfig
+          v-if="formData && Object.keys(formData).length > 0"
+          :configData="formData"
+          @submit="handleSubmit"
+        ></EditConfig>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
+import { emptyValues } from '@/utils/helpers'
+import EditConfig from '../../components/config/EditConfig'
+
 export default {
   name: 'ConfigTable',
+  components: {
+    EditConfig
+  },
   emits: ['delete-item', 'edit-item', 'add-item'],
   props: {
-    items: Array,
+    items: {
+      type: Array,
+      required: true
+    },
     addButton: {
       type: Boolean,
       default: false
@@ -89,61 +96,71 @@ export default {
       type: String,
       default: null
     },
+    sortByItem: {
+      type: String,
+      default: null
+    },
     headerFilter: {
       type: Array,
-      default: null
+      default: () => []
+    },
+    actionColumn: {
+      type: Boolean,
+      default: false
     }
   },
   data: () => ({
-    selected_row: {},
-    expanded: [],
+    edit: false,
+    formData: {},
     search: ''
   }),
   computed: {
-    headers () {
-      if (this.headerFilter) {
-        return this.headerFilter.map(key => {
+    headers() {
+      var actionHeader = {
+        text: 'Actions',
+        value: 'actions',
+        sortable: false
+      }
+      var headers = []
+      if (this.headerFilter.length > 0) {
+        headers = this.headerFilter.map((item) => ({ text: item, value: item }))
+      } else if (this.items.length > 0) {
+        headers = Object.keys(this.items[0]).map((key) => {
           return {
             text: key,
             value: key
           }
         })
       }
-      var headers = (this.items.length > 0 ? Object.keys(this.items[0]).map(key => {
-        return {
-          text: key,
-          value: key
-        }
-      }) : [])
-      headers.push({
-        text: 'Actions',
-        value: 'actions',
-        sortable: false
-      })
+      if (this.actionColumn) {
+        headers.push(actionHeader)
+      }
       return headers
     }
   },
   methods: {
-    getDefaultColor (defaultgroup) {
-      return (defaultgroup ? 'green' : '')
+    handleSubmit(submittedData) {
+      console.log(submittedData)
+      if (this.edit) {
+        this.$emit('edit-item', submittedData)
+      } else {
+        this.$emit('add-item', submittedData)
+      }
+    },
+    getDefaultColor(defaultgroup) {
+      return defaultgroup ? 'green' : ''
     },
     deleteItem(item) {
       this.$emit('delete-item', item)
     },
-    editItem(item) {
-      this.$emit('edit-item', item)
-    },
     addItem() {
-      this.$emit('add-item')
+      this.edit = false
+      var onlyKeys = emptyValues(this.items[0])
+      this.formData = onlyKeys
     },
     rowClick(item, event) {
-      this.selected_row = item
-      if (event.isExpanded) {
-        const index = this.expanded.findIndex(i => i === item)
-        this.expanded.splice(index, 1)
-      } else {
-        this.expanded.push(item)
-      }
+      this.formData = item
+      this.edit = true
     }
   }
 }
