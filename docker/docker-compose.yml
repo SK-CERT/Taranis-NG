@@ -22,6 +22,7 @@ services:
       POSTGRES_USER: "taranis-ng"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       TZ: "${TZ}"
+      PGTZ: "${TZ}"
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
     volumes:
       - "database_data:/var/lib/postgresql/data"
@@ -105,7 +106,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
-      TARANIS_NG_CORE_URL: "http://core/api/v1"
+      TARANIS_NG_CORE_URL: "http://core"
       TARANIS_NG_CORE_SSE: "http://core/sse"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
