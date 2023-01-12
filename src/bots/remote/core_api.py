@@ -24,7 +24,7 @@ class CoreApi:
     def get_news_items_data(cls, limit):
         try:
             response = requests.get(cls.api_url + '/api/v1/bots/news-item-data?limit=' + limit, headers=cls.headers)
-            return response.json()
+            return response.json(), response.status_code
         except Exception:
             return None, 400
 
