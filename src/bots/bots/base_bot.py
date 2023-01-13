@@ -1,4 +1,5 @@
 import datetime
+import traceback
 
 from managers import time_manager
 from shared.schema import bot, bot_preset
@@ -35,12 +36,12 @@ class BaseBot:
 
     @staticmethod
     def print_exception(preset, error):
-        print('Bot Preset ID: ' + preset.id)
-        print('Bot Preset name: ' + preset.name)
+        print('Bot Preset:', preset.id, preset.name)
         if str(error).startswith('b'):
             print('ERROR: ' + str(error)[2:-1])
         else:
             print('ERROR: ' + str(error))
+        print('TRACEBACK:', traceback.format_exc(), flush=True)
 
     @staticmethod
     def history(interval):

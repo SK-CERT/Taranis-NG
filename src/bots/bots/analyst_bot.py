@@ -37,43 +37,35 @@ class AnalystBot(BaseBot):
 
             bots_params = dict(zip(attr_name, regexp))
             limit = BaseBot.history(interval)
-            news_items_data = CoreApi.get_news_items_data(limit)
-
-            if news_items_data:
-
+            news_items_data, code = CoreApi.get_news_items_data(limit)
+            if code == 200 and news_items_data is not None:
                 for item in news_items_data:
+                    if item:
+                        news_item_id = item['id']
+                        title = item['title']
+                        preview = item['review']
+                        content = item['content']
 
-                    news_item_id = item['id']
-                    title = item['title']
-                    preview = item['review']
-                    content = item['content']
+                        analyzed_text = ''.join([title, preview, content]).split()
+                        analyzed_text = [item.replace('.', '') if item.endswith('.') else item
+                                            for item in analyzed_text]
+                        analyzed_text = [item.replace(',', '') if item.endswith(',') else item
+                                            for item in analyzed_text]
 
-                    analyzed_text = ''.join([title, preview, content]).split()
-                    analyzed_text = [item.replace('.', '') if item.endswith('.') else item
-                                     for item in analyzed_text]
-                    analyzed_text = [item.replace(',', '') if item.endswith(',') else item
-                                     for item in analyzed_text]
+                        for element in analyzed_text:
+                            attributes = []
+                            for key, value in bots_params.items():
+                                finding = re.search(value, element)
+                                if finding:
+                                    found_value = finding.group(0)
+                                    value = found_value
+                                    binary_mime_type = ''
+                                    binary_value = ''
 
-                    for element in analyzed_text:
-
-                        attributes = []
-
-                        for key, value in bots_params.items():
-
-                            finding = re.search("(" + value + ")", element)
-                            if finding:
-                                found_value = finding.group(1)
-
-                                value = found_value
-                                binary_mime_type = ''
-                                binary_value = ''
-
-                                news_attribute = news_item.NewsItemAttribute(key, value, binary_mime_type, binary_value)
-
-                                attributes.append(news_attribute)
-
-                                news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
-                                CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
+                                    news_attribute = news_item.NewsItemAttribute(key, value, binary_mime_type, binary_value)
+                                    attributes.append(news_attribute)
+                                    news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
+                                    CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
 
         except Exception as error:
             BaseBot.print_exception(preset, error)

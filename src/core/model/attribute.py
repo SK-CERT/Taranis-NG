@@ -48,8 +48,8 @@ class AttributeEnum(db.Model):
         query = cls.query.filter_by(attribute_id=attribute_id)
         if search:
             search_string = '%' + search + '%'
-            query = query.filter(or_(AttributeEnum.value.like(search_string),
-                                     AttributeEnum.description.like(search_string)))
+            query = query.filter(or_(AttributeEnum.value.ilike(search_string),
+                                     AttributeEnum.description.ilike(search_string)))
 
         query = query.order_by(db.asc(AttributeEnum.index))
 
