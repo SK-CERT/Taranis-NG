@@ -113,7 +113,7 @@ class NewsItemData(db.Model):
     @classmethod
     def get_all_news_items_data(cls, limit):
         limit = datetime.strptime(limit, '%d.%m.%Y - %H:%M')
-        limit = datetime.strftime(limit, '%Y-%m-%d - %H:%M')
+        limit = datetime.strftime(limit, '%Y-%m-%d %H:%M') # Changed format (- is timezone sign, wrong datetime evaluated, when time > 16:00 -> time zone displacement out of range error)
 
         news_items_data = cls.query.filter(cls.collected > limit).all()
         news_items_data_schema = NewsItemDataSchema(many=True)
