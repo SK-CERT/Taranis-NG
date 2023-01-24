@@ -44,7 +44,7 @@ class Products(Resource):
 
 class Product(Resource):
 
-    @auth_required('PUBLISH_UPDATE', ACLCheck.PRODUCT_TYPE_ACCESS)
+    @auth_required('PUBLISH_ACCESS', ACLCheck.PRODUCT_TYPE_ACCESS)
     def get(self, product_id):
         return product.Product.get_detail_json(product_id)
 
