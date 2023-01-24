@@ -65,6 +65,7 @@ services:
 
       TZ: "${TZ}"
       DEBUG: "true"
+      DEBUG_SQL: "false"
       # to allow automatic initialisation of collectors/presenters/publishers
       COLLECTOR_PRESENTER_PUBLISHER_API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
     labels:

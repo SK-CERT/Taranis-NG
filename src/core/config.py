@@ -14,7 +14,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=DB_USER, pw=DB_PASSWORD,
                                                                                     url=DB_URL, db=DB_DATABASE)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    #SQLALCHEMY_ECHO = True             # DEBUG SQL Queries
+    SQLALCHEMY_ECHO = (os.getenv("DEBUG_SQL", "false").lower() == "true") # DEBUG SQL Queries
 
     if "DB_POOL_SIZE" in os.environ:
         DB_POOL_SIZE = os.getenv("DB_POOL_SIZE")
