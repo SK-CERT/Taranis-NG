@@ -123,9 +123,12 @@
                     </v-tab-item>
 
                     <v-tab-item value="tab-2" class="pa-5">
-                        <NewsItemAttribute v-for="attribute in news_item.attributes" :key="attribute.id"
-                                           :attribute="attribute"
-                                           :news_item_data="news_item.news_items[0].news_item_data"/>
+                        <div v-for="item in news_item.news_items" :key="item.id">
+                            <NewsItemAttribute v-for="attribute in item.news_item_data.attributes"
+                                    :key="attribute.id"
+                                    :attribute="attribute"
+                                    :news_item_data="news_item.news_items[0].news_item_data"/>
+                        </div>
                     </v-tab-item>
 
                     <v-tab-item value="tab-3" class="pa-5">
