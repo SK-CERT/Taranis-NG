@@ -111,7 +111,15 @@ def resolve_resource():
 def resolve_data():
     if "Content-Type" in request.headers and "application/json" in request.headers["Content-Type"]:
         if request.data is not None:
-            return str(request.data)[:4096].replace("\\r", "").replace("\\n", "").replace(" ", "")[2:-1]
+            data = str(request.data)[:4096].replace("\\r", "").replace("\\n", "").replace(" ", "")[2:-1]
+            # strip sensitve data
+            censored = {"password", "api_key"}
+            for cen in censored:
+                search = "\"" + cen + "\":(\".*?\")"
+                found = re.search(search, data, flags=re.IGNORECASE)
+                if found:
+                    data = data.replace(found.group(1), "\"CENSORED\"")
+            return data
 
     return ""
 

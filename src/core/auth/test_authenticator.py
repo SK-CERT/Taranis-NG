@@ -14,6 +14,6 @@ class TestAuthenticator(BaseAuthenticator):
             if users[credentials["username"]] == credentials["password"]:
                 return BaseAuthenticator.generate_jwt(credentials["username"])
 
-        log_manager.store_auth_error_activity("Authentication failed with credentials: " + str(credentials))
+        log_manager.store_auth_error_activity("Authentication failed for user: " + credentials["username"])
 
         return BaseAuthenticator.generate_error()
