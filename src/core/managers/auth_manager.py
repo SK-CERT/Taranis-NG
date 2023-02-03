@@ -355,9 +355,14 @@ def get_user_from_jwt():
 
 
 def decode_user_from_jwt(jwt_token):
-    decoded = jwt.decode(jwt_token, os.getenv('JWT_SECRET_KEY'))
-    if decoded is not None:
-        return User.find(decoded['sub'])
+    decoded = None
+    try:
+        decoded = jwt.decode(jwt_token, os.getenv('JWT_SECRET_KEY'))
+    except Exception as ex: # e.g. "Signature has expired"
+        log_manager.store_auth_error_activity("Invalid JWT: " + str(ex))
+    if decoded is None:
+        return None
+    return User.find(decoded['sub'])
 
 
 def get_external_permissions_ids():
