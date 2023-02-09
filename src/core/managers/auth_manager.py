@@ -275,10 +275,10 @@ def api_key_required(fn):
             return error
 
         # does it match some of our collector's keys?
-        if not CollectorsNode.exists_by_api_key(auth_header.replace('Bearer ', '')):
-            log_manager.store_auth_error_activity("Incorrect api key: "
-                                                  + auth_header.replace('Bearer ',
-                                                                        '') + " for external access")
+        api_key = auth_header.replace('Bearer ', '')
+        if not CollectorsNode.exists_by_api_key(api_key):
+            api_key = log_manager.sensitive_value(api_key)
+            log_manager.store_auth_error_activity("Incorrect api key: " + api_key + " for external access")
             return error
 
         # allow
