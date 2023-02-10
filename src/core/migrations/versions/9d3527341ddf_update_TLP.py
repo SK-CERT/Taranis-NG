@@ -1,4 +1,4 @@
-"""TLC WHITE to CLEAR
+"""TLP WHITE to CLEAR
 
 Revision ID: 9d3527341ddf
 Revises: c2c78cb93a3e
