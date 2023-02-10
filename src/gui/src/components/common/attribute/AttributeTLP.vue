@@ -6,9 +6,9 @@
                 <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
                 <v-radio-group :disabled="!canModify" v-if="!read_only && !values[index].remote" row v-model="values[index].value" @change="onEdit(index)">
                     <v-radio
-                            :label="$t('attribute.tlp_white')"
+                            :label="$t('attribute.tlp_clear')"
                             color="gray"
-                            value="WHITE"
+                            value="CLEAR"
                     ></v-radio>
                     <v-radio
                             :label="$t('attribute.tlp_green')"
@@ -49,34 +49,27 @@
                         :val_index="index"
                 >
                     <template v-slot:col_middle>
-                        <v-radio-group
-                                :disabled="!canModify"
-                                v-if="!read_only && !values[index].remote"
-                                row
-                                v-model="values[index].value"
-                                @change="onEdit(index)"
-                        >
-                            <v-radio
-                                    :label="$t('attribute.tlp_white')"
-                                    color="gray"
-                                    value="WHITE"
-                            ></v-radio>
-                            <v-radio
-                                    :label="$t('attribute.tlp_green')"
-                                    color="green"
-                                    value="GREEN"
-                            ></v-radio>
-                            <v-radio
-                                    :label="$t('attribute.tlp_amber')"
-                                    color="orange"
-                                    value="AMBER"
-                            ></v-radio>
-                            <v-radio
-                                    :label="$t('attribute.tlp_red')"
-                                    color="red"
-                                    value="RED"
-                            ></v-radio>
-                        </v-radio-group>
+                      <v-radio-group :disabled="!canModify"
+                                     v-if="!read_only && !values[index].remote"
+                                     row
+                                     v-model="values[index].value"
+                                     @change="onEdit(index)">
+                        <v-radio :label="$t('attribute.tlp_clear')"
+                                 color="gray"
+                                 value="CLEAR"></v-radio>
+                        <v-radio :label="$t('attribute.tlp_green')"
+                                 color="green"
+                                 value="GREEN"></v-radio>
+                        <v-radio :label="$t('attribute.tlp_amber')"
+                                 color="orange"
+                                 value="AMBER"></v-radio>
+                        <v-radio :label="$t('attribute.tlp_amber_strict')"
+                                 color="orange"
+                                 value="AMBER+STRICT"></v-radio>
+                        <v-radio :label="$t('attribute.tlp_red')"
+                                 color="red"
+                                 value="RED"></v-radio>
+                      </v-radio-group>
                     </template>
                 </AttributeValueLayout>
             </v-row>
