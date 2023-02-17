@@ -70,8 +70,9 @@ docker-compose -f docker/docker-compose.yml up --no-build
 or, alternatively, build and run the containers with:
 
 ```bash
-TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml up --build
+TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml up --build --pull
 ```
+(`--pull` updates the base images)
 
 **Voila, Taranis NG is up and running. Visit your instance by navigating to
 [https://localhost:4443/](https://localhost:4443/) using your web browser**.
