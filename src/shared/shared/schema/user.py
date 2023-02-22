@@ -31,9 +31,10 @@ class UserPresentationSchema(UserSchema, PresentationSchema):
 
 
 class User:
-    def __init__(self, username, name, permissions):
+    def __init__(self, username, name, password, permissions):
         self.username = username
         self.name = name
+        self.password = password
         self.permissions = permissions
 
 
