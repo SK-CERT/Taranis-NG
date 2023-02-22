@@ -70,7 +70,6 @@ class AccountManagement(Command):
 
             opt_roles = opt_roles.split(',')
             roles = []
-
             for ro in opt_roles:
                 r = None
                 try:
@@ -83,6 +82,16 @@ class AccountManagement(Command):
                     abort()
 
                 roles.append(r)
+
+            new_user = user.User(-1, opt_username, opt_name, opt_password, None, roles, None)
+            db_manager.db.session.add(new_user)
+            db_manager.db.session.commit()
+
+            #if roles:
+            #    k.roles = roles
+            #    db_manager.db.session.commit()
+            
+            print('User \'{}\' with id {} created.'.format(opt_name, new_user.id))
 
         if (opt_edit):
             if (not opt_username):
@@ -125,7 +134,6 @@ class AccountManagement(Command):
 
             user.User.delete(u.id)
             print('The user \'{}\' has been deleted.'.format(opt_username))
-
 
 # role management
 class RoleManagement(Command):
@@ -310,7 +318,6 @@ class CollectorManagement(Command):
                 else:
                     print('Unable to update collector node {}.\n\tResponse: [{}] {}.'.format(node.id, status_code, collectors_info))
 
-
 # dictionary management
 class DictionaryManagement(Command):
 
@@ -430,7 +437,6 @@ class ApiKeysManagement(Command):
 
             apikey.ApiKey.delete(k.id)
             print('ApiKey \'{}\' has been deleted.'.format(opt_name))
-
 
 manager.add_command('account', AccountManagement)
 manager.add_command('role', RoleManagement)
