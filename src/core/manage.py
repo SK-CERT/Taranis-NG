@@ -86,10 +86,6 @@ class AccountManagement(Command):
             new_user = user.User(-1, opt_username, opt_name, opt_password, None, roles, None)
             db_manager.db.session.add(new_user)
             db_manager.db.session.commit()
-
-            #if roles:
-            #    k.roles = roles
-            #    db_manager.db.session.commit()
             
             print('User \'{}\' with id {} created.'.format(opt_name, new_user.id))
 

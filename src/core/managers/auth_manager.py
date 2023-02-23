@@ -10,7 +10,7 @@ from flask_jwt_extended.exceptions import JWTExtendedException
 from managers import log_manager, time_manager
 from auth.keycloak_authenticator import KeycloakAuthenticator
 from auth.openid_authenticator import OpenIDAuthenticator
-from auth.test_authenticator import TestAuthenticator
+from auth.password_authenticator import PasswordAuthenticator
 from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
@@ -42,10 +42,10 @@ def initialize(app):
         current_authenticator = OpenIDAuthenticator()
     elif which == 'keycloak':
         current_authenticator = KeycloakAuthenticator()
-    elif which == 'test':
-        current_authenticator = TestAuthenticator()
+    elif which == 'password':
+        current_authenticator = PasswordAuthenticator()
     else:
-        current_authenticator = TestAuthenticator()
+        current_authenticator = PasswordAuthenticator()
 
     current_authenticator.initialize(app)
 
