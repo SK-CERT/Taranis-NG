@@ -92,7 +92,7 @@ Adding a collector node: TL;DR: no action needed. Longer version: This is done a
 
 Adding a presenter node: Log in as an `admin`, then navigate to Configuration
 -> Presenters nodes. Click `Add new`. Enter any name and description. For URL,
-enter `http://collectors/` and for key, enter `supersecret` (or whatever
+enter `http://presenters/` and for key, enter `supersecret` (or whatever
 password you chose during the installation). Click `Save`.
 
 Adding a publisher node: repeat the process at Configuration -> Publishers
