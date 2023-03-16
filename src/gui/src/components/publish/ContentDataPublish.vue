@@ -51,7 +51,16 @@
                 }
                 this.$store.dispatch("getAllProducts", {filter: this.filter, offset:offset, limit:limit})
                     .then(() => {
+                        const product_types = Object.values(this.$store.getters.getProductTypes.items);
                         this.collections = this.collections.concat(this.$store.getters.getProducts.items);
+                        for (let i = 0; i < this.collections.length; i++) {
+                            let product_type = product_types.filter(x => x.id == this.collections[i].product_type_id);
+                            if (product_type.length) {
+                                this.collections[i].product_type_name = product_type[0].title;
+                            } else {
+                                this.collections[i].product_type_name = this.$t('card_item.title');
+                            }
+                        }
                         setTimeout(() => {
                             this.data_loaded = true
                         }, 1000);
