@@ -34,7 +34,7 @@ class BaseAuthenticator:
 
         user = User.find(username)
         if not user:
-            log_manager.store_auth_error_activity("User not exists after authentication: " + username)
+            log_manager.store_auth_error_activity("User does not exist after authentication: " + username)
             return BaseAuthenticator.generate_error()
         else:
             log_manager.store_user_activity(user, "LOGIN", "Successful")
