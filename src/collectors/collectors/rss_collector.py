@@ -35,7 +35,7 @@ class RSSCollector(BaseCollector):
         feed_url = source.parameter_values['FEED_URL']
         interval = source.parameter_values['REFRESH_INTERVAL']
 
-        log_manager.log_collector_activity('rss', source.id, 'Starting collector for url: {}'.format(feed_url))
+        log_manager.log_collector_activity('rss', source.name, 'Starting collector for url: {}'.format(feed_url))
 
         user_agent = source.parameter_values['USER_AGENT']
         if user_agent:
@@ -82,7 +82,7 @@ class RSSCollector(BaseCollector):
             else:
                 feed = feedparser.parse(feed_url)
 
-            log_manager.log_collector_activity('rss', source.id, 'RSS returned feed with {} entries'.format(len(feed['entries'])))
+            log_manager.log_collector_activity('rss', source.name, 'RSS returned feed with {} entries'.format(len(feed['entries'])))
 
             news_items = []
 
@@ -99,10 +99,10 @@ class RSSCollector(BaseCollector):
                 # if published > limit: TODO: uncomment after testing, we need some initial data now
                 link_for_article = feed_entry['link']
                 if not link_for_article:
-                    log_manager.log_collector_activity("rss", source.id, "Skipping (empty link)")
+                    log_manager.log_collector_activity("rss", source.name, "Skipping (empty link)")
                     continue
 
-                log_manager.log_collector_activity('rss', source.id, 'Processing entry [{}]'.format(link_for_article))
+                log_manager.log_collector_activity('rss', source.name, 'Processing entry [{}]'.format(link_for_article))
 
                 html_content = ''
                 request = urllib.request.Request(link_for_article)
@@ -134,7 +134,7 @@ class RSSCollector(BaseCollector):
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            log_manager.log_collector_activity('rss', source.id, 'RSS collection exceptionally failed')
+            log_manager.log_collector_activity('rss', source.name, 'RSS collection exceptionally failed')
             BaseCollector.print_exception(source, error)
             log_manager.log_debug(traceback.format_exc())
 
