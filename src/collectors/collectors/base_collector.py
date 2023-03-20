@@ -20,7 +20,7 @@ class BaseCollector:
     parameters = [
         Parameter(0, "PROXY_SERVER", "Proxy server",
                   "Type SOCKS5 proxy server as username:password@ip:port or ip:port", ParameterType.STRING),
-        Parameter(0, "REFRESH_INTERVAL", "Refresh interval in minutes", "How often is this collector queried for new data",
+        Parameter(0, "REFRESH_INTERVAL", "Refresh interval in minutes (0 to disable)", "How often is this collector queried for new data",
                   ParameterType.NUMBER)
     ]
 
