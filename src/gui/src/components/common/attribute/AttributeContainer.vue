@@ -19,6 +19,7 @@
 
 <script>
     import AttributeString from "@/components/common/attribute/AttributeString";
+    import AttributeNumber from "@/components/common/attribute/AttributeNumber";
     import AttributeRichText from "@/components/common/attribute/AttributeRichText";
     import AttributeAttachment from "@/components/common/attribute/AttributeAttachment";
     import AttributeTLP from "@/components/common/attribute/AttributeTLP";
@@ -37,6 +38,7 @@
         name: "AttributeContainer",
         components: {
             AttributeString,
+            AttributeNumber,
             AttributeText,
             AttributeRichText,
             AttributeAttachment,
@@ -61,6 +63,7 @@
         data: () => ({
             attributes: {
                 STRING: "String",
+                NUMBER: "Number",
                 TEXT: "Text",
                 RICH_TEXT: "RichText",
                 ATTACHMENT: "Attachment",
