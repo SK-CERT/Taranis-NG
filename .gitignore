@@ -25,6 +25,7 @@ src/.env
 *.pem
 *.key
 *.log
+*.crt
 local/
 
 # settings of editors
