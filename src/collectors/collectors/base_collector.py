@@ -247,7 +247,6 @@ class BaseCollector:
 
                 # start collection
                 for source in self.osint_sources:
-                    log_debug("----- {} -----".format(source.name))
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == '' or interval == '0':

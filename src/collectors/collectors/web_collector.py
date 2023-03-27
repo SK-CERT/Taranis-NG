@@ -513,13 +513,13 @@ class WebCollector(BaseCollector):
             return False, 'Error obtaining title page', 0, 0
 
         # if there is a popup selector, click on it!
-        try:
-            if self.selectors['popup_close']:
+        if self.selectors['popup_close']:
+            try:
                 popup = WebDriverWait(browser, 10).until(EC.presence_of_element_located(self.__get_element_locator(self.selectors['popup_close'])))
-                if popup:
-                    popup.click()
-        except Exception as ex:
-            log_manager.log_collector_activity('web', self.source.name, 'Popup close error: ' + traceback.format_exc())
+            except Exception as ex:
+                log_manager.log_collector_activity('web', self.source.name, 'Popup find error: ' + traceback.format_exc())
+            if popup:
+                popup.click()
 
         # if there is a "load more" selector, click on it!
         page = 1

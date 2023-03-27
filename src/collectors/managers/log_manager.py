@@ -88,5 +88,5 @@ def log_system_activity(module, message):
     log_info("[{}] {}".format(module, message))
 
 def log_collector_activity(collector_type, collector, message):
-    log_text = "{} '{}': {}".format(collector_type, collector, message)
+    log_text = "COLLECTOR {} '{}': {}".format(collector_type, collector, message)
     log_debug(log_text)
