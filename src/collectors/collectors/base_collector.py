@@ -20,7 +20,7 @@ class BaseCollector:
     parameters = [
         Parameter(0, "PROXY_SERVER", "Proxy server",
                   "Type SOCKS5 proxy server as username:password@ip:port or ip:port", ParameterType.STRING),
-        Parameter(0, "REFRESH_INTERVAL", "Refresh interval in minutes", "How often is this collector queried for new data",
+        Parameter(0, "REFRESH_INTERVAL", "Refresh interval in minutes (0 to disable)", "How often is this collector queried for new data",
                   ParameterType.NUMBER)
     ]
 
@@ -235,8 +235,7 @@ class BaseCollector:
 
         # get new node configuration
         response, code = CoreApi.get_osint_sources(self.type)
-
-        log_debug("HTTP {}: Got the following reply: {}".format(code, response))
+        #log_debug("HTTP {}: Got the following reply: {}".format(code, response))
 
         try:
             # if configuration was successfully received
@@ -248,23 +247,24 @@ class BaseCollector:
 
                 # start collection
                 for source in self.osint_sources:
-                    self.collect(source)
                     interval = source.parameter_values["REFRESH_INTERVAL"]
-
                     # do not schedule if no interval is set
-                    if interval == '':
+                    if interval == '' or interval == '0':
+                        log_debug("scheduling '{}' disabled".format(str(source.name)))
                         continue
 
-                    log_debug("scheduling.....")
+                    self.collect(source)
 
                     # run task every day at XY
                     if interval[0].isdigit() and ':' in interval:
+                        log_debug("scheduling '{}' at: {}".format(str(source.name), str(interval)))
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.collect, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(',')
                         day = interval[0].strip()
                         at = interval[1].strip()
+                        log_debug("scheduling '{}' at: {} {}".format(str(source.name), str(day), str(at)))
                         if day == 'Monday':
                             source.scheduler_job = time_manager.schedule_job_on_monday(at, self.collect, source)
                         elif day == 'Tuesday':
@@ -281,7 +281,7 @@ class BaseCollector:
                             source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.collect, source)
                     # run task every XY minutes
                     else:
-                        log_debug("scheduling for {}".format(int(interval)))
+                        log_debug("scheduling '{}' for {}".format(str(source.name), int(interval)))
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
             else:
                 # TODO: send update to core with the error message
