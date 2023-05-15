@@ -11,6 +11,7 @@ from managers import log_manager, time_manager
 from auth.keycloak_authenticator import KeycloakAuthenticator
 from auth.openid_authenticator import OpenIDAuthenticator
 from auth.password_authenticator import PasswordAuthenticator
+from auth.ldap_authenticator import LDAPAuthenticator
 from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
@@ -37,13 +38,15 @@ def initialize(app):
 
     JWTManager(app)
 
-    which = os.getenv('TARANIS_NG_AUTHENTICATOR')
+    which = os.getenv('TARANIS_NG_AUTHENTICATOR').casefold()
     if which == 'openid':
         current_authenticator = OpenIDAuthenticator()
     elif which == 'keycloak':
         current_authenticator = KeycloakAuthenticator()
     elif which == 'password':
         current_authenticator = PasswordAuthenticator()
+    elif which == 'ldap':
+        current_authenticator = LDAPAuthenticator()
     else:
         current_authenticator = PasswordAuthenticator()
 
