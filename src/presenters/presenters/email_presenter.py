@@ -6,6 +6,8 @@ Returns:
 import os
 from base64 import b64encode
 import jinja2
+import re
+
 
 from .base_presenter import BasePresenter
 from shared.schema.parameter import Parameter, ParameterType
@@ -68,9 +70,21 @@ class EMAILPresenter(BasePresenter):
                 max_tlp = "CLEAR"
             return max_tlp
 
+        def adjust_links(input_data):
+            """Adjust links in input data - adds letter in front of numbers."""
+
+            pattern = r'\[(\d+)\]'
+
+            for report in input_data["report_items"]:
+                report["attrs"]["description"] = re.sub(pattern, lambda match: f"[A{match.group(1)}]", report["attrs"]["description"])
+
+            return input_data
+
+
         def generate_part(part_name):
             input_data = BasePresenter.generate_input_data(presenter_input)
             max_tlp = get_max_tlp(input_data)
+            input_data = adjust_links(input_data)
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
             func_dict = {
                 "vars": vars,
