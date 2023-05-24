@@ -1,6 +1,10 @@
 from shared.schema.presenter import PresenterSchema
 from managers import log_manager
-import json, datetime, types
+import json
+import datetime
+import types
+import re
+
 
 class BasePresenter:
     type = "BASE_PRESENTER"
@@ -18,14 +22,17 @@ class BasePresenter:
             return dict(value)
         else:
             return value.__dict__
+
     # helper class
     class AttributesObject:
         def toJSON(self):
             return json.dumps(self, default=BasePresenter.json_default, sort_keys=True, indent=4)
+
     # helper class
     class ReportItemObject:
         def toJSON(self):
             return json.dumps(self, default=BasePresenter.json_default, sort_keys=True, indent=4)
+
         def __init__(self, report_item, report_types, attribute_map):
             # report item itself
             self.name = report_item.title
@@ -69,6 +76,40 @@ class BasePresenter:
         def toJSON(self):
             return json.dumps(self, default=BasePresenter.json_default, sort_keys=True, indent=4)
 
+        def get_max_tlp(self, reports):
+            """Returns the highest TLP value from a list of reports
+
+            Args:
+                reports (list): list of reports
+
+            Returns:
+                max_tlp: Highest TLP value from the list of reports
+            """
+            color_values = {
+                            'WHITE': 0,
+                            'CLEAR': 1,
+                            'GREEN': 2,
+                            'AMBER': 3,
+                            'AMBER+STRICT': 4,
+                            'RED': 5
+                            }
+            colors = []
+
+            for report in reports:
+                colors.append(report.attrs.tlp)
+
+            max_tlp = max(colors, key=lambda color: color_values.get(color, 0))
+            if not max_tlp:
+                max_tlp = "CLEAR"
+            return max_tlp
+
+        def add_link_prefix(self, report, letter):
+            pattern = r'\[(\d+)\]'
+            description = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.description)
+            log_manager.log_info(description)
+
+            return description
+
         def __init__(self, presenter_input):
             # types of report items (e.g. vuln report, disinfo report)
             report_types = dict()
@@ -85,8 +126,17 @@ class BasePresenter:
 
             self.product = presenter_input.product
             self.report_items = list()
+
             for report in presenter_input.reports:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))
+
+            letter = 'A'
+            for report in self.report_items:
+                report.attrs.description = self.add_link_prefix(report, letter)
+                report.attrs.link_prefix = letter
+                letter = chr(ord(letter) + 1)
+
+            self.product.max_tlp = self.get_max_tlp(self.report_items)
 
     def get_info(self):
         info_schema = PresenterSchema()
