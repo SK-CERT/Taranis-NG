@@ -10,7 +10,6 @@ import jinja2
 from .base_presenter import BasePresenter
 from shared.schema.parameter import Parameter, ParameterType
 
-
 class EMAILPresenter(BasePresenter):
     """Class for EMAIL presenter.
 

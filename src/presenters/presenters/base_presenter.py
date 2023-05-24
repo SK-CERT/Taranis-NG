@@ -106,9 +106,10 @@ class BasePresenter:
         def add_link_prefix(self, report, letter):
             pattern = r'\[(\d+)\]'
             description = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.description)
+            recommendations = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.recommendations)
             log_manager.log_info(description)
 
-            return description
+            return description, recommendations
 
         def __init__(self, presenter_input):
             # types of report items (e.g. vuln report, disinfo report)
@@ -132,7 +133,7 @@ class BasePresenter:
 
             letter = 'A'
             for report in self.report_items:
-                report.attrs.description = self.add_link_prefix(report, letter)
+                report.attrs.description, report.attrs.recommendations = self.add_link_prefix(report, letter)
                 report.attrs.link_prefix = letter
                 letter = chr(ord(letter) + 1)
 
