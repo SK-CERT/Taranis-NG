@@ -38,8 +38,10 @@ Keycloak is not needed to run test version of TaranisNG at the moment. You can u
 11. In **taranis-ng-core** add environment variable TARANIS_NG_AUTHENTICATOR=openid (just for sign in) or TARANIS_NG_AUTHENTICATOR=keycloak (for identy management)
 12. In **taranis-ng-core** add environment variable OPENID_LOGOUT_URL and set it according to your Keycloak installation e.g. http://127.0.0.1:8081/auth/realms/taranisng/protocol/openid-connect/logout?redirect_uri=<GOTO_URL>
 13. In **taranis-ng-gui** add these environment variables to activate external login:
+    ```
     VUE_APP_TARANIS_NG_LOGIN_URL=http://127.0.0.1:5000/api/auth/login
     VUE_APP_TARANIS_NG_LOGOUT_URL=http://127.0.0.1:5000/api/auth/logout
+    ```
 
 ## Keycloak example of docker-compose.yml for taranis-ng-core:
 ```
