@@ -7,7 +7,16 @@ import time
 import random
 import os
 
+
 class LDAPAuthenticator(BaseAuthenticator):
+    """Authenticates users against an LDAP server.
+
+    Args:
+        BaseAuthenticator (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     LDAP_SERVER = os.getenv('LDAP_SERVER')
     LDAP_BASE_DN = os.getenv('LDAP_BASE_DN')
@@ -17,9 +26,22 @@ class LDAPAuthenticator(BaseAuthenticator):
         log_manager.store_auth_error_activity("No LDAP CA certificate found. LDAP authentication might not work.")
 
     def get_required_credentials(self):
+        """Gets the username and the password.
+
+        Returns:
+            _type_: _description_
+        """
         return ["username", "password"]
 
     def authenticate(self, credentials):
+        """Tries to authenticate the user against the LDAP server.
+
+        Args:
+            credentials (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         tls = Tls(ca_certs_file=self.LDAP_CA_CERT_PATH, validate=ssl.CERT_REQUIRED, version=ssl.PROTOCOL_TLSv1_2)
         server = Server(self.LDAP_SERVER, use_ssl=True, tls=tls, get_info=ALL)
         conn = Connection(server, user=f'uid={credentials["username"]},{self.LDAP_BASE_DN}', password=credentials["password"], read_only=True)

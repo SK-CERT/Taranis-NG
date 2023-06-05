@@ -142,8 +142,8 @@ def get_user_from_api_key():
         user: User object or None
     """
     try:
-        if not request.headers.has_key('Authorization') or not request.headers['Authorization'].__contains__('Bearer '):
-           return None
+        if 'Authorization' not in request.headers or not request.headers['Authorization'].__contains__('Bearer '):
+            return None
         key_string = request.headers['Authorization'].replace('Bearer ', '')
         api_key = ApiKey.find_by_key(key_string)
         if not api_key:
@@ -153,6 +153,7 @@ def get_user_from_api_key():
     except Exception as ex:
         log_manager.store_auth_error_activity("Apikey check presence error: " + str(ex))
         return None
+
 
 def get_perm_from_user(user):
     """
@@ -173,6 +174,7 @@ def get_perm_from_user(user):
     except Exception as ex:
         log_manager.store_auth_error_activity("Get permmision from user error: " + str(ex))
         return None
+
 
 def get_user_from_jwt_token():
     """
@@ -200,6 +202,7 @@ def get_user_from_jwt_token():
         return None
     return user
 
+
 def get_perm_from_jwt_token(user):
     """
     Get user permmisions
@@ -220,6 +223,7 @@ def get_perm_from_jwt_token(user):
     except Exception as ex:
         log_manager.store_auth_error_activity("Get permmision from JWT error: " + str(ex))
         return None
+
 
 def auth_required(required_permissions, *acl_args):
     def auth_required_wrap(fn):
@@ -267,7 +271,7 @@ def api_key_required(fn):
         error = ({'error': 'not authorized'}, 401)
 
         # do we have the authorization header?
-        if not request.headers.has_key('Authorization'):
+        if 'Authorization' not in request.headers.has_key:
             log_manager.store_auth_error_activity("Missing Authorization header for external access")
             return error
 
@@ -296,7 +300,7 @@ def access_key_required(fn):
         error = ({'error': 'not authorized'}, 401)
 
         # do we have the authorization header?
-        if not request.headers.has_key('Authorization'):
+        if 'Authorization' not in request.headers:
             log_manager.store_auth_error_activity("Missing Authorization header for remote access")
             return error
 
@@ -361,7 +365,7 @@ def decode_user_from_jwt(jwt_token):
     decoded = None
     try:
         decoded = jwt.decode(jwt_token, os.getenv('JWT_SECRET_KEY'))
-    except Exception as ex: # e.g. "Signature has expired"
+    except Exception as ex:  # e.g. "Signature has expired"
         log_manager.store_auth_error_activity("Invalid JWT: " + str(ex))
     if decoded is None:
         return None
