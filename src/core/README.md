@@ -51,3 +51,10 @@ TARANIS_NG_AUTHENTICATOR: "keycloak"
 KEYCLOAK_REALM_NAME: "taranis-ng"
 KEYCLOAK_USER_MANAGEMENT: "false"
 ```
+# **LDAP authentication**
+If you prefer to authenticate users with LDAP, you need to set environment variables similarly to this:
+```
+TARANIS_NG_AUTHENTICATOR: "ldap"
+LDAP_SERVER: "ldaps://ldap.example.com"
+LDAP_BASE_DN: "ou=people,dc=example,dc=com"
+```
