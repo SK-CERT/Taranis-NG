@@ -96,7 +96,8 @@ class BasePresenter:
             colors = []
 
             for report in reports:
-                colors.append(report.attrs.tlp)
+                if report.type == "Vulnerability Report":
+                    colors.append(report.attrs.tlp)
 
             max_tlp = max(colors, key=lambda color: color_values.get(color, 0))
             if not max_tlp:
@@ -107,7 +108,6 @@ class BasePresenter:
             pattern = r'\[(\d+)\]'
             description = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.description)
             recommendations = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.recommendations)
-            log_manager.log_info(description)
 
             return description, recommendations
 
@@ -132,12 +132,15 @@ class BasePresenter:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))
 
             letter = 'A'
+            vul_report_count = 0
             for report in self.report_items:
-                report.attrs.description, report.attrs.recommendations = self.add_link_prefix(report, letter)
-                report.attrs.link_prefix = letter
-                letter = chr(ord(letter) + 1)
-
-            self.product.max_tlp = self.get_max_tlp(self.report_items)
+                if report.type == "Vulnerability Report":
+                    report.attrs.description, report.attrs.recommendations = self.add_link_prefix(report, letter)
+                    report.attrs.link_prefix = letter
+                    letter = chr(ord(letter) + 1)
+                    vul_report_count += 1
+            if vul_report_count > 0:
+                self.product.max_tlp = self.get_max_tlp(self.report_items)
 
     def get_info(self):
         info_schema = PresenterSchema()
