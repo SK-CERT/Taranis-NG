@@ -9,7 +9,7 @@ const actions = {
 
     login(context, userData) {
 
-        return authenticate(userData)
+        return authenticate(userData, userData.method)
             .then(response => {
                 context.commit('setJwtToken', response.data.access_token);
                 context.dispatch('setUser', context.getters.getUserData);
