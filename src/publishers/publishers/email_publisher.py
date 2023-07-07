@@ -1,12 +1,12 @@
-import datetime
+"""Publisher for publishing by email."""
+from datetime import datetime
 from base64 import b64decode
 import os
-import ast
 from managers import log_manager
-import traceback
 from .base_publisher import BasePublisher
 from shared.schema.parameter import Parameter, ParameterType
 from envelope import Envelope
+import mimetypes
 
 
 class EMAILPublisher(BasePublisher):
@@ -35,7 +35,6 @@ class EMAILPublisher(BasePublisher):
         Parameter(0, "EMAIL_SIGN", "Email signature", "File used for signing or auto", ParameterType.STRING),
         Parameter(0, "EMAIL_SIGN_PASSWORD", "Email signature password", "Password for signing file", ParameterType.STRING),
         Parameter(0, "EMAIL_ENCRYPT", "Email encryption", "File used for encryption or auto", ParameterType.STRING),
-
     ]
 
     parameters.extend(BasePublisher.parameters)
@@ -61,51 +60,45 @@ class EMAILPublisher(BasePublisher):
         sign_password = publisher_input.parameter_values_map["EMAIL_SIGN_PASSWORD"]
         encrypt = publisher_input.parameter_values_map["EMAIL_ENCRYPT"]
 
-        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        now = datetime.now().strftime("%Y%m%d%H%M%S")
 
-        smtp = {
-            "host": smtp_server,
-            "port": smtp_server_port,
-            "user": user,
-            "password": password
-        }
-
-        # set attachment or the email body and subject
-        if publisher_input.data:
-            attachment_mimetype = publisher_input.mime_type
-            # if attachment is not email
-            if attachment_mimetype != "email":
-                attachment_data = publisher_input.data[:]
-                if "/" in attachment_mimetype:
-                    maintype, subtype = attachment_mimetype.split("/", 1)
-                    if attachment_mimetype == "text/plain":
-                        extension = "txt"
-                    else:
-                        extension = subtype
-                    log_manager.log_info(f"Attachment extension: {extension}")
-            # if attachment is email
-            else:
-                attachment_data = ast.literal_eval(publisher_input.data)
-                subject = b64decode(attachment_data["subject"]).decode().replace("\n", "").replace("\r", "")
-                message = b64decode(attachment_data["body"]).decode()
-                attachment_data = None
-        else:
-            attachment_data = None
-
-        if attachment_data:
-            attachment_dict = [(b64decode(attachment_data), f"file_{now}.{extension}", attachment_mimetype)]
-        else:
-            attachment_dict = None
+        smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password}
 
         envelope = Envelope()
+
+        # if attachment data available from presenter
+        if publisher_input.mime_type and publisher_input.data:
+            attachment_mimetype = publisher_input.mime_type
+            attachment_extension = mimetypes.guess_extension(attachment_mimetype)
+            attachment_data = publisher_input.data[:]
+            attachment_list = [
+                (
+                    b64decode(attachment_data),
+                    attachment_mimetype,
+                    f"file_{now}{attachment_extension}",
+                    False,
+                )
+            ]
+            # it is possible to attach multiple files
+            envelope.attach(attachment_list)
+
+        # when title available from presenter
+        if publisher_input.message_title:
+            subject = publisher_input.message_title
+        # when body available from presenter
+        if publisher_input.message_body:
+            message = publisher_input.message_body
+
         if not message:
             envelope.message(" ")
         else:
             envelope.message(message)
-        envelope.subject(subject)
+        if not subject:
+            envelope.subject(" ")
+        else:
+            envelope.subject(subject)
         envelope.from_(sender)
         envelope.to(recipients)
-        envelope.attachments(attachment_dict)
         envelope.smtp(smtp)
 
         if sign == "auto":
@@ -123,7 +116,5 @@ class EMAILPublisher(BasePublisher):
         try:
             envelope.send()
 
-        # except Exception as error:
-        #     BasePublisher.print_exception(self, error)
-        except:
-            log_manager.log_critical(traceback.format_exc())
+        except Exception as error:
+            BasePublisher.print_exception(self, error)
