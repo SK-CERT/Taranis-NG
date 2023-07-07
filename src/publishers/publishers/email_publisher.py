@@ -120,6 +120,8 @@ class EMAILPublisher(BasePublisher):
             log_manager.log_info(f"Encrypting email with file {encrypt}")
             envelope.encryption(key=open(encrypt))
 
+        client_key_path = os.path.join("crypto", "tls.key")
+        client_cert_path = os.path.join("crypto", "tls.crt")
         try:
             envelope.send()
 
