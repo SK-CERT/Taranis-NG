@@ -7,7 +7,7 @@ from presenters.pdf_presenter import PDFPresenter
 from presenters.html_presenter import HTMLPresenter
 from presenters.text_presenter import TEXTPresenter
 from presenters.misp_presenter import MISPPresenter
-from presenters.email_presenter import EMAILPresenter
+from presenters.message_presenter import MESSAGEPresenter
 from shared.schema.presenter import PresenterInputSchema, PresenterOutputSchema
 
 presenters = {}
@@ -19,7 +19,7 @@ def initialize():
     register_presenter(HTMLPresenter())
     register_presenter(TEXTPresenter())
     register_presenter(MISPPresenter())
-    register_presenter(EMAILPresenter())
+    register_presenter(MESSAGEPresenter())
 
 
 def register_presenter(presenter):
