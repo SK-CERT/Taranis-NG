@@ -84,10 +84,10 @@ class EMAILPublisher(BasePublisher):
 
         # when title available from presenter
         if publisher_input.message_title:
-            subject = publisher_input.message_title
+            subject = b64decode(publisher_input.message_title).decode("UTF-8")
         # when body available from presenter
         if publisher_input.message_body:
-            message = publisher_input.message_body
+            message = b64decode(publisher_input.message_body).decode("UTF-8")
 
         if not message:
             envelope.message(" ")
