@@ -1,72 +1,24 @@
-{% for report_item in data.report_items %}
-{% if report_item.type != "Vulnerability Report" %}
-This template cannot be used for item of type "{{ report_item.type }}". It can only handle "Vulnerability Report".
-{% else %}
+Hi,
 
+{{ data.product.description }}
+{% for report_item in data.report_items %}{% if report_item.type != "Vulnerability Report" %}This template cannot be used for item of type "{{ report_item.type }}". It can only handle "Vulnerability Report".{% else %}
 
-## Vulnerability
+{{ report_item.name }}
 
-CVSS VECTOR: {% if report_item.attrs.cvss %}{{ report_item.attrs.cvss | default('unspecified') }}{% endif %}
-TLP: {{ report_item.attrs.tlp }}
-CONFIDENTIALITY: {{ report_item.attrs.confidentiality | default('Public') }}
-DESCRIPTION: {{ report_item.attrs.description }}
-FIRST PUBLISHED: {{ report_item.attrs.exposure_date }}
-UPDATED: {{ report_item.attrs.update_date }}
-CVE: {% for cve in report_item.attrs.cve %}{{ cve }}{{ ", " if loop.last else "" }}{% endfor %}
-IMPACT:
-{% for impact in report_item.attrs.impact -%}
-- {{ impact }}
-{% endfor %}
+{{ report_item.attrs.description }}
 
-## Identify and act
-
-{% if report_item.attrs.ioc is defined and report_item.attrs.ioc|length > 0 -%}
-
-### IOC
-
-{% for ioc in report_item.attrs.ioc -%}
-- {{ ioc }}
-{% endfor %}
-{%- endif %}
-{% if report_item.attrs.affected_systems is defined and report_item.attrs.affected_systems|length > 0 -%}
-
-### Affected systems
-
-{% for entry in report_item.attrs.affected_systems -%}
-- {{ entry }}
-{% endfor %}
-{%- endif %}
-{% if report_item.attrs.recommendations is defined and report_item.attrs.recommendations != "" -%}
-
+{% if report_item.attrs.recommendations %}
 ### Recommendations
 
 {{ report_item.attrs.recommendations }}
-{% endif %}
-{% if report_item.attrs.links is defined and report_item.attrs.links|length > 1 %}
 
+{% endif %}
+### CVE: {% for cve in report_item.attrs.cve %}{{ cve }}{{ ", " if not loop.last else "" }}{% endfor %}
+{% if report_item.attrs.links %}
 ### Links
-
 {% for entry in report_item.attrs.links %}
-- {{ entry }}
-{% endfor %}
-{% endif %}
-{% if false %}
-
-## Associated news items
-
-{% for news_item in report_item.news_items %}
- - Title: {{ news_item.title }}
-   Author:  {{ news_item.author }}
-   Source: {{ news_item.source }}
-   Link: {{ news_item.link }}
-   Published: {{ news_item.published }}
-{% endfor %}
-{% endif %}
-
-{% endif %}
-{% endfor %}
--------
-John Doe
+[{{ report_item.attrs.link_prefix }}{{ loop.index }}] - {{ entry }}
+{% endfor %}{% endif %}{% endif %}{% endfor %}
+--
 Cyber Security Team
 Acme Corporation
-email:john.doe@acme.fy
