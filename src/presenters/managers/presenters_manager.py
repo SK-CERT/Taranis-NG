@@ -2,6 +2,7 @@ from presenters.pdf_presenter import PDFPresenter
 from presenters.html_presenter import HTMLPresenter
 from presenters.text_presenter import TEXTPresenter
 from presenters.misp_presenter import MISPPresenter
+from presenters.json_presenter import JSONPresenter
 from shared.schema.presenter import PresenterInputSchema, PresenterOutputSchema
 
 presenters = {}
@@ -12,6 +13,7 @@ def initialize():
     register_presenter(HTMLPresenter())
     register_presenter(TEXTPresenter())
     register_presenter(MISPPresenter())
+    register_presenter(JSONPresenter())
 
 
 def register_presenter(presenter):
