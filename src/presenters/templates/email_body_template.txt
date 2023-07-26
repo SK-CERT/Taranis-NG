@@ -20,5 +20,6 @@ Hi,
 [{{ report_item.attrs.link_prefix }}{{ loop.index }}] - {{ entry }}
 {% endfor %}{% endif %}{% endif %}{% endfor %}
 --
+{{ data.product.user.name }}
 Cyber Security Team
 Acme Corporation
