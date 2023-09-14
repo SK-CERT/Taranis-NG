@@ -55,10 +55,8 @@ class BasePresenter:
             attribute_group_items = dict()
             attribute_group_items_by_name = dict()
             
-            print (dir(report_item), flush=True)
+            # print (dir(report_item), flush=True)
 
-            # attributes = ReportItem.get_attributes_for_report(report_item.id)
-            # report_item.get_attributes_for_report
             for attribute in report_item.attributes:
                 attribute_group_item_id = attribute.attribute_group_item_id
                 if attribute_group_item_id not in attribute_group_items:
@@ -71,14 +69,14 @@ class BasePresenter:
                     attribute_group_items_by_name[attr_key] = 1
                 else:
                     attribute_group_items_by_name[attr_key] += 1
-                print(">>>", attr_key + ":", attribute.value, flush=True)
+                # print(">>>", attr_key + ":", attribute.value, flush=True)
 
             for attribute_group_item_id in attribute_group_items.keys():
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
 
                 attribute_group_item = attribute_group_items[attribute_group_item_id]
-                #print("=>>", attribute_group_item, flush=True)
+                # print("=>>", attribute_group_item, flush=True)
 
                 min_occurrence = attribute_map[attribute_group_item_id].min_occurrence
                 max_occurrence = attribute_map[attribute_group_item_id].max_occurrence
@@ -93,7 +91,7 @@ class BasePresenter:
                         value_to_add.append(attribute.value)
 
                 how_many_with_the_same_name = attribute_group_items_by_name[attr_key]
-                print("===", attr_key + ":", value_to_add, how_many_with_the_same_name, flush=True)
+                # print("===", attr_key + ":", value_to_add, how_many_with_the_same_name, flush=True)
                 if how_many_with_the_same_name == 1:
                     setattr(self.attrs, attr_key, value_to_add)
                 else:
