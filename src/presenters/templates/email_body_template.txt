@@ -1,0 +1,25 @@
+Hi,
+
+{{ data.product.description }}
+{% for report_item in data.report_items %}{% if report_item.type != "Vulnerability Report" %}This template cannot be used for item of type "{{ report_item.type }}". It can only handle "Vulnerability Report".{% else %}
+
+{{ report_item.name }}
+
+{{ report_item.attrs.description }}
+
+{% if report_item.attrs.recommendations %}
+### Recommendations
+
+{{ report_item.attrs.recommendations }}
+
+{% endif %}
+### CVE: {% for cve in report_item.attrs.cve %}{{ cve }}{{ ", " if not loop.last else "" }}{% endfor %}
+{% if report_item.attrs.links %}
+### Links
+{% for entry in report_item.attrs.links %}
+[{{ report_item.attrs.link_prefix }}{{ loop.index }}] - {{ entry }}
+{% endfor %}{% endif %}{% endif %}{% endfor %}
+--
+{{ data.product.user.name }}
+Cyber Security Team
+Acme Corporation
