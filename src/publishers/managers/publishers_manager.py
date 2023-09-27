@@ -4,6 +4,7 @@ from publishers.twitter_publisher import TWITTERPublisher
 from publishers.wordpress_publisher import WORDPRESSPublisher
 from publishers.misp_publisher import MISPPublisher
 from shared.schema.publisher import PublisherInputSchema
+from managers import log_manager
 
 publishers = {}
 
@@ -24,6 +25,8 @@ def get_registered_publishers_info():
     publishers_info = []
     for key in publishers:
         publishers_info.append(publishers[key].get_info())
+    log_manager.log_critical(publishers_info)
+
 
     return publishers_info
 
