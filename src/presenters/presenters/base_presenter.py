@@ -11,7 +11,7 @@ class BasePresenter:
     name = "Base Presenter"
     description = "Base abstract type for all presenters"
 
-    parameters = []
+    parameters = list()
 
     # helper class
     @staticmethod
@@ -57,19 +57,53 @@ class BasePresenter:
 
             self.attrs = BasePresenter.AttributesObject()
 
+            # group the values ; identify attributes with the same names
+            attribute_group_items = dict()
+            attribute_group_items_by_name = dict()
+            
+            # print (dir(report_item), flush=True)
+
             for attribute in report_item.attributes:
-                if attribute.value is not None:
-                    attr_type = attribute_map[attribute.attribute_group_item_id]
-                    attr_key = attr_type.title.lower().replace(" ", "_")
-                    if hasattr(self.attrs, attr_key):
-                        if attribute_map[attribute.attribute_group_item_id].max_occurrence > 1:
-                            attr = getattr(self.attrs, attr_key)
-                            attr.append(attribute.value)
-                    else:
-                        if attribute_map[attribute.attribute_group_item_id].max_occurrence == 1:
-                            setattr(self.attrs, attr_key, attribute.value)
-                        else:
-                            setattr(self.attrs, attr_key, [attribute.value])
+                attribute_group_item_id = attribute.attribute_group_item_id
+                if attribute_group_item_id not in attribute_group_items:
+                    attribute_group_items[attribute_group_item_id] = list()
+                attribute_group_items[attribute_group_item_id].append(attribute)  ######
+
+                attr_type = attribute_map[attribute_group_item_id]
+                attr_key = attr_type.title.lower().replace(" ", "_")
+                if attr_key not in attribute_group_items_by_name:
+                    attribute_group_items_by_name[attr_key] = 1
+                else:
+                    attribute_group_items_by_name[attr_key] += 1
+                # print(">>>", attr_key + ":", attribute.value, flush=True)
+
+            for attribute_group_item_id in attribute_group_items.keys():
+                attr_type = attribute_map[attribute_group_item_id]
+                attr_key = attr_type.title.lower().replace(" ", "_")
+
+                attribute_group_item = attribute_group_items[attribute_group_item_id]
+                # print("=>>", attribute_group_item, flush=True)
+
+                min_occurrence = attribute_map[attribute_group_item_id].min_occurrence
+                max_occurrence = attribute_map[attribute_group_item_id].max_occurrence
+
+                value_to_add = None
+                if max_occurrence == 1:
+                    if len(attribute_group_item) > 0:
+                        value_to_add = attribute_group_item[0].value
+                else:
+                    value_to_add = list()
+                    for attribute in attribute_group_item:
+                        value_to_add.append(attribute.value)
+
+                how_many_with_the_same_name = attribute_group_items_by_name[attr_key]
+                # print("===", attr_key + ":", value_to_add, how_many_with_the_same_name, flush=True)
+                if how_many_with_the_same_name == 1:
+                    setattr(self.attrs, attr_key, value_to_add)
+                else:
+                    if not hasattr(self.attrs, attr_key):
+                        setattr(self.attrs, attr_key, list())
+                    getattr(self.attrs, attr_key).append(value_to_add)
 
     # object holding all that we received from the CORE
     class InputDataObject:
@@ -159,3 +193,15 @@ class BasePresenter:
 
     def generate(self, presenter_input):
         pass
+
+    # used in JINJA templating for formating "string date" to "date"
+    def _filter_datetime(date, fmtin=None, fmtout=None):
+        if date == "":
+            return ""
+        if not fmtin:
+            fmtin = "%Y.%m.%d"
+        date = datetime.datetime.strptime(date, fmtin)
+        native = date.replace(tzinfo=None)
+        if not fmtout:
+            fmtout = "%-d.%-m.%Y"
+        return native.strftime(fmtout)

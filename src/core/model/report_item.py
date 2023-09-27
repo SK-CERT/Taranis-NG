@@ -38,7 +38,7 @@ class ReportItemAttribute(db.Model):
     current = db.Column(db.Boolean, default=True)
 
     attribute_group_item_id = db.Column(db.Integer, db.ForeignKey('attribute_group_item.id'))
-    attribute_group_item = db.relationship("AttributeGroupItem")
+    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True)
     attribute_group_item_title = db.Column(db.String)
 
     report_item_id = db.Column(db.Integer, db.ForeignKey('report_item.id'), nullable=True)
@@ -61,10 +61,6 @@ class ReportItemAttribute(db.Model):
     def find(cls, attribute_id):
         report_item_attribute = cls.query.get(attribute_id)
         return report_item_attribute
-
-    @staticmethod
-    def sort(report_item_attribute):
-        return report_item_attribute.last_updated
 
 
 class NewReportItemSchema(ReportItemBaseSchema):
@@ -94,11 +90,11 @@ class ReportItem(db.Model):
     completed = db.Column(db.Boolean, default=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    user = db.relationship("User")
+    user = db.relationship("User", viewonly=True)
     remote_user = db.Column(db.String())
 
     report_item_type_id = db.Column(db.Integer, db.ForeignKey('report_item_type.id'), nullable=True)
-    report_item_type = db.relationship("ReportItemType")
+    report_item_type = db.relationship("ReportItemType", viewonly=True)
 
     news_item_aggregates = db.relationship("NewsItemAggregate", secondary='report_item_news_item_aggregate')
 
@@ -141,7 +137,7 @@ class ReportItem(db.Model):
     def reconstruct(self):
         self.subtitle = ""
         self.tag = "mdi-file-table-outline"
-        self.attributes.sort(key=ReportItemAttribute.sort)
+        self.attributes.sort(key=lambda obj: (obj.attribute_group_item.attribute_group.index, obj.attribute_group_item.index, obj.id))
 
     @classmethod
     def count_all(cls, is_completed):
