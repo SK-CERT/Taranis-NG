@@ -18,10 +18,11 @@
 - `G`: Ungroup selected item(s)
 - `n`: Create **n**ew product from item
 - `a`: Expand/close **a**ggregated list item
-- `o`: **O**pen active news item source (in non-selection-mode only)
+- `o`: **O**pen active news item source (only the active news item, not all selected ones)
 - `R`: **R**eload news item list
 - `/`: Jump to search bar
-- `f`: Switch to Filter mode
+- `f`: Switch to Filter mode (see below)
+- `v`: Switch to View mode (see below)
 
 ### Filter mode
 - `Esc`: Exit filter mode
@@ -29,3 +30,13 @@
 - `i`: Toggle filter important news items and exit filter mode
 - `u`: Toggle filter liked (relevant) news items and exit filter mode
 - `n`: Toggle filter news items in analyze and exit filter mode
+
+### View mode
+- `Esc`: Exit view mode
+- `d`: Switch to view "Dashboard"
+- `C`: Switch to view "Configuration" (global)
+- `a`: Switch to view "Assess"
+- `z`: Switch to view "Analyze"
+- `p`: Switch to view "Publish" (local)
+- `m`: Switch to view "My Assets"
+- `c`: Switch to view "Configuration" (user)
