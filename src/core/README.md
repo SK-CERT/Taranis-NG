@@ -54,6 +54,9 @@ TARANIS_NG_AUTHENTICATOR: "keycloak"
 KEYCLOAK_REALM_NAME: "taranis-ng"
 KEYCLOAK_USER_MANAGEMENT: "false"
 ```
+
+You can use and modify the existing `docker-compose-keycloak.yml` example in the repository.
+
 # **LDAP authentication**
 If you prefer to authenticate users with LDAP, you need to set environment variables similarly to this:
 ```

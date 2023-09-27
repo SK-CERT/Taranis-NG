@@ -19,7 +19,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
         # verify code and get JWT token from keycloak
         response = post(
             url=environ.get(
-                'TARANIS_NG_KEYCLOAK_INTERNAL_URL') + 'auth/realms/taranis_ng/protocol/openid-connect/token',
+                'TARANIS_NG_KEYCLOAK_INTERNAL_URL') + '/auth/realms/' + environ.get('KEYCLOAK_REALM_NAME') + '/protocol/openid-connect/token',
             data={
                 'grant_type': 'authorization_code',
                 'code': request.args['code'],  # code from url
@@ -30,13 +30,15 @@ class KeycloakAuthenticator(BaseAuthenticator):
                                environ.get('TARANIS_NG_KEYCLOAK_CLIENT_SECRET')),
             # do not forget credentials
             proxies={'http': None, 'https': None},
-            allow_redirects=False)
+            allow_redirects=False, verify=False)
 
         data = None
 
         try:
             # get json data from response
             data = response.json()
+            log_manager.log_debug('Keycloak authentication response:')
+            log_manager.log_debug(data)
         except Exception:
             log_manager.store_auth_error_activity("Keycloak returned an unexpected response.")
             return {'error': 'Internal server error'}, 500

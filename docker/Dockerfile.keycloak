@@ -1,0 +1,6 @@
+FROM jboss/keycloak:15.0.2
+
+COPY ./src/keycloak/realm-export.json /opt/jboss/keycloak/realm-export.json
+
+COPY ./src/keycloak/disable-theme-cache.cli /opt/jboss/startup-scripts/disable-theme-cache.cli
+COPY ./src/keycloak/theme /opt/jboss/keycloak/themes/taranis-ng
