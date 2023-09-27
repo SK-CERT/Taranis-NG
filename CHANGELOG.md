@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [v23.09.1] - 2023-09-27
+### Added
+* New reports (OSINT, Disinfo, Offensice,Weekly)
+* Keycloak authetification support
+* JSON presenter
+* Email presenter
+* LDAP authentication
+* Support for password authentification (database), removed test_authentificator
+* Product info into presenter
+* Password data were logged in plain text, now are replaced by string CENSORED
+* In Products, display "Report type" instead of string "Title" in row detail
+
+### Changed
+* Fixed Gui shortcuts
+* Collectors: better logs, fix "Popup close" crash
+* Fixed Access denied by ACL in News items (deleting Osint sources)
+* Fixed MISP template
+* Confidentiality not showing TOP SECRET on PDF, HTML, HTML WEEKLY templates
+* TLC updated: WHITE to CLEAR, added AMBER+STRICT
+* CASE INSENSITIVE search for attributes
+* Fixed time zone displacement out of range error when time > 16:00 + wrong datetime evaluated in SQL queries
+* Fixed error Signature has expired
+* Properly display attributes in an aggregate
+* Fixed bad authentification required for product (PUBLISH_ACCESS, PRODUCT_TYPE_ACCESS)
+* Fixed bots crash, better Regex
+* Added missing TOR binary to the collectors
+* Improved templates
+* a lot of various fixes
+
 ## [v21.11.1] - 2021-11-19
 ### Added
 * Added collector management to manage.py - https://github.com/SK-CERT/Taranis-NG/issues/18
