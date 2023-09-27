@@ -824,7 +824,10 @@ const messages_en = {
             delete_item: 'Delete news item',
         },
         shortcuts: {
-            enter_filter_mode: 'Entered filter mode. Exit with Escape.',
+            enter_filter_mode: 'Entered shortcut mode "filter". Exit with Escape.',
+            enter_view_mode: 'Entered shortcut mode "view". Exit with Escape.',
+            default_mode: 'Back in shortcut mode "default".',
+            aggregate_no_group: 'Cannot open unaggregated news item, only works with news item groups.',
         },
     },
 

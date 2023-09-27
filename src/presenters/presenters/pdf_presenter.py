@@ -40,7 +40,7 @@ class PDFPresenter(BasePresenter):
             input_data = BasePresenter.generate_input_data(presenter_input)
 
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
-
+            env.filters["strfdate"] = BasePresenter._filter_datetime
             body = env.get_template(tail)
             output_text = body.render(data=input_data)
             with open(output_body_html, 'w') as output_file:

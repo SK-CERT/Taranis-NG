@@ -28,7 +28,7 @@ class AttributeGroupItem(db.Model):
     max_occurrence = db.Column(db.Integer)
 
     attribute_group_id = db.Column(db.Integer, db.ForeignKey('attribute_group.id'))
-    attribute_group = db.relationship("AttributeGroup")
+    attribute_group = db.relationship("AttributeGroup", viewonly=True)
 
     attribute_id = db.Column(db.Integer, db.ForeignKey('attribute.id'))
     attribute = db.relationship("Attribute")
