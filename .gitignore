@@ -26,6 +26,7 @@ src/.env
 *.key
 *.log
 *.crt
+*.asc
 local/
 
 # settings of editors
