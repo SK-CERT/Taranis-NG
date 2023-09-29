@@ -77,8 +77,8 @@ def publish(preset, data, message_title, message_body, recipients):
     if data is not None:
         data_data = data["data"]
         data_mime = data["mime_type"]
-        message_title = data["message_title"]
-        message_body = data["message_body"]
+        message_title = data.get("message_title", None)
+        message_body = data.get("message_body", None)
 
     input_data = PublisherInput(publisher.type, preset.parameter_values, data_mime, data_data, message_title, message_body, recipients)
     input_schema = PublisherInputSchema()
