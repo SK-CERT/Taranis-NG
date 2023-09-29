@@ -41,3 +41,8 @@ class MISPPresenter(BasePresenter):
             return presenter_output
         except Exception as error:
             BasePresenter.print_exception(self, error)
+            presenter_output = {
+                'mime_type': 'text/plain',
+                'data': b64encode(("TEMPLATING ERROR\n"+str(error)).encode()).decode('UTF-8')
+            }
+            return presenter_output
