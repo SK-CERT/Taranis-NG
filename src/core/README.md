@@ -63,4 +63,5 @@ If you prefer to authenticate users with LDAP, you need to set environment varia
 TARANIS_NG_AUTHENTICATOR: "ldap"
 LDAP_SERVER: "ldaps://ldap.example.com"
 LDAP_BASE_DN: "ou=people,dc=example,dc=com"
+LDAP_CA_CERT_PATH: "auth/ldap_ca.pem"
 ```
