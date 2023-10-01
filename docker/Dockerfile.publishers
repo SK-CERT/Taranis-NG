@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -
 COPY ./src/publishers/requirements.txt /app/requirements.txt
 RUN apk add --no-cache \
     swig\
+    libmagic \
     gnupg 
 
 RUN \

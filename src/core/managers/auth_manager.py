@@ -38,7 +38,9 @@ def initialize(app):
 
     JWTManager(app)
 
-    which = os.getenv('TARANIS_NG_AUTHENTICATOR').casefold()
+    which = os.getenv('TARANIS_NG_AUTHENTICATOR')
+    if which is not None:
+        which = which.lower()
     if which == 'openid':
         current_authenticator = OpenIDAuthenticator()
     elif which == 'keycloak':
@@ -271,7 +273,7 @@ def api_key_required(fn):
         error = ({'error': 'not authorized'}, 401)
 
         # do we have the authorization header?
-        if 'Authorization' not in request.headers.has_key:
+        if 'Authorization' not in request.headers:
             log_manager.store_auth_error_activity("Missing Authorization header for external access")
             return error
 
