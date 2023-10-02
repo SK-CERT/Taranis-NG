@@ -20,8 +20,8 @@ class LDAPAuthenticator(BaseAuthenticator):
 
     LDAP_SERVER = os.getenv('LDAP_SERVER')
     LDAP_BASE_DN = os.getenv('LDAP_BASE_DN')
-    LDAP_CA_CERT_PATH = 'auth/ldap_ca.pem'
-    if not os.path.isfile(LDAP_CA_CERT_PATH):
+    LDAP_CA_CERT_PATH = os.getenv('LDAP_CA_CERT_PATH')
+    if LDAP_CA_CERT_PATH is not None and not os.path.isfile(LDAP_CA_CERT_PATH):
         LDAP_CA_CERT_PATH = None
         log_manager.store_auth_error_activity("No LDAP CA certificate found. LDAP authentication might not work.")
 
