@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="/app/templates/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/app/templates/css/custom.css">
+</head>
+
+<body>
+    <div>
+        <table class="table table-borderless">
+            <tr>
+                <td class="w20"><img src="/app/templates/images/taranis.png"></td>
+                <td class="w60 text-center align-middle sw_title">VULNERABILITY REPORT</td>
+                <td class="w20 sw_number">No: SW1234-ER/2</td>
+            </tr>
+        </table>
+        <br>
+    </div>
+    {# <img src="/app/templates/images/taranis.svg" alt="Taranis SVG"/> #}
+
+    <div style="padding-top: 30pt">
+
+        {% for report_item in data.report_items %}
+        <table class="table table-bordered header_info" style="width: 100%">
+
+            <tr>
+                <th colspan="6" class="th_data" style="color:white; background-color: #256ec2 !important">
+                    CONFIDENTIALITY, DISTRIBUTION, SEVERITY</th>
+            </tr>
+            <tr class="table-row">
+                <td class="w25 py-0">
+                    <div class="mt-2 text_bold">Confidentiality</div>
+                </td>
+                <td class="w15 py-0">
+                    <div class="mt-2">
+                        <label class="checkbox-button">
+                            <input type="checkbox" class="checkbox-button__input" id="low" name="low" {% if
+                                report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
+                            <span class="checkbox-button__control"></span>
+                            <span class="checkbox-button__label">Unrestricted</span>
+                        </label>
+                    </div>
+                </td>
+                <td class="w15 py-0">
+                    <div class="mt-2">
+                        <label class="checkbox-button">
+                            <input type="checkbox" class="checkbox-button__input" id="middle" name="middle" {% if
+                                report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
+                            <span class="checkbox-button__control"></span>
+                            <span class="checkbox-button__label">Classified</span>
+                        </label>
+                    </div>
+                </td>
+                <td class="w15 py-0">
+                    <div class="mt-2">
+                        <label class="checkbox-button">
+                            <input type="checkbox" class="checkbox-button__input" id="high" name="high" {% if
+                                report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
+                            <span class="checkbox-button__control"></span>
+                            <span class="checkbox-button__label">Confidential</span>
+                        </label>
+                    </div>
+                </td>
+                <td class="w15 py-0">
+                    <div class="mt-2">
+                        <label class="checkbox-button">
+                            <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {% if
+                                report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
+                            <span class="checkbox-button__control"></span>
+                            <span class="checkbox-button__label">Secret</span>
+                        </label>
+                    </div>
+                </td>
+                <td class="w15 py-0">
+                    <div class="mt-2">
+                        <label class="checkbox-button">
+                            <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {% if
+                                report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
+                            <span class="checkbox-button__control"></span>
+                            <span class="checkbox-button__label">Top Secret</span>
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="w25 py-0">
+                    <div class="mt-2 text_bold">TLP</div>
+                </td>
+                <td class="mt-2" colspan="5">
+                    {% if report_item.attrs.tlp == 'CLEAR' or report_item.attrs.tlp == 'WHITE' %}
+                    <span
+                        style="padding: 4px; background-color: black !important; color:white; font-weight: 700">TLP:CLEAR</span>
+                    {% endif %}
+                    {% if report_item.attrs.tlp == 'GREEN' %}
+                    <span
+                        style="padding: 4px; background-color: black !important; color:#33ff00; font-weight: 700">TLP:GREEN</span>
+                    {% endif %}
+                    {% if report_item.attrs.tlp == 'AMBER' %}
+                    <span
+                        style="padding: 4px; background-color: black !important; color:#ffc000; font-weight: 700">TLP:AMBER</span>
+                    {% endif %}
+                    {% if report_item.attrs.tlp == 'AMBER+STRICT' %}
+                    <span
+                        style="padding: 4px; background-color: black !important; color:#ffc000; font-weight: 700">TLP:AMBER+STRICT</span>
+                    {% endif %}
+                    {% if report_item.attrs.tlp == 'RED' %}
+                    <span
+                        style="padding: 4px; background-color: black !important; color:#ff2b2b; font-weight: 700">TLP:RED</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="w25 py-0">
+                    <div class="mt-2 text_bold">CVSS vector</div>
+                </td>
+                <td class="py-0" colspan="5">
+                    <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss|e }} </span></div>
+                </td>
+            </tr>
+        </table>
+
+        <br>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">DESCRIPTION</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {{ report_item.attrs.description|e }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">PUBLISHED</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {{ report_item.attrs.exposure_date }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">UPDATED</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {{ report_item.attrs.update_date }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">CVE</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {% if report_item.attrs.cve %}
+                    {% for i in report_item.attrs.cve %}
+                    <div>{{ i|e }}</div>
+                    {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">IMPACT</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {% if report_item.attrs.impact %}
+                    {% for i in report_item.attrs.impact %}
+                    <div>{{ i|e }}</div>
+                    {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">IOC</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {% if report_item.attrs.ioc %}
+                    {% for i in report_item.attrs.ioc %}
+                    <div>{{ i|e }}</div>
+                    {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">AFFECTED SYSTEMS</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {% if report_item.attrs.affected_systems %}
+                    {% for i in report_item.attrs.affected_systems %}
+                    <div>{{ i|e }}</div>
+                    {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">RECOMMENDATIONS</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    {{ report_item.attrs.recommendations }}
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered">
+            <tr>
+                <th class="th_data" style="color:white; background-color: #256ec2 !important">LINKS</th>
+            </tr>
+            <tr>
+                <td class="text-justify text_in_tab">
+                    <ul class="list-unstyled">
+                        {% if report_item.attrs.links %}
+                        {% for i in report_item.attrs.links %}
+                        <div>{{ i|e }}</div>
+                        {% endfor %}
+                        {% endif %}
+                    </ul>
+                </td>
+            </tr>
+        </table>
+        {% endfor %}
+    </div>
+    <div>
+        <br>
+        <table class="table table-borderless">
+            <tr class="footer_text footer_color">
+                <td class="w30 py-0 text_bold">Created by Taranis NG</td>
+                <td class="w40 py-0 text-center info">Repo: <a
+                        href="https://github.com/SK-CERT/Taranis-NG/">github.com/SK-CERT/Taranis-NG</a></td>
+                <td class="w30 py-0 text-right text_bold">Company name</td>
+            </tr>
+            <tr class="footer_text">
+                <td class="w30 py-0">OSINT analysis tool</td>
+                <td class="w40 py-0 text-center info">E-mail: sk-cert@nbu.gov.sk</td>
+                <td class="w30 py-0 text-right">Company address</td>
+            </tr>
+            <tr class="footer_text">
+                <td class="w30 py-0">for CSIRT community</td>
+                <td class="w40 py-0 text-center info">Web: <a href="https://www.sk-cert.sk">www.sk-cert.sk</a></td>
+                <td class="w30 py-0 text-right">City name</td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>
