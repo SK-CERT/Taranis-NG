@@ -134,6 +134,7 @@
                     <v-tab-item value="tab-3" class="pa-5">
                         <vue-editor
                             ref="assessDetailComments"
+                            v-model="editorData"
                             :editorOptions="editorOptionVue2"
                         />
                     </v-tab-item>
@@ -232,14 +233,14 @@ export default {
                     this.news_item.news_items[0] = response.data;
                     this.title = news_item.title;
                     this.description = news_item.description;
-                    this.editorData = this.news_item.comments
+                    this.editorData = news_item.comments
                 });
             } else {
                 this.visible = true
                 this.news_item = news_item;
                 this.title = news_item.title;
                 this.description = news_item.description;
-                this.editorData = this.news_item.comments
+                this.editorData = news_item.comments
             }
 
             this.$root.$emit('first-dialog', 'push');
