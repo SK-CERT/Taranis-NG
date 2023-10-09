@@ -686,6 +686,7 @@ const messages_en = {
     report_item: {
         add_new: "New report item",
         edit: "Edit report item",
+        read: "Report item preview",
         save: "Save",
         cancel: "Cancel",
         validation_error: "Please fill in all required fields",

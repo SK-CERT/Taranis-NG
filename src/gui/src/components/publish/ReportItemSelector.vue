@@ -32,7 +32,7 @@
 
         <v-spacer style="height:8px"></v-spacer>
 
-        <NewReportItem ref="reportItemDialog"/>
+        <NewReportItem ref="reportItemDialog" :read_only="true"/>
 
         <component publish_selector class="item-selector" v-bind:is="cardLayout()" v-for="value in values" :card="value"
                    :key="value.id"
