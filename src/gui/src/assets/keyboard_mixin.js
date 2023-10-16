@@ -44,11 +44,11 @@ const keyboardMixin = targetId => ({
         cardReindex() {
             this.keyRemaper();
 
-            setTimeout( ()=>{
+            setTimeout(() => {
                 this.scrollPos();
-            },100 )
+            }, 100)
 
-            if(this.focus) {
+            if (this.focus) {
                 this.$refs.contentData.checkFocus(this.pos);
             }
 
@@ -56,7 +56,7 @@ const keyboardMixin = targetId => ({
 
         reindexCardItems() {
 
-            let data = document.querySelectorAll("#selector_"+this.target+" .card-item");
+            let data = document.querySelectorAll("#selector_" + this.target + " .card-item");
 
             data.forEach((add, i) => {
                 add.setAttribute('data-id', i);
@@ -131,27 +131,28 @@ const keyboardMixin = targetId => ({
             if (newPosition !== undefined) this.pos = newPosition;
             if (newPosition >= this.card_items.length) this.pos = this.card_items.length - 1
             this.$refs.contentData.checkFocus(this.pos);
-            setTimeout(()=>{
+            setTimeout(() => {
                 this.keyRemaper();
-            },150);
+            }, 150);
         },
 
         keyAction(press) {
             //let dialog = document.querySelectorAll(".v-dialog--active").length ? true : false;
-            //window.console.debug("keyAction", press);
+            // window.console.debug("state:", this.state, "keyboard_state:", this.keyboard_state, "keyAction:", press);
             // define here, as it's not allowed in the case-switch
             let search_field = document.getElementById('search')
 
             let keyAlias = '';
             for (let i = 0; i < this.shortcuts.length; i++) {
                 // ignore all presses with Ctrl or Alt key, they have a different meaning
-                if (! ( press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
+                if (!(press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
                     keyAlias = this.shortcuts[i].alias;
                     break;
                 }
             }
-            if (document.activeElement == search_field && (keyAlias !== 'close_item' || press.keyCode !== 27)) {
-                // when search field is active, ignore all keypresses except Escape
+            // window.console.debug("keyAlias:", keyAlias, "activeElement:", document.activeElement);
+            if ((document.activeElement == search_field || document.activeElement.className == "ql-editor")  && (keyAlias !== 'close_item' || press.keyCode !== 27)) {
+                // when search field or editor is active, ignore all keypresses except Escape
                 return;
             }
 
@@ -458,7 +459,7 @@ const keyboardMixin = targetId => ({
                             this.keyboard_state = 'DEFAULT';
                             break;
                     }
-                    if (this.keyboard_state = 'DEFAULT') {
+                    if (this.keyboard_state === 'DEFAULT') {
                         this.$root.$emit('notification',
                             {
                                 type: 'success',
@@ -500,7 +501,7 @@ const keyboardMixin = targetId => ({
                 }
             }
 
-            //window.console.debug(this.pos, this.isItemOpen, this.isSomeFocused(), this.focus);
+            // window.console.debug(this.pos, this.isItemOpen, this.isSomeFocused(), this.focus);
         },
 
         scrollPos() {

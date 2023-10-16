@@ -38,5 +38,6 @@ local/
 *.njsproj
 *.pyproj
 *.pyproj.user
+*.njsproj.user
 *.sln
 *.sw?
