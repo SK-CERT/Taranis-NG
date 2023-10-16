@@ -65,6 +65,7 @@
                     <v-tab-item value="tab-2" class="pa-5">
                         <vue-editor
                                 ref="assessAggregateDetailComments"
+                                v-model="editorData"
                                 :editorOptions="editorOptionVue2"
                         />
                     </v-tab-item>
@@ -157,7 +158,7 @@
                 this.news_item = news_item;
                 this.title = news_item.title;
                 this.description = news_item.description;
-                this.editorData = this.news_item.comments
+                this.editorData = news_item.comments
 
                 this.$root.$emit('first-dialog', 'push');
             },
