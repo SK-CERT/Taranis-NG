@@ -20,6 +20,7 @@
 
                     <v-toolbar-title>
                         <span v-if="!edit">{{ $t('report_item.add_new') }}</span>
+                        <span v-else-if="read_only">{{ $t('report_item.read') }}</span>
                         <span v-else>{{ $t('report_item.edit') }}</span>
                     </v-toolbar-title>
 
@@ -187,7 +188,7 @@
                                                         <v-expansion-panel-content class="pt-0">
                                                             <AttributeContainer
                                                                 :attribute_item="attribute_item" :edit="edit" :modify="modify"
-                                                                :report_item_id="report_item.id"
+                                                                :report_item_id="report_item.id" :read_only="read_only"
                                                             />
                                                         </v-expansion-panel-content>
                                                     </v-expansion-panel>
@@ -258,7 +259,8 @@ export default {
         add_button: Boolean,
         analyze_selector: Boolean,
         collections: Array,
-        csv_codes: Array
+        csv_codes: Array,
+        read_only: Boolean,
     },
     components: {NewsItemSelector, AttributeContainer, RemoteReportItemSelector, VueCsvImport},
     data: () => ({
@@ -309,6 +311,9 @@ export default {
         dialog(val) {
             if (val) { document.getElementsByName('hmtl').style.overflow = 'hidden' }
             else { document.getElementsByName('hmtl').style.overflow = 'auto' }
+        },
+        $route() {
+            this.local_reports = !window.location.pathname.includes('/group/');
         }
     },
     computed: {
@@ -565,7 +570,6 @@ export default {
 
                 let data = response.data;
 
-                this.visible = true;
                 this.edit = true;
                 this.overlay = false
                 this.show_error = false;
@@ -586,6 +590,10 @@ export default {
                 this.report_item.report_item_type_id = data.report_item_type_id;
                 this.report_item.completed = data.completed;
 
+                if (!this.report_types || !this.report_types.length) {
+                    return;
+                }
+
                 for (let i = 0; i < this.report_types.length; i++) {
                     if (this.report_types[i].id === this.report_item.report_item_type_id) {
                         this.selected_type = this.report_types[i];
@@ -599,6 +607,8 @@ export default {
                         break;
                     }
                 }
+
+                this.visible = true;
 
                 getReportItemLocks(this.report_item.id).then((response) => {
                     let locks_data = response.data
@@ -820,11 +830,6 @@ export default {
         this.$root.$on('report-item-locked', this.report_item_locked);
         this.$root.$on('report-item-unlocked', this.report_item_unlocked);
         this.$root.$on('report-item-updated', this.report_item_updated);
-    },
-    watch: {
-        $route() {
-            this.local_reports = !window.location.pathname.includes('/group/');
-        }
     },
     beforeDestroy() {
         this.$root.$off('attachments-uploaded')
