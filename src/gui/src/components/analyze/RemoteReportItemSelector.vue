@@ -229,11 +229,17 @@
                         })
                     }
 
-                    if (this.$store.getters.getCurrentReportItemGroup === null && this.links.length > 0) {
-                        this.selected_group_id = this.links[0].id
-                        this.$store.dispatch("changeCurrentReportItemGroup", this.links[0].id);
+                    // check if .links exist otherwise it will crash with undefined error
+                    if (this.links.length > 0) {
+                        if (this.$store.getters.getCurrentReportItemGroup === null) {
+                            this.selected_group_id = this.links[0].id
+                            this.$store.dispatch("changeCurrentReportItemGroup", this.selected_group_id);
+                        } else {
+                            this.selected_group_id = this.$store.getters.getCurrentReportItemGroup
+                            this.links[0].id = this.selected_group_id
+                        }
                     } else {
-                        this.selected_group_id = this.links[0].id = this.$store.getters.getCurrentReportItemGroup
+                        this.selected_group_id = this.$store.getters.getCurrentReportItemGroup
                     }
                 });
 
