@@ -100,18 +100,14 @@
 
                 this.news_items_data_loaded = false;
 
-                if (append === false) {
-                    this.news_items_data = []
-                }
-
-                let offset = this.news_items_data.length;
+                let offset = 0;
                 let limit = 20;
                 if (reload_all) {
-                    offset = 0;
                     if (this.news_items_data.length > limit) {
                         limit = this.news_items_data.length;
                     }
-                    this.news_items_data = []
+                } else if (append) {
+                    offset = this.news_items_data.length;
                 }
 
                 let group = '';
@@ -136,7 +132,17 @@
                         limit: limit
                     }
                 }).then(() => {
-                    this.news_items_data = this.news_items_data.concat(this.$store.getters.getNewsItems.items);
+                    // clear after data load (prevent blinking, jumping)
+                    if ((append === false) || reload_all) {
+                        this.news_items_data = []
+                    }
+                    // window.console.log('#', "Add:", append, "Reload:", reload_all, "O:", offset, "L:", limit, "->", this.$store.getters.getNewsItems.items.length);
+                    if (append) {
+                        this.news_items_data = this.news_items_data.concat(this.$store.getters.getNewsItems.items);
+                    } else {
+                        this.news_items_data = this.$store.getters.getNewsItems.items;
+                    }
+                    // window.console.log('#', "C:", this.news_items_data.length);
                     this.$emit('new-data-loaded', this.$store.getters.getNewsItems.total_count);
                     setTimeout( () => {
                         this.$emit('card-items-reindex');
