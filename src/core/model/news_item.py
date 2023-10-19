@@ -113,7 +113,7 @@ class NewsItemData(db.Model):
     @classmethod
     def get_all_news_items_data(cls, limit):
         limit = datetime.strptime(limit, '%d.%m.%Y - %H:%M')
-        news_items_data = cls.query.filter(cls.collected > limit).all()
+        news_items_data = cls.query.filter(cls.collected >= limit).all()
         news_items_data_schema = NewsItemDataSchema(many=True)
         return news_items_data_schema.dump(news_items_data)
 
