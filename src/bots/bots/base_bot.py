@@ -2,6 +2,7 @@ import datetime
 import traceback
 
 from managers import time_manager
+from managers.log_manager import log_debug
 from shared.schema import bot, bot_preset
 from shared.schema.parameter import Parameter, ParameterType
 from remote.core_api import CoreApi
@@ -12,8 +13,9 @@ class BaseBot:
     name = "Base Bot"
     description = "Base abstract type for all bots"
 
+    # real values are stored in 'parameter' table
     parameters = [
-        Parameter(0, "REFRESH_INTERVAL", "Refresh Interval", "How often and when is this bot doing its job. Examples:<ul><li>10 --- perform the task every 10 minutes</li><li>10:30 --- perform the task every day at 10:30</li><li>Tuesday,10:30 --- perform the task every Tuesday at 10:30</li></ul>",
+        Parameter(0, "REFRESH_INTERVAL", "Refresh interval (0 to disable)", "How often and when is this bot doing its job. Examples:<ul><li>10 --- perform the task every 10 minutes</li><li>10:30 --- perform the task every day at 10:30</li><li>Tuesday,10:30 --- perform the task every Tuesday at 10:30</li></ul>",
                   ParameterType.NUMBER)
     ]
 
@@ -70,16 +72,23 @@ class BaseBot:
             self.bot_presets = preset_schema.load(response)
 
             for preset in self.bot_presets:
-                self.execute(preset)
                 interval = preset.parameter_values["REFRESH_INTERVAL"]
+                # do not schedule if no interval is set
+                if interval == '' or interval == '0':
+                    log_debug("scheduling '{}' disabled".format(str(preset.name)))
+                    continue
+                 
+                self.execute(preset)
 
                 if interval:
                     if interval[0].isdigit() and ':' in interval:
+                        log_debug("scheduling '{}' at: {}".format(str(preset.name), str(interval)))
                         time_manager.schedule_job_every_day(interval, self.execute, preset)
                     elif interval[0].isalpha():
                         interval = interval.split(',')
                         day = interval[0].strip()
                         at = interval[1].strip()
+                        log_debug("scheduling '{}' at: {} {}".format(str(preset.name), str(day), str(at)))
                         if day == 'Monday':
                             time_manager.schedule_job_on_monday(at, self.execute, preset)
                         elif day == 'Tuesday':
@@ -95,4 +104,5 @@ class BaseBot:
                         else:
                             time_manager.schedule_job_on_sunday(at, self.execute, preset)
                     else:
+                        log_debug("scheduling '{}' for {}".format(str(preset.name), int(interval)))
                         time_manager.schedule_job_minutes(int(interval), self.execute, preset)

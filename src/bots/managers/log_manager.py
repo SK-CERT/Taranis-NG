@@ -87,6 +87,6 @@ elif "SYSLOG_ADDRESS" in os.environ:
 def log_system_activity(module, message):
     log_info("[{}] {}".format(module, message))
 
-def log_collector_activity(collector_type, collector, message):
-    log_text = "COLLECTOR {} '{}': {}".format(collector_type, collector, message)
+def log_bot_activity(bot, message):
+    log_text = "BOT '{}': {}".format(bot, message)
     log_info(log_text)
