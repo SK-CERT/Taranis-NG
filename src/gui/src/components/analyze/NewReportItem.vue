@@ -226,14 +226,14 @@
 </template>
 
 <style>
-.taranis-ng-vertical-view {
-    position: relative;
-}
+    .taranis-ng-vertical-view {
+        position: relative;
+    }
 
-.v-dialog__content,
-.v-dialog--fullscreen {
-    position: absolute;
-}
+    .v-dialog__content,
+    .v-dialog--fullscreen {
+        position: fixed;
+    }
 </style>
 
 <script>
