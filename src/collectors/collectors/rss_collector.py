@@ -30,6 +30,7 @@ class RSSCollector(BaseCollector):
 
     news_items = []
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
 
         feed_url = source.parameter_values['FEED_URL']

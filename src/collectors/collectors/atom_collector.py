@@ -24,6 +24,7 @@ class AtomCollector(BaseCollector):
 
     news_items = []
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
 
         feed_url = source.parameter_values['ATOM_FEED_URL']

@@ -218,7 +218,6 @@ class WebCollector(BaseCollector):
                 browser.switch_to.window(tab)
                 return
 
-
     def __close_other_tabs(self, browser, handle_to_keep, fallback_url):
         try:
             handles_to_close = copy.copy(browser.window_handles)
@@ -471,6 +470,7 @@ class WebCollector(BaseCollector):
         subprocess.Popen(['tor'])
         time.sleep(3)
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
         """Collects news items from this source (main function)"""
 

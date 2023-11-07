@@ -21,6 +21,11 @@ def reportStatus():
         log_debug("[{}] Sending status update...".format(__name__))
         response, code = CoreApi.update_collector_status()
         log_debug("[{}] Core responded with: HTTP {}, {}".format(__name__, code, response))
+        # for debuging scheduler tasks
+        # for key in collectors:
+        #     for source in collectors[key].osint_sources:
+        #         if hasattr(source, "scheduler_job"):
+        #             log_debug("Last run: {}, Next run: {}, {}".format(source.scheduler_job.last_run or "never", source.scheduler_job.next_run or "never", source.name))
         time.sleep(55)
 
 def initialize():
