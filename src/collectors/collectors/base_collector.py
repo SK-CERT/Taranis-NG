@@ -5,6 +5,7 @@ import bleach
 import re
 import time
 from dateutil import tz
+from functools import wraps
 
 from managers import time_manager
 from managers.log_manager import log_debug, log_info, log_debug_trace
@@ -33,6 +34,17 @@ class BaseCollector:
 
     def collect(self, source):
         pass
+
+    @staticmethod
+    def ignore_exceptions(func):
+        @wraps(func)
+        def wrapper(source):
+            try:
+                func(source)
+            except e:
+                message = "An unhandled exception occurred during scheduled collector run: {}".format(e)
+                BaseCollector.print_exception(source, message)
+        return wrapper
 
     @staticmethod
     def print_exception(source, error):
