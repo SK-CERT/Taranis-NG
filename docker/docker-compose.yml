@@ -97,6 +97,7 @@ services:
     depends_on:
       core:
         condition: service_healthy
+    restart: unless-stopped
     image: "skcert/taranis-ng-bots:${TARANIS_NG_TAG}"
     build:
       context: ..
