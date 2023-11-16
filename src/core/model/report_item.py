@@ -407,7 +407,7 @@ class ReportItem(db.Model):
                 if 'attribute_id' in data:
                     attribute_to_delete = None
                     for attribute in report_item.attributes:
-                        if attribute.id == data['attribute_id']:
+                        if str(attribute.id) == data['attribute_id']:
                             attribute_to_delete = attribute
                             break
 
@@ -466,7 +466,7 @@ class ReportItem(db.Model):
 
                 if 'attribute_id' in data:
                     for attribute in report_item.attributes:
-                        if attribute.id == data['attribute_id']:
+                        if str(attribute.id) == data['attribute_id']:
                             data['attribute_value'] = attribute.value
                             data['attribute_last_updated'] = attribute.last_updated.strftime('%d.%m.%Y - %H:%M')
                             data['attribute_user'] = attribute.user.name
@@ -489,7 +489,7 @@ class ReportItem(db.Model):
 
                 if 'attribute_id' in data:
                     for attribute in report_item.attributes:
-                        if attribute.id == data['attribute_id']:
+                        if str(attribute.id) == data['attribute_id']:
                             data['attribute_value'] = attribute.value
                             data['binary_mime_type'] = attribute.binary_mime_type
                             data['binary_size'] = attribute.binary_size
