@@ -90,52 +90,35 @@ class BasePresenter:
 
             self.attrs = BasePresenter.AttributesObject()
 
-            # group the values ; identify attributes with the same names
-            attribute_group_items = dict()
-            attribute_group_items_by_name = dict()
-
-            # print (dir(report_item), flush=True)
+            attribute_group_items = {}
+            attribute_groups = {}
 
             for attribute in report_item.attributes:
                 attribute_group_item_id = attribute.attribute_group_item_id
-                if attribute_group_item_id not in attribute_group_items:
-                    attribute_group_items[attribute_group_item_id] = list()
-                attribute_group_items[attribute_group_item_id].append(attribute)
+                attribute_group_items.setdefault(attribute_group_item_id, []).append(attribute)
 
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
-                if attr_key not in attribute_group_items_by_name:
-                    attribute_group_items_by_name[attr_key] = 1
-                else:
-                    attribute_group_items_by_name[attr_key] += 1
-                # print(">>>", attr_key + ":", attribute.value, flush=True)
 
-            for attribute_group_item_id in attribute_group_items.keys():
+                attribute_groups.setdefault(attr_key, set()).add(attribute_group_item_id)
+
+            for attribute_group_item_id, attribute_group_item in attribute_group_items.items():
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
 
-                attribute_group_item = attribute_group_items[attribute_group_item_id]
-                # print("=>>", attribute_group_item, flush=True)
+                max_occurrence = attr_type.max_occurrence
+                value_to_add = (
+                    attribute_group_item[0].value
+                    if max_occurrence == 1 and attribute_group_item
+                    else [attribute.value for attribute in attribute_group_item]
+                )
 
-                # min_occurrence = attribute_map[attribute_group_item_id].min_occurrence
-                max_occurrence = attribute_map[attribute_group_item_id].max_occurrence
-
-                value_to_add = None
-                if max_occurrence == 1:
-                    if len(attribute_group_item) > 0:
-                        value_to_add = attribute_group_item[0].value
-                else:
-                    value_to_add = list()
-                    for attribute in attribute_group_item:
-                        value_to_add.append(attribute.value)
-
-                how_many_with_the_same_name = attribute_group_items_by_name[attr_key]
-                # print("===", attr_key + ":", value_to_add, how_many_with_the_same_name, flush=True)
+                how_many_with_the_same_name = len(attribute_groups[attr_key])
                 if how_many_with_the_same_name == 1:
                     setattr(self.attrs, attr_key, value_to_add)
                 else:
                     if not hasattr(self.attrs, attr_key):
-                        setattr(self.attrs, attr_key, list())
+                        setattr(self.attrs, attr_key, [])
                     getattr(self.attrs, attr_key).append(value_to_add)
 
     class InputDataObject:
