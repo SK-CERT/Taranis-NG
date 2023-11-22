@@ -1,3 +1,8 @@
+"""Base presenter.
+
+Returns:
+    _description_
+"""
 from shared.schema.presenter import PresenterSchema
 from managers import log_manager
 import json
@@ -7,15 +12,24 @@ import re
 
 
 class BasePresenter:
+    """Base presenter class."""
+
     type = "BASE_PRESENTER"
     name = "Base Presenter"
     description = "Base abstract type for all presenters"
 
     parameters = list()
 
-    # helper class
     @staticmethod
     def json_default(value):
+        """Serialize a value to JSON.
+
+        Arguments:
+            value -- value to serialize
+
+        Returns:
+            dict: serialized value
+        """
         if isinstance(value, datetime.date):
             return dict(year=value.year, month=value.month, day=value.day)
         elif isinstance(value, types.MappingProxyType):
@@ -23,17 +37,36 @@ class BasePresenter:
         else:
             return value.__dict__
 
-    # helper class
     class AttributesObject:
+        """Helper class: object holding all attributes of a report item."""
+
         def toJSON(self):
+            """Serialize the object to JSON.
+
+            Returns:
+                json.dumps(self): serialized object
+            """
             return json.dumps(self, default=BasePresenter.json_default, sort_keys=True, indent=4)
 
-    # helper class
     class ReportItemObject:
+        """Helper class: object holding all data about a report item."""
+
         def toJSON(self):
+            """Serialize the object to JSON.
+
+            Returns:
+                json.dumps(self): serialized object
+            """
             return json.dumps(self, default=BasePresenter.json_default, sort_keys=True, indent=4)
 
         def __init__(self, report_item, report_types, attribute_map):
+            """Initialize the object.
+
+            Arguments:
+                report_item -- report item to initialize the object with
+                report_types -- report types
+                attribute_map -- attribute map
+            """
             # report item itself
             self.name = report_item.title
             self.name_prefix = report_item.title_prefix
@@ -52,22 +85,22 @@ class BasePresenter:
             # embedded news items
             self.news_items = list()
             for news_item_aggregate in report_item.news_item_aggregates:
-                for news_item in news_item_aggregate['news_items']:
-                    self.news_items.append(news_item['news_item_data'])
+                for news_item in news_item_aggregate["news_items"]:
+                    self.news_items.append(news_item["news_item_data"])
 
             self.attrs = BasePresenter.AttributesObject()
 
             # group the values ; identify attributes with the same names
             attribute_group_items = dict()
             attribute_group_items_by_name = dict()
-            
+
             # print (dir(report_item), flush=True)
 
             for attribute in report_item.attributes:
                 attribute_group_item_id = attribute.attribute_group_item_id
                 if attribute_group_item_id not in attribute_group_items:
                     attribute_group_items[attribute_group_item_id] = list()
-                attribute_group_items[attribute_group_item_id].append(attribute)  ######
+                attribute_group_items[attribute_group_item_id].append(attribute)
 
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
@@ -84,7 +117,7 @@ class BasePresenter:
                 attribute_group_item = attribute_group_items[attribute_group_item_id]
                 # print("=>>", attribute_group_item, flush=True)
 
-                min_occurrence = attribute_map[attribute_group_item_id].min_occurrence
+                # min_occurrence = attribute_map[attribute_group_item_id].min_occurrence
                 max_occurrence = attribute_map[attribute_group_item_id].max_occurrence
 
                 value_to_add = None
@@ -105,13 +138,19 @@ class BasePresenter:
                         setattr(self.attrs, attr_key, list())
                     getattr(self.attrs, attr_key).append(value_to_add)
 
-    # object holding all that we received from the CORE
     class InputDataObject:
+        """Object holding all that we received from the CORE."""
+
         def toJSON(self):
+            """Serialize the object to JSON.
+
+            Returns:
+                json.dumps(self): serialized object
+            """
             return json.dumps(self, default=BasePresenter.json_default, sort_keys=True, indent=4)
 
         def get_max_tlp(self, reports):
-            """Returns the highest TLP value from a list of reports
+            """Get the highest TLP value from a list of reports.
 
             Args:
                 reports (list): list of reports
@@ -119,14 +158,7 @@ class BasePresenter:
             Returns:
                 max_tlp: Highest TLP value from the list of reports
             """
-            color_values = {
-                            'WHITE': 0,
-                            'CLEAR': 1,
-                            'GREEN': 2,
-                            'AMBER': 3,
-                            'AMBER+STRICT': 4,
-                            'RED': 5
-                            }
+            color_values = {"WHITE": 0, "CLEAR": 1, "GREEN": 2, "AMBER": 3, "AMBER+STRICT": 4, "RED": 5}
             colors = []
 
             for report in reports:
@@ -139,13 +171,27 @@ class BasePresenter:
             return max_tlp
 
         def add_link_prefix(self, report, letter):
-            pattern = r'\[(\d+)\]'
+            """Add link prefix to the report description and recommendations.
+
+            Arguments:
+                report -- report to add link prefix to
+                letter -- letter to use as a link prefix
+
+            Returns:
+                description, recommendations: report description and recommendations with link prefix added
+            """
+            pattern = r"\[(\d+)\]"
             description = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.description)
             recommendations = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.recommendations)
 
             return description, recommendations
 
         def __init__(self, presenter_input):
+            """Initialize the object.
+
+            Arguments:
+                presenter_input -- input data
+            """
             # types of report items (e.g. vuln report, disinfo report)
             report_types = dict()
             for report_type in presenter_input.report_types:
@@ -160,12 +206,13 @@ class BasePresenter:
                         attribute_map[attribute_group_item.id] = attribute_group_item
 
             self.product = presenter_input.product
+            self.product.date = datetime.datetime.now()
             self.report_items = list()
 
             for report in presenter_input.reports:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))
 
-            letter = 'A'
+            letter = "A"
             vul_report_count = 0
             for report in self.report_items:
                 if report.type == "Vulnerability Report":
@@ -177,22 +224,37 @@ class BasePresenter:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)
 
     def get_info(self):
+        """Get info about the presenter.
+
+        Returns:
+            info_schema.dump(self): info about the presenter
+        """
         info_schema = PresenterSchema()
         return info_schema.dump(self)
 
     def print_exception(self, error):
+        """Print exception.
+
+        Arguments:
+            error -- exception to print
+        """
         log_manager.log_debug_trace("[{0}] {1}".format(self.name, error))
 
     @staticmethod
     def generate_input_data(presenter_input):
+        """Generate input data for the presenter.
+
+        Arguments:
+            presenter_input -- input data
+
+        Returns:
+            data_obj: input data object
+        """
         data = BasePresenter.InputDataObject(presenter_input)
         data_json = data.toJSON()
         log_manager.log_info("=== TEMPLATING FROM THE FOLLOWING INPUT ===\n" + data_json)
         data_obj = json.loads(data_json)
         return data_obj
-
-    def generate(self, presenter_input):
-        pass
 
     # used in JINJA templating for formating "string date" to "date"
     def _filter_datetime(date, fmtin=None, fmtout=None):
