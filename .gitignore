@@ -22,11 +22,15 @@ build/
 .env.local
 .env.*.local
 src/.env
-*.pem
+src/publishers/crypto
+!src/publishers/crypto/READEME.md
 *.key
 *.log
 *.crt
 *.asc
+*.pub
+*.pem
+*.p12
 local/
 
 # settings of editors
