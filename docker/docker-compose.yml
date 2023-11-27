@@ -26,6 +26,8 @@ services:
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
     volumes:
       - "database_data:/var/lib/postgresql/data"
+    ports:
+        - 127.0.0.1:5432:5432
     logging:
       driver: "json-file"
       options:
@@ -67,6 +69,7 @@ services:
       TZ: "${TZ}"
       DEBUG: "true"
       DEBUG_SQL: "false"
+      LOG_SENSITIVE_DATA: "${LOG_SENSITIVE_DATA}"
       # to allow automatic initialisation of collectors/presenters/publishers
       COLLECTOR_PRESENTER_PUBLISHER_API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
     labels:
@@ -87,6 +90,8 @@ services:
 
     volumes:
       - "core_data:/data"
+      - "D:\\Dev\\Taranis-NG\\src\\core:/app"
+      - "D:\\Dev\\Taranis-NG\\src\\shared\\shared:/app/shared"
     logging:
       driver: "json-file"
       options:
@@ -111,7 +116,12 @@ services:
       TARANIS_NG_CORE_URL: "http://core"
       TARANIS_NG_CORE_SSE: "http://core/sse"
       WORKERS_PER_CORE: "1"
+      WEB_CONCURRENCY: "1"
+      DEBUG: "true"
       TZ: "${TZ}"
+    volumes:
+      - "D:\\Dev\\Taranis-NG\\src\\bots:/app"
+      - "D:\\Dev\\Taranis-NG\\src\\shared\\shared:/app/shared"
     logging:
       driver: "json-file"
       options:
@@ -136,10 +146,13 @@ services:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
+      WEB_CONCURRENCY: "1"
       DEBUG: "true"
       TZ: "${TZ}"
     volumes:
       - "collector_storage:/app/storage"
+      - "D:\\Dev\\Taranis-NG\\src\\collectors:/app"
+      - "D:\\Dev\\Taranis-NG\\src\\shared\\shared:/app/shared"
     logging:
       driver: "json-file"
       options:
@@ -164,11 +177,14 @@ services:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
+      DEBUG: "true"
       TZ: "${TZ}"
     ports:
       - "${PRESENTER_PORT}:80"
     volumes:
-      - "presenters_templates:/app/templates"
+      - "D:\\Dev\\Taranis-NG\\src\\presenters:/app"
+      - "D:\\Dev\\Taranis-NG\\src\\presenters\\templates:/app/templates"
+      - "D:\\Dev\\Taranis-NG\\src\\shared\\shared:/app/shared"
     logging:
       driver: "json-file"
       options:
@@ -194,6 +210,9 @@ services:
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
+    volumes:
+      - "D:\\Dev\\Taranis-NG\\src\\publishers:/app"
+      - "D:\\Dev\\Taranis-NG\\src\\shared\\shared:/app/shared"
     logging:
       driver: "json-file"
       options:
