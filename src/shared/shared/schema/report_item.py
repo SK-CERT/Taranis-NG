@@ -24,7 +24,7 @@ class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
     version = fields.Int()
     current = fields.Bool()
-    user = fields.Nested(UserSchemaBase)
+    user = fields.Nested(UserSchemaBase, exclude=("password",))
 
     @post_load
     def make(self, data, **kwargs):
