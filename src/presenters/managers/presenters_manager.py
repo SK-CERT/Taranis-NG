@@ -56,7 +56,6 @@ def generate(presenter_input_json):
         _description_
     """
     presenter_input_schema = PresenterInputSchema()
-    print(presenter_input_json, flush=True)
     presenter_input = presenter_input_schema.load(presenter_input_json)
 
     presenter_output = presenters[presenter_input.type].generate(presenter_input)

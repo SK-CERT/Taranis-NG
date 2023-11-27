@@ -1,4 +1,4 @@
-FROM python:3.12-alpine3.18 AS build_shared
+FROM python:3.9-alpine3.17 AS build_shared
 
 WORKDIR /build_shared/
 
@@ -8,7 +8,7 @@ RUN python -m build
 
 
 
-FROM python:3.12-alpine3.18 AS production
+FROM python:3.9-alpine3.17 AS production
 
 WORKDIR /app/
 
@@ -25,9 +25,9 @@ RUN pip install --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -
 
 COPY ./src/publishers/requirements.txt /app/requirements.txt
 RUN apk add --no-cache \
-    swig \
+    swig\
     libmagic \
-    gnupg
+    gnupg 
 
 RUN \
     apk add --no-cache --virtual .build-deps build-base \

@@ -375,15 +375,14 @@ class ReportItem(db.Model):
 
                 if 'attribute_id' in data:
                     for attribute in report_item.attributes:
-                        # sometime we compare: int & int or int & str
-                        if str(attribute.id) == str(data['attribute_id']):
+                        if attribute.id == data['attribute_id']:
                             if attribute.value != data['attribute_value']:
                                 modified = True
                                 attribute.value = data['attribute_value']
                                 data['attribute_value'] = ''
                                 attribute.user = user
                                 attribute.last_updated = datetime.now()
-                            break
+                                break
 
             if 'add' in data:
                 if 'attribute_id' in data:
@@ -408,8 +407,7 @@ class ReportItem(db.Model):
                 if 'attribute_id' in data:
                     attribute_to_delete = None
                     for attribute in report_item.attributes:
-                        # sometime we compare: int & int or int & str
-                        if str(attribute.id) == str(data['attribute_id']):
+                        if str(attribute.id) == data['attribute_id']:
                             attribute_to_delete = attribute
                             break
 
