@@ -1,4 +1,4 @@
-FROM python:3.7-alpine3.14 AS build_shared
+FROM python:3.12-alpine3.18 AS build_shared
 
 WORKDIR /build_shared/
 
@@ -8,7 +8,7 @@ RUN python -m build
 
 
 
-FROM python:3.7-alpine3.14 AS production
+FROM python:3.12-alpine3.18 AS production
 
 WORKDIR /app/
 
@@ -20,59 +20,15 @@ RUN \
     apk add --no-cache \
     libpng \
     libjpeg \
-    wkhtmltopdf
+    py3-gobject3 \
+    pango
 
 # install fonts
 RUN \
     apk add --no-cache \
     msttcorefonts-installer \
     fontconfig \
-    font-noto \
-    font-noto-adlam \
-    font-noto-adlamunjoined \
-    font-noto-arabic \
-    font-noto-armenian \
-    font-noto-avestan \
-    font-noto-bamum \
-    font-noto-bengali \
-    font-noto-buhid \
-    font-noto-carian \
-    font-noto-chakma \
-    font-noto-cherokee \
-    font-noto-cypriot \
-    font-noto-deseret \
-    font-noto-devanagari \
-    font-noto-ethiopic \
-    font-noto-extra \
-    font-noto-georgian \
-    font-noto-glagolitic \
-    font-noto-gothic \
-    font-noto-gujarati \
-    font-noto-gurmukhi \
-    font-noto-hebrew \
-    font-noto-kannada \
-    font-noto-kayahli \
-    font-noto-khmer \
-    font-noto-lao \
-    font-noto-lisu \
-    font-noto-malayalam \
-    font-noto-mandaic \
-    font-noto-myanmar \
-    font-noto-nko \
-    font-noto-olchiki \
-    font-noto-oldturkic \
-    font-noto-oriya \
-    font-noto-osage \
-    font-noto-osmanya \
-    font-noto-shavian \
-    font-noto-sinhala \
-    font-noto-tamil \
-    font-noto-telugu \
-    font-noto-thaana \
-    font-noto-thai \
-    font-noto-tibetan \
-    font-noto-tifinagh \
-    font-noto-vai \
+    font-noto-all \
     terminus-font \
     ttf-opensans \
     font-bakoma \
