@@ -17,7 +17,7 @@ class ApiKeyBaseSchema(Schema):
 
 
 class ApiKeySchema(ApiKeyBaseSchema):
-    user = fields.Nested(UserSchemaBase)
+    user = fields.Nested(UserSchemaBase, exclude=("password",))
 
     @post_load
     def make(self, data, **kwargs):
