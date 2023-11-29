@@ -31,8 +31,6 @@ if "DEBUG" in os.environ and os.environ.get("DEBUG").lower() == "true":
     gunicorn_logger.setLevel(logging.DEBUG)
     sys_logger.setLevel(logging.DEBUG)
 
-
-
 # alter the sensitive value for logging, based on LOG_SENSITIVE_DATA env variable:
 #
 # LOG_SENSITIVE_DATA=no (or undefined) - remove sensitive data
@@ -58,7 +56,6 @@ def sensitive_value(value):
         return encryptedString
     else:
         return '•••••'
-
 
 # used to decrypt the encrypted secrets from the logs
 # source: https://github.com/gdavid7/cryptocode/blob/main/cryptocode.py
@@ -105,8 +102,6 @@ def generate_escaped_data(request_data):
     data = re.sub(r'\s+', ' ', data)
     data = re.sub(r'(^\s+)|(\s+$)', '', data)
     return data
-
-
 
 # send a debug message
 def log_debug(message):
@@ -168,17 +163,17 @@ elif "SYSLOG_ADDRESS" in os.environ:
         sys_logger = None
         log_debug("Unable to connect to syslog server!")
         log_debug(ex)
-
+else: 
+    # disable log duplicities on the screen if we have SYSLOG disabled
+    sys_logger = None
 
 def resolve_ip_address():
     headers_list = request.headers.getlist("X-Forwarded-For")
     ip_address = headers_list[0] if headers_list else request.remote_addr
     return ip_address
 
-
 def resolve_method():
     return request.method
-
 
 def resolve_resource():
     fp_len = len(request.full_path)
@@ -187,16 +182,13 @@ def resolve_resource():
     else:
         return request.full_path
 
-
 def store_activity(activity_type, activity_detail, request_data = None):
     LogRecord.store(resolve_ip_address(), None, None, None, None, module_id, activity_type, resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
 
-
 def store_user_activity(user, activity_type, activity_detail, request_data = None):
     LogRecord.store(resolve_ip_address(), user.id, user.name, None, None, module_id, activity_type, resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
-
 
 def store_access_error_activity(user, activity_detail, request_data = None):
     ip = resolve_ip_address()
@@ -220,7 +212,6 @@ def store_access_error_activity(user, activity_detail, request_data = None):
     LogRecord.store(ip, user.id, user.name, None, None, module_id, "ACCESS_ERROR", resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
 
-
 def store_data_error_activity(user, activity_detail, request_data = None):
     db.session.rollback()
     ip = resolve_ip_address()
@@ -243,7 +234,6 @@ def store_data_error_activity(user, activity_detail, request_data = None):
     LogRecord.store(ip, user.id, user.name, None, None, module_id, "DATA_ERROR", resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
 
-
 def store_data_error_activity_no_user(activity_detail, request_data = None):
     db.session.rollback()
     ip = resolve_ip_address()
@@ -264,7 +254,6 @@ def store_data_error_activity_no_user(activity_detail, request_data = None):
     LogRecord.store(ip, None, None, None, None, module_id, "PUBLIC_ACCESS_DATA_ERROR", resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
 
-
 def store_auth_error_activity(activity_detail, request_data = None):
     db.session.rollback()
     log_text = "TARANIS NG Auth Error (Method: {}, Resource: {}, Activity Detail: {}, Activity Data: {})".format(
@@ -282,7 +271,6 @@ def store_auth_error_activity(activity_detail, request_data = None):
     print(log_text)
     LogRecord.store(resolve_ip_address(), None, None, None, None, module_id, "AUTH_ERROR", resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
-
 
 def store_user_auth_error_activity(user, activity_detail, request_data = None):
     db.session.rollback()
@@ -304,11 +292,9 @@ def store_user_auth_error_activity(user, activity_detail, request_data = None):
     LogRecord.store(ip, user.id, user.name, None, None, module_id, "AUTH_ERROR", resolve_resource(),
                     activity_detail, resolve_method(), generate_escaped_data(request_data))
 
-
 def store_system_activity(system_id, system_name, activity_type, activity_detail, request_data = None):
     LogRecord.store(resolve_ip_address(), None, None, system_id, system_name, module_id, activity_type,
                     resolve_resource(), activity_detail, resolve_method(), generate_escaped_data(request_data))
-
 
 def store_system_error_activity(system_id, system_name, activity_type, activity_detail, request_data = None):
     db.session.rollback()
