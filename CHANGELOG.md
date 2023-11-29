@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [v23.09.1] - 2023-09-27
+### Breaking change! (Only for docker users with customized or new report templates)
+
+**Background:**
+Presenter docker maps `/app/templates` directory to `presenters_templates` container.
+This override original `/app/templates` files with user modifications.
+When new or updated templates arrive with new version, they stay hidden due this mapping.
+
+**Solution:**
+Remap user changes to `/app/templates/user_templates` directory.
+There is need then just update old template path in `Configuration / Product Types`:
+e.g.  `/app/templates/file.html` -> `/app/templates/user_templates/file.html`
+
 ### Added
 * New reports (OSINT, Disinfo, Offensive, Weekly)
 * Keycloak authentication support
@@ -31,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * Fixed bots crash, better Regex
 * Added missing TOR binary to the collectors
 * Improved templates
+* Fixed bug when new templates stay hiden due wrong docker mapping
 * A lot of various fixes
 
 Thanks for the contributions: @sebix, @multiflexi
