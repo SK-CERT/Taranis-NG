@@ -43,6 +43,7 @@ class PresenterInputProductSchema(Schema):
     product_type = fields.Str()
     product_type_description = fields.Str()
     user = fields.Nested(UserSchemaBase, exclude=("password",))
+    id = fields.Str()
 
     @post_load
     def make(self, data, **kwargs):
@@ -91,7 +92,7 @@ class PresenterInputSchema(Schema):
 class PresenterInputProduct:
     """Real data holding object presented by PresenterInputProductSchema."""
 
-    def __init__(self, title, description, product_type, product_type_description, user):
+    def __init__(self, title, description, product_type, product_type_description, user, id):
         """Initialize the "presenter input product".
 
         Args:
@@ -106,6 +107,7 @@ class PresenterInputProduct:
         self.product_type = product_type
         self.product_type_description = product_type_description
         self.user = user
+        self.id = id
 
     @classmethod
     def make_from_product(cls, product):
@@ -118,7 +120,7 @@ class PresenterInputProduct:
             _type_: PresenterInputProduct object.
         """
         return PresenterInputProduct(
-            product.title, product.description, product.product_type.title, product.product_type.description, product.user
+            product.title, product.description, product.product_type.title, product.product_type.description, product.user, product.id
         )
 
 
