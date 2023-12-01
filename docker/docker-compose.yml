@@ -97,6 +97,7 @@ services:
     depends_on:
       core:
         condition: service_healthy
+    restart: unless-stopped
     image: "skcert/taranis-ng-bots:${TARANIS_NG_TAG}"
     build:
       context: ..
@@ -168,7 +169,7 @@ services:
     ports:
       - "${PRESENTER_PORT}:80"
     volumes:
-      - "presenters_templates:/app/templates"
+      - "presenters_templates:/app/templates/user_templates"
     logging:
       driver: "json-file"
       options:

@@ -83,6 +83,9 @@ elif "SYSLOG_ADDRESS" in os.environ:
         sys_logger = None
         log_debug("Unable to connect to syslog server!")
         log_debug(ex)
+else: 
+    # disable log duplicities on the screen if we have SYSLOG disabled
+    sys_logger = None
 
 def log_system_activity(module, message):
     log_info("[{}] {}".format(module, message))

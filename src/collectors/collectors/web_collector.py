@@ -12,7 +12,9 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from urllib.parse import urlparse
 import os
 import dateparser
@@ -137,17 +139,17 @@ class WebCollector(BaseCollector):
 
         element = None
         if prefix == 'id':
-            element = driver.find_element_by_id(selector)
+            element = driver.find_element(By.ID, selector)
         if prefix == 'name':
-            element = driver.find_element_by_name(selector)
+            element = driver.find_element(By.NAME, selector)
         elif prefix == 'xpath':
-            element = driver.find_element_by_xpath(selector)
+            element = driver.find_element(By.XPATH, selector)
         elif prefix in [ 'tag_name', 'tag' ]:
-            element = driver.find_element_by_tag_name(selector)
+            element = driver.find_element(By.TAG_NAME, selector)
         elif prefix in [ 'class_name', 'class' ]:
-            element = driver.find_element_by_class_name(selector)
+            element = driver.find_element(By.CLASS_NAME, selector)
         elif prefix in [ 'css_selector', 'css' ]:
-            element = driver.find_element_by_css_selector(selector)
+            element = driver.find_element(By.CSS_SELECTOR, selector)
 
         return element
 
@@ -177,17 +179,17 @@ class WebCollector(BaseCollector):
 
         elements = None
         if prefix == 'id':
-            elements = [ driver.find_element_by_id(selector) ]
+            elements = [ driver.find_element(By.ID, selector) ]
         if prefix == 'name':
-            elements = driver.find_elements_by_name(selector)
+            elements = driver.find_element(By.NAME, selector)
         elif prefix == 'xpath':
-            elements = driver.find_elements_by_xpath(selector)
+            elements = driver.find_element(By.XPATH, selector)
         elif prefix in [ 'tag_name', 'tag' ]:
-            elements = driver.find_elements_by_tag_name(selector)
+            elements = driver.find_elements(By.TAG_NAME, selector)
         elif prefix in [ 'class_name', 'class' ]:
-            elements = driver.find_elements_by_class_name(selector)
+            elements = driver.find_element(By.CLASS_NAME, selector)
         elif prefix in [ 'css_selector', 'css' ]:
-            elements = driver.find_elements_by_css_selector(selector)
+            elements = driver.find_elements(By.CSS_SELECTOR, selector)
         return elements
 
     @staticmethod
@@ -368,12 +370,12 @@ class WebCollector(BaseCollector):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_argument('--incognito')
+        chrome_service = ChromeService(executable_path=chrome_driver_executable)
         if self.user_agent:
             chrome_options.add_argument('user-agent=' + self.user_agent)
         if self.tor_service.lower() == 'yes':
             socks_proxy = "socks5://127.0.0.1:9050"
             chrome_options.add_argument('--proxy-server={}'.format(socks_proxy))
-            driver = webdriver.Chrome(executable_path=chrome_driver_executable, options=chrome_options)
         elif self.proxy:
             webdriver.DesiredCapabilities.CHROME['proxy'] = {
                 "proxyType": "MANUAL",
@@ -381,10 +383,8 @@ class WebCollector(BaseCollector):
                 "ftpProxy": self.proxy,
                 "sslProxy": self.proxy
             }
-            driver = webdriver.Chrome(executable_path=chrome_driver_executable, options=chrome_options)
-        else:
-            driver = webdriver.Chrome(executable_path=chrome_driver_executable, options=chrome_options)
-
+            
+        driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
         log_manager.log_debug('Chrome driver initialized.')
         return driver
 
@@ -406,30 +406,26 @@ class WebCollector(BaseCollector):
         if self.user_agent:
             firefox_options.add_argument('user-agent=' + self.user_agent)
 
-        profile = webdriver.FirefoxProfile()
-        firefox_capabilities = webdriver.DesiredCapabilities.FIREFOX
-        firefox_capabilities['marionette'] = True
-
         if self.tor_service.lower() == 'yes':
-            profile.set_preference('network.proxy.type', 1) # manual proxy config
-            profile.set_preference('network.proxy.socks', '127.0.0.1')
-            profile.set_preference('network.proxy.socks_port', 9050)
-            profile.set_preference('network.proxy.no_proxies_on', f'localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8');
+            firefox_options.set_preference('network.proxy.type', 1) # manual proxy config
+            firefox_options.set_preference('network.proxy.socks', '127.0.0.1')
+            firefox_options.set_preference('network.proxy.socks_port', 9050)
+            firefox_options.set_preference('network.proxy.no_proxies_on', f'localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8');
 
         elif self.proxy:
-            profile.set_preference('network.proxy.type', 1) # manual proxy config
-            profile.set_preference('network.proxy.http', self.proxy_host)
-            profile.set_preference('network.proxy.http_port', int(self.proxy_port))
-            profile.set_preference('network.proxy.ssl', self.proxy_host)
-            profile.set_preference('network.proxy.ssl_port', int(self.proxy_port))
-            profile.set_preference('network.proxy.ftp', self.proxy)
-            profile.set_preference('network.proxy.ftp_port', int(self.proxy_port))
-            profile.set_preference('network.proxy.no_proxies_on', f'localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8');
+            firefox_options.set_preference('network.proxy.type', 1) # manual proxy config
+            firefox_options.set_preference('network.proxy.http', self.proxy_host)
+            firefox_options.set_preference('network.proxy.http_port', int(self.proxy_port))
+            firefox_options.set_preference('network.proxy.ssl', self.proxy_host)
+            firefox_options.set_preference('network.proxy.ssl_port', int(self.proxy_port))
+            firefox_options.set_preference('network.proxy.ftp', self.proxy)
+            firefox_options.set_preference('network.proxy.ftp_port', int(self.proxy_port))
+            firefox_options.set_preference('network.proxy.no_proxies_on', f'localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8');
         else:
-            profile.set_preference('network.proxy.type', 0) # no proxy
+            firefox_options.set_preference('network.proxy.type', 0) # no proxy
 
-        profile.update_preferences()
-        driver = webdriver.Firefox(profile, executable_path=firefox_driver_executable, options=firefox_options, capabilities=firefox_capabilities)
+        firefox_service = FirefoxService(executable_path=firefox_driver_executable)
+        driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
 
         log_manager.log_debug('Firefox driver initialized.')
         return driver
@@ -518,8 +514,11 @@ class WebCollector(BaseCollector):
                 popup = WebDriverWait(browser, 10).until(EC.presence_of_element_located(self.__get_element_locator(self.selectors['popup_close'])))
             except Exception as ex:
                 log_manager.log_collector_activity('web', self.source.name, 'Popup find error: ' + traceback.format_exc())
-            if popup:
-                popup.click()
+            try:
+                if popup:
+                    popup.click()
+            except Exception as ex:
+                log_manager.log_collector_activity('web', self.source.name, 'Popup click error: ' + traceback.format_exc())
 
         # if there is a "load more" selector, click on it!
         page = 1
