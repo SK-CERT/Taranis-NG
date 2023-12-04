@@ -5,9 +5,10 @@ import bleach
 import re
 import time
 from dateutil import tz
+from functools import wraps
 
 from managers import time_manager
-from managers.log_manager import log_debug, log_info, log_debug_trace
+from managers.log_manager import log_debug, log_info, log_warning, log_critical, log_debug_trace
 from remote.core_api import CoreApi
 from shared.schema import collector, osint_source, news_item
 from shared.schema.parameter import Parameter, ParameterType
@@ -33,6 +34,18 @@ class BaseCollector:
 
     def collect(self, source):
         pass
+
+    # wrap scheduled action with exception because scheduler fail plan next one
+    @staticmethod
+    def ignore_exceptions(func):
+        @wraps(func)
+        def wrapper(self, source):
+            try:
+                func(self, source)
+            except Exception as ex:
+                log_critical("An unhandled exception occurred during scheduled collector run: {}".format(ex))
+                log_debug_trace(ex)
+        return wrapper
 
     @staticmethod
     def print_exception(source, error):
@@ -285,6 +298,7 @@ class BaseCollector:
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
             else:
                 # TODO: send update to core with the error message
+                log_warning("configuration not received, code: {}, response: {}".format(code, response))
                 pass
         except Exception as ex:
             log_debug_trace()

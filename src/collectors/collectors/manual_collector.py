@@ -10,5 +10,6 @@ class ManualCollector(BaseCollector):
 
     parameters.extend(BaseCollector.parameters)
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
         pass

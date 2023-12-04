@@ -466,6 +466,7 @@ class WebCollector(BaseCollector):
         subprocess.Popen(['tor'])
         time.sleep(3)
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
         """Collects news items from this source (main function)"""
 

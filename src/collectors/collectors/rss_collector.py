@@ -37,6 +37,7 @@ class RSSCollector(BaseCollector):
 
     news_items = []
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
         """Collect data from RSS feed.
 
