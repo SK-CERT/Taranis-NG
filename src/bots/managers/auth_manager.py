@@ -30,7 +30,7 @@ def api_key_required(fn):
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        if "Authorization" not in request.headers.keys() or request.headers["Authorization"] != ("Bearer " + api_key):
+        if "Authorization" not in request.headers or request.headers["Authorization"] != ("Bearer " + api_key):
             return {"error": "not authorized"}, 401
         else:
             return fn(*args, **kwargs)

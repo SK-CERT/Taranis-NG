@@ -383,7 +383,7 @@ class WebCollector(BaseCollector):
                 "ftpProxy": self.proxy,
                 "sslProxy": self.proxy
             }
-            
+
         driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
         log_manager.log_debug('Chrome driver initialized.')
         return driver
@@ -509,15 +509,16 @@ class WebCollector(BaseCollector):
 
         # if there is a popup selector, click on it!
         if self.selectors['popup_close']:
+            popup = None
             try:
                 popup = WebDriverWait(browser, 10).until(EC.presence_of_element_located(self.__get_element_locator(self.selectors['popup_close'])))
             except Exception as ex:
                 log_manager.log_collector_activity('web', self.source.name, 'Popup find error: ' + traceback.format_exc())
-            try:
-                if popup:
+            if popup is not None:
+                try:
                     popup.click()
-            except Exception as ex:
-                log_manager.log_collector_activity('web', self.source.name, 'Popup click error: ' + traceback.format_exc())
+                except Exception as ex:
+                    log_manager.log_collector_activity('web', self.source.name, 'Popup click error: ' + traceback.format_exc())
 
         # if there is a "load more" selector, click on it!
         page = 1
