@@ -84,7 +84,7 @@
 
                 this.timeout = setTimeout(function () {
                     this.$root.$emit('update-assets-filter', this.filter);
-                }, 300);
+                }, 800);
             },
             changeTheme() {
                 this.$vuetify.theme.themes.light.primary = "#f0f";

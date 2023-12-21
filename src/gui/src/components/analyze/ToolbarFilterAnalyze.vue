@@ -157,7 +157,7 @@ export default {
                 if (this.publish_selector === false) {
                     this.$refs.toolbarGroupAnalyze.disableMultiSelect()
                 }
-            }, 300);
+            }, 800);
         },
 
         changeTheme() {
