@@ -53,7 +53,7 @@
                 let self = this;
                 this.timeout = setTimeout(function(){
                     self.$root.$emit('update-items-filter', self.filter)
-                }, 800);
+                },800);
             },
             changeTheme() {
                 this.$vuetify.theme.themes.light.primary = "#f0f";

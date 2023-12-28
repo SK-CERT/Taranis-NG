@@ -199,7 +199,7 @@
                     if (self.analyze_selector === false) {
                         self.$refs.toolbarGroupAssess.disableMultiSelect()
                     }
-                }, 800);
+                }, 300);
             },
 
             changeTheme() {
