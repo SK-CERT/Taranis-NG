@@ -12,7 +12,8 @@ const actions = {
 
         return getAllProducts(data)
             .then(response => {
-                context.commit('setProducts', response.data);
+                if (response)
+                    context.commit('setProducts', response.data);
             })
     },
 

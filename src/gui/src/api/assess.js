@@ -19,7 +19,7 @@ export function getNewsItemsByGroup(group_id, filter_data) {
     filter += "&offset=" + encodeURIComponent(filter_data.offset)
     filter += "&limit=" + encodeURIComponent(filter_data.limit)
 
-    return ApiService.get('/assess/news-item-aggregates-by-group/' + group_id + filter)
+    return ApiService.getWithCancel('screenData', '/assess/news-item-aggregates-by-group/' + group_id + filter)
 }
 
 export function addNewsItem(data) {

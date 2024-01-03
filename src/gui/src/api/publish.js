@@ -7,7 +7,7 @@ export function getAllProducts(filter_data) {
     filter += "&offset=" + encodeURIComponent(filter_data.offset)
     filter += "&limit=" + encodeURIComponent(filter_data.limit)
 
-    return ApiService.get('/publish/products' + filter)
+    return ApiService.getWithCancel('screenData', '/publish/products' + filter)
 }
 
 export function createProduct(data) {
