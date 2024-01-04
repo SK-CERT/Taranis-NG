@@ -12,7 +12,10 @@
             <v-list-item class="px-1" v-for="link in filteredLinks" :key="link.id" router :to="link.route">
                 <v-list-item-content class="py-2" v-if="!link.separator">
                     <v-icon color="cx-drawer-text">{{ link.icon }}</v-icon>
-                    <v-list-item-title class="cx-drawer-text--text caption">{{ $t(link.title) }}</v-list-item-title>
+                    <v-list-item-title class="cx-drawer-text--text caption">
+                        <span v-if="link.translate">{{ $t(link.title) }}</span>
+                        <span v-else>{{ link.title }}</span>
+                    </v-list-item-title>
                 </v-list-item-content>
                 <v-list-item-content class="separator py-0 blue-grey" v-else>
                     <v-divider class="section-divider " color="white"></v-divider>

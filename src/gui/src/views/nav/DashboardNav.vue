@@ -10,8 +10,7 @@
 
         },
         data: () => ({
-            links: [
-            ]
+            links: []
         })
     }
 </script>
