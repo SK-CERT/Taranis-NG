@@ -1,7 +1,6 @@
 import axios from 'axios'
 
 var abortControllers = {};
-//let cancRequest = null;
 
 const ApiService = {
 
