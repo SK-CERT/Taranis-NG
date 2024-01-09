@@ -4,8 +4,8 @@ import Vue from 'vue';
 import Vuetify from 'vuetify/lib';
 //import colors from 'vuetify/lib/util/colors'
 import App from './App.vue'
-import {router} from './router'
-import {store} from '@/store/store'
+import { router } from './router'
+import { store } from '@/store/store'
 import ApiService from "@/services/api_service";
 import VueI18n from 'vue-i18n'
 import messages from "@/i18n/messages";
@@ -23,7 +23,7 @@ import layout_config from "./assets/layout_config";
 const CSL = {
     install(Vue) {
         Vue.prototype.UI = layout_config
-        this.UI = () => {}
+        this.UI = () => { }
     }
 }
 Vue.use(CSL);
@@ -43,11 +43,11 @@ Vue.use(Vuetify, {
 });
 
 Vue.use(Vuetify, {
-  iconfont: 'md'
+    iconfont: 'md'
 });
 
 Vue.use(Vuetify, {
-  iconfont: 'mdi'
+    iconfont: 'mdi'
 });
 
 const vuetify = new Vuetify({
@@ -59,8 +59,19 @@ const vuetify = new Vuetify({
 
 Vue.use(VueI18n);
 
+let bash_locale = "$VUE_APP_TARANIS_NG_LOCALE";
+let locale;
+
+if (bash_locale) {
+    locale = bash_locale;
+} else if (typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
+    locale = process.env.VUE_APP_TARANIS_NG_LOCALE;
+} else {
+    locale = navigator.language.split('-')[0];
+}
+
 const i18n = new VueI18n({
-    locale: ((typeof(process.env.VUE_APP_TARANIS_NG_LOCALE) == "undefined") ? "$VUE_APP_TARANIS_NG_LOCALE" : process.env.VUE_APP_TARANIS_NG_LOCALE),
+    locale: locale,
     fallbackLocale: 'en',
     messages
 });
@@ -70,7 +81,7 @@ Vue.use(VeeValidate, {
     i18n,
 });
 
-ApiService.init(((typeof(process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API));
+ApiService.init(((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API));
 
 if (localStorage.ACCESS_TOKEN) {
     store.dispatch('setToken', (localStorage.ACCESS_TOKEN)).then()
