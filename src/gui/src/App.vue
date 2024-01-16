@@ -59,6 +59,13 @@ export default {
                 this.sseConnection = null
             }
             this.connectSSE()
+        },
+
+        initUserSettings() {
+            this.$store.dispatch('getUserProfile').then(() => {
+                this.$vuetify.theme.dark = this.$store.getters.getProfileDarkTheme
+                this.$i18n.locale = this.$store.getters.getProfileLanguage
+            });
         }
     },
     updated() {
@@ -77,9 +84,7 @@ export default {
 
         if (localStorage.ACCESS_TOKEN) {
             if (this.isAuthenticated()) {
-                this.$store.dispatch('getUserProfile').then(() => {
-                    this.$vuetify.theme.dark = this.$store.getters.getProfileDarkTheme
-                });
+                this.initUserSettings();
                 this.connectSSE()
             } else {
                 if (this.$store.getters.getJWT) {
@@ -107,6 +112,7 @@ export default {
         });
 
         this.$root.$on('logged-in', () => {
+            this.initUserSettings();
             this.connectSSE()
         });
 
