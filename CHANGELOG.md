@@ -4,18 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [v23.09.1] - 2023-09-27
-### Breaking change! (Only for docker users with customized or new report templates)
+## [v23.12.1] - 2023-12-06
+
+### Breaking Change! (Only for Docker users who use customized or new report templates)
 
 **Background:**
-Presenter docker maps `/app/templates` directory to `presenters_templates` container.
-This override original `/app/templates` files with user modifications.
-When new or updated templates arrive with new version, they stay hidden due this mapping.
+The Presenter Docker maps the `/app/templates` directory to the `presenters_templates` container.
+This overrides the original `/app/templates` files with user modifications. When new or updated templates arrive with a new version, they stay hidden due to this mapping.
 
 **Solution:**
-Remap user changes to `/app/templates/user_templates` directory.
-There is need then just update old template path in `Configuration / Product Types`:
-e.g.  `/app/templates/file.html` -> `/app/templates/user_templates/file.html`
+Remap user-changed reports to the `/app/templates/user_templates` directory. 
+Simply update the old template path in `Configuration / Product Types`: e.g., `/app/templates/file.html` -> `/app/templates/user_templates/file.html`
+
+### Added
+- Added variable `TARANIS_NG_AUTHENTICATOR` to `docker.yml` and `.env` (default value "password").
+- Improved regex bots (logs, multiple regex, disable bot, don't try to create duplicity values...).
+- Migrated COLLECTORS, PUBLISHERS, BOTS, and PRESENTERS to the latest Python 3.12, Alpine 3.18, and latest Python modules.
+- Migrated to the new PDF presenter (WeasyPrint, before deprecated PDFKit).
+- Migrated Collectors to the latest Selenium version.
+- New SFTP publisher (Paramiko).
+- If more users work on the same report item -> update locked field with a new value.
+
+### Changed
+- Fixed the issue when the message title or body is missing in the publisher.
+- Fixed LDAP crash (moved cert path to env variable `LDAP_CA_CERT_PATH`).
+- Disabled keyboard shortcuts in News Items comments editor.
+- Fixed saving comments in News Items (was not working).
+- Fixed the display of report item details on the product (was empty before).
+- Fixed some small GUI crashes (null .link, fast report item open).
+- Fixed a bad condition in bots (not processing records that were issued in 00 seconds).
+- Fixed blinking/jumping in Assess (data reload).
+- Replaced PNG picture in the template with a new fixed SVG image that finally works everywhere.
+- Updated PDF template.
+- Don't show/send the user password field to the backend (report items).
+- Fixed deleting/updating items on the report item.
+- Bot container was missing a restart policy.
+- Fixed bad mapping of user report templates.
+- Disabled log duplicities on the screen if SYSLOG is disabled.
+- Fixed dialog centering based on scrollbar range and not on screen size.
+- Improved temp file names in the PDF presenter.
+- Scheduled actions in Collectors are more exception-resistant.
+- A lot of various fixes.
+
+Thanks for the contributions: @multiflexi
+
+## [v23.09.1] - 2023-09-27
 
 ### Added
 * New reports (OSINT, Disinfo, Offensive, Weekly)

@@ -39,10 +39,8 @@ class PDFPresenter(BasePresenter):
             dict: mime type and base64 encoded data of the generated PDF document
         """
         try:
-            temporary_directory = tempfile.gettempdir() + "/"
-            output_html = temporary_directory + "pdf_body.html"
-            output_pdf = temporary_directory + "pdf_report__" + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M") + ".pdf"
-
+            output_html = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix='.html', delete_on_close=False).name
+            output_pdf = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix='.pdf', delete_on_close=False).name
             head, tail = os.path.split(presenter_input.parameter_values_map["PDF_TEMPLATE_PATH"])
 
             input_data = BasePresenter.generate_input_data(presenter_input)
@@ -54,25 +52,6 @@ class PDFPresenter(BasePresenter):
             with open(output_html, "w") as output_file:
                 output_file.write(output_text)
 
-            if not os.path.exists(temporary_directory):
-                os.mkdir(temporary_directory)
-
-            # options = {
-            #     'dpi': 500,
-            #     'page-size': 'A4',
-            #     'margin-top': '1.55in',
-            #     'margin-right': '0.75in',
-            #     'margin-bottom': '1.55in',
-            #     'margin-left': '0.75in',
-            #     'encoding': "UTF-8",
-            #     'header-html': pdf_header_template,
-            #     'footer-html': pdf_footer_template,
-            #     'custom-header': [
-            #         ('Accept-Encoding', 'gzip')
-            #     ],
-            #     'no-outline': None,
-            #     'enable-local-file-access': None
-            # }
             HTML(output_html).write_pdf(output_pdf)
 
             encoding = "UTF-8"
