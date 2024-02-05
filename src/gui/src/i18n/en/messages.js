@@ -321,7 +321,7 @@ const messages_en = {
 
     product_type: {
         add_new: "Add new product type",
-        edit: "Edit new product type",
+        edit: "Edit product type",
         node: "Presenters Node",
         presenter: "Presenter",
         add: "Add",
@@ -361,7 +361,7 @@ const messages_en = {
 
     presenters_node: {
         add_new: "Add new presenters node",
-        edit: "Edit new presenters node",
+        edit: "Edit presenters node",
         add: "Add",
         save: "Save",
         add_btn: "Add New",
@@ -381,7 +381,7 @@ const messages_en = {
 
     publishers_node: {
         add_new: "Add new publishers node",
-        edit: "Add new publishers node",
+        edit: "Edit publishers node",
         add: "Add",
         save: "Save",
         add_btn: "Add New",
@@ -401,7 +401,7 @@ const messages_en = {
 
     bots_node: {
         add_new: "Add new bots node",
-        edit: "Add new bots node",
+        edit: "Edit bots node",
         add: "Add",
         save: "Save",
         add_btn: "Add New",
