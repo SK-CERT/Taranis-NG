@@ -37,6 +37,7 @@ class RSSCollector(BaseCollector):
 
     news_items = []
 
+    @BaseCollector.ignore_exceptions
     def collect(self, source):
         """Collect data from RSS feed.
 
@@ -44,7 +45,7 @@ class RSSCollector(BaseCollector):
             source -- Source object.
         """
         feed_url = source.parameter_values["FEED_URL"]
-        # interval = source.parameter_values["REFRESH_INTERVAL"]
+        interval = source.parameter_values["REFRESH_INTERVAL"]
 
         log_manager.log_collector_activity("rss", source.name, "Starting collector for url: {}".format(feed_url))
 
@@ -67,11 +68,11 @@ class RSSCollector(BaseCollector):
             if proxy_server == "none":
                 proxy_handler = urllib.request.ProxyHandler({})
             else:
-                proxy = re.search(r"^(http|https|socks4|socks5)://([a-zA-Z0-9\-\.\_]+):(\d+)/?$", proxy_server)
+                proxy = re.search(r"^(http|https|socks4|socks5|ftp)://([a-zA-Z0-9\-\.\_]+):(\d+)/?$", proxy_server)
                 if proxy:
                     scheme, host, port = proxy.groups()
                     # classic HTTP/HTTPS proxy
-                    if scheme in ["http", "https"]:
+                    if scheme in ["http", "https", "ftp"]:
                         proxy_handler = urllib.request.ProxyHandler(
                             {
                                 "http": "{}://{}:{}".format(scheme, host, port),
@@ -100,59 +101,59 @@ class RSSCollector(BaseCollector):
 
             news_items = []
 
+            limit = BaseCollector.history(interval)
             for feed_entry in feed["entries"]:
                 for key in ["author", "published", "title", "description", "link"]:
                     if key not in feed_entry.keys():
                         feed_entry[key] = ""
 
-                # limit = BaseCollector.history(interval)
                 published = feed_entry["published"]
                 published = dateparser.parse(published, settings={"DATE_ORDER": "DMY"})
+                # comment this at the beginning of the testing to get some initial data
+                if str(published) > str(limit):
+                    link_for_article = feed_entry["link"]
+                    if not link_for_article:
+                        log_manager.log_collector_activity("rss", source.name, "Skipping (empty link)")
+                        continue
 
-                # if published > limit: TODO: uncomment after testing, we need some initial data now
-                link_for_article = feed_entry["link"]
-                if not link_for_article:
-                    log_manager.log_collector_activity("rss", source.name, "Skipping (empty link)")
-                    continue
+                    log_manager.log_collector_activity("rss", source.name, "Processing entry [{}]".format(link_for_article))
 
-                log_manager.log_collector_activity("rss", source.name, "Processing entry [{}]".format(link_for_article))
+                    html_content = ""
+                    request = urllib.request.Request(link_for_article)
+                    request.add_header("User-Agent", user_agent)
 
-                html_content = ""
-                request = urllib.request.Request(link_for_article)
-                request.add_header("User-Agent", user_agent)
+                    with opener(request) as response:
+                        html_content = response.read()
 
-                with opener(request) as response:
-                    html_content = response.read()
+                    soup = BeautifulSoup(html_content, features="html.parser")
 
-                soup = BeautifulSoup(html_content, features="html.parser")
+                    content = ""
 
-                content = ""
+                    if html_content:
+                        content_text = [p.text.strip() for p in soup.findAll("p")]
+                        replaced_str = "\xa0"
+                        if replaced_str:
+                            content = [w.replace(replaced_str, " ") for w in content_text]
+                            content = " ".join(content)
 
-                if html_content:
-                    content_text = [p.text.strip() for p in soup.findAll("p")]
-                    replaced_str = "\xa0"
-                    if replaced_str:
-                        content = [w.replace(replaced_str, " ") for w in content_text]
-                        content = " ".join(content)
+                    for_hash = feed_entry["author"] + feed_entry["title"] + feed_entry["link"]
 
-                for_hash = feed_entry["author"] + feed_entry["title"] + feed_entry["link"]
+                    news_item = NewsItemData(
+                        uuid.uuid4(),
+                        hashlib.sha256(for_hash.encode()).hexdigest(),
+                        feed_entry["title"],
+                        feed_entry["description"],
+                        feed_url,
+                        feed_entry["link"],
+                        feed_entry["published"],
+                        feed_entry["author"],
+                        datetime.datetime.now(),
+                        content,
+                        source.id,
+                        [],
+                    )
 
-                news_item = NewsItemData(
-                    uuid.uuid4(),
-                    hashlib.sha256(for_hash.encode()).hexdigest(),
-                    feed_entry["title"],
-                    feed_entry["description"],
-                    feed_url,
-                    feed_entry["link"],
-                    feed_entry["published"],
-                    feed_entry["author"],
-                    datetime.datetime.now(),
-                    content,
-                    source.id,
-                    [],
-                )
-
-                news_items.append(news_item)
+                    news_items.append(news_item)
 
             BaseCollector.publish(news_items, source)
 
