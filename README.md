@@ -129,10 +129,10 @@ a new ACL by clicking `Add new`. You can pick any particular item type
 Item, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
 access types to everyone, selected users, or selected roles.
 
-### Uploading the CPE and CVE dictionaries
+### Uploading the CPE, CWE and CVE dictionaries
 
-In order to simplify the process of writing advisories, you can have CPE
-dictionary and a current list of CVEs preloaded in Taranis NG.
+In order to simplify the process of writing advisories, you can have CPE, CWE
+dictionaries and a current list of CVEs preloaded in Taranis NG.
 
 1. Download the official CPE dictionary from
 [nvd.nist.gov/products/cpe](https://nvd.nist.gov/products/cpe) in gz format.
@@ -151,6 +151,16 @@ in xml.gz format.
 ```bash
 gzcat allitems.xml.gz | \
     docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
+```
+
+5. Download the official CWE list from
+[cwe.mitre.org/data/downloads.html](https://cwe.mitre.org/data/downloads.html)
+in xml.zip format.
+
+6. Upload the dictionary to the proper path, and import into the database
+```bash
+gzcat cwec_latest.xml.zip | \
+    docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cwe
 ```
 
 ### Using the default stop lists for better tag cloud
