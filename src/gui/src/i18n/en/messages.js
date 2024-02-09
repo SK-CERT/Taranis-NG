@@ -485,6 +485,7 @@ const messages_en = {
         search: "Search",
         reload_cpe: "Reload CPE Dictionary",
         reload_cve: "Reload CVE Dictionary",
+        reload_cwe: "Reload CWE Dictionary",
         delete_existing: "Delete all existing values",
         select_enum: "Select Constant Value",
         reloading: "Reloading dictionary...",
