@@ -15,7 +15,7 @@ repos:
       args: [--max-line-length=142]
       types: ['python']
       overrides:
-        - exclude: src/core/migrations
+        - exclude: src/core/migrations/versions/*.py
           extend-ignore: D100,D101,D102,D103,D104,D105,D106,D107
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
