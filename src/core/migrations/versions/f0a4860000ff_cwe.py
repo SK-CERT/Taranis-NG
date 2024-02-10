@@ -179,35 +179,36 @@ def upgrade():
         old_enum = sa.Enum(name="old_enum")
         old_enum.drop(op.get_bind(), checkfirst=False)
 
-    if not session.query(Attribute_f0a4860000ff).filter_by(name="CWE").first():
+    attr = session.query(Attribute_f0a4860000ff).filter_by(name="CWE").first()
+    if not attr:
         session.add(Attribute_f0a4860000ff("CWE", "Common Weakness Enumeration", AttributeTypeREVf0a4860000ff.CWE, "NONE"))
         session.commit()
+        print("CWE attribute added...", flush=True)
+    else:
+        print("CWE attribute already exists...", flush=True)
 
-    # ======= Update existing old report =======
-
+    attr = session.query(Attribute_f0a4860000ff).filter_by(name="CWE").first()
     rit = session.query(ReportItemType_f0a4860000ff).filter_by(title="Vulnerability Report").first()
     if rit:
         ag = session.query(AttributeGroup_f0a4860000ff).filter_by(title="Vulnerability", report_item_type_id=rit.id).first()
         if ag:
             agi = session.query(AttributeGroupItem_f0a4860000ff).filter_by(title="CWE", attribute_group_id=ag.id).first()
-            # check if we already run this
             if not agi:
-                agi = session.query(AttributeGroupItem_f0a4860000ff).filter_by(title="CWE", attribute_group_id=ag.id).first()
-                if agi:
-                    agi.title = "CWE"
-                    session.add(agi)
-
-                    session.add(AttributeGroupItem_f0a4860000ff("CWE", "", 9, 0, 1000, ag.id, Attribute_f0a4860000ff.id))
-
-                    session.commit()
-                else:
-                    print("No report attribute group item to upgrade...", flush=True)
+                last_group_item = (
+                    session.query(AttributeGroupItem_f0a4860000ff)
+                    .filter_by(attribute_group_id=ag.id)
+                    .order_by(AttributeGroupItem_f0a4860000ff.index.desc())
+                    .first()
+                )
+                session.add(AttributeGroupItem_f0a4860000ff("CWE", "", last_group_item.index + 1, 0, 1000, ag.id, attr.id))
+                session.commit()
+                print("Added CWE to attribute group...", flush=True)
             else:
-                print("Old report already updated...", flush=True)
+                print("CWE already in attribute group...", flush=True)
         else:
-            print("No report attribute group to upgrade...", flush=True)
+            print("Vulnerability attribute group not found...", flush=True)
     else:
-        print("No report to upgrade...", flush=True)
+        print("Vulnerability report item type not found...", flush=True)
 
 
 def downgrade():
