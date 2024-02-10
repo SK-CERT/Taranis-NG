@@ -14,7 +14,7 @@ from flask_script.commands import Option
 import traceback
 
 from managers import db_manager
-from model import user, role, collector, collectors_node, permission
+from model import user, role, collector, collectors_node, permission, osint_source  # noqa: F401
 from model import apikey
 from remote.collectors_api import CollectorsApi
 
@@ -463,7 +463,7 @@ class DictionaryManagement(Command):
                 app.logger.critical("File structure was not recognized!")
                 abort()
 
-        app.logger.error("Dictionary was uploaded.")
+        app.logger.critical("Dictionary was uploaded.")
         exit()
 
     def upload_to(self, filename):
