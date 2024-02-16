@@ -79,11 +79,13 @@ docker compose -f docker/docker-compose.yml up --no-build
 or, alternatively, build and run the containers with:
 
 ```bash
-TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml up --build --pull
+TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml build --pull
+TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml up
 ```
 or
 ```bash
-TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml up --build --pull
+TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml build --pull
+TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml up
 ```
 (`--pull` updates the base images)
 
