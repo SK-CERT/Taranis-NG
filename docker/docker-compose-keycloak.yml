@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   core:
-    environment: 
+    environment:
       TARANIS_NG_AUTHENTICATOR: "keycloak"
 
       OPENID_LOGOUT_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth/realms/taranis-ng/protocol/openid-connect/logout?redirect_uri=GOTO_URL"
@@ -13,12 +13,19 @@ services:
       KEYCLOAK_USER_MANAGEMENT: "true"
       KEYCLOAK_SERVER_URL: "http://keycloak:8080"
       KEYCLOAK_ADMIN_USERNAME: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "supersecret"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_PASSWORD}"
+      KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_password
       KEYCLOAK_REALM_NAME: "taranis-ng"
       KEYCLOAK_CLIENT_SECRET_KEY: "supersecret"
       KEYCLOAK_VERIFY: "true"
+    secrets:
+      - keycloak_password
 
   gui:
     environment:
       VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/auth/logout?gotoUrl=TARANIS_GUI_URI"
       VUE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
+
+secrets:
+  keycloak_password:
+    file: keycloak_password.txt

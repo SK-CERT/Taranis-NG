@@ -21,6 +21,7 @@ services:
       POSTGRES_DB: "taranis-ng"
       POSTGRES_USER: "taranis-ng"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       TZ: "${TZ}"
       PGTZ: "${TZ}"
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
@@ -31,6 +32,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    secrets:
+       - postgres_password
 
   core:
     depends_on:
@@ -52,12 +55,14 @@ services:
       DB_DATABASE: "taranis-ng"
       DB_USER: "taranis-ng"
       DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      DB_PASSWORD_FILE: /run/secrets/postgres_password
       DB_POOL_SIZE: 100
       DB_POOL_RECYCLE: 300
       DB_POOL_TIMEOUT: 30
       TARANIS_NG_AUTHENTICATOR: "${TARANIS_NG_AUTHENTICATOR}"
 
       JWT_SECRET_KEY: "${JWT_SECRET_KEY}"
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
 
@@ -68,7 +73,9 @@ services:
       DEBUG: "true"
       DEBUG_SQL: "false"
       # to allow automatic initialisation of collectors/presenters/publishers
-      COLLECTOR_PRESENTER_PUBLISHER_API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      # COLLECTOR_PRESENTER_PUBLISHER_API_KEY_FILE: "/run/secrets/api_key"
+      API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      API_KEY_FILE: "/run/secrets/api_key"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
@@ -84,7 +91,6 @@ services:
       traefik.http.routers.taranis-sse-443.tls: "true"
       traefik.http.routers.taranis-sse-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-sse-443.service: "taranis-api"
-
     volumes:
       - "core_data:/data"
     logging:
@@ -92,6 +98,10 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    secrets:
+      - postgres_password
+      - jwt_secret_key
+      - api_key
 
   bots:
     depends_on:
@@ -109,6 +119,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      API_KEY_FILE: "/run/secrets/api_key"
       TARANIS_NG_CORE_URL: "http://core"
       TARANIS_NG_CORE_SSE: "http://core/sse"
       WORKERS_PER_CORE: "1"
@@ -118,6 +129,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    secrets:
+      - api_key
 
   collectors:
     depends_on:
@@ -136,6 +149,7 @@ services:
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      API_KEY_FILE: "/run/secrets/api_key"
       WORKERS_PER_CORE: "1"
       DEBUG: "true"
       TZ: "${TZ}"
@@ -146,6 +160,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    secrets:
+      - api_key
 
   presenters:
     depends_on:
@@ -164,6 +180,7 @@ services:
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      API_KEY_FILE: "/run/secrets/api_key"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
     ports:
@@ -175,6 +192,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    secrets:
+      - api_key
 
   publishers:
     depends_on:
@@ -193,6 +212,7 @@ services:
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       API_KEY: "${COLLECTOR_PRESENTER_PUBLISHER_API_KEY}"
+      API_KEY_FILE: "/run/secrets/api_key"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
     logging:
@@ -200,6 +220,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    secrets:
+      - api_key
 
   gui:
     depends_on:
@@ -268,6 +290,14 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+
+secrets:
+  postgres_password:
+    file: postgres_password.txt
+  jwt_secret_key:
+    file: jwt_secret_key.txt
+  api_key:
+    file: api_key.txt
 
 volumes:
   redis_conf:

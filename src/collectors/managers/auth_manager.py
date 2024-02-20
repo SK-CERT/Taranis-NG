@@ -9,6 +9,9 @@ import os
 import ssl
 
 api_key = os.getenv("API_KEY")
+if not api_key:
+    with open(os.getenv("API_KEY_FILE"), "r") as file:
+        api_key = file.read()
 
 if os.getenv("SSL_VERIFICATION") == "False":
     try:
