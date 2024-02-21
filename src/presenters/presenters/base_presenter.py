@@ -144,31 +144,14 @@ class BasePresenter:
             """
             color_values = {"WHITE": 0, "CLEAR": 1, "GREEN": 2, "AMBER": 3, "AMBER+STRICT": 4, "RED": 5}
             colors = []
-
             for report in reports:
-                if report.type == "Vulnerability Report":
+                if report.type.startswith("Vulnerability Report"):
                     colors.append(report.attrs.tlp)
-
-            max_tlp = max(colors, key=lambda color: color_values.get(color, 0))
-            if not max_tlp:
+            if colors:
+                max_tlp = max(colors, key=lambda color: color_values.get(color, 1))
+            else:
                 max_tlp = "CLEAR"
             return max_tlp
-
-        def add_link_prefix(self, report, letter):
-            """Add link prefix to the report description and recommendations.
-
-            Arguments:
-                report -- report to add link prefix to
-                letter -- letter to use as a link prefix
-
-            Returns:
-                description, recommendations: report description and recommendations with link prefix added
-            """
-            pattern = r"\[(\d+)\]"
-            description = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.description)
-            recommendations = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.recommendations)
-
-            return description, recommendations
 
         def link_renumbering(self, text, report_links, product_links):
             """Replace the numbers enclosed in brackets in the given text with the corresponding indices from product_links.
@@ -185,7 +168,6 @@ class BasePresenter:
 
             # Create a mapping from old indices to new indices
             mapping = {old_index + 1: product_links.index(item) + 1 for old_index, item in enumerate(report_links)}
-            log_manager.log_info(f"Mapping: {mapping}")
 
             # Use a regular expression to find all instances of numbers enclosed in brackets
             def replace_match(match):
@@ -221,25 +203,18 @@ class BasePresenter:
             for report in presenter_input.reports:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))
 
-            link_deduplication = True
-            letter = "A"
             vul_report_count = 0
             product_links = []
             # If there are multiple vulnerability reports, we need to renumber the links
             for report in self.report_items:
                 if report.type.startswith("Vulnerability Report"):
-                    if link_deduplication:
-                        if report.attrs.links:
-                            for link in report.attrs.links:
-                                if link not in product_links:
-                                    product_links.append(link)
+                    vul_report_count += 1
+                    if report.attrs.links:
+                        for link in report.attrs.links:
+                            if link not in product_links:
+                                product_links.append(link)
                         report.attrs.description = self.link_renumbering(report.attrs.description, report.attrs.links, product_links)
                         report.attrs.recommendations = self.link_renumbering(report.attrs.recommendations, report.attrs.links, product_links)
-                    else:
-                        report.attrs.description, report.attrs.recommendations = self.add_link_prefix(report, letter)
-                        report.attrs.link_prefix = letter
-                        letter = chr(ord(letter) + 1)
-                    vul_report_count += 1
             # If there are vulnerability reports, set the max TLP and product links
             if vul_report_count > 0:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)
