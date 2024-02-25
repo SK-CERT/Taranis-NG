@@ -9,44 +9,26 @@
                     <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="cancel">
                         <v-icon>{{ UI.ICON.CLOSE }}</v-icon>
                     </v-btn>
-                    <v-toolbar-title>{{$t('attribute.select_enum')}}</v-toolbar-title>
+                    <v-toolbar-title>{{ $t('attribute.select_enum') }}</v-toolbar-title>
                 </v-toolbar>
 
                 <v-card>
                     <v-card-text>
-                        <v-data-table
-                            :headers="headers"
-                            :items="attribute_enums"
-                            :server-items-length="attribute_enums_total_count"
-                            @update:options="updateOptions"
-                            :items-per-page="25"
-                            class="elevation-1 enum_selector"
-                            :page.sync="current_page"
-                            @click:row="clickRow"
-                            :footer-props="{
-                                                      showFirstLastPage: true,
-                                                      itemsPerPageOptions: [25, 50, 100],
-                                                      showCurrentPage: true
-                                                    }"
-
-                        >
+                        <v-data-table :headers="headers" :items="attribute_enums"
+                            :server-items-length="attribute_enums_total_count" @update:options="updateOptions"
+                            :items-per-page="25" class="elevation-1 enum_selector" :page.sync="current_page"
+                            @click:row="clickRow" :footer-props="{
+                                showFirstLastPage: true,
+                                itemsPerPageOptions: [25, 50, 100],
+                                showCurrentPage: true
+                            }">
                             <template v-slot:top>
                                 <v-toolbar flat color="white">
-                                    <v-toolbar-title>{{$t('attribute.attribute_constants')}}</v-toolbar-title>
-                                    <v-divider
-                                        class="mx-4"
-                                        inset
-                                        vertical
-                                    ></v-divider>
+                                    <v-toolbar-title>{{ $t('attribute.attribute_constants') }}</v-toolbar-title>
+                                    <v-divider class="mx-4" inset vertical></v-divider>
                                     <v-spacer></v-spacer>
-                                    <v-text-field
-                                        v-model="search"
-                                        append-icon="mdi-magnify"
-                                        :label="$t('attribute.search')"
-                                        v-on:keyup="filterSearch"
-                                        single-line
-                                        hide-details
-                                    ></v-text-field>
+                                    <v-text-field v-model="search" append-icon="mdi-magnify" :label="$t('attribute.search')"
+                                        v-on:keyup="filterSearch" single-line hide-details></v-text-field>
                                 </v-toolbar>
                             </template>
 
@@ -59,92 +41,96 @@
 </template>
 
 <script>
-    import {getAttributeEnums} from "@/api/analyze";
-    import {getCPEAttributeEnums} from "@/api/assets";
+import { getAttributeEnums } from "@/api/analyze";
+import { getCPEAttributeEnums } from "@/api/assets";
 
-    export default {
-        name: "EnumSelector",
-        props: {
-            attribute_id: Number,
-            value_index: Number,
-            cpe_only: Boolean
+export default {
+    name: "EnumSelector",
+    props: {
+        attribute_id: Number,
+        value_index: Number,
+        cpe_only: Boolean
+    },
+    data: () => ({
+        visible: false,
+        search: "",
+        headers: [
+            {
+                text: 'Value',
+                align: 'left',
+                sortable: false,
+                value: 'value',
+            },
+            {
+                text: 'Description',
+                value: 'description',
+                sortable: false
+            },
+        ],
+        current_page: 1,
+        current_page_size: 25,
+        attribute_enums: [],
+        attribute_enums_total_count: 0
+    }),
+    methods: {
+        show() {
+            this.updateAttributeEnums()
+            this.visible = true;
         },
-        data: () => ({
-            visible: false,
-            search: "",
-            headers: [
-                {
-                    text: 'Value',
-                    align: 'left',
-                    sortable: false,
-                    value: 'value',
-                },
-                {text: 'Description', value: 'description', sortable: false},
-            ],
-            current_page: 1,
-            current_page_size: 25,
-            attribute_enums: [],
-            attribute_enums_total_count: 0
-        }),
-        methods: {
-            show() {
-                this.updateAttributeEnums()
-                this.visible = true;
-            },
 
-            cancel() {
-                this.visible = false
-            },
+        cancel() {
+            this.visible = false
+        },
 
-            filterSearch() {
-                clearTimeout(this.timeout);
+        filterSearch() {
+            clearTimeout(this.timeout);
 
-                let self = this
-                this.timeout = setTimeout(function () {
-                    self.current_page = 1
-                    self.updateAttributeEnums()
-                }, 300);
-            },
+            let self = this
+            this.timeout = setTimeout(function () {
+                self.current_page = 1
+                self.updateAttributeEnums()
+            }, 300);
+        },
 
-            clickRow(event, row) {
-                this.$emit('enum-selected', {index: this.value_index, value: row.item.value})
-                this.visible = false
-            },
+        clickRow(event, row) {
+            this.$emit('enum-selected', { index: this.value_index, value: row.item.value, value_description: row.item.description })
+            this.visible = false
+        },
 
-            updateAttributeEnums() {
-                if (this.cpe_only === true) {
-                    getCPEAttributeEnums({
-                        search: this.search,
-                        offset: (this.current_page - 1) * this.current_page_size,
-                        limit: this.current_page_size
-                    }).then((response) => {
-                        this.processResponse(response)
-                    })
-                } else {
-                    getAttributeEnums({
-                        attribute_id: this.attribute_id,
-                        search: this.search,
-                        offset: (this.current_page - 1) * this.current_page_size,
-                        limit: this.current_page_size
-                    }).then((response) => {
-                        this.processResponse(response)
-                    })
-                }
-            },
-
-            processResponse(response) {
-                this.attribute_enums = []
-                this.attribute_enums_total_count = response.data.total_count
-                for (let i = 0; i < response.data.items.length; i++) {
-                    this.attribute_enums.push(response.data.items[i])
-                }
-            },
-
-            updateOptions(options) {
-                this.current_page = options.page
-                this.current_page_size = options.itemsPerPage
-                this.updateAttributeEnums()
+        updateAttributeEnums() {
+            if (this.cpe_only === true) {
+                getCPEAttributeEnums({
+                    search: this.search,
+                    offset: (this.current_page - 1) * this.current_page_size,
+                    limit: this.current_page_size
+                }).then((response) => {
+                    this.processResponse(response)
+                })
+            } else {
+                getAttributeEnums({
+                    attribute_id: this.attribute_id,
+                    search: this.search,
+                    offset: (this.current_page - 1) * this.current_page_size,
+                    limit: this.current_page_size
+                }).then((response) => {
+                    this.processResponse(response)
+                })
             }
+        },
+
+        processResponse(response) {
+            this.attribute_enums = []
+            this.attribute_enums_total_count = response.data.total_count
+            for (let i = 0; i < response.data.items.length; i++) {
+                this.attribute_enums.push(response.data.items[i])
+            }
+        },
+
+        updateOptions(options) {
+            this.current_page = options.page
+            this.current_page_size = options.itemsPerPage
+            this.updateAttributeEnums()
         }
     }
+}
 </script>
