@@ -114,7 +114,12 @@ class EMAILPublisher(BasePublisher):
             envelope.encryption(key=open(encrypt))
 
         try:
-            envelope.send()
+            sent = envelope.send()
+            success = bool(sent)
+            if success:
+                log_manager.log_info("Email sent successfully")
+            else:
+                log_manager.log_critical("Email sending failed")
 
         except Exception as error:
             BasePublisher.print_exception(self, error)
