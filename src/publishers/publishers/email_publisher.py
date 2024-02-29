@@ -99,7 +99,6 @@ class EMAILPublisher(BasePublisher):
             envelope.subject(subject)
         envelope.from_(sender)
         envelope.to(recipients)
-        envelope.smtp(smtp)
 
         if sign == "auto":
             envelope.signature(key=sign)
@@ -113,11 +112,13 @@ class EMAILPublisher(BasePublisher):
             log_manager.log_info(f"Encrypting email with file {encrypt}")
             envelope.encryption(key=open(encrypt))
 
+        envelope.smtp(smtp)
         try:
             sent = envelope.send()
             success = bool(sent)
             if success:
                 log_manager.log_info("Email sent successfully")
+                Envelope.smtp_quit()
             else:
                 log_manager.log_critical("Email sending failed")
 
