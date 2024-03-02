@@ -12,7 +12,6 @@ import messages from "@/i18n/messages";
 import VeeValidate from 'vee-validate';
 import Themes from './assets/themes';
 import {Scroll} from 'vuetify/lib/directives';
-import CKEditor from '@ckeditor/ckeditor5-vue'
 import VueCookies from 'vue-cookies'
 import VueSSE from 'vue-sse';
 import DatetimePicker from 'vuetify-datetime-picker';
@@ -50,8 +49,6 @@ Vue.use(Vuetify, {
 Vue.use(Vuetify, {
   iconfont: 'mdi'
 });
-
-Vue.use(CKEditor);
 
 const vuetify = new Vuetify({
     theme: {

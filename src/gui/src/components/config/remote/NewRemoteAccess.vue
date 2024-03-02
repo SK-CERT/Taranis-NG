@@ -77,7 +77,7 @@
                                           class="elevation-1"
                             >
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{$t('remote_access.osint_sources')}}
                                         </v-toolbar-title>
                                     </v-toolbar>
@@ -95,7 +95,7 @@
                                           class="elevation-1"
                             >
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{$t('remote_access.report_item_types')}}
                                         </v-toolbar-title>
                                     </v-toolbar>
@@ -116,74 +116,6 @@
                     <v-alert v-if="show_error" dense type="error" text>
                         {{$t('remote_access.error')}}
                     </v-alert>
-
-                    <!--<v-card>
-                        <v-card-text>
-
-                            <v-text-field :disabled="!canUpdate"
-                                          :label="$t('remote_access.name')"
-                                          name="title"
-                                          type="text"
-                                          v-model="remote_access.name"
-                                          v-validate="'required'"
-                                          data-vv-name="name"
-                                          :error-messages="errors.collect('name')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
-                            <v-textarea :disabled="!canUpdate"
-                                        :label="$t('remote_access.description')"
-                                        name="description"
-                                        v-model="remote_access.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            ></v-textarea>
-                            <v-text-field :disabled="!canUpdate"
-                                          :label="$t('remote_access.access_key')"
-                                          name="access_key"
-                                          type="text"
-                                          v-model="remote_access.access_key"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
-                            <v-checkbox
-                                :disabled="!canUpdate"
-                                :label="$t('remote_access.enabled')"
-                                v-model="remote_access.enabled"
-                            ></v-checkbox>
-                            <v-data-table :disabled="!canUpdate"
-                                          v-model="selected_osint_sources"
-                                          :headers="headers_sources"
-                                          :items="osint_sources"
-                                          item-key="id"
-                                          :show-select="canUpdate"
-                                          class="elevation-1"
-                            >
-                                <template v-slot:top>
-                                    <v-toolbar flat color="white">
-                                        <v-toolbar-title>{{$t('remote_access.osint_sources')}}
-                                        </v-toolbar-title>
-                                    </v-toolbar>
-                                </template>
-
-                            </v-data-table>
-
-                            <v-data-table :disabled="!canUpdate"
-                                          v-model="selected_report_item_types"
-                                          :headers="headers_types"
-                                          :items="report_item_types"
-                                          item-key="id"
-                                          :show-select="canUpdate"
-                                          class="elevation-1"
-                            >
-                                <template v-slot:top>
-                                    <v-toolbar flat color="white">
-                                        <v-toolbar-title>{{$t('remote_access.report_item_types')}}
-                                        </v-toolbar-title>
-                                    </v-toolbar>
-                                </template>
-
-                            </v-data-table>
-
-                        </v-card-text>
-                    </v-card>-->
 
                 </v-form>
             </v-card>

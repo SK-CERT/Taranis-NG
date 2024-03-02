@@ -1,12 +1,5 @@
 /* Temporary CSS - WiP - Don't modify */
-
-/*div.content-container > div.container { !* add button *!
-    position: relative;
-    !*bottom: 40px;
-    width: 82px;
-    right: 0;*!
-    z-index: 100;
-}*/
+/* JP: deduplicated */
 
 /* Fullscreen Dialog */
 div.v-dialog__content header {
@@ -21,23 +14,12 @@ div.v-dialog__content header {
     z-index: 1;
 }
 
-/* NEW */
 /* App Bar */
 .app-header {
-    /*background-color: #c7c7c7 !important;
-    border-bottom: 1px solid red !important;*/
     box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.02),
     0 4px 5px 0 rgba(0, 0, 0, 0.14),
     0 1px 10px 0 rgba(0, 0, 0, 0.12);
 }
-
-/*.app-header img {
-    height: 45px;
-}*/
-
-/*.container {
-    max-width: calc(100%) !important;
-}*/
 
 #app .user-settings-dialog .v-tabs .v-window.v-tabs-items {
     background-color: transparent !important;
@@ -80,7 +62,6 @@ div.v-data-table > header {
 }
 
 /* --- Login.vue --- */
-/* Login Screen */
 .login-screen {
     background-color: #eee;
 }
@@ -145,11 +126,13 @@ div.v-data-table > header {
 }
 
 /* --- AnalyzeView.vue --- */
+/* --- MyAssetsView.vue --- */
 .np {
     display: none;
 }
 
 /* --- AssessView.vue --- */
+/* --- EnterView.vue --- */
 .nri {
     display: none;
 }
@@ -175,19 +158,11 @@ div.v-data-table > header {
     right: 12px;
 }
 
-/* --- EnterView.vue --- */
-.nri {
-    display: none;
-}
-
+/* --- DashboardView.vue --- */
+/* --- ToolbarFilterAssets.vue --- */
 .v-chip-group .v-chip.filter {
     height: 20px;
     margin-top: 5px;
-}
-
-/* --- MyAssetsView.vue --- */
-.np {
-    display: none;
 }
 
 /* --- MainMenu.vue --- */
@@ -227,7 +202,6 @@ header.app-header.border.dark {
 .user-menu-button {
     margin-right: 0;
     margin-left: 0;
-    /*height: 46px !important;*/
 }
 
 .user-menu .v-badge__badge {
@@ -257,13 +231,13 @@ header.app-header.border.dark {
     right:0;
 }
 
-/* --- CardAnalyze.vue --- */
-
 /* --- ContentDataAnalyze.vue --- */
+/* --- ContentDataPublish.vue --- */
 html {
     scroll-behavior: smooth;
 }
 
+/* --- ContentDataAnalyze.vue --- */
 #selector_analyze .card-assess {
     transition: background-color 1s;
 }
@@ -284,15 +258,26 @@ html {
 }
 
 /* --- NewReportItem.vue --- */
+/* --- RemoteReportItem.vue --- */
+/* --- VulnerabilityDetail.vue --- */
+/* --- NewRole.vue --- */
+/* --- NewOSINTSourceGroup.vue --- */
+/* --- NewRemoteAccess.vue --- */
+/* --- NewRemoteNode.vue --- */
+/* --- NewACL.vue --- */
+/* --- NewExternalUser.vue --- */
+/* --- NewProduct.vue --- */
 .div-wrapper .theme--light.v-card {
     border-left: 5px solid rgb(255, 172, 33);
+}
+/* --- NewUser.vue --- */
+.div-wrapper .theme--light.v-card {
+    border-left: 5px solid rgb(100, 172, 33);
 }
 
 .tabs [role='tablist'] {
     background-color: #f5ebd5 !important;
-
 }
-
 
 .tabs .v-window-item {
 }
@@ -324,6 +309,18 @@ html {
     color: white;
 }
 
+/* --- CPETable.vue --- */
+/* --- NewAttribute.vue --- */
+/* --- WordTable.vue --- */
+.vue-csv-uploader button.load {
+    margin: 10px;
+    margin-left: 0;
+    padding: 4px 10px 4px 10px;
+    background-color: #4092dd;
+    border-radius: 4px;
+    color: white;
+}
+
 .vue-csv-uploader-part-two table {
     width: 400px;
 }
@@ -345,15 +342,6 @@ html {
 }
 
 /* --- RemoteReportItem.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
 .div-wrapper .v-card-title-dialog {
     background-color: rgba(207, 158, 37, 0.2);
     border-radius: 0;
@@ -362,21 +350,6 @@ html {
     padding: 0;
     padding-left: 1em;
 }
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-.locked-style {
-    border-color: lightblue !important;
-    border-width: 1px;
-    border-style: dashed;
-}
-
-/* --- RemoteRerpotItemSelector.vue --- */
 
 /* --- ToolbarGroupAnalyze.vue --- */
 .view .view-panel button.multi-select-button-pressed {
@@ -399,11 +372,6 @@ html {
 
 .alink {
     text-decoration: none;
-}
-
-/* --- CardAssessItem.vue --- */
-#selector .card.focus {
-    background-color: #caecff;
 }
 
 /* --- ContentDataAssess.vue --- */
@@ -432,30 +400,7 @@ html,
 }
 
 /* --- NewsItemAggregateDetail.vue --- */
-[role='tablist'] {
-    top: 48px;
-}
-
-.title-limit {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 550px;
-    font-size: 1em;
-}
-
 /* --- NewsItemDetail.vue --- */
-[role='tablist'] {
-    top: 48px;
-}
-.title-limit {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 550px;
-    font-size: 1em;
-}
-
 /* --- NewsItemSingleDetail.vue --- */
 [role='tablist'] {
     top: 48px;
@@ -469,78 +414,12 @@ html,
     font-size: 1em;
 }
 
-/* --- CardAsset.vue --- */
-
-
-/* --- CardVulnerability.vue --- */
-
-/* --- CPETable.vue --- */
-.vue-csv-uploader button.load {
-    margin: 10px;
-    margin-left: 0;
-    padding: 4px 10px 4px 10px;
-    background-color: #4092dd;
-    border-radius: 4px;
-    color: white;
-}
-
-.vue-csv-uploader-part-two table {
-    width: 400px;
-}
-
-.vue-csv-uploader-part-two table thead {
-    text-align: left;
-}
-
-.vue-csv-uploader-part-two table select {
-    -webkit-appearance: auto;
-    -moz-appearance: auto;
-    border: 1px solid gray;
-    border-radius: 4px;
-}
-
 /* --- NewAsset.vue --- */
 
 .cx-toolbar-filter {
     position: sticky;
     top: 0;
     z-index: 100;
-}
-
-#selector .card.focus {
-    background-color: #caecff;
-}
-
-/* --- ToolbarFilterAssets.vue --- */
-.v-chip-group .v-chip.filter {
-    height: 20px;
-    margin-top: 5px;
-}
-
-/* --- VulnerabilityDetail.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
 }
 
 /* --- DataInput.vue --- */
@@ -550,14 +429,11 @@ html,
 }
 
 /* --- CSButton.vue --- */
-.v-tooltip__content.hide-tooltip {
-    display: none !important;
-}
-
 /* --- CalculatorCVSS.vue --- */
 .v-tooltip__content.hide-tooltip {
     display: none !important;
 }
+
 .v-card.bsm {
     border-left: 4px solid #ddd;
     transition: border-left-color 250ms;
@@ -594,6 +470,7 @@ html,
 .bsm.critical { border-left-color: red !important; }
 
 span.cs_metric_score {
+    color: black;
     background-color: rgba(255,255,255,1) !important;
     border-radius: 4px;
 }
@@ -629,7 +506,6 @@ tbody tr {
 nav .v-list-item__title {
     text-align: center;
     white-space: unset;
-    /*font-size: 1vh;*/
 }
 
 .navigation .navigation-list div.v-list-item:not(.section-icon) {
@@ -646,13 +522,10 @@ nav .v-list-item__title {
 
 .chatEnv {
     position: relative;
-
     z-index: 20;
 }
 
 .chatButton {
-    /*position: relative;
-    left: 0.5em;*/
 }
 
 .taranis-chat .quick-chat-container {
@@ -662,6 +535,7 @@ nav .v-list-item__title {
 }
 
 /* --- AttributeAttachment.vue --- */
+/* --- RemoteAttributeAttachment.vue --- */
 #dropzone {
     width: 100%;
     height: 64px;
@@ -683,7 +557,6 @@ nav .v-list-item__title {
 }
 
 [cs] .dz-details {
-
 }
 
 [cs] [data-dz-size] {
@@ -713,12 +586,8 @@ nav .v-list-item__title {
     margin-top: 8px;
 }
 
-/* --- AttributeCVE.vue --- */
-.v-tooltip__content.hide-tooltip {
-    display: none !important;
-}
-
 /* --- AttributeContainer.vue --- */
+/* --- RemoteAttributeContainer.vue --- scoped */
 .div-wrapper .theme--light.v-card {
     border-left: 0;
     margin-top: 4px;
@@ -772,309 +641,6 @@ button.ql-publish:hover {
     content: "Publish";
 }
 
-/* --- RemoteAttributeAttachment.vue --- */
-#dropzone {
-    width: 100%;
-    height: 64px;
-    background-color: #e4e4e4;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-[cs] {
-    position: relative;
-    float: left;
-    width: 68px;
-    margin: 4px 12px;
-}
-
-[cs] > div {
-    text-align: center;
-}
-
-[cs] .dz-details {
-
-}
-
-[cs] [data-dz-size] {
-    font-size: 10px;
-    font-weight: bold;
-}
-
-[cs] .dz-filename {
-    width: 64px;
-    overflow: hidden;
-    white-space: pre-wrap;
-    text-overflow: ellipsis;
-    line-height: 1;
-}
-
-[cs] [data-dz-name] {
-    font-size: 10px;
-}
-
-#dropzone.dz-started .dz-message {
-    display: none;
-}
-
-.dropzone-wrapper-div {
-    margin-left: 8px;
-    margin-right: 8px;
-    margin-top: 8px;
-}
-
-/* --- RemoteAttributeContainer.vue --- scoped */
-.div-wrapper .theme--light.v-card {
-    border-left: 0;
-    margin-top: 4px;
-}
-
-/* --- RemoteAttributeString.vue --- scoped */
-
-/* --- CardCompact.vue --- */
-
-/* --- CardNode.vue --- */
-
-/* --- CardPreset.vue --- */
-
-/* --- NewAttribute.vue --- */
-.vue-csv-uploader button.load {
-    margin: 10px;
-    margin-left: 0;
-    padding: 4px 10px 4px 10px;
-    background-color: #4092dd;
-    border-radius: 4px;
-    color: white;
-}
-
-.vue-csv-uploader-part-two table {
-    width: 400px;
-}
-
-.vue-csv-uploader-part-two table thead {
-    text-align: left;
-}
-
-.vue-csv-uploader-part-two table select {
-    -webkit-appearance: auto;
-    -moz-appearance: auto;
-    border: 1px solid gray;
-    border-radius: 4px;
-}
-
-/* --- CardGroup.vue --- */
-
-/* --- NewRole.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- CardSource.vue --- */
-
-/* --- NewOSINTSourceGroup.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- CardProductType.vue --- */
-
-/* --- NewRemoteAccess.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- NewRemoteNode.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- CardUser.vue --- */
-
-/* --- NewACL.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- NewExternalUser.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- NewUser.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- WordTable.vue --- */
-.vue-csv-uploader button.load {
-    margin: 10px;
-    margin-left: 0;
-    padding: 4px 10px 4px 10px;
-    background-color: #4092dd;
-    border-radius: 4px;
-    color: white;
-}
-
-.vue-csv-uploader-part-two table {
-    width: 400px;
-}
-
-.vue-csv-uploader-part-two table thead {
-    text-align: left;
-}
-
-.vue-csv-uploader-part-two table select {
-    -webkit-appearance: auto;
-    -moz-appearance: auto;
-    border: 1px solid gray;
-    border-radius: 4px;
-}
-
 /* --- AttributeItemLayout.vue --- */
 .attribute-item-layout .row {
     width: 100%;
@@ -1101,6 +667,14 @@ button.ql-publish:hover {
     background-color: rgba(106, 190, 242, 0.06);
 }
 
+#app.theme--dark .attribute-value-layout:hover {
+    background-color: #252931;
+}
+
+#app.theme--dark .ql-editor.ql-blank::before {
+    color: rgba(255, 255, 255, 0.6);
+}
+
 .icon-tooltip {
     position: absolute;
     opacity: 0.7;
@@ -1112,9 +686,6 @@ button.ql-publish:hover {
 }
 
 /* --- ContentDataPublish.vue --- */
-html {
-    scroll-behavior: smooth;
-}
 #selector_publish .card-assess {
     transition: background-color 1s;
 }
@@ -1130,31 +701,3 @@ html {
     box-shadow: inset 0 0 0 3px red;
     background-color: rgba(255, 0, 0, 0.3);
 }
-
-/* --- NewProduct.vue --- */
-.div-wrapper .theme--light.v-card {
-    border-left: 5px solid rgb(255, 172, 33);
-}
-
-.tabs [role='tablist'] {
-    background-color: #f5ebd5 !important;
-
-}
-
-.div-wrapper .v-card-title-dialog {
-    background-color: rgba(207, 158, 37, 0.2);
-    border-radius: 0;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-    padding-left: 1em;
-}
-
-.tabs .v-window-item {
-}
-
-.icon-field-offset {
-    margin-left: 8px;
-}
-
-/* --- ReportItemSelector.vue --- */

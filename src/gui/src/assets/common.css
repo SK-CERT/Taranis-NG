@@ -57,3 +57,7 @@
     background-color: #f8f8f8;
     box-shadow: -3px 0 0 #6abef2;
 }
+
+#app.theme--dark .valueHolder:hover {
+    background-color: #252931;
+}
