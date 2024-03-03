@@ -1,12 +1,34 @@
-"""This module contains the authentication manager."""
+"""This module contains the authentication manager for the Taranis-NG application.
 
+The authentication manager handles user authentication and authorization using different authenticators.
+It provides functions for initializing the manager, authenticating users, refreshing authentication tokens,
+performing access control checks, and retrieving user permissions.
+
+Classes:
+    ACLCheck: Enumeration for ACL checks.
+
+Functions:
+    cleanup_token_blacklist: Clean up the token blacklist by deleting tokens older than one day.
+    initialize: Initialize the authentication manager.
+    get_required_credentials: Get the required credentials for authentication.
+    authenticate: Authenticate the user with the provided credentials.
+    refresh: Refresh the authentication token for the specified user.
+    logout: Log out a user.
+    check_acl: Check the access control list (ACL) for the given item.
+    no_auth: Decorator that allows access to the decorated function without authentication.
+    get_id_name_by_acl: Get the corresponding ID name based on the given ACL.
+    get_user_from_api_key: Try to authenticate the user by API key.
+    get_perm_from_user: Get user permissions.
+    get_user_from_jwt_token: Try to authenticate the user by JWT token.
+    get_perm_from_jwt_token: Get user permissions from JWT token.
+"""
 import os
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
 import jwt
 from flask import request
-from flask_jwt_extended import JWTManager, get_jwt_claims, get_jwt_identity, verify_jwt_in_request, get_raw_jwt
+from flask_jwt_extended import JWTManager, get_jwt_identity, verify_jwt_in_request, get_jwt
 from flask_jwt_extended.exceptions import JWTExtendedException
 
 from managers import log_manager, time_manager
@@ -54,6 +76,9 @@ def initialize(app):
 
     Arguments:
         app: The Flask application object.
+
+    Returns:
+        None
     """
     global current_authenticator
 
@@ -122,7 +147,7 @@ def logout(token):
         token (str): The authentication token of the user.
 
     Returns:
-        None: This function does not return any value.
+        None
     """
     return current_authenticator.logout(token)
 
@@ -250,7 +275,7 @@ def get_user_from_api_key():
         user = User.find_by_id(api_key.user_id)
         return user
     except Exception as ex:
-        log_manager.store_auth_error_activity(f"API key check presence error: {str(ex)}")
+        log_manager.store_auth_error_activity(f"ApiKey check presence error: {ex}")
         return None
 
 
@@ -272,7 +297,7 @@ def get_perm_from_user(user):
             all_users_perms = all_users_perms.union(role_perms)
         return all_users_perms
     except Exception as ex:
-        log_manager.store_auth_error_activity(f"Get permission from user error: {str(ex)}")
+        log_manager.store_auth_error_activity(f"Get permission from user error: {ex}")
         return None
 
 
@@ -293,7 +318,7 @@ def get_user_from_jwt_token():
     # does it encode an identity?
     identity = get_jwt_identity()
     if not identity:
-        log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_raw_jwt()}")
+        log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
         return None
 
     user = User.find(identity)
@@ -310,12 +335,12 @@ def get_perm_from_jwt_token(user):
         user: The user object.
 
     Returns:
-        A set of user's permissions or None if permissions are missing or an error occurs.
-
+        A set of user's permissions if available, otherwise None.
     """
     try:
         # does it include permissions?
-        claims = get_jwt_claims()
+        jwt_data = get_jwt()
+        claims = jwt_data["user_claims"]
         if not claims or "permissions" not in claims:
             log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT")
             return None
@@ -323,7 +348,7 @@ def get_perm_from_jwt_token(user):
         all_users_perms = set(claims["permissions"])
         return all_users_perms
     except Exception as ex:
-        log_manager.store_auth_error_activity(f"Get permission from JWT error: {str(ex)}")
+        log_manager.store_auth_error_activity(f"Get permission from JWT error: {ex}")
         return None
 
 
@@ -332,11 +357,10 @@ def auth_required(required_permissions, *acl_args):
 
     Arguments:
         required_permissions (str or list): The required permissions for the user.
-        *acl_args: Variable number of arguments representing the ACLs to check.
+        *acl_args: Additional arguments for ACL access.
 
     Returns:
         The decorated function.
-
     """
 
     def auth_required_wrap(fn):
@@ -380,13 +404,13 @@ def auth_required(required_permissions, *acl_args):
 
 
 def api_key_required(fn):
-    """Enforce API key authentication.
+    """Check for the presence of an API key in the Authorization header.
 
-    Args:
-        fn (function): The function to be decorated.
+    Arguments:
+        fn: The function to be decorated.
 
     Returns:
-        function: The decorated function.
+        The decorated function.
     """
 
     @wraps(fn)
@@ -476,7 +500,7 @@ def jwt_required(fn):
 
         identity = get_jwt_identity()
         if not identity:
-            log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_raw_jwt()}")
+            log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
             return {"error": "authorization failed"}, 401
 
         user = User.find(identity)
@@ -505,12 +529,11 @@ def get_access_key():
 def get_user_from_jwt():
     """Obtain the identity and current permissions.
 
-    This function retrieves the user information from the JWT token. If the user information
-    is not found in the JWT token, it falls back to retrieving the user information from the
-    API key.
+    This function first tries to obtain the user from the API key.
+    If the user is not found, it then tries to obtain the user from the JWT token.
 
     Returns:
-        The user object containing the identity and current permissions.
+        The user object if found, None otherwise.
     """
     user = get_user_from_api_key()
     if user is None:
@@ -533,7 +556,7 @@ def decode_user_from_jwt(jwt_token):
         with open(os.getenv("JWT_SECRET_KEY_FILE"), "r") as file:
             jwt_secret_key = file.read()
     try:
-        decoded = jwt.decode(jwt_token, jwt_secret_key)
+        decoded = jwt.decode(jwt_token, os.getenv("JWT_SECRET_KEY"))
     except Exception as ex:  # e.g. "Signature has expired"
         log_manager.store_auth_error_activity(f"Invalid JWT: {str(ex)}")
     if decoded is None:
@@ -542,18 +565,21 @@ def decode_user_from_jwt(jwt_token):
 
 
 def get_external_permissions_ids():
-    """Get the external permissions IDs."""
+    """Return a list of external permissions IDs.
+
+    This function returns a list of permission IDs that are related to accessing, creating, and configuring assets.
+
+    Returns:
+        list: A list of external permission IDs.
+    """
     return ["MY_ASSETS_ACCESS", "MY_ASSETS_CREATE", "MY_ASSETS_CONFIG"]
 
 
 def get_external_permissions():
     """Get the external permissions.
 
-    This function retrieves a list of external permissions by calling the `get_external_permissions_ids` function
-    and then fetching the corresponding permission objects using the `Permission.find` method.
-
     Returns:
-        A list of external permission objects.
+        A list of external permissions.
     """
     permissions = []
     for permission_id in get_external_permissions_ids():
