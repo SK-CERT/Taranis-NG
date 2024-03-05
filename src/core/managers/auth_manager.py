@@ -556,7 +556,7 @@ def decode_user_from_jwt(jwt_token):
         with open(os.getenv("JWT_SECRET_KEY_FILE"), "r") as file:
             jwt_secret_key = file.read()
     try:
-        decoded = jwt.decode(jwt_token, os.getenv("JWT_SECRET_KEY"))
+        decoded = jwt.decode(jwt_token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
     except Exception as ex:  # e.g. "Signature has expired"
         log_manager.store_auth_error_activity(f"Invalid JWT: {str(ex)}")
     if decoded is None:
