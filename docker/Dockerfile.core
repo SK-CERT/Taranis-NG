@@ -36,6 +36,7 @@ RUN \
     apk add --no-cache --virtual .build-deps \
     gcc \
     g++ \
+    git \
     make \
     glib-dev \
     musl-dev \
