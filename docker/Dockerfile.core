@@ -49,6 +49,7 @@ RUN \
     libc-dev\
     zlib-dev \
     linux-headers \
+    git \
     make \
     glib-dev \
     musl-dev \
