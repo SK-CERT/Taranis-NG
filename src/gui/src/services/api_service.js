@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+var abortControllers = {};
+
 const ApiService = {
 
     init(baseURL) {
@@ -16,7 +18,29 @@ const ApiService = {
     },
 
     get(resource, data = {}) {
+        //window.console.debug("GET:", resource);
         return axios.get(resource, data)
+    },
+
+    getWithCancel(resType, resource) {
+        // resType: cancel key that abort request (support for multiple cancels)
+        if (resType in abortControllers) {
+            // window.console.debug("CANCEL", resType);
+            abortControllers[resType].abort();
+        }
+
+        abortControllers[resType] = new AbortController();
+        let promise = axios.get(resource, {
+            signal: abortControllers[resType].signal
+        }).catch(function (e) {
+                if (axios.isCancel(e)) {
+                    window.console.debug("request canceled:", resource);
+                } else {
+                    throw e;
+                }
+            });
+        // window.console.debug("GET CANCEL:", resource, promise);
+        return promise;
     },
 
     post(resource, data) {

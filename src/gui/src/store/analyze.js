@@ -25,7 +25,8 @@ const actions = {
 
         return getAllReportItems(data)
             .then(response => {
-                context.commit('setReportItems', response.data);
+                if (response)
+                    context.commit('setReportItems', response.data);
             })
     },
 
