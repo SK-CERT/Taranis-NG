@@ -66,5 +66,6 @@ class HotkeySchema(Schema):
 class UserProfileSchema(Schema):
     spellcheck = fields.Bool()
     dark_theme = fields.Bool()
+    language = fields.Str()
     word_lists = fields.List(fields.Nested(WordListSchema))
     hotkeys = fields.Nested(HotkeySchema, many=True)
