@@ -68,7 +68,7 @@
                                 >
 
                                     <template v-slot:top>
-                                        <v-toolbar flat color="white">
+                                        <v-toolbar flat>
                                             <v-toolbar-title>{{$t('osint_source.word_lists')}}</v-toolbar-title>
                                         </v-toolbar>
                                     </template>
@@ -84,8 +84,7 @@
                                     <v-tooltip top v-for="shortcut in shortcuts" :key="shortcut.alias">
                                         <template v-slot:activator="{on}">
                                             <v-btn  :id=shortcut.alias v-on="on"
-                                                    class="blue lighten-5 ma-1" style="width: calc(100% / 3 - 8px);"
-                                                    text
+                                                    class="ma-1" style="width: calc(100% / 3 - 8px);"
                                                     @click.stop="pressKeyDialog(shortcut.alias)"
                                                     @blur="pressKeyVisible = false"
                                             >

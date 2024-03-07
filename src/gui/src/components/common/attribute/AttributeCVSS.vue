@@ -80,7 +80,7 @@
                                       :rules="[rules.vector]"
                         ></v-text-field>
 
-                        <v-card class="text-center pb-3" color="white" outlined>
+                        <v-card class="text-center pb-3" flat>
                             <v-row justify="center">
                                 <v-col v-for="metric in score.all" :key="metric.name" class="pa-0 mr-1 severity" :class="metric.severity" style="width: calc(100% / 3); border-radius: 4px;">
                                     <span class="body-2 white--text">{{ $t('cvss_calculator.'+metric.name+'_score') + " " }}</span>

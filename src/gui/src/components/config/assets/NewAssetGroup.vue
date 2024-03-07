@@ -57,7 +57,7 @@
                                 class="elevation-1"
                             >
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{$t('asset_group.allowed_users')}}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
@@ -74,7 +74,7 @@
                                 class="elevation-1"
                             >
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{$t('asset_group.notification_templates')}}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
