@@ -796,7 +796,7 @@ const messages_en = {
                 MONTH: 'Show news items for the last month'
             },
             sort: {
-                time: {
+                date: {
                     ascending: 'Sort news items by collected date ascending',
                     descending: 'Sort news items by collected date descending'
                 },
@@ -832,6 +832,20 @@ const messages_en = {
         },
     },
 
+    assets: {
+        tooltip: {
+            filter_vulnerable: "Show/hide vulnerable assets",
+            sort: {
+                vulnerability: {
+                    descending: 'Sort assets by vulnerability in descending order',
+                },
+                alphabetical: {
+                    ascending: 'Sort assets alphabetically in ascending order',
+                },
+            },
+        }
+    },
+
     publish: {
         tooltip: {
             range: {
@@ -841,7 +855,7 @@ const messages_en = {
                 MONTH: 'Show products for the last month'
             },
             sort: {
-                time: {
+                date: {
                     ascending: 'Sort products by creation date ascending',
                     descending: 'Sort products by creation date descending'
                 }
