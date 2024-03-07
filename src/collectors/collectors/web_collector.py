@@ -378,7 +378,7 @@ class WebCollector(BaseCollector):
             chrome_options.add_argument('--proxy-server={}'.format(socks_proxy))
         elif self.proxy:
             webdriver.DesiredCapabilities.CHROME['proxy'] = {
-                "proxyType": "MANUAL",
+                "proxyType": "manual",
                 "httpProxy": self.proxy,
                 "ftpProxy": self.proxy,
                 "sslProxy": self.proxy
