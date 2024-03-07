@@ -19,6 +19,12 @@ build/
 *.bak
 
 # sensitive data not to be commited
+docker/.env
+docker/postgres_password.txt
+docker/postgres_keycloak_password.txt
+docker/keycloak_password.txt
+docker/jwt_secret_key.txt
+docker/api_key.txt
 .env.local
 .env.*.local
 src/.env
