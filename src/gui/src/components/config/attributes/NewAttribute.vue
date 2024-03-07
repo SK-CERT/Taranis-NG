@@ -130,6 +130,12 @@
                                             <v-icon left>mdi-refresh</v-icon>
                                             <span>{{$t('attribute.reload_cpe')}}</span>
                                         </v-btn>
+                                        <v-btn v-if="edit && selected_type !== null && selected_type.id === 'CWE'"
+                                               color="primary" dark class="mb-2 mr-3"
+                                               @click="reloadDictionary('cwe')">
+                                            <v-icon left>mdi-refresh</v-icon>
+                                            <span>{{$t('attribute.reload_cwe')}}</span>
+                                        </v-btn>
 
                                         <v-dialog v-if="canUpdate" v-model="dialog" max-width="500px">
                                             <template v-slot:activator="{ on }">
@@ -346,6 +352,7 @@
                 {id: "DATE_TIME", title: "Date Time"},
                 {id: "LINK", title: "Link"},
                 {id: "ATTACHMENT", title: "Attachment"},
+                {id: "CWE", title: "CWE"},
                 {id: "TLP", title: "TLP"},
                 {id: "CVE", title: "CVE"},
                 {id: "CPE", title: "CPE"},
