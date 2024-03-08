@@ -1,7 +1,7 @@
 """Add CWE attribute
 
 Revision ID: f0a4860000ff
-Revises: e87b34c74db0
+Revises: dfc12c30395b
 Create Date: 2024-02-08 12:53:03.830779
 
 """
@@ -18,7 +18,7 @@ Base = declarative_base()
 
 # revision identifiers, used by Alembic.
 revision = "f0a4860000ff"
-down_revision = "e87b34c74db0"
+down_revision = "dfc12c30395b"
 branch_labels = None
 depends_on = None
 
