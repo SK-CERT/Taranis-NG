@@ -60,18 +60,9 @@ const vuetify = new Vuetify({
 Vue.use(VueI18n);
 
 let bash_locale = "$VUE_APP_TARANIS_NG_LOCALE";
-let locale;
-
-if (bash_locale) {
-    locale = bash_locale;
-} else if (typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
-    locale = process.env.VUE_APP_TARANIS_NG_LOCALE;
-} else {
-    locale = navigator.language.split('-')[0];
-}
 
 const i18n = new VueI18n({
-    locale: locale,
+    locale: bash_locale,
     fallbackLocale: 'en',
     messages
 });

@@ -109,12 +109,17 @@ const getters = {
     getProfileLanguage(state) {
         let lng = state.language;
         if (!lng) {
-            if (typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
-                lng = process.env.VUE_APP_TARANIS_NG_LOCALE;
-            }
-            if (!lng) {
-                lng = "en";
-            }
+            lng = navigator.language.split('-')[0];;
+        }
+        if (!lng && typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
+            lng = process.env.VUE_APP_TARANIS_NG_LOCALE;
+        }
+        if (!lng) {
+            let bash_locale = "$VUE_APP_TARANIS_NG_LOCALE";
+            lng = bash_locale;
+        }
+        if (!lng) {
+            lng = "en";
         }
         return lng;
     }
