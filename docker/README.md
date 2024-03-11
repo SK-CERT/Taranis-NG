@@ -56,7 +56,7 @@ git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
 ```
 
-_Then_, using your favorite text editor, please change the default passwords in `docker/.env` file. You can only skip this step when deploying a non-production testing environment.
+_Then_, rename file `docker/.env.example` to `.env` and using your favorite text editor, please remove default passwords to use [Docker secrets](https://docs.docker.com/compose/use-secrets/). You should only use passwords in `.env` when deploying a non-production testing environment.
 
 ```bash
 vim docker/.env
