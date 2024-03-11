@@ -292,11 +292,11 @@ services:
 
 secrets:
   postgres_password:
-    file: postgres_password.txt
+    file: secrets/postgres_password.txt
   jwt_secret_key:
-    file: jwt_secret_key.txt
+    file: secrets/jwt_secret_key.txt
   api_key:
-    file: api_key.txt
+    file: secrets/api_key.txt
 
 volumes:
   redis_conf:

@@ -67,9 +67,9 @@ services:
 
 secrets:
   postgres_keycloak_password:
-    file: postgres_keycloak_password.txt
+    file: secrets/postgres_keycloak_password.txt
   keycloak_password:
-    file: keycloak_password.txt
+    file: secrets/keycloak_password.txt
 
 volumes:
   keycloak_db_data:

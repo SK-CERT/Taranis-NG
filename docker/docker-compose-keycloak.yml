@@ -28,4 +28,4 @@ services:
 
 secrets:
   keycloak_password:
-    file: keycloak_password.txt
+    file: secrets/keycloak_password.txt
