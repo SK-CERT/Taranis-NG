@@ -5,7 +5,35 @@
 
 version: 2
 updates:
-  - package-ecosystem: "docker" # See documentation for possible values
-    directory: "/docker" # Location of package manifests
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/src/bots"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/src/collectors"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/src/core"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip" 
+    directory: "/src/core"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip" 
+    directory: "/src/presenters"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip" 
+    directory: "/src/publishers"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm" 
+    directory: "/src/gui"
     schedule:
       interval: "weekly"
