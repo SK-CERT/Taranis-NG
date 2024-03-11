@@ -22,10 +22,6 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip" 
-    directory: "/src/core"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "pip" 
     directory: "/src/presenters"
     schedule:
       interval: "weekly"
