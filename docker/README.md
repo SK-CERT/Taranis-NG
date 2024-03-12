@@ -56,7 +56,7 @@ git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
 ```
 
-_Then_, rename file `docker/.env.example` to `.env` and using your favorite text editor, please remove default passwords to use [Docker secrets](https://docs.docker.com/compose/use-secrets/). You should only use passwords in `.env` when deploying a non-production testing environment.
+_Then_, remove `.sample` extension from file `docker/.env.sample` and files in `docker/secrets`. Use your favorite text editor and change default passwords. Taranis NG uses [Docker secrets](https://docs.docker.com/compose/use-secrets/) to store sensitive data. (Saving passwords in variables defined in `docker/.env` is not advised and you will need to modify Docker compose YAML files to make it work correctly.)
 
 ```bash
 vim docker/.env
