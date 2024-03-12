@@ -63,7 +63,7 @@
     "@babel/helper-compilation-targets": "^7.16.3",
     "@ckeditor/ckeditor5-alignment": "^20.0.0",
     "@mdi/font": "^6.4.95",
-    "@vue/cli-plugin-babel": "^3.3.0",
+    "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-plugin-eslint": "^3.12.1",
     "@vue/cli-service": "^3.12.1",
     "babel-eslint": "^10.1.0",
