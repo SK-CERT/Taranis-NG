@@ -1,4 +1,5 @@
 """This module contains the configuration class for Taranis-NG."""
+
 import os
 from dotenv import load_dotenv
 
@@ -17,6 +18,7 @@ class Config(object):
         DB_DATABASE (str): The name of the database.
         DB_USER (str): The username for the database connection.
         DB_PASSWORD (str): The password for the database connection.
+        DB_PASSWORD_FILE (str): The path to the file containing the database password.
         SQLALCHEMY_DATABASE_URI (str): The SQLAlchemy database URI.
         SQLALCHEMY_TRACK_MODIFICATIONS (bool): Whether to track modifications in SQLAlchemy.
         SQLALCHEMY_ECHO (bool): Whether to echo SQL queries in SQLAlchemy.

@@ -1,14 +1,14 @@
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 24.2.0
     hooks:
       - id: black
         language_version: python3
         args: [--line-length=142]
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 7.0.0
     hooks:
     - id: flake8
       additional_dependencies: [flake8-docstrings]
@@ -16,8 +16,9 @@ repos:
       types: ['python']
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
     - id: check-yaml
     - id: end-of-file-fixer
+      exclude: '.*\.sample$'
     - id: trailing-whitespace
