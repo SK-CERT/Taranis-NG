@@ -161,6 +161,7 @@
             selected_word_lists: [],
             languages: [
                 { id: 'en', value: 'English' },
+                { id: 'cs', value: 'Czech' },
                 { id: 'sk', value: 'Slovak' },
             ],
         }),
