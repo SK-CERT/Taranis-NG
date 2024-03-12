@@ -10,7 +10,7 @@ gunicorn==21.2.0
 marshmallow==3.21.0
 marshmallow-enum==1.5.1
 PySocks==1.7.1
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 requests==2.31.0
 schedule==1.2.1
