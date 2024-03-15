@@ -11,20 +11,29 @@
                 <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR">{{ UI.ICON[btn.ui_icon] }}</v-icon>
             </v-btn>
         </div>
+      <v-row>
+        <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                       @close="showDeletePopup = false"
+        ></ConfirmDelete>
+      </v-row>
     </div>
+
 </template>
 
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
     import {groupAction} from "@/api/assess";
     import Permissions from "@/services/auth/permissions";
+    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     export default {
         name: "ToolbarGroupAssess",
         components: {
+          ConfirmDelete
         },
         data: () => ({
-            multi_select: false
+            multi_select: false,
+            showDeletePopup: false
         }),
         mixins: [AuthMixin],
         computed: {
@@ -49,7 +58,7 @@
                     { can: this.canModify, disabled: !this.multi_select, action: 'IMPORTANT', data_btn: 'important', title: this.$t('assess.tooltip.important_items'), ui_icon: 'IMPORTANT' },
                     { can: this.canModify, disabled: !this.multi_select, action: 'LIKE', data_btn: 'like', title: this.$t('assess.tooltip.like_items'), ui_icon: 'LIKE' },
                     { can: this.canModify, disabled: !this.multi_select, action: 'DISLIKE', data_btn: 'dislike', title: this.$t('assess.tooltip.dislike_items'), ui_icon: 'UNLIKE' },
-                    { can: this.canDelete, disabled: !this.multi_select, action: 'DELETE', data_btn: 'delete', title: this.$t('assess.tooltip.delete_items'), ui_icon: 'DELETE' }
+                    { can: this.canDelete, disabled: !this.multi_select, action: 'TO_DELETE', data_btn: 'delete', title: this.$t('assess.tooltip.delete_items'), ui_icon: 'DELETE' }
                 ]
             }
         },
@@ -91,7 +100,11 @@
             action(type) {
                 if (type === 'ANALYZE') {
                     this.analyze();
-                } else {
+                }
+                else if (type === 'TO_DELETE'){
+                  this.showDeletePopup = !this.showDeletePopup;
+                }
+                else {
                     let selection = this.$store.getters.getSelection
                     let items = []
                     for (let i = 0; i < selection.length; i++) {
@@ -120,7 +133,12 @@
                 if (this.multi_select === true) {
                     this.multiSelect()
                 }
-            }
+            },
+
+          handleDeletion() {
+            this.showDeletePopup = false;
+            this.action('DELETE')
+          }
 
         },
         mounted() {
