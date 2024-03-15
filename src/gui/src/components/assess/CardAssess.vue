@@ -125,7 +125,7 @@
                                                         <v-icon :color="buttonStatus(card.me_dislike)">mdi-thumb-down
                                                         </v-icon>
                                                     </v-btn>
-                                                    <v-btn v-if="canDelete" icon @click.stop="cardItemToolbar('delete')"
+                                                    <v-btn v-if="canDelete" icon @click.stop="toggleDeletePopup()"
                                                            :title="$t('assess.tooltip.delete_item')"
                                                            data-btn="delete">
                                                         <v-icon color="accent">{{ UI.ICON.DELETE }}</v-icon>
@@ -149,7 +149,11 @@
                 </v-hover>
             </v-col>
         </v-row>
-
+        <v-row>
+          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                         @close="showDeletePopup = false"
+          ></ConfirmDelete>
+        </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 grey lighten-4 rounded">
             <CardAssessItem v-for="news_item in card.news_items" :key="news_item.id" :news_item="news_item"
                             :analyze_selector="analyze_selector" :compact_mode="compact_mode"
@@ -168,6 +172,7 @@ import {importantNewsItemAggregate} from "@/api/assess";
 import {deleteNewsItemAggregate} from "@/api/assess";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
+import ConfirmDelete from "@/components/common/ConfirmDelete"
 
 export default {
     name: "CardAssess",
@@ -182,11 +187,12 @@ export default {
         data_set: String
     },
     mixins: [AuthMixin],
-    components: {CardAssessItem},
+    components: {CardAssessItem, ConfirmDelete},
     data: () => ({
         toolbar: false,
         opened: false,
-        selected: false
+        selected: false,
+        showDeletePopup: false,
     }),
     computed: {
         canAccess() {
@@ -421,7 +427,14 @@ export default {
                 this.toolbar = false;
                 this.$el.querySelector(".card .layout").classList.remove('focus');
             }
-        }
+        },
+      toggleDeletePopup() {
+        this.showDeletePopup = !this.showDeletePopup;
+      },
+      handleDeletion() {
+        this.showDeletePopup = false;
+        this.cardItemToolbar('delete')
+      }
     },
     created() {
         this.opened = this.aggregate_opened;
