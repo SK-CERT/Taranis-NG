@@ -85,6 +85,13 @@ const messages_sk = {
         name: "Meno",
         description: "Popis",
         successful: "Nový OSINT zdroj bol úspešne pridaný"
+    },
+    assess: {
+        confirmation: {
+            confirmation_text: "Ste si istý, že chcete odstrániť túto položku?",
+            cancel: "Zrušiť",
+            confirm: "Áno, vymazať"
+        },
     }
 };
 
