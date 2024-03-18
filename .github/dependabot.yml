@@ -17,6 +17,8 @@ updates:
     directory: "/src/collectors"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "slackclient"
 #  - package-ecosystem: "pip"
 #    directory: "/src/core"
 #    schedule:
