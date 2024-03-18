@@ -41,7 +41,7 @@
     "vue": "^2.6.14",
     "vue-ckeditor2": "^2.1.5",
     "vue-cli": "^2.9.6",
-    "vue-cookies": "^1.7.4",
+    "vue-cookies": "^1.8.3",
     "vue-csv-import": "^3.3.10",
     "vue-cvss": "^1.1.2",
     "vue-i18n": "^8.28.2",
