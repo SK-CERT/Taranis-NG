@@ -34,7 +34,7 @@
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canDelete" icon class="red"
-                                                       @click.stop="cardItemToolbar('delete')"
+                                                       @click.stop="toggleDeletePopup()"
                                                        :title="$t('analyze.tooltip.delete_item')">
                                                     <v-icon color="white">mdi-trash-can-outline</v-icon>
                                                 </v-btn>
@@ -62,15 +62,22 @@
                 </v-hover>
             </v-col>
         </v-row>
+      <v-row>
+        <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                       @close="showDeletePopup = false"
+        ></ConfirmDelete>
+      </v-row>
     </v-container>
 </template>
 
 <script>
 import Permissions from "@/services/auth/permissions";
 import AuthMixin from "@/services/auth/auth_mixin";
+import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
 export default {
     name: "CardAnalyze",
+  components: {ConfirmDelete},
     props: {
         card: Object,
         publish_selector: Boolean,
@@ -80,7 +87,8 @@ export default {
     data: () => ({
         toolbar: false,
         selected: false,
-        status: "in_progress"
+        status: "in_progress",
+        showDeletePopup: false,
     }),
     computed: {
 
@@ -160,6 +168,15 @@ export default {
 
         multiSelectOff() {
             this.selected = false
+        },
+
+        toggleDeletePopup() {
+          this.showDeletePopup = !this.showDeletePopup;
+        },
+
+        handleDeletion() {
+          this.showDeletePopup = false;
+          this.cardItemToolbar('delete')
         }
     },
     mounted() {

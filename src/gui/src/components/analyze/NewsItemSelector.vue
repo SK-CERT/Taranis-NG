@@ -1,4 +1,5 @@
 <template>
+  <v-container>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW" data-source="news_item_selector">
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="dialog" news-item-selector>
             <v-card flat>
@@ -53,7 +54,7 @@
                            :card="value"
                            :showToolbar="true"
                            data_set="assess_report_item"
-                           @remove-item-from-selector="removeFromSelector"
+                           @remove-item-from-selector="toggleDeletePopup(value)"
                            @show-single-aggregate-detail="showSingleAggregateDetail(value)"
                            @show-aggregate-detail="showAggregateDetail(value)"
                            @show-item-detail="showItemDetail(value)"
@@ -65,6 +66,12 @@
         <NewsItemDetail ref="newsItemDetail" :attach="attach" />
         <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" />
     </v-row>
+      <v-row>
+        <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="removeFromSelector(to_delete)"
+                       @close="showDeletePopup = false"
+        ></ConfirmDelete>
+      </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -78,10 +85,12 @@
     import NewsItemDetail from "@/components/assess/NewsItemDetail";
     import NewsItemAggregateDetail from "@/components/assess/NewsItemAggregateDetail";
     import {getReportItemData, updateReportItem} from "@/api/analyze";
+    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     export default {
         name: "NewsItemSelector",
         components: {
+          ConfirmDelete,
             ViewLayout,
             ContentDataAssess,
             ToolbarFilterAssess,
@@ -103,7 +112,9 @@
             value: "",
             groups: [],
             links: [],
-            selected_group_id: ""
+            selected_group_id: "",
+            showDeletePopup: false,
+            to_delete : Object,
         }),
         mixins: [AuthMixin],
         computed: {
@@ -185,7 +196,7 @@
             },
 
             removeFromSelector(aggregate) {
-
+                this.showDeletePopup = false;
                 let data = {}
                 data.delete = true
                 data.aggregate_id = aggregate.id
@@ -233,7 +244,12 @@
                         }
                     }
                 }
-            }
+            },
+
+          toggleDeletePopup(aggregate) {
+            this.showDeletePopup = !this.showDeletePopup;
+            this.to_delete = aggregate;
+          },
         },
 
         updated() {
