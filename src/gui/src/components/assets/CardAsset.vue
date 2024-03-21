@@ -47,9 +47,8 @@
         </v-row>
         <v-row>
           <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="title_name"
-          >
-          </ConfirmDelete>
+                         @close="showDeletePopup = false" :title_name="card.title"
+          ></ConfirmDelete>
         </v-row>
     </v-container>
 </template>
@@ -70,7 +69,6 @@
             toolbar: false,
             selected: false,
             status: "in_progress",
-            title_name: "",
             showDeletePopup: false,
         }),
         mixins: [AuthMixin],
@@ -110,14 +108,10 @@
             },
             toggleDeletePopup() {
               this.showDeletePopup = !this.showDeletePopup;
-              this.setTitleForDeleteItem();
             },
             handleDeletion() {
               this.showDeletePopup = false;
               this.cardItemToolbar('delete')
-            },
-            setTitleForDeleteItem(){
-              this.title_name = this.card.title;
             }
         }
     }

@@ -151,7 +151,7 @@
         </v-row>
         <v-row>
           <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="title_name"
+                         @close="showDeletePopup = false" :title_name="card.title"
           ></ConfirmDelete>
         </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 grey lighten-4 rounded">

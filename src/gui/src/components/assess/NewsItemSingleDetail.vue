@@ -146,7 +146,7 @@
         </v-dialog>
     </v-row>
       <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                     @close="showDeletePopup = false"
+                     @close="showDeletePopup = false" :title_name="news_item.title"
       ></ConfirmDelete>
   </v-container>
 </template>

@@ -64,7 +64,7 @@
         </v-row>
       <v-row>
         <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                       @close="showDeletePopup = false"
+                       @close="showDeletePopup = false" :title_name="card.title"
         ></ConfirmDelete>
       </v-row>
     </v-container>

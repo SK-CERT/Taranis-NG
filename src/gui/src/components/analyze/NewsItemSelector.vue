@@ -68,7 +68,7 @@
     </v-row>
       <v-row>
         <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="removeFromSelector(to_delete)"
-                       @close="showDeletePopup = false"
+                       @close="showDeletePopup = false" :title_name="to_delete.title"
         ></ConfirmDelete>
       </v-row>
   </v-container>
@@ -249,6 +249,7 @@
           toggleDeletePopup(aggregate) {
             this.showDeletePopup = !this.showDeletePopup;
             this.to_delete = aggregate;
+
           },
         },
 
