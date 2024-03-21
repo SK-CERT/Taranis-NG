@@ -832,7 +832,7 @@ const messages_en = {
             aggregate_no_group: 'Cannot open unaggregated news item, only works with news item groups.',
         },
         confirmation: {
-            confirmation_text: "Are you sure you want to delete this item?",
+            confirmation_text: "Are you sure you want to delete following item?",
             cancel: "Cancel",
             confirm: "Yes, Delete it",
         },

@@ -1,7 +1,8 @@
 <template>
   <v-overlay :dark="false" style="z-index: 10000">
-    <v-card class="delete-confirm-popup">
-      <v-card-title>{{ $t('assess.confirmation.confirmation_text') }}</v-card-title>
+    <v-card class="mx-auto" outlined>
+      <v-card-title class="justify-center">{{ $t('assess.confirmation.confirmation_text') }}</v-card-title>
+      <v-card-text class="font-weight-black">{{ title_name }}</v-card-text>
       <v-card-actions class="justify-center">
         <v-btn @click.prevent="confirmDeletion" class="red accent-1" color="red darken-4" text>
           <v-icon color="red darken-4">{{ UI.ICON.DELETE }}</v-icon>
@@ -18,6 +19,9 @@
 <script>
 
 export default {
+  props: {
+    title_name: String,
+  },
   methods: {
     confirmDeletion() {
       this.$emit('confirm');
@@ -30,15 +34,4 @@ export default {
 </script>
 
 <style>
-.delete-confirm-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  z-index: 100;
-}
-
 </style>

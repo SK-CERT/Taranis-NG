@@ -151,7 +151,7 @@
         </v-row>
         <v-row>
           <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false"
+                         @close="showDeletePopup = false" :title_name="title_name"
           ></ConfirmDelete>
         </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 grey lighten-4 rounded">
@@ -192,6 +192,7 @@ export default {
         toolbar: false,
         opened: false,
         selected: false,
+        title_name: "",
         showDeletePopup: false,
     }),
     computed: {
@@ -430,6 +431,7 @@ export default {
         },
       toggleDeletePopup() {
         this.showDeletePopup = !this.showDeletePopup;
+        this.title_name = this.card.title;
       },
       handleDeletion() {
         this.showDeletePopup = false;
