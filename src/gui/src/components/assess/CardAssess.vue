@@ -192,7 +192,6 @@ export default {
         toolbar: false,
         opened: false,
         selected: false,
-        title_name: "",
         showDeletePopup: false,
     }),
     computed: {
@@ -431,7 +430,6 @@ export default {
         },
       toggleDeletePopup() {
         this.showDeletePopup = !this.showDeletePopup;
-        this.title_name = this.card.title;
       },
       handleDeletion() {
         this.showDeletePopup = false;
