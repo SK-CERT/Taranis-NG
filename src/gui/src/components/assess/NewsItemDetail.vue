@@ -1,4 +1,5 @@
 <template>
+  <v-container>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="close" :attach="attach">
             <v-card>
@@ -13,7 +14,7 @@
                         <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')" :title="$t('assess.tooltip.ungroup_item')">
                             <v-icon small color="accent">mdi-ungroup</v-icon>
                         </v-btn>
-                        <v-btn v-if="canDelete" small icon @click.stop="cardItemToolbar('delete')" :title="$t('assess.tooltip.delete_item')">
+                        <v-btn v-if="canDelete" small icon @click.stop="toggleDeletePopup" :title="$t('assess.tooltip.delete_item')">
                             <v-icon small color="accent">mdi-delete</v-icon>
                         </v-btn>
                         <a v-if="canAccess" :href="news_item.news_item_data.link" target="_blank" rel="noreferrer" :title="$t('assess.tooltip.open_source')">
@@ -100,6 +101,12 @@
             </v-card>
         </v-dialog>
     </v-row>
+    <v-row>
+      <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                     @close="showDeletePopup = false" :title_name="news_item.news_item_data.title"
+      ></ConfirmDelete>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -110,10 +117,11 @@
     import NewsItemAttribute from "@/components/assess/NewsItemAttribute";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
+    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     export default {
         name: "NewsItemDetail",
-        components: {NewsItemAttribute},
+        components: {ConfirmDelete, NewsItemAttribute},
         mixins: [AuthMixin],
         props: {
             analyze_selector: Boolean,
@@ -122,7 +130,8 @@
         data: () => ({
             visible: false,
             news_item: {news_item_data:{}},
-            toolbar: false
+            toolbar: false,
+            showDeletePopup: false,
         }),
         computed: {
             canAccess() {
@@ -239,6 +248,13 @@
                 } else {
                     return "accent"
                 }
+            },
+            toggleDeletePopup() {
+              this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+              this.showDeletePopup = false;
+              this.cardItemToolbar('delete')
             }
         }
     }
