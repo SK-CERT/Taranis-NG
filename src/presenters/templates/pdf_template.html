@@ -124,9 +124,7 @@
                 <th class="th_data" style="color:white; background-color: #256ec2 !important">DESCRIPTION</th>
             </tr>
             <tr>
-                <td class="text-justify text_in_tab">
-                    {{ report_item.attrs.description|e }}
-                </td>
+                <td class="text-justify text_in_tab crlf">{{ report_item.attrs.description|e }}</td>
             </tr>
         </table>
 
@@ -202,13 +200,7 @@
                 <th class="th_data" style="color:white; background-color: #256ec2 !important">AFFECTED SYSTEMS</th>
             </tr>
             <tr>
-                <td class="text-justify text_in_tab">
-                    {% if report_item.attrs.affected_systems %}
-                    {% for i in report_item.attrs.affected_systems %}
-                    <div>{{ i|e }}</div>
-                    {% endfor %}
-                    {% endif %}
-                </td>
+                <td class="text-justify text_in_tab crlf">{{ report_item.attrs.affected_systems }}</td>
             </tr>
         </table>
 
@@ -217,9 +209,7 @@
                 <th class="th_data" style="color:white; background-color: #256ec2 !important">RECOMMENDATIONS</th>
             </tr>
             <tr>
-                <td class="text-justify text_in_tab">
-                    {{ report_item.attrs.recommendations }}
-                </td>
+                <td class="text-justify text_in_tab crlf">{{ report_item.attrs.recommendations }}</td>
             </tr>
         </table>
 

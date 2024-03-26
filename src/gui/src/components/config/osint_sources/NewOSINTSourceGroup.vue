@@ -59,7 +59,7 @@
                                           class="elevation-1"
                             >
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{ $t('osint_source_group.osint_sources') }}
                                         </v-toolbar-title>
                                     </v-toolbar>

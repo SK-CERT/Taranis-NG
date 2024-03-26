@@ -14,8 +14,7 @@
             Navigation
         },
         data: () => ({
-            links: [
-            ]
+            links: []
         })
     }
 </script>

@@ -78,7 +78,7 @@
                             >
 
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{ $t('user.organizations') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
@@ -96,7 +96,7 @@
                             >
 
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{ $t('user.roles') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
@@ -114,7 +114,7 @@
                             >
 
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{ $t('user.permissions') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>

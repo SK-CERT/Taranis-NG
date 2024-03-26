@@ -31,7 +31,7 @@
                                 </v-col>
 
                                 <!--FOOTER-->
-                                <v-col cols="12" class="py-1 grey lighten-4">
+                                <v-col cols="12" class="py-1">
                                     <v-btn v-if="card.vulnerabilities_count > 0" depressed x-small class="red white--text mr-1">
                                         {{ $t('asset.vulnerabilities_count') + card.vulnerabilities_count }}
                                     </v-btn>

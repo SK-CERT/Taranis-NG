@@ -17,7 +17,7 @@
                 <!-- Score -->
                 <v-sheet class="text-center vector-string" color="primary darken-2 white--text">
                     <span class="caption font-weight-bold" >{{ calc.vectorString }}</span>
-                    <v-sheet class="text-center score-sheet" color="white">
+                    <v-sheet class="text-center score-sheet">
                         <v-row justify="center" class="score-sheet">
                             <v-col v-for="metric in calc.all" :key="metric.name" class="cs_cvss_score pa-0 my-1 severity" :class="metric.severity">
                                 <span class="body-2 white--text">{{ $t('cvss_calculator.'+metric.name+'_score') + " " }}</span>

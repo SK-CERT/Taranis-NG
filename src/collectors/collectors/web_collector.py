@@ -72,6 +72,8 @@ class WebCollector(BaseCollector):
         ## obtaining links to articles (optional)
         Parameter(0, "SINGLE_ARTICLE_LINK_SELECTOR", "SELECTOR at TITLE PAGE: Links to articles",
                   "Selector that matches the link to the article. Matching results should contain a 'href' attribute.", ParameterType.STRING),
+        Parameter(0, "LINKS_LIMIT", "Limit for article links",
+                  "OPTIONAL: Maximum number of article links to process. Default: all", ParameterType.NUMBER),
 
         ## parsing a single article
         Parameter(0, "TITLE_SELECTOR", "SELECTOR at ARTICLE: Article title",
@@ -173,9 +175,9 @@ class WebCollector(BaseCollector):
         """extracts list of elements from the headless browser by selector"""
 
         prefix, selector = WebCollector.__get_prefix_and_selector(element_selector)
-        #log_manager.log_debug(prefix)
-        #log_manager.log_debug(selector)
-        #log_manager.log_debug(driver.page_source)
+        # log_manager.log_debug(prefix)
+        # log_manager.log_debug(selector)
+        # log_manager.log_debug(driver.page_source)
 
         elements = None
         if prefix == 'id':
@@ -297,12 +299,9 @@ class WebCollector(BaseCollector):
 
         #self.interval = self.source.parameter_values['REFRESH_INTERVAL']
 
-        try:
-            self.pagination_limit = int(self.source.parameter_values['PAGINATION_LIMIT'])
-        except Exception:
-            self.pagination_limit = 1
-        if self.pagination_limit <= 0:
-            self.pagination_limit = 1
+        self.pagination_limit = BaseCollector.read_int_parameter("PAGINATION_LIMIT", 1, self.source)
+        self.links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, self.source)
+        self.word_limit = BaseCollector.read_int_parameter("WORD_LIMIT", 0, self.source)
 
         self.selectors = {}
 
@@ -318,13 +317,6 @@ class WebCollector(BaseCollector):
         self.selectors['author'] = self.source.parameter_values['AUTHOR_SELECTOR']
         self.selectors['attachment'] = self.source.parameter_values['ATTACHMENT_SELECTOR']
         self.selectors['additional_id'] = self.source.parameter_values['ADDITIONAL_ID_SELECTOR']
-
-        try:
-            self.word_limit = int(self.source.parameter_values['WORD_LIMIT'])
-            if self.word_limit < 0:
-                self.word_limit = 0
-        except Exception:
-            self.word_limit = 0
 
         self.web_driver_type = self.source.parameter_values['WEBDRIVER']
         self.client_cert_directory = self.source.parameter_values['CLIENT_CERT_DIR']
@@ -378,7 +370,7 @@ class WebCollector(BaseCollector):
             chrome_options.add_argument('--proxy-server={}'.format(socks_proxy))
         elif self.proxy:
             webdriver.DesiredCapabilities.CHROME['proxy'] = {
-                "proxyType": "MANUAL",
+                "proxyType": "manual",
                 "httpProxy": self.proxy,
                 "ftpProxy": self.proxy,
                 "sslProxy": self.proxy
@@ -565,7 +557,8 @@ class WebCollector(BaseCollector):
                 break
 
             if page >= self.pagination_limit or not self.selectors['next_page']:
-                log_manager.log_collector_activity('web', self.source.name, 'Page limit reached')
+                if self.pagination_limit > 1:
+                   log_manager.log_collector_activity('web', self.source.name, 'Page limit reached')
                 break
 
             # visit next page of results
@@ -592,7 +585,6 @@ class WebCollector(BaseCollector):
         """Parses the title page for articles"""
 
         processed_articles, failed_articles = 0, 0
-
         article_items = self.__safe_find_elements_by(browser, self.selectors['single_article_link'])
         if article_items is None:
             log_manager.log_collector_activity('web', self.source.name, 'Invalid page or incorrect selector for article items')
@@ -600,17 +592,27 @@ class WebCollector(BaseCollector):
 
         index_url_just_before_click = browser.current_url
 
+        count = 0
+        # print(browser.page_source, flush=True)
         for item in article_items:
+            count += 1
+            # try:
+            #     print(item.get_attribute('outerHTML'), flush=True)
+            # except Exception:
+            #     pass
+            link = None
             try:
-                href = item.get_attribute('href')
-                log_manager.log_collector_activity('web', self.source.name, 'Visiting article at {}'.format(href))
-            except Exception:
-                href = ''
-                log_manager.log_collector_activity('web', self.source.name, 'Visiting article with no link'.format(href))
-            click_method = 1 # TODO: some day, make this user-configurable with tri-state enum
-
-            if click_method == 1:
                 link = item.get_attribute('href')
+                if link == None: # don't continue, it will crash in current situation
+                    log_manager.log_collector_activity('web', self.source.name, 'Warnning: no link for article {}/{}'.format(count, len(article_items)))
+                    continue
+                log_manager.log_collector_activity('web', self.source.name, 'Visiting article {}/{}: {}'.format(count, len(article_items), link))
+            except Exception:
+                log_manager.log_collector_activity('web', self.source.name, 'Failed to get link for article {}/{}'.format(count, len(article_items)))
+                continue
+
+            click_method = 1 # TODO: some day, make this user-configurable with tri-state enum
+            if click_method == 1:
                 browser.switch_to.new_window('tab')
                 browser.get(link)
             elif click_method == 2:
@@ -631,6 +633,11 @@ class WebCollector(BaseCollector):
                 news_item = self.__process_article_page(index_url, browser)
                 if news_item:
                     log_manager.log_collector_activity('web', self.source.name, 'Successfully parsed an article')
+                    # log_manager.log_collector_activity('web', self.source.name, '... Title    : {0}'.format(news_item.title))
+                    # log_manager.log_collector_activity('web', self.source.name, '... Review   : {0:.100}'.format(news_item.review))
+                    # log_manager.log_collector_activity('web', self.source.name, '... Content  : {0:.100}'.format(news_item.content))
+                    # log_manager.log_collector_activity('web', self.source.name, '... Author   : {0}'.format(news_item.author))
+                    # log_manager.log_collector_activity('web', self.source.name, '... Published: {0}'.format(news_item.published))
                     self.news_items.append(news_item)
                 else:
                     log_manager.log_collector_activity('web', self.source.name, 'Failed to parse an article')
@@ -649,14 +656,16 @@ class WebCollector(BaseCollector):
             elif not self.__close_other_tabs(browser, title_page_handle, fallback_url = index_url):
                 log_manager.log_collector_activity('web', self.source.name, 'Error during page crawl (after-crawl clean up)')
                 break
+            if count >= self.links_limit & self.links_limit > 0:
+                log_manager.log_collector_activity('web', self.source.name, 'Limit for article links reached ({})'.format(self.links_limit))
+                break
+
         return processed_articles, failed_articles
 
     def __process_article_page(self, index_url, browser):
         """Parses a single article"""
 
         current_url = browser.current_url
-
-        log_manager.log_collector_activity('web', self.source.name, 'Processing article page: {}'.format(current_url))
 
         title = self.__find_element_text_by(browser, self.selectors['title'])
 

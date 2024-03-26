@@ -60,7 +60,7 @@
                             <CPETable :cpes="asset.asset_cpes" @update-cpes="update" />
                         </v-col>
                     </v-row>
-                    <v-row no-gutters class="mt-4 px-3 grey lighten-4 rounded" v-if="edit">
+                    <v-row no-gutters class="mt-4 px-3 rounded" v-if="edit">
                         <v-col cols="12">
                             <span class="body-1 font-weight-bold text-uppercase primary--text">{{$t('asset.vulnerabilities')}}</span>
                         </v-col>

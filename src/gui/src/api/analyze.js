@@ -16,7 +16,7 @@ export function getAllReportItems(filter_data) {
     filter += "&offset=" + encodeURIComponent(filter_data.offset)
     filter += "&limit=" + encodeURIComponent(filter_data.limit)
 
-    return ApiService.get('/analyze/report-items' + filter)
+    return ApiService.getWithCancel('screenData', '/analyze/report-items' + filter)
 }
 
 export function getReportItem(report_item_id) {

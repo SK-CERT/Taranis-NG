@@ -15,7 +15,8 @@ const actions = {
 
         return getNewsItemsByGroup(data.group_id, data.data)
             .then(response => {
-                context.commit('setNewsItems', response.data);
+                if (response)
+                    context.commit('setNewsItems', response.data);
             })
     },
 

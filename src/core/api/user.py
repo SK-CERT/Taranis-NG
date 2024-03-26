@@ -32,7 +32,7 @@ class UserProductTypes(Resource):
 
     @auth_required('PUBLISH_ACCESS')
     def get(self):
-        return product_type.ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), False)
+        return product_type.ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), True)
 
 
 class UserPublisherPresets(Resource):

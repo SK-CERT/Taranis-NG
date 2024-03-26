@@ -80,7 +80,7 @@
                                       :rules="[rules.vector]"
                         ></v-text-field>
 
-                        <v-card class="text-center pb-3" color="white" outlined>
+                        <v-card class="text-center pb-3" flat>
                             <v-row justify="center">
                                 <v-col v-for="metric in score.all" :key="metric.name" class="pa-0 mr-1 severity" :class="metric.severity" style="width: calc(100% / 3); border-radius: 4px;">
                                     <span class="body-2 white--text">{{ $t('cvss_calculator.'+metric.name+'_score') + " " }}</span>
@@ -117,7 +117,7 @@
             status: "",
             rules: {
                 vector: value => {
-                    const pattern = /^CVSS:3\.1\/((AV:[NALP]|AC:[LH]|PR:[UNLH]|UI:[NR]|S:[UC]|[CIA]:[NLH]|E:[XUPFH]|RL:[XOTWU]|RC:[XURC]|[CIA]R:[XLMH]|MAV:[XNALP]|MAC:[XLH]|MPR:[XUNLH]|MUI:[XNR]|MS:[XUC]|M[CIA]:[XNLH])\/)*(AV:[NALP]|AC:[LH]|PR:[UNLH]|UI:[NR]|S:[UC]|[CIA]:[NLH]|E:[XUPFH]|RL:[XOTWU]|RC:[XURC]|[CIA]R:[XLMH]|MAV:[XNALP]|MAC:[XLH]|MPR:[XUNLH]|MUI:[XNR]|MS:[XUC]|M[CIA]:[XNLH])$/
+                const pattern = /(^CVSS:3\.1\/((AV:[NALP]|AC:[LH]|PR:[UNLH]|UI:[NR]|S:[UC]|[CIA]:[NLH]|E:[XUPFH]|RL:[XOTWU]|RC:[XURC]|[CIA]R:[XLMH]|MAV:[XNALP]|MAC:[XLH]|MPR:[XUNLH]|MUI:[XNR]|MS:[XUC]|M[CIA]:[XNLH])\/)*(AV:[NALP]|AC:[LH]|PR:[UNLH]|UI:[NR]|S:[UC]|[CIA]:[NLH]|E:[XUPFH]|RL:[XOTWU]|RC:[XURC]|[CIA]R:[XLMH]|MAV:[XNALP]|MAC:[XLH]|MPR:[XUNLH]|MUI:[XNR]|MS:[XUC]|M[CIA]:[XNLH])$)|(^(10(\.0)?|[0-9](\.[0-9])?)$)/
                     return value == '' || pattern.test(value) || 'Invalid or Incomplete Vector String'
                 }
             }
@@ -136,29 +136,40 @@
         methods: {
             updateValue(e) {
                 this.calcValue = e;
-                this.score = this.clc.calculateCVSSFromVector(this.calcValue);
-                setTimeout(()=>{
+                const value = parseFloat(e);
+                if (value >= 0 && value <= 10) {
+                    // OK
+                } else {
+                    this.score = this.clc.calculateCVSSFromVector(this.calcValue);
+                }
+                setTimeout(() => {
                     this.values[0].value = e;
                     this.onEdit(0);
-                },200);
+                }, 200);
             },
             report(e) {
                 this.status = e;
             },
             directValueChange() {
-                let vsReport = this.clc.calculateCVSSFromVector(this.calcValue);
-
-                if(vsReport.success) {
-                    this.score = vsReport;
-
+                const value = parseFloat(this.calcValue);
+                if (value >= 0 && value <= 10) {
                     this.values[0].value = this.calcValue;
                     this.onKeyUp(0);
+                } else {
+                    let vsReport = this.clc.calculateCVSSFromVector(this.calcValue);
+                    if (vsReport.success) {
+                        this.score = vsReport;
+                        this.values[0].value = this.calcValue;
+                        this.onKeyUp(0);
+                    }
                 }
             }
-
         },
-        mounted(){
-            if( this.values[0].value !== "" ) {
+        mounted() {
+            const value = parseFloat(this.values[0].value);
+            if (value >= 0 && value <= 10) {
+                this.calcValue = this.values[0].value;
+            } else if (this.values[0].value !== "") {
                 this.calcValue = this.values[0].value;
                 this.score = this.clc.calculateCVSSFromVector(this.calcValue);
             } else {
