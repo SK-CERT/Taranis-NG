@@ -109,7 +109,7 @@ const getters = {
     getProfileLanguage(state) {
         let lng = state.language;
         if (!lng) {
-            lng = navigator.language.split('-')[0];;
+            lng = navigator.language.split('-')[0];
         }
         if (!lng && typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
             lng = process.env.VUE_APP_TARANIS_NG_LOCALE;
