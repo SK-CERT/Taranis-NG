@@ -1,4 +1,4 @@
-import {getReportItemData, holdLockReportItem, lockReportItem, unlockReportItem, updateReportItem} from "@/api/analyze";
+import { getReportItemData, holdLockReportItem, lockReportItem, unlockReportItem, updateReportItem } from "@/api/analyze";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
 
@@ -35,6 +35,7 @@ var AttributesMixin = {
     methods: {
         enumSelected(data) {
             this.values[data.index].value = data.value
+            this.values[data.index].value_description = data.value_description
             this.onEdit(data.index)
         },
 
@@ -54,7 +55,7 @@ var AttributesMixin = {
                             index: this.values.length,
                             value: "",
                             last_updated: data.attribute_last_updated,
-                            user: {name: data.attribute_user}
+                            user: { name: data.attribute_user }
                         })
                     })
                 })
@@ -104,7 +105,7 @@ var AttributesMixin = {
         onFocus(field_index) {
             if (this.edit === true) {
 
-                lockReportItem(this.report_item_id, {'field_id': this.values[field_index].id}).then(() => {
+                lockReportItem(this.report_item_id, { 'field_id': this.values[field_index].id }).then(() => {
                 })
             }
             //window.console.debug("onFocus")
@@ -115,7 +116,7 @@ var AttributesMixin = {
 
                 this.onEdit(field_index)
 
-                unlockReportItem(this.report_item_id, {'field_id': this.values[field_index].id}).then(() => {
+                unlockReportItem(this.report_item_id, { 'field_id': this.values[field_index].id }).then(() => {
                 })
             }
         },
@@ -126,7 +127,7 @@ var AttributesMixin = {
                 clearTimeout(this.key_timeout);
                 let self = this;
                 this.key_timeout = setTimeout(function () {
-                    holdLockReportItem(self.report_item_id, {'field_id': self.values[field_index].id}).then(() => {
+                    holdLockReportItem(self.report_item_id, { 'field_id': self.values[field_index].id }).then(() => {
                     })
                 }, 1000);
             }
@@ -140,6 +141,7 @@ var AttributesMixin = {
                 data.attribute_id = this.values[field_index].id
 
                 let value = this.values[field_index].value
+                let value_description = this.values[field_index].value_description
                 if (this.attribute_group.attribute.type === 'CPE') {
                     value = value.replace("*", "%")
                 } else if (this.attribute_group.attribute.type === 'BOOLEAN') {
@@ -150,11 +152,12 @@ var AttributesMixin = {
                     }
                 }
                 data.attribute_value = value
+                data.value_description = value_description
 
                 updateReportItem(this.report_item_id, data).then((update_response) => {
                     getReportItemData(this.report_item_id, update_response.data).then((response) => {
                         this.values[field_index].last_updated = response.data.attribute_last_updated
-                        this.values[field_index].user = {name: response.data.attribute_user}
+                        this.values[field_index].user = { name: response.data.attribute_user }
                     })
                 })
             }
@@ -201,8 +204,9 @@ var AttributesMixin = {
                                         value = value === "true";
                                     }
                                     this.values[i].value = value
+                                    this.values[i].value_description = data.value_description
                                     this.values[i].last_updated = data.attribute_last_updated
-                                    this.values[i].user = {name: data.attribute_user}
+                                    this.values[i].user = { name: data.attribute_user }
                                     break
                                 }
                             }
@@ -215,14 +219,15 @@ var AttributesMixin = {
                                     id: data.attribute_id,
                                     index: this.values.length,
                                     value: data.attribute_value,
+                                    value_description: data.value_description,
                                     binary_mime_type: data.binary_mime_type,
                                     binary_size: data.binary_size,
                                     binary_description: data.binary_description,
                                     last_updated: data.attribute_last_updated,
-                                    user: {name: data.attribute_user}
+                                    user: { name: data.attribute_user }
                                 })
                                 if (this.attribute_group.attribute.type === 'ATTACHMENT') {
-                                    this.addFile(this.values[this.values.length-1])
+                                    this.addFile(this.values[this.values.length - 1])
                                 }
                             })
                         }
