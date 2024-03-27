@@ -830,6 +830,11 @@ const messages_cs = {
             default_mode: "Mód zkratek 'původní'.",
             aggregate_no_group: "Nelze otevřít neagregovanou novinku, funguje pouze se skupinou novinek.",
         },
+        confirmation: {
+            confirmation_text: "Jste si jistý, že chcete zmazat tuto položku?",
+            cancel: "Zrušit",
+            confirm: "Ano, zmazat",
+        },
     },
 
     publish: {

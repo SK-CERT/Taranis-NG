@@ -23,7 +23,7 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="cardItemToolbar('delete')">
+                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="toggleDeletePopup">
                                                 <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
@@ -35,17 +35,25 @@
                 </v-hover>
             </v-col>
         </v-row>
+        <v-row>
+          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                         @close="showDeletePopup = false" :title_name="card.title"
+          ></ConfirmDelete>
+        </v-row>
     </v-container>
 </template>
 
 <script>
     import AuthMixin from "@/services/auth/auth_mixin";
+    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     export default {
         name: "CardPreset",
+      components: {ConfirmDelete},
         props: ['card', 'deletePermission'],
         data:() => ({
-            toolbar: false
+            toolbar: false,
+            showDeletePopup: false,
         }),
         mixins: [AuthMixin],
         methods: {
@@ -66,6 +74,13 @@
                         this.itemClicked(this.card);
                         break;
                 }
+            },
+            toggleDeletePopup() {
+              this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+              this.showDeletePopup = false;
+              this.cardItemToolbar('delete')
             }
         }
     }

@@ -98,7 +98,7 @@
                                                     <v-icon :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
                                                 </v-btn>
 
-                                                <v-btn v-if="canDelete" icon @click.stop="cardItemToolbar('delete')" data-btn="delete" :title="$t('assess.tooltip.delete_item')">
+                                                <v-btn v-if="canDelete" icon @click.stop="toggleDeletePopup" data-btn="delete" :title="$t('assess.tooltip.delete_item')">
                                                     <v-icon color="accent">mdi-delete</v-icon>
                                                 </v-btn>
 
@@ -112,6 +112,11 @@
                 </v-hover>
             </v-col>
         </v-row>
+        <v-row>
+          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                         @close="showDeletePopup = false" :title_name="news_item.news_item_data.title"
+          ></ConfirmDelete>
+        </v-row>
     </v-container>
 </template>
 
@@ -122,9 +127,11 @@
     import {deleteNewsItem} from "@/api/assess";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
+    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     export default {
         name: "CardAssessItem",
+      components: {ConfirmDelete},
         props: {
             news_item: Object,
             analyze_selector: Boolean,
@@ -134,7 +141,8 @@
         mixins: [AuthMixin],
         data: () => ({
             toolbar: false,
-            selected: false
+            selected: false,
+            showDeletePopup: false,
         }),
         computed: {
             canAccess() {
@@ -312,6 +320,13 @@
                     this.toolbar = false;
                     this.$el.querySelector(".card .layout").classList.remove('focus');
                 }
+            },
+            toggleDeletePopup() {
+              this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+              this.showDeletePopup = false;
+              this.cardItemToolbar('delete')
             }
         },
         mounted() {
