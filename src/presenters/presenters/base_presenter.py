@@ -106,13 +106,15 @@ class BasePresenter:
             for attribute_group_item_id, attribute_group_item in attribute_group_items.items():
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
-
-                max_occurrence = attr_type.max_occurrence
-                value_to_add = (
-                    attribute_group_item[0].value
-                    if max_occurrence == 1 and attribute_group_item
-                    else [attribute.value for attribute in attribute_group_item]
-                )
+                if attr_key.startswith("cwe"):
+                    value_to_add = {attribute.value: attribute.value_description for attribute in attribute_group_item}
+                else:
+                    max_occurrence = attr_type.max_occurrence
+                    value_to_add = (
+                        attribute_group_item[0].value
+                        if max_occurrence == 1 and attribute_group_item
+                        else [attribute.value for attribute in attribute_group_item]
+                    )
 
                 how_many_with_the_same_name = len(attribute_groups[attr_key])
                 if how_many_with_the_same_name == 1:
@@ -145,7 +147,7 @@ class BasePresenter:
             color_values = {"WHITE": 0, "CLEAR": 1, "GREEN": 2, "AMBER": 3, "AMBER+STRICT": 4, "RED": 5}
             colors = []
             for report in reports:
-                if report.type.startswith("Vulnerability Report"):
+                if hasattr(report.attrs, "tlp"):
                     colors.append(report.attrs.tlp)
             if colors:
                 max_tlp = max(colors, key=lambda color: color_values.get(color, 1))
@@ -184,13 +186,13 @@ class BasePresenter:
                 presenter_input -- input data
             """
             # types of report items (e.g. vuln report, disinfo report)
-            report_types = dict()
+            report_types = {}
             for report_type in presenter_input.report_types:
                 # index by ID
                 report_types[report_type.id] = report_type
 
             # attributes that can be used in report items (for internal use)
-            attribute_map = dict()
+            attribute_map = {}
             for report_type in presenter_input.report_types:
                 for attribute_group in report_type.attribute_groups:
                     for attribute_group_item in attribute_group.attribute_group_items:
@@ -198,7 +200,7 @@ class BasePresenter:
 
             self.product = presenter_input.product
             self.product.date = datetime.datetime.now()
-            self.report_items = list()
+            self.report_items = []
 
             for report in presenter_input.reports:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))
@@ -209,12 +211,16 @@ class BasePresenter:
             for report in self.report_items:
                 if report.type.startswith("Vulnerability Report"):
                     vul_report_count += 1
-                    if report.attrs.links:
+                    if hasattr(report.attrs, "links"):
                         for link in report.attrs.links:
                             if link not in product_links:
                                 product_links.append(link)
-                        report.attrs.description = self.link_renumbering(report.attrs.description, report.attrs.links, product_links)
-                        report.attrs.recommendations = self.link_renumbering(report.attrs.recommendations, report.attrs.links, product_links)
+                        if hasattr(report.attrs, "description"):
+                            report.attrs.description = self.link_renumbering(report.attrs.description, report.attrs.links, product_links)
+                        if hasattr(report.attrs, "recommendations"):
+                            report.attrs.recommendations = self.link_renumbering(
+                                report.attrs.recommendations, report.attrs.links, product_links
+                            )
             # If there are vulnerability reports, set the max TLP and product links
             if vul_report_count > 0:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)

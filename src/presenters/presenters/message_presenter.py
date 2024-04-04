@@ -3,6 +3,7 @@
 Returns:
     _description_
 """
+
 import os
 from base64 import b64encode
 import jinja2
@@ -66,5 +67,5 @@ class MESSAGEPresenter(BasePresenter):
 
         except Exception as error:
             BasePresenter.print_exception(self, error)
-            presenter_output = {"mime_type": "text/plain", "data": b64encode(("TEMPLATING ERROR\n" + str(error)).encode()).decode("UTF-8")}
+            presenter_output = {"mime_type": "text/plain", "data": b64encode((f"TEMPLATING ERROR\n{error}").encode()).decode("UTF-8")}
             return presenter_output
