@@ -34,7 +34,7 @@
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canDelete" icon class="red"
-                                                       @click.stop="toggleDeletePopup()"
+                                                       @click.stop="toggleDeletePopup('delete')"
                                                        :title="$t('analyze.tooltip.delete_item')">
                                                     <v-icon color="white">mdi-trash-can-outline</v-icon>
                                                 </v-btn>
@@ -49,7 +49,7 @@
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canModify" icon
-                                                       @click.stop="cardItemToolbar('remove')">
+                                                       @click.stop="toggleDeletePopup('remove')">
                                                     <v-icon color="accent">mdi-minus-circle-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
@@ -64,7 +64,7 @@
         </v-row>
       <v-row>
         <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                       @close="showDeletePopup = false" :title_name="card.title"
+                       @close="revertPopupAction" :title_name="card.title"
         ></ConfirmDelete>
       </v-row>
     </v-container>
@@ -89,6 +89,7 @@ export default {
         selected: false,
         status: "in_progress",
         showDeletePopup: false,
+        popupAction: "",
     }),
     computed: {
 
@@ -170,13 +171,19 @@ export default {
             this.selected = false
         },
 
-        toggleDeletePopup() {
+        toggleDeletePopup(action) {
+          this.popupAction = action;
+          this.showDeletePopup = !this.showDeletePopup;
+        },
+
+        revertPopupAction(){
+          this.popupAction = ""
           this.showDeletePopup = !this.showDeletePopup;
         },
 
         handleDeletion() {
           this.showDeletePopup = false;
-          this.cardItemToolbar('delete')
+          this.cardItemToolbar(this.popupAction);
         }
     },
     mounted() {
