@@ -1,4 +1,5 @@
 <template>
+  <v-container>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="close" :attach="attach">
             <v-card>
@@ -14,7 +15,7 @@
                         <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')" :title="$t('assess.tooltip.ungroup_item')">
                             <v-icon small color="accent">mdi-ungroup</v-icon>
                         </v-btn>
-                        <v-btn v-if="canDelete" small icon @click.stop="cardItemToolbar('delete')" :title="$t('assess.tooltip.delete_item')">
+                        <v-btn v-if="canDelete" small icon @click.stop="toggleDeletePopup" :title="$t('assess.tooltip.delete_item')">
                             <v-icon small color="accent">mdi-delete</v-icon>
                         </v-btn>
                         <v-btn v-if="canCreateReport" small icon @click.stop="cardItemToolbar('new')" :title="$t('assess.tooltip.analyze_item')">
@@ -75,6 +76,12 @@
             </v-card>
         </v-dialog>
     </v-row>
+    <v-row>
+      <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                     @close="showDeletePopup = false" :title_name="news_item.title"
+      ></ConfirmDelete>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -86,6 +93,7 @@
     import Permissions from "@/services/auth/permissions";
 
     import { VueEditor } from 'vue2-editor';
+    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' },
@@ -103,7 +111,7 @@
             analyze_selector: Boolean,
             attach: undefined
         },
-        components: {VueEditor},
+        components: {ConfirmDelete, VueEditor},
         mixins: [AuthMixin],
         computed: {
             canAccess() {
@@ -139,7 +147,8 @@
             news_item: Object,
             title: "",
             description: "",
-            toolbar: false
+            toolbar: false,
+            showDeletePopup: false,
         }),
         methods: {
             open(news_item) {
@@ -251,6 +260,13 @@
                 } else {
                     return "accent"
                 }
+            },
+            toggleDeletePopup() {
+              this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+              this.showDeletePopup = false;
+              this.cardItemToolbar('delete')
             }
         }
     }

@@ -1,4 +1,5 @@
 <template>
+  <v-container>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="close" :attach="attach">
             <v-card>
@@ -11,7 +12,7 @@
                     <v-spacer></v-spacer>
 
                     <div v-if="!multiSelectActive && !analyze_selector">
-                        <v-btn v-if="canDelete" small icon @click.stop="cardItemToolbar('delete')" :title="$t('assess.tooltip.delete_item')">
+                        <v-btn v-if="canDelete" small icon @click.stop="toggleDeletePopup()" :title="$t('assess.tooltip.delete_item')">
                             <v-icon small color="accent">mdi-delete</v-icon>
                         </v-btn>
                         <a v-if="canAccess" :href="news_item.news_items[0].news_item_data.link" rel="noreferrer" target="_blank" :title="$t('assess.tooltip.open_source')">
@@ -144,6 +145,10 @@
             </v-card>
         </v-dialog>
     </v-row>
+      <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
+                     @close="showDeletePopup = false" :title_name="news_item.title"
+      ></ConfirmDelete>
+  </v-container>
 </template>
 
 <script>
@@ -155,7 +160,8 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
 
-    import {VueEditor} from 'vue2-editor';
+import {VueEditor} from 'vue2-editor';
+import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
 
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' },
@@ -169,7 +175,7 @@
 
     export default {
         name: "NewsItemSingleDetail",
-        components: {NewsItemAttribute, VueEditor},
+        components: {ConfirmDelete, NewsItemAttribute, VueEditor},
         mixins: [AuthMixin],
         props: {
             analyze_selector: Boolean,
@@ -209,7 +215,8 @@
             access: false,
             modify: false,
             news_item: {news_items: [{news_item_data: {}}]},
-            toolbar: false
+            toolbar: false,
+            showDeletePopup: false,
         }),
         methods: {
             open(news_item) {
@@ -316,6 +323,13 @@
                 } else {
                     return "accent"
                 }
+              },
+            toggleDeletePopup() {
+              this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+              this.showDeletePopup = false;
+              this.cardItemToolbar('delete')
             }
         }
     }
