@@ -183,13 +183,13 @@ class WebCollector(BaseCollector):
         if prefix == 'id':
             elements = [ driver.find_element(By.ID, selector) ]
         if prefix == 'name':
-            elements = driver.find_element(By.NAME, selector)
+            elements = driver.find_elements(By.NAME, selector)
         elif prefix == 'xpath':
-            elements = driver.find_element(By.XPATH, selector)
+            elements = driver.find_elements(By.XPATH, selector)
         elif prefix in [ 'tag_name', 'tag' ]:
             elements = driver.find_elements(By.TAG_NAME, selector)
         elif prefix in [ 'class_name', 'class' ]:
-            elements = driver.find_element(By.CLASS_NAME, selector)
+            elements = driver.find_elements(By.CLASS_NAME, selector)
         elif prefix in [ 'css_selector', 'css' ]:
             elements = driver.find_elements(By.CSS_SELECTOR, selector)
         return elements
