@@ -40,10 +40,15 @@ def get_keycloak_password():
     Returns:
         str: The Keycloak admin password.
     """
-    keycloak_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
-    if not keycloak_password:
+    try:
         with open(os.getenv("KEYCLOAK_ADMIN_PASSWORD_FILE"), "r") as file:
             keycloak_password = file.read()
+    except FileNotFoundError:
+        print(
+            "KEYCLOAK_ADMIN_PASSWORD_FILE not found. Please set the KEYCLOAK_ADMIN_PASSWORD_FILE environment variable to the path of "
+            "the file containing the Keycloak admin password."
+        )
+        keycloak_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
     return keycloak_password
 
 

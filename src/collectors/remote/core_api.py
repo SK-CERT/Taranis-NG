@@ -1,4 +1,5 @@
 """This module provides methods for interacting with the Taranis-NG API."""
+
 import logging
 import os
 import urllib
@@ -30,10 +31,12 @@ class CoreApi:
     api_url = os.getenv("TARANIS_NG_CORE_URL")
     if api_url.endswith("/"):
         api_url = api_url[:-1]
-    api_key = os.getenv("API_KEY")
-    if not api_key:
+    try:
         with open(os.getenv("API_KEY_FILE"), "r") as file:
             api_key = file.read()
+    except FileNotFoundError:
+        print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
+        api_key = os.getenv("API_KEY")
     headers = {"Authorization": "Bearer " + api_key}
 
     @classmethod

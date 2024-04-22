@@ -48,10 +48,15 @@ class Config(object):
     DB_URL = os.getenv("DB_URL")
     DB_DATABASE = os.getenv("DB_DATABASE")
     DB_USER = os.getenv("DB_USER")
-    DB_PASSWORD = os.getenv("DB_PASSWORD")
-    if not DB_PASSWORD:
+    try:
         with open(os.getenv("DB_PASSWORD_FILE"), "r") as file:
             DB_PASSWORD = file.read()
+    except FileNotFoundError:
+        print(
+            "DB_PASSWORD_FILE not found. Please set the DB_PASSWORD_FILE environment variable to the path of the file containing "
+            "the DB password."
+        )
+        DB_PASSWORD = os.getenv("DB_PASSWORD")
 
     SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://{user}:{pw}@{url}/{db}".format(user=DB_USER, pw=DB_PASSWORD, url=DB_URL, db=DB_DATABASE)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -69,10 +74,15 @@ class Config(object):
             "pool_timeout": int(DB_POOL_TIMEOUT),
         }
 
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    if not JWT_SECRET_KEY:
+    try:
         with open(os.getenv("JWT_SECRET_KEY_FILE"), "r") as file:
             JWT_SECRET_KEY = file.read()
+    except FileNotFoundError:
+        print(
+            "JWT_SECRET_KEY_FILE not found. Please set the JWT_SECRET_KEY_FILE environment variable to the path of the file containing the "
+            "JWT secret key."
+        )
+        JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     JWT_IDENTITY_CLAIM = "sub"
     JWT_ACCESS_TOKEN_EXPIRES = 14400
     DEBUG = True

@@ -56,7 +56,7 @@ git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
 ```
 
-_Then_, remove `.example` extension from file `docker/.env.example` and files in `docker/secrets`. Use your favorite text editor and change default passwords. Taranis NG uses [Docker secrets](https://docs.docker.com/compose/use-secrets/) to store sensitive data. (Saving passwords in variables defined in `docker/.env` is not advised and you will need to modify Docker compose YAML files to make it work correctly.)
+_Then_, remove `.example` extension from file `docker/.env.example` and files in `docker/secrets`. Use your favorite text editor and change default passwords. Taranis NG uses [Docker secrets](https://docs.docker.com/compose/use-secrets/) to store sensitive data. (Saving passwords in variables defined in `docker/.env` is not advised and you will need to modify Docker compose YAML files to make it work correctly. Also, make sure you do not have both POSTGRES_PASSWORD and POSTGRES_PASSWORD_FILE set - they are mutually exclusive)
 
 ```bash
 vim docker/.env

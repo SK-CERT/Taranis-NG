@@ -1,4 +1,5 @@
 """This module is responsible for managing the Server-Sent Events (SSE) from the Core."""
+
 import os
 import requests
 import sseclient
@@ -7,10 +8,12 @@ import threading
 from managers import bots_manager
 
 
-api_key = os.getenv("API_KEY")
-if not api_key:
+try:
     with open(os.getenv("API_KEY_FILE"), "r") as file:
         api_key = file.read()
+except FileNotFoundError:
+    print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
+    api_key = os.getenv("API_KEY")
 
 
 def initialize():

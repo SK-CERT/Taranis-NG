@@ -1,4 +1,5 @@
 """This module contains the authentication manager."""
+
 import os
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -26,10 +27,12 @@ from model.apikey import ApiKey
 
 current_authenticator = None
 
-api_key = os.getenv("API_KEY")
-if not api_key:
+try:
     with open(os.getenv("API_KEY_FILE"), "r") as file:
         api_key = file.read()
+except FileNotFoundError:
+    print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
+    api_key = os.getenv("API_KEY")
 
 
 def cleanup_token_blacklist(app):
