@@ -12,4 +12,4 @@ python-dotenv==1.0.1
 requests==2.31.0
 tweepy==4.14.0
 urllib3==2.2.1
-pymisp==2.4.187
+pymisp==2.4.190
