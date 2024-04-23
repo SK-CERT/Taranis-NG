@@ -32,8 +32,7 @@
                                         v-model="selected_type"
                                         :items="product_types"
                                         item-text="title"
-                                        :label="$t('product.report_type')"
-                            />
+                                        :label="$t('product.report_type')" />
                         </v-col>
                         <v-col cols="6" class="pr-3">
                             <v-text-field :disabled="!canModify"
@@ -44,16 +43,14 @@
                                           v-validate="'required'"
                                           data-vv-name="title"
                                           :error-messages="errors.collect('title')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                          :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12" class="pr-3">
                             <v-textarea :disabled="!canModify"
                                         :label="$t('product.description')"
                                         name="description"
                                         v-model="product.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                        :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters>
@@ -86,11 +83,17 @@
                             </v-btn>
                         </v-col>
                         <v-col cols="6">
-                            <v-btn v-if="canPublish" depressed small @click="publishProduct">
+                            <v-btn v-if="canPublish" depressed small @click="publishConfirmation">
                                 <v-icon left>mdi-send-outline</v-icon>
                                 <span>{{ $t('product.publish') }}</span>
                             </v-btn>
                         </v-col>
+                    </v-row>
+                    <v-row>
+                        <MessageBox class="justify-center" v-if="showPublishConfirmation"
+                                    @buttonOk="publishProduct" @buttonCancel="showPublishConfirmation = false"
+                                    :title="$t('product.publish_confirmation')" :message="product.title">
+                        </MessageBox>
                     </v-row>
 
                     <v-row no-gutters class="pt-2">
@@ -111,14 +114,15 @@
 </template>
 
 <script>
-import AuthMixin from "../../services/auth/auth_mixin";
-import {createProduct, publishProduct, updateProduct} from "@/api/publish";
-import ReportItemSelector from "@/components/publish/ReportItemSelector";
-import Permissions from "@/services/auth/permissions";
+    import AuthMixin from "../../services/auth/auth_mixin";
+    import {createProduct, publishProduct, updateProduct} from "@/api/publish";
+    import ReportItemSelector from "@/components/publish/ReportItemSelector";
+    import Permissions from "@/services/auth/permissions";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
 export default {
     name: "NewProduct",
-    components: {ReportItemSelector},
+    components: { ReportItemSelector, MessageBox },
     props: {add_button: Boolean},
     data: () => ({
         visible: false,
@@ -138,7 +142,8 @@ export default {
             description: "",
             product_type_id: null,
             report_items: [],
-        }
+        },
+        showPublishConfirmation: false,
     }),
     mixins: [AuthMixin],
     computed: {
@@ -171,8 +176,12 @@ export default {
             this.$validator.reset();
         },
 
-        publishProduct() {
+        publishConfirmation() {
+            this.showPublishConfirmation = true;
+        },
 
+        publishProduct() {
+            this.showPublishConfirmation = false;
             for (let i = 0; i < this.publisher_presets.length; i++) {
                 if (this.publisher_presets[i].selected) {
                     this.$validator.validateAll().then(() => {
