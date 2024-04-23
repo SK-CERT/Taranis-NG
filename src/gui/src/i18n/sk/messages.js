@@ -1,30 +1,30 @@
 const messages_sk = {
 
     validations: {
-            custom: {
-                username: {
-                    required: "Vyplňte prosím prihlasovacie meno"
-                },
-                password: {
-                    required: "Heslo je povinné"
-                },
-                url: {
-                    required: "URL je povinné"
-                },
-                key: {
-                    required: "API kľúč je povinný"
-                },
-                name: {
-                    required: "Názov je povinný"
-                },
-                parameter: {
-                    required: "Parameter je povinný"
-                },
-                password_check: {
-                    required: "Heslo je povinné",
-                    confirmed: "Heslá sa nezhodujú"
-                }
+        custom: {
+            username: {
+                required: "Vyplňte prosím prihlasovacie meno"
             },
+            password: {
+                required: "Heslo je povinné"
+            },
+            url: {
+                required: "URL je povinné"
+            },
+            key: {
+                required: "API kľúč je povinný"
+            },
+            name: {
+                required: "Názov je povinný"
+            },
+            parameter: {
+                required: "Parameter je povinný"
+            },
+            password_check: {
+                required: "Heslo je povinné",
+                confirmed: "Heslá sa nezhodujú"
+            }
+        },
     },
 
     login: {
@@ -86,11 +86,43 @@ const messages_sk = {
         description: "Popis",
         successful: "Nový OSINT zdroj bol úspešne pridaný"
     },
+
+    product: {
+        add_new: "Pridať nový produkt",
+        add_btn: "Pridať",
+        edit: "Editovať produkt",
+        save: "Uložiť",
+        cancel: "Zrušiť",
+        validation_error: "Prosím vyplnte všetky povinné polia",
+        error: "Nemôžem vytvoriť tento produkt",
+        title: "Meno",
+        name: "Názov",
+        description: "Popis",
+        report_type: "Typ produktu",
+        successful: "Nový produk bol úspešne vytvorený",
+        successful_edit: "Produkt bol úspešne uložený",
+        removed: "Produkt bol úspešne zmazaný",
+        removed_error: "Produkt sa používa a nemôže byť zmazaný",
+        preview: "Náhľad produktu",
+        publish: "Publikovať produkt",
+        publish_confirmation: "Ste si istý, že chcete publikovať tento produkt?",
+        total_count: "Počet produktov: "
+    },
+
     assess: {
         confirmation: {
             confirmation_text: "Ste si istý, že chcete odstrániť túto položku?",
             cancel: "Zrušiť",
             confirm: "Áno, vymazať"
+        },
+    },
+
+    common: {
+        messagebox: {
+            yes: "Áno",
+            no: "Nie",
+            cancel: "Zrušiť",
+            delete: "Ste si istý, že chcete odstrániť túto položku?",
         },
     }
 };

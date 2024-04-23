@@ -734,6 +734,7 @@ const messages_en = {
         removed_error: "Product is in use and could not be deleted",
         preview: "Show product preview",
         publish: "Publish product",
+        publish_confirmation: "Are you sure you want to publish following product?",
         total_count: "Products count: "
     },
 
@@ -1071,6 +1072,15 @@ const messages_en = {
     error: {
         aggregate_in_use: "Some of selected aggregates or news items are already assigned to a report item",
         server_error: "Unknown server error..."
+    },
+
+    common: {
+        messagebox: {
+            yes: "Yes",
+            no: "No",
+            cancel: "Cancel",
+            delete: "Are you sure you want to delete following item?",
+        },
     }
 };
 
