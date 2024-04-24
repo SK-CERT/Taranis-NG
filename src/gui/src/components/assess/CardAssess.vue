@@ -3,7 +3,7 @@
         <v-row>
             <v-col v-if="multiSelectActive" :style="UI.STYLE.card_selector_zone">
                 <v-row justify="center" align="center">
-                    <v-checkbox v-if="!preselected" v-model="selected" @change="selectionChanged"/>
+                    <v-checkbox v-if="!preselected" v-model="selected" @change="selectionChanged" />
                 </v-row>
             </v-col>
             <v-col :class="UI.CLASS.card_offset">
@@ -12,8 +12,7 @@
                             @click.stop="cardItemToolbar"
                             @mouseenter.native="toolbar=true"
                             @mouseleave.native="toolbar=cardFocus"
-                            :color="selectedColor"
-                    >
+                            :color="selectedColor">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
@@ -58,12 +57,11 @@
                                                    @click.stop="openCard">
                                                 <v-icon v-if="opened" left>mdi-arrow-down-drop-circle</v-icon>
                                                 <v-icon v-if="!opened" left>mdi-arrow-right-drop-circle</v-icon>
-                                                <div
-                                                    class="subtitle-2"> {{ $t('card_item.aggregated_items') }}: {{ card.news_items.length }}</div>
+                                                <div class="subtitle-2"> {{ $t('card_item.aggregated_items') }}: {{ card.news_items.length }}</div>
                                             </v-btn>
                                         </template>
                                         <template v-else>
-                                            <div  class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
+                                            <div class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
                                                 {{ itemLink }}
                                             </div>
                                         </template>
@@ -122,7 +120,8 @@
                                                     <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')"
                                                            :title="$t('assess.tooltip.dislike_item')"
                                                            data-btn="unlike">
-                                                        <v-icon :color="buttonStatus(card.me_dislike)">mdi-thumb-down
+                                                        <v-icon :color="buttonStatus(card.me_dislike)">
+                                                            mdi-thumb-down
                                                         </v-icon>
                                                     </v-btn>
                                                     <v-btn v-if="canDelete" icon @click.stop="toggleDeletePopup()"
@@ -150,305 +149,305 @@
             </v-col>
         </v-row>
         <v-row>
-          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="card.title"
-          ></ConfirmDelete>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.title">
+            </MessageBox>
         </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 grey lighten-4 rounded">
             <CardAssessItem v-for="news_item in card.news_items" :key="news_item.id" :news_item="news_item"
                             :analyze_selector="analyze_selector" :compact_mode="compact_mode"
                             :word_list_regex="word_list_regex"
-                            @show-item-detail="showItemDetail(news_item)"
-            />
+                            @show-item-detail="showItemDetail(news_item)" />
         </div>
     </v-container>
 </template>
 
 <script>
-import CardAssessItem from "@/components/assess/CardAssessItem";
-import {groupAction, voteNewsItemAggregate} from "@/api/assess";
-import {readNewsItemAggregate} from "@/api/assess";
-import {importantNewsItemAggregate} from "@/api/assess";
-import {deleteNewsItemAggregate} from "@/api/assess";
-import AuthMixin from "@/services/auth/auth_mixin";
-import Permissions from "@/services/auth/permissions";
-import ConfirmDelete from "@/components/common/ConfirmDelete"
+    import CardAssessItem from "@/components/assess/CardAssessItem";
+    import { groupAction, voteNewsItemAggregate } from "@/api/assess";
+    import { readNewsItemAggregate } from "@/api/assess";
+    import { importantNewsItemAggregate } from "@/api/assess";
+    import { deleteNewsItemAggregate } from "@/api/assess";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import Permissions from "@/services/auth/permissions";
+    import MessageBox from "@/components/common/MessageBox"
 
-export default {
-    name: "CardAssess",
-    props: {
-        card: Object,
-        analyze_selector: Boolean,
-        analyze_can_modify: Boolean,
-        compact_mode: Boolean,
-        preselected: Boolean,
-        word_list_regex: String,
-        aggregate_opened: Boolean,
-        data_set: String
-    },
-    mixins: [AuthMixin],
-    components: {CardAssessItem, ConfirmDelete},
-    data: () => ({
-        toolbar: false,
-        opened: false,
-        selected: false,
-        showDeletePopup: false,
-    }),
-    computed: {
-        canAccess() {
-            return this.checkPermission(Permissions.ASSESS_ACCESS)
+    export default {
+        name: "CardAssess",
+        props: {
+            card: Object,
+            analyze_selector: Boolean,
+            analyze_can_modify: Boolean,
+            compact_mode: Boolean,
+            preselected: Boolean,
+            word_list_regex: String,
+            aggregate_opened: Boolean,
+            data_set: String
         },
+        mixins: [AuthMixin],
+        components: { CardAssessItem, MessageBox },
+        data: () => ({
+            toolbar: false,
+            opened: false,
+            selected: false,
+            showDeletePopup: false,
+        }),
+        computed: {
+            canAccess() {
+                return this.checkPermission(Permissions.ASSESS_ACCESS)
+            },
 
-        canModify() {
-            return this.checkPermission(Permissions.ASSESS_UPDATE)
-        },
+            canModify() {
+                return this.checkPermission(Permissions.ASSESS_UPDATE)
+            },
 
-        canDelete() {
-            return this.checkPermission(Permissions.ASSESS_DELETE)
-        },
+            canDelete() {
+                return this.checkPermission(Permissions.ASSESS_DELETE)
+            },
 
-        canCreateReport() {
-            return this.checkPermission(Permissions.ANALYZE_CREATE)
-        },
+            canCreateReport() {
+                return this.checkPermission(Permissions.ANALYZE_CREATE)
+            },
 
-        multiSelectActive() {
-            return this.$store.getters.getMultiSelect
+            multiSelectActive() {
+                return this.$store.getters.getMultiSelect
+            },
+            selectedColor() {
+                if (this.selected === true || this.preselected) {
+                    return "orange lighten-4"
+                } else {
+                    return ""
+                }
+            },
+            singleAggregate() {
+                return this.card.news_items.length === 1
+            },
+            itemLink() {
+                if (this.card.news_items.length === 1) {
+                    return this.card.news_items[0].news_item_data.link
+                } else {
+                    return ""
+                }
+            },
+            cardType() {
+                if (this.singleAggregate) {
+                    return "single";
+                } else {
+                    return "aggregate";
+                }
+            },
+            cardFocus() {
+                if (this.$el.querySelector(".card .layout").classList.contains('focus')) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            cardStatus() {
+                if (this.card.important) {
+                    return "important"
+                } else if (this.card.read) {
+                    return "read"
+                } else {
+                    return "new"
+                }
+            },
         },
-        selectedColor() {
-            if (this.selected === true || this.preselected) {
-                return "orange lighten-4"
-            } else {
-                return ""
-            }
-        },
-        singleAggregate() {
-            return this.card.news_items.length === 1
-        },
-        itemLink() {
-            if (this.card.news_items.length === 1) {
-                return this.card.news_items[0].news_item_data.link
-            } else {
-                return ""
-            }
-        },
-        cardType() {
-            if (this.singleAggregate) {
-                return "single";
-            } else {
-                return "aggregate";
-            }
-        },
-        cardFocus() {
-            if (this.$el.querySelector(".card .layout").classList.contains('focus')) {
-                return true;
-            } else {
-                return false;
-            }
-        },
-        cardStatus() {
-            if (this.card.important) {
-                return "important"
-            } else if (this.card.read) {
-                return "read"
-            } else {
-                return "new"
-            }
-        },
-    },
-    methods: {
-        showItemDetail(data) {
-            this.$emit('show-item-detail', data);
+        methods: {
+            showItemDetail(data) {
+                this.$emit('show-item-detail', data);
 
-            this.stateChange('SHOW_ITEM');
-        },
-        openCard() {
-            this.opened = !this.opened;
+                this.stateChange('SHOW_ITEM');
+            },
+            openCard() {
+                this.opened = !this.opened;
 
-            this.$emit('i', {'id': this.card.id, 'opened': this.opened});
-            this.$emit('card-items-reindex');
-            this.$root.$emit('key-remap');
+                this.$emit('i', { 'id': this.card.id, 'opened': this.opened });
+                this.$emit('card-items-reindex');
+                this.$root.$emit('key-remap');
 
-        },
-        selectionChanged() {
-            if (this.selected === true) {
-                this.$store.dispatch("select", {'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card})
-            } else {
-                this.$store.dispatch("deselect", {'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card})
-            }
-        },
-        itemClicked(data) {
-            if (this.card.news_items.length === 1) {
-                this.$emit('show-single-aggregate-detail', {
-                    'data': data,
-                    'isSelector': this.analyze_selector,
-                    'id': this.$parent.selfID
+            },
+            selectionChanged() {
+                if (this.selected === true) {
+                    this.$store.dispatch("select", { 'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card })
+                } else {
+                    this.$store.dispatch("deselect", { 'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card })
+                }
+            },
+            itemClicked(data) {
+                if (this.card.news_items.length === 1) {
+                    this.$emit('show-single-aggregate-detail', {
+                        'data': data,
+                        'isSelector': this.analyze_selector,
+                        'id': this.$parent.selfID
+                    });
+                } else {
+                    this.$emit('show-aggregate-detail', {
+                        'data': data,
+                        'isSelector': this.analyze_selector,
+                        'id': this.$parent.selfID
+                    });
+                }
+                this.stateChange('SHOW_ITEM');
+            },
+
+            stateChange(_state) {
+                this.$root.$emit('change-state', _state);
+                this.$root.$emit('check-focus', this.$el.dataset.id);
+                this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
+            },
+
+            getGroupId() {
+                if (window.location.pathname.includes("/group/")) {
+                    let i = window.location.pathname.indexOf("/group/");
+                    let len = window.location.pathname.length;
+                    return window.location.pathname.substring(i + 7, len);
+                } else {
+                    return null;
+                }
+            },
+            cardItemToolbar(action) {
+
+                switch (action) {
+                    case "like":
+                        voteNewsItemAggregate(this.getGroupId(), this.card.id, 1).then(() => {
+                        });
+                        break;
+
+                    case "unlike":
+                        voteNewsItemAggregate(this.getGroupId(), this.card.id, -1).then(() => {
+                        });
+                        break;
+
+                    case "link":
+                        break;
+
+                    case "new":
+                        //window.console.debug("CLICK NEW");
+                        this.$root.$emit('new-report', [this.card]);
+                        //this.stateChange('NEW_PRODUCT');
+                        //this.$root.$emit('mouse-click-analyze');
+                        break;
+
+                    case "remove":
+                        this.$emit('remove-item-from-selector', this.card);
+                        break;
+
+                    case "important":
+                        importantNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
+                        });
+                        break;
+
+                    case "read":
+                        readNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
+                        });
+                        break;
+
+                    case "delete":
+                        deleteNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
+                        }).catch((error) => {
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'error',
+                                    loc: 'error.' + error.response.data
+                                }
+                            )
+                        });
+                        break;
+
+                    case "ungroup":
+                        groupAction({
+                            'group': this.getGroupId(),
+                            'action': 'UNGROUP',
+                            'items': [{ 'type': 'AGGREGATE', 'id': this.card.id }]
+                        }).then(() => {
+
+                        }).catch((error) => {
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'error',
+                                    loc: 'error.' + error.response.data
+                                }
+                            )
+                        });
+                        break;
+
+                    default:
+                        this.toolbar = false;
+                        this.itemClicked(this.card);
+                        break;
+                }
+            },
+
+            buttonStatus: function (active) {
+                if (active) {
+                    return "info"
+                } else {
+                    return "accent"
+                }
+            },
+            wordCheck(target) {
+                let parse = new Array();
+                let message = this.escapeHtml(target).split(' ');
+                let word_list = new RegExp(this.word_list_regex, "gi");
+
+                for (let i = 0; i < message.length; i++) {
+                    let res = message[i].replace(word_list, function (x) {
+                        return "<span class='wordlist'>" + x + "</span>";
+                    });
+
+                    parse.push(res + " ");
+                }
+
+                return parse.join('');
+            },
+            escapeHtml(text) {
+                let map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+
+                return text.replace(/[&<>"']/g, function (m) {
+                    return map[m];
                 });
-            } else {
-                this.$emit('show-aggregate-detail', {
-                    'data': data,
-                    'isSelector': this.analyze_selector,
-                    'id': this.$parent.selfID
-                });
-            }
-            this.stateChange('SHOW_ITEM');
-        },
-
-        stateChange(_state) {
-            this.$root.$emit('change-state', _state);
-            this.$root.$emit('check-focus', this.$el.dataset.id);
-            this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
-        },
-
-        getGroupId() {
-            if (window.location.pathname.includes("/group/")) {
-                let i = window.location.pathname.indexOf("/group/");
-                let len = window.location.pathname.length;
-                return window.location.pathname.substring(i + 7, len);
-            } else {
-                return null;
-            }
-        },
-        cardItemToolbar(action) {
-
-            switch (action) {
-                case "like":
-                    voteNewsItemAggregate(this.getGroupId(), this.card.id, 1).then(() => {
-                    });
-                    break;
-
-                case "unlike":
-                    voteNewsItemAggregate(this.getGroupId(), this.card.id, -1).then(() => {
-                    });
-                    break;
-
-                case "link":
-                    break;
-
-                case "new":
-                    //window.console.debug("CLICK NEW");
-                    this.$root.$emit('new-report', [this.card]);
-                    //this.stateChange('NEW_PRODUCT');
-                    //this.$root.$emit('mouse-click-analyze');
-                    break;
-
-                case "remove":
-                    this.$emit('remove-item-from-selector', this.card);
-                    break;
-
-                case "important":
-                    importantNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
-                    });
-                    break;
-
-                case "read":
-                    readNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
-                    });
-                    break;
-
-                case "delete":
-                    deleteNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
-                    }).catch((error) => {
-                        this.$root.$emit('notification',
-                            {
-                                type: 'error',
-                                loc: 'error.' + error.response.data
-                            }
-                        )
-                    });
-                    break;
-
-                case "ungroup":
-                    groupAction({
-                        'group': this.getGroupId(),
-                        'action': 'UNGROUP',
-                        'items': [{'type': 'AGGREGATE', 'id': this.card.id}]
-                    }).then(() => {
-
-                    }).catch((error) => {
-                        this.$root.$emit('notification',
-                            {
-                                type: 'error',
-                                loc: 'error.' + error.response.data
-                            }
-                        )
-                    });
-                    break;
-
-                default:
+            },
+            multiSelectOff() {
+                this.selected = false
+            },
+            setFocus(id) {
+                if (this.$el.dataset.id == id) {
+                    this.toolbar = true;
+                    this.$el.querySelector(".card .layout").classList.add('focus');
+                } else {
                     this.toolbar = false;
-                    this.itemClicked(this.card);
-                    break;
+                    this.$el.querySelector(".card .layout").classList.remove('focus');
+                }
+            },
+            toggleDeletePopup() {
+                this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
         },
-
-        buttonStatus: function (active) {
-            if (active) {
-                return "info"
-            } else {
-                return "accent"
-            }
+        created() {
+            this.opened = this.aggregate_opened;
         },
-        wordCheck(target) {
-            let parse = new Array();
-            let message = this.escapeHtml(target).split(' ');
-            let word_list = new RegExp(this.word_list_regex, "gi");
+        mounted() {
+            this.$root.$on('multi-select-off', this.multiSelectOff);
 
-            for (let i = 0; i < message.length; i++) {
-                let res = message[i].replace(word_list, function (x) {
-                    return "<span class='wordlist'>" + x + "</span>";
-                });
-
-                parse.push(res + " ");
-            }
-
-            return parse.join('');
-        },
-        escapeHtml(text) {
-            let map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-
-            return text.replace(/[&<>"']/g, function (m) {
-                return map[m];
+            this.$root.$on('check-focus', (id) => {
+                this.setFocus(id);
             });
         },
-        multiSelectOff() {
-            this.selected = false
-        },
-        setFocus(id) {
-            if (this.$el.dataset.id == id) {
-                this.toolbar = true;
-                this.$el.querySelector(".card .layout").classList.add('focus');
-            } else {
-                this.toolbar = false;
-                this.$el.querySelector(".card .layout").classList.remove('focus');
-            }
-        },
-      toggleDeletePopup() {
-        this.showDeletePopup = !this.showDeletePopup;
-      },
-      handleDeletion() {
-        this.showDeletePopup = false;
-        this.cardItemToolbar('delete')
-      }
-    },
-    created() {
-        this.opened = this.aggregate_opened;
-    },
-    mounted() {
-        this.$root.$on('multi-select-off', this.multiSelectOff);
-
-        this.$root.$on('check-focus', (id) => {
-            this.setFocus(id);
-        });
-    },
-    beforeDestroy() {
-        this.$root.$off('multi-select-off', this.multiSelectOff);
-        this.$root.$off('check-focus');
+        beforeDestroy() {
+            this.$root.$off('multi-select-off', this.multiSelectOff);
+            this.$root.$off('check-focus');
+        }
     }
-}
 </script>

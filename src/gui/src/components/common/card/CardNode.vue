@@ -40,9 +40,10 @@
             </v-col>
         </v-row>
         <v-row>
-          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="card.name"
-          ></ConfirmDelete>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.name">
+            </MessageBox>
         </v-row>
     </v-container>
 
@@ -51,14 +52,14 @@
 <script>
 
     import AuthMixin from "@/services/auth/auth_mixin";
-    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardNode",
-      components: {ConfirmDelete},
+        components: { MessageBox },
         props: ['card', 'deletePermission'],
         mixins: [AuthMixin],
-        data:() => ({
+        data: () => ({
             toolbar: false,
             showDeletePopup: false,
         }),
@@ -91,11 +92,11 @@
                 }
             },
             toggleDeletePopup() {
-              this.showDeletePopup = !this.showDeletePopup;
+                this.showDeletePopup = !this.showDeletePopup;
             },
             handleDeletion() {
-              this.showDeletePopup = false;
-              this.cardItemToolbar('delete')
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
 
         }

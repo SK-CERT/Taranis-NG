@@ -37,77 +37,78 @@
             </v-col>
         </v-row>
         <v-row>
-          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="card.name"
-          ></ConfirmDelete>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.name">
+            </MessageBox>
         </v-row>
     </v-container>
 </template>
 
 <script>
 
-import AuthMixin from "@/services/auth/auth_mixin";
-import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
-export default {
-    name: "CardGroup",
-  components: {ConfirmDelete},
-    props: ['card', 'deletePermission'],
-    mixins: [AuthMixin],
-    data: () => ({
-        toolbar: false,
-        showDeletePopup: false,
-    }),
-    computed: {
-        cardName() {
-            if (this.card.default) {
-                return this.$t('osint_source_group.default_group')
-            } else {
-                return this.card.name
+    export default {
+        name: "CardGroup",
+        components: { MessageBox },
+        props: ['card', 'deletePermission'],
+        mixins: [AuthMixin],
+        data: () => ({
+            toolbar: false,
+            showDeletePopup: false,
+        }),
+        computed: {
+            cardName() {
+                if (this.card.default) {
+                    return this.$t('osint_source_group.default_group')
+                } else {
+                    return this.card.name
+                }
+            },
+            cardDescription() {
+                if (this.card.default) {
+                    return this.$t('osint_source_group.default_group_description')
+                } else {
+                    return this.card.desc
+                }
+            },
+            cardStatus() {
+                if (this.card.status === undefined) {
+                    return "status-green"
+                } else {
+                    return "status-" + this.card.status
+                }
             }
         },
-        cardDescription() {
-            if (this.card.default) {
-                return this.$t('osint_source_group.default_group_description')
-            } else {
-                return this.card.desc
+        methods: {
+            itemClicked(data) {
+                this.$root.$emit('show-edit', data)
+            },
+            deleteClicked(data) {
+                this.$root.$emit('delete-item', data)
+            },
+            cardItemToolbar(action) {
+                switch (action) {
+                    case "delete":
+                        this.deleteClicked(this.card)
+                        break;
+
+                    default:
+                        this.toolbar = false;
+                        this.itemClicked(this.card);
+                        break;
+                }
+            },
+            toggleDeletePopup() {
+                this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
-        },
-        cardStatus() {
-            if (this.card.status === undefined) {
-                return "status-green"
-            } else {
-                return "status-" + this.card.status
-            }
+
         }
-    },
-    methods: {
-        itemClicked(data) {
-            this.$root.$emit('show-edit', data)
-        },
-        deleteClicked(data) {
-            this.$root.$emit('delete-item', data)
-        },
-        cardItemToolbar(action) {
-            switch (action) {
-                case "delete":
-                    this.deleteClicked(this.card)
-                    break;
-
-                default:
-                    this.toolbar = false;
-                    this.itemClicked(this.card);
-                    break;
-            }
-        },
-        toggleDeletePopup() {
-          this.showDeletePopup = !this.showDeletePopup;
-        },
-        handleDeletion() {
-          this.showDeletePopup = false;
-          this.cardItemToolbar('delete')
-        }
-
     }
-}
 </script>

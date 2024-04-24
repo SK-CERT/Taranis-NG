@@ -36,9 +36,10 @@
             </v-col>
         </v-row>
         <v-row>
-          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="card.title"
-          ></ConfirmDelete>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.title">
+            </MessageBox>
         </v-row>
     </v-container>
 </template>
@@ -46,20 +47,20 @@
 <script>
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
-    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardProduct",
-      components: {ConfirmDelete},
+        components: { MessageBox },
         props: ['card'],
-        data:() => ({
+        data: () => ({
             toolbar: false,
             showDeletePopup: false,
         }),
         mixins: [AuthMixin],
         computed: {
             canDelete() {
-               return this.checkPermission(Permissions.PUBLISH_DELETE) && this.card.modify === true
+                return this.checkPermission(Permissions.PUBLISH_DELETE) && this.card.modify === true
             }
         },
         methods: {
@@ -88,11 +89,11 @@
                 }
             },
             toggleDeletePopup() {
-              this.showDeletePopup = !this.showDeletePopup;
+                this.showDeletePopup = !this.showDeletePopup;
             },
             handleDeletion() {
-              this.showDeletePopup = false;
-              this.cardItemToolbar('delete')
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
         }
     }

@@ -13,8 +13,7 @@
                             @click.stop="cardItemToolbar"
                             @mouseenter.native="toolbar=true"
                             @mouseleave.native="toolbar=cardFocus"
-                            :color="selectedColor"
-                    >
+                            :color="selectedColor">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
@@ -113,25 +112,26 @@
             </v-col>
         </v-row>
         <v-row>
-          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="news_item.news_item_data.title"
-          ></ConfirmDelete>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title">
+            </MessageBox>
         </v-row>
     </v-container>
 </template>
 
 <script>
-    import {groupAction, voteNewsItem} from "@/api/assess";
-    import {readNewsItem} from "@/api/assess";
-    import {importantNewsItem} from "@/api/assess";
-    import {deleteNewsItem} from "@/api/assess";
+    import { groupAction, voteNewsItem } from "@/api/assess";
+    import { readNewsItem } from "@/api/assess";
+    import { importantNewsItem } from "@/api/assess";
+    import { deleteNewsItem } from "@/api/assess";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
-    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardAssessItem",
-      components: {ConfirmDelete},
+        components: { MessageBox },
         props: {
             news_item: Object,
             analyze_selector: Boolean,
@@ -172,7 +172,7 @@
                 }
             },
             cardFocus() {
-                if(this.$el.querySelector(".card .layout").classList.contains('focus')) {
+                if (this.$el.querySelector(".card .layout").classList.contains('focus')) {
                     return true;
                 } else {
                     return false;
@@ -197,14 +197,14 @@
             },
             selectionChanged() {
                 if (this.selected === true) {
-                    this.$store.dispatch("select", {'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item})
+                    this.$store.dispatch("select", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
                 } else {
-                    this.$store.dispatch("deselect", {'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item})
+                    this.$store.dispatch("deselect", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
                 }
             },
             stateChange() {
-                this.$root.$emit('change-state','SHOW_ITEM');
-                this.$root.$emit('check-focus',this.$el.dataset.id);
+                this.$root.$emit('change-state', 'SHOW_ITEM');
+                this.$root.$emit('check-focus', this.$el.dataset.id);
                 this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
             },
             getGroupId() {
@@ -257,7 +257,7 @@
                         groupAction({
                             'group': this.getGroupId(),
                             'action': 'UNGROUP',
-                            'items': [{'type': 'ITEM', 'id': this.news_item.id}]
+                            'items': [{ 'type': 'ITEM', 'id': this.news_item.id }]
                         }).then(() => {
                         }).catch((error) => {
                             this.$root.$emit('notification',
@@ -286,9 +286,9 @@
             wordCheck(target) {
                 let parse = new Array();
                 let message = this.escapeHtml(target).split(' ');
-                let word_list = new RegExp(this.word_list_regex,"gi");
+                let word_list = new RegExp(this.word_list_regex, "gi");
 
-                for( let i=0; i<message.length; i++ ) {
+                for (let i = 0; i < message.length; i++) {
                     let res = message[i].replace(word_list, function (x) {
                         return "<span class='wordlist'>" + x + "</span>";
                     });
@@ -307,13 +307,13 @@
                     "'": '&#039;'
                 };
 
-                return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+                return text.replace(/[&<>"']/g, function (m) { return map[m]; });
             },
             multiSelectOff() {
                 this.selected = false
             },
             setFocus(id) {
-                if(this.$el.dataset.id == id) {
+                if (this.$el.dataset.id == id) {
                     this.toolbar = true;
                     this.$el.querySelector(".card .layout").classList.add('focus');
                 } else {
@@ -322,11 +322,11 @@
                 }
             },
             toggleDeletePopup() {
-              this.showDeletePopup = !this.showDeletePopup;
+                this.showDeletePopup = !this.showDeletePopup;
             },
             handleDeletion() {
-              this.showDeletePopup = false;
-              this.cardItemToolbar('delete')
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
         },
         mounted() {
@@ -342,8 +342,8 @@
     }
 </script>
 <style>
-.v-dialog--fullscreen {
-    position: fixed !important;
-    top: 0;
-}
+    .v-dialog--fullscreen {
+        position: fixed !important;
+        top: 0;
+    }
 </style>
