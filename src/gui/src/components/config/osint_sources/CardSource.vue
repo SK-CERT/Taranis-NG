@@ -3,14 +3,13 @@
         <v-row no-gutters>
             <v-col v-if="multiSelect" :style="UI.STYLE.card_selector_zone">
                 <v-row justify="center" align="center">
-                    <v-checkbox v-model="selected" @change="selectionChanged"/>
+                    <v-checkbox v-model="selected" @change="selectionChanged" />
                 </v-row>
             </v-col>
             <v-col :class="UI.CLASS.card_offset">
                 <v-hover v-slot="{hover}">
                     <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2"
-                            @click.stop="cardItemToolbar" :color="selected && multiSelect ? 'green lighten-4' : ''"
-                    >
+                            @click.stop="cardItemToolbar" :color="selected && multiSelect ? 'green lighten-4' : ''">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
@@ -47,9 +46,10 @@
             </v-col>
         </v-row>
         <v-row>
-          <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="handleDeletion"
-                         @close="showDeletePopup = false" :title_name="card.name"
-          ></ConfirmDelete>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.name">
+            </MessageBox>
         </v-row>
     </v-container>
 </template>
@@ -57,13 +57,13 @@
 <script>
 
     import AuthMixin from "@/services/auth/auth_mixin";
-    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardSource",
-      components: {ConfirmDelete},
+        components: { MessageBox },
         props: ['card', 'deletePermission'],
-        data:() => ({
+        data: () => ({
             toolbar: false,
             selected: false,
             showDeletePopup: false,
@@ -83,7 +83,7 @@
         },
         methods: {
             selectionChanged() {
-                if(this.selected) {
+                if (this.selected) {
                     this.$store.dispatch('selectOSINTSource', this.card.id);
                 } else {
                     this.$store.dispatch('deselectOSINTSource', this.card.id);
@@ -109,11 +109,11 @@
                 }
             },
             toggleDeletePopup() {
-              this.showDeletePopup = !this.showDeletePopup;
+                this.showDeletePopup = !this.showDeletePopup;
             },
             handleDeletion() {
-              this.showDeletePopup = false;
-              this.cardItemToolbar('delete')
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
 
         },

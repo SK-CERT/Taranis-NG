@@ -1,77 +1,77 @@
 <template>
-  <v-container>
-    <v-row v-bind="UI.DIALOG.ROW.WINDOW" data-source="news_item_selector">
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="dialog" news-item-selector>
-            <v-card flat>
-                <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000" style="position: fixed; width: 100%;">
-                    <v-btn icon dark @click="close">
-                        <v-icon>mdi-close-circle</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>{{$t('assess.select_news_item')}}</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-btn text dark @click="add">
-                        <v-icon left>mdi-plus-box</v-icon>
-                        <span>{{$t('assess.add')}}</span>
-                    </v-btn>
-                </v-toolbar>
-                <v-container class="pa-0 pt-12 grey darken-4" style="max-width: 96px !important; position: fixed; left: 0; top: 0; height: 100%;">
-                    <v-list dense dark>
-                        <v-list-item v-for="link in links" :key="link.id" @click="changeGroup($event, link.id)"
-                                     class="px-0" align="center"
-                                     :class="link.id === selected_group_id ? 'active' : ''">
-                            <v-list-item-content class="">
-                                <v-icon>{{ link.icon }}</v-icon>
-                                <v-list-item-title style="white-space: unset; font-size: 0.7em;">{{ $t(link.title) }}</v-list-item-title>
-                            </v-list-item-content>
-                        </v-list-item>
-                    </v-list>
-                </v-container>
+    <v-container>
+        <v-row v-bind="UI.DIALOG.ROW.WINDOW" data-source="news_item_selector">
+            <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="dialog" news-item-selector>
+                <v-card flat>
+                    <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000" style="position: fixed; width: 100%;">
+                        <v-btn icon dark @click="close">
+                            <v-icon>mdi-close-circle</v-icon>
+                        </v-btn>
+                        <v-toolbar-title>{{$t('assess.select_news_item')}}</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                        <v-btn text dark @click="add">
+                            <v-icon left>mdi-plus-box</v-icon>
+                            <span>{{$t('assess.add')}}</span>
+                        </v-btn>
+                    </v-toolbar>
+                    <v-container class="pa-0 pt-12 grey darken-4" style="max-width: 96px !important; position: fixed; left: 0; top: 0; height: 100%;">
+                        <v-list dense dark>
+                            <v-list-item v-for="link in links" :key="link.id" @click="changeGroup($event, link.id)"
+                                         class="px-0" align="center"
+                                         :class="link.id === selected_group_id ? 'active' : ''">
+                                <v-list-item-content class="">
+                                    <v-icon>{{ link.icon }}</v-icon>
+                                    <v-list-item-title style="white-space: unset; font-size: 0.7em;">{{ $t(link.title) }}</v-list-item-title>
+                                </v-list-item-content>
+                            </v-list-item>
+                        </v-list>
+                    </v-container>
 
-                <v-container fluid class="pa-0 pt-12 pl-8 ma-0 ml-16" style="width: calc(100% - 64px); position: sticky;">
-                    <div :style="UI.STYLE.sticky_filter_toolbar">
-                        <ToolbarFilterAssess analyze_selector
-                                             total_count_title="assess.total_count"
-                                             @update-news-items-filter="updateFilter"
-                                             ref="toolbarFilter"/>
-                    </div>
+                    <v-container fluid class="pa-0 pt-12 pl-8 ma-0 ml-16" style="width: calc(100% - 64px); position: sticky;">
+                        <div :style="UI.STYLE.sticky_filter_toolbar">
+                            <ToolbarFilterAssess analyze_selector
+                                                 total_count_title="assess.total_count"
+                                                 @update-news-items-filter="updateFilter"
+                                                 ref="toolbarFilter" />
+                        </div>
 
-                    <ContentDataAssess analyze_selector :selection="values"
-                                       class="item-selector"
-                                       card-item="CardAssess"
-                                       selfID="selector_assess_analyze"
-                                       data_set="assess_news_item"
-                                       ref="contentData"
-                                       @new-data-loaded="newDataLoaded"/>
-                </v-container>
+                        <ContentDataAssess analyze_selector :selection="values"
+                                           class="item-selector"
+                                           card-item="CardAssess"
+                                           selfID="selector_assess_analyze"
+                                           data_set="assess_news_item"
+                                           ref="contentData"
+                                           @new-data-loaded="newDataLoaded" />
+                    </v-container>
 
-            </v-card>
-        </v-dialog>
+                </v-card>
+            </v-dialog>
 
-        <v-row>
-            <v-col cols="12" :class="UI.CLASS.card_offset" v-for="value in values" :key="value.id">
-                <component analyze_selector compact_mode class="item-selector" v-bind:is="cardLayout()"
-                           :analyze_can_modify="canModify"
-                           :card="value"
-                           :showToolbar="true"
-                           data_set="assess_report_item"
-                           @remove-item-from-selector="toggleDeletePopup(value)"
-                           @show-single-aggregate-detail="showSingleAggregateDetail(value)"
-                           @show-aggregate-detail="showAggregateDetail(value)"
-                           @show-item-detail="showItemDetail(value)"
-                />
-            </v-col>
+            <v-row>
+                <v-col cols="12" :class="UI.CLASS.card_offset" v-for="value in values" :key="value.id">
+                    <component analyze_selector compact_mode class="item-selector" v-bind:is="cardLayout()"
+                               :analyze_can_modify="canModify"
+                               :card="value"
+                               :showToolbar="true"
+                               data_set="assess_report_item"
+                               @remove-item-from-selector="toggleDeletePopup(value)"
+                               @show-single-aggregate-detail="showSingleAggregateDetail(value)"
+                               @show-aggregate-detail="showAggregateDetail(value)"
+                               @show-item-detail="showItemDetail(value)" />
+                </v-col>
+            </v-row>
+
+            <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" />
+            <NewsItemDetail ref="newsItemDetail" :attach="attach" />
+            <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" />
         </v-row>
-
-        <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" />
-        <NewsItemDetail ref="newsItemDetail" :attach="attach" />
-        <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" />
-    </v-row>
-      <v-row>
-        <ConfirmDelete class="justify-center" v-if="showDeletePopup" @confirm="removeFromSelector(to_delete)"
-                       @close="showDeletePopup = false" :title_name="to_delete.title"
-        ></ConfirmDelete>
-      </v-row>
-  </v-container>
+        <v-row>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="removeFromSelector(to_delete)" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="to_delete.title">
+            </MessageBox>
+        </v-row>
+    </v-container>
 </template>
 
 <script>
@@ -84,13 +84,13 @@
     import NewsItemSingleDetail from "@/components/assess/NewsItemSingleDetail";
     import NewsItemDetail from "@/components/assess/NewsItemDetail";
     import NewsItemAggregateDetail from "@/components/assess/NewsItemAggregateDetail";
-    import {getReportItemData, updateReportItem} from "@/api/analyze";
-    import ConfirmDelete from "@/components/common/ConfirmDelete.vue";
+    import { getReportItemData, updateReportItem } from "@/api/analyze";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "NewsItemSelector",
         components: {
-          ConfirmDelete,
+            MessageBox,
             ViewLayout,
             ContentDataAssess,
             ToolbarFilterAssess,
@@ -114,7 +114,7 @@
             links: [],
             selected_group_id: "",
             showDeletePopup: false,
-            to_delete : Object,
+            to_delete: Object,
         }),
         mixins: [AuthMixin],
         computed: {
@@ -246,11 +246,11 @@
                 }
             },
 
-          toggleDeletePopup(aggregate) {
-            this.showDeletePopup = !this.showDeletePopup;
-            this.to_delete = aggregate;
+            toggleDeletePopup(aggregate) {
+                this.showDeletePopup = !this.showDeletePopup;
+                this.to_delete = aggregate;
 
-          },
+            },
         },
 
         updated() {
@@ -260,7 +260,7 @@
         },
 
         mounted() {
-            this.$store.dispatch('getAllOSINTSourceGroupsAssess', {search: ''})
+            this.$store.dispatch('getAllOSINTSourceGroupsAssess', { search: '' })
                 .then(() => {
                     this.groups = this.$store.getters.getOSINTSourceGroups.items;
                     for (let i = 0; i < this.groups.length; i++) {
@@ -282,5 +282,7 @@
 </script>
 
 <style>
-    .row { margin: 0; }
+    .row {
+        margin: 0;
+    }
 </style>

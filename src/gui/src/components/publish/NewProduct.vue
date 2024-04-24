@@ -91,7 +91,7 @@
                     </v-row>
                     <v-row>
                         <MessageBox class="justify-center" v-if="showPublishConfirmation"
-                                    @buttonOk="publishProduct" @buttonCancel="showPublishConfirmation = false"
+                                    @buttonYes="publishProduct" @buttonCancel="showPublishConfirmation = false"
                                     :title="$t('product.publish_confirmation')" :message="product.title">
                         </MessageBox>
                     </v-row>
