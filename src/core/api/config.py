@@ -3,8 +3,9 @@ import io
 from flask import request, send_file
 from flask_restful import Resource
 
-from managers import auth_manager, sse_manager, remote_manager, presenters_manager, \
+from managers import auth_manager, remote_manager, presenters_manager, \
     publishers_manager, bots_manager, external_auth_manager, log_manager, collectors_manager
+from managers.sse_manager import sse_manager
 from managers.auth_manager import auth_required, get_user_from_jwt
 from model import acl_entry, remote, presenters_node, publisher_preset, publishers_node, \
     bots_node, bot_preset, attribute, collectors_node, organization, osint_source, product_type, \

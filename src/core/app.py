@@ -5,6 +5,7 @@ from managers import *
 from model import *  # just until all new model classes are used regularly
 
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
@@ -17,7 +18,6 @@ def create_app():
 
         auth_manager.initialize(app)
         api_manager.initialize(app)
-
         sse_manager.initialize(app)
         remote_manager.initialize(app)
         tagcloud_manager.initialize(app)

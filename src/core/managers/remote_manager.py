@@ -52,7 +52,7 @@ class EventThread(threading.Thread):
                                         {'last_sync_time': data['last_sync_time']})
 
                                     with EventThread.app.app_context():
-                                        sse_manager.news_items_updated()
+                                        sse_manager.sse_manager.news_items_updated()
 
                     elif event.event == 'remote_access_report_items_updated':
                         if self.remote_node.sync_report_items:
@@ -68,7 +68,7 @@ class EventThread(threading.Thread):
                                         {'last_sync_time': data['last_sync_time']})
 
                                     with EventThread.app.app_context():
-                                        sse_manager.report_items_updated()
+                                        sse_manager.sse_manager.report_items_updated()
 
             except Exception:
                 time.sleep(5)
