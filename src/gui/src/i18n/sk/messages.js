@@ -109,14 +109,6 @@ const messages_sk = {
         total_count: "Počet produktov: "
     },
 
-    assess: {
-        confirmation: {
-            confirmation_text: "Ste si istý, že chcete odstrániť túto položku?",
-            cancel: "Zrušiť",
-            confirm: "Áno, vymazať"
-        },
-    },
-
     common: {
         messagebox: {
             yes: "Áno",
