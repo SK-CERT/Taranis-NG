@@ -830,11 +830,6 @@ const messages_cs = {
             default_mode: "Mód zkratek 'původní'.",
             aggregate_no_group: "Nelze otevřít neagregovanou novinku, funguje pouze se skupinou novinek.",
         },
-        confirmation: {
-            confirmation_text: "Jste si jistý, že chcete zmazat tuto položku?",
-            cancel: "Zrušit",
-            confirm: "Ano, zmazat",
-        },
     },
 
     publish: {
@@ -1056,6 +1051,15 @@ const messages_cs = {
     error: {
         aggregate_in_use: "Některé vybrané novinky nebo sloučené novinky jsou již připojeny k analýze",
         server_error: "Neznámá chyba serveru..."
+    },
+
+    common: {
+        messagebox: {
+            yes: "Ano",
+            no: "Ne",
+            cancel: "Zrušit",
+            delete: "Jste si jisti, že chcete odstranit tuto položku?",
+        },
     }
 };
 
