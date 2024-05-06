@@ -1,5 +1,5 @@
 Flask==3.0.2
-Flask-Cors==4.0.0
+Flask-Cors==4.0.1
 Flask-RESTful==0.3.10
 gevent==24.2.1
 gunicorn==21.2.0
