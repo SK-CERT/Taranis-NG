@@ -2,6 +2,9 @@
 
 echo "Running inside /app/prestart.sh..."
 
+echo "Running sse forward in the background..."
+/usr/local/bin/forward &
+
 echo "Running migrations..."
 /app/db_migration.py db upgrade head
 

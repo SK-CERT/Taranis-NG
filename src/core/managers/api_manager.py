@@ -1,6 +1,5 @@
 from flask_restful import Api
 from api import *
-from api import sse
 
 
 def initialize(app):
@@ -11,7 +10,7 @@ def initialize(app):
     collectors.initialize(api)
     isalive.initialize(api)
     config.initialize(api)
-    sse.initialize(app)
+    sse.initialize(api)
     analyze.initialize(api)
     publish.initialize(api)
     user.initialize(api)

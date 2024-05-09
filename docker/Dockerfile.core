@@ -6,6 +6,15 @@ RUN pip install --no-cache-dir build
 COPY ./src/shared/. .
 RUN python -m build
 
+RUN apk add --no-cache  \
+    gcc \
+    build-base\
+    libc-dev\
+    linux-headers
+
+COPY ./src/core/forward.c .
+
+RUN gcc -o forward forward.c
 
 
 FROM python:3.7-alpine3.14 AS production
@@ -36,6 +45,10 @@ RUN \
     apk add --no-cache --virtual .build-deps \
     gcc \
     g++ \
+    build-base\
+    libc-dev\
+    zlib-dev \
+    linux-headers \
     make \
     glib-dev \
     musl-dev \
@@ -44,6 +57,9 @@ RUN \
     postgresql-dev && \
     pip install --no-cache-dir -r /app/requirements.txt && \
     apk --purge del .build-deps
+
+
+COPY --from=build_shared /build_shared/forward /usr/local/bin/forward
 
 COPY ./docker/start.sh /start.sh
 RUN chmod +x /start.sh
