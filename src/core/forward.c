@@ -94,7 +94,7 @@ int accept_peer(int listenfd, int peer_type) {
     }
     peers[n_peers].fd = accept(listenfd, NULL, NULL);
     if (peers[n_peers].fd == -1) {
-        perror("accept failed");
+        perror("Accept failed");
         return -1;
     }
     peers[n_peers].type = peer_type;
@@ -103,9 +103,9 @@ int accept_peer(int listenfd, int peer_type) {
     if (peer_type == PEER_TYPE_SENDER) {
         char *new_buf = malloc(DEFAULT_MESSAGE_SIZE);
         if (DEBUG_MALLOC)
-            printf("sender peer %d fd %d malloc %d = %p\n", n_peers, peers[n_peers].fd, DEFAULT_MESSAGE_SIZE, new_buf);
+            printf("Sender peer %d fd %d malloc %d = %p\n", n_peers, peers[n_peers].fd, DEFAULT_MESSAGE_SIZE, new_buf);
         if (new_buf == NULL) {
-            perror("malloc failed");
+            perror("Malloc failed");
             shutdown(peers[n_peers].fd, 2);
             close(peers[n_peers].fd);
             return -1;
@@ -148,7 +148,7 @@ int receive_jsons(int idx) {
         new_message_space = realloc(peers[idx].extra.sender.message,
                                     peers[idx].extra.sender.msg_max_len + DEFAULT_MESSAGE_SIZE);
         if (new_message_space == NULL) {
-            perror("cannot resize sender buffer");
+            perror("Cannot resize sender buffer");
             return -1;
         }
         peers[idx].extra.sender.message = new_message_space;
@@ -156,17 +156,17 @@ int receive_jsons(int idx) {
     }
 
     if (DEBUG_INPUT)
-        printf("Z klienta %d citam %d bajtov od %p(povodne %p)\n", idx,
+        printf("From client %d reading %d bytes frk  %p(originally %p)\n", idx,
                peers[idx].extra.sender.msg_max_len - peers[idx].extra.sender.msg_len,
                peers[idx].extra.sender.message + peers[idx].extra.sender.msg_len, peers[idx].extra.sender.message);
     int len = read(peers[idx].fd,
                    peers[idx].extra.sender.message + peers[idx].extra.sender.msg_len,
                    peers[idx].extra.sender.msg_max_len - peers[idx].extra.sender.msg_len);
-    if (DEBUG_INPUT) printf("Nacitanych %d bajtov\n", len);
+    if (DEBUG_INPUT) printf("Reads %d bytes\n", len);
 
     if (len == 0) {
         // remote side closed connection
-        if (DEBUG_INPUT) printf("Idem zlozit klienta %d fd %d, lebo len=0\n", idx, peers[idx].fd);
+        if (DEBUG_INPUT) printf("Preparing to hang client %d fd %d, due to len=0\n", idx, peers[idx].fd);
         prepare_for_hangup(idx);
         return -1;
     }
@@ -178,48 +178,48 @@ int receive_jsons(int idx) {
         int i;
         for (i = 0; i < peers[idx].extra.sender.msg_len; i++) {
             if (DEBUG_PARSER)
-                printf("Spracovavam znak [%c], in_string:%d, i:%d/%d, brackets:%d\n",
+                printf("Processing character [%c], in_string:%d, i:%d/%d, brackets:%d\n",
                        (peers[idx].extra.sender.message[i] >= 32 && peers[idx].extra.sender.message[i] < 127)
                        ? peers[idx].extra.sender.message[i] : '.', in_string, i, peers[idx].extra.sender.msg_len,
                        brackets);
             if (in_string) {
                 if (in_string == 2) {
-                    if (DEBUG_PARSER) printf("seriem na ten znak\n");
+                    if (DEBUG_PARSER) printf("Ignore this character\n");
                     in_string = 1;
                     continue;
                 }
                 if (peers[idx].extra.sender.message[i] == '"') {
-                    if (DEBUG_PARSER) printf("koncim uvodzovky\n");
+                    if (DEBUG_PARSER) printf("Ending  quotation marks\n");
                     in_string = 0;
                     continue;
                 }
                 if (peers[idx].extra.sender.message[i] == '\\') {
-                    if (DEBUG_PARSER) printf("zacal mi backslash, dalsie budem ignorovat\n");
+                    if (DEBUG_PARSER) printf("Beginning of backslash, ignore rest\n");
                     in_string = 2;
                     continue;
                 }
                 continue;
             }
-            if (DEBUG_PARSER) printf("nie som v stringu\n");
+            if (DEBUG_PARSER) printf("Not in string\n");
             if (peers[idx].extra.sender.message[i] == '{') {
-                if (DEBUG_PARSER) printf("zacina mi zatvorka\n");
+                if (DEBUG_PARSER) printf("Start of bracket\n");
                 brackets++;
             } else if (peers[idx].extra.sender.message[i] == '}') {
-                if (DEBUG_PARSER) printf("konci mi zatvorka\n");
+                if (DEBUG_PARSER) printf("End of bracket\n");
                 brackets--;
                 if (brackets <= 0) {
-                    if (DEBUG_PARSER) printf("bola posledna\n");
+                    if (DEBUG_PARSER) printf("Last bracket was send\n");
                     break;
                 }
             } else if (peers[idx].extra.sender.message[i] == '"') {
-                if (DEBUG_PARSER) printf("zacina mi string\n");
+                if (DEBUG_PARSER) printf("Start of string\n");
                 in_string = 1;
                 continue;
             }
         }
-        if (DEBUG_PARSER) printf("==== KONIEC SPRACOVANIA ====\n");
+        if (DEBUG_PARSER) printf("==== END OF PROCESSING ====\n");
         if (i == peers[idx].extra.sender.msg_len) {
-            if (DEBUG_PARSER) printf("nenasiel som spravu\n");
+            if (DEBUG_PARSER) printf("Message not found\n");
             // no new messages
             break;
         }
@@ -227,8 +227,8 @@ int receive_jsons(int idx) {
 
         for (int j = 2; j < n_peers; j++) {
             if (peers[j].type == PEER_TYPE_CLIENT) {
-                // FIXME: prerobit na vystupne buffre a poll na write
-                // lebo toto moze blokovat.. :(
+                // FIXME: convert to output buffers and poll to write
+                // possible block. :(
                 // FIXME 2: osetrit dlzku write
                 write(peers[j].fd, peers[idx].extra.sender.message, i + 1);
                 write(peers[j].fd, "\n", 1);
@@ -292,7 +292,7 @@ int main() {
             }
             if (!will_hangup(i) && (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))) {
                 if (DEBUG_INPUT)
-                    printf("klient %d fd %d==%d ma revent 0x%04x, zatvaram\n", i, peers[i].fd, fds[i].fd,
+                    printf("Client %d fd %d==%d has revent 0x%04x, closing\n", i, peers[i].fd, fds[i].fd,
                            fds[i].revents);
                 prepare_for_hangup(i);
             }

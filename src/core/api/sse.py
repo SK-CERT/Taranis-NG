@@ -10,15 +10,12 @@ class TaranisSSE(Resource):
     @stream_with_context
     def stream(self):
         try:
-            # Attempt to create a socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         except Exception as e:
             print(f"Failed to create socket: {e}")
             return
 
         try:
-            # Attempt to connect to the server
-
             sock.connect(('localhost', 5001))
         except Exception as e:
             print(f"Failed to connect to server: {e}")
@@ -28,28 +25,22 @@ class TaranisSSE(Resource):
         buffer = ""
         try:
             while True:
-                # Read byte by byte
                 data = sock.recv(1)
-                if data:
-                    # Decode each byte received
-                    char = data.decode('utf-8')
-                    buffer += char
-                    # Check if the character is the closing of a JSON object
-                    if char == '}':
-                        try:
-                            # Try parsing the accumulated data
-                            json_data = json.loads(buffer)
-                            try:
-                                yield f"event: {json_data['event']}\ndata: {json.dumps(json_data['data'])}\n\n"  # Yield the JSON data if successfully parsed
-                            except Exception as e:
-                                pass
-                            buffer = ""  # Reset buffer after successful JSON parse
-                        except json.JSONDecodeError:
-                            # Continue accumulating data if JSON is not complete
-                            continue
-                else:
-                    print("Connection closed by the server.")
+                if not data:
                     break
+
+                char = data.decode('utf-8')
+                buffer += char
+
+                if char == '}':
+                    try:
+                        json_data = json.loads(buffer)
+                    except json.JSONDecodeError:
+                        continue
+
+                    yield f"event: {json_data['event']}\ndata: {json.dumps(json_data['data'])}\n\n"
+                    buffer = ""
+
         except Exception as e:
             print(f"Error during data reception or processing: {e}")
         finally:
