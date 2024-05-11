@@ -11,12 +11,14 @@ class TaranisSSE(Resource):
     def stream(self):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(60)
         except Exception as e:
             print(f"Failed to create socket: {e}")
             return
 
         try:
             sock.connect(('localhost', 5001))
+            sock.settimeout(10)
         except Exception as e:
             print(f"Failed to connect to server: {e}")
             sock.close()
@@ -24,12 +26,23 @@ class TaranisSSE(Resource):
 
         buffer = ""
         try:
+            data = b""
             while True:
-                data = sock.recv(1)
-                if not data:
-                    break
+                try:
+                    b = sock.recv(1)
+                except socket.timeout:
+                    yield ''
+                    continue
 
-                char = data.decode('utf-8')
+                if not b:
+                    break
+                data += b
+                try:
+                    char = data.decode('utf-8')
+                    data = b""
+                except UnicodeDecodeError:
+                    continue
+
                 buffer += char
 
                 if char == '}':
@@ -40,7 +53,6 @@ class TaranisSSE(Resource):
 
                     yield f"event: {json_data['event']}\ndata: {json.dumps(json_data['data'])}\n\n"
                     buffer = ""
-
         except Exception as e:
             print(f"Error during data reception or processing: {e}")
         finally:
