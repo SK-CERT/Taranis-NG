@@ -10,6 +10,10 @@
 
 #define PEER_POOL_INCREMENT 1024
 #define DEFAULT_MESSAGE_SIZE 512
+
+// this must be much higher than the expected message size, because clients may not be
+// scheduled before multiple messages are received and buffered for transmission.
+#define CLIENT_BUFFER_SIZE 16384
 #define PEER_TYPE_SENDER 0
 #define PEER_TYPE_CLIENT 1
 
@@ -26,6 +30,9 @@ struct message_queue_s {
 };
 
 struct client_s {
+    char circular_buffer[CLIENT_BUFFER_SIZE];
+    int tail; // append end
+    int head; // read end
 };
 
 struct sender_s {
@@ -92,6 +99,8 @@ int accept_peer(int listenfd, int peer_type) {
             return -1;
         max_peers += PEER_POOL_INCREMENT;
     }
+
+    bzero(&peers[n_peers], sizeof(struct peer_s));
     peers[n_peers].fd = accept(listenfd, NULL, NULL);
     if (peers[n_peers].fd == -1) {
         perror("Accept failed");
@@ -131,6 +140,29 @@ void prepare_for_hangup(int idx) {
     peers[idx].fd = -1;
 }
 
+int append_to_peer(int index, char *buf, int len) {
+    if (peers[index].type != PEER_TYPE_CLIENT)
+        return -1;
+
+    struct client_s *client = &peers[index].extra.client;
+
+    int space_remaining = (client->head - client->tail + CLIENT_BUFFER_SIZE - 1) % CLIENT_BUFFER_SIZE;
+    int space_until_wrap = CLIENT_BUFFER_SIZE - client->tail;
+
+    if (space_remaining < len) {
+        // cannot append the message for the client; kick it out
+        return -1;
+    }
+    if (len <= space_until_wrap) {
+        memcpy(client->circular_buffer + client->tail, buf, len);
+    } else {
+        memcpy(client->circular_buffer + client->tail, buf, space_until_wrap);
+        memcpy(client->circular_buffer, buf + space_until_wrap, len - space_until_wrap);
+    }
+    client->tail = (client->tail + len) % CLIENT_BUFFER_SIZE;
+    return 0;
+}
+
 void hangup_peer(int index) {
     if (peers[index].type == PEER_TYPE_SENDER) {
         if (peers[index].extra.sender.message) {
@@ -144,6 +176,8 @@ void hangup_peer(int index) {
 
 int receive_jsons(int idx) {
     char *new_message_space;
+    int jsons_received = 0;
+
     if (peers[idx].extra.sender.msg_len == peers[idx].extra.sender.msg_max_len) {
         new_message_space = realloc(peers[idx].extra.sender.message,
                                     peers[idx].extra.sender.msg_max_len + DEFAULT_MESSAGE_SIZE);
@@ -223,15 +257,15 @@ int receive_jsons(int idx) {
             // no new messages
             break;
         }
-        // we have a complete JSON to send out
+        // we have a complete JSON to send out; store it in the output buffers
+        jsons_received++;
 
         for (int j = 2; j < n_peers; j++) {
             if (peers[j].type == PEER_TYPE_CLIENT) {
-                // FIXME: convert to output buffers and poll to write
-                // possible block. :(
-                // FIXME 2: osetrit dlzku write
-                write(peers[j].fd, peers[idx].extra.sender.message, i + 1);
-                write(peers[j].fd, "\n", 1);
+                if (append_to_peer(j, peers[idx].extra.sender.message, i + 1) == -1) {
+                    // kick the client, it doesn't empty its ring buffer fast enough
+                    prepare_for_hangup(j);
+                }
             }
         }
 
@@ -240,6 +274,62 @@ int receive_jsons(int idx) {
                     peers[idx].extra.sender.msg_len - i - 1);
 
         peers[idx].extra.sender.msg_len -= i + 1;
+    }
+    return jsons_received;
+}
+
+int try_send(void) {
+    int index;
+    int at_least_one_writer = 0;
+    struct client_s *client;
+    int bytes_to_send, bytes_sent;
+
+    for (index = 0; index < n_peers; index++) {
+        if (peers[index].type != PEER_TYPE_CLIENT || will_hangup(index))
+            continue;
+        fds[index].revents = 0;
+
+        client = &peers[index].extra.client;
+        if (client->tail == client->head) {
+            fds[index].events = 0;
+            continue;
+        }
+        fds[index].events = POLLOUT;
+        at_least_one_writer = 1;
+    }
+    if (!at_least_one_writer)
+        return 0;
+
+    int ret = poll(fds, n_peers, -1);
+    if (ret < 0) {
+        perror("Poll failed");
+        return ret;
+    }
+
+    for (index = 0; index < n_peers; index++) {
+        if (fds[index].revents & (POLLHUP | POLLERR | POLLNVAL)) {
+            prepare_for_hangup(index);
+            continue;
+        }
+        if (fds[index].revents & POLLOUT) {
+            client = &peers[index].extra.client;
+            if (client->tail > client->head) { // no wrap necessary
+                bytes_to_send = client->tail - client->head;
+            } else { // data wraps; let's send just the first part right now
+                bytes_to_send = CLIENT_BUFFER_SIZE - client->head;
+            }
+            bytes_sent = write(peers[index].fd,
+                               client->circular_buffer + client->head,
+                               bytes_to_send
+            );
+            if (bytes_sent == -1) {
+                prepare_for_hangup(index);
+            } else if (bytes_sent == 0) {
+                prepare_for_hangup(index);
+            } else {
+                client->head = (client->head + bytes_sent) % CLIENT_BUFFER_SIZE;
+            }
+        }
     }
     return 0;
 }
@@ -269,6 +359,7 @@ int main() {
     fds[1].events = POLLIN;
 
     while (1) {
+        try_send(); // this also adds POLLOUT to the fds[].events
         int ret = poll(fds, n_peers, -1);
         if (ret < 0) {
             perror("Poll failed");
@@ -288,7 +379,8 @@ int main() {
         // handle existing senders
         for (int i = 2; i < n_peers; i++) {
             if (!will_hangup(i) && fds[i].revents & POLLIN) {
-                receive_jsons(i);
+                if (receive_jsons(i) > 0)
+                    try_send();
             }
             if (!will_hangup(i) && (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))) {
                 if (DEBUG_INPUT)
@@ -304,7 +396,6 @@ int main() {
                 hangup_peer(i);
             }
         }
-
     }
 
     return 0;
