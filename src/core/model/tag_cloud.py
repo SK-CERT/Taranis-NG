@@ -41,7 +41,7 @@ class TagCloud(db.Model):
     @classmethod
     def get_grouped_words(cls, tag_cloud_day):
         day_filter = (datetime.datetime.now() - datetime.timedelta(days=tag_cloud_day)).date()
-        stopwords = WordListEntry.stopwords_subquery()
+        stopwords = WordListEntry.stopwords_subquery().select()
         grouped_words = db.session.query(TagCloud.word,
                                          label('word_quantity', func.sum(TagCloud.word_quantity))).filter(
             TagCloud.collected == day_filter).filter(
