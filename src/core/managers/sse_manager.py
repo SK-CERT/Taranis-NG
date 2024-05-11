@@ -24,6 +24,9 @@ class SSEManager:
     def remote_access_disconnect(self, data):
         self.sse.publish(data, event='remote_access_disconnect', channel='remote')
 
+    def keep_alive(self):
+        self.sse.publish({}, event='keep-alive')
+
     def remote_access_news_items_updated(self, osint_source_ids):
         remote_access_event_ids = RemoteAccess.get_relevant_for_news_items(osint_source_ids)
         self.sse.publish(remote_access_event_ids, event='remote_access_news_items_updated', channel='remote')
@@ -79,3 +82,4 @@ sse_manager = SSEManager()
 
 def initialize(app):
     time_manager.schedule_job_minutes(1, sse_manager.check_report_item_locks, app)
+    time_manager.schedule_job_minutes(1, sse_manager.keep_alive)
