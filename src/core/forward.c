@@ -95,7 +95,7 @@ int accept_peer(int listenfd, int peer_type) {
             peers = peers_realloc;
         if (fds_realloc)
             fds = fds_realloc;
-        if (!peers_realloc || !peers_realloc)
+        if (!peers_realloc || !fds_realloc)
             return -1;
         max_peers += PEER_POOL_INCREMENT;
     }
