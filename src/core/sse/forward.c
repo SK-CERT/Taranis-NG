@@ -46,7 +46,7 @@ static int n_peers;
 static int max_peers;
 static struct peer_s *peers;
 static struct pollfd *fds;
-static int verbose_level;
+static int verbose_level; // 1-nothing 2-malloc 3-input 4-parser 5-all
 
 int will_hangup(int idx) {
     return (peers[idx].fd == -1);
