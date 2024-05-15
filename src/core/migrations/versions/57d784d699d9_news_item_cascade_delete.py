@@ -1,4 +1,4 @@
-"""add cascade delete to news_item releated tables
+"""add cascade delete to NEWS_ITEM releated tables
 
 Revision ID: 57d784d699d9
 Revises: f0a4860000ff
@@ -37,7 +37,7 @@ def downgrade():
     # news_item_attribute
     op.create_foreign_key('news_item_data_news_item_attribute_news_item_attribute_id_fkey',  'news_item_data_news_item_attribute',      'news_item_attribute', ['news_item_attribute_id'], ['id'])
     op.create_foreign_key('news_item_aggregate_news_item_attri_news_item_attribute_id_fkey', 'news_item_aggregate_news_item_attribute', 'news_item_attribute', ['news_item_attribute_id'], ['id'])
-    # news_item_data  -   manual delete in application keeps DATA tree records (to not crawl again?)
+    # news_item_data
     op.create_foreign_key('news_item_data_news_item_attribute_news_item_data_id_fkey', 'news_item_data_news_item_attribute', 'news_item_data', ['news_item_data_id'], ['id'])
     op.create_foreign_key('news_item_news_item_data_id_fkey',                          'news_item',                          'news_item_data', ['news_item_data_id'], ['id'])
     # news_item_aggregate
