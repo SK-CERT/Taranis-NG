@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/poll.h>
+#include <getopt.h>
 
 #define PEER_POOL_INCREMENT 1024
 #define DEFAULT_MESSAGE_SIZE 512
@@ -17,22 +18,13 @@
 #define PEER_TYPE_SENDER 0
 #define PEER_TYPE_CLIENT 1
 
-#define PORT_SENDER 5000
-#define PORT_CLIENT 5001
-
-#define DEBUG_PARSER 0
-#define DEBUG_INPUT 0
-#define DEBUG_MALLOC 0
-
-struct message_queue_s {
-    char *message;
-    struct message_queue_s *next;
-};
+#define PORT_SENDER 50000
+#define PORT_CLIENT 50001
 
 struct client_s {
     char circular_buffer[CLIENT_BUFFER_SIZE];
-    int tail; // append end
-    int head; // read end
+    int head; // append end
+    int tail; // read end
 };
 
 struct sender_s {
@@ -54,6 +46,36 @@ static int n_peers;
 static int max_peers;
 static struct peer_s *peers;
 static struct pollfd *fds;
+static int verbose_level;
+
+int will_hangup(int idx) {
+    return (peers[idx].fd == -1);
+}
+
+void prepare_for_hangup(int idx) {
+    shutdown(peers[idx].fd, 2);
+    close(peers[idx].fd);
+    peers[idx].fd = -1;
+}
+
+void hangup_peer(int index) {
+    if (peers[index].type == PEER_TYPE_SENDER) {
+        if (peers[index].extra.sender.message) {
+            free(peers[index].extra.sender.message);
+        }
+    }
+    peers[index] = peers[n_peers - 1];
+    fds[index] = fds[n_peers - 1];
+    n_peers--;
+}
+
+void hangup_peers() {
+    for (int i = n_peers - 1; i >= 2; i--) {
+        if (will_hangup(i)) {
+            hangup_peer(i);
+        }
+    }
+}
 
 int setup_server_socket(int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -64,7 +86,6 @@ int setup_server_socket(int port) {
 
     int opt = 1;
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
@@ -111,7 +132,7 @@ int accept_peer(int listenfd, int peer_type) {
 
     if (peer_type == PEER_TYPE_SENDER) {
         char *new_buf = malloc(DEFAULT_MESSAGE_SIZE);
-        if (DEBUG_MALLOC)
+        if (verbose_level == 2 || verbose_level == 5)
             printf("Sender peer %d fd %d malloc %d = %p\n", n_peers, peers[n_peers].fd, DEFAULT_MESSAGE_SIZE, new_buf);
         if (new_buf == NULL) {
             perror("Malloc failed");
@@ -124,20 +145,10 @@ int accept_peer(int listenfd, int peer_type) {
         peers[n_peers].extra.sender.msg_max_len = DEFAULT_MESSAGE_SIZE;
         fds[n_peers].events = POLLIN;
     } else {
-        fds[n_peers].events = 0;
+        fds[n_peers].events = POLLIN;
     }
     fds[n_peers].revents = 0;
     return n_peers++;
-}
-
-int will_hangup(int idx) {
-    return (peers[idx].fd == -1);
-}
-
-void prepare_for_hangup(int idx) {
-    shutdown(peers[idx].fd, 2);
-    close(peers[idx].fd);
-    peers[idx].fd = -1;
 }
 
 int append_to_peer(int index, char *buf, int len) {
@@ -146,32 +157,21 @@ int append_to_peer(int index, char *buf, int len) {
 
     struct client_s *client = &peers[index].extra.client;
 
-    int space_remaining = (client->head - client->tail + CLIENT_BUFFER_SIZE - 1) % CLIENT_BUFFER_SIZE;
-    int space_until_wrap = CLIENT_BUFFER_SIZE - client->tail;
+    int space_remaining = (client->tail - client->head + CLIENT_BUFFER_SIZE - 1) % CLIENT_BUFFER_SIZE;
+    int space_until_wrap = CLIENT_BUFFER_SIZE - client->head;
 
     if (space_remaining < len) {
         // cannot append the message for the client; kick it out
         return -1;
     }
     if (len <= space_until_wrap) {
-        memcpy(client->circular_buffer + client->tail, buf, len);
+        memcpy(client->circular_buffer + client->head, buf, len);
     } else {
-        memcpy(client->circular_buffer + client->tail, buf, space_until_wrap);
+        memcpy(client->circular_buffer + client->head, buf, space_until_wrap);
         memcpy(client->circular_buffer, buf + space_until_wrap, len - space_until_wrap);
     }
-    client->tail = (client->tail + len) % CLIENT_BUFFER_SIZE;
+    client->head = (client->head + len) % CLIENT_BUFFER_SIZE;
     return 0;
-}
-
-void hangup_peer(int index) {
-    if (peers[index].type == PEER_TYPE_SENDER) {
-        if (peers[index].extra.sender.message) {
-            free(peers[index].extra.sender.message);
-        }
-    }
-    peers[index] = peers[n_peers - 1];
-    fds[index] = fds[n_peers - 1];
-    n_peers--;
 }
 
 int receive_jsons(int idx) {
@@ -189,18 +189,19 @@ int receive_jsons(int idx) {
         peers[idx].extra.sender.msg_max_len += DEFAULT_MESSAGE_SIZE;
     }
 
-    if (DEBUG_INPUT)
+    if (verbose_level == 3 || verbose_level == 5)
         printf("From client %d reading %d bytes frk  %p(originally %p)\n", idx,
                peers[idx].extra.sender.msg_max_len - peers[idx].extra.sender.msg_len,
                peers[idx].extra.sender.message + peers[idx].extra.sender.msg_len, peers[idx].extra.sender.message);
     int len = read(peers[idx].fd,
                    peers[idx].extra.sender.message + peers[idx].extra.sender.msg_len,
                    peers[idx].extra.sender.msg_max_len - peers[idx].extra.sender.msg_len);
-    if (DEBUG_INPUT) printf("Reads %d bytes\n", len);
+    if (verbose_level == 3 || verbose_level == 5) printf("Reads %d bytes\n", len);
 
-    if (len == 0) {
+    if (len <= 0) {
         // remote side closed connection
-        if (DEBUG_INPUT) printf("Preparing to hang client %d fd %d, due to len=0\n", idx, peers[idx].fd);
+        if (verbose_level == 3 || verbose_level == 5)
+            printf("Preparing to hang client %d fd %d, due to len=0\n", idx, peers[idx].fd);
         prepare_for_hangup(idx);
         return -1;
     }
@@ -211,49 +212,49 @@ int receive_jsons(int idx) {
         int in_string = 0; /* 0, 1, 2 */
         int i;
         for (i = 0; i < peers[idx].extra.sender.msg_len; i++) {
-            if (DEBUG_PARSER)
+            if (verbose_level == 4 || verbose_level == 5)
                 printf("Processing character [%c], in_string:%d, i:%d/%d, brackets:%d\n",
                        (peers[idx].extra.sender.message[i] >= 32 && peers[idx].extra.sender.message[i] < 127)
                        ? peers[idx].extra.sender.message[i] : '.', in_string, i, peers[idx].extra.sender.msg_len,
                        brackets);
             if (in_string) {
                 if (in_string == 2) {
-                    if (DEBUG_PARSER) printf("Ignore this character\n");
+                    if (verbose_level == 4 || verbose_level == 5) printf("Ignore this character\n");
                     in_string = 1;
                     continue;
                 }
                 if (peers[idx].extra.sender.message[i] == '"') {
-                    if (DEBUG_PARSER) printf("Ending  quotation marks\n");
+                    if (verbose_level == 4 || verbose_level == 5) printf("Ending  quotation marks\n");
                     in_string = 0;
                     continue;
                 }
                 if (peers[idx].extra.sender.message[i] == '\\') {
-                    if (DEBUG_PARSER) printf("Beginning of backslash, ignore rest\n");
+                    if (verbose_level == 4 || verbose_level == 5) printf("Beginning of backslash, ignore rest\n");
                     in_string = 2;
                     continue;
                 }
                 continue;
             }
-            if (DEBUG_PARSER) printf("Not in string\n");
+            if (verbose_level == 4 || verbose_level == 5) printf("Not in string\n");
             if (peers[idx].extra.sender.message[i] == '{') {
-                if (DEBUG_PARSER) printf("Start of bracket\n");
+                if (verbose_level == 4 || verbose_level == 5) printf("Start of bracket\n");
                 brackets++;
             } else if (peers[idx].extra.sender.message[i] == '}') {
-                if (DEBUG_PARSER) printf("End of bracket\n");
+                if (verbose_level == 4 || verbose_level == 5) printf("End of bracket\n");
                 brackets--;
                 if (brackets <= 0) {
-                    if (DEBUG_PARSER) printf("Last bracket was send\n");
+                    if (verbose_level == 4 || verbose_level == 5) printf("Last bracket was send\n");
                     break;
                 }
             } else if (peers[idx].extra.sender.message[i] == '"') {
-                if (DEBUG_PARSER) printf("Start of string\n");
+                if (verbose_level == 4 || verbose_level == 5) printf("Start of string\n");
                 in_string = 1;
                 continue;
             }
         }
-        if (DEBUG_PARSER) printf("==== END OF PROCESSING ====\n");
+        if (verbose_level == 4 || verbose_level == 5) printf("==== END OF PROCESSING ====\n");
         if (i == peers[idx].extra.sender.msg_len) {
-            if (DEBUG_PARSER) printf("Message not found\n");
+            if (verbose_level == 4 || verbose_level == 5) printf("Message not found\n");
             // no new messages
             break;
         }
@@ -278,63 +279,48 @@ int receive_jsons(int idx) {
     return jsons_received;
 }
 
-int try_send(void) {
-    int index;
-    int at_least_one_writer = 0;
+void do_send_to_client(int index) {
     struct client_s *client;
     int bytes_to_send, bytes_sent;
 
-    for (index = 0; index < n_peers; index++) {
-        if (peers[index].type != PEER_TYPE_CLIENT || will_hangup(index))
-            continue;
-        fds[index].revents = 0;
+    if (will_hangup(index) || peers[index].type != PEER_TYPE_CLIENT)
+        return;
+    client = &peers[index].extra.client;
 
-        client = &peers[index].extra.client;
-        if (client->tail == client->head) {
-            fds[index].events = 0;
-            continue;
-        }
-        fds[index].events = POLLOUT;
-        at_least_one_writer = 1;
-    }
-    if (!at_least_one_writer)
-        return 0;
+    if (client->tail == client->head)
+        return;
 
-    int ret = poll(fds, n_peers, -1);
-    if (ret < 0) {
-        perror("Poll failed");
-        return ret;
+    if (client->head > client->tail) { // no wrap necessary
+        bytes_to_send = client->head - client->tail;
+    } else { // data wraps; let's send just the first part right now
+        bytes_to_send = CLIENT_BUFFER_SIZE - client->tail;
     }
-
-    for (index = 0; index < n_peers; index++) {
-        if (fds[index].revents & (POLLHUP | POLLERR | POLLNVAL)) {
-            prepare_for_hangup(index);
-            continue;
-        }
-        if (fds[index].revents & POLLOUT) {
-            client = &peers[index].extra.client;
-            if (client->tail > client->head) { // no wrap necessary
-                bytes_to_send = client->tail - client->head;
-            } else { // data wraps; let's send just the first part right now
-                bytes_to_send = CLIENT_BUFFER_SIZE - client->head;
-            }
-            bytes_sent = write(peers[index].fd,
-                               client->circular_buffer + client->head,
-                               bytes_to_send
-            );
-            if (bytes_sent == -1) {
-                prepare_for_hangup(index);
-            } else if (bytes_sent == 0) {
-                prepare_for_hangup(index);
-            } else {
-                client->head = (client->head + bytes_sent) % CLIENT_BUFFER_SIZE;
-            }
-        }
+    bytes_sent = write(peers[index].fd,
+                       client->circular_buffer + client->tail,
+                       bytes_to_send
+    );
+    if (bytes_sent <= 0) {
+        prepare_for_hangup(index);
+    } else {
+        client->tail = (client->tail + bytes_sent) % CLIENT_BUFFER_SIZE;
     }
-    return 0;
 }
 
-int main() {
+void print_help(char *self_name, int sender_port, int client_port) {
+    printf("Usage: %s [OPTIONS]\n", self_name);
+    printf("Options:\n");
+    printf("  -h, --help            Display this help message and quit\n");
+    printf("  -v, --verbose         Increase verbose level (up to 5)\n");
+    printf("  -s <PORT>, --sender-port <PORT>    Set sender port number (current value: %d)\n", sender_port);
+    printf("  -c <PORT>, --client-port <PORT>    Set client port number (current value: %d)\n", client_port);
+}
+
+void main(int argc, char *argv[]) {
+    verbose_level = 0;
+    int sender_port = 5000;
+    int client_port = 5001;
+    int opt;
+
     n_peers = 2;
     max_peers = PEER_POOL_INCREMENT;
     peers = malloc(sizeof(struct peer_s) * max_peers);
@@ -348,18 +334,78 @@ int main() {
         exit(1);
     }
 
+    // parse options
+    while (1) {
+        static struct option long_options[] = {
+                {"help",        no_argument,       0, 'h'},
+                {"verbose",     optional_argument, 0, 'v'},
+                {"sender-port", required_argument, 0, 's'},
+                {"client-port", required_argument, 0, 'c'},
+                {0,             0,                 0, 0}
+        };
+        int option_index = 0;
+
+        opt = getopt_long(argc, argv, "hv:s:c:", long_options, &option_index);
+
+        if (opt == -1) {
+            break;
+        }
+
+        switch (opt) {
+            case 'h':
+                print_help(argv[0], sender_port, client_port);
+                exit(0);
+            case 'v':
+                if (optarg) {
+                    verbose_level = atoi(optarg);
+                } else {
+                    verbose_level = 1;
+                }
+                if (verbose_level > 5) {
+                    verbose_level = 5;
+                }
+                break;
+            case 's':
+                sender_port = atoi(optarg);
+                if (sender_port < 1 || sender_port > 65535) {
+                    fprintf(stderr, "Error: Sender port must be between 1 and 65535\n");
+                    exit(1);
+                }
+                break;
+            case 'c':
+                client_port = atoi(optarg);
+                if (client_port < 1 || client_port > 65535) {
+                    fprintf(stderr, "Error: Client port must be between 1 and 65535\n");
+                    exit(1);
+                }
+                break;
+            default:
+                print_help(argv[0], sender_port, client_port);
+                exit(1);
+        }
+    }
+
     peers[0].type = -1;
-    peers[0].fd = setup_server_socket(PORT_SENDER);
+    peers[0].fd = setup_server_socket(sender_port);
     fds[0].fd = peers[0].fd;
     fds[0].events = POLLIN;
 
     peers[1].type = -1;
-    peers[1].fd = setup_server_socket(PORT_CLIENT);
+    peers[1].fd = setup_server_socket(client_port);
     fds[1].fd = peers[1].fd;
     fds[1].events = POLLIN;
 
+    // main loop
     while (1) {
-        try_send(); // this also adds POLLOUT to the fds[].events
+        // modify poll() preferences for consumers
+        for (int i = 2; i < n_peers; i++) {
+            if (peers[i].type != PEER_TYPE_CLIENT || will_hangup(i))
+                continue;
+            if (peers[i].extra.client.head == peers[i].extra.client.tail)
+                fds[i].events = POLLIN;
+            else
+                fds[i].events = POLLIN | POLLOUT;
+        }
         int ret = poll(fds, n_peers, -1);
         if (ret < 0) {
             perror("Poll failed");
@@ -376,28 +422,37 @@ int main() {
             accept_peer(fds[1].fd, PEER_TYPE_CLIENT);
         }
 
-        // handle existing senders
+        // handle disconnecting clients
         for (int i = 2; i < n_peers; i++) {
-            if (!will_hangup(i) && fds[i].revents & POLLIN) {
-                if (receive_jsons(i) > 0)
-                    try_send();
-            }
-            if (!will_hangup(i) && (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))) {
-                if (DEBUG_INPUT)
-                    printf("Client %d fd %d==%d has revent 0x%04x, closing\n", i, peers[i].fd, fds[i].fd,
-                           fds[i].revents);
-                prepare_for_hangup(i);
+            if (will_hangup(i) || !(fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)))
+                continue;
+
+            prepare_for_hangup(i);
+        }
+
+        // handle output first
+        for (int i = 2; i < n_peers; i++) {
+            if (will_hangup(i) || !(fds[i].revents & POLLOUT))
+                continue;
+            do_send_to_client(i);
+        }
+
+        // last, handle new inputs
+        for (int i = 2; i < n_peers; i++) {
+            if (will_hangup(i) || !(fds[i].revents & POLLIN))
+                continue;
+
+            if (peers[i].type == PEER_TYPE_CLIENT) {
+                char toilet[512];
+                if (read(peers[i].fd, toilet, sizeof(toilet)) <= 0)
+                    prepare_for_hangup(i);
+            } else {
+                receive_jsons(i);
             }
         }
 
-        // close the clients
-        for (int i = n_peers - 1; i >= 2; i--) {
-            if (will_hangup(i)) {
-                hangup_peer(i);
-            }
-        }
+        // hangup some peers
+        hangup_peers();
     }
-
-    return 0;
 }
 

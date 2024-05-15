@@ -1,6 +1,5 @@
-from managers.sse import SSE
+from sse.sse import SSE
 from datetime import datetime
-import os
 
 from managers import auth_manager, bots_manager, time_manager, remote_manager
 from model.remote import RemoteAccess
@@ -23,9 +22,6 @@ class SSEManager:
 
     def remote_access_disconnect(self, data):
         self.sse.publish(data, event='remote_access_disconnect', channel='remote')
-
-    def keep_alive(self):
-        self.sse.publish({}, event='keep-alive')
 
     def remote_access_news_items_updated(self, osint_source_ids):
         remote_access_event_ids = RemoteAccess.get_relevant_for_news_items(osint_source_ids)
@@ -82,4 +78,3 @@ sse_manager = SSEManager()
 
 def initialize(app):
     time_manager.schedule_job_minutes(1, sse_manager.check_report_item_locks, app)
-    time_manager.schedule_job_minutes(1, sse_manager.keep_alive)

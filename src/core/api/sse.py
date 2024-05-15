@@ -7,6 +7,7 @@ from managers import auth_manager, bots_manager, time_manager, remote_manager
 
 
 class TaranisSSE(Resource):
+
     @stream_with_context
     def stream(self):
         try:
@@ -18,7 +19,7 @@ class TaranisSSE(Resource):
 
         try:
             sock.connect(('localhost', 5001))
-            sock.settimeout(10)
+            sock.settimeout(1)
         except Exception as e:
             print(f"Failed to connect to server: {e}")
             sock.close()
@@ -31,7 +32,7 @@ class TaranisSSE(Resource):
                 try:
                     b = sock.recv(1)
                 except socket.timeout:
-                    yield ''
+                    yield ":\n\n"
                     continue
 
                 if not b:
@@ -41,6 +42,7 @@ class TaranisSSE(Resource):
                     char = data.decode('utf-8')
                     data = b""
                 except UnicodeDecodeError:
+                    yield ":\n\n"
                     continue
 
                 buffer += char
