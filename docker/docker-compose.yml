@@ -68,6 +68,7 @@ services:
 
       CVE_UPDATE_FILE: "${CVE_UPDATE_FILE}"
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
+      CWE_UPDATE_FILE: "${CWE_UPDATE_FILE}"
 
       TZ: "${TZ}"
       DEBUG: "true"
@@ -292,11 +293,11 @@ services:
 
 secrets:
   postgres_password:
-    file: secrets/postgres_password.txt
+    file: ./secrets/postgres_password.txt
   jwt_secret_key:
-    file: secrets/jwt_secret_key.txt
+    file: ./secrets/jwt_secret_key.txt
   api_key:
-    file: secrets/api_key.txt
+    file: ./secrets/api_key.txt
 
 volumes:
   redis_conf:
