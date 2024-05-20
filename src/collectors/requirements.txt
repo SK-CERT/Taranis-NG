@@ -12,7 +12,7 @@ marshmallow-enum==1.5.1
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
-requests==2.31.0
+requests==2.32.0
 schedule==1.2.1
 selenium==4.20.0
 slackclient==1.3.2
