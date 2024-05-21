@@ -23,7 +23,7 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-if="deleteAllowed() && hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn icon class="red" @click.stop="cardItemToolbar('delete')">
+                                            <v-btn icon class="red" @click.stop="toggleDeletePopup">
                                                 <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
@@ -31,7 +31,7 @@
                                 </v-col>
 
                                 <!--FOOTER-->
-                                <v-col cols="12" class="py-1 grey lighten-4">
+                                <v-col cols="12" class="py-1">
                                     <v-btn v-if="card.vulnerabilities_count > 0" depressed x-small class="red white--text mr-1">
                                         {{ $t('asset.vulnerabilities_count') + card.vulnerabilities_count }}
                                     </v-btn>
@@ -45,15 +45,23 @@
                 </v-hover>
             </v-col>
         </v-row>
+        <v-row>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.title">
+            </MessageBox>
+        </v-row>
     </v-container>
 </template>
 
 <script>
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardAsset",
+        components: { MessageBox },
         props: {
             card: Object,
         },
@@ -61,7 +69,8 @@
         data: () => ({
             toolbar: false,
             selected: false,
-            status: "in_progress"
+            status: "in_progress",
+            showDeletePopup: false,
         }),
         mixins: [AuthMixin],
         computed: {
@@ -97,6 +106,13 @@
                         this.itemClicked(this.card);
                         break;
                 }
+            },
+            toggleDeletePopup() {
+                this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
         }
     }

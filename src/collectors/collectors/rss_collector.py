@@ -31,6 +31,8 @@ class RSSCollector(BaseCollector):
     parameters = [
         Parameter(0, "FEED_URL", "Feed URL", "Full url for RSS feed", ParameterType.STRING),
         Parameter(0, "USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING),
+        Parameter(0, "LINKS_LIMIT", "Limit for article links",
+                     "OPTIONAL: Maximum number of article links to process. Default: all", ParameterType.NUMBER),
     ]
 
     parameters.extend(BaseCollector.parameters)
@@ -46,6 +48,7 @@ class RSSCollector(BaseCollector):
         """
         feed_url = source.parameter_values["FEED_URL"]
         interval = source.parameter_values["REFRESH_INTERVAL"]
+        links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
 
         log_manager.log_collector_activity("rss", source.name, "Starting collector for url: {}".format(feed_url))
 
@@ -101,59 +104,60 @@ class RSSCollector(BaseCollector):
 
             news_items = []
 
-            limit = BaseCollector.history(interval)
+            count = 0
             for feed_entry in feed["entries"]:
+                count += 1
                 for key in ["author", "published", "title", "description", "link"]:
                     if key not in feed_entry.keys():
                         feed_entry[key] = ""
 
-                published = feed_entry["published"]
-                published = dateparser.parse(published, settings={"DATE_ORDER": "DMY"})
-                # comment this at the beginning of the testing to get some initial data
-                if str(published) > str(limit):
-                    link_for_article = feed_entry["link"]
-                    if not link_for_article:
-                        log_manager.log_collector_activity("rss", source.name, "Skipping (empty link)")
-                        continue
+                link_for_article = feed_entry["link"]
+                if not link_for_article:
+                    log_manager.log_collector_activity("rss", source.name, "Skipping (empty link)")
+                    continue
 
-                    log_manager.log_collector_activity("rss", source.name, "Processing entry [{}]".format(link_for_article))
+                log_manager.log_collector_activity("rss", source.name, "Visiting article {}/{}: {}".format(count, len(feed["entries"]), link_for_article))
 
-                    html_content = ""
-                    request = urllib.request.Request(link_for_article)
-                    request.add_header("User-Agent", user_agent)
+                html_content = ""
+                request = urllib.request.Request(link_for_article)
+                request.add_header("User-Agent", user_agent)
 
-                    with opener(request) as response:
-                        html_content = response.read()
+                with opener(request) as response:
+                    html_content = response.read()
 
-                    soup = BeautifulSoup(html_content, features="html.parser")
+                soup = BeautifulSoup(html_content, features="html.parser")
 
-                    content = ""
+                content = ""
 
-                    if html_content:
-                        content_text = [p.text.strip() for p in soup.findAll("p")]
-                        replaced_str = "\xa0"
-                        if replaced_str:
-                            content = [w.replace(replaced_str, " ") for w in content_text]
-                            content = " ".join(content)
+                if html_content:
+                    content_text = [p.text.strip() for p in soup.findAll("p")]
+                    replaced_str = "\xa0"
+                    if replaced_str:
+                        content = [w.replace(replaced_str, " ") for w in content_text]
+                        content = " ".join(content)
 
-                    for_hash = feed_entry["author"] + feed_entry["title"] + feed_entry["link"]
+                for_hash = feed_entry["author"] + feed_entry["title"] + feed_entry["link"]
 
-                    news_item = NewsItemData(
-                        uuid.uuid4(),
-                        hashlib.sha256(for_hash.encode()).hexdigest(),
-                        feed_entry["title"],
-                        feed_entry["description"],
-                        feed_url,
-                        feed_entry["link"],
-                        feed_entry["published"],
-                        feed_entry["author"],
-                        datetime.datetime.now(),
-                        content,
-                        source.id,
-                        [],
-                    )
+                news_item = NewsItemData(
+                    uuid.uuid4(),
+                    hashlib.sha256(for_hash.encode()).hexdigest(),
+                    feed_entry["title"],
+                    feed_entry["description"],
+                    feed_url,
+                    feed_entry["link"],
+                    feed_entry["published"],
+                    feed_entry["author"],
+                    datetime.datetime.now(),
+                    content,
+                    source.id,
+                    [],
+                )
 
-                    news_items.append(news_item)
+                news_items.append(news_item)
+
+                if count >= links_limit & links_limit > 0:
+                    log_manager.log_collector_activity('rss', source.name, 'Limit for article links reached ({})'.format(links_limit))
+                    break
 
             BaseCollector.publish(news_items, source)
 

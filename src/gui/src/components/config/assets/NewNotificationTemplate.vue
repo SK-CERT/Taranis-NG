@@ -58,7 +58,11 @@
                         </v-col>
                         <v-col cols="12" class="pa-1">
                             <span style="font-size:16px">{{$t('notification_template.message_body')}}</span>
-                            <ckeditor :editor="editor" v-model="editorData" :config="editorConfig"></ckeditor>
+                            <vue-editor
+                                ref="assessEnter"
+                                v-model="editorData"
+                                :editorOptions="editorOptionVue2"
+                            ></vue-editor>
                         </v-col>
                     </v-row>
                     <v-row no-gutters class="pt-2">
@@ -86,20 +90,32 @@
     import {createNewNotificationTemplate} from "@/api/assets";
     import {updateNotificationTemplate} from "@/api/assets";
     import RecipientTable from "@/components/config/assets/RecipientTable";
-    import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+    import { VueEditor } from 'vue2-editor';
+
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' },
+            'blockquote', 'code-block', 'clean'],
+        [{ align: "" }, { align: "center" }, { align: "right" }, { align: "justify" }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+        [{ 'size': ['small', false, 'large', 'huge'] }, { 'header': [1, 2, 3, 4, 5, 6, false] },
+            { 'color': [] }, { 'background': [] }],
+        ['link', 'image'],
+    ];
 
     export default {
         name: "NewNotificationTemplate",
         components: {
-            RecipientTable
+            RecipientTable,
+            VueEditor,
         },
         data: () => ({
             visible: false,
             edit: false,
-            editor: ClassicEditor,
-            editorData: '<p></p>',
-            editorConfig: {
-                // The configuration of the editor.
+            editorOptionVue2: {
+                theme: 'snow',
+                modules: {
+                    toolbar: toolbarOptions
+                }
             },
             show_validation_error: false,
             show_error: false,

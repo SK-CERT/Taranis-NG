@@ -29,6 +29,7 @@
     import AttributeRadio from "@/components/common/attribute/AttributeRadio";
     import AttributeCPE from "@/components/common/attribute/AttributeCPE";
     import AttributeCVE from "@/components/common/attribute/AttributeCVE";
+    import AttributeCWE from "@/components/common/attribute/AttributeCWE";
     import AttributeBoolean from "@/components/common/attribute/AttributeBoolean";
     import AttributeTime from "@/components/common/attribute/AttributeTime";
     import AttributeDateTime from "@/components/common/attribute/AttributeDateTime";
@@ -48,6 +49,7 @@
             AttributeRadio,
             AttributeCPE,
             AttributeCVE,
+            AttributeCWE,
             AttributeBoolean,
             AttributeTime,
             AttributeDateTime,
@@ -73,6 +75,7 @@
                 RADIO: "Radio",
                 CPE: "CPE",
                 CVE: "CVE",
+                CWE: "CWE",
                 BOOLEAN: "Boolean",
                 TIME: "Time",
                 DATE_TIME: "DateTime",

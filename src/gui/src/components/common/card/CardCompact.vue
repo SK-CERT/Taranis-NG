@@ -23,7 +23,7 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="cardItemToolbar('delete')">
+                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="toggleDeletePopup">
                                                 <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
@@ -35,19 +35,28 @@
                 </v-hover>
             </v-col>
         </v-row>
+        <v-row>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.title">
+            </MessageBox>
+        </v-row>
     </v-container>
 
 </template>
 
 <script>
     import AuthMixin from "@/services/auth/auth_mixin";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardCompact",
+        components: { MessageBox },
         props: ['card', 'deletePermission'],
         mixins: [AuthMixin],
         data: () => ({
-            toolbar: false
+            toolbar: false,
+            showDeletePopup: false,
         }),
         methods: {
             itemClicked(data) {
@@ -67,6 +76,13 @@
                         this.itemClicked(this.card);
                         break;
                 }
+            },
+            toggleDeletePopup() {
+                this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
         },
         mounted() {

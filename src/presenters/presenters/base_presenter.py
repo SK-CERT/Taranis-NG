@@ -3,6 +3,7 @@
 Returns:
     _description_
 """
+
 from shared.schema.presenter import PresenterSchema
 from managers import log_manager
 import json
@@ -143,31 +144,38 @@ class BasePresenter:
             """
             color_values = {"WHITE": 0, "CLEAR": 1, "GREEN": 2, "AMBER": 3, "AMBER+STRICT": 4, "RED": 5}
             colors = []
-
             for report in reports:
-                if report.type == "Vulnerability Report":
+                if hasattr(report.attrs, "tlp"):
                     colors.append(report.attrs.tlp)
-
-            max_tlp = max(colors, key=lambda color: color_values.get(color, 0))
-            if not max_tlp:
+            if colors:
+                max_tlp = max(colors, key=lambda color: color_values.get(color, 1))
+            else:
                 max_tlp = "CLEAR"
             return max_tlp
 
-        def add_link_prefix(self, report, letter):
-            """Add link prefix to the report description and recommendations.
+        def link_renumbering(self, text, report_links, product_links):
+            """Replace the numbers enclosed in brackets in the given text with the corresponding indices from product_links.
 
             Arguments:
-                report -- report to add link prefix to
-                letter -- letter to use as a link prefix
+                text (str): The text in which the numbers enclosed in brackets will be replaced.
+                report_links (list): The list of report links.
+                product_links (list): The list of product links.
 
             Returns:
-                description, recommendations: report description and recommendations with link prefix added
+                str: The updated text with the numbers enclosed in brackets replaced by the corresponding indices from product_links.
             """
             pattern = r"\[(\d+)\]"
-            description = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.description)
-            recommendations = re.sub(pattern, lambda match: f"[{letter}{match.group(1)}]", report.attrs.recommendations)
 
-            return description, recommendations
+            # Create a mapping from old indices to new indices
+            mapping = {old_index + 1: product_links.index(item) + 1 for old_index, item in enumerate(report_links)}
+
+            # Use a regular expression to find all instances of numbers enclosed in brackets
+            def replace_match(match):
+                old_index = int(match.group(1))
+                new_index = mapping.get(old_index, old_index)  # Use the old index as a fallback
+                return f"[{new_index}]"
+
+            return re.sub(pattern, replace_match, text)
 
         def __init__(self, presenter_input):
             """Initialize the object.
@@ -176,13 +184,13 @@ class BasePresenter:
                 presenter_input -- input data
             """
             # types of report items (e.g. vuln report, disinfo report)
-            report_types = dict()
+            report_types = {}
             for report_type in presenter_input.report_types:
                 # index by ID
                 report_types[report_type.id] = report_type
 
             # attributes that can be used in report items (for internal use)
-            attribute_map = dict()
+            attribute_map = {}
             for report_type in presenter_input.report_types:
                 for attribute_group in report_type.attribute_groups:
                     for attribute_group_item in attribute_group.attribute_group_items:
@@ -190,21 +198,31 @@ class BasePresenter:
 
             self.product = presenter_input.product
             self.product.date = datetime.datetime.now()
-            self.report_items = list()
+            self.report_items = []
 
             for report in presenter_input.reports:
                 self.report_items.append(BasePresenter.ReportItemObject(report, report_types, attribute_map))
 
-            letter = "A"
             vul_report_count = 0
+            product_links = []
+            # If there are multiple vulnerability reports, we need to renumber the links
             for report in self.report_items:
-                if report.type == "Vulnerability Report":
-                    report.attrs.description, report.attrs.recommendations = self.add_link_prefix(report, letter)
-                    report.attrs.link_prefix = letter
-                    letter = chr(ord(letter) + 1)
+                if report.type.startswith("Vulnerability Report"):
                     vul_report_count += 1
+                    if hasattr(report.attrs, "links"):
+                        for link in report.attrs.links:
+                            if link not in product_links:
+                                product_links.append(link)
+                        if hasattr(report.attrs, "description"):
+                            report.attrs.description = self.link_renumbering(report.attrs.description, report.attrs.links, product_links)
+                        if hasattr(report.attrs, "recommendations"):
+                            report.attrs.recommendations = self.link_renumbering(
+                                report.attrs.recommendations, report.attrs.links, product_links
+                            )
+            # If there are vulnerability reports, set the max TLP and product links
             if vul_report_count > 0:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)
+                self.product.links = product_links
 
     def get_info(self):
         """Get info about the presenter.

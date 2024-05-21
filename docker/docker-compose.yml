@@ -244,7 +244,7 @@ services:
       VUE_APP_TARANIS_NG_URL: "${TARANIS_NG_HTTPS_URI}"
       VUE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
       VUE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
-      VUE_APP_TARANIS_NG_LOCALE: en
+      VUE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
       TZ: "${TZ}"
     labels:
       traefik.enable: "true"

@@ -3,14 +3,13 @@
         <v-row no-gutters>
             <v-col v-if="multiSelect" :style="UI.STYLE.card_selector_zone">
                 <v-row justify="center" align="center">
-                    <v-checkbox v-model="selected" @change="selectionChanged"/>
+                    <v-checkbox v-model="selected" @change="selectionChanged" />
                 </v-row>
             </v-col>
             <v-col :class="UI.CLASS.card_offset">
                 <v-hover v-slot="{hover}">
                     <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2"
-                            @click.stop="cardItemToolbar" :color="selected && multiSelect ? 'green lighten-4' : ''"
-                    >
+                            @click.stop="cardItemToolbar" :color="selected && multiSelect ? 'green lighten-4' : ''">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
@@ -34,7 +33,7 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="cardItemToolbar('delete')">
+                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="toggleDeletePopup">
                                                 <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
@@ -46,19 +45,28 @@
                 </v-hover>
             </v-col>
         </v-row>
+        <v-row>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.name">
+            </MessageBox>
+        </v-row>
     </v-container>
 </template>
 
 <script>
 
     import AuthMixin from "@/services/auth/auth_mixin";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
         name: "CardSource",
+        components: { MessageBox },
         props: ['card', 'deletePermission'],
-        data:() => ({
+        data: () => ({
             toolbar: false,
-            selected: false
+            selected: false,
+            showDeletePopup: false,
         }),
         mixins: [AuthMixin],
         computed: {
@@ -75,7 +83,7 @@
         },
         methods: {
             selectionChanged() {
-                if(this.selected) {
+                if (this.selected) {
                     this.$store.dispatch('selectOSINTSource', this.card.id);
                 } else {
                     this.$store.dispatch('deselectOSINTSource', this.card.id);
@@ -100,6 +108,13 @@
                         break;
                 }
             },
+            toggleDeletePopup() {
+                this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
+            }
 
         },
         mounted() {

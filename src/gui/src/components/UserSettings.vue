@@ -43,6 +43,14 @@
                                             :label="$t('settings.dark_theme')"
                                         ></v-switch>
                                     </v-col>
+                                    <v-col>
+                                        <v-select v-model="language" @change="languageChage"
+                                                  :value="language"
+                                                  :items="languages"
+                                                  item-text="value"
+                                                  item-value="id"
+                                                  label="Language"></v-select>
+                                    </v-col>
                                 </v-row>
                             </v-container>
                         </v-tab-item>
@@ -60,7 +68,7 @@
                                 >
 
                                     <template v-slot:top>
-                                        <v-toolbar flat color="white">
+                                        <v-toolbar flat>
                                             <v-toolbar-title>{{$t('osint_source.word_lists')}}</v-toolbar-title>
                                         </v-toolbar>
                                     </template>
@@ -76,8 +84,7 @@
                                     <v-tooltip top v-for="shortcut in shortcuts" :key="shortcut.alias">
                                         <template v-slot:activator="{on}">
                                             <v-btn  :id=shortcut.alias v-on="on"
-                                                    class="blue lighten-5 ma-1" style="width: calc(100% / 3 - 8px);"
-                                                    text
+                                                    class="ma-1" style="width: calc(100% / 3 - 8px);"
                                                     @click.stop="pressKeyDialog(shortcut.alias)"
                                                     @blur="pressKeyVisible = false"
                                             >
@@ -137,6 +144,7 @@
         data: () => ({
             visible: false,
             dark_theme: false,
+            language: 'en',
             spellcheck: null,
             pressKeyVisible: false,
             shortcuts: [],
@@ -150,18 +158,26 @@
                 {text: 'Description', value: 'description'},
             ],
             word_lists: [],
-            selected_word_lists: []
+            selected_word_lists: [],
+            languages: [
+                { id: 'en', value: 'English' },
+                { id: 'cs', value: 'Czech' },
+                { id: 'sk', value: 'Slovak' },
+            ],
         }),
         methods: {
             close() {
                 this.visible = false;
-                this.$vuetify.theme.dark = this.$store.getters.getDarkTheme
+                // set original settings values if no SAVE is selected
+                this.$vuetify.theme.dark = this.$store.getters.getProfileDarkTheme
+                this.$i18n.locale = this.$store.getters.getProfileLanguage
             },
 
             save() {
                 this.$store.dispatch('saveUserProfile', {
                     spellcheck: this.spellcheck,
                     dark_theme: this.dark_theme,
+                    language: this.language,
                     hotkeys: this.shortcuts,
                     word_lists: this.selected_word_lists,
                 }).then(() => {
@@ -171,6 +187,10 @@
 
             darkToggle() {
                 this.$vuetify.theme.dark = this.dark_theme
+            },
+
+            languageChage() {
+                this.$i18n.locale = this.language
             },
 
             pressKeyDialog(event) {
@@ -208,6 +228,7 @@
                 this.visible = true;
                 this.spellcheck = this.$store.getters.getProfileSpellcheck
                 this.dark_theme = this.$store.getters.getProfileDarkTheme
+                this.language = this.$store.getters.getProfileLanguage
                 this.selected_word_lists = this.$store.getters.getProfileWordLists
                 this.shortcuts = this.$store.getters.getProfileHotkeys
             });

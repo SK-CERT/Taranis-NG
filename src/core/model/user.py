@@ -63,7 +63,7 @@ class User(db.Model):
             for permission in permissions:
                 self.permissions.append(Permission.find(permission.id))
 
-        self.profile = UserProfile(True, False, [], [])
+        self.profile = UserProfile(True, False, None, [], [])
         self.title = ""
         self.subtitle = ""
         self.tag = ""
@@ -222,7 +222,7 @@ class User(db.Model):
 
         user.profile.spellcheck = updated_profile.spellcheck
         user.profile.dark_theme = updated_profile.dark_theme
-
+        user.profile.language = updated_profile.language
         user.profile.word_lists = []
         from model.word_list import WordList
         for word_list in updated_profile.word_lists:
@@ -272,14 +272,15 @@ class UserProfile(db.Model):
 
     spellcheck = db.Column(db.Boolean, default=True)
     dark_theme = db.Column(db.Boolean, default=False)
-
+    language = db.Column(db.String(2))
     hotkeys = db.relationship("Hotkey", cascade="all, delete-orphan")
     word_lists = db.relationship('WordList', secondary='user_profile_word_list')
 
-    def __init__(self, spellcheck, dark_theme, hotkeys, word_lists):
+    def __init__(self, spellcheck, dark_theme, language, hotkeys, word_lists):
         self.id = None
         self.spellcheck = spellcheck
         self.dark_theme = dark_theme
+        self.language = language
         self.hotkeys = hotkeys
 
         self.word_lists = []

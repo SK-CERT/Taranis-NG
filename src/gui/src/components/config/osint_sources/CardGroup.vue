@@ -24,7 +24,7 @@
                                     <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
                                             <v-btn v-if="!card.default && checkPermission(deletePermission)" icon class="red"
-                                                   @click.stop="cardItemToolbar('delete')">
+                                                   @click.stop="toggleDeletePopup">
                                                 <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
@@ -36,63 +36,79 @@
                 </v-hover>
             </v-col>
         </v-row>
+        <v-row>
+            <MessageBox class="justify-center" v-if="showDeletePopup"
+                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+                        :title="$t('common.messagebox.delete')" :message="card.name">
+            </MessageBox>
+        </v-row>
     </v-container>
 </template>
 
 <script>
 
-import AuthMixin from "@/services/auth/auth_mixin";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
-export default {
-    name: "CardGroup",
-    props: ['card', 'deletePermission'],
-    mixins: [AuthMixin],
-    data: () => ({
-        toolbar: false
-    }),
-    computed: {
-        cardName() {
-            if (this.card.default) {
-                return this.$t('osint_source_group.default_group')
-            } else {
-                return this.card.name
+    export default {
+        name: "CardGroup",
+        components: { MessageBox },
+        props: ['card', 'deletePermission'],
+        mixins: [AuthMixin],
+        data: () => ({
+            toolbar: false,
+            showDeletePopup: false,
+        }),
+        computed: {
+            cardName() {
+                if (this.card.default) {
+                    return this.$t('osint_source_group.default_group')
+                } else {
+                    return this.card.name
+                }
+            },
+            cardDescription() {
+                if (this.card.default) {
+                    return this.$t('osint_source_group.default_group_description')
+                } else {
+                    return this.card.desc
+                }
+            },
+            cardStatus() {
+                if (this.card.status === undefined) {
+                    return "status-green"
+                } else {
+                    return "status-" + this.card.status
+                }
             }
         },
-        cardDescription() {
-            if (this.card.default) {
-                return this.$t('osint_source_group.default_group_description')
-            } else {
-                return this.card.desc
+        methods: {
+            itemClicked(data) {
+                this.$root.$emit('show-edit', data)
+            },
+            deleteClicked(data) {
+                this.$root.$emit('delete-item', data)
+            },
+            cardItemToolbar(action) {
+                switch (action) {
+                    case "delete":
+                        this.deleteClicked(this.card)
+                        break;
+
+                    default:
+                        this.toolbar = false;
+                        this.itemClicked(this.card);
+                        break;
+                }
+            },
+            toggleDeletePopup() {
+                this.showDeletePopup = !this.showDeletePopup;
+            },
+            handleDeletion() {
+                this.showDeletePopup = false;
+                this.cardItemToolbar('delete')
             }
-        },
-        cardStatus() {
-            if (this.card.status === undefined) {
-                return "status-green"
-            } else {
-                return "status-" + this.card.status
-            }
+
         }
-    },
-    methods: {
-        itemClicked(data) {
-            this.$root.$emit('show-edit', data)
-        },
-        deleteClicked(data) {
-            this.$root.$emit('delete-item', data)
-        },
-        cardItemToolbar(action) {
-            switch (action) {
-                case "delete":
-                    this.deleteClicked(this.card)
-                    break;
-
-                default:
-                    this.toolbar = false;
-                    this.itemClicked(this.card);
-                    break;
-            }
-        },
-
     }
-}
 </script>

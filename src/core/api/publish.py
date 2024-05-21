@@ -1,3 +1,15 @@
+"""This module contains API endpoints for publishing products.
+
+The module includes the following classes:
+- Products: Represents the API endpoint for retrieving and creating products.
+- Product: Represents a single product resource.
+- PublishProduct: Represents the API resource for publishing a product.
+- ProductsOverview: Represents the resource for retrieving product overview.
+
+Each class has its own methods for handling different HTTP requests.
+
+The module also includes an initialization function to add the resources to the API instance.
+"""
 import base64
 from flask import Response
 from flask import request
@@ -10,77 +22,162 @@ from model.permission import Permission
 
 
 class Products(Resource):
+    """A class representing the API endpoint for products.
 
-    @auth_required('PUBLISH_ACCESS')
+    This class provides methods for retrieving and creating products.
+
+    Attributes:
+        Resource: A base class for implementing API resources.
+
+    Methods:
+        get: Retrieves a list of products based on the provided filters.
+        post: Creates a new product.
+    """
+
+    @auth_required("PUBLISH_ACCESS")
     def get(self):
+        """Retrieve a list of products based on the provided filters.
+
+        Returns:
+            A JSON response containing the list of products.
+        """
         try:
             filter = {}
-            if 'search' in request.args and request.args['search']:
-                filter['search'] = request.args['search']
-            if 'range' in request.args and request.args['range']:
-                filter['range'] = request.args['range']
-            if 'sort' in request.args and request.args['sort']:
-                filter['sort'] = request.args['sort']
+            if "search" in request.args and request.args["search"]:
+                filter["search"] = request.args["search"]
+            if "range" in request.args and request.args["range"]:
+                filter["range"] = request.args["range"]
+            if "sort" in request.args and request.args["sort"]:
+                filter["sort"] = request.args["sort"]
 
             offset = None
-            if 'offset' in request.args and request.args['offset']:
-                offset = int(request.args['offset'])
+            if "offset" in request.args and request.args["offset"]:
+                offset = int(request.args["offset"])
 
             limit = 50
-            if 'limit' in request.args and request.args['limit']:
-                limit = min(int(request.args['limit']), 200)
+            if "limit" in request.args and request.args["limit"]:
+                limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
             log_manager.log_debug(ex)
             return "", 400
 
         return product.Product.get_json(filter, offset, limit, auth_manager.get_user_from_jwt())
 
-    @auth_required('PUBLISH_CREATE')
+    @auth_required("PUBLISH_CREATE")
     def post(self):
+        """Create a new product.
+
+        Returns:
+            The ID of the newly created product.
+        """
         user = auth_manager.get_user_from_jwt()
         new_product = product.Product.add_product(request.json, user.id)
         return new_product.id
 
 
 class Product(Resource):
+    """Represent a product resource.
 
-    @auth_required('PUBLISH_ACCESS', ACLCheck.PRODUCT_TYPE_ACCESS)
+    Arguments:
+        Resource -- The base class for API resources.
+    """
+
+    @auth_required("PUBLISH_ACCESS", ACLCheck.PRODUCT_TYPE_ACCESS)
     def get(self, product_id):
+        """Get the details of a product.
+
+        Arguments:
+            product_id (int): The ID of the product.
+
+        Returns:
+            dict: A JSON object containing the details of the product.
+        """
         return product.Product.get_detail_json(product_id)
 
-    @auth_required('PUBLISH_UPDATE', ACLCheck.PRODUCT_TYPE_MODIFY)
+    @auth_required("PUBLISH_UPDATE", ACLCheck.PRODUCT_TYPE_MODIFY)
     def put(self, product_id):
+        """Update a product.
+
+        Arguments:
+            product_id (int): The ID of the product to be updated.
+        """
         product.Product.update_product(product_id, request.json)
 
-    @auth_required('PUBLISH_DELETE', ACLCheck.PRODUCT_TYPE_MODIFY)
+    @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_TYPE_MODIFY)
     def delete(self, product_id):
+        """Delete a product.
+
+        Arguments:
+            product_id (int): The ID of the product to be deleted.
+        """
         return product.Product.delete(product_id)
 
 
 class PublishProduct(Resource):
+    """A class representing the API resource for publishing a product.
 
-    @auth_required('PUBLISH_PRODUCT')
+    This class provides methods for publishing a product and handling the publish operation.
+
+    Arguments:
+        Resource -- The base class for API resources.
+
+    Returns:
+        The result of the publish operation or an error message and status code if the operation fails.
+    """
+
+    @auth_required("PUBLISH_PRODUCT")
     def post(self, product_id, publisher_id):
+        """Publish a product.
+
+        Arguments:
+            product_id -- The ID of the product to be published.
+            publisher_id -- The ID of the publisher.
+
+        Returns:
+            If the product is successfully generated, returns the result of the publish operation.
+            Otherwise, returns a tuple containing the error message and the status code.
+        """
         product_data, status_code = presenters_manager.generate_product(product_id)
         if status_code == 200:
-            return publishers_manager.publish(publisher_preset.PublisherPreset.find(publisher_id), product_data, None,
-                                              None, None)
+            return publishers_manager.publish(publisher_preset.PublisherPreset.find(publisher_id), product_data, None, None, None)
         else:
             return "Failed to generate product", status_code
 
 
 class ProductsOverview(Resource):
+    """A resource class for retrieving product overview.
+
+    This class handles the GET request for retrieving product overview based on the provided product ID.
+    It requires a valid JWT (JSON Web Token) in the request arguments for authentication and authorization.
+
+    Attributes:
+        Resource (class): The base class for creating API resources.
+
+    Methods:
+        get: Handles the GET request for retrieving product overview.
+    """
 
     def get(self, product_id):
-        if 'jwt' in request.args:
-            user = auth_manager.decode_user_from_jwt(request.args['jwt'])
+        """Get the product data for the given product ID.
+
+        Arguments:
+            product_id (str): The ID of the product.
+
+        Returns:
+            Response: The product data as a response object.
+        """
+        if "jwt" in request.args:
+            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
             if user is not None:
                 permissions = user.get_permissions()
-                if 'PUBLISH_ACCESS' in permissions:
+                if "PUBLISH_ACCESS" in permissions:
                     if product_type.ProductType.allowed_with_acl(product_id, user, False, True, False):
                         product_data, status_code = presenters_manager.generate_product(product_id)
                         if status_code == 200:
-                            return Response(base64.b64decode(product_data['data']), mimetype=product_data['mime_type'])
+                            if "message_body" in product_data:
+                                return Response(base64.b64decode(product_data["message_body"]), mimetype=product_data["mime_type"])
+                            else:
+                                return Response(base64.b64decode(product_data["data"]), mimetype=product_data["mime_type"])
                         else:
                             return "Failed to generate product", status_code
                     else:
@@ -94,6 +191,11 @@ class ProductsOverview(Resource):
 
 
 def initialize(api):
+    """Initialize the publish module.
+
+    Arguments:
+        api -- The API instance to add resources to.
+    """
     api.add_resource(Products, "/api/v1/publish/products")
     api.add_resource(Product, "/api/v1/publish/products/<int:product_id>")
     api.add_resource(ProductsOverview, "/api/v1/publish/products/<int:product_id>/overview")

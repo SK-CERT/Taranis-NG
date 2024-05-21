@@ -71,6 +71,9 @@ input {
 .checkbox-button__control {
     transform: scale(0.75)
 }
+.crlf {
+    white-space: pre-line;
+}
 
 /*FOOTER*/
 .footer_text {

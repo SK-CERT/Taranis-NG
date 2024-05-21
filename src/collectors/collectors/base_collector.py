@@ -49,12 +49,11 @@ class BaseCollector:
 
     @staticmethod
     def print_exception(source, error):
-        log_info('OSINTSource ID: ' + source.id)
-        log_info('OSINTSource name: ' + source.name)
+        log_warning('OSINTSource name: ' + source.name)
         if str(error).startswith('b'):
-            log_info('ERROR: ' + str(error)[2:-1])
+            log_warning('ERROR: ' + str(error)[2:-1])
         else:
-            log_info('ERROR: ' + str(error))
+            log_warning('ERROR: ' + str(error))
 
     @staticmethod
     def timezone_info():
@@ -306,3 +305,13 @@ class BaseCollector:
 
     def initialize(self):
         self.refresh()
+
+    @staticmethod
+    def read_int_parameter(name, default_value, source):
+        try:
+            val = int(source.parameter_values[name])
+            if val <= 0:
+                val = default_value
+        except Exception:
+            val = default_value
+        return val

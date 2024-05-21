@@ -18,7 +18,8 @@ const actions = {
 
         return getDashboardData()
             .then(response => {
-                context.commit('setDashboardData', response.data);
+                if (response)
+                    context.commit('setDashboardData', response.data);
             })
     }
 };

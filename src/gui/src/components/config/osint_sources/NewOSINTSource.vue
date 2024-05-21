@@ -90,7 +90,7 @@
                                           class="elevation-1"
                             >
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>
                                             {{ $t('osint_source.osint_source_groups') }}
                                         </v-toolbar-title>
@@ -112,7 +112,7 @@
                             >
 
                                 <template v-slot:top>
-                                    <v-toolbar flat color="white">
+                                    <v-toolbar flat>
                                         <v-toolbar-title>{{ $t('osint_source.word_lists') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>

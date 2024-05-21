@@ -47,6 +47,7 @@ const state = {
     ],
     spellcheck: true,
     dark_theme: false,
+    language: "",
     word_lists: []
 };
 
@@ -74,6 +75,7 @@ const mutations = {
     setUserProfile(state, profile) {
         state.spellcheck = profile.spellcheck
         state.dark_theme = profile.dark_theme
+        state.language = profile.language
         state.word_lists = profile.word_lists
         for (let i = 0; i < state.hotkeys.length; i++) {
             for (let j = 0; j < profile.hotkeys.length; j++) {
@@ -102,6 +104,24 @@ const getters = {
 
     getProfileWordLists(state) {
         return state.word_lists;
+    },
+
+    getProfileLanguage(state) {
+        let lng = state.language;
+        if (!lng) {
+            lng = navigator.language.split('-')[0];
+        }
+        if (!lng && typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
+            lng = process.env.VUE_APP_TARANIS_NG_LOCALE;
+        }
+        if (!lng) {
+            let bash_locale = "$VUE_APP_TARANIS_NG_LOCALE";
+            lng = bash_locale;
+        }
+        if (!lng) {
+            lng = "en";
+        }
+        return lng;
     }
 };
 

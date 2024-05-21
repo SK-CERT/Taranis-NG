@@ -24,14 +24,14 @@
                             :page.sync="current_page"
                             @click:row="clickRow"
                             :footer-props="{
-                                                      showFirstLastPage: true,
-                                                      itemsPerPageOptions: [25, 50, 100],
-                                                      showCurrentPage: true
-                                                    }"
+                                               showFirstLastPage: true,
+                                               itemsPerPageOptions: [25, 50, 100],
+                                               showCurrentPage: true
+                                           }"
 
                         >
                             <template v-slot:top>
-                                <v-toolbar flat color="white">
+                                <v-toolbar flat>
                                     <v-toolbar-title>{{$t('attribute.attribute_constants')}}</v-toolbar-title>
                                     <v-divider
                                         class="mx-4"
