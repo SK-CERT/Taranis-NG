@@ -19,6 +19,8 @@ build/
 *.bak
 
 # sensitive data not to be commited
+docker/.env
+docker/secrets/*.txt
 .env.local
 .env.*.local
 src/.env

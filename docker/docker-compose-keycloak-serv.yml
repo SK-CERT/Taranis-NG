@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: "taranis-ng-keycloak"
       POSTGRES_USER: "taranis-ng-keycloak"
-      POSTGRES_PASSWORD: "${POSTGRES_KEYCLOAK_PASSWORD}"
+      POSTGRES_PASSWORD: /run/secrets/keycloak_postgres_password
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
     volumes:
       - "keycloak_db_data:/var/lib/postgresql/data"
@@ -15,7 +15,9 @@ services:
       driver: "json-file"
       options:
         max-size: "200k"
-        max-file: "10" 
+        max-file: "10"
+    secrets:
+      - keycloak_postgres_password
 
   keycloak:
     image: "skcert/taranis-ng-keycloak:${TARANIS_NG_TAG}"
@@ -32,10 +34,12 @@ services:
       DB_DATABASE: taranis-ng-keycloak
       DB_USER: taranis-ng-keycloak
       DB_PASSWORD: "${POSTGRES_KEYCLOAK_PASSWORD}"
+      DB_PASSWORD_FILE: /run/secrets/keycloak_postgres_password
       KEYCLOAK_IMPORT: "/opt/jboss/keycloak/realm-export.json"
       KEYCLOAK_FRONTEND_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth"
       KEYCLOAK_USER: "${KEYCLOAK_USER}"
       KEYCLOAK_PASSWORD: "${KEYCLOAK_PASSWORD}"
+      KEYCLOAK_PASSWORD_FILE: /run/secrets/keycloak_password
       KEYCLOAK_DEFAULT_THEME: "taranis-ng"
       PROXY_ADDRESS_FORWARDING: "false"
       JAVA_OPTS: "-Dkeycloak.profile.feature.upload_scripts=enabled"
@@ -57,8 +61,16 @@ services:
       traefik.http.routers.taranis-keycloak-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-keycloak-443.middlewares: "taranis-keycloak-stripprefix"
       traefik.http.routers.taranis-keycloak-443.service: "taranis-keycloak"
+    secrets:
+      - keycloak_postgres_password
+      - keycloak_password
+
+secrets:
+  postgres_keycloak_password:
+    file: secrets/keycloak_postgres_password.txt
+  keycloak_password:
+    file: secrets/keycloak_password.txt
 
 volumes:
   keycloak_db_data:
   keycloak_data:
-

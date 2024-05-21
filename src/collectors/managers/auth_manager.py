@@ -3,12 +3,18 @@
 Returns:
     wrapper: Wrapper function for the API endpoints.
 """
+
 from functools import wraps
 from flask import request
 import os
 import ssl
 
-api_key = os.getenv("API_KEY")
+try:
+    with open(os.getenv("API_KEY_FILE"), "r") as file:
+        api_key = file.read()
+except FileNotFoundError:
+    print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
+    api_key = os.getenv("API_KEY")
 
 if os.getenv("SSL_VERIFICATION") == "False":
     try:

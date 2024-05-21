@@ -8,10 +8,16 @@ echo "Running sse forward in the background..."
 echo "Running migrations..."
 python /app/db_migration.py db upgrade head
 
-if [ `python ./manage.py collector --list | wc -l` = 0 -a x"$SKIP_DEFAULT_COLLECTOR" != "xtrue" ]; then
+if [ "$(python ./manage.py collector --list | wc -l)" == 0 ] && [ x"$SKIP_DEFAULT_COLLECTOR" != "xtrue" ]; then
     (
     echo "Adding default collector"
-    python ./manage.py collector --create --name "Default Docker Collector" --description "A local collector node configured as a part of Taranis NG default installation." --api-url "http://collectors/" --api-key "$COLLECTOR_PRESENTER_PUBLISHER_API_KEY"
+    if [ -z "$API_KEY_FILE" ]; then
+        echo "API_KEY_FILE variable is not set, will use API_KEY..."
+    else
+        echo "Reading API key from file..."
+        API_KEY=$(cat "$API_KEY_FILE")
+    fi
+    python ./manage.py collector --create --name "Default Docker Collector" --description "A local collector node configured as a part of Taranis NG default installation." --api-url "http://collectors/" --api-key "$API_KEY"
     ) &
 fi
 
