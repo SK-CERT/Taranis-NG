@@ -7,7 +7,8 @@ and deleting a user from the external authentication system.
 
 Functions:
 - keycloak_user_management_enabled(): Check if Keycloak user management is enabled.
-- get_keycloak_password(): Get the Keycloak admin password.
+- get_keycloak_client_secret_key(): Get the Keycloak client_secret_key.
+- get_keycloak_admin_password(): Get the Keycloak admin password.
 - get_keycloak_admin(): Return an instance of KeycloakAdmin.
 - create_user(user_data): Create a user in the external authentication system.
 - update_user(user_data, original_username): Update user information in the external authentication system.
@@ -30,26 +31,40 @@ def keycloak_user_management_enabled():
         return False
 
 
-def get_keycloak_password():
+def get_keycloak_client_secret_key():
+    """Get the Keycloak client_secret_key.
+
+    This function retrieves the Keycloak client_secret_key from the file
+    specified by the environment variable KEYCLOAK_CLIENT_SECRET_KEY_FILE.
+
+    Returns:
+        str: The Keycloak client_secret_key.
+    """
+    try:
+        with open(os.getenv("KEYCLOAK_CLIENT_SECRET_KEY_FILE"), "r") as file:
+            client_secret_key = file.read()
+    except FileNotFoundError:
+        print("KEYCLOAK_CLIENT_SECRET_KEY_FILE not found. Please check this variable and verify the path of the file containing the secret.", flush=True)
+        client_secret_key = "not-really-a-secret"
+    return client_secret_key
+
+
+def get_keycloak_admin_password():
     """Get the Keycloak admin password.
 
-    This function retrieves the Keycloak admin password from the environment variable
-    KEYCLOAK_ADMIN_PASSWORD. If the environment variable is not set, it reads the password
-    from the file specified by the environment variable KEYCLOAK_ADMIN_PASSWORD_FILE.
+    This function retrieves the Keycloak admin password from the file
+    specified by the environment variable KEYCLOAK_ADMIN_PASSWORD_FILE.
 
     Returns:
         str: The Keycloak admin password.
     """
     try:
         with open(os.getenv("KEYCLOAK_ADMIN_PASSWORD_FILE"), "r") as file:
-            keycloak_password = file.read()
+            keycloak_admin_password = file.read()
     except FileNotFoundError:
-        print(
-            "KEYCLOAK_ADMIN_PASSWORD_FILE not found. Please set the KEYCLOAK_ADMIN_PASSWORD_FILE environment variable to the path of "
-            "the file containing the Keycloak admin password."
-        )
-        keycloak_password = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
-    return keycloak_password
+        print("KEYCLOAK_ADMIN_PASSWORD_FILE not found. Please check this variable and verify the path of the file containing the Keycloak admin password.", flush=True)
+        keycloak_admin_password = "not-really-a-password"
+    return keycloak_admin_password
 
 
 def get_keycloak_admin():
@@ -62,12 +77,12 @@ def get_keycloak_admin():
         KeycloakAdmin: An instance of the KeycloakAdmin class.
     """
     return KeycloakAdmin(
-        server_url=os.getenv("KEYCLOAK_SERVER_URL"),
-        username=os.getenv("KEYCLOAK_ADMIN_USERNAME"),
-        password=get_keycloak_password(),
-        realm_name=os.getenv("KEYCLOAK_REALM_NAME"),
-        client_secret_key=os.getenv("KEYCLOAK_CLIENT_SECRET_KEY"),
-        verify=(os.getenv("KEYCLOAK_VERIFY").lower() == "true"),
+        server_url        = os.getenv("TARANIS_NG_KEYCLOAK_INTERNAL_URL"),
+        username          = os.getenv("KEYCLOAK_ADMIN_USERNAME"),
+        password          = get_keycloak_admin_password(),
+        realm_name        = os.getenv("KEYCLOAK_REALM_NAME"),
+        client_secret_key = get_keycloak_client_secret_key(),
+        verify            = (os.getenv("KEYCLOAK_VERIFY").lower() == "true"),
     )
 
 

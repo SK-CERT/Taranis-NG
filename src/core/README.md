@@ -43,23 +43,37 @@ Keycloak is not needed to run test version of TaranisNG at the moment. You can u
     VUE_APP_TARANIS_NG_LOGOUT_URL=http://127.0.0.1:5000/api/auth/logout
     ```
 
-## Keycloak example of docker-compose.yml for taranis-ng-core:
+## Keycloak client example of docker-compose.yml:
+
+**taranis-ng-core** section:
 ```
+TARANIS_NG_AUTHENTICATOR: "keycloak"
 OPENID_LOGOUT_URL: "https://keycloak.example.com/auth/realms/jiskb/protocol/openid-connect/logout?redirect_uri=GOTO_URL"
 TARANIS_NG_KEYCLOAK_URL: "https://keycloak.example.com"
 TARANIS_NG_KEYCLOAK_INTERNAL_URL: "https://keycloak.int.example.com"
 TARANIS_NG_KEYCLOAK_CLIENT_ID: "taranis-ng"
-TARANIS_NG_KEYCLOAK_CLIENT_SECRET: "XXXXXX"
-TARANIS_NG_AUTHENTICATOR: "keycloak"
 KEYCLOAK_REALM_NAME: "taranis-ng"
 KEYCLOAK_USER_MANAGEMENT: "false"
+```
+
+update Keycloak CLIENT_SECRET_KEY value inside keycloak_client_secret_key.txt file. Path is defined in this section:
+```
+secrets:
+  keycloak_client_secret_key:
+    file: ./secrets/keycloak_client_secret_key.txt
+```
+
+**taranis-ng-gui** section:
+```
+VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/auth/logout?gotoUrl=TARANIS_GUI_URI"
+VUE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
 ```
 
 You can use and modify the existing `docker-compose-keycloak.yml` example in the repository and
 run with ```docker-compose -f docker-compose.yml -f docker-compose-keycloak.yml```
 
 
-# **LDAP authentication**
+# **LDAP setup**
 If you prefer to authenticate users with LDAP, you need to set environment variables similarly to this:
 ```
 TARANIS_NG_AUTHENTICATOR: "ldap"
