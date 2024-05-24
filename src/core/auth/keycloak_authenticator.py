@@ -4,7 +4,7 @@ from flask_restful import request
 from requests import post
 from requests.auth import HTTPBasicAuth
 
-from managers import log_manager
+from managers import log_manager, external_auth_manager
 from auth.base_authenticator import BaseAuthenticator
 
 
@@ -27,7 +27,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
                 # original redirect_uri (host needs to match)
             },
             auth=HTTPBasicAuth(environ.get('TARANIS_NG_KEYCLOAK_CLIENT_ID'),
-                               environ.get('TARANIS_NG_KEYCLOAK_CLIENT_SECRET')),
+                               external_auth_manager.get_keycloak_client_secret_key()),
             # do not forget credentials
             proxies={'http': None, 'https': None},
             allow_redirects=False, verify=False)
