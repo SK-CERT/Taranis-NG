@@ -71,7 +71,7 @@
                 if (this.card.default) {
                     return this.$t('osint_source_group.default_group_description')
                 } else {
-                    return this.card.desc
+                    return this.card.description
                 }
             },
             cardStatus() {
