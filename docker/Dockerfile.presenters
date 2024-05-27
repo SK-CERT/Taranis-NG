@@ -28,7 +28,22 @@ RUN \
     apk add --no-cache \
     msttcorefonts-installer \
     fontconfig \
-    font-noto-all \
+    font-noto \
+    font-noto-arabic \
+    font-noto-armenian \
+    font-noto-bengali \
+    font-noto-devanagari \
+    font-noto-ethiopic \
+    font-noto-extra \
+    font-noto-georgian \
+    font-noto-hebrew \
+    font-noto-kannada \
+    font-noto-lao \
+    font-noto-malayalam \
+    font-noto-myanmar \
+    font-noto-tamil \
+    font-noto-thai \
+    font-noto-tibetan \
     terminus-font \
     ttf-opensans \
     font-bakoma \
