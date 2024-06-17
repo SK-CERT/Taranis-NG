@@ -14,30 +14,18 @@
 
                 <v-card>
                     <v-card-text>
-                        <v-data-table
-                            :headers="headers"
-                            :items="attribute_enums"
-                            :server-items-length="attribute_enums_total_count"
-                            @update:options="updateOptions"
-                            :items-per-page="25"
-                            class="elevation-1 enum_selector"
-                            :page.sync="current_page"
-                            @click:row="clickRow"
-                            :footer-props="{
-                                               showFirstLastPage: true,
-                                               itemsPerPageOptions: [25, 50, 100],
-                                               showCurrentPage: true
-                                           }"
-
-                        >
+                        <v-data-table :headers="headers" :items="attribute_enums"
+                            :server-items-length="attribute_enums_total_count" @update:options="updateOptions"
+                            :items-per-page="25" class="elevation-1 enum_selector" :page.sync="current_page"
+                            @click:row="clickRow" :footer-props="{
+                                showFirstLastPage: true,
+                                itemsPerPageOptions: [25, 50, 100],
+                                showCurrentPage: true
+                            }">
                             <template v-slot:top>
-                                <v-toolbar flat>
-                                    <v-toolbar-title>{{$t('attribute.attribute_constants')}}</v-toolbar-title>
-                                    <v-divider
-                                        class="mx-4"
-                                        inset
-                                        vertical
-                                    ></v-divider>
+                                <v-toolbar flat color="white">
+                                    <v-toolbar-title>{{ $t('attribute.attribute_constants') }}</v-toolbar-title>
+                                    <v-divider class="mx-4" inset vertical></v-divider>
                                     <v-spacer></v-spacer>
                                     <v-text-field v-model="search" append-icon="mdi-magnify" :label="$t('attribute.search')"
                                         v-on:keyup="filterSearch" single-line hide-details></v-text-field>
