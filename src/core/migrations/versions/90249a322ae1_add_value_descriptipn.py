@@ -1,10 +1,11 @@
 """Add value description to report item attribute table
 
 Revision ID: 90249a322ae1
-Revises: f0a4860000ff
+Revises: 57d784d699d9
 Create Date: 2024-02-25 19:00:13.825003
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.engine.reflection import Inspector
@@ -12,7 +13,7 @@ from sqlalchemy.engine.reflection import Inspector
 
 # revision identifiers, used by Alembic.
 revision = "90249a322ae1"
-down_revision = "f0a4860000ff"
+down_revision = "57d784d699d9"
 branch_labels = None
 depends_on = None
 
