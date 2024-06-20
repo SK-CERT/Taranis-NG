@@ -107,12 +107,15 @@ class BasePresenter:
                 attr_type = attribute_map[attribute_group_item_id]
                 attr_key = attr_type.title.lower().replace(" ", "_")
 
-                max_occurrence = attr_type.max_occurrence
-                value_to_add = (
-                    attribute_group_item[0].value
-                    if max_occurrence == 1 and attribute_group_item
-                    else [attribute.value for attribute in attribute_group_item]
-                )
+                if attr_key.startswith("cwe"):
+                    value_to_add = {attribute.value: attribute.value_description for attribute in attribute_group_item}
+                else:
+                    max_occurrence = attr_type.max_occurrence
+                    value_to_add = (
+                        attribute_group_item[0].value
+                        if max_occurrence == 1 and attribute_group_item
+                        else [attribute.value for attribute in attribute_group_item]
+                    )
 
                 how_many_with_the_same_name = len(attribute_groups[attr_key])
                 if how_many_with_the_same_name == 1:
