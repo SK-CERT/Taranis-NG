@@ -209,18 +209,27 @@ class OSINTSource(db.Model):
 
         return osint_source, default_group
 
-    def update_status(self, status_schema):
-        # if not collected, do not change last collected timestamp
-        if status_schema.last_collected:
-            self.last_collected = status_schema.last_collected
+    @classmethod
+    def update_collected(cls, osint_source_id):
+        """Update collector's "last collected" record with current datetime (only when some data is collected).
 
-        # if not attempted, do not change last collected timestamp
-        if status_schema.last_attempted:
-            self.last_attempted = status_schema.last_attempted
+        Args:
+            osint_source_id (int): Osint source Id.
+        """
+        osint_source = cls.query.get(osint_source_id)
+        osint_source.last_collected = datetime.now()
+        db.session.commit()
 
-        self.last_error_message = status_schema.last_error_message
-        self.last_data = status_schema.last_data
+    @classmethod
+    def update_last_attempt(cls, osint_source_id):
+        """Update collector's "last attempted" record with current datetime.
 
+        Args:
+            osint_source_id (int): Osint source Id.
+        """
+        osint_source = cls.query.get(osint_source_id)
+        osint_source.last_attempted = datetime.now()
+        db.session.commit()
 
 class OSINTSourceParameterValue(db.Model):
     osint_source_id = db.Column(db.String, db.ForeignKey('osint_source.id'), primary_key=True)

@@ -25,9 +25,14 @@ class SlackCollector(BaseCollector):
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
+        """Collect data from Slack source.
 
+        Arguments:
+            source -- Source object.
+        """
+
+        BaseCollector.update_last_attempt(source)
         news_items = []
-
         proxy_server = source.parameter_values['PROXY_SERVER']
 
         if proxy_server:

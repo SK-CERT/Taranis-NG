@@ -555,6 +555,9 @@ class NewsItemAggregate(db.Model):
 
         db.session.commit()
 
+        for source_id in osint_source_ids:
+            OSINTSource.update_collected(source_id)
+
         return osint_source_ids
 
     @classmethod

@@ -2,7 +2,7 @@ import os
 import threading
 import time
 
-from managers.log_manager import log_debug, log_system_activity
+from managers.log_manager import log_debug, log_system_activity, log_warning
 from collectors.atom_collector import AtomCollector
 from collectors.email_collector import EmailCollector
 from collectors.manual_collector import ManualCollector
@@ -19,9 +19,10 @@ status_report_thread = None
 def reportStatus():
     while True:
         log_debug("[{}] Sending status update...".format(__name__))
-        response, code = CoreApi.update_collector_status()
-        log_debug("[{}] Core responded with: HTTP {}, {}".format(__name__, code, response))
-        # for debuging scheduler tasks
+        response, status_code = CoreApi.update_collector_status()
+        if status_code != 200:
+            log_warning("[{}] Core status update response: HTTP {}, {}".format(__name__, status_code, response))
+        # for debugging scheduler tasks
         # for key in collectors:
         #     for source in collectors[key].osint_sources:
         #         if hasattr(source, "scheduler_job"):

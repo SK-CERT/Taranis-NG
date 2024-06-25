@@ -58,6 +58,8 @@ class OSINTSourceSchema(OSINTSourceSchemaBase):
     name = fields.Str()
     description = fields.Str()
     collector_id = fields.Str()
+    last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%S")
+    last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%S")
 
 
 class OSINTSourceCollectorSchema(Schema):

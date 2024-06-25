@@ -25,7 +25,13 @@ class ScheduledTasksCollector(BaseCollector):
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
+        """Collect data from scheduled tasks.
 
+        Arguments:
+            source -- Source object.
+        """
+
+        BaseCollector.update_last_attempt(source)
         news_items = []
         head, tail = os.path.split(source.parameter_values['TASK_COMMAND'])
         task_title = source.parameter_values['TASK_TITLE']

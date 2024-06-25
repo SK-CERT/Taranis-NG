@@ -25,10 +25,17 @@
                                     <div>{{card.description}}</div>
                                 </v-col>
                                 <v-col>
+                                    <div class="grey--text">{{$t('osint_source.last_attempt')}}</div>
+                                    <div>{{card.last_attempted}}</div>
+                                </v-col>
+                                <v-col>
+                                    <div class="grey--text">{{$t('osint_source.last_collected')}}</div>
+                                    <div>{{card.last_collected}}</div>
+                                </v-col>
+                                <v-col>
                                     <div class="grey--text">{{$t('osint_source.type')}}</div>
                                     <div>{{card.collector.type}}</div>
                                 </v-col>
-
                                 <!--HOVER TOOLBAR-->
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">

@@ -46,6 +46,8 @@ class RSSCollector(BaseCollector):
         Arguments:
             source -- Source object.
         """
+
+        BaseCollector.update_last_attempt(source)
         feed_url = source.parameter_values["FEED_URL"]
         interval = source.parameter_values["REFRESH_INTERVAL"]
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)

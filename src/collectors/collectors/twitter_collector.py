@@ -30,8 +30,14 @@ class TwitterCollector(BaseCollector):
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
+        """Collect data from X source.
+
+        Arguments:
+            source -- Source object.
+        """
 
         try:
+            BaseCollector.update_last_attempt(source)
             news_items = []
             attributes = []
 

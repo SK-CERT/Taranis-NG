@@ -84,6 +84,8 @@ const messages_sk = {
         error: "Nepodarilo sa vytvoriť zadaný zdroj.",
         name: "Meno",
         description: "Popis",
+        last_attempt: "Posledný pokus",
+        last_collected: "Posledný zber",
         successful: "Nový OSINT zdroj bol úspešne pridaný"
     },
 

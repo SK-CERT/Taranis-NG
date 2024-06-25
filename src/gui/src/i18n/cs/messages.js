@@ -202,6 +202,8 @@ const messages_cs = {
         error: "Tento zdroj OSINT se nepodařilo uložit",
         name: "Název",
         description: "Popis",
+        last_attempt: "Poslední pokus",
+        last_collected: "Poslední sběr",
         successful: "Nový zdroj OSINT byl přidán",
         successful_edit: "Zdroj OSINT byl upraven",
         removed: "Zdroj OSINT byl úspěšně smazán",

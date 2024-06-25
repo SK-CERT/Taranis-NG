@@ -104,6 +104,20 @@ class CoreApi:
             return ex, 400
 
     @classmethod
+    def update_collector_last_attepmt(cls, source_id):
+        """Update collector's "last attempted" record with current datetime.
+
+        Returns:
+            tuple: A tuple containing the JSON response and the HTTP status code.
+        """
+        try:
+            response = requests.get(cls.api_url + "/api/v1/collectors/osint-sources/" + urllib.parse.quote(source_id) + "/attempt", headers=cls.headers)
+            return response.json(), response.status_code
+        except Exception as ex:
+            logger.debug(ex)
+            return ex, 400
+
+    @classmethod
     def add_news_items(cls, news_items):
         """Add news items to the collector.
 
