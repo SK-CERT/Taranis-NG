@@ -202,6 +202,8 @@ const messages_en = {
         error: "Could not save this OSINT source",
         name: "Name",
         description: "Description",
+        last_attempt: "Last attempt",
+        last_collected: "Last collected",
         successful: "New OSINT source was successfully added",
         successful_edit: "OSINT source was successfully updated",
         removed: "OSINT source was successfully deleted",

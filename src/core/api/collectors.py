@@ -26,6 +26,16 @@ class OSINTSourcesForCollectors(Resource):
         return osint_source.OSINTSource.get_all_for_collector_json(node, parameters.collector_type)
 
 
+class OSINTSourceLastAttempt(Resource):
+
+    @api_key_required
+    def get(self, osint_source_id):
+        source = osint_source.OSINTSource.get_by_id(osint_source_id)
+        if not source:
+            return {}, 404
+        source.update_last_attempt(osint_source_id)
+        return {}, 200
+
 class AddNewsItems(Resource):
 
     @api_key_required
@@ -68,5 +78,6 @@ class CollectorStatusUpdate(Resource):
 def initialize(api):
     api.add_resource(OSINTSourcesForCollectors, "/api/v1/collectors/<string:collector_id>/osint-sources")
     api.add_resource(OSINTSourceStatusUpdate, "/api/v1/collectors/osint-sources/<string:osint_source_id>")
+    api.add_resource(OSINTSourceLastAttempt, "/api/v1/collectors/osint-sources/<string:osint_source_id>/attempt")
     api.add_resource(CollectorStatusUpdate, "/api/v1/collectors/<string:collector_id>")
     api.add_resource(AddNewsItems, "/api/v1/collectors/news-items")

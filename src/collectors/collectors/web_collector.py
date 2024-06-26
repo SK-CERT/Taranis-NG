@@ -462,6 +462,7 @@ class WebCollector(BaseCollector):
     def collect(self, source):
         """Collects news items from this source (main function)"""
 
+        BaseCollector.update_last_attempt(source)
         self.source = source
         log_manager.log_collector_activity('web', self.source.name, 'Starting collector')
 
@@ -597,9 +598,11 @@ class WebCollector(BaseCollector):
         for item in article_items:
             count += 1
             # try:
-            #     print(item.get_attribute('outerHTML'), flush=True)
-            # except Exception:
+            #     print("H: {0} {1:.200}".format(count, item.get_attribute('outerHTML')), flush=True)
+            # except Exception as ex:
             #     pass
+            # if first item works but next items have problems - it's because this:
+            # https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#stale-element-reference-exception
             link = None
             try:
                 link = item.get_attribute('href')
@@ -632,10 +635,9 @@ class WebCollector(BaseCollector):
             try:
                 news_item = self.__process_article_page(index_url, browser)
                 if news_item:
-                    log_manager.log_collector_activity('web', self.source.name, 'Successfully parsed an article')
                     # log_manager.log_collector_activity('web', self.source.name, '... Title    : {0}'.format(news_item.title))
-                    # log_manager.log_collector_activity('web', self.source.name, '... Review   : {0:.100}'.format(news_item.review))
-                    # log_manager.log_collector_activity('web', self.source.name, '... Content  : {0:.100}'.format(news_item.content))
+                    # log_manager.log_collector_activity('web', self.source.name, '... Review   : {0:.100}'.format(news_item.review.replace("\r", "").replace("\n", " ").strip()))
+                    # log_manager.log_collector_activity('web', self.source.name, '... Content  : {0:.100}'.format(news_item.content.replace("\r", "").replace("\n", " ").strip()))
                     # log_manager.log_collector_activity('web', self.source.name, '... Author   : {0}'.format(news_item.author))
                     # log_manager.log_collector_activity('web', self.source.name, '... Published: {0}'.format(news_item.published))
                     self.news_items.append(news_item)

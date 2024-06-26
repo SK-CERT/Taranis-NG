@@ -30,7 +30,13 @@ class AtomCollector(BaseCollector):
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
+        """Collect data from Atom feed.
 
+        Arguments:
+            source -- Source object.
+        """
+
+        BaseCollector.update_last_attempt(source)
         feed_url = source.parameter_values['ATOM_FEED_URL']
         user_agent = source.parameter_values['USER_AGENT']
         interval = source.parameter_values['REFRESH_INTERVAL']

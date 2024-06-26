@@ -35,6 +35,12 @@ class BaseCollector:
     def collect(self, source):
         pass
 
+    @staticmethod
+    def update_last_attempt(source):
+        response, status_code = CoreApi.update_collector_last_attepmt(source.id)
+        if status_code != 200:
+            log_critical("Update last attempt: HTTP {}, response: {}".format(status_code, response))
+
     # wrap scheduled action with exception because scheduler fail plan next one
     @staticmethod
     def ignore_exceptions(func):

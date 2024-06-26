@@ -33,9 +33,14 @@ class EmailCollector(BaseCollector):
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
+        """Collect data from email source.
 
+        Arguments:
+            source -- Source object.
+        """
+
+        BaseCollector.update_last_attempt(source)
         news_items = []
-
         email_server_type = source.parameter_values['EMAIL_SERVER_TYPE']
         email_server_hostname = source.parameter_values['EMAIL_SERVER_HOSTNAME']
         email_server_port = source.parameter_values['EMAIL_SERVER_PORT']
