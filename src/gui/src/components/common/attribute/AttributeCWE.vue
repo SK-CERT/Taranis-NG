@@ -17,6 +17,11 @@
                             :class="getLockedStyle(index)" :disabled="values[index].locked || !canModify"
                             @fo="firstOne(index)">
                         </v-text-field>
+                        <v-text-field v-model="values[index].value_description" dense :label="$t('attribute.description')"
+                            @focus="onFocus(index)" @blur="onBlur(index)" @keyup="onKeyUp(index)"
+                            :class="getLockedStyle(index)" :disabled="values[index].locked || !canModify"
+                            @fo="firstOne(index)">
+                        </v-text-field>
                     </template>
                 </AttributeValueLayout>
 
