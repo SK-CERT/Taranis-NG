@@ -577,7 +577,6 @@ class WebCollector(BaseCollector):
                 break
 
         self.__dispose_of_headless_driver(browser)
-        log_manager.log_collector_activity('web', self.source.name, 'Committing {} news items'.format(len(self.news_items)))
         BaseCollector.publish(self.news_items, self.source)
 
         return True, '', total_processed_articles, total_failed_articles
