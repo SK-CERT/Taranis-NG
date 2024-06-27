@@ -8,7 +8,7 @@ from dateutil import tz
 from functools import wraps
 
 from managers import time_manager
-from managers.log_manager import log_debug, log_info, log_warning, log_critical, log_debug_trace
+from managers.log_manager import log_debug, log_info, log_warning, log_critical, log_debug_trace, log_collector_activity
 from remote.core_api import CoreApi
 from shared.schema import collector, osint_source, news_item
 from shared.schema.parameter import Parameter, ParameterType
@@ -232,6 +232,7 @@ class BaseCollector:
 
     @staticmethod
     def publish(news_items, source):
+        log_collector_activity("", source.name, "Collected {} news items".format(len(news_items)))
         BaseCollector.sanitize_news_items(news_items, source)
         filtered_news_items = BaseCollector.filter_by_word_list(news_items, source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
@@ -261,14 +262,14 @@ class BaseCollector:
                 source_schema = osint_source.OSINTSourceSchemaBase(many=True)
                 self.osint_sources = source_schema.load(response)
 
-                log_debug("{} data loaded".format(len(self.osint_sources)))
+                log_debug("{} sources loaded for {}".format(len(self.osint_sources), self.type))
 
                 # start collection
                 for source in self.osint_sources:
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == '' or interval == '0':
-                        log_debug("scheduling '{}' disabled".format(str(source.name)))
+                        log_debug("disabled '{}'".format(str(source.name)))
                         continue
 
                     self.collect(source)

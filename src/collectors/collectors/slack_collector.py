@@ -2,14 +2,16 @@ import datetime
 import hashlib
 import uuid
 import time
-from slackclient import SlackClient
+import traceback
 import socket
 
+from slack import WebClient
 from .base_collector import BaseCollector
+from managers import log_manager
 from shared.schema.news_item import NewsItemData
 from shared.schema.parameter import Parameter, ParameterType
 
-
+# the slackclient project is in maintenance mode now, "slack_sdk" is successor: https://pypi.org/project/slack-sdk/
 class SlackCollector(BaseCollector):
     type = "SLACK_COLLECTOR"
     name = "Slack Collector"
@@ -56,56 +58,56 @@ class SlackCollector(BaseCollector):
                 print('OSINTSource name: ' + source.name)
                 print('Proxy connection failed')
 
-        slack_client = SlackClient(source.parameter_values['SLACK_API_TOKEN'])
+        ids = source.parameter_values['WORKSPACE_CHANNELS_ID'].replace(' ', '')
+        channels_list = ids.split(',')
 
-        if slack_client.rtm_connect():
+        slack_client = WebClient(source.parameter_values['SLACK_API_TOKEN'])
 
-            while True:
-                try:
-                    data = slack_client.rtm_read()
+        try:
+            for channel_id in channels_list:
+                log_manager.log_collector_activity('slack', source.name, "Channel: {0}".format(channel_id))
+                channel_info = slack_client.conversations_info(channel=channel_id)
+                channel_name = channel_info['channel']['name']
 
-                    if data:
-                        for item in data:
+                # in future we can use parameter "oldest" - Only messages after this Unix timestamp will be included in results
+                data = slack_client.conversations_history(channel = channel_id, limit = 30)
+                count = 0
+                for message in data["messages"]:
+                    count += 1
+                    # log_manager.log_collector_activity('slack', source.name, "Message: {0}".format(count))
+                    published = time.ctime(float(message["ts"]))
+                    content = message['text']
+                    preview = content[:500]
 
-                            ids = source.parameter_values['WORKSPACE_CHANNELS_ID'].replace(' ', '')
-                            channels_list = ids.split(',')
+                    user_id = message['user']
+                    user_name = slack_client.users_profile_get(user=user_id)
+                    author = user_name["profile"]["real_name"]
 
-                            if item['type'] == 'message' and item['channel'] in channels_list:
-                                published = time.ctime(float(item["ts"]))
-                                content = item['text']
-                                preview = item['text'][:500]
+                    team_id =  message.get("team", "")
+                    if team_id:
+                        team_info = slack_client.team_info(team=team_id)
+                        team_name = team_info['team']['name']
+                    else:
+                        team_name = ""
 
-                                user = item['user']
-                                user_name = slack_client.api_call("users.info", user=user)
-                                author = user_name['user']['real_name']
+                    title = f"Slack post from channel {channel_name}"
+                    if team_name:
+                        title += f" ({team_name})"
+                    link = ""
+                    url = ""
+                    for_hash = user_id + channel_id + content
 
-                                channel_id = item['channel']
-                                channel_name = slack_client.api_call("channels.info", channel=channel_id)
-                                channel = channel_name['channel']['name']
+                    # log_manager.log_collector_activity('slack', source.name, '... Title    : {0}'.format(title))
+                    # log_manager.log_collector_activity('slack', source.name, '... Content  : {0:.100}'.format(content.replace("\r", "").replace("\n", " ").strip()))
+                    # log_manager.log_collector_activity('slack', source.name, '... Author   : {0}'.format(author))
+                    # log_manager.log_collector_activity('slack', source.name, '... Published: {0}'.format(published))
 
-                                team = item['team']
-                                team_name = slack_client.api_call("team.info", team=team)
-                                workspace = team_name['team']['name']
+                    news_item = NewsItemData(uuid.uuid4(), hashlib.sha256(for_hash.encode()).hexdigest(),
+                                             title, preview, url, link, published, author,
+                                             datetime.datetime.now(), content, source.id, [])
+                    news_items.append(news_item)
 
-                                title = 'Slack post from workspace ' + workspace + ' and channel ' + channel
-                                link = ''
-                                url = ''
+            BaseCollector.publish(news_items, source)
 
-                                for_hash = author + channel + content
-
-                                news_item = NewsItemData(uuid.uuid4(), hashlib.sha256(for_hash.encode()).hexdigest(),
-                                                         title, preview, url, link, published, author,
-                                                         datetime.datetime.now(), content, source.id, [])
-
-                                news_items.append(news_item)
-
-                        BaseCollector.publish(news_items, source)
-
-                        time.sleep(1)
-                except KeyError:
-                    print('Deleted message')
-                    pass
-        else:
-            print('OSINTSource ID: ' + source.id)
-            print('OSINTSource name: ' + source.name)
-            print('ERROR')
+        except Exception as ex:
+            log_manager.log_collector_activity('slack', source.name, 'Error: ' + traceback.format_exc())

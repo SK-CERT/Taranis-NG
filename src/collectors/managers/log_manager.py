@@ -83,13 +83,13 @@ elif "SYSLOG_ADDRESS" in os.environ:
         sys_logger = None
         log_warning("Unable to connect to syslog server!")
         log_warning(ex)
-else: 
+else:
     # disable log duplicities on the screen if we have SYSLOG disabled
     sys_logger = None
 
 def log_system_activity(module, message):
     log_info("[{}] {}".format(module, message))
 
-def log_collector_activity(collector_type, collector, message):
-    log_text = "COLLECTOR {} '{}': {}".format(collector_type, collector, message)
+def log_collector_activity(collector_type, source_name, message):
+    log_text = "COLLECTOR {} '{}': {}".format(collector_type, source_name, message)
     log_debug(log_text)
