@@ -687,6 +687,7 @@ class WebCollector(BaseCollector):
         if not published_str:
             published_str = 'today'
         published = dateparser.parse(published_str, settings={'DATE_ORDER': 'DMY'})
+        published_str = published.strftime("%Y-%m-%d %H:%M")  # remove microseconds/seconds from the screen, looks ugly
 
         link = current_url
 
@@ -698,7 +699,7 @@ class WebCollector(BaseCollector):
                         hashlib.sha256(for_hash.encode()).hexdigest(),
                         title, article_description,
                         self.web_url, link,
-                        published,
+                        published_str,
                         author,
                         datetime.datetime.now(),
                         article_full_text,
