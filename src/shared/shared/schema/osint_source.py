@@ -47,8 +47,8 @@ class OSINTSourceUpdateStatusSchema(Schema):
     class Meta:
         unknown = EXCLUDE
 
-    last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%s")
-    last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%s")
+    last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%S")
+    last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%S")
     last_error_message = fields.Str()
     last_data = fields.Raw()
 
