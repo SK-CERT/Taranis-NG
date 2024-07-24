@@ -21,6 +21,7 @@ build/
 # sensitive data not to be commited
 docker/.env
 docker/secrets/*.txt
+docker/traefik/dynamic/*.yml
 .env.local
 .env.*.local
 src/.env
