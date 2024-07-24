@@ -47,3 +47,7 @@ local/
 *.njsproj.user
 *.sln
 *.sw?
+
+# ignore custom templates
+src/presenters/templates/custom/*
+!src/presenters/templates/custom/README.md
