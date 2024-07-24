@@ -45,7 +45,7 @@ class NewsItemData(db.Model):
     published = db.Column(db.String())
     updated = db.Column(db.DateTime, default=datetime.now())
 
-    attributes = db.relationship('NewsItemAttribute', secondary="news_item_data_news_item_attribute")
+    attributes = db.relationship('NewsItemAttribute', secondary="news_item_data_news_item_attribute", lazy='selectin')
 
     osint_source_id = db.Column(db.String, db.ForeignKey('osint_source.id'), nullable=True)
     osint_source = db.relationship('OSINTSource')
@@ -172,7 +172,7 @@ class NewsItem(db.Model):
     relevance = db.Column(db.Integer, default=0)
 
     news_item_data_id = db.Column(db.String, db.ForeignKey('news_item_data.id'))
-    news_item_data = db.relationship('NewsItemData')
+    news_item_data = db.relationship('NewsItemData', lazy='selectin')
 
     news_item_aggregate_id = db.Column(db.Integer, db.ForeignKey('news_item_aggregate.id'))
 
@@ -398,9 +398,9 @@ class NewsItemAggregate(db.Model):
 
     osint_source_group_id = db.Column(db.String, db.ForeignKey('osint_source_group.id'))
 
-    news_items = db.relationship("NewsItem")
+    news_items = db.relationship("NewsItem", lazy='joined')
 
-    news_item_attributes = db.relationship("NewsItemAttribute", secondary='news_item_aggregate_news_item_attribute')
+    news_item_attributes = db.relationship("NewsItemAttribute", secondary='news_item_aggregate_news_item_attribute', lazy='selectin')
 
     @classmethod
     def find(cls, news_item_aggregate_id):

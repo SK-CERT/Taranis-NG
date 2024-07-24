@@ -38,7 +38,7 @@ class WordList(db.Model):
     description = db.Column(db.String(), nullable=False)
     use_for_stop_words = db.Column(db.Boolean, default=False)
 
-    categories = db.relationship("WordListCategory", cascade="all, delete-orphan")
+    categories = db.relationship("WordListCategory", cascade="all, delete-orphan", lazy='joined')
 
     def __init__(self, id, name, description, categories, use_for_stop_words):
         self.id = None
@@ -148,7 +148,7 @@ class WordListCategory(db.Model):
 
     word_list_id = db.Column(db.Integer, db.ForeignKey('word_list.id'))
 
-    entries = db.relationship("WordListEntry", cascade="all, delete-orphan")
+    entries = db.relationship("WordListEntry", cascade="all, delete-orphan", lazy='joined')
 
     def __init__(self, name = None, description = None, link = None, entries = None):
         self.id = None

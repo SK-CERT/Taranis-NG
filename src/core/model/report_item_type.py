@@ -31,7 +31,7 @@ class AttributeGroupItem(db.Model):
     attribute_group = db.relationship("AttributeGroup", viewonly=True)
 
     attribute_id = db.Column(db.Integer, db.ForeignKey('attribute.id'))
-    attribute = db.relationship("Attribute")
+    attribute = db.relationship("Attribute", lazy="joined")
 
     def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute_id):
         if id is not None and id != -1:
@@ -76,7 +76,7 @@ class AttributeGroup(db.Model):
     report_item_type = db.relationship("ReportItemType")
 
     attribute_group_items = db.relationship('AttributeGroupItem', back_populates="attribute_group",
-                                            cascade="all, delete-orphan")
+                                            cascade="all, delete-orphan", lazy="joined")
 
     def __init__(self, id, title, description, section, section_title, index, attribute_group_items):
         if id is not None and id != -1:
@@ -148,7 +148,7 @@ class ReportItemType(db.Model):
     description = db.Column(db.String())
 
     attribute_groups = db.relationship('AttributeGroup', back_populates="report_item_type",
-                                       cascade="all, delete-orphan")
+                                       cascade="all, delete-orphan", lazy="joined")
 
     def __init__(self, id, title, description, attribute_groups):
         self.id = None
@@ -205,11 +205,6 @@ class ReportItemType(db.Model):
     @classmethod
     def get_all_json(cls, search, user, acl_check):
         report_item_types, count = cls.get(search, user, acl_check)
-        for report_item_type in report_item_types:
-            for attribute_group in report_item_type.attribute_groups:
-                for attribute_group_item in attribute_group.attribute_group_items:
-                    attribute_group_item.attribute.attribute_enums = Attribute.get_enums(
-                        attribute_group_item.attribute)
 
         report_item_type_schema = ReportItemTypePresentationSchema(many=True)
         return {'total_count': count, 'items': report_item_type_schema.dump(report_item_types)}

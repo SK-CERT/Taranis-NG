@@ -69,7 +69,7 @@ class AttributeEnumSchema(Schema):
 class AttributeEnum:
     """Class representing an attribute enum."""
 
-    def __init__(self, index, value, description):
+    def __init__(self, id, index, value, description):
         """
         Initialize an Attribute object.
 
@@ -78,6 +78,7 @@ class AttributeEnum:
             value (str): The value of the attribute.
             description (str): The description of the attribute.
         """
+        self.id = id
         self.index = index
         self.value = value
         self.description = description
@@ -120,7 +121,7 @@ class AttributePresentationSchema(AttributeSchema, PresentationSchema):
 class Attribute:
     """Class representing an attribute."""
 
-    def __init__(self, id, name, description, type, default_value, validator, validator_parameter):
+    def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
         """
         Initialize an Attribute object.
 
@@ -132,6 +133,7 @@ class Attribute:
             default_value: The default value of the attribute.
             validator: The validator function for the attribute.
             validator_parameter: The parameter for the validator function.
+            attribute_enums: Attribute enum values.
 
         Returns:
             None
@@ -143,3 +145,4 @@ class Attribute:
         self.default_value = default_value
         self.validator = validator
         self.validator_parameter = validator_parameter
+        self.attribute_enums = attribute_enums
