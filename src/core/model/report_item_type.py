@@ -28,7 +28,7 @@ class AttributeGroupItem(db.Model):
     max_occurrence = db.Column(db.Integer)
 
     attribute_group_id = db.Column(db.Integer, db.ForeignKey('attribute_group.id'))
-    attribute_group = db.relationship("AttributeGroup", viewonly=True)
+    attribute_group = db.relationship("AttributeGroup", back_populates="attribute_group_items", viewonly=True, lazy="joined")
 
     attribute_id = db.Column(db.Integer, db.ForeignKey('attribute.id'))
     attribute = db.relationship("Attribute", lazy="joined")
@@ -50,9 +50,9 @@ class AttributeGroupItem(db.Model):
     def find(cls, id):
         return cls.query.get(id)
 
-    @staticmethod
-    def sort(attribute_group_item):
-        return attribute_group_item.index
+    # @staticmethod
+    # def sort(attribute_group_item):
+    #     return attribute_group_item.index
 
 
 class NewAttributeGroupSchema(AttributeGroupBaseSchema):
@@ -76,7 +76,7 @@ class AttributeGroup(db.Model):
     report_item_type = db.relationship("ReportItemType")
 
     attribute_group_items = db.relationship('AttributeGroupItem', back_populates="attribute_group",
-                                            cascade="all, delete-orphan", lazy="joined")
+                                            cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroupItem.index)
 
     def __init__(self, id, title, description, section, section_title, index, attribute_group_items):
         if id is not None and id != -1:
@@ -91,13 +91,13 @@ class AttributeGroup(db.Model):
         self.index = index
         self.attribute_group_items = attribute_group_items
 
-    @orm.reconstructor
-    def reconstruct(self):
-        self.attribute_group_items.sort(key=AttributeGroupItem.sort)
+    # @orm.reconstructor
+    # def reconstruct(self):
+    #     self.attribute_group_items.sort(key=AttributeGroupItem.sort)
 
-    @staticmethod
-    def sort(attribute_group):
-        return attribute_group.index
+    # @staticmethod
+    # def sort(attribute_group):
+    #     return attribute_group.index
 
     def update(self, updated_attribute_group):
         self.title = updated_attribute_group.title
@@ -148,7 +148,7 @@ class ReportItemType(db.Model):
     description = db.Column(db.String())
 
     attribute_groups = db.relationship('AttributeGroup', back_populates="report_item_type",
-                                       cascade="all, delete-orphan", lazy="joined")
+                                       cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroup.index)
 
     def __init__(self, id, title, description, attribute_groups):
         self.id = None
@@ -162,7 +162,7 @@ class ReportItemType(db.Model):
     def reconstruct(self):
         self.subtitle = self.description
         self.tag = "mdi-file-table-outline"
-        self.attribute_groups.sort(key=AttributeGroup.sort)
+        #self.attribute_groups.sort(key=AttributeGroup.sort)
 
     @classmethod
     def find(cls, id):
@@ -200,7 +200,7 @@ class ReportItemType(db.Model):
                 func.lower(ReportItemType.title).like(search_string),
                 func.lower(ReportItemType.description).like(search_string)))
 
-        return query.order_by(db.asc(ReportItemType.title)).all(), query.count()
+        return query.order_by(ReportItemType.title).all(), query.count()
 
     @classmethod
     def get_all_json(cls, search, user, acl_check):

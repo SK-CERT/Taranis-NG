@@ -115,11 +115,11 @@ class ReportItemAttribute(db.Model):
     current = db.Column(db.Boolean, default=True)
 
     attribute_group_item_id = db.Column(db.Integer, db.ForeignKey("attribute_group_item.id"))
-    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True)
+    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True, lazy="joined", order_by=AttributeGroupItem.index)
     attribute_group_item_title = db.Column(db.String)
 
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), nullable=True)
-    report_item = db.relationship("ReportItem")
+    report_item = db.relationship("ReportItem", back_populates="attributes")
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     user = db.relationship("User")
@@ -261,7 +261,7 @@ class ReportItem(db.Model):
         secondaryjoin=ReportItemRemoteReportItem.remote_report_item_id == id,
     )
 
-    attributes = db.relationship("ReportItemAttribute", back_populates="report_item", cascade="all, delete-orphan")
+    attributes = db.relationship("ReportItemAttribute", back_populates="report_item", cascade="all, delete-orphan", lazy="joined")
 
     report_item_cpes = db.relationship("ReportItemCpe", cascade="all, delete-orphan")
 
@@ -697,7 +697,7 @@ class ReportItem(db.Model):
 
                 if "attribute_id" in data:
                     for attribute in report_item.attributes:
-                        # Compare attribute IDs
+                        # convert ID to string, we compare types: int & int or int & str
                         if str(attribute.id) == str(data["attribute_id"]):
                             if attribute.value != data["attribute_value"]:
                                 modified = True
@@ -736,7 +736,7 @@ class ReportItem(db.Model):
                 if "attribute_id" in data:
                     attribute_to_delete = None
                     for attribute in report_item.attributes:
-                        # sometime we compare: int & int or int & str
+                        # convert ID to string, we compare types: int & int or int & str
                         if str(attribute.id) == str(data["attribute_id"]):
                             attribute_to_delete = attribute
                             break
@@ -944,8 +944,8 @@ class ReportItem(db.Model):
         self.report_item_cpes = []
         if self.completed is True:
             for attribute in self.attributes:
-                attribute_group = AttributeGroupItem.find(attribute.attribute_group_item_id)
-                if attribute_group.attribute.type == AttributeType.CPE:
+                item = AttributeGroupItem.find(attribute.attribute_group_item_id)
+                if item.attribute.type == AttributeType.CPE:
                     self.report_item_cpes.append(ReportItemCpe(attribute.value))
 
 
