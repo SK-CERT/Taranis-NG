@@ -684,6 +684,7 @@ export default {
                                     if (data.remote_report_items[l].attributes[k].attribute_group_item_title === this.selected_type.attribute_groups[i].attribute_group_items[j].title) {
 
                                         let value = data.remote_report_items[l].attributes[k].value
+                                        let value_description = data.remote_report_items[l].attributes[k].value_description
                                         if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
                                             value = value.replace("%", "*")
                                         } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
