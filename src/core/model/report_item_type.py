@@ -50,10 +50,6 @@ class AttributeGroupItem(db.Model):
     def find(cls, id):
         return cls.query.get(id)
 
-    # @staticmethod
-    # def sort(attribute_group_item):
-    #     return attribute_group_item.index
-
 
 class NewAttributeGroupSchema(AttributeGroupBaseSchema):
     attribute_group_items = fields.Nested('NewAttributeGroupItemSchema', many=True)
@@ -90,14 +86,6 @@ class AttributeGroup(db.Model):
         self.section_title = section_title
         self.index = index
         self.attribute_group_items = attribute_group_items
-
-    # @orm.reconstructor
-    # def reconstruct(self):
-    #     self.attribute_group_items.sort(key=AttributeGroupItem.sort)
-
-    # @staticmethod
-    # def sort(attribute_group):
-    #     return attribute_group.index
 
     def update(self, updated_attribute_group):
         self.title = updated_attribute_group.title
@@ -162,7 +150,6 @@ class ReportItemType(db.Model):
     def reconstruct(self):
         self.subtitle = self.description
         self.tag = "mdi-file-table-outline"
-        #self.attribute_groups.sort(key=AttributeGroup.sort)
 
     @classmethod
     def find(cls, id):
