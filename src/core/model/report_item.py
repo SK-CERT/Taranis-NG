@@ -861,7 +861,9 @@ class ReportItem(db.Model):
         """
         report_item = cls.query.get(id)
         file_data = file.read()
-        new_attribute = ReportItemAttribute(None, file.filename, file.mimetype, len(file_data), description, attribute_group_item_id, None)
+        new_attribute = ReportItemAttribute(
+            None, file.filename, "", file.mimetype, len(file_data), description, attribute_group_item_id, None
+        )
         new_attribute.user = user
         new_attribute.binary_data = file_data
         report_item.attributes.append(new_attribute)
