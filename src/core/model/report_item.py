@@ -705,12 +705,13 @@ class ReportItem(db.Model):
                                 data["attribute_value"] = ""
                                 attribute.user = user
                                 attribute.last_updated = datetime.now()
-                            if attribute.value_description != data["value_description"]:
-                                modified = True
-                                attribute.value_description = data["value_description"]
-                                data["value_description"] = ""
-                                attribute.user = user
-                                attribute.last_updated = datetime.now()
+                            if data.get("value_description", False):
+                                if attribute.value_description != data["value_description"]:
+                                    modified = True
+                                    attribute.value_description = data["value_description"]
+                                    data["value_description"] = ""
+                                    attribute.user = user
+                                    attribute.last_updated = datetime.now()
                             break
 
             if "add" in data:
