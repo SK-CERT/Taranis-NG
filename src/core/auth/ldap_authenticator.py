@@ -1,3 +1,15 @@
+"""This module provides an LDAPAuthenticator class that authenticates users against an LDAP server.
+
+Attributes:
+    LDAP_SERVER (str): The LDAP server URL.
+    LDAP_BASE_DN (str): The base DN (Distinguished Name) for LDAP queries.
+    LDAP_CA_CERT_PATH (str): The file path to the LDAP CA certificate.
+
+Classes:
+    LDAPAuthenticator: Authenticates users against an LDAP server.
+
+"""
+
 from managers import log_manager
 from auth.base_authenticator import BaseAuthenticator
 from flask import request
@@ -9,7 +21,7 @@ import os
 
 
 class LDAPAuthenticator(BaseAuthenticator):
-    """Authenticates users against an LDAP server.
+    """Authenticate users against an LDAP server.
 
     Args:
         BaseAuthenticator (_type_): _description_
@@ -18,15 +30,17 @@ class LDAPAuthenticator(BaseAuthenticator):
         _type_: _description_
     """
 
-    LDAP_SERVER = os.getenv('LDAP_SERVER')
-    LDAP_BASE_DN = os.getenv('LDAP_BASE_DN')
-    LDAP_CA_CERT_PATH = os.getenv('LDAP_CA_CERT_PATH')
-    if LDAP_CA_CERT_PATH is not None and not os.path.isfile(LDAP_CA_CERT_PATH):
-        LDAP_CA_CERT_PATH = None
+    LDAP_SERVER = os.getenv("LDAP_SERVER")
+    LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
+    if os.getenv("LDAP_CA_CERT_PATH") not in [None, ""]:
+        LDAP_CA_CERT_PATH = os.getenv("LDAP_CA_CERT_PATH")
+    elif os.path.isfile("auth/ldap_ca.pem"):
+        LDAP_CA_CERT_PATH = "auth/ldap_ca.pem"
+    else:
         log_manager.store_auth_error_activity("No LDAP CA certificate found. LDAP authentication might not work.")
 
     def get_required_credentials(self):
-        """Gets the username and the password.
+        """Get the username and the password.
 
         Returns:
             _type_: _description_
@@ -34,7 +48,7 @@ class LDAPAuthenticator(BaseAuthenticator):
         return ["username", "password"]
 
     def authenticate(self, credentials):
-        """Tries to authenticate the user against the LDAP server.
+        """Try to authenticate the user against the LDAP server.
 
         Args:
             credentials (_type_): _description_
