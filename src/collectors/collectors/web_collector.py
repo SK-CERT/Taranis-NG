@@ -494,7 +494,6 @@ class WebCollector(BaseCollector):
         log_manager.log_collector_activity('web', self.source.name, 'Requesting title page: {}'.format(self.web_url))
         try:
             browser.get(index_url)
-            log_manager.log_collector_activity('web', self.source.name, 'Title page obtained')
         except Exception:
             log_manager.log_collector_activity('web', self.source.name, 'Error obtaining title page')
             self.__dispose_of_headless_driver(browser)
