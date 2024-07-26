@@ -272,12 +272,12 @@ class BaseCollector:
                         log_debug("disabled '{}'".format(str(source.name)))
                         continue
 
-                    self.collect(source)
+                    self.run_collector(source)
 
                     # run task every day at XY
                     if interval[0].isdigit() and ':' in interval:
                         log_debug("scheduling '{}' at: {}".format(str(source.name), str(interval)))
-                        source.scheduler_job = time_manager.schedule_job_every_day(interval, self.collect, source)
+                        source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(',')
@@ -285,23 +285,23 @@ class BaseCollector:
                         at = interval[1].strip()
                         log_debug("scheduling '{}' at: {} {}".format(str(source.name), str(day), str(at)))
                         if day == 'Monday':
-                            source.scheduler_job = time_manager.schedule_job_on_monday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_collector, source)
                         elif day == 'Tuesday':
-                            source.scheduler_job = time_manager.schedule_job_on_tuesday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_tuesday(at, self.run_collector, source)
                         elif day == 'Wednesday':
-                            source.scheduler_job = time_manager.schedule_job_on_wednesday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_wednesday(at, self.run_collector, source)
                         elif day == 'Thursday':
-                            source.scheduler_job = time_manager.schedule_job_on_thursday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_thursday(at, self.run_collector, source)
                         elif day == 'Friday':
-                            source.scheduler_job = time_manager.schedule_job_on_friday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_friday(at, self.run_collector, source)
                         elif day == 'Saturday':
-                            source.scheduler_job = time_manager.schedule_job_on_saturday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_saturday(at, self.run_collector, source)
                         elif day == 'Sunday':
-                            source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.collect, source)
+                            source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.run_collector, source)
                     # run task every XY minutes
                     else:
                         log_debug("scheduling '{}' for {}".format(str(source.name), int(interval)))
-                        source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.collect, source)
+                        source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
             else:
                 # TODO: send update to core with the error message
                 log_warning("configuration not received, code: {}, response: {}".format(code, response))
@@ -309,6 +309,10 @@ class BaseCollector:
         except Exception as ex:
             log_debug_trace()
             pass
+
+    def run_collector(self, source):
+        runner = self.__class__() # get right type of collector
+        runner.collect(source)
 
     def initialize(self):
         self.refresh()
