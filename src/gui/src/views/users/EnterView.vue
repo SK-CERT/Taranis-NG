@@ -97,7 +97,7 @@
                     toolbar: toolbarOptions
                 }
             },
-
+            editorData: "",
             news_item: {
                 id: "",
                 title: "",
