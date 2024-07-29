@@ -32,11 +32,15 @@ class LDAPAuthenticator(BaseAuthenticator):
 
     LDAP_SERVER = os.getenv("LDAP_SERVER")
     LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
+    # Check if the LDAP CA certificate path is set in the environment variables or the certificate is in the default path
+    # Custom path
     if os.getenv("LDAP_CA_CERT_PATH") not in [None, ""]:
         LDAP_CA_CERT_PATH = os.getenv("LDAP_CA_CERT_PATH")
+    # Default path
     elif os.path.isfile("auth/ldap_ca.pem"):
         LDAP_CA_CERT_PATH = "auth/ldap_ca.pem"
-    else:
+    # No path and authentication method is LDAP
+    elif os.getenv("TARANIS_NG_AUTHENTICATOR").casefold() == "ldap":
         log_manager.store_auth_error_activity("No LDAP CA certificate found. LDAP authentication might not work.")
 
     def get_required_credentials(self):
