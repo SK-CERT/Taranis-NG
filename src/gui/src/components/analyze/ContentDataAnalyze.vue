@@ -101,7 +101,16 @@
 
                 this.$store.dispatch("getAllReportItems", {group: group, filter: this.filter, offset: offset, limit: limit})
                     .then(() => {
+                        const report_types = Object.values(this.$store.getters.getReportItemTypes.items);
                         this.collections = this.collections.concat(this.$store.getters.getReportItems.items);
+                        for (let i = 0; i < this.collections.length; i++) {
+                            let report_type = report_types.filter(x => x.id == this.collections[i].report_item_type_id);
+                            if (report_type.length) {
+                                this.collections[i].report_type_name = report_type[0].title;
+                            } else {
+                                this.collections[i].report_type_name = this.$t('card_item.title');
+                            }
+                        }
                         this.$emit('new-data-loaded', this.collections.length);
                         setTimeout(() => {
                             this.data_loaded = true

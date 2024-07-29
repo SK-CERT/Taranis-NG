@@ -20,7 +20,7 @@
                                     <v-icon center>{{ card.tag }}</v-icon>
                                 </v-col>
                                 <v-col>
-                                    <div class="grey--text">{{$t('card_item.title')}}</div>
+                                    <div class="grey--text">{{card.report_type_name}}</div>
                                     <span>{{card.title}}</span>
                                 </v-col>
                                 <v-col>
