@@ -22,6 +22,7 @@ Functions:
     get_user_from_jwt_token: Try to authenticate the user by JWT token.
     get_perm_from_jwt_token: Get user permissions from JWT token.
 """
+
 import os
 from datetime import datetime, timedelta
 from enum import Enum, auto

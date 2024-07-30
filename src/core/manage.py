@@ -1,10 +1,47 @@
 #! /usr/bin/env python
-"""This script is used to manage user accounts, roles, and collectors in the Taranis-NG application."""
+"""This script is used to manage user accounts, roles, and collectors in the Taranis-NG application.
 
-"""Module for managing the application from the command line."""
+Usage:
+    python manage.py account [options]
+    python manage.py role [options]
+    python manage.py collector [options]
 
-from os import abort, getenv, read
-from flask import Flask
+Options:
+    account:
+        --list, -l              List all user accounts.
+        --create, -c            Create a new user account.
+        --edit, -e              Edit an existing user account.
+        --delete, -d            Delete an existing user account.
+        --username              Username of the user account.
+        --name                  Name of the user.
+        --password              Password of the user account.
+        --roles                 Roles assigned to the user account.
+
+    role:
+        --list, -l              List all roles.
+        --create, -c            Create a new role.
+        --edit, -e              Edit an existing role.
+        --delete, -d            Delete an existing role.
+        --filter, -f            Filter roles by name.
+        --id                    ID of the role.
+        --name                  Name of the role.
+        --description           Description of the role.
+        --permissions           Permissions assigned to the role.
+
+    collector:
+        --list, -l              List all collectors.
+        --create, -c            Create a new collector.
+        --edit, -e              Edit an existing collector.
+        --delete, -d            Delete an existing collector.
+        --update, -u            Update collectors.
+        --all, -a               Update all collectors.
+        --show-api-key          Show API key in the output.
+        --id                    ID of the collector.
+        --name                  Name of the collector.
+        --description           Description of the collector.
+        --api-url               API URL of the collector.
+        --api-key               API key of the collector.
+"""
 import random
 import socket
 import string
@@ -12,7 +49,8 @@ import time
 import logging
 import click
 import traceback
-
+from os import abort, getenv, read
+from flask import Flask
 from managers import db_manager
 from model import user, role, permission, collectors_node, collector, attribute, apikey
 from remote.collectors_api import CollectorsApi
@@ -379,7 +417,6 @@ def dictionary_management(upload_cve, upload_cpe):
         upload_cve (bool): Indicates whether to upload the CVE file and load the CVE dictionary.
         upload_cpe (bool): Indicates whether to upload the CPE file and load the CPE dictionary.
     """
-
     if upload_cve:
         cve_update_file = getenv("CVE_UPDATE_FILE")
         if cve_update_file is None:
