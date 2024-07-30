@@ -1,5 +1,5 @@
 # build stage
-FROM node:lts-alpine as build-stage
+FROM node:lts-alpine AS build-stage
 
 RUN npm install -g @vue/cli-service
 
@@ -16,7 +16,7 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm run build
 
 # production stage
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine AS production-stage
 
 RUN rm /docker-entrypoint.d/30-tune-worker-processes.sh
 COPY ./src/gui/extras/30-envsubst-on-javascript.sh /docker-entrypoint.d/
