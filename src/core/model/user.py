@@ -228,7 +228,7 @@ class User(db.Model):
             query = query.join(UserOrganization, User.id == UserOrganization.user_id)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search.lower()}%"
             query = query.filter(or_(func.lower(User.name).like(search_string), func.lower(User.username).like(search_string)))
 
         return query.order_by(db.asc(User.name)).all(), query.count()

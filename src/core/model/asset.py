@@ -289,7 +289,7 @@ class Asset(db.Model):
                 query = query.filter(Asset.vulnerabilities_count > 0)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search.lower()}%"
             query = query.join(AssetCpe, Asset.id == AssetCpe.asset_id).filter(
                 or_(
                     func.lower(Asset.name).like(search_string),
@@ -574,7 +574,7 @@ class AssetGroup(db.Model):
             query = query.join(AssetGroupOrganization, AssetGroup.id == AssetGroupOrganization.asset_group_id)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search.lower()}%"
             query = query.filter(or_(func.lower(AssetGroup.name).like(search_string), func.lower(AssetGroup.description).like(search_string)))
 
         return query.order_by(db.asc(AssetGroup.name)).all(), query.count()

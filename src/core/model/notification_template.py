@@ -203,7 +203,7 @@ class NotificationTemplate(db.Model):
             )
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search.lower()}%"
             query = query.filter(
                 or_(
                     func.lower(NotificationTemplate.name).like(search_string),
