@@ -48,6 +48,7 @@ local/
 *.njsproj.user
 *.sln
 *.sw?
+.editorconfig
 
 # ignore custom templates
 src/presenters/templates/custom/*

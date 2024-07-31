@@ -122,10 +122,10 @@ class User(db.Model):
 
     organizations = db.relationship("Organization", secondary="user_organization")
     roles = db.relationship(Role, secondary="user_role")
-    permissions = db.relationship(Permission, secondary="user_permission")
+    permissions = db.relationship(Permission, secondary="user_permission", lazy="joined")
 
     profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"))
-    profile = db.relationship("UserProfile", cascade="all")
+    profile = db.relationship("UserProfile", cascade="all", lazy="joined")
 
     def __init__(self, id, username, name, password, organizations, roles, permissions):
         """Initialize a User object with the given parameters.
@@ -557,8 +557,8 @@ class UserProfile(db.Model):
     spellcheck = db.Column(db.Boolean, default=True)
     dark_theme = db.Column(db.Boolean, default=False)
     language = db.Column(db.String(2))
-    hotkeys = db.relationship("Hotkey", cascade="all, delete-orphan")
-    word_lists = db.relationship("WordList", secondary="user_profile_word_list")
+    hotkeys = db.relationship("Hotkey", cascade="all, delete-orphan", lazy="joined")
+    word_lists = db.relationship("WordList", secondary="user_profile_word_list", lazy="joined")
 
     def __init__(self, spellcheck, dark_theme, language, hotkeys, word_lists):
         """Initialize a User object with the given parameters.
