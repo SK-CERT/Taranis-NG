@@ -13,6 +13,7 @@ class Presenters(Resource):
 
     @api_key_required
     def post(self):
+        # print("=== GENERATE FROM THE FOLLOWING JSON ===", request.json, flush=True)
         return presenters_manager.generate(request.json)
 
 

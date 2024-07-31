@@ -7,7 +7,8 @@ Returns:
 import os
 from xml.etree.ElementTree import iterparse
 from marshmallow import fields, post_load
-from sqlalchemy import orm, func, or_
+from sqlalchemy import orm, func, or_, and_
+from sqlalchemy.orm import backref
 
 from managers import log_manager
 from managers.db_manager import db
@@ -48,7 +49,7 @@ class AttributeEnum(db.Model):
     imported = db.Column(db.Boolean, default=False)
 
     attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id"))
-    attribute = db.relationship("Attribute")
+    attribute = db.relationship("Attribute", back_populates="attribute_enums")
 
     def __init__(self, id, index, value, description):
         """Initialize the attribute enum.
@@ -306,7 +307,6 @@ class Attribute(db.Model):
         find_by_type: Finds an attribute by type.
         get: Retrieves attributes based on search criteria.
         get_all_json: Retrieves all attributes in JSON format.
-        get_enums: Retrieves attribute enums for a given attribute.
         create_attribute: Creates a new attribute.
         add_attribute: Adds a new attribute.
         update: Updates an attribute.
@@ -324,6 +324,15 @@ class Attribute(db.Model):
 
     validator = db.Column(db.Enum(AttributeValidator))
     validator_parameter = db.Column(db.String())
+
+    attribute_enums = db.relationship("AttributeEnum",
+        primaryjoin=and_(
+            id == AttributeEnum.attribute_id,
+            or_(
+                type == AttributeType.RADIO, type == AttributeType.ENUM
+            )
+        ),
+        back_populates="attribute", lazy="subquery")
 
     def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
         """Initialize an Attribute object.
@@ -447,21 +456,6 @@ class Attribute(db.Model):
 
         attribute_schema = AttributePresentationSchema(many=True)
         return {"total_count": total_count, "items": attribute_schema.dump(attributes)}
-
-    @classmethod
-    def get_enums(cls, attribute):
-        """Retrieve attribute enums for a given attribute.
-
-        Args:
-            attribute (Attribute): The attribute object.
-
-        Returns:
-            list: A list of attribute enums.
-        """
-        if attribute.type == AttributeType.RADIO or attribute.type == AttributeType.ENUM:
-            return AttributeEnum.get_all_for_attribute(attribute.id)
-        else:
-            return []
 
     @classmethod
     def create_attribute(cls, attribute):
