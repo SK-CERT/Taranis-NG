@@ -6,7 +6,7 @@ Flask==3.0.3
 Flask-Cors==4.0.1
 Flask-RESTful==0.3.10
 gevent==24.2.1
-gunicorn==22.0.0
+gunicorn==23.0.0
 marshmallow==3.21.3
 marshmallow-enum==1.5.1
 PySocks==1.7.1
