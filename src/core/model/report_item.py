@@ -28,7 +28,7 @@ from marshmallow import fields, post_load
 
 from managers.db_manager import db
 from model.news_item import NewsItemAggregate
-from model.report_item_type import AttributeGroup, AttributeGroupItem
+from model.report_item_type import AttributeGroupItem
 from model.report_item_type import ReportItemType
 from model.acl_entry import ACLEntry
 from shared.schema.acl_entry import ItemType
