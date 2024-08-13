@@ -115,7 +115,8 @@ class ReportItemAttribute(db.Model):
     current = db.Column(db.Boolean, default=True)
 
     attribute_group_item_id = db.Column(db.Integer, db.ForeignKey("attribute_group_item.id"))
-    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True, lazy="joined", order_by=AttributeGroupItem.index)
+    # for nice output there should be order_by also for AttributeGroup.index but there is problem reference sub table: AttributeGroupItem.attribute_group.index
+    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True, lazy="joined", order_by=[AttributeGroupItem.index, id])
     attribute_group_item_title = db.Column(db.String)
 
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), nullable=True)
@@ -312,7 +313,6 @@ class ReportItem(db.Model):
         """
         self.subtitle = ""
         self.tag = "mdi-file-table-outline"
-        self.attributes.sort(key=lambda obj: (obj.attribute_group_item.attribute_group.index, obj.attribute_group_item.index, obj.id))
 
     @classmethod
     def count_all(cls, is_completed):
