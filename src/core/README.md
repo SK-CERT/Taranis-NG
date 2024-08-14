@@ -6,12 +6,14 @@
     `source venv/bin/activate`
     `pip3 install -r requirements.txt`
 4. Set environment variables for taranis-ng-core:
-    DB_URL=127.0.0.1:5432;DB_DATABASE=taranisdb;DB_USER=<YOUR-DB-USER>;DB_PASSWORD=<YOUR-DB-USER-PASSWORD>;JWT_SECRET_KEY=<YOUR-JWT-SECRET-KEY>
-5. Before first run uncomment line with `import test.py` in app.py to create set of test data. After first run comment this line again.
-6. Run taranis-ng-core: `python3 run.py`
-7. Set environment variables for taranis-ng-collectors:
+    DB_URL=127.0.0.1:5432;DB_DATABASE=taranisdb;DB_USER=<YOUR-DB-USER>
+5. Set secrets (passwords) for taranis-ng-core:
+    api_key.txt, jwt_secret_key.txt, postgres_password.txt
+6. Before first run uncomment line with `import test.py` in app.py to create set of test data. After first run comment this line again.
+7. Run taranis-ng-core: `python3 run.py`
+8. Set environment variables for taranis-ng-collectors:
     FLASK_RUN_PORT=5001;API_KEY=12345;TARANIS_NG_CORE_URL=http://127.0.0.1:5000;SSL_VERIFICATION=False
-8. Run taranis-ng-collectors: `python3 run.py` and it should collect first set of RSS news items from preconfigured test osint source
+9. Run taranis-ng-collectors: `python3 run.py` and it should collect first set of RSS news items from preconfigured test osint source
 
 # **TaranisNG frontend setup**
 1. Install Node.js from https://nodejs.org/en/

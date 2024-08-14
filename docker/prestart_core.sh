@@ -10,13 +10,8 @@ python /app/db_migration.py db upgrade head
 
 if [ "$(python ./manage.py collector --list | wc -l)" == 0 ] && [ x"$SKIP_DEFAULT_COLLECTOR" != "xtrue" ]; then
     (
-    echo "Adding default collector"
-    if [ -z "$API_KEY_FILE" ]; then
-        echo "API_KEY_FILE variable is not set, will use API_KEY..."
-    else
-        echo "Reading API key from file..."
-        API_KEY=$(cat "$API_KEY_FILE")
-    fi
+    echo "Reading API key from file..."
+    API_KEY=$(cat "/run/secrets/api_key")
     python ./manage.py collector --create --name "Default Docker Collector" --description "A local collector node configured as a part of Taranis NG default installation." --api-url "http://collectors/" --api-key "$API_KEY"
     ) &
 fi

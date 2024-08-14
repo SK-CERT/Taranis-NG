@@ -18,7 +18,6 @@ class Config(object):
         DB_DATABASE (str): The name of the database.
         DB_USER (str): The username for the database connection.
         DB_PASSWORD (str): The password for the database connection.
-        DB_PASSWORD_FILE (str): The path to the file containing the database password.
         SQLALCHEMY_DATABASE_URI (str): The SQLAlchemy database URI.
         SQLALCHEMY_TRACK_MODIFICATIONS (bool): Whether to track modifications in SQLAlchemy.
         SQLALCHEMY_ECHO (bool): Whether to echo SQL queries in SQLAlchemy.
@@ -43,21 +42,20 @@ class Config(object):
         OPENID_LOGOUT_URL (str): The URL for OIDC logout.
     """
 
-    REDIS_URL = os.getenv("REDIS_URL")
+    def read_secret(secret_name):
+        file_path = f"/run/secrets/{secret_name}"
+        try:
+            with open(file_path, "r") as secret_file:
+                return secret_file.read().strip()
+        except FileNotFoundError:
+            raise RuntimeError(f"Secret '{secret_name}' not found.")
 
+
+    REDIS_URL = os.getenv("REDIS_URL")
     DB_URL = os.getenv("DB_URL")
     DB_DATABASE = os.getenv("DB_DATABASE")
     DB_USER = os.getenv("DB_USER")
-    try:
-        with open(os.getenv("DB_PASSWORD_FILE"), "r") as file:
-            DB_PASSWORD = file.read()
-    except FileNotFoundError:
-        print(
-            "DB_PASSWORD_FILE not found. Please set the DB_PASSWORD_FILE environment variable to the path of the file containing "
-            "the DB password."
-        )
-        DB_PASSWORD = os.getenv("DB_PASSWORD")
-
+    DB_PASSWORD = read_secret("postgres_password")
     SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://{user}:{pw}@{url}/{db}".format(user=DB_USER, pw=DB_PASSWORD, url=DB_URL, db=DB_DATABASE)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = os.getenv("DEBUG_SQL", "false").lower() == "true"  # DEBUG SQL Queries
@@ -74,15 +72,7 @@ class Config(object):
             "pool_timeout": int(DB_POOL_TIMEOUT),
         }
 
-    try:
-        with open(os.getenv("JWT_SECRET_KEY_FILE"), "r") as file:
-            JWT_SECRET_KEY = file.read()
-    except FileNotFoundError:
-        print(
-            "JWT_SECRET_KEY_FILE not found. Please set the JWT_SECRET_KEY_FILE environment variable to the path of the file containing the "
-            "JWT secret key."
-        )
-        JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    JWT_SECRET_KEY = read_secret("jwt_secret_key")
     JWT_IDENTITY_CLAIM = "sub"
     JWT_ACCESS_TOKEN_EXPIRES = 14400
     DEBUG = True
