@@ -6,7 +6,8 @@ Returns:
 
 import os
 import ssl
-from flask import Config, request
+from config import Config
+from flask import request
 from functools import wraps
 
 
