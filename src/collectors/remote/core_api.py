@@ -2,8 +2,9 @@
 
 import logging
 import os
-import urllib
 import requests
+import urllib
+from config import Config
 
 logger = logging.getLogger("gunicorn.error")
 logger.level = logging.INFO
@@ -19,7 +20,6 @@ class CoreApi:
 
     Attributes:
         api_url (str): The URL of the Taranis-NG API.
-        api_key (str): The API key used for authentication.
         headers (dict): The headers to be included in API requests.
 
     Methods:
@@ -31,13 +31,7 @@ class CoreApi:
     api_url = os.getenv("TARANIS_NG_CORE_URL")
     if api_url.endswith("/"):
         api_url = api_url[:-1]
-    try:
-        with open(os.getenv("API_KEY_FILE"), "r") as file:
-            api_key = file.read()
-    except FileNotFoundError:
-        print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
-        api_key = os.getenv("API_KEY")
-    headers = {"Authorization": "Bearer " + api_key}
+    headers = {"Authorization": f"Bearer {Config.API_KEY}"}
 
     @classmethod
     def get_osint_sources(cls, collector_type):
@@ -66,7 +60,7 @@ class CoreApi:
                 + "/api/v1/collectors/"
                 + urllib.parse.quote(id)
                 + "/osint-sources?api_key="
-                + urllib.parse.quote(cls.api_key)
+                + urllib.parse.quote(Config.API_KEY)
                 + "&collector_type="
                 + urllib.parse.quote(collector_type),
                 headers=cls.headers,

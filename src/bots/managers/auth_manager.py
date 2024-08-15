@@ -4,17 +4,11 @@ Returns:
     wrapper: Wrapper function for the API endpoints.
 """
 
-from functools import wraps
-from flask import request
 import os
 import ssl
-
-try:
-    with open(os.getenv("API_KEY_FILE"), "r") as file:
-        api_key = file.read()
-except FileNotFoundError:
-    print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
-    api_key = os.getenv("API_KEY")
+from config import Config
+from flask import request
+from functools import wraps
 
 if os.getenv("SSL_VERIFICATION") == "False":
     try:
@@ -30,13 +24,14 @@ def api_key_required(fn):
 
     Arguments:
         fn -- The function to be decorated.
+
     Returns:
         wrapper: Wrapper function for the API endpoints.
     """
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        if "Authorization" not in request.headers or request.headers["Authorization"] != ("Bearer " + api_key):
+        if "Authorization" not in request.headers or request.headers["Authorization"] != (f"Bearer {Config.API_KEY}"):
             return {"error": "not authorized"}, 401
         else:
             return fn(*args, **kwargs)

@@ -56,7 +56,7 @@ git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
 ```
 
-_Then_, remove `.example` extension from file `docker/.env.example` and files in `docker/secrets`. Use your favorite text editor and change default passwords. Taranis NG uses [Docker secrets](https://docs.docker.com/compose/use-secrets/) to store sensitive data. (Saving passwords in variables defined in `docker/.env` is not advised and you will need to modify Docker compose YAML files to make it work correctly. Also, make sure you do not have both POSTGRES_PASSWORD and POSTGRES_PASSWORD_FILE set - they are mutually exclusive)
+_Then_, remove `.example` extension from file `docker/.env.example` and files in `docker/secrets`. Use your favorite text editor and change default passwords. Taranis NG uses [Docker secrets](https://docs.docker.com/compose/use-secrets/) to store sensitive data. (Saving passwords in variables defined in `docker/.env` is not advised and you will need to modify Docker compose YAML files to make it work correctly.
 
 ```bash
 vim docker/.env
@@ -147,14 +147,18 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 | `DB_URL`                    | PostgreSQL database URL. | `127.0.0.1` |
 | `DB_DATABASE`               | PostgreSQL database name. | `taranis-ng` |
 | `DB_USER`                   | PostgreSQL database user. | `taranis-ng` |
-| `DB_PASSWORD`               | PostgreSQL database password. | `supersecret` |
 | `DB_POOL_SIZE`              | SQLAlchemy QueuePool number of active connections to the database. | `100` |
 | `DB_POOL_RECYCLE`           | SQLAlchemy QueuePool maximum connection age. | `300` |
 | `DB_POOL_TIMEOUT`           | SQLAlchemy QueuePool connection timeout. | `5` |
-| `JWT_SECRET_KEY`            | JWT token secret key. | `supersecret` |
 | `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/auth/realms/master/protocol/openid-connect/logout` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
 | `SKIP_DEFAULT_COLLECTOR`    | Set to `true` to prevent initialization of a default docker collector at first run | `` |
+
+| Secrets file                | Description | Example |
+|-----------------------------|-------------|----------|
+| `postgres_password`         | PostgreSQL database password. | `supersecret` |
+| `jwt_secret_key`            | JWT token secret key. | `supersecret` |
+
 
 Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/pooling.html) to maintain multiple active connections to the database server. Connection pooling is required when your deployment serves hundreds of customers from one instance. To enable connection pooling, set the `DB_POOL_SIZE`, `DB_POOL_RECYCLE`, and `DB_POOL_TIMEOUT` environment variables.
 
@@ -163,8 +167,12 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 | Environment variable        | Description | Example |
 |-----------------------------|-------------|----------|
 | `TARANIS_NG_CORE_URL`       | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
-| `API_KEY`                   | Shared API key. | `cuBG/4H9lGTeo47F9X6DUg` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
+
+| Secrets file                | Description | Example |
+|-----------------------------|-------------|----------|
+| `api_key`            | Shared API key. | `cuBG/4H9lGTeo47F9X6DUg` |
+
 
 ### `gui`
 

@@ -1,8 +1,9 @@
 """This module provides a class to interact with the Taranis-NG Core API."""
 
-import os
 import json
+import os
 import requests
+from config import Config
 
 
 class CoreApi:
@@ -10,7 +11,6 @@ class CoreApi:
 
     Attributes:
         api_url (str): The URL of the Taranis-NG Core API.
-        api_key (str): The API key used for authentication.
         headers (dict): The headers used for API requests.
 
     Methods:
@@ -28,13 +28,7 @@ class CoreApi:
     api_url = os.getenv("TARANIS_NG_CORE_URL")
     if api_url.endswith("/"):
         api_url = api_url[:-1]
-    try:
-        with open(os.getenv("API_KEY_FILE"), "r") as file:
-            api_key = file.read()
-    except FileNotFoundError:
-        print("API_KEY_FILE not found. Please set the API_KEY_FILE environment variable to the path of the file containing the API key.")
-        api_key = os.getenv("API_KEY")
-    headers = {"Authorization": "Bearer " + api_key}
+    headers = {"Authorization": f"Bearer {Config.API_KEY}"}
 
     @classmethod
     def get_bots_presets(cls, bot_type):
@@ -53,7 +47,7 @@ class CoreApi:
         """
         try:
             response = requests.post(
-                cls.api_url + "/api/v1/bots/bots-presets", json={"api_key": cls.api_key, "bot_type": bot_type}, headers=cls.headers
+                cls.api_url + "/api/v1/bots/bots-presets", json={"api_key": Config.API_KEY, "bot_type": bot_type}, headers=cls.headers
             )
             return response.json(), response.status_code
         except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError):

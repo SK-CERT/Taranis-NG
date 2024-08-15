@@ -1,8 +1,3 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 class Config(object):
 
     def read_secret(secret_name):
@@ -15,6 +10,3 @@ class Config(object):
 
 
     API_KEY = read_secret("api_key")
-    EMAIL_USER = os.getenv("EMAIL_USER")
-    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-    EMAIL_SEND = os.getenv("EMAIL_SEND")
