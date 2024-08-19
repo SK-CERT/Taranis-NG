@@ -115,12 +115,16 @@ class RSSCollector(BaseCollector):
                 author = feed_entry.get("author", "")
                 title = feed_entry.get("title", "")
                 published = feed_entry.get("published", "")
+                published_parsed = feed_entry.get("published_parsed", "")
                 updated = feed_entry.get("updated", "")
+                updated_parsed = feed_entry.get("updated_parsed", "")
                 summary = feed_entry.get("summary", "")
                 content = feed_entry.get("content", "")
+                date = ""
                 review = ""
                 article = ""
                 link_for_article = feed_entry.get("link", "")
+                log_manager.log_collector_activity("rss", source.name, f"Title: {title}")
                 if summary:
                     review = strip_html_tags(summary[:500])
                 if content:
@@ -151,14 +155,19 @@ class RSSCollector(BaseCollector):
                         if len(article_sanit) > len(summary):
                             article = article_sanit
 
-                # use first 1800 characters of summary if article is empty
+                # use summary if article is empty
                 if summary and not article:
                     article = strip_html_tags(summary)
                 # use first 500 characters of article if summary is empty
                 elif not summary and article:
                     review = article[:500]
 
-                if published:
+                # use published date if available, otherwise use updated date
+                if published_parsed:
+                    date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
+                elif updated_parsed:
+                    date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
+                elif published:
                     date = published
                 elif updated:
                     date = updated
