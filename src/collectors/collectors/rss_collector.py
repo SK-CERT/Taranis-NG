@@ -60,14 +60,12 @@ class RSSCollector(BaseCollector):
         feed_url = source.parameter_values["FEED_URL"]
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
 
-        log_manager.log_collector_activity("rss", source.name, f"Starting collector for url: {feed_url}")
+        log_manager.log_collector_activity("rss", source.name, f"Starting collector for URL: {feed_url}")
 
         user_agent = source.parameter_values["USER_AGENT"]
         if user_agent:
             feedparser.USER_AGENT = user_agent
             log_manager.log_collector_activity("rss", source.name, f"Using user agent: {user_agent}")
-        else:
-            log_manager.log_collector_activity("rss", source.name, "No user agent used")
 
         # use system proxy
         proxy_handler = None
@@ -79,7 +77,6 @@ class RSSCollector(BaseCollector):
             # disable proxy - do not use system proxy
             if proxy_server == "none":  # WTF?
                 proxy_handler = urllib.request.ProxyHandler({})
-                log_manager.log_collector_activity("rss", source.name, "No proxy configuration found")
             else:
                 proxy = re.search(r"^(http|https|socks4|socks5|ftp)://([a-zA-Z0-9\-\.\_]+):(\d+)/?$", proxy_server)
                 if proxy:
@@ -94,10 +91,8 @@ class RSSCollector(BaseCollector):
                         )
                     elif scheme == "socks4":
                         proxy_handler = SocksiPyHandler(socks.SOCKS4, host, int(port))
-                        log_manager.log_collector_activity("rss", source.name, "Found SOCKS4 proxy configuration")
                     elif scheme == "socks5":
                         proxy_handler = SocksiPyHandler(socks.SOCKS5, host, int(port))
-                        log_manager.log_collector_activity("rss", source.name, "Found SOCKS5 proxy configuration")
 
         # use proxy in urllib
         if proxy_handler:
@@ -106,10 +101,9 @@ class RSSCollector(BaseCollector):
         try:
             if proxy_handler:
                 feed = feedparser.parse(feed_url, handlers=[proxy_handler])
-                log_manager.log_collector_activity("rss", source.name, "Using proxy for RSS feed")
+                log_manager.log_collector_activity("rss", source.name, f"Using proxy {proxy_server} for RSS feed")
             else:
                 feed = feedparser.parse(feed_url)
-                log_manager.log_collector_activity("rss", source.name, "Not using proxy for RSS feed")
 
             log_manager.log_collector_activity("rss", source.name, f"RSS returned feed with {len(feed['entries'])} entries")
 
