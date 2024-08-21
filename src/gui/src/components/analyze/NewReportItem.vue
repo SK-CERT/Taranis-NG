@@ -96,11 +96,14 @@
                                     <span class="caption grey--text">ID: {{ report_item.uuid }}</span>
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
-                                    <v-combobox v-on:change="reportSelected" :disabled="edit"
+                                    <v-combobox v-on:change="reportSelected"
+                                                :disabled="edit"
                                                 v-model="selected_type"
                                                 :items="report_types"
                                                 item-text="title"
                                                 :label="$t('report_item.report_type')"
+                                                name="report_type"
+                                                v-validate="'required'"
                                     />
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
@@ -356,7 +359,7 @@ export default {
             this.report_item.title = "";
             this.report_item.title_prefix = "";
             this.report_item.completed = false;
-            this.$validator.reset();
+            this.resetValidation();
         },
 
         reportSelected() {
@@ -389,7 +392,7 @@ export default {
             setTimeout(() => {
                 //this.$root.$emit('mouse-click-close');
                 this.$root.$emit('change-state', 'DEFAULT');
-                this.$validator.reset();
+                this.resetValidation();
                 this.visible = false;
                 this.$root.$emit('first-dialog', '');
             }, 150);
@@ -485,6 +488,11 @@ export default {
                     this.show_validation_error = true;
                 }
             })
+        },
+
+        resetValidation() {
+            this.$validator.reset();
+            this.show_validation_error = false;
         },
 
         getLockedStyle(field_id) {
@@ -818,6 +826,7 @@ export default {
         },
     },
     mixins: [AuthMixin],
+
     mounted() {
         this.$root.$on('attachments-uploaded', () => {
             this.attachmets_attributes_count--
@@ -836,10 +845,9 @@ export default {
 
         this.local_reports = !window.location.pathname.includes('/group/');
 
-        this.$store.dispatch('getAllReportItemTypes', {search: ''})
-                .then(() => {
-                    this.report_types = this.$store.getters.getReportItemTypes.items;
-                });
+        this.$store.dispatch('getAllReportItemTypes', {search: ''}).then(() => {
+            this.report_types = this.$store.getters.getReportItemTypes.items;
+        });
 
         this.$root.$on('new-report', (data) => {
             this.visible = true;

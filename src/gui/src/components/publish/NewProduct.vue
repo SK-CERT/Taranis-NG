@@ -28,11 +28,15 @@
                 <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
                     <v-row no-gutters>
                         <v-col cols="6" class="pr-3">
-                            <v-combobox v-on:change="productSelected" :disabled="!canModify"
+                            <v-combobox v-on:change="productSelected"
+                                        :disabled="!canModify"
                                         v-model="selected_type"
                                         :items="product_types"
                                         item-text="title"
-                                        :label="$t('product.report_type')" />
+                                        :label="$t('product.report_type')"
+                                        name="report_type"
+                                        v-validate="'required'"
+                            />
                         </v-col>
                         <v-col cols="6" class="pr-3">
                             <v-text-field :disabled="!canModify"
@@ -173,7 +177,7 @@
                 this.product.description = ""
                 this.product.product_type_id = null
                 this.product.report_items = []
-                this.$validator.reset();
+                this.resetValidation();
             },
 
             publishConfirmation() {
@@ -205,13 +209,13 @@
                                 if (this.product.id !== -1) {
                                     updateProduct(this.product).then(() => {
 
-                                        this.$validator.reset();
+                                        this.resetValidation();
                                         publishProduct(this.product.id, this.publisher_presets[i].id)
                                     })
                                 } else {
                                     createProduct(this.product).then((response) => {
 
-                                        this.$validator.reset();
+                                        this.resetValidation();
                                         this.product.id = response.data
                                         publishProduct(this.product.id, this.publisher_presets[i].id)
                                     })
@@ -231,7 +235,7 @@
             },
 
             cancel() {
-                this.$validator.reset();
+                this.resetValidation();
                 this.visible = false
             },
 
@@ -257,7 +261,7 @@
                         if (this.product.id !== -1) {
                             updateProduct(this.product).then(() => {
 
-                                this.$validator.reset();
+                                this.resetValidation();
                                 this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + this.product.id + "/overview?jwt=" + this.$store.getters.getJWT
                                 this.$refs.previewBtn.$el.click()
                             })
@@ -265,7 +269,7 @@
                             createProduct(this.product).then((response) => {
 
                                 this.product.id = response.data
-                                this.$validator.reset();
+                                this.resetValidation();
                                 this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + response.data + "/overview?jwt=" + this.$store.getters.getJWT
                                 this.$refs.previewBtn.$el.click()
                             })
@@ -300,7 +304,7 @@
                         if (this.product.id !== -1) {
                             updateProduct(this.product).then(() => {
 
-                                this.$validator.reset();
+                                this.resetValidation();
                                 this.visible = false;
 
                                 this.$root.$emit('notification',
@@ -316,7 +320,7 @@
                         } else {
                             createProduct(this.product).then(() => {
 
-                                this.$validator.reset();
+                                this.resetValidation();
                                 this.visible = false;
 
                                 this.$root.$emit('notification',
@@ -336,7 +340,12 @@
                         this.show_validation_error = true;
                     }
                 })
-            }
+            },
+
+            resetValidation() {
+                this.$validator.reset();
+                this.show_validation_error = false;
+            },
         },
         mounted() {
 
@@ -346,18 +355,16 @@
                 this.report_items = data
             });
 
-            this.$store.dispatch('getAllUserProductTypes', { search: '' })
-                .then(() => {
-                    this.product_types = this.$store.getters.getProductTypes.items
-                });
+            this.$store.dispatch('getAllUserProductTypes', { search: '' }).then(() => {
+                this.product_types = this.$store.getters.getProductTypes.items
+            });
 
-            this.$store.dispatch('getAllUserPublishersPresets', { search: '' })
-                .then(() => {
-                    this.publisher_presets = this.$store.getters.getProductsPublisherPresets.items;
-                    for (let i = 0; i < this.publisher_presets.length; i++) {
-                        this.publisher_presets.selected = false
-                    }
-                });
+            this.$store.dispatch('getAllUserPublishersPresets', { search: '' }).then(() => {
+                this.publisher_presets = this.$store.getters.getProductsPublisherPresets.items;
+                for (let i = 0; i < this.publisher_presets.length; i++) {
+                    this.publisher_presets.selected = false
+                }
+            });
 
             this.$root.$on('show-product-edit', (data) => {
                 this.visible = true;
