@@ -84,7 +84,7 @@
         },
         methods: {
             itemClicked(data) {
-                this.$root.$emit('show-edit', data)
+                this.$root.$emit('show-edit-src-grp', data)
             },
             deleteClicked(data) {
                 this.$root.$emit('delete-item', data)
