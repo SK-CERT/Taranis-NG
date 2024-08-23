@@ -25,7 +25,7 @@ class BasePresenter:
     def json_default(value):
         """Serialize a value to JSON.
 
-        Arguments:
+        Parameters:
             value -- value to serialize
 
         Returns:
@@ -63,7 +63,7 @@ class BasePresenter:
         def __init__(self, report_item, report_types, attribute_map):
             """Initialize the object.
 
-            Arguments:
+            Parameters:
                 report_item -- report item to initialize the object with
                 report_types -- report types
                 attribute_map -- attribute map
@@ -139,7 +139,7 @@ class BasePresenter:
         def get_max_tlp(self, reports):
             """Get the highest TLP value from a list of reports.
 
-            Args:
+            Parameters:
                 reports (list): list of reports
 
             Returns:
@@ -159,7 +159,7 @@ class BasePresenter:
         def link_renumbering(self, text, report_links, product_links):
             """Replace the numbers enclosed in brackets in the given text with the corresponding indices from product_links.
 
-            Arguments:
+            Parameters:
                 text (str): The text in which the numbers enclosed in brackets will be replaced.
                 report_links (list): The list of report links.
                 product_links (list): The list of product links.
@@ -183,7 +183,7 @@ class BasePresenter:
         def __init__(self, presenter_input):
             """Initialize the object.
 
-            Arguments:
+            Parameters:
                 presenter_input -- input data
             """
             # types of report items (e.g. vuln report, disinfo report)
@@ -239,7 +239,7 @@ class BasePresenter:
     def print_exception(self, error):
         """Print exception.
 
-        Arguments:
+        Parameters:
             error -- exception to print
         """
         logger.log_debug_trace(f"[{self.name}] {error}")
@@ -248,7 +248,7 @@ class BasePresenter:
     def generate_input_data(presenter_input):
         """Generate input data for the presenter.
 
-        Arguments:
+        Parameters:
             presenter_input -- input data
 
         Returns:
