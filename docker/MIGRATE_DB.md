@@ -103,7 +103,7 @@ database:
     database:
 ```
 
-### After (v16, already applied in this update)
+### After (v16)
 
 File `.env`, only modified lines:
 
