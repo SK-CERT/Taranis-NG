@@ -114,6 +114,7 @@ services:
       TARANIS_NG_CORE_SSE: "http://core/sse"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
+      LOG_LEVEL: "${LOG_LEVEL}"
     logging:
       driver: "json-file"
       options:
@@ -139,8 +140,8 @@ services:
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       WORKERS_PER_CORE: "1"
-      DEBUG: "true"
       TZ: "${TZ}"
+      LOG_LEVEL: "${LOG_LEVEL}"
     volumes:
       - "collector_storage:/app/storage"
     logging:
@@ -169,6 +170,7 @@ services:
       TARANIS_NG_CORE_URL: "http://core"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
+      LOG_LEVEL: "${LOG_LEVEL}"
     ports:
       - "${PRESENTER_PORT}:80"
     volumes:
@@ -199,6 +201,7 @@ services:
       TARANIS_NG_CORE_URL: "http://core"
       WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
+      LOG_LEVEL: "${LOG_LEVEL}"
     logging:
       driver: "json-file"
       options:
