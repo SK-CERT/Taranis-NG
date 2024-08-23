@@ -221,7 +221,7 @@ export default {
                 this.osint_sources = this.$store.getters.getOSINTSources.items
             });
 
-        this.$root.$on('show-edit', (data) => {
+        this.$root.$on('show-edit-src-grp', (data) => {
             this.visible = true;
             this.edit = true;
             this.show_error = false;
@@ -235,7 +235,7 @@ export default {
         });
     },
     beforeDestroy() {
-        this.$root.$off('show-edit')
+        this.$root.$off('show-edit-src-grp')
     }
 }
 </script>
