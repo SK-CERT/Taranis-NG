@@ -12,7 +12,7 @@ from sockshandler import SocksiPyHandler
 from bs4 import BeautifulSoup
 
 from .base_collector import BaseCollector
-from managers import log_manager
+from managers.log_manager import logger
 from shared.schema.news_item import NewsItemData
 from shared.schema.parameter import Parameter, ParameterType
 
@@ -60,12 +60,12 @@ class RSSCollector(BaseCollector):
         feed_url = source.parameter_values["FEED_URL"]
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
 
-        log_manager.log_collector_activity("rss", source.name, f"Starting collector for URL: {feed_url}")
+        logger.log_collector_activity_info("rss", source.name, f"Starting collector for URL: {feed_url}")
 
         user_agent = source.parameter_values["USER_AGENT"]
         if user_agent:
             feedparser.USER_AGENT = user_agent
-            log_manager.log_collector_activity("rss", source.name, f"Using user agent: {user_agent}")
+            logger.log_collector_activity_info("rss", source.name, f"Using user agent: {user_agent}")
 
         # use system proxy
         proxy_handler = None
@@ -101,11 +101,11 @@ class RSSCollector(BaseCollector):
         try:
             if proxy_handler:
                 feed = feedparser.parse(feed_url, handlers=[proxy_handler])
-                log_manager.log_collector_activity("rss", source.name, f"Using proxy {proxy_server} for RSS feed")
+                logger.log_collector_activity_info("rss", source.name, f"Using proxy {proxy_server} for RSS feed")
             else:
                 feed = feedparser.parse(feed_url)
 
-            log_manager.log_collector_activity("rss", source.name, f"RSS returned feed with {len(feed['entries'])} entries")
+            logger.log_collector_activity_debug("rss", source.name, f"RSS returned feed with {len(feed['entries'])} entries")
 
             news_items = []
 
@@ -124,17 +124,16 @@ class RSSCollector(BaseCollector):
                 review = ""
                 article = ""
                 link_for_article = feed_entry.get("link", "")
-                log_manager.log_collector_activity("rss", source.name, f"Title: {title}")
                 if summary:
                     review = strip_html_tags(summary[:500])
                 if content:
                     article = strip_html_tags(content[0].get("value", ""))
 
                 if not link_for_article:
-                    log_manager.log_collector_activity("rss", source.name, "Skipping (empty link)")
+                    logger.log_collector_activity_info("rss", source.name, "Skipping (empty link)")
                     continue
                 elif not article:
-                    log_manager.log_collector_activity(
+                    logger.log_collector_activity_info(
                         "rss", source.name, f"Visiting article {count}/{len(feed['entries'])}: {link_for_article}"
                     )
                     html_article = ""
@@ -192,14 +191,14 @@ class RSSCollector(BaseCollector):
                 news_items.append(news_item)
 
                 if count >= links_limit & links_limit > 0:
-                    log_manager.log_collector_activity("rss", source.name, f"Limit for article links reached ({links_limit})")
+                    logger.log_collector_activity_debug("rss", source.name, f"Limit for article links reached ({links_limit})")
                     break
 
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            log_manager.log_collector_activity("rss", source.name, "RSS collection exceptionally failed")
+            logger.log_collector_activity_info("rss", source.name, "RSS collection exceptionally failed")
             BaseCollector.print_exception(source, error)
-            log_manager.log_debug(traceback.format_exc())
+            logger.log_debug(traceback.format_exc())
 
-        log_manager.log_debug("{} collection finished.".format(self.type))
+        logger.log_debug("{} collection finished.".format(self.type))
