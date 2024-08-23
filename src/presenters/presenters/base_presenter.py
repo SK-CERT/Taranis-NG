@@ -5,7 +5,7 @@ Returns:
 """
 
 from shared.schema.presenter import PresenterSchema
-from managers import log_manager
+from managers.log_manager import logger
 import json
 import datetime
 import types
@@ -242,7 +242,7 @@ class BasePresenter:
         Arguments:
             error -- exception to print
         """
-        log_manager.log_debug_trace("[{0}] {1}".format(self.name, error))
+        logger.log_debug_trace(f"[{self.name}] {error}")
 
     @staticmethod
     def generate_input_data(presenter_input):
@@ -256,7 +256,7 @@ class BasePresenter:
         """
         data = BasePresenter.InputDataObject(presenter_input)
         data_json = data.toJSON()
-        log_manager.log_info("=== TEMPLATING FROM THE FOLLOWING INPUT ===\n" + data_json)
+        logger.log_debug(f"=== TEMPLATING FROM THE FOLLOWING INPUT ===\n{data_json}")
         data_obj = json.loads(data_json)
         return data_obj
 

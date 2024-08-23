@@ -1,7 +1,22 @@
+"""Base abstract type for all publishers."""
+
 from shared.schema.publisher import PublisherSchema
-from managers import log_manager
+from managers.log_manager import logger
+
 
 class BasePublisher:
+    """Base abstract type for all publishers.
+
+    Attributes:
+        type (str): The type of the publisher.
+        name (str): The name of the publisher.
+        description (str): The description of the publisher.
+        parameters (list): The list of parameters for the publisher.
+    Methods:
+        get_info(): Returns the information schema of the publisher.
+        print_exception(error): Prints the exception with debug trace.
+    """
+
     type = "BASE_PUBLISHER"
     name = "Base Publisher"
     description = "Base abstract type for all publishers"
@@ -9,11 +24,18 @@ class BasePublisher:
     parameters = []
 
     def get_info(self):
+        """Return the information of the publisher.
+
+        Returns:
+            (dict): The information of the publisher.
+        """
         info_schema = PublisherSchema()
         return info_schema.dump(self)
 
-    def publish(self, publisher_input):
-        pass
-
     def print_exception(self, error):
-        log_manager.log_debug_trace("[{0}] {1}".format(self.name, error))
+        """Print the given error message with the name of the publisher.
+
+        Parameters:
+            error (str): The error message to be printed.
+        """
+        logger.log_debug_trace(f"[{self.name}] {error}")
