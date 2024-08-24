@@ -73,7 +73,7 @@ class LDAPAuthenticator(BaseAuthenticator):
         if not conn.bind():
             data = request.get_json()
             data["password"] = log_manager.sensitive_value(data["password"])
-            log_manager.store_auth_error_activity("Authentication failed for user: " + credentials["username"], request_data=data)
+            log_manager.store_auth_error_activity(f"Authentication failed for user: {credentials['username']}", request_data=data)
             time.sleep(random.uniform(1, 3))
             return BaseAuthenticator.generate_error()
 
