@@ -128,6 +128,22 @@ class TaranisLogger:
         """
         self.logger.info(message)
 
+    def log_warning(self, message):
+        """Log an warning message.
+
+        Parameters:
+            message (str): The message to be logged.
+        """
+        self.logger.warning(message)
+
+    def warning(self, message):
+        """Log an warning message.
+
+        Parameters:
+            message (str): The message to be logged.
+        """
+        self.logger.warning(message)
+
     def log_critical(self, message):
         """Log a critical message.
 
