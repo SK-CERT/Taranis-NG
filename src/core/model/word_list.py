@@ -217,9 +217,15 @@ class WordListEntry(db.Model):
 
     @classmethod
     def stopwords_subquery(cls):
-        return db.session.query(func.lower(WordListEntry.value)).distinct().group_by(WordListEntry.value).join(
-            WordListCategory,
-            WordListCategory.id == WordListEntry.word_list_category_id).join(
-            WordList, WordList.id == WordListCategory.word_list_id).filter(
-            WordList.use_for_stop_words == True).subquery()
+        return db.session.query(
+                    func.lower(WordListEntry.value)
+                ).distinct().group_by(
+                    WordListEntry.value
+                ).join(
+                    WordListCategory, WordListCategory.id == WordListEntry.word_list_category_id
+                ).join(
+                    WordList, WordList.id == WordListCategory.word_list_id
+                ).filter(
+                    WordList.use_for_stop_words == True
+                ).scalar_subquery()
 
