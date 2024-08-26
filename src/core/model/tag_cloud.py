@@ -42,11 +42,18 @@ class TagCloud(db.Model):
     def get_grouped_words(cls, tag_cloud_day):
         day_filter = (datetime.datetime.now() - datetime.timedelta(days=tag_cloud_day)).date()
         stopwords = WordListEntry.stopwords_subquery()
-        grouped_words = db.session.query(TagCloud.word,
-                                         label('word_quantity', func.sum(TagCloud.word_quantity))).filter(
-            TagCloud.collected == day_filter).filter(
-            func.lower(TagCloud.word).notin_(stopwords)).group_by(TagCloud.word).order_by(
-            db.desc('word_quantity')).limit(100).all()
+        grouped_words = db.session.query(
+                TagCloud.word,
+                label('word_quantity', func.sum(TagCloud.word_quantity))
+            ).filter(
+                TagCloud.collected == day_filter
+            ).filter(
+                func.lower(TagCloud.word).notin_(stopwords)
+            ).group_by(
+                TagCloud.word
+            ).order_by(
+                db.desc('word_quantity')
+            ).limit(100).all()
         grouped_words_schema = GroupedWordsSchema(many=True)
         return grouped_words_schema.dump(grouped_words)
 
