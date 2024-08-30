@@ -1,17 +1,15 @@
 """This module provides methods for interacting with the Taranis-NG API."""
 
-import logging
 import os
 import requests
 import urllib
 from config import Config
+from shared.log import TaranisLogger
 
-logger = logging.getLogger("gunicorn.error")
-logger.level = logging.INFO
 
-# increase logging level
-if "DEBUG" in os.environ and os.environ.get("DEBUG").lower() == "true":
-    logger.setLevel(logging.DEBUG)
+logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
+
+logger = TaranisLogger("Remote Collectors", logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
 
 
 class CoreApi:
@@ -56,13 +54,8 @@ class CoreApi:
 
         try:
             response = requests.get(
-                cls.api_url
-                + "/api/v1/collectors/"
-                + urllib.parse.quote(id)
-                + "/osint-sources?api_key="
-                + urllib.parse.quote(Config.API_KEY)
-                + "&collector_type="
-                + urllib.parse.quote(collector_type),
+                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(id)}/osint-sources?api_key={urllib.parse.quote(Config.API_KEY)}"
+                f"&collector_type={urllib.parse.quote(collector_type)}",
                 headers=cls.headers,
             )
             return response.json(), response.status_code
@@ -91,7 +84,7 @@ class CoreApi:
             return "Cannot read collector config file.", 0
 
         try:
-            response = requests.get(cls.api_url + "/api/v1/collectors/" + urllib.parse.quote(id), headers=cls.headers)
+            response = requests.get(f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(id)}", headers=cls.headers)
             return response.json(), response.status_code
         except Exception as ex:
             logger.debug(ex)
@@ -105,7 +98,9 @@ class CoreApi:
             tuple: A tuple containing the JSON response and the HTTP status code.
         """
         try:
-            response = requests.get(cls.api_url + "/api/v1/collectors/osint-sources/" + urllib.parse.quote(source_id) + "/attempt", headers=cls.headers)
+            response = requests.get(
+                f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/attempt", headers=cls.headers
+            )
             return response.json(), response.status_code
         except Exception as ex:
             logger.debug(ex)
@@ -127,7 +122,7 @@ class CoreApi:
             Exception: If an error occurs during the request.
         """
         try:
-            response = requests.post(cls.api_url + "/api/v1/collectors/news-items", json=news_items, headers=cls.headers)
+            response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers)
             return response.status_code
         except Exception as ex:
             logger.debug(ex)
