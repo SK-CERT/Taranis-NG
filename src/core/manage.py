@@ -2,12 +2,13 @@
 
 """Module for managing the application from the command line."""
 
-from os import abort, getenv, read
+import os
 import random
 import socket
 import string
 import time
-import logging
+
+# import logging
 from flask import Flask
 from flask_script import Manager, Command
 from flask_script.commands import Option
@@ -17,12 +18,14 @@ from managers import db_manager
 from model import user, role, collector, collectors_node, permission, osint_source  # noqa: F401
 from model import apikey
 from remote.collectors_api import CollectorsApi
+from shared.log import TaranisLogger
+
 
 app = Flask(__name__)
 app.config.from_object("config.Config")
 manager = Manager(app=app)
-app.logger = logging.getLogger("gunicorn.error")
-app.logger.level = logging.INFO
+logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
+logger = TaranisLogger("Manage", logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
 
 db_manager.initialize(app)
 
@@ -74,17 +77,17 @@ class AccountManagement(Command):
                 roles = []
                 for r in us.roles:
                     roles.append(r.id)
-                print("Id: {}\n\tUsername: {}\n\tName: {}\n\tRoles: {}".format(us.id, us.username, us.name, roles))
+                print(f"Id: {us.id}\n\tUsername: {us.username}\n\tName: {us.name}\n\tRoles: {roles}")
             exit()
 
         if opt_create:
             if not opt_username or not opt_password or not opt_roles:
-                app.logger.critical("Username, password or role not specified!")
-                abort()
+                logger.critical("Username, password or role not specified!")
+                os.abort()
 
             if user.User.find(opt_username):
-                app.logger.critical("User already exists!")
-                abort()
+                logger.critical("User already exists!")
+                os.abort()
 
             opt_roles = opt_roles.split(",")
             roles = []
@@ -96,8 +99,8 @@ class AccountManagement(Command):
                     r = role.Role.find_by_name(ro)
 
                 if not r:
-                    app.logger.critical("The specified role '{}' does not exist!".format(ro))
-                    abort()
+                    logger.critical(f"The specified role '{ro}' does not exist!")
+                    os.abort()
 
                 roles.append(r)
 
@@ -105,19 +108,19 @@ class AccountManagement(Command):
             db_manager.db.session.add(new_user)
             db_manager.db.session.commit()
 
-            print("User '{}' with id {} created.".format(opt_name, new_user.id))
+            print(f"User '{opt_name}' with id {new_user.id} created.")
 
         if opt_edit:
             if not opt_username:
-                app.logger.critical("Username not specified!")
-                abort()
+                logger.critical("Username not specified!")
+                os.abort()
             if not opt_password or not opt_roles:
-                app.logger.critical("Please specify a new password or role id!")
-                abort()
+                logger.critical("Please specify a new password or role id!")
+                os.abort()
 
             if not user.User.find(opt_username):
-                app.logger.critical("User does not exist!")
-                abort()
+                logger.critical("User does not exist!")
+                os.abort()
 
             if opt_roles:
                 opt_roles = opt_roles.split(",")
@@ -131,23 +134,23 @@ class AccountManagement(Command):
                         r = role.Role.find_by_name(ro)
 
                     if not r:
-                        app.logger.critical("The specified role '{}' does not exist!".format(ro))
-                        abort()
+                        logger.critical(f"The specified role '{ro}' does not exist!")
+                        os.abort()
 
                     roles.append(r)
 
         if opt_delete:
             if not opt_username:
-                app.logger.critical("Username not specified!")
-                abort()
+                logger.critical("Username not specified!")
+                os.abort()
 
             u = user.User.find(opt_username)
             if not u:
-                app.logger.critical("User does not exist!")
-                abort()
+                logger.critical("User does not exist!")
+                os.abort()
 
             user.User.delete(u.id)
-            print("The user '{}' has been deleted.".format(opt_username))
+            print(f"The user '{opt_username}' has been deleted.")
 
 
 class RoleManagement(Command):
@@ -194,13 +197,13 @@ class RoleManagement(Command):
                 perms = []
                 for p in ro.permissions:
                     perms.append(p.id)
-                print("Id: {}\n\tName: {}\n\tDescription: {}\n\tPermissions: {}".format(ro.id, ro.name, ro.description, perms))
+                print(f"Id: {ro.id}\n\tName: {ro.name}\n\tDescription: {ro.description}\n\tPermissions: {perms}")
             exit()
 
         if opt_create:
             if not opt_name or not opt_permissions:
-                app.logger.critical("Role name or permissions not specified!")
-                abort()
+                logger.critical("Role name or permissions not specified!")
+                os.abort()
 
             opt_permissions = opt_permissions.split(",")
             perms = []
@@ -209,8 +212,8 @@ class RoleManagement(Command):
                 p = permission.Permission.find(pe)
 
                 if not p:
-                    app.logger.critical("The specified permission '{}' does not exist!".format(pe))
-                    abort()
+                    logger.critical(f"The specified permission '{pe}' does not exist!")
+                    os.abort()
 
                 perms.append(p)
 
@@ -218,20 +221,20 @@ class RoleManagement(Command):
             db_manager.db.session.add(new_role)
             db_manager.db.session.commit()
 
-            print("Role '{}' with id {} created.".format(opt_name, new_role.id))
+            print(f"Role '{opt_name}' with id {new_role.id} created.")
 
         if opt_edit:
             if not opt_id or not opt_name:
-                app.logger.critical("Role id or name not specified!")
-                abort()
+                logger.critical("Role id or name not specified!")
+                os.abort()
             if not opt_name or not opt_description or not opt_permissions:
-                app.logger.critical("Please specify a new name, description or permissions!")
-                abort()
+                logger.critical("Please specify a new name, description or permissions!")
+                os.abort()
 
         if opt_delete:
             if not opt_id or not opt_name:
-                app.logger.critical("Role id or name not specified!")
-                abort()
+                logger.critical("Role id or name not specified!")
+                os.abort()
 
 
 class CollectorManagement(Command):
@@ -296,25 +299,21 @@ class CollectorManagement(Command):
                 for c in node.collectors:
                     capabilities.append(c.type)
                     for s in c.sources:
-                        sources.append("{} ({})".format(s.name, s.id))
+                        sources.append(f"{s.name} ({s.id})")
+                if opt_show_api_key:
+                    api_key_str = f"API key: {node.api_key}\n\t"
+                else:
+                    api_key_str = ""
                 print(
-                    "Id: {}\n\tName: {}\n\tURL: {}\n\t{}Created: {}\n\tLast seen: {}\n\tCapabilities: {}\n\tSources: {}".format(
-                        node.id,
-                        node.name,
-                        node.api_url,
-                        "API key: {}\n\t".format(node.api_key) if opt_show_api_key else "",
-                        node.created,
-                        node.last_seen,
-                        capabilities,
-                        sources,
-                    )
+                    f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
+                    f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}"
                 )
             exit()
 
         if opt_create:
             if not opt_name or not opt_api_url or not opt_api_key:
-                app.logger.critical("Please specify the collector node name, API url and key!")
-                abort()
+                logger.critical("Please specify the collector node name, API url and key!")
+                os.abort()
 
             data = {
                 "id": "",
@@ -337,62 +336,62 @@ class CollectorManagement(Command):
                     status_code = 0
                     time.sleep(1)
                 retries += 1
-                print("Retrying [{}/{}]...".format(retries, max_retries))
+                print(f"Retrying [{retries}/{max_retries}]...")
 
             if status_code != 200:
                 print("Cannot create a new collector node!")
-                print("Response from collector: {}".format(collectors_info))
-                abort()
+                print(f"Response from collector: {collectors_info}")
+                os.abort()
 
             collectors = collector.Collector.create_all(collectors_info)
             node = collectors_node.CollectorsNode.add_new(data, collectors)
             collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info(node.id)
 
-            print("Collector node '{}' with id {} created.".format(opt_name, node.id))
+            print(f"Collector node '{opt_name}' with id {node.id} created.")
 
         if opt_edit:
             if not opt_id or not opt_name:
-                app.logger.critical("Collector node id or name not specified!")
-                abort()
+                logger.critical("Collector node id or name not specified!")
+                os.abort()
             if not opt_name or not opt_description or not opt_api_url or not opt_api_key:
-                app.logger.critical("Please specify a new name, description, API url or key!")
-                abort()
+                logger.critical("Please specify a new name, description, API url or key!")
+                os.abort()
 
         if opt_delete:
             if not opt_id or not opt_name:
-                app.logger.critical("Collector node id or name not specified!")
-                abort()
+                logger.critical("Collector node id or name not specified!")
+                os.abort()
 
         if opt_update:
             if not opt_all and not opt_id and not opt_name:
-                app.logger.critical("Collector node id or name not specified!")
-                app.logger.critical("If you want to update all collectors, pass the --all parameter.")
-                abort()
+                logger.critical("Collector node id or name not specified!")
+                logger.critical("If you want to update all collectors, pass the --all parameter.")
+                os.abort()
 
             nodes = None
             if opt_id:
                 nodes = [collectors_node.CollectorsNode.get_by_id(opt_id)]
                 if not nodes:
-                    app.logger.critical("Collector node does not exit!")
-                    abort()
+                    logger.critical("Collector node does not exit!")
+                    os.abort()
             elif opt_name:
                 nodes, count = collectors_node.CollectorsNode.get(opt_name)
                 if not count:
-                    app.logger.critical("Collector node does not exit!")
-                    abort()
+                    logger.critical("Collector node does not exit!")
+                    os.abort()
             else:
                 nodes, count = collectors_node.CollectorsNode.get(None)
                 if not count:
-                    app.logger.critical("No collector nodes exist!")
-                    abort()
+                    logger.critical("No collector nodes exist!")
+                    os.abort()
 
             for node in nodes:
                 # refresh collector node id
                 collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
                 if status_code == 200:
-                    print("Collector node {} updated.".format(node.id))
+                    print(f"Collector node {node.id} updated.")
                 else:
-                    print("Unable to update collector node {}.\n\tResponse: [{}] {}.".format(node.id, status_code, collectors_info))
+                    print(f"Unable to update collector node {node.id}.\n\tResponse: [{status_code}] {collectors_info}.")
 
 
 class DictionaryManagement(Command):
@@ -422,48 +421,48 @@ class DictionaryManagement(Command):
         from model import attribute
 
         if opt_cve:
-            cve_update_file = getenv("CVE_UPDATE_FILE")
+            cve_update_file = os.getenv("CVE_UPDATE_FILE")
             if cve_update_file is None:
-                app.logger.critical("CVE_UPDATE_FILE is undefined")
-                abort()
+                logger.critical("CVE_UPDATE_FILE is undefined")
+                os.abort()
 
             self.upload_to(cve_update_file)
             try:
                 attribute.Attribute.load_dictionaries("cve")
             except Exception:
-                app.logger.debug(traceback.format_exc())
-                app.logger.critical("File structure was not recognized!")
-                abort()
+                logger.debug(traceback.format_exc())
+                logger.critical("File structure was not recognized!")
+                os.abort()
 
         if opt_cpe:
-            cpe_update_file = getenv("CPE_UPDATE_FILE")
+            cpe_update_file = os.getenv("CPE_UPDATE_FILE")
             if cpe_update_file is None:
-                app.logger.critical("CPE_UPDATE_FILE is undefined")
-                abort()
+                logger.critical("CPE_UPDATE_FILE is undefined")
+                os.abort()
 
             self.upload_to(cpe_update_file)
             try:
                 attribute.Attribute.load_dictionaries("cpe")
             except Exception:
-                app.logger.debug(traceback.format_exc())
-                app.logger.critical("File structure was not recognized!")
-                abort()
+                logger.debug(traceback.format_exc())
+                logger.critical("File structure was not recognized!")
+                os.abort()
 
         if opt_cwe:
-            cwe_update_file = getenv("CWE_UPDATE_FILE")
+            cwe_update_file = os.getenv("CWE_UPDATE_FILE")
             if cwe_update_file is None:
-                app.logger.critical("CWE_UPDATE_FILE is undefined")
-                abort()
+                logger.critical("CWE_UPDATE_FILE is undefined")
+                os.abort()
 
             self.upload_to(cwe_update_file)
             try:
                 attribute.Attribute.load_dictionaries("cwe")
             except Exception:
-                app.logger.debug(traceback.format_exc())
-                app.logger.critical("File structure was not recognized!")
-                abort()
+                logger.debug(traceback.format_exc())
+                logger.critical("File structure was not recognized!")
+                os.abort()
 
-        app.logger.critical("Dictionary was uploaded.")
+        logger.info("Dictionary was uploaded.")
         exit()
 
     def upload_to(self, filename):
@@ -475,14 +474,14 @@ class DictionaryManagement(Command):
         try:
             with open(filename, "wb") as out_file:
                 while True:
-                    chunk = read(0, 131072)
+                    chunk = os.read(0, 131072)
                     if not chunk:
                         break
                     out_file.write(chunk)
         except Exception:
-            app.logger.debug(traceback.format_exc())
-            app.logger.critical("Upload failed!")
-            abort()
+            logger.debug(traceback.format_exc())
+            logger.critical("Upload failed!")
+            os.abort()
 
 
 class ApiKeysManagement(Command):
@@ -516,31 +515,30 @@ class ApiKeysManagement(Command):
             apikeys = apikey.ApiKey.get_all()
             for k in apikeys:
                 print(
-                    "Id: {}\n\tName: {}\n\tKey: {}\n\tCreated: {}\n\tUser id: {}\n\tExpires: {}".format(
-                        k.id, k.name, k.key, k.created_at, k.user_id, k.expires_at
-                    )
+                    f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key}\n\tCreated: {k.created_at}\n\tUser id: {k.user_id}\n\t"
+                    f"Expires: {k.expires_at}"
                 )
             exit()
 
         if opt_create:
             if not opt_name:
-                app.logger.critical("Name not specified!")
-                abort()
+                logger.critical("Name not specified!")
+                os.abort()
 
             if apikey.ApiKey.find_by_name(opt_name):
-                app.logger.critical("Name already exists!")
-                abort()
+                logger.critical("Name already exists!")
+                os.abort()
 
             if not opt_user:
-                app.logger.critical("User not specified!")
-                abort()
+                logger.critical("User not specified!")
+                os.abort()
 
             u = None
             if opt_user:
                 u = user.User.find(opt_user)
                 if not u:
-                    app.logger.critical("The specified user '{}' does not exist!".format(opt_user))
-                    abort()
+                    logger.critical(f"The specified user '{opt_user}' does not exist!")
+                    os.abort()
 
             data = {
                 # 'id': None,
@@ -551,20 +549,20 @@ class ApiKeysManagement(Command):
             }
 
             k = apikey.ApiKey.add_new(data)
-            print("ApiKey '{}' with id {} created.".format(opt_name, k.id))
+            print(f"ApiKey '{opt_name}' with id {k.id} created.")
 
         if opt_delete:
             if not opt_name:
-                app.logger.critical("Name not specified!")
-                abort()
+                logger.critical("Name not specified!")
+                os.abort()
 
             k = apikey.ApiKey.find_by_name(opt_name)
             if not k:
-                app.logger.critical("Name not found!")
-                abort()
+                logger.critical("Name not found!")
+                os.abort()
 
             apikey.ApiKey.delete(k.id)
-            print("ApiKey '{}' has been deleted.".format(opt_name))
+            print(f"ApiKey '{opt_name}' has been deleted.")
 
 
 manager.add_command("account", AccountManagement)

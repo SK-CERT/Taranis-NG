@@ -78,14 +78,6 @@ class TaranisLogger:
 
         self.logger = lloggers[0]
 
-    def log_debug(self, message):
-        """Log a debug message.
-
-        Parameters:
-            message (str): The message to be logged.
-        """
-        self.logger.debug(message)
-
     def debug(self, message):
         """Log a debug message.
 
@@ -94,7 +86,9 @@ class TaranisLogger:
         """
         self.logger.debug(message)
 
-    def log_debug_trace(self, message=None):
+    log_debug = debug
+
+    def debug_trace(self, message=None):
         """Log a debug message along with the traceback of the current exception.
 
         Parameters:
@@ -104,6 +98,8 @@ class TaranisLogger:
             self.logger.debug(message)
         self.logger.debug(traceback.format_exc())
 
+    log_debug_trace = debug_trace
+
     def exception(self, message=None):
         """Log an exception with an optional message.
 
@@ -112,13 +108,7 @@ class TaranisLogger:
         """
         self.log_debug_trace(message)
 
-    def log_info(self, message):
-        """Log an info message.
-
-        Parameters:
-            message (str): The message to be logged.
-        """
-        self.logger.info(message)
+    log_exception = exception
 
     def info(self, message):
         """Log an info message.
@@ -128,13 +118,7 @@ class TaranisLogger:
         """
         self.logger.info(message)
 
-    def log_warning(self, message):
-        """Log an warning message.
-
-        Parameters:
-            message (str): The message to be logged.
-        """
-        self.logger.warning(message)
+    log_info = info
 
     def warning(self, message):
         """Log an warning message.
@@ -144,13 +128,7 @@ class TaranisLogger:
         """
         self.logger.warning(message)
 
-    def log_critical(self, message):
-        """Log a critical message.
-
-        Parameters:
-            message (str): The message to be logged.
-        """
-        self.logger.critical(message)
+    log_warning = warning
 
     def critical(self, message):
         """Log a critical message.
@@ -159,6 +137,8 @@ class TaranisLogger:
             message (str): The message to be logged.
         """
         self.logger.critical(message)
+
+    log_critical = critical
 
     def log_collector_activity_debug(self, collector_type, source_name, message):
         """Log the debug activity of a collector.

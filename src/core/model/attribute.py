@@ -429,7 +429,7 @@ class Attribute(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search.lower()}%"
             query = query.filter(or_(func.lower(Attribute.name).like(search_string), func.lower(Attribute.description).like(search_string)))
 
         return query.order_by(db.asc(Attribute.name)).all(), query.count()
@@ -568,11 +568,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        logger.log_critical("Processed CVE items: " + str(item_count))
+                        logger.info(f"Processed CVE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        logger.log_critical("Processed CVE items: " + str(item_count))
+        logger.info(f"Processed CVE items: {item_count}")
         db.session.commit()
 
     @classmethod
@@ -605,11 +605,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        logger.log_critical("Processed CPE items: " + str(item_count))
+                        logger.info(f"Processed CPE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        logger.log_critical("Processed CPE items: " + str(item_count))
+        logger.info(f"Processed CPE items: {item_count}")
         db.session.commit()
 
     @classmethod
@@ -639,11 +639,11 @@ class Attribute(db.Model):
                     element.clear()
                     # desc = ""
                     if block_item_count == 1000:
-                        logger.log_critical("Processed CWE items: " + str(item_count))
+                        logger.info(f"Processed CWE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        logger.log_critical("Processed CWE items: " + str(item_count))
+        logger.info(f"Processed CWE items: {item_count}")
         db.session.commit()
 
     @classmethod
