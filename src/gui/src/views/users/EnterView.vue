@@ -14,41 +14,36 @@
             <v-form @submit.prevent="add" id="form" ref="form" style="width: 100%; padding: 8px">
                 <v-card>
                     <v-card-text>
-                        <v-text-field
-                                :label="$t('enter.title')"
-                                name="title"
-                                type="text"
-                                v-model="news_item.title"
-                                v-validate="'required'"
-                                data-vv-name="title"
-                                :error-messages="errors.collect('title')"
+                        <v-text-field :label="$t('enter.title')"
+                                      name="title"
+                                      type="text"
+                                      v-model="news_item.title"
+                                      v-validate="'required'"
+                                      data-vv-name="title"
+                                      :error-messages="errors.collect('title')"
                         ></v-text-field>
 
-                        <v-textarea
-                                :label="$t('enter.review')"
-                                name="review"
-                                v-model="news_item.review"
+                        <v-textarea :label="$t('enter.review')"
+                                    name="review"
+                                    v-model="news_item.review"
                         ></v-textarea>
 
-                        <v-text-field
-                                :label="$t('enter.source')"
-                                name="source"
-                                type="text"
-                                v-model="news_item.source"
+                        <v-text-field :label="$t('enter.source')"
+                                      name="source"
+                                      type="text"
+                                      v-model="news_item.source"
                         ></v-text-field>
 
-                        <v-text-field
-                                :label="$t('enter.link')"
-                                name="link"
-                                type="text"
-                                v-model="news_item.link"
+                        <v-text-field :label="$t('enter.link')"
+                                      name="link"
+                                      type="text"
+                                      v-model="news_item.link"
                         ></v-text-field>
 
-                        <vue-editor
-                                ref="assessEnter"
-                                v-model="editorData"
-                                :editorOptions="editorOptionVue2"
-                        ></vue-editor>
+                        <v-textarea :label="$t('enter.content')"
+                                    name="content"
+                                    v-model="news_item.content"
+                        ></v-textarea>
 
                     </v-card-text>
                 </v-card>
@@ -67,37 +62,17 @@
 
 <script>
     import ViewLayout from "../../components/layouts/ViewLayout";
-    import { VueEditor } from 'vue2-editor';
     import {addNewsItem} from "@/api/assess";
-
-    const toolbarOptions = [
-        ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' },
-            'blockquote', 'code-block', 'clean'],
-        [{ align: "" }, { align: "center" }, { align: "right" }, { align: "justify" }],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-        [{ 'size': ['small', false, 'large', 'huge'] }, { 'header': [1, 2, 3, 4, 5, 6, false] },
-            { 'color': [] }, { 'background': [] }],
-        ['link', 'image'],
-    ];
 
     export default {
         name: "Enter",
         components: {
             ViewLayout,
-            VueEditor,
         },
         data: () => ({
 
             show_error: false,
             show_validation_error: false,
-
-            editorOptionVue2: {
-                theme: 'snow',
-                modules: {
-                    toolbar: toolbarOptions
-                }
-            },
-            editorData: "",
             news_item: {
                 id: "",
                 title: "",
@@ -120,8 +95,6 @@
                 this.$validator.validateAll().then(() => {
 
                     if (!this.$validator.errors.any()) {
-
-                        this.news_item.content = this.editorData;
 
                         let i = window.location.pathname.indexOf("/source/");
                         let len = window.location.pathname.length;
@@ -152,8 +125,6 @@
                             this.news_item.attributes = []
 
                             this.$validator.reset();
-
-                            this.editorData = '<p></p>';
 
                             this.$root.$emit('notification',
                                 {
