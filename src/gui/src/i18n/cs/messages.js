@@ -107,6 +107,7 @@ const messages_cs = {
         review: "Souhrn",
         source: "Zdroj",
         link: "Odkaz",
+        content: "Obsah",
         successful: "Novinka byla vytvořena",
     },
 
