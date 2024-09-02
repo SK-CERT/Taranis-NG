@@ -107,6 +107,7 @@ const messages_en = {
         review: "Review",
         source: "Source",
         link: "Link",
+        content: "Content",
         successful: "News item was successfully created"
     },
 
