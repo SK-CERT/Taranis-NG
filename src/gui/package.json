@@ -29,7 +29,7 @@
     "@ckeditor/ckeditor5-build-classic": "^16.0.0",
     "@ckeditor/ckeditor5-vue": "^1.0.3",
     "@vue/cli": "^4.5.15",
-    "axios": "^0.24.0",
+    "axios": "^1.7.7",
     "ckeditor": "^4.12.1",
     "ckeditor5-vuejs": "^1.0.18",
     "core-js": "^2.6.12",
