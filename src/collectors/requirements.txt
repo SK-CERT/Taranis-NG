@@ -3,7 +3,7 @@ bleach==6.1.0
 dateparser==1.2.0
 feedparser==6.0.11
 Flask==3.0.3
-Flask-Cors==4.0.1
+Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
 gevent==24.2.1
 gunicorn==23.0.0
