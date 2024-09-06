@@ -111,6 +111,7 @@
         data: () => ({
             visible: false,
             edit: false,
+            editorData: '<p></p>',
             editorOptionVue2: {
                 theme: 'snow',
                 modules: {
