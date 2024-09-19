@@ -153,14 +153,14 @@
                                                       :modify="modify"
                                                       :collections="collections"
                                                       :report_item_id="this.report_item.id"
-                                                      :edit="edit"/>
+                                                      :edit="edit" />
                                 </v-col>
                             </v-row>
                             <v-row no-gutters>
                                 <v-col cols="12">
                                     <RemoteReportItemSelector :values="remote_report_items" :modify="modify" :edit="edit"
                                                               :report_item_id="this.report_item.id"
-                                                              @remote-report-items-changed="updateRemoteAttributes"/>
+                                                              @remote-report-items-changed="updateRemoteAttributes" />
                                 </v-col>
                             </v-row>
                             <v-row>
@@ -217,8 +217,8 @@
                     <v-col v-if="verticalView" :cols="verticalView ? 6 : 0"
                         style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
                         <NewsItemSelector ref="new_item_selector" analyze_selector attach=".taranis-ng-vertical-view"
-                            :values="news_item_aggregates" :modify="modify" :collections="collections"
-                            :report_item_id="this.report_item.id" :edit="edit" />
+                                          :values="news_item_aggregates" :modify="modify" :collections="collections"
+                                          :report_item_id="this.report_item.id" :edit="edit" />
                     </v-col>
                 </v-row>
 
@@ -276,7 +276,6 @@ export default {
             {text: 'Value', value: 'value', align: 'left', sortable: true},
             {text: 'Actions', value: 'action', align: 'right', sortable: false},
         ],
-        dialog: false,
         dialog_csv: false,
         expand_panel_groups: [],
         expand_group_items: [],
@@ -310,10 +309,20 @@ export default {
         }
     }),
     watch: {
-        // remove scrollbars when a report item is open
-        dialog(val) {
-            if (val) { document.getElementsByName('hmtl').style.overflow = 'hidden' }
-            else { document.getElementsByName('hmtl').style.overflow = 'auto' }
+        // Remove double scrollbars when a report item is open
+        // There is a very nasty bug: when you open this screen for a second time, two scrollbars are shown.
+        // In the past, there was an attempt to fix this, but previous code doesn't work (possibly unfinished?)
+        // The problem is that the main 'html' tag is missing the 'overflow-y-hidden' class/style on the second open
+        // 1. open: new inicialization works ok    2. open: something remove style when the same screen is visible again
+        // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
+        // It's good to find a better solution than this quick fix.
+        visible(val) {
+            if (val) {
+                document.documentElement.style.overflow = 'hidden'
+            }
+            else {
+                document.documentElement.style.overflow = 'auto'
+            }
         },
         $route() {
             this.local_reports = !window.location.pathname.includes('/group/');
@@ -593,11 +602,10 @@ export default {
 
         showDetail(report_item) {
             getReportItem(report_item.id).then((response) => {
-
                 let data = response.data;
 
                 this.edit = true;
-                this.overlay = false
+                this.overlay = false;
                 this.show_error = false;
                 this.modify = report_item.modify;
 
@@ -633,7 +641,6 @@ export default {
                         break;
                     }
                 }
-
                 this.visible = true;
 
                 getReportItemLocks(this.report_item.id).then((response) => {

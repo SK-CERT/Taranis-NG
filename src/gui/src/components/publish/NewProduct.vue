@@ -150,6 +150,18 @@
             showPublishConfirmation: false,
         }),
         mixins: [AuthMixin],
+        watch: {
+            // Remove double scrollbars on product when report items selector is open/closed
+            // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
+            visible(val) {
+                if (val) {
+                    document.documentElement.style.overflow = 'hidden'
+                }
+                else {
+                    document.documentElement.style.overflow = 'auto'
+                }
+            }
+        },
         computed: {
             canCreate() {
                 return this.checkPermission(Permissions.PUBLISH_CREATE)
@@ -166,17 +178,17 @@
         methods: {
             addProduct() {
                 this.visible = true;
-                this.edit = false
+                this.edit = false;
                 this.show_error = false;
-                this.modify = false
-                this.access = false
+                this.modify = false;
+                this.access = false;
                 this.selected_type = null;
-                this.report_items = []
-                this.product.id = -1
-                this.product.title = ""
-                this.product.description = ""
-                this.product.product_type_id = null
-                this.product.report_items = []
+                this.report_items = [];
+                this.product.id = -1;
+                this.product.title = "";
+                this.product.description = "";
+                this.product.product_type_id = null;
+                this.product.report_items = [];
                 this.resetValidation();
             },
 
@@ -369,8 +381,8 @@
             this.$root.$on('show-product-edit', (data) => {
                 this.visible = true;
                 this.edit = true;
-                this.modify = data.modify
-                this.access = data.access
+                this.modify = data.modify;
+                this.access = data.access;
                 this.show_error = false;
 
                 this.selected_type = null;
