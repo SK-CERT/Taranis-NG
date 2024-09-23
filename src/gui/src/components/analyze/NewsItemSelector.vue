@@ -21,7 +21,7 @@
                                          :class="link.id === selected_group_id ? 'active' : ''">
                                 <v-list-item-content class="">
                                     <v-icon>{{ link.icon }}</v-icon>
-                                    <v-list-item-title style="white-space: unset; font-size: 0.7em;">{{ $t(link.title) }}</v-list-item-title>
+                                    <v-list-item-title style="white-space: unset; font-size: 0.7em;">{{ link.title }}</v-list-item-title>
                                 </v-list-item-content>
                             </v-list-item>
                         </v-list>

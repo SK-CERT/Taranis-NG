@@ -37,28 +37,68 @@ const messages_sk = {
 
     user_menu: {
         settings: "Nastavenia profilu",
-        logout: "Odhlásiť sa"
+        logout: "Odhlásiť sa",
+        dark_theme: "Tmavý motiv",
     },
 
     main_menu: {
-        assess: "Zistiť",
+        enter: "Vložiť",
+        assess: "Vyhodnotiť",
         analyze: "Analyzovať",
         publish: "Publikovať",
         config: "Konfigurácia",
-        dashboard: "Dashboard"
+        dashboard: "Dashboard",
+        my_assets: "Aktíva"
     },
 
     nav_menu: {
-        newsitems: "Nové zistenia",
+        enter: "Vytvoriť novinku",
+        newsitems: "Novinky",
         products: "Produkty",
         publications: "Publikácie",
         recent: "Najnovšie",
         popular: "Populárne",
         favourites: "Obľúbené",
         configuration: "Konfigurácia",
-        collectors_nodes: "Server zberačov údajov",
+        collectors_nodes: "Inštancie zberačov",
+        presenters_nodes: "Inštancie prezenterov",
+        publishers_nodes: "Inštancie publikateľov",
+        bots_nodes: "Inštancie robotov",
         osint_sources: "OSINT zdroje",
+        osint_source_groups: "OSINT skupiny",
+        publisher_presets: "Publikačné kanály",
+        bot_presets: "Roboti",
         collectors: "Zberače údajov",
+        report_items: "Analýzy",
+        attributes: "Atribúty",
+        report_types: "Typy analýz",
+        product_types: "Typy produktov",
+        roles: "Role",
+        acls: "ACL",
+        users: "Užívatelia",
+        organizations: "Organizácie",
+        word_lists: "Slovníky",
+        asset_groups: "Skupiny aktív",
+        notification_templates: "Šablóny oznámení",
+        remote_access: "Vzdialený prístup",
+        remote_nodes: "Vzdialené inštancie",
+        local: "Lokálne"
+    },
+
+    notification: {
+        close: "Zavrieť"
+    },
+
+    enter: {
+        create: "Vytvoriť",
+        validation_error: "Prosím vyplňte všetky povinné polia",
+        error: "Novinku sa nepodarilo vytvoriť",
+        title: "Názov",
+        review: "Súhrn",
+        source: "Zdroj",
+        link: "Odkaz",
+        content: "Obsah",
+        successful: "Novinka bola úspešne vytvorená",
     },
 
     collectors_node: {
@@ -81,7 +121,7 @@ const messages_sk = {
         add: "Pridať",
         cancel: "Zrušiť",
         validation_error: "Prosím vyplňte všetky povinné polia",
-        error: "Nepodarilo sa vytvoriť zadaný zdroj.",
+        error: "Nepodarilo sa vytvoriť zadaný zdroj",
         name: "Meno",
         description: "Popis",
         last_attempt: "Posledný pokus",

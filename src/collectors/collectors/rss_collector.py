@@ -137,22 +137,25 @@ class RSSCollector(BaseCollector):
                         "rss", source.name, f"Visiting article {count}/{len(feed['entries'])}: {link_for_article}"
                     )
                     html_article = ""
-                    request = urllib.request.Request(link_for_article)
-                    request.add_header("User-Agent", user_agent)
+                    try:
+                        request = urllib.request.Request(link_for_article)
+                        request.add_header("User-Agent", user_agent)
 
-                    with opener(request) as response:
-                        html_article = response.read()
+                        with opener(request) as response:
+                            html_article = response.read()
 
-                    soup = BeautifulSoup(html_article, features="html.parser")
+                        soup = BeautifulSoup(html_article, features="html.parser")
 
-                    if html_article:
-                        article_text = [p.text.strip() for p in soup.findAll("p")]
-                        replaced_str = "\xa0"
-                        article_sanit = [w.replace(replaced_str, " ") for w in article_text]
-                        article_sanit = " ".join(article_sanit)
-                        # use HTML article if it is longer than summary
-                        if len(article_sanit) > len(summary):
-                            article = article_sanit
+                        if html_article:
+                            article_text = [p.text.strip() for p in soup.findAll("p")]
+                            replaced_str = "\xa0"
+                            article_sanit = [w.replace(replaced_str, " ") for w in article_text]
+                            article_sanit = " ".join(article_sanit)
+                            # use HTML article if it is longer than summary
+                            if len(article_sanit) > len(summary):
+                                article = article_sanit
+                    except Exception as error:
+                        logger.log_collector_activity_info("rss", source.name, f"Failed to fetch article - {error}")
 
                 # use summary if article is empty
                 if summary and not article:
@@ -201,4 +204,4 @@ class RSSCollector(BaseCollector):
             BaseCollector.print_exception(source, error)
             logger.log_debug(traceback.format_exc())
 
-        logger.log_debug("{} collection finished.".format(self.type))
+        logger.log_debug(f"{self.type} collection finished.")

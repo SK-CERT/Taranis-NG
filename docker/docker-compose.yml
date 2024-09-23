@@ -12,17 +12,18 @@ services:
         max-size: "200k"
         max-file: "10"
 
-  database:
+  postgres:
     image: "postgres:${POSTGRES_TAG}"
     restart: unless-stopped
     environment:
       POSTGRES_DB: "taranis-ng"
       POSTGRES_USER: "taranis-ng"
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       TZ: "${TZ}"
       PGTZ: "${TZ}"
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
     volumes:
-      - "database_data:/var/lib/postgresql/data"
+      - "postgres_data:/var/lib/postgresql/data"
     logging:
       driver: "json-file"
       options:
@@ -34,7 +35,7 @@ services:
   core:
     depends_on:
       - "redis"
-      - "database"
+      - "postgres"
     restart: unless-stopped
     image: "skcert/taranis-ng-core:${TARANIS_NG_TAG}"
     build:
@@ -47,7 +48,7 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       REDIS_URL: "redis://redis"
-      DB_URL: "database"
+      DB_URL: "postgres"
       DB_DATABASE: "taranis-ng"
       DB_USER: "taranis-ng"
       DB_POOL_SIZE: 100
@@ -288,7 +289,7 @@ secrets:
 
 volumes:
   redis_conf:
-  database_data:
+  postgres_data:
   core_data:
   presenters_templates:
   collector_storage:
