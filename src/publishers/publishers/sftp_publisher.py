@@ -101,8 +101,8 @@ class SFTPPublisher(BasePublisher):
                 ssh_key = paramiko.DSSKey(filename=key_path, password=ssh_key_password)
                 return ssh_key
             except paramiko.ssh_exception.SSHException as error:
-                logger.log_critical(f"Issue with SSH key {key_path}")
-                logger.log_debug(f"Error: {error}")
+                logger.critical(f"Issue with SSH key {key_path}")
+                logger.debug(f"Error: {error}")
                 return None
 
         try:
@@ -136,20 +136,20 @@ class SFTPPublisher(BasePublisher):
             else:
                 ssh.connect(hostname=url, port=port, username=username, password=password)
             sftp = ssh.open_sftp()
-            logger.log_info(f"Successfully connected to {url} on port {port}")
+            logger.info(f"Successfully connected to {url} on port {port}")
             try:
                 sftp.putfo(file_object, f"{full_path}", confirm=True)
-                logger.log_info(f"Successfully saved data to {full_path} on remote machine")
+                logger.info(f"Successfully saved data to {full_path} on remote machine")
             except Exception as error:
-                logger.log_critical(f"Failed to save data to {full_path} on remote machine")
-                logger.log_debug(f"Error: {error}")
+                logger.critical(f"Failed to save data to {full_path} on remote machine")
+                logger.debug(f"Error: {error}")
             if command:
                 try:
                     ssh.exec_command(command)
-                    logger.log_info(f"Executed command {command} on remote machine")
+                    logger.info(f"Executed command {command} on remote machine")
                 except Exception as error:
-                    logger.log_critical(f"Failed to execute command {command} on remote machine")
-                    logger.log_debug(f"Error: {error}")
+                    logger.critical(f"Failed to execute command {command} on remote machine")
+                    logger.debug(f"Error: {error}")
             sftp.close()
         except Exception as error:
             BasePublisher.print_exception(self, error)

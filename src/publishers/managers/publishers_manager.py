@@ -62,7 +62,7 @@ def get_registered_publishers_info():
     publishers_info = []
     for key in publishers:
         publishers_info.append(publishers[key].get_info())
-    logger.log_critical(publishers_info)
+    logger.critical(publishers_info)
 
     return publishers_info
 

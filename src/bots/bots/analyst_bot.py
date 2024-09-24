@@ -68,7 +68,7 @@ class AnalystBot(BaseBot):
 
             bots_params = dict(zip(attr_name, regexp))
             limit = BaseBot.history(interval)
-            logger.log_bot_activity_info(preset.name, f"running with date limit {limit}")
+            logger.info(f"{preset.name}: running with date limit {limit}")
             news_items_data, code = CoreApi.get_news_items_data(limit)
             if code == 200 and news_items_data is not None:
                 for item in news_items_data:
@@ -102,7 +102,7 @@ class AnalystBot(BaseBot):
                                 attributes.append(news_attribute)
 
                         if len(attributes) > 0:
-                            logger.log_debug(f"Processing item id: {news_item_id}, {item['collected']}, Found: {len(attributes)}")
+                            logger.debug(f"Processing item id: {news_item_id}, {item['collected']}, Found: {len(attributes)}")
                             news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
                             CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
 

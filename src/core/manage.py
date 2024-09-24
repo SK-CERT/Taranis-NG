@@ -25,7 +25,7 @@ app = Flask(__name__)
 app.config.from_object("config.Config")
 manager = Manager(app=app)
 logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
-logger = TaranisLogger("Manage", logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
+logger = TaranisLogger(logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
 
 db_manager.initialize(app)
 

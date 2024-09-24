@@ -2,7 +2,7 @@
 
 The following environment variables are used:
 - WORKERS_PER_CORE: Number of workers per CPU core. Default is 2.
-- WEB_CONCURRENCY: Number of worker processes. Default is calculated based on the number of CPU cores and workers per core.
+- WEB_CONCURRENCY: Number of worker processes. Default is 1.
 - HOST: The host IP address to bind to. Default is 0.0.0.0.
 - PORT: The port number to bind to. Default is 80.
 - BIND: The bind address and port. If not provided, it will use the host and port values.
@@ -25,7 +25,7 @@ import multiprocessing
 import os
 
 workers_per_core_str = os.getenv("WORKERS_PER_CORE", "2")
-web_concurrency_str = os.getenv("WEB_CONCURRENCY", None)
+web_concurrency_str = os.getenv("WEB_CONCURRENCY", "1")
 host = os.getenv("HOST", "0.0.0.0")
 port = os.getenv("PORT", "80")
 bind_env = os.getenv("BIND", None)

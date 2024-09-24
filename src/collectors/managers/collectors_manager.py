@@ -22,22 +22,22 @@ status_report_thread = None
 def reportStatus():
     """Continuously send status updates to the Core API."""
     while True:
-        logger.log_debug(f"[{__name__}] Sending status update...")
+        logger.debug(f"[{__name__}] Sending status update...")
         response, status_code = CoreApi.update_collector_status()
         if status_code != 200:
-            logger.log_warning(f"[{__name__}] Core status update response: HTTP {status_code}, {response}")
+            logger.warning(f"[{__name__}] Core status update response: HTTP {status_code}, {response}")
         # for debugging scheduler tasks
         # for key in collectors:
         #     for source in collectors[key].osint_sources:
         #         if hasattr(source, "scheduler_job"):
-        #             logger.log_debug("Last run: {}, Next run: {}, {}".format(source.scheduler_job.last_run or "never",
+        #             logger.debug("Last run: {}, Next run: {}, {}".format(source.scheduler_job.last_run or "never",
         #                source.scheduler_job.next_run or "never", source.name))
         time.sleep(55)
 
 
 def initialize():
     """Initialize the collectors."""
-    logger.log_system_activity_info(__name__, "Initializing collector...")
+    logger.info(f"{__name__}: Initializing collector...")
 
     # inform core that this collector node is alive
     status_report_thread = threading.Thread(target=reportStatus)
@@ -53,7 +53,7 @@ def initialize():
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
 
-    logger.log_system_activity_info(__name__, "Collector initialized.")
+    logger.info(f"{__name__}: Collector initialized.")
 
 
 def register_collector(collector):

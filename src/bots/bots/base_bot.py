@@ -122,20 +122,20 @@ class BaseBot:
                 interval = preset.parameter_values["REFRESH_INTERVAL"]
                 # do not schedule if no interval is set
                 if interval == "" or interval == "0":
-                    logger.log_debug(f"scheduling '{preset.name}' disabled")
+                    logger.debug(f"scheduling '{preset.name}' disabled")
                     continue
 
                 self.execute(preset)
 
                 if interval:
                     if interval[0].isdigit() and ":" in interval:
-                        logger.log_debug(f"scheduling '{preset.name}' at: {interval}")
+                        logger.debug(f"scheduling '{preset.name}' at: {interval}")
                         time_manager.schedule_job_every_day(interval, self.execute, preset)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        logger.log_debug(f"scheduling '{preset.name}' at: {day} {at}")
+                        logger.debug(f"scheduling '{preset.name}' at: {day} {at}")
                         if day == "Monday":
                             time_manager.schedule_job_on_monday(at, self.execute, preset)
                         elif day == "Tuesday":
@@ -151,5 +151,5 @@ class BaseBot:
                         else:
                             time_manager.schedule_job_on_sunday(at, self.execute, preset)
                     else:
-                        logger.log_debug(f"scheduling '{preset.name}' for {interval}")
+                        logger.debug(f"scheduling '{preset.name}' for {interval}")
                         time_manager.schedule_job_minutes(int(interval), self.execute, preset)

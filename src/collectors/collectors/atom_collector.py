@@ -56,13 +56,14 @@ class AtomCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
+        self.collector_source = f"{self.name} '{source.name}':"
         BaseCollector.update_last_attempt(source)
         feed_url = source.parameter_values["ATOM_FEED_URL"]
         user_agent = source.parameter_values["USER_AGENT"]
         interval = source.parameter_values["REFRESH_INTERVAL"]  # noqa: F841
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
 
-        logger.log_collector_activity_info("atom", source.name, f"Starting collector for URL: {feed_url}")
+        logger.info(f"{self.collector_source} Starting collector for {feed_url}")
 
         proxies = {}
         if "PROXY_SERVER" in source.parameter_values:
@@ -81,7 +82,7 @@ class AtomCollector(BaseCollector):
             else:
                 feed = feedparser.parse(feed_url)
 
-            logger.log_collector_activity_info("atom", source.name, f"Atom returned feed with {len(feed['entries'])} entries")
+            logger.info(f"{self.collector_source} Atom returned feed with {len(feed['entries'])} entries")
 
             news_items = []
 
@@ -89,9 +90,7 @@ class AtomCollector(BaseCollector):
             for feed_entry in feed["entries"]:
                 count += 1
                 link_for_article = feed_entry["link"]
-                logger.log_collector_activity_info(
-                    "atom", source.name, f"Visiting article {count}/{len(feed['entries'])}: {link_for_article}"
-                )
+                logger.info(f"{self.collector_source} Visiting article {count}/{len(feed['entries'])}: {link_for_article}")
                 if proxies:
                     page = requests.get(link_for_article, headers={"User-Agent": user_agent}, proxies=proxies)
                 else:
@@ -128,14 +127,14 @@ class AtomCollector(BaseCollector):
                 news_items.append(news_item)
 
                 if count >= links_limit & links_limit > 0:
-                    logger.log_collector_activity_info("atom", source.name, f"Limit for article links reached ({links_limit})")
+                    logger.info(f"{self.collector_source} Limit for article links reached ({links_limit})")
                     break
 
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.log_collector_activity_info("atom", source.name, "Atom collection exceptionally failed")
+            logger.info(f"{self.collector_source} Atom collection exceptionally failed")
             BaseCollector.print_exception(source, error)
-            logger.log_debug(traceback.format_exc())
+            logger.debug(traceback.format_exc())
 
-        logger.log_debug(f"{self.type} collection finished.")
+        logger.debug(f"{self.type} collection finished.")

@@ -81,7 +81,7 @@ class Attributes(Resource):
         try:
             attribute.Attribute.add_attribute(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create attribute")
             return "", 400
 
@@ -101,7 +101,7 @@ class Attribute(Resource):
         try:
             attribute.Attribute.update(attribute_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update attribute")
             return "", 400
 
@@ -117,7 +117,7 @@ class Attribute(Resource):
         try:
             return attribute.Attribute.delete_attribute(attribute_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete attribute")
             return "", 400
 
@@ -157,7 +157,7 @@ class AttributeEnums(Resource):
         try:
             attribute.AttributeEnum.add(attribute_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create attribute enum")
             return "", 400
 
@@ -178,7 +178,7 @@ class AttributeEnum(Resource):
         try:
             attribute.AttributeEnum.update(enum_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update attribute enum")
             return "", 400
 
@@ -195,7 +195,7 @@ class AttributeEnum(Resource):
         try:
             return attribute.AttributeEnum.delete(enum_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete attribute enum")
             return "", 400
 
@@ -225,7 +225,7 @@ class ReportItemTypesConfig(Resource):
         try:
             report_item_type.ReportItemType.add_report_item_type(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create report type")
             return "", 400
 
@@ -245,7 +245,7 @@ class ReportItemType(Resource):
         try:
             report_item_type.ReportItemType.update(type_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update report type")
             return "", 400
 
@@ -261,7 +261,7 @@ class ReportItemType(Resource):
         try:
             return report_item_type.ReportItemType.delete_report_item_type(type_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete report type")
             return "", 400
 
@@ -291,7 +291,7 @@ class ProductTypes(Resource):
         try:
             product_type.ProductType.add_new(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create product type")
             return "", 400
 
@@ -311,7 +311,7 @@ class ProductType(Resource):
         try:
             product_type.ProductType.update(type_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update product type")
             return "", 400
 
@@ -327,7 +327,7 @@ class ProductType(Resource):
         try:
             return product_type.ProductType.delete(type_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete product type")
             return "", 400
 
@@ -388,7 +388,7 @@ class Roles(Resource):
         try:
             role.Role.add_new(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create role")
             return "", 400
 
@@ -408,7 +408,7 @@ class Role(Resource):
         try:
             role.Role.update(role_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update role")
             return "", 400
 
@@ -424,7 +424,7 @@ class Role(Resource):
         try:
             return role.Role.delete(role_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete role")
             return "", 400
 
@@ -454,7 +454,7 @@ class ACLEntries(Resource):
         try:
             acl_entry.ACLEntry.add_new(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create acl entry")
             return "", 400
 
@@ -474,7 +474,7 @@ class ACLEntry(Resource):
         try:
             acl_entry.ACLEntry.update(acl_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update acl entry")
             return "", 400
 
@@ -490,7 +490,7 @@ class ACLEntry(Resource):
         try:
             return acl_entry.ACLEntry.delete(acl_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete acl entry")
             return "", 400
 
@@ -520,7 +520,7 @@ class Organizations(Resource):
         try:
             organization.Organization.add_new(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create organization")
             return "", 400
 
@@ -540,7 +540,7 @@ class Organization(Resource):
         try:
             organization.Organization.update(organization_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update organization")
             return "", 400
 
@@ -556,7 +556,7 @@ class Organization(Resource):
         try:
             return organization.Organization.delete(organization_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete organization")
             return "", 400
 
@@ -586,7 +586,7 @@ class Users(Resource):
         try:
             external_auth_manager.create_user(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create user in external auth system")
             return "", 400
 
@@ -611,7 +611,7 @@ class User(Resource):
         try:
             external_auth_manager.update_user(request.json, original_username)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update user in external auth system")
             return "", 400
 
@@ -634,7 +634,7 @@ class User(Resource):
         try:
             external_auth_manager.delete_user(original_username)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete user in external auth system")
             return "", 400
 
@@ -665,7 +665,7 @@ class ExternalUsers(Resource):
             permissions = auth_manager.get_external_permissions_ids()
             user.User.add_new_external(auth_manager.get_user_from_jwt(), permissions, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create external user")
             return "", 400
 
@@ -686,7 +686,7 @@ class ExternalUser(Resource):
             permissions = auth_manager.get_external_permissions_ids()
             user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update external user")
             return "", 400
 
@@ -702,7 +702,7 @@ class ExternalUser(Resource):
         try:
             return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete external user")
             return "", 400
 
@@ -732,7 +732,7 @@ class WordLists(Resource):
         try:
             word_list.WordList.add_new(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create word list")
             return "", 400
 
@@ -752,7 +752,7 @@ class WordList(Resource):
         try:
             return word_list.WordList.delete(word_list_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete word list")
             return "", 400
 
@@ -768,7 +768,7 @@ class WordList(Resource):
         try:
             word_list.WordList.update(word_list_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update word list")
             return "", 400
 
@@ -798,7 +798,7 @@ class CollectorsNodes(Resource):
         try:
             return "", collectors_manager.add_collectors_node(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create collectors node")
             return "", 400
 
@@ -818,7 +818,7 @@ class CollectorsNode(Resource):
         try:
             collectors_manager.update_collectors_node(node_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update collectors node")
             return "", 400
 
@@ -834,7 +834,7 @@ class CollectorsNode(Resource):
         try:
             collectors_node.CollectorsNode.delete(node_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete collectors node")
             return "", 400
 
@@ -864,7 +864,7 @@ class OSINTSources(Resource):
         try:
             collectors_manager.add_osint_source(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create OSINT source")
             return "", 400
 
@@ -886,7 +886,7 @@ class OSINTSource(Resource):
             if default_group is not None:
                 NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update OSINT source")
             return "", 400
 
@@ -902,7 +902,7 @@ class OSINTSource(Resource):
         try:
             collectors_manager.delete_osint_source(source_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete OSINT source")
             return "", 400
 
@@ -923,7 +923,7 @@ class OSINTSourcesExport(Resource):
                 io.BytesIO(data), attachment_filename="osint_sources_export.json", mimetype="application/json", as_attachment=True
             )
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not export OSINT source")
             return "", 400
 
@@ -944,7 +944,7 @@ class OSINTSourcesImport(Resource):
                 collectors_node_id = request.form["collectors_node_id"]
                 collectors_manager.import_osint_sources(collectors_node_id, file)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not import OSINT source")
             return "", 400
 
@@ -974,7 +974,7 @@ class OSINTSourceGroups(Resource):
         try:
             osint_source.OSINTSourceGroup.add(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create OSINT source group")
             return "", 400
 
@@ -999,7 +999,7 @@ class OSINTSourceGroup(Resource):
                     NewsItemAggregate.reassign_to_new_groups(source.id, default_group.id)
             return message, code
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update OSINT source group")
             return "", 400
 
@@ -1015,7 +1015,7 @@ class OSINTSourceGroup(Resource):
         try:
             return osint_source.OSINTSourceGroup.delete(group_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete OSINT source group")
             return "", 400
 
@@ -1045,7 +1045,7 @@ class RemoteAccesses(Resource):
         try:
             remote.RemoteAccess.add(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create remote access")
             return "", 400
 
@@ -1067,7 +1067,7 @@ class RemoteAccess(Resource):
             if disconnect:
                 sse_manager.remote_access_disconnect([event_id])
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remote access")
             return "", 400
 
@@ -1083,7 +1083,7 @@ class RemoteAccess(Resource):
         try:
             return remote.RemoteAccess.delete(remote_access_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remote access")
             return "", 400
 
@@ -1113,7 +1113,7 @@ class RemoteNodes(Resource):
         try:
             remote.RemoteNode.add(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create remote node")
             return "", 400
 
@@ -1134,7 +1134,7 @@ class RemoteNode(Resource):
             if remote.RemoteNode.update(id, request.json) is False:
                 remote_manager.disconnect_from_node(remote_node_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remote node")
             return "", 400
 
@@ -1151,7 +1151,7 @@ class RemoteNode(Resource):
             remote_manager.disconnect_from_node(remote_node_id)
             return remote.RemoteNode.delete(id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remote node")
             return "", 400
 
@@ -1171,7 +1171,7 @@ class RemoteNodeConnect(Resource):
         try:
             return remote_manager.connect_to_node(remote_node_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not connect to node")
             return "", 400
 
@@ -1201,7 +1201,7 @@ class PresentersNodes(Resource):
         try:
             return "", presenters_manager.add_presenters_node(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create presenters node")
             return "", 400
 
@@ -1221,7 +1221,7 @@ class PresentersNode(Resource):
         try:
             presenters_manager.update_presenters_node(node_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update presenters node")
             return "", 400
 
@@ -1237,7 +1237,7 @@ class PresentersNode(Resource):
         try:
             return presenters_node.PresentersNode.delete(node_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete presenters node")
             return "", 400
 
@@ -1267,7 +1267,7 @@ class PublisherNodes(Resource):
         try:
             return "", publishers_manager.add_publishers_node(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create publishers node")
             return "", 400
 
@@ -1287,7 +1287,7 @@ class PublishersNode(Resource):
         try:
             publishers_manager.update_publishers_node(node_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update publishers node")
             return "", 400
 
@@ -1303,7 +1303,7 @@ class PublishersNode(Resource):
         try:
             return publishers_node.PublishersNode.delete(node_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete publishers node")
             return "", 400
 
@@ -1333,7 +1333,7 @@ class PublisherPresets(Resource):
         try:
             publishers_manager.add_publisher_preset(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create publishers preset")
             return "", 400
 
@@ -1353,7 +1353,7 @@ class PublisherPreset(Resource):
         try:
             publisher_preset.PublisherPreset.update(preset_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update publishers preset")
             return "", 400
 
@@ -1369,7 +1369,7 @@ class PublisherPreset(Resource):
         try:
             return publisher_preset.PublisherPreset.delete(preset_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete publishers preset")
             return "", 400
 
@@ -1399,7 +1399,7 @@ class BotNodes(Resource):
         try:
             return "", bots_manager.add_bots_node(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create bots node")
             return "", 400
 
@@ -1419,7 +1419,7 @@ class BotsNode(Resource):
         try:
             bots_manager.update_bots_node(node_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update bots node")
             return "", 400
 
@@ -1435,7 +1435,7 @@ class BotsNode(Resource):
         try:
             return bots_node.BotsNode.delete(node_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete bots node")
             return "", 400
 
@@ -1465,7 +1465,7 @@ class BotPresets(Resource):
         try:
             bots_manager.add_bot_preset(request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create bots preset")
             return "", 400
 
@@ -1485,7 +1485,7 @@ class BotPreset(Resource):
         try:
             bot_preset.BotPreset.update(preset_id, request.json)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update bots preset")
             return "", 400
 
@@ -1501,7 +1501,7 @@ class BotPreset(Resource):
         try:
             return bot_preset.BotPreset.delete(preset_id)
         except Exception as ex:
-            logger.log_critical(ex)
+            logger.critical(ex)
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete bots preset")
             return "", 400
 

@@ -88,7 +88,7 @@ class OSINTSourceStatusUpdate(Resource):
             osint_source_status_schema = OSINTSourceUpdateStatusSchema()
             osint_source_status = osint_source_status_schema.load(request.json)  # noqa F841
         except Exception as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
             return {}, 400
 
         return {}, 200
@@ -114,7 +114,7 @@ class CollectorStatusUpdate(Resource):
         try:
             collector.updateLastSeen()
         except Exception as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
             return {}, 400
 
         return {}, 200

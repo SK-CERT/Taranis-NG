@@ -265,6 +265,7 @@ services:
     image: "traefik:latest"
     environment:
       TZ: "${TZ}"
+      TRAEFIK_LOG_LEVEL: "${LOG_LEVEL}"
     ports:
       - "${TARANIS_NG_HTTP_PORT}:80"
       - "${TARANIS_NG_HTTPS_PORT}:443"

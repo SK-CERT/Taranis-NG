@@ -45,6 +45,7 @@ class SlackCollector(BaseCollector):
         Arguments:
             source: Source object.
         """
+        self.collector_source = f"{self.name} '{source.name}':"
         BaseCollector.update_last_attempt(source)
         news_items = []
         proxy_server = source.parameter_values["PROXY_SERVER"]
@@ -77,7 +78,7 @@ class SlackCollector(BaseCollector):
 
         try:
             for channel_id in channels_list:
-                logger.log_collector_activity_info("slack", source.name, f"Channel: {channel_id}")
+                logger.info(f"{self.collector_source} Channel: {channel_id}")
                 channel_info = slack_client.conversations_info(channel=channel_id)
                 channel_name = channel_info["channel"]["name"]
 
@@ -86,7 +87,7 @@ class SlackCollector(BaseCollector):
                 count = 0
                 for message in data["messages"]:
                     count += 1
-                    # logger.log_collector_activity_info('slack', source.name, "Message: {0}".format(count))
+                    logger.debug(f"{self.collector_source} Message: {0}".format(count))
                     published = time.ctime(float(message["ts"]))
                     content = message["text"]
                     preview = content[:500]
@@ -109,11 +110,10 @@ class SlackCollector(BaseCollector):
                     url = ""
                     for_hash = user_id + channel_id + content
 
-                    # logger.log_collector_activity_info('slack', source.name, '... Title    : {0}'.format(title))
-                    # logger.log_collector_activity_info('slack', source.name, '... Content  :
-                    # {0:.100}'.format(content.replace("\r", "").replace("\n", " ").strip()))
-                    # logger.log_collector_activity_info('slack', source.name, '... Author   : {0}'.format(author))
-                    # logger.log_collector_activity_info('slack', source.name, '... Published: {0}'.format(published))
+                    logger.debug(f"{self.collector_source} ... Title    : {title}")
+                    logger.debug(f"{self.collector_source} ... Content  : {content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                    logger.debug(f"{self.collector_source} ... Author   : {author}")
+                    logger.debug(f"{self.collector_source} ... Published: {published}")
 
                     news_item = NewsItemData(
                         uuid.uuid4(),
@@ -134,4 +134,4 @@ class SlackCollector(BaseCollector):
             BaseCollector.publish(news_items, source)
 
         except Exception as ex:  # noqa F841
-            logger.log_collector_activity_info("slack", source.name, f"Error: {traceback.format_exc()}")
+            logger.info(f"{self.collector_source} Error: {traceback.format_exc()}")

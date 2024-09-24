@@ -38,4 +38,4 @@ class BasePublisher:
         Parameters:
             error (str): The error message to be printed.
         """
-        logger.log_debug_trace(f"[{self.name}] {error}")
+        logger.exception(f"[{self.name}] {error}")

@@ -9,7 +9,7 @@ from shared.log import TaranisLogger
 
 logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
 
-logger = TaranisLogger("Remote Collectors", logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
+logger = TaranisLogger(logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
 
 
 class CoreApi:

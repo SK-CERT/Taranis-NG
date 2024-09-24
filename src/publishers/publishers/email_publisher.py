@@ -110,26 +110,26 @@ class EMAILPublisher(BasePublisher):
         if sign == "auto":
             envelope.signature(key=sign)
         elif os.path.isfile(sign):
-            logger.log_info(f"Signing email with file {sign}")
+            logger.info(f"Signing email with file {sign}")
             envelope.signature(key=open(sign), passphrase=sign_password)
 
         if encrypt == "auto":
             envelope.encryption(key=encrypt)
         elif os.path.isfile(encrypt):
-            logger.log_info(f"Encrypting email with file {encrypt}")
+            logger.info(f"Encrypting email with file {encrypt}")
             envelope.encryption(key=open(encrypt))
 
-        logger.log_debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{envelope}")
+        logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{envelope}")
 
         envelope.smtp(smtp)
         try:
             sent = envelope.send()
             success = bool(sent)
             if success:
-                logger.log_info("Email sent successfully")
+                logger.info("Email sent successfully")
                 Envelope.smtp_quit()
             else:
-                logger.log_critical("Email sending failed")
+                logger.critical("Email sending failed")
 
         except Exception as error:
             BasePublisher.print_exception(self, error)

@@ -242,7 +242,7 @@ class BasePresenter:
         Parameters:
             error -- exception to print
         """
-        logger.log_debug_trace(f"[{self.name}] {error}")
+        logger.exception(f"[{self.name}] {error}")
 
     @staticmethod
     def generate_input_data(presenter_input):
@@ -256,7 +256,7 @@ class BasePresenter:
         """
         data = BasePresenter.InputDataObject(presenter_input)
         data_json = data.toJSON()
-        logger.log_debug(f"=== TEMPLATING FROM THE FOLLOWING INPUT ===\n{data_json}")
+        logger.debug(f"=== TEMPLATING FROM THE FOLLOWING INPUT ===\n{data_json}")
         data_obj = json.loads(data_json)
         return data_obj
 

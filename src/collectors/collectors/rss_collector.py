@@ -51,6 +51,7 @@ class RSSCollector(BaseCollector):
         Arguments:
             source -- Source object.
         """
+        self.collector_source = f"{self.name} '{source.name}':"
 
         def strip_html_tags(html_string):
             soup = BeautifulSoup(html_string, "html.parser")
@@ -60,12 +61,12 @@ class RSSCollector(BaseCollector):
         feed_url = source.parameter_values["FEED_URL"]
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
 
-        logger.log_collector_activity_info("rss", source.name, f"Starting collector for URL: {feed_url}")
+        logger.info(f"{self.collector_source} Starting collector for URL: {feed_url}")
 
         user_agent = source.parameter_values["USER_AGENT"]
         if user_agent:
             feedparser.USER_AGENT = user_agent
-            logger.log_collector_activity_info("rss", source.name, f"Using user agent: {user_agent}")
+            logger.info(f"{self.collector_source} Using user agent: {user_agent}")
 
         # use system proxy
         proxy_handler = None
@@ -101,11 +102,11 @@ class RSSCollector(BaseCollector):
         try:
             if proxy_handler:
                 feed = feedparser.parse(feed_url, handlers=[proxy_handler])
-                logger.log_collector_activity_info("rss", source.name, f"Using proxy {proxy_server} for RSS feed")
+                logger.info(f"{self.collector_source} Using proxy {proxy_server} for RSS feed")
             else:
                 feed = feedparser.parse(feed_url)
 
-            logger.log_collector_activity_debug("rss", source.name, f"RSS returned feed with {len(feed['entries'])} entries")
+            logger.debug(f"{self.collector_source} Feed returned {len(feed['entries'])} entries")
 
             news_items = []
 
@@ -130,12 +131,10 @@ class RSSCollector(BaseCollector):
                     article = strip_html_tags(content[0].get("value", ""))
 
                 if not link_for_article:
-                    logger.log_collector_activity_info("rss", source.name, "Skipping (empty link)")
+                    logger.info(f"{self.collector_source} Skipping (empty link)")
                     continue
                 elif not article:
-                    logger.log_collector_activity_info(
-                        "rss", source.name, f"Visiting article {count}/{len(feed['entries'])}: {link_for_article}"
-                    )
+                    logger.info(f"{self.collector_source} Visiting article {count}/{len(feed['entries'])}: {link_for_article}")
                     html_article = ""
                     try:
                         request = urllib.request.Request(link_for_article)
@@ -155,7 +154,7 @@ class RSSCollector(BaseCollector):
                             if len(article_sanit) > len(summary):
                                 article = article_sanit
                     except Exception as error:
-                        logger.log_collector_activity_info("rss", source.name, f"Failed to fetch article - {error}")
+                        logger.info(f"{self.collector_source} Failed to fetch article - {error}")
 
                 # use summary if article is empty
                 if summary and not article:
@@ -194,14 +193,14 @@ class RSSCollector(BaseCollector):
                 news_items.append(news_item)
 
                 if count >= links_limit & links_limit > 0:
-                    logger.log_collector_activity_debug("rss", source.name, f"Limit for article links reached ({links_limit})")
+                    logger.debug(f"{self.collector_source} Limit for article links reached ({links_limit})")
                     break
 
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.log_collector_activity_info("rss", source.name, "RSS collection exceptionally failed")
+            logger.info(f"{self.collector_source} RSS collection exceptionally failed")
             BaseCollector.print_exception(source, error)
-            logger.log_debug(traceback.format_exc())
+            logger.debug(traceback.format_exc())
 
-        logger.log_debug(f"{self.type} collection finished.")
+        logger.debug(f"{self.type} collection finished.")

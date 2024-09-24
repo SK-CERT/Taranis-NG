@@ -17,10 +17,7 @@ from Cryptodome.Random import get_random_bytes
 # setup logger level
 logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
 
-# custom module ID to append to log messages
-module_id = os.environ.get("MODULE_ID", None)
-
-logger = TaranisLogger(module_id, logging_level_str, True, False, os.environ.get("SYSLOG_ADDRESS"))
+logger = TaranisLogger(logging_level_str, True, False, os.environ.get("SYSLOG_ADDRESS"))
 
 logging_level = getattr(logging, logging_level_str.upper(), logging.INFO)
 # setup Flask logger
@@ -174,7 +171,7 @@ def store_activity(activity_type, activity_detail, request_data=None):
         None,
         None,
         None,
-        module_id,
+        None,
         activity_type,
         resolve_resource(),
         activity_detail,
@@ -198,7 +195,7 @@ def store_user_activity(user, activity_type, activity_detail, request_data=None)
         user.name,
         None,
         None,
-        module_id,
+        None,
         activity_type,
         resolve_resource(),
         activity_detail,
@@ -222,7 +219,7 @@ def store_access_error_activity(user, activity_detail, request_data=None):
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
 
     print(log_text)
     db.session.rollback()
@@ -232,7 +229,7 @@ def store_access_error_activity(user, activity_detail, request_data=None):
         user.name,
         None,
         None,
-        module_id,
+        None,
         "ACCESS_ERROR",
         resolve_resource(),
         activity_detail,
@@ -258,7 +255,7 @@ def store_data_error_activity(user, activity_detail, request_data=None):
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
 
     print(log_text)
     LogRecord.store(
@@ -267,7 +264,7 @@ def store_data_error_activity(user, activity_detail, request_data=None):
         user.name,
         None,
         None,
-        module_id,
+        None,
         "DATA_ERROR",
         resolve_resource(),
         activity_detail,
@@ -291,7 +288,7 @@ def store_data_error_activity_no_user(activity_detail, request_data=None):
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
 
     print(log_text)
     LogRecord.store(
@@ -300,7 +297,7 @@ def store_data_error_activity_no_user(activity_detail, request_data=None):
         None,
         None,
         None,
-        module_id,
+        None,
         "PUBLIC_ACCESS_DATA_ERROR",
         resolve_resource(),
         activity_detail,
@@ -323,7 +320,7 @@ def store_auth_error_activity(activity_detail, request_data=None):
         try:
             sys_logger.error(log_text)
         except Exception() as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
 
     print(log_text)
     LogRecord.store(
@@ -332,7 +329,7 @@ def store_auth_error_activity(activity_detail, request_data=None):
         None,
         None,
         None,
-        module_id,
+        None,
         "AUTH_ERROR",
         resolve_resource(),
         activity_detail,
@@ -357,7 +354,7 @@ def store_user_auth_error_activity(user, activity_detail, request_data=None):
         try:
             sys_logger.error(log_text)
         except Exception() as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
 
     print(log_text)
     LogRecord.store(
@@ -366,7 +363,7 @@ def store_user_auth_error_activity(user, activity_detail, request_data=None):
         user.name,
         None,
         None,
-        module_id,
+        None,
         "AUTH_ERROR",
         resolve_resource(),
         activity_detail,
@@ -391,7 +388,7 @@ def store_system_activity(system_id, system_name, activity_type, activity_detail
         None,
         system_id,
         system_name,
-        module_id,
+        None,
         activity_type,
         resolve_resource(),
         activity_detail,
@@ -419,7 +416,7 @@ def store_system_error_activity(system_id, system_name, activity_type, activity_
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
 
     print(log_text)
     LogRecord.store(
@@ -428,7 +425,7 @@ def store_system_error_activity(system_id, system_name, activity_type, activity_
         None,
         system_id,
         system_name,
-        module_id,
+        None,
         activity_type,
         resolve_resource(),
         activity_detail,

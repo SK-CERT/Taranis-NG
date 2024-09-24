@@ -6,6 +6,7 @@ import uuid
 import tweepy
 
 from .base_collector import BaseCollector
+from managers.log_manager import logger
 from shared.schema.news_item import NewsItemData
 from shared.schema.parameter import Parameter, ParameterType
 
@@ -55,6 +56,8 @@ class TwitterCollector(BaseCollector):
         """
         try:
             BaseCollector.update_last_attempt(source)
+            self.collector_source = f"{self.name} '{source.name}':"
+            logger.info(f"{self.collector_source} Collecting data from Twitter")
             news_items = []
             attributes = []
 

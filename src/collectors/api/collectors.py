@@ -24,7 +24,7 @@ class Collectors(Resource):
             Otherwise, it returns an empty string with a status code of 400.
         """
         if "id" in request.json:
-            logger.log_debug(f"Got ID for collector: {request.json['id']}")
+            logger.debug(f"Got ID for collector: {request.json['id']}")
             return collectors_manager.get_registered_collectors_info(request.json["id"])
         return "", 400
 

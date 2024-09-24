@@ -60,7 +60,7 @@ class Products(Resource):
             if "limit" in request.args and request.args["limit"]:
                 limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
             return "", 400
 
         return product.Product.get_json(filter, offset, limit, auth_manager.get_user_from_jwt())

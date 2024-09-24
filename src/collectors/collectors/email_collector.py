@@ -11,6 +11,7 @@ import email.utils
 import socket
 
 from .base_collector import BaseCollector
+from managers.log_manager import logger
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
 from shared.schema.parameter import Parameter, ParameterType
 
@@ -49,6 +50,8 @@ class EmailCollector(BaseCollector):
             source -- Source object.
         """
         BaseCollector.update_last_attempt(source)
+        self.collector_source = f"{self.name} '{source.name}':"
+        logger.info(f"{self.collector_source} Collecting data from email")
         news_items = []
         email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
         email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]

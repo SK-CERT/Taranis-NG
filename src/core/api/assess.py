@@ -80,7 +80,7 @@ class NewsItemsByGroup(Resource):
             if "limit" in request.args and request.args["limit"]:
                 limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
-            logger.log_debug(ex)
+            logger.debug(ex)
             return "", 400
 
         return news_item.NewsItemAggregate.get_by_group_json(group_id, filter, offset, limit, user)
