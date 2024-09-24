@@ -58,12 +58,23 @@ KEYCLOAK_REALM_NAME: "taranis-ng"
 KEYCLOAK_USER_MANAGEMENT: "false"
 ```
 
-update Keycloak CLIENT_SECRET_KEY value inside keycloak_client_secret_key.txt file. Path is defined in this section:
+If you configure keycloak only as client (not administration) please comment (#) or delete this value:
 ```
 secrets:
-  keycloak_client_secret_key:
-    file: ./secrets/keycloak_client_secret_key.txt
+    - keycloak_admin_password
 ```
+
+
+and update key inside file:
+```
+./secrets/keycloak_client_secret_key.txt
+```
+
+If you configure keycloak for administration please update password inside file:
+```
+./secrets/keycloak_admin_password.txt
+```
+
 
 **taranis-ng-gui** section:
 ```
