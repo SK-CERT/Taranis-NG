@@ -11,11 +11,9 @@ services:
       TARANIS_NG_KEYCLOAK_INTERNAL_URL: "https://keycloak.int.example.com"
       TARANIS_NG_KEYCLOAK_CLIENT_ID: "taranis-ng"
       KEYCLOAK_REALM_NAME: "taranis-ng"
-      KEYCLOAK_CLIENT_SECRET_KEY_FILE: /run/secrets/keycloak_client_secret_key
       KEYCLOAK_USER_MANAGEMENT: "false"
       # needed if KEYCLOAK_USER_MANAGEMENT = true
       KEYCLOAK_ADMIN_USERNAME: "admin"
-      KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_admin_password
       KEYCLOAK_VERIFY: "true"
     secrets:
       - keycloak_client_secret_key
