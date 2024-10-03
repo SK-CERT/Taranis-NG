@@ -134,19 +134,19 @@ class TaranisLogFormatter(logging.Formatter):
             format_string (str): The format string used for logging messages.
             FORMATS (dict): A dictionary mapping logging levels to format strings.
         """
-        grey = "\x1b[38;20m"
+        grey_bold = "\x1b[1;38;5;246m"
         cyan_bold = "\x1b[1;36m"
-        yellow = "\x1b[33;20m"
-        red = "\x1b[31;20m"
+        yellow_bold = "\x1b[1;38;5;214m"
         red_bold = "\x1b[1;31m"
+        white_bold_on_red = "\x1b[1;37m\x1b[41m"
         reset = "\x1b[0m"
         self.format_string = "[%(levelname)s] - %(message)s"
         self.FORMATS = {
-            logging.DEBUG: grey + self.format_string + reset,
+            logging.DEBUG: grey_bold + self.format_string + reset,
             logging.INFO: cyan_bold + self.format_string + reset,
-            logging.WARNING: yellow + self.format_string + reset,
-            logging.ERROR: red + self.format_string + reset,
-            logging.CRITICAL: red_bold + self.format_string + reset,
+            logging.WARNING: yellow_bold + self.format_string + reset,
+            logging.ERROR: red_bold + self.format_string + reset,
+            logging.CRITICAL: white_bold_on_red + self.format_string + reset,
         }
 
     def format(self, record):
