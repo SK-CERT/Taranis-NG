@@ -3,7 +3,6 @@
 import datetime
 import hashlib
 import uuid
-import traceback
 import re
 import socks
 import feedparser
@@ -65,8 +64,8 @@ class RSSCollector(BaseCollector):
 
         user_agent = source.parameter_values["USER_AGENT"]
         if user_agent:
+            logger.debug(f"{self.collector_source} Using user agent: {user_agent}")
             feedparser.USER_AGENT = user_agent
-            logger.info(f"{self.collector_source} Using user agent: {user_agent}")
 
         # use system proxy
         proxy_handler = None
@@ -83,6 +82,7 @@ class RSSCollector(BaseCollector):
                 if proxy:
                     scheme, host, port = proxy.groups()
                     if scheme in ["http", "https", "ftp"]:
+                        logger.debug(f"{self.collector_source} Using {scheme} proxy: {host}:{port}")
                         proxy_handler = urllib.request.ProxyHandler(
                             {
                                 "http": f"{scheme}://{host}:{port}",
@@ -91,8 +91,10 @@ class RSSCollector(BaseCollector):
                             }
                         )
                     elif scheme == "socks4":
+                        logger.debug(f"{self.collector_source} Using socks4 proxy: {host}:{port}")
                         proxy_handler = SocksiPyHandler(socks.SOCKS4, host, int(port))
                     elif scheme == "socks5":
+                        logger.debug(f"{self.collector_source} Using socks5 proxy: {host}:{port}")
                         proxy_handler = SocksiPyHandler(socks.SOCKS5, host, int(port))
 
         # use proxy in urllib
@@ -101,12 +103,12 @@ class RSSCollector(BaseCollector):
 
         try:
             if proxy_handler:
+                logger.debug(f"{self.collector_source} Using proxy for feed collection: {proxy_server}")
                 feed = feedparser.parse(feed_url, handlers=[proxy_handler])
-                logger.info(f"{self.collector_source} Using proxy {proxy_server} for RSS feed")
             else:
                 feed = feedparser.parse(feed_url)
 
-            logger.debug(f"{self.collector_source} Feed returned {len(feed['entries'])} entries")
+            logger.debug(f"{self.collector_source} Feed returned {len(feed['entries'])} entries.")
 
             news_items = []
 
@@ -131,10 +133,10 @@ class RSSCollector(BaseCollector):
                     article = strip_html_tags(content[0].get("value", ""))
 
                 if not link_for_article:
-                    logger.info(f"{self.collector_source} Skipping (empty link)")
+                    logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
                     continue
                 elif not article:
-                    logger.info(f"{self.collector_source} Visiting article {count}/{len(feed['entries'])}: {link_for_article}")
+                    logger.debug(f"{self.collector_source} Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
                     html_article = ""
                     try:
                         request = urllib.request.Request(link_for_article)
@@ -153,25 +155,33 @@ class RSSCollector(BaseCollector):
                             # use HTML article if it is longer than summary
                             if len(article_sanit) > len(summary):
                                 article = article_sanit
+                            logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
                     except Exception as error:
-                        logger.info(f"{self.collector_source} Failed to fetch article - {error}")
+                        logger.exception()
+                        logger.error(f"{self.collector_source} Failed to fetch article: {error}")
 
                 # use summary if article is empty
                 if summary and not article:
                     article = strip_html_tags(summary)
+                    logger.debug(f"{self.collector_source} Using summary for article: {article}")
                 # use first 500 characters of article if summary is empty
                 elif not summary and article:
                     review = article[:500]
+                    logger.debug(f"{self.collector_source} Using first 500 characters of article for summary: {review}")
 
                 # use published date if available, otherwise use updated date
                 if published_parsed:
                     date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
+                    logger.debug(f"{self.collector_source} Using parsed 'published' date: {date}")
                 elif updated_parsed:
                     date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
+                    logger.debug(f"{self.collector_source} Using parsed 'updated' date: {date}")
                 elif published:
                     date = published
+                    logger.debug(f"{self.collector_source} Using 'published' date: {date}")
                 elif updated:
                     date = updated
+                    logger.debug(f"{self.collector_source} Using 'updated' date: {date}")
 
                 for_hash = author + title + link_for_article
 
@@ -193,14 +203,13 @@ class RSSCollector(BaseCollector):
                 news_items.append(news_item)
 
                 if count >= links_limit & links_limit > 0:
-                    logger.debug(f"{self.collector_source} Limit for article links reached ({links_limit})")
+                    logger.info(f"{self.collector_source} Limit for article links ({links_limit}) has been reached.")
                     break
 
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.info(f"{self.collector_source} RSS collection exceptionally failed")
-            BaseCollector.print_exception(source, error)
-            logger.debug(traceback.format_exc())
+            logger.exception()
+            logger.error(f"{self.collector_source} RSS collection exceptionally failed: {error}")
 
-        logger.debug(f"{self.type} collection finished.")
+        logger.info(f"{self.collector_source} Collection finished.")

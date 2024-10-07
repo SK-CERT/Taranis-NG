@@ -131,12 +131,12 @@ class EmailCollector(BaseCollector):
 
                 news_items.append(news_item)
 
-        if email_server_type.upper() == "IMAP":
+        if email_server_type.lower() == "imap":
             try:
                 if proxy_server:
                     proxy_tunnel()
 
-                connection = imaplib.IMAP4_SSL(email_server_type.lower() + "." + email_server_hostname.lower(), email_server_port)
+                connection = imaplib.IMAP4_SSL(f"{email_server_type.lower()}.{email_server_hostname.lower()}", email_server_port)
                 connection.login(email_username, email_password)
                 connection.select("inbox")
 
@@ -156,8 +156,9 @@ class EmailCollector(BaseCollector):
                 connection.close()
                 connection.logout()
             except Exception as error:
-                BaseCollector.print_exception(source, error)
-        else:
+                logger.exception()
+                logger.error(f"{self.collector_source} Failed to fetch emails using IMAP: {error}")
+        elif email_server_type.lower() == "pop3":
             try:
                 if proxy_server:
                     proxy_tunnel()
@@ -178,6 +179,10 @@ class EmailCollector(BaseCollector):
 
                 connection.quit()
             except Exception as error:
-                BaseCollector.print_exception(source, error)
+                logger.exception()
+                logger.error(f"{self.collector_source} Failed to fetch emails using POP3: {error}")
+        else:
+            logger.error(f"{self.collector_source} Email server connection type is not supported: {email_server_type}")
 
         BaseCollector.publish(news_items, source)
+        logger.info(f"{self.collector_source} Collection finished.")

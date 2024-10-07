@@ -312,8 +312,9 @@ class BaseCollector:
                 # TODO: send update to core with the error message
                 logger.warning(f"configuration not received, code: {code}, response: {response}")
                 pass
-        except Exception as ex:  # noqa F841
-            logger.exception(ex)
+        except Exception as error:
+            logger.exception()
+            logger.error(f"Refreshing of sources failed: {error}")
             pass
 
     def run_collector(self, source):
@@ -344,6 +345,8 @@ class BaseCollector:
             val = int(source.parameter_values[name])
             if val <= 0:
                 val = default_value
-        except Exception:
+        except Exception as error:
+            logger.exception()
+            logger.error(f"Reading of int parameter failed: {error}")
             val = default_value
         return val
