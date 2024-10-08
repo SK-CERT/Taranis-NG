@@ -150,7 +150,7 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 | `DB_POOL_SIZE`              | SQLAlchemy QueuePool number of active connections to the database. | `100` |
 | `DB_POOL_RECYCLE`           | SQLAlchemy QueuePool maximum connection age. | `300` |
 | `DB_POOL_TIMEOUT`           | SQLAlchemy QueuePool connection timeout. | `5` |
-| `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/auth/realms/master/protocol/openid-connect/logout` |
+| `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/realms/master/protocol/openid-connect/logout` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
 | `SKIP_DEFAULT_COLLECTOR`    | Set to `true` to prevent initialization of a default docker collector at first run | `` |
 

@@ -68,10 +68,7 @@ export default {
     },
     methods: {
         logout() {
-            this.$store.dispatch('logout')
-                .then(() => {
-                    window.location.reload()
-                })
+            this.$store.dispatch('logout');
         },
         settings() {
             this.$root.$emit('show-user-settings');

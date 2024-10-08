@@ -1,63 +1,64 @@
-version: "3.9"
-
 services:
   keycloak_db:
     image: "postgres:${POSTGRES_TAG}"
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "taranis-ng-keycloak"
-      POSTGRES_USER: "taranis-ng-keycloak"
-      POSTGRES_PASSWORD: "${POSTGRES_KEYCLOAK_PASSWORD}"
+        POSTGRES_DB: "taranis-ng-keycloak"
+        POSTGRES_USER: "taranis-ng-keycloak"
+        POSTGRES_PASSWORD: "${POSTGRES_KEYCLOAK_PASSWORD}"
     command: ["postgres", "-c", "shared_buffers=${DB_SHARED_BUFFERS}", "-c", "max_connections=${DB_MAX_CONNECTIONS}"]
     volumes:
-      - "keycloak_db_data:/var/lib/postgresql/data"
+        - "keycloak_db_data:/var/lib/postgresql/data"
     logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
 
   keycloak:
     image: "skcert/taranis-ng-keycloak:${TARANIS_NG_TAG}"
     build:
-      context: ..
-      dockerfile: ./docker/Dockerfile.keycloak
+        context: ..
+        dockerfile: ./docker/Dockerfile.keycloak
     restart: unless-stopped
     depends_on:
-      - keycloak_db
+        - keycloak_db
     environment:
-      DB_VENDOR: postgres
-      DB_ADDR: keycloak_db
-      DB_PORT: 5432
-      DB_DATABASE: taranis-ng-keycloak
-      DB_USER: taranis-ng-keycloak
-      DB_PASSWORD: "${POSTGRES_KEYCLOAK_PASSWORD}"
-      KEYCLOAK_IMPORT: "/opt/jboss/keycloak/realm-export.json"
-      KEYCLOAK_FRONTEND_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth"
-      KEYCLOAK_USER: "${KEYCLOAK_USER}"
-      KEYCLOAK_PASSWORD: "${KEYCLOAK_PASSWORD}"
-      KEYCLOAK_DEFAULT_THEME: "taranis-ng"
-      PROXY_ADDRESS_FORWARDING: "false"
-      JAVA_OPTS: "-Dkeycloak.profile.feature.upload_scripts=enabled"
+        DB_VENDOR: postgres
+        DB_ADDR: keycloak_db
+        DB_PORT: 5432
+        DB_DATABASE: taranis-ng-keycloak
+        DB_USER: taranis-ng-keycloak
+        DB_PASSWORD: "${POSTGRES_KEYCLOAK_PASSWORD}"
+        KEYCLOAK_FRONTEND_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth"
+        KEYCLOAK_USER: "${KEYCLOAK_USER}"
+        KEYCLOAK_PASSWORD: "${KEYCLOAK_PASSWORD}"
+        KEYCLOAK_ADMIN: "${KEYCLOAK_USER}"
+        KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_PASSWORD}"
+        KEYCLOAK_DEFAULT_THEME: "taranis-ng"
+        PROXY_ADDRESS_FORWARDING: "false"
+    command: ["-Dkeycloak.profile.feature.upload_scripts=enabled", "start-dev", "--import-realm"]
     volumes:
-      - "keycloak_data:/opt/jboss/keycloak/standalone/data"
+        - "keycloak_data:/opt/jboss/keycloak/standalone/data"
+    # ports:
+    #    - 127.0.0.1:4445:8080
     logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+        driver: "json-file"
+        options:
+            max-size: "200k"
+            max-file: "10"
     labels:
-      traefik.enable: "true"
-      traefik.http.services.taranis-keycloak.loadbalancer.server.port: "8080"
-      traefik.http.middlewares.taranis-keycloak-stripprefix.stripprefix.prefixes: "/api/v1/keycloak"
+        traefik.enable: "true"
+        traefik.http.services.taranis-keycloak.loadbalancer.server.port: "8080"
+        traefik.http.middlewares.taranis-keycloak-stripprefix.stripprefix.prefixes: "/api/v1/keycloak"
 
-      traefik.http.routers.taranis-keycloak-443.entrypoints: "websecure"
-      traefik.http.routers.taranis-keycloak-443.rule: "PathPrefix(`/api/v1/keycloak/auth`)"
-      traefik.http.routers.taranis-keycloak-443.tls: "true"
-      traefik.http.routers.taranis-keycloak-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
-      traefik.http.routers.taranis-keycloak-443.middlewares: "taranis-keycloak-stripprefix"
-      traefik.http.routers.taranis-keycloak-443.service: "taranis-keycloak"
+        traefik.http.routers.taranis-keycloak-443.entrypoints: "websecure"
+        traefik.http.routers.taranis-keycloak-443.rule: "PathPrefix(`/api/v1/keycloak/auth`)"
+        traefik.http.routers.taranis-keycloak-443.tls: "true"
+        traefik.http.routers.taranis-keycloak-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+        traefik.http.routers.taranis-keycloak-443.middlewares: "taranis-keycloak-stripprefix"
+        traefik.http.routers.taranis-keycloak-443.service: "taranis-keycloak"
 
 volumes:
-  keycloak_db_data:
-  keycloak_data:
+    keycloak_db_data:
+    keycloak_data:
