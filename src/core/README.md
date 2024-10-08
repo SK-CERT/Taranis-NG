@@ -25,6 +25,13 @@
 6. Test accounts are user with password user and admin with password admin
 
 # **Keycloak setup**
+
+Keycloak in Docker:
+
+You can use the existing `docker-compose-keycloak-serv.yml` for creating keycloak server inside docker container.
+
+Manual install:
+
 This quick setup guide demonstrates installation for early test purposes running on localhost and default ports. Everything in Keycloak can be reconfigured to specific needs as well as Login screen template.
 Keycloak is not needed to run test version of TaranisNG at the moment. You can use default _TestAuthenticator_ instead.
 1. Requires JAVA 8 to run so download and install JDK from Oracle or OpenJDK e.g. `apt install openjdk-8-jdk`
@@ -38,39 +45,39 @@ Keycloak is not needed to run test version of TaranisNG at the moment. You can u
 9. In CLIENTS choose taranis-ng and regenerate secret in CREDENTIALS -> REGENERATE SECRET and put secret it _into client_secrets.json_ inside **taranis-ng-core** root (_NOTE: this will be properly configurable inside admin interface in the future_)
 10. Create 2 users **user** and **admin** in USERS -> ADD USER. These are test users in TaranisNG at the moment.
 11. In **taranis-ng-core** add environment variable TARANIS_NG_AUTHENTICATOR=openid (just for sign in) or TARANIS_NG_AUTHENTICATOR=keycloak (for identy management)
-12. In **taranis-ng-core** add environment variable OPENID_LOGOUT_URL and set it according to your Keycloak installation e.g. http://127.0.0.1:8081/auth/realms/taranisng/protocol/openid-connect/logout?redirect_uri=<GOTO_URL>
-13. In **taranis-ng-gui** add these environment variables to activate external login:
-    ```
-    VUE_APP_TARANIS_NG_LOGIN_URL=http://127.0.0.1:5000/api/auth/login
-    VUE_APP_TARANIS_NG_LOGOUT_URL=http://127.0.0.1:5000/api/auth/logout
-    ```
+12. In **taranis-ng-core** add environment variable OPENID_LOGOUT_URL and set it according to your Keycloak installation
+13. In **taranis-ng-gui** add these environment variables VUE_APP_TARANIS_NG_LOGIN_URL, VUE_APP_TARANIS_NG_LOGOUT_URL to activate external login:
 
 ## Keycloak client example of docker-compose.yml:
 
 **taranis-ng-core** section:
 ```
 TARANIS_NG_AUTHENTICATOR: "keycloak"
-OPENID_LOGOUT_URL: "https://keycloak.example.com/auth/realms/jiskb/protocol/openid-connect/logout?redirect_uri=GOTO_URL"
 TARANIS_NG_KEYCLOAK_URL: "https://keycloak.example.com"
 TARANIS_NG_KEYCLOAK_INTERNAL_URL: "https://keycloak.int.example.com"
 TARANIS_NG_KEYCLOAK_CLIENT_ID: "taranis-ng"
+OPENID_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/logout?redirect_uri=GOTO_URL"
+KEYCLOAK_VERSION: "25.0.6"
 KEYCLOAK_REALM_NAME: "taranis-ng"
 KEYCLOAK_USER_MANAGEMENT: "false"
 ```
 
-If you configure keycloak only as client (not administration) please comment (#) or delete this value:
+If you configure keycloak in client mode check this secret definition:
 ```
 secrets:
     - keycloak_admin_password
 ```
-
-
 and update key inside file:
 ```
 ./secrets/keycloak_client_secret_key.txt
 ```
 
-If you configure keycloak for administration please update password inside file:
+If you configure keycloak also for administration check this secret definition:
+```
+secrets:
+    - keycloak_admin_password
+```
+and update password inside file:
 ```
 ./secrets/keycloak_admin_password.txt
 ```
@@ -78,8 +85,8 @@ If you configure keycloak for administration please update password inside file:
 
 **taranis-ng-gui** section:
 ```
-VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/auth/logout?gotoUrl=TARANIS_GUI_URI"
-VUE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_HTTPS_URI}/api/v1/keycloak/auth/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
+VUE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
+VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/logout"
 ```
 
 You can use and modify the existing `docker-compose-keycloak.yml` example in the repository and
