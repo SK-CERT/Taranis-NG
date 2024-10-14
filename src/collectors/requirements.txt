@@ -5,7 +5,7 @@ feedparser==6.0.11
 Flask==3.0.3
 Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
-gevent==24.2.1
+gevent==24.10.2
 gunicorn==23.0.0
 marshmallow==3.22.0
 marshmallow-enum==1.5.1
