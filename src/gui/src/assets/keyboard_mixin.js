@@ -150,13 +150,14 @@ const keyboardMixin = targetId => ({
                     break;
                 }
             }
-            // window.console.debug("keyAlias:", keyAlias, "activeElement:", document.activeElement);
+            // window.console.debug("keyAlias:", keyAlias, ", type:", document.activeElement.type, ", class:", document.activeElement.className, ", activeElement:", document.activeElement);
             if ((document.activeElement == search_field ||
-                 document.activeElement.className == "ql-editor" ||
+                 document.activeElement.className.includes("ql-editor") ||
                  document.activeElement.type == "text" ||
                  document.activeElement.type == "textarea") && (keyAlias !== 'close_item' || press.keyCode !== 27)) {
                 // when search field, editor, text or textarea is active, ignore all keypresses except Escape
                 // example problem: Assess, create report from item and you type N in description field -> all is canceled and it creates new report again
+                // maybe we should check some specific shortcuts on "v-card" class? It's easier, less conditions
                 return;
             }
 
