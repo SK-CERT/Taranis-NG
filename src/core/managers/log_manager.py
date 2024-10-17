@@ -15,11 +15,12 @@ from Cryptodome.Random import get_random_bytes
 
 
 # setup logger level
-logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
+taranis_logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
+modules_logging_level_str = os.environ.get("MODULES_LOG_LEVEL", "INFO")
 
-logger = TaranisLogger(logging_level_str, True, False, os.environ.get("SYSLOG_ADDRESS"))
+logger = TaranisLogger(taranis_logging_level_str, modules_logging_level_str, True, os.environ.get("SYSLOG_ADDRESS"))
 
-logging_level = getattr(logging, logging_level_str.upper(), logging.INFO)
+logging_level = getattr(logging, taranis_logging_level_str.upper(), logging.INFO)
 # setup Flask logger
 gunicorn_logger = getLogger("gunicorn.error")
 gunicorn_logger.setLevel(logging_level)

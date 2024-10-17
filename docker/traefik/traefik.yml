@@ -11,6 +11,10 @@ api:
     insecure: true
     dashboard: true
 
+# Change this to 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'PANIC'
+log:
+  level: WARN
+
 providers:
     docker:
         exposedByDefault: false
@@ -18,4 +22,5 @@ providers:
         directory: /etc/traefik/dynamic
         watch: true
 
-accessLog: {}
+# Comment out the following lines to disable the access log
+#accessLog: {}

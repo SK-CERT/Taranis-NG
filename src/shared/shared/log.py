@@ -4,6 +4,7 @@ import logging.handlers
 import sys
 import socket
 import logging
+import traceback
 from typing import Optional
 
 
@@ -11,10 +12,9 @@ class TaranisLogger:
     """A logger class for Taranis-NG.
 
     Parameters:
-        module (str): The name of the module using the logger.
-        logging_level_str (str): The logging level as a string.
+        taranis_logging_level_str (str): The logging level for the Taranis logger as a string.
+        modules_logging_level_str (str): The logging level for other modules as a string.
         colored (bool): Whether to use colored output.
-        gunicorn (bool): Whether the logger is used in a Gunicorn environment.
         syslog_address (Optional[tuple]): The address of the syslog server (optional).
 
     Attributes:
@@ -22,26 +22,32 @@ class TaranisLogger:
 
     Methods:
         debug(message): Log a debug message.
-        exception(message): Log a debug message with a traceback.
+        error(message): Log an error message.
+        exception(message): Log an exception message with a traceback.
         info(message): Log an info message.
+        warning(message): Log a warning message.
         critical(message): Log a critical message.
     """
 
-    def __init__(self, logging_level_str: str, colored: bool, gunicorn: bool, syslog_address: Optional[tuple]):
+    def __init__(self, taranis_logging_level_str: str, modules_logging_level_str: str, colored: bool, syslog_address: Optional[tuple]):
         """Initialize a Log object.
 
         Parameters:
-            module (str): The name of the module.
-            logging_level_str (str): The logging level as a string.
+            taranis_logging_level_str (str): The logging level for the Taranis logger.
+            modules_logging_level_str (str): The logging level for other modules.
             colored (bool): Indicates whether to use colored output.
-            gunicorn (bool): Indicates whether the logger is used in a Gunicorn environment.
             syslog_address (Optional[tuple]): The address of the syslog server, if applicable.
         """
-        stream_handler = logging.StreamHandler(stream=sys.stdout)
+        # Create separate stream handlers for each logger
+        taranis_stream_handler = logging.StreamHandler(stream=sys.stdout)
+        module_stream_handler = logging.StreamHandler(stream=sys.stdout)
         if colored:
-            stream_handler.setFormatter(TaranisLogFormatter())
+            taranis_stream_handler.setFormatter(TaranisLogFormatter())
+            module_stream_handler.setFormatter(TaranisLogFormatter())
         else:
-            stream_handler.setFormatter(logging.Formatter("[%(levelname)s] - %(message)s"))
+            taranis_stream_handler.setFormatter(logging.Formatter("[%(levelname)s] - %(message)s"))
+            module_stream_handler.setFormatter(logging.Formatter("[%(levelname)s] - %(message)s"))
+
         sys_log_handler = None
         if syslog_address:
             try:
@@ -49,22 +55,29 @@ class TaranisLogger:
             except Exception:
                 print("Unable to connect to syslog server!")
 
-        lloggers = [logging.getLogger()]
+        # Configure the root logger for all other modules
+        module_logger = logging.getLogger()
+        module_logger.handlers.clear()
+        module_logging_level = getattr(logging, modules_logging_level_str.upper(), logging.INFO)
+        module_logger.setLevel(module_logging_level)
+        module_logger.addHandler(module_stream_handler)
+        if sys_log_handler:
+            module_logger.addHandler(sys_log_handler)
 
-        if gunicorn:
-            lloggers = [logging.getLogger("gunicorn.error")]
+        # Configure the "taranis" logger
+        taranis_logger = logging.getLogger("taranis")
+        taranis_logger.handlers.clear()
+        taranis_logging_level = getattr(logging, taranis_logging_level_str.upper(), logging.INFO)
+        taranis_logger.setLevel(taranis_logging_level)
+        taranis_logger.addHandler(taranis_stream_handler)
+        if sys_log_handler:
+            taranis_logger.addHandler(sys_log_handler)
 
-        for llogger in lloggers:
-            llogger.handlers.clear()
-            logging_level = getattr(logging, logging_level_str.upper(), logging.INFO)
-            llogger.setLevel(logging_level)
+        # Prevent the root logger from propagating messages to the taranis logger
+        taranis_logger.propagate = False
 
-            if sys_log_handler:
-                llogger.addHandler(sys_log_handler)
-
-            llogger.addHandler(stream_handler)
-
-        self.logger = lloggers[0]
+        # Set the primary logger to taranis
+        self.logger = taranis_logger
 
     def debug(self, message):
         """Log a debug message.
@@ -88,7 +101,7 @@ class TaranisLogger:
         Parameters:
             message (str, optional): An optional message to include in the log. Defaults to None.
         """
-        self.logger.exception(message)
+        self.logger.exception(message, traceback.format_exc())
 
     def info(self, message):
         """Log an info message.
@@ -119,7 +132,6 @@ class TaranisLogFormatter(logging.Formatter):
     """Custom log formatter for Taranis log messages.
 
     Parameters:
-        module (str): The name of the module.
         format_string (str): The format string for log messages.
         FORMATS (dict): A dictionary mapping log levels to format strings.
     Methods:
@@ -127,13 +139,7 @@ class TaranisLogFormatter(logging.Formatter):
     """
 
     def __init__(self):
-        """Initialize a Log object.
-
-        Parameters:
-            module (str): The name of the module.
-            format_string (str): The format string used for logging messages.
-            FORMATS (dict): A dictionary mapping logging levels to format strings.
-        """
+        """Initialize a TaranisLogFormatter object."""
         grey_bold = "\x1b[1;38;5;246m"
         cyan_bold = "\x1b[1;36m"
         yellow_bold = "\x1b[1;38;5;214m"

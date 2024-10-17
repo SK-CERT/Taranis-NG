@@ -24,8 +24,11 @@ from shared.log import TaranisLogger
 app = Flask(__name__)
 app.config.from_object("config.Config")
 manager = Manager(app=app)
-logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
-logger = TaranisLogger(logging_level_str, True, True, os.environ.get("SYSLOG_ADDRESS"))
+# setup logger level
+taranis_logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
+modules_logging_level_str = os.environ.get("MODULES_LOG_LEVEL", "INFO")
+
+logger = TaranisLogger(taranis_logging_level_str, modules_logging_level_str, True, os.environ.get("SYSLOG_ADDRESS"))
 
 db_manager.initialize(app)
 
