@@ -86,11 +86,11 @@ class TaranisLogger:
         """
         self.logger.debug(message)
 
-    def error(self, message=None):
-        """Log an exception with an optional message.
+    def error(self, message):
+        """Log an error message.
 
         Parameters:
-            message (str, optional): An optional message to include in the log. Defaults to None.
+            message (str): The message to be logged.
         """
         self.logger.error(message)
 
@@ -98,7 +98,7 @@ class TaranisLogger:
         """Log an exception with an optional message.
 
         Parameters:
-            message (str, optional): An optional message to include in the log. Defaults to None.
+            message (str, optional): An optional message to include in the log. Defaults to "Traceback:".
         """
         self.logger.exception(message)
 
