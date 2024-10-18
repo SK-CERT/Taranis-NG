@@ -157,8 +157,7 @@ class RSSCollector(BaseCollector):
                                 article = article_sanit
                             logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
                     except Exception as error:
-                        logger.exception()
-                        logger.error(f"{self.collector_source} Failed to fetch article: {error}")
+                        logger.exception(f"{self.collector_source} Failed to fetch article: {error}")
 
                 # use summary if article is empty
                 if summary and not article:
@@ -209,7 +208,6 @@ class RSSCollector(BaseCollector):
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.exception()
-            logger.error(f"{self.collector_source} RSS collection exceptionally failed: {error}")
+            logger.exception(f"{self.collector_source} RSS collection exceptionally failed: {error}")
 
         logger.info(f"{self.collector_source} Collection finished.")

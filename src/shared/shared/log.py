@@ -4,7 +4,6 @@ import logging.handlers
 import sys
 import socket
 import logging
-import traceback
 from typing import Optional
 
 
@@ -95,13 +94,13 @@ class TaranisLogger:
         """
         self.logger.error(message)
 
-    def exception(self, message=None):
+    def exception(self, message="Traceback:"):
         """Log an exception with an optional message.
 
         Parameters:
             message (str, optional): An optional message to include in the log. Defaults to None.
         """
-        self.logger.exception(message, traceback.format_exc())
+        self.logger.exception(message)
 
     def info(self, message):
         """Log an info message.

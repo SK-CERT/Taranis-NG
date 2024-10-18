@@ -386,15 +386,13 @@ class WebCollector(BaseCollector):
                     break
             browser.switch_to.window(handle_to_keep)
         except Exception as error:
-            logger.exception()
-            logger.error(f"{self.collector_source} Browser tab restoration failed, reloading the title page: {error}")
+            logger.exception(f"{self.collector_source} Browser tab restoration failed, reloading the title page: {error}")
             try:
                 # last resort - at least try to reopen the original page
                 browser.get(fallback_url)
                 return True
             except Exception as error:
-                logger.exception()
-                logger.error(f"{self.collector_source} Fallback to the original page failed: {error}")
+                logger.exception(f"{self.collector_source} Fallback to the original page failed: {error}")
                 return False
         return browser.current_window_handle == handle_to_keep
 
@@ -590,8 +588,7 @@ class WebCollector(BaseCollector):
             browser.implicitly_wait(15)  # how long to wait for elements when selector doesn't match
             return browser
         except Exception as error:
-            logger.exception()
-            logger.error(f"{self.collector_source} Failed to get headless driver: {error}")
+            logger.exception(f"{self.collector_source} Failed to get headless driver: {error}")
             return None
 
     def __dispose_of_headless_driver(self, driver):
@@ -600,24 +597,21 @@ class WebCollector(BaseCollector):
         Parameters:
             driver: The headless browser driver to be disposed of.
         """
-        # try:
-        #     driver.close()
-        # except Exception as error:
-        #     logger.exception()
-        #     logger.error(f"{self.collector_source} Could not close the headless browser driver: {error}")
-        #     pass
+        try:
+            driver.close()
+        except Exception as error:
+            logger.exception(f"{self.collector_source} Could not close the headless browser driver: {error}")
+            pass
         try:
             driver.quit()
         except Exception as error:
-            logger.exception()
-            logger.error(f"{self.collector_source} Could not quit the headless browser driver: {error}")
+            logger.exception(f"{self.collector_source} Could not quit the headless browser driver: {error}")
             pass
-        # try:
-        #     driver.dispose()
-        # except Exception as error:
-        #     logger.exception()
-        #     logger.error(f"{self.collector_source} Could not dispose the headless browser driver: {error}")
-        #     pass
+        try:
+            driver.dispose()
+        except Exception as error:
+            logger.exception(f"{self.collector_source} Could not dispose the headless browser driver: {error}")
+            pass
 
     def __run_tor(self):
         """Run The Onion Router service in a subprocess."""
@@ -668,8 +662,7 @@ class WebCollector(BaseCollector):
         try:
             browser.get(index_url)
         except Exception as error:
-            logger.exception()
-            logger.error(f"{self.collector_source} Error obtaining title page: {error}")
+            logger.exception(f"{self.collector_source} Error obtaining title page: {error}")
             self.__dispose_of_headless_driver(browser)
             return False, "Error obtaining title page", 0, 0
 
@@ -681,14 +674,12 @@ class WebCollector(BaseCollector):
                     EC.presence_of_element_located(self.__get_element_locator(self.selectors["popup_close"]))
                 )
             except Exception as error:
-                logger.exception()
-                logger.error(f"{self.collector_source} Popup find error: {error}")
+                logger.exception(f"{self.collector_source} Popup find error: {error}")
             if popup is not None:
                 try:
                     popup.click()
                 except Exception as error:
-                    logger.exception()
-                    logger.error(f"{self.collector_source} Popup click error: {error}")
+                    logger.exception(f"{self.collector_source} Popup click error: {error}")
 
         # if there is a "load more" selector, click on it!
         page = 1

@@ -313,8 +313,7 @@ class BaseCollector:
                 logger.warning(f"configuration not received, code: {code}, response: {response}")
                 pass
         except Exception as error:
-            logger.exception()
-            logger.error(f"Refreshing of sources failed: {error}")
+            logger.exception(f"Refreshing of sources failed: {error}")
             pass
 
     def run_collector(self, source):
@@ -346,7 +345,6 @@ class BaseCollector:
             if val <= 0:
                 val = default_value
         except Exception as error:
-            logger.exception()
-            logger.error(f"Reading of int parameter failed: {error}")
+            logger.exception(f"Reading of int parameter failed: {error}")
             val = default_value
         return val

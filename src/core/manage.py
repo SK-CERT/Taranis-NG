@@ -25,8 +25,8 @@ app = Flask(__name__)
 app.config.from_object("config.Config")
 manager = Manager(app=app)
 # setup logger level
-taranis_logging_level_str = os.environ.get("LOG_LEVEL", "INFO")
-modules_logging_level_str = os.environ.get("MODULES_LOG_LEVEL", "INFO")
+taranis_logging_level_str = os.environ.get("TARANIS_LOG_LEVEL", "DEBUG")
+modules_logging_level_str = os.environ.get("MODULES_LOG_LEVEL", "WARNING")
 
 logger = TaranisLogger(taranis_logging_level_str, modules_logging_level_str, True, os.environ.get("SYSLOG_ADDRESS"))
 

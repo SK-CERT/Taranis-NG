@@ -6,7 +6,7 @@ The following environment variables are used:
 - HOST: The host IP address to bind to. Default is 0.0.0.0.
 - PORT: The port number to bind to. Default is 80.
 - BIND: The bind address and port. If not provided, it will use the host and port values.
-- LOG_LEVEL: The log level. Default is 'info'.
+- MODULES_LOG_LEVEL: The log level. Default is 'WARNING'.
 
 The module defines the following variables:
 - loglevel: The log level to be used by Gunicorn.
@@ -29,7 +29,7 @@ web_concurrency_str = os.getenv("WEB_CONCURRENCY", "1")
 host = os.getenv("HOST", "0.0.0.0")
 port = os.getenv("PORT", "80")
 bind_env = os.getenv("BIND", None)
-use_loglevel = os.getenv("LOG_LEVEL", "info")
+use_loglevel = os.getenv("MODULES_LOG_LEVEL", "WARNING")
 if bind_env:
     use_bind = bind_env
 else:

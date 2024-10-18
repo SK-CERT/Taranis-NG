@@ -23,4 +23,4 @@ providers:
         watch: true
 
 # Comment out the following lines to disable the access log
-#accessLog: {}
+accessLog: {}

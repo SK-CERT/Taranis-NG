@@ -156,8 +156,7 @@ class EmailCollector(BaseCollector):
                 connection.close()
                 connection.logout()
             except Exception as error:
-                logger.exception()
-                logger.error(f"{self.collector_source} Failed to fetch emails using IMAP: {error}")
+                logger.exception(f"{self.collector_source} Failed to fetch emails using IMAP: {error}")
         elif email_server_type.lower() == "pop3":
             try:
                 if proxy_server:
@@ -179,8 +178,7 @@ class EmailCollector(BaseCollector):
 
                 connection.quit()
             except Exception as error:
-                logger.exception()
-                logger.error(f"{self.collector_source} Failed to fetch emails using POP3: {error}")
+                logger.exception(f"{self.collector_source} Failed to fetch emails using POP3: {error}")
         else:
             logger.error(f"{self.collector_source} Email server connection type is not supported: {email_server_type}")
 
