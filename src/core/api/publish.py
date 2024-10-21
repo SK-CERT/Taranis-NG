@@ -10,12 +10,14 @@ Each class has its own methods for handling different HTTP requests.
 
 The module also includes an initialization function to add the resources to the API instance.
 """
+
 import base64
 from flask import Response
 from flask import request
 from flask_restful import Resource
 
 from managers import auth_manager, presenters_manager, publishers_manager, log_manager
+from managers.log_manager import logger
 from managers.auth_manager import auth_required, ACLCheck
 from model import product, product_type, publisher_preset
 from model.permission import Permission
@@ -58,7 +60,7 @@ class Products(Resource):
             if "limit" in request.args and request.args["limit"]:
                 limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
-            log_manager.log_debug(ex)
+            logger.debug(ex)
             return "", 400
 
         return product.Product.get_json(filter, offset, limit, auth_manager.get_user_from_jwt())

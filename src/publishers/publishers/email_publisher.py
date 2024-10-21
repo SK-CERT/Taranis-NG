@@ -1,8 +1,9 @@
 """Publisher for publishing by email."""
+
 from datetime import datetime
 from base64 import b64decode
 import os
-from managers import log_manager
+from managers.log_manager import logger
 from .base_publisher import BasePublisher
 from shared.schema.parameter import Parameter, ParameterType
 from envelope import Envelope
@@ -10,13 +11,16 @@ import mimetypes
 
 
 class EMAILPublisher(BasePublisher):
-    """_summary_.
+    """This class represents a publisher that sends emails using SMTP server.
 
-    Arguments:
-        BasePublisher -- _description_
+    Attributes:
+        type (str): The type of the publisher.
+        name (str): The name of the publisher.
+        description (str): The description of the publisher.
+        parameters (list): The list of parameters required for email publishing.
 
-    Returns:
-        _description_
+    Methods:
+        publish(publisher_input): Publishes an email using the provided publisher input.
     """
 
     type = "EMAIL_PUBLISHER"
@@ -40,13 +44,16 @@ class EMAILPublisher(BasePublisher):
     parameters.extend(BasePublisher.parameters)
 
     def publish(self, publisher_input):
-        """_summary_.
+        """Publish an email using the provided publisher input.
 
-        Arguments:
-            publisher_input -- _description_
+        Parameters:
+            publisher_input (PublisherInput): The input containing the parameters for the email publisher.
 
         Returns:
-            _description_
+            bool: True if the email was sent successfully, False otherwise.
+
+        Raises:
+            Exception: If an error occurs while sending the email.
         """
         smtp_server = publisher_input.parameter_values_map["SMTP_SERVER"]
         smtp_server_port = publisher_input.parameter_values_map["SMTP_SERVER_PORT"]
@@ -103,24 +110,26 @@ class EMAILPublisher(BasePublisher):
         if sign == "auto":
             envelope.signature(key=sign)
         elif os.path.isfile(sign):
-            log_manager.log_info(f"Signing email with file {sign}")
+            logger.info(f"Signing email with file {sign}")
             envelope.signature(key=open(sign), passphrase=sign_password)
 
         if encrypt == "auto":
             envelope.encryption(key=encrypt)
         elif os.path.isfile(encrypt):
-            log_manager.log_info(f"Encrypting email with file {encrypt}")
+            logger.info(f"Encrypting email with file {encrypt}")
             envelope.encryption(key=open(encrypt))
+
+        logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{envelope}")
 
         envelope.smtp(smtp)
         try:
             sent = envelope.send()
             success = bool(sent)
             if success:
-                log_manager.log_info("Email sent successfully")
+                logger.info("Email sent successfully")
                 Envelope.smtp_quit()
             else:
-                log_manager.log_critical("Email sending failed")
+                logger.critical("Email sending failed")
 
         except Exception as error:
             BasePublisher.print_exception(self, error)

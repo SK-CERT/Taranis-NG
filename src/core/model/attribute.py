@@ -8,9 +8,8 @@ import os
 from xml.etree.ElementTree import iterparse
 from marshmallow import fields, post_load
 from sqlalchemy import orm, func, or_, and_
-from sqlalchemy.orm import backref
 
-from managers import log_manager
+from managers.log_manager import logger
 from managers.db_manager import db
 from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, AttributeType, AttributeValidator, AttributePresentationSchema
 
@@ -325,14 +324,12 @@ class Attribute(db.Model):
     validator = db.Column(db.Enum(AttributeValidator))
     validator_parameter = db.Column(db.String())
 
-    attribute_enums = db.relationship("AttributeEnum",
-        primaryjoin=and_(
-            id == AttributeEnum.attribute_id,
-            or_(
-                type == AttributeType.RADIO, type == AttributeType.ENUM
-            )
-        ),
-        back_populates="attribute", lazy="subquery")
+    attribute_enums = db.relationship(
+        "AttributeEnum",
+        primaryjoin=and_(id == AttributeEnum.attribute_id, or_(type == AttributeType.RADIO, type == AttributeType.ENUM)),
+        back_populates="attribute",
+        lazy="subquery",
+    )
 
     def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
         """Initialize an Attribute object.
@@ -432,7 +429,7 @@ class Attribute(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search.lower()}%"
             query = query.filter(or_(func.lower(Attribute.name).like(search_string), func.lower(Attribute.description).like(search_string)))
 
         return query.order_by(db.asc(Attribute.name)).all(), query.count()
@@ -571,11 +568,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        log_manager.log_critical("Processed CVE items: " + str(item_count))
+                        logger.info(f"Processed CVE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        log_manager.log_critical("Processed CVE items: " + str(item_count))
+        logger.info(f"Processed CVE items: {item_count}")
         db.session.commit()
 
     @classmethod
@@ -608,11 +605,11 @@ class Attribute(db.Model):
                     element.clear()
                     desc = ""
                     if block_item_count == 1000:
-                        log_manager.log_critical("Processed CPE items: " + str(item_count))
+                        logger.info(f"Processed CPE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        log_manager.log_critical("Processed CPE items: " + str(item_count))
+        logger.info(f"Processed CPE items: {item_count}")
         db.session.commit()
 
     @classmethod
@@ -642,11 +639,11 @@ class Attribute(db.Model):
                     element.clear()
                     # desc = ""
                     if block_item_count == 1000:
-                        log_manager.log_critical("Processed CWE items: " + str(item_count))
+                        logger.info(f"Processed CWE items: {item_count}")
                         block_item_count = 0
                         db.session.commit()
 
-        log_manager.log_critical("Processed CWE items: " + str(item_count))
+        logger.info(f"Processed CWE items: {item_count}")
         db.session.commit()
 
     @classmethod

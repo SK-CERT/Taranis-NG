@@ -1,5 +1,4 @@
-"""
-This module provides functionality for managing publishers in Taranis-NG.
+"""This module provides functionality for managing publishers in Taranis-NG.
 
 The publishers manager is responsible for registering publishers, retrieving information about registered publishers,
 and publishing data using the appropriate publisher based on the input.
@@ -30,7 +29,7 @@ from publishers.twitter_publisher import TWITTERPublisher
 from publishers.wordpress_publisher import WORDPRESSPublisher
 from publishers.misp_publisher import MISPPublisher
 from shared.schema.publisher import PublisherInputSchema
-from managers import log_manager
+from managers.log_manager import logger
 
 publishers = {}
 
@@ -46,35 +45,32 @@ def initialize():
 
 
 def register_publisher(publisher):
-    """
-    Register a publisher.
+    """Register a publisher.
 
-    Args:
+    Parameters:
         publisher: The publisher object to register.
     """
     publishers[publisher.type] = publisher
 
 
 def get_registered_publishers_info():
-    """
-    Retrieve information about the registered publishers.
+    """Retrieve information about the registered publishers.
 
     Returns:
-        A list of dictionaries containing information about each registered publisher.
+       (list): A list of dictionaries containing information about each registered publisher.
     """
     publishers_info = []
     for key in publishers:
         publishers_info.append(publishers[key].get_info())
-    log_manager.log_critical(publishers_info)
+    logger.critical(publishers_info)
 
     return publishers_info
 
 
 def publish(publisher_input_json):
-    """
-    Publish the given input using the appropriate publisher.
+    """Publish the given input using the appropriate publisher.
 
-    Args:
+    Parameters:
         publisher_input_json: The JSON input for the publisher.
 
     Raises:
