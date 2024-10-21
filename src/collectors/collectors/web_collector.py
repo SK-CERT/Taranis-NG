@@ -598,19 +598,9 @@ class WebCollector(BaseCollector):
             driver: The headless browser driver to be disposed of.
         """
         try:
-            driver.close()
-        except Exception as error:
-            logger.exception(f"{self.collector_source} Could not close the headless browser driver: {error}")
-            pass
-        try:
             driver.quit()
         except Exception as error:
             logger.exception(f"{self.collector_source} Could not quit the headless browser driver: {error}")
-            pass
-        try:
-            driver.dispose()
-        except Exception as error:
-            logger.exception(f"{self.collector_source} Could not dispose the headless browser driver: {error}")
             pass
 
     def __run_tor(self):
