@@ -354,7 +354,7 @@ class OSINTSourceGroup(db.Model):
             db.session.delete(osint_source_group)
             db.session.commit()
             # Checking multiple source group assignments is problematic due to the existence of more NewsItemsAggregate records
-            # and the assignment may change over time. Let's move them to the default group.
+            # and the source assignment may change over time. Let's move them to the default group.
             default_group = cls.get_default()
             newsItemAggregates = NewsItemAggregate.get_news_items_aggregate_by_source_group(None) # we use db delete rule: set null
             for item in newsItemAggregates:
