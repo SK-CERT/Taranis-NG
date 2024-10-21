@@ -941,12 +941,13 @@ class NewsItemAggregate(db.Model):
     @classmethod
     def get_news_items_aggregate(cls, source_group, limit):
         limit = datetime.strptime(limit['limit'], '%d.%m.%Y - %H:%M')
-
-        # TODO: Change condition in query to >
-        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit). \
-            all()
+        news_item_aggregates = cls.query.filter(cls.osint_source_group_id == source_group).filter(cls.created > limit).all()
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         return news_item_aggregate_schema.dumps(news_item_aggregates)
+
+    @classmethod
+    def get_news_items_aggregate_by_source_group(cls, source_group_id):
+        return cls.query.filter(cls.osint_source_group_id == source_group_id).all()
 
 
 class NewsItemAggregateSearchIndex(db.Model):

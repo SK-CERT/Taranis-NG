@@ -48,7 +48,7 @@
                         <v-tab href="#tab-2">
                             <span>{{ $t('assess.attributes') }}</span>
                         </v-tab>
-                        <v-tab href="#tab-3">
+                        <v-tab href="#tab-3" @click="onTabClick(3)">
                             <span>{{ $t('assess.comments') }}</span>
                         </v-tab>
 
@@ -305,6 +305,15 @@
             handleDeletion() {
                 this.showDeletePopup = false;
                 this.cardItemToolbar('delete')
+            },
+            onTabClick(tabNumber) {
+                if (tabNumber === 3) {   // Set the editor's focus so the user can start typing immediately
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.$refs.assessDetailComments.quill.focus();
+                        }, 100);
+                    });
+                }
             }
         }
     }

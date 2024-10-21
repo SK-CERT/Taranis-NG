@@ -7,25 +7,26 @@ from flask import request, Response
 from flask_restful import Resource
 
 from managers.auth_manager import no_auth
-
+from packaging import version
 
 class Keycloak(Resource):
+    keycloak_url = re.escape(str(environ['TARANIS_NG_KEYCLOAK_URL']))
+    realm = str(environ['KEYCLOAK_REALM_NAME'])
+    # there's a change in API endpoints from version 17.0.0
+    auth_path = ""
+    if version.parse(environ.get("KEYCLOAK_VERSION")) < version.parse("17.0.0"):
+        auth_path += r"\/auth"
     matchers = [
-        re.compile(r"^" + re.escape(str(environ[
-                                            'TARANIS_NG_KEYCLOAK_URL'])) + r"\/auth\/realms\/" + str(environ['KEYCLOAK_REALM_NAME']) + "\/protocol\/openid-connect\/auth\?(response_type\=code)\&(client_id\=taranis_ng)\&(redirect_uri\=(https?%3[aA]\/\/[a-z0-9A-Z%\/\.\-_]*|https?%3[aA]%2[fF]%2[fF][a-z0-9A-Z%\/\.\-_]*))$"),
         # login url
-        re.compile(r"^" + re.escape(str(environ[
-                                            'TARANIS_NG_KEYCLOAK_URL'])) + r"\/auth\/realms\/" + str(environ['KEYCLOAK_REALM_NAME']) + "\/login-actions\/authenticate(\??session_code\=[a-zA-Z0-9\-_]+)?(\&?\??execution\=[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})?(\&?\??client_id\=taranis_ng)?(\&?\??tab_id=[a-zA-Z0-9\-_]+)?$"),
+        re.compile(r"^" + keycloak_url + auth_path + r"\/realms\/" + realm + "\/protocol\/openid-connect\/auth\?(response_type\=code)\&(client_id\=taranis_ng)\&(redirect_uri\=(https?%3[aA]\/\/[a-z0-9A-Z%\/\.\-_]*|https?%3[aA]%2[fF]%2[fF][a-z0-9A-Z%\/\.\-_]*))$"),
         # login submit url
-        re.compile(r"^" + re.escape(str(environ[
-                                            'TARANIS_NG_KEYCLOAK_URL'])) + r"\/auth\/realms\/" + str(environ['KEYCLOAK_REALM_NAME']) + "\/protocol\/openid-connect\/logout\?(redirect_uri\=(https?%3[aA]\/\/[a-z0-9A-Z%\/\.\-_]*|https?%3[aA]%2[fF]%2[fF][a-z0-9A-Z%\/\.\-_]*))$"),
+        re.compile(r"^" + keycloak_url + auth_path + r"\/realms\/" + realm + "\/login-actions\/authenticate(\??session_code\=[a-zA-Z0-9\-_]+)?(\&?\??execution\=[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})?(\&?\??client_id\=taranis_ng)?(\&?\??tab_id=[a-zA-Z0-9\-_]+)?$"),
         # logout url
-        re.compile(r"^" + re.escape(str(
-            environ['TARANIS_NG_KEYCLOAK_URL'])) + r"\/auth\/resources\/([^\.]*|[^\.]*\.[^\.]*|[^\.]*\.[^\.]*\.[^\.]*)$"),
+        re.compile(r"^" + keycloak_url + auth_path + r"\/realms\/" + realm + "\/protocol\/openid-connect\/logout\?(redirect_uri\=(https?%3[aA]\/\/[a-z0-9A-Z%\/\.\-_]*|https?%3[aA]%2[fF]%2[fF][a-z0-9A-Z%\/\.\-_]*))$"),
         # resources url
-        re.compile(r"^" + re.escape(str(environ[
-                                            'TARANIS_NG_KEYCLOAK_URL'])) + r"\/auth\/realms\/" + str(environ['KEYCLOAK_REALM_NAME']) + "\/login-actions\/required-action(\??session_code\=[a-zA-Z0-9\-_]+)?(\??\&?execution\=(UPDATE_PASSWORD))(\&?\??client_id\=taranis_ng)?(\&?\??tab_id=[a-zA-Z0-9\-_]+)?$"),
+        re.compile(r"^" + keycloak_url + auth_path + r"/resources\/([^\.]*|[^\.]*\.[^\.]*|[^\.]*\.[^\.]*\.[^\.]*)$"),
         # reset password url
+        re.compile(r"^" + keycloak_url + auth_path + r"\/realms\/" + realm + "\/login-actions\/required-action(\??session_code\=[a-zA-Z0-9\-_]+)?(\??\&?execution\=(UPDATE_PASSWORD))(\&?\??client_id\=taranis_ng)?(\&?\??tab_id=[a-zA-Z0-9\-_]+)?$"),
     ]
 
     @no_auth

@@ -1,6 +1,4 @@
-FROM jboss/keycloak:15.0.2
+FROM quay.io/keycloak/keycloak:25.0.6
 
-COPY ./src/keycloak/realm-export.json /opt/jboss/keycloak/realm-export.json
+COPY ./src/keycloak/realm-export.json /opt/keycloak/data/import/realm-export.json
 
-COPY ./src/keycloak/disable-theme-cache.cli /opt/jboss/startup-scripts/disable-theme-cache.cli
-COPY ./src/keycloak/theme /opt/jboss/keycloak/themes/taranis-ng

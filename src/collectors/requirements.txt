@@ -5,7 +5,7 @@ feedparser==6.0.11
 Flask==3.0.3
 Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
-gevent==24.2.1
+gevent==24.10.2
 gunicorn==23.0.0
 marshmallow==3.22.0
 marshmallow-enum==1.5.1
@@ -14,6 +14,6 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 requests==2.32.3
 schedule==1.2.2
-selenium==4.24.0
+selenium==4.25.0
 slackclient==2.9.4
 tweepy==4.14.0

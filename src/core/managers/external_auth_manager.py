@@ -17,7 +17,7 @@ Functions:
 
 import os
 from keycloak import KeycloakAdmin
-
+from config import Config
 
 def keycloak_user_management_enabled():
     """Check if Keycloak user management is enabled.
@@ -34,37 +34,23 @@ def keycloak_user_management_enabled():
 def get_keycloak_client_secret_key():
     """Get the Keycloak client_secret_key.
 
-    This function retrieves the Keycloak client_secret_key from the file
-    specified by the environment variable KEYCLOAK_CLIENT_SECRET_KEY_FILE.
+    This function retrieves the Keycloak client_secret_key from the Docker secrets file.
 
     Returns:
         str: The Keycloak client_secret_key.
     """
-    try:
-        with open(os.getenv("KEYCLOAK_CLIENT_SECRET_KEY_FILE"), "r") as file:
-            client_secret_key = file.read()
-    except FileNotFoundError:
-        print("KEYCLOAK_CLIENT_SECRET_KEY_FILE not found. Please check this variable and verify the path of the file containing the secret.", flush=True)
-        client_secret_key = "not-really-a-secret"
-    return client_secret_key
+    return Config.read_secret("keycloak_client_secret_key")
 
 
 def get_keycloak_admin_password():
     """Get the Keycloak admin password.
 
-    This function retrieves the Keycloak admin password from the file
-    specified by the environment variable KEYCLOAK_ADMIN_PASSWORD_FILE.
+    This function retrieves the Keycloak admin password from the Docker secrets file.
 
     Returns:
         str: The Keycloak admin password.
     """
-    try:
-        with open(os.getenv("KEYCLOAK_ADMIN_PASSWORD_FILE"), "r") as file:
-            keycloak_admin_password = file.read()
-    except FileNotFoundError:
-        print("KEYCLOAK_ADMIN_PASSWORD_FILE not found. Please check this variable and verify the path of the file containing the Keycloak admin password.", flush=True)
-        keycloak_admin_password = "not-really-a-password"
-    return keycloak_admin_password
+    return Config.read_secret("keycloak_admin_password")
 
 
 def get_keycloak_admin():
