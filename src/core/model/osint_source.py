@@ -347,9 +347,18 @@ class OSINTSourceGroup(db.Model):
 
     @classmethod
     def delete(cls, osint_source_group_id):
+        from model.news_item import NewsItemAggregate # must be here, because circular import error
+
         osint_source_group = cls.query.get(osint_source_group_id)
         if osint_source_group.default is False:
             db.session.delete(osint_source_group)
+            db.session.commit()
+            # Checking multiple source group assignments is problematic due to the existence of more NewsItemsAggregate records
+            # and the assignment may change over time. Let's move them to the default group.
+            default_group = cls.get_default()
+            newsItemAggregates = NewsItemAggregate.get_news_items_aggregate_by_source_group(None) # we use db delete rule: set null
+            for item in newsItemAggregates:
+                item.osint_source_group_id = default_group.id
             db.session.commit()
             return "", 200
         else:
