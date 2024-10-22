@@ -61,7 +61,7 @@ class EmailCollector(BaseCollector):
         proxy_server = source.parameter_values["PROXY_SERVER"]
 
         def proxy_tunnel():
-            server = f"{email_server_type.lower()}.{email_server_hostname.lower()}"
+            server = f"{email_server_hostname.lower()}"
             port = email_server_port
 
             server_proxy = proxy_server.rsplit(":", 1)[0]
@@ -136,7 +136,7 @@ class EmailCollector(BaseCollector):
                 if proxy_server:
                     proxy_tunnel()
 
-                connection = imaplib.IMAP4_SSL(f"{email_server_type.lower()}.{email_server_hostname.lower()}", email_server_port)
+                connection = imaplib.IMAP4_SSL(email_server_hostname.lower(), email_server_port)
                 connection.login(email_username, email_password)
                 connection.select("inbox")
 
@@ -162,7 +162,7 @@ class EmailCollector(BaseCollector):
                 if proxy_server:
                     proxy_tunnel()
 
-                connection = poplib.POP3_SSL(f"{email_server_type.lower()}.{email_server_hostname.lower()}", email_server_port)
+                connection = poplib.POP3_SSL(email_server_hostname.lower(), email_server_port)
                 connection.user(email_username)
                 connection.pass_(email_password)
 
