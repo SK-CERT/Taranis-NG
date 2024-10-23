@@ -45,8 +45,6 @@ class SlackCollector(BaseCollector):
         Arguments:
             source: Source object.
         """
-        self.collector_source = f"{self.name} '{source.name}':"
-        BaseCollector.update_last_attempt(source)
         news_items = []
         proxy_server = source.parameter_values["PROXY_SERVER"]
 
@@ -131,7 +129,7 @@ class SlackCollector(BaseCollector):
                     )
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            BaseCollector.publish(news_items, source, self.collector_source)
 
-        except Exception as ex:  # noqa F841
-            logger.info(f"{self.collector_source} Error: {traceback.format_exc()}")
+        except Exception as error:
+            logger.exception(f"{self.collector_source} Collection failed: {error}")

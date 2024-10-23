@@ -50,17 +50,14 @@ class RSSCollector(BaseCollector):
         Arguments:
             source -- Source object.
         """
-        self.collector_source = f"{self.name} '{source.name}':"
-
         def strip_html_tags(html_string):
             soup = BeautifulSoup(html_string, "html.parser")
             return soup.get_text(separator=" ", strip=True)
 
-        BaseCollector.update_last_attempt(source)
         feed_url = source.parameter_values["FEED_URL"]
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
 
-        logger.info(f"{self.collector_source} Starting collector for URL: {feed_url}")
+        logger.info(f"{self.collector_source} Requesting feed URL: {feed_url}")
 
         user_agent = source.parameter_values["USER_AGENT"]
         if user_agent:
@@ -136,7 +133,7 @@ class RSSCollector(BaseCollector):
                     logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
                     continue
                 elif not article:
-                    logger.debug(f"{self.collector_source} Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
+                    logger.info(f"{self.collector_source} Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
                     html_article = ""
                     try:
                         request = urllib.request.Request(link_for_article)
@@ -157,7 +154,7 @@ class RSSCollector(BaseCollector):
                                 article = article_sanit
                             logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
                     except Exception as error:
-                        logger.exception(f"{self.collector_source} Failed to fetch article: {error}")
+                        logger.exception(f"{self.collector_source} Fetch article failed: {error}")
 
                 # use summary if article is empty
                 if summary and not article:
@@ -171,16 +168,21 @@ class RSSCollector(BaseCollector):
                 # use published date if available, otherwise use updated date
                 if published_parsed:
                     date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                    logger.debug(f"{self.collector_source} Using parsed 'published' date: {date}")
+                    logger.debug(f"{self.collector_source} Using parsed 'published' date")
                 elif updated_parsed:
                     date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                    logger.debug(f"{self.collector_source} Using parsed 'updated' date: {date}")
+                    logger.debug(f"{self.collector_source} Using parsed 'updated' date")
                 elif published:
                     date = published
-                    logger.debug(f"{self.collector_source} Using 'published' date: {date}")
+                    logger.debug(f"{self.collector_source} Using 'published' date")
                 elif updated:
                     date = updated
-                    logger.debug(f"{self.collector_source} Using 'updated' date: {date}")
+                    logger.debug(f"{self.collector_source} Using 'updated' date")
+
+                logger.debug(f"{self.collector_source} ... Title    : {title}")
+                logger.debug(f"{self.collector_source} ... Review   : {review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                logger.debug(f"{self.collector_source} ... Content  : {article.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                logger.debug(f"{self.collector_source} ... Published: {date}")
 
                 for_hash = author + title + link_for_article
 
@@ -202,12 +204,10 @@ class RSSCollector(BaseCollector):
                 news_items.append(news_item)
 
                 if count >= links_limit & links_limit > 0:
-                    logger.info(f"{self.collector_source} Limit for article links ({links_limit}) has been reached.")
+                    logger.debug(f"{self.collector_source} Limit for article links ({links_limit}) has been reached.")
                     break
 
-            BaseCollector.publish(news_items, source)
+            BaseCollector.publish(news_items, source, self.collector_source)
 
         except Exception as error:
-            logger.exception(f"{self.collector_source} RSS collection exceptionally failed: {error}")
-
-        logger.info(f"{self.collector_source} Collection finished.")
+            logger.exception(f"{self.collector_source} Collection failed: {error}")

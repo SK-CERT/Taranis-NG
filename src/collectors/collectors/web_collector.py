@@ -294,9 +294,9 @@ class WebCollector(BaseCollector):
             A list of elements found using the given selector.
         """
         prefix, selector = WebCollector.__get_prefix_and_selector(element_selector)
-        logger.debug(f"Prefix: {prefix}")
-        logger.debug(f"Selector: {selector}")
-        logger.debug(f"Page source code: {driver.page_source}")
+        # logger.debug(f"Prefix: {prefix}")
+        # logger.debug(f"Selector: {selector}")
+        # logger.debug(f"Page source code: {driver.page_source}")
 
         elements = None
         if prefix == "id":
@@ -417,7 +417,7 @@ class WebCollector(BaseCollector):
                 self.interpret_as = "directory"
                 self.web_url = file_part
             else:
-                logger.info(f"{self.collector_source} Missing file {web_url}")
+                logger.warning(f"{self.collector_source} Missing file {web_url}")
                 return False
 
         elif re.search(r"^[a-z0-9]+://", web_url.lower()):
@@ -588,7 +588,7 @@ class WebCollector(BaseCollector):
             browser.implicitly_wait(15)  # how long to wait for elements when selector doesn't match
             return browser
         except Exception as error:
-            logger.exception(f"{self.collector_source} Failed to get headless driver: {error}")
+            logger.exception(f"{self.collector_source} Get headless driver failed: {error}")
             return None
 
     def __dispose_of_headless_driver(self, driver):
@@ -607,11 +607,6 @@ class WebCollector(BaseCollector):
         except Exception as error:
             logger.exception(f"{self.collector_source} Could not quit the headless browser driver: {error}")
             pass
-        try:
-            driver.dispose()
-        except Exception as error:
-            logger.exception(f"{self.collector_source} Could not dispose the headless browser driver: {error}")
-            pass
 
     def __run_tor(self):
         """Run The Onion Router service in a subprocess."""
@@ -626,11 +621,7 @@ class WebCollector(BaseCollector):
         Parameters:
             source (Source): The source to collect news items from.
         """
-        self.collector_source = f"{self.name} '{source.name}':"
-        BaseCollector.update_last_attempt(source)
         self.source = source
-        logger.info(f"{self.collector_source} Starting collector")
-
         self.__parse_settings()
         self.news_items = []
 
@@ -655,14 +646,14 @@ class WebCollector(BaseCollector):
         """
         browser = self.__get_headless_driver()
         if browser is None:
-            logger.info(f"{self.collector_source} Error initializing the headless browser")
+            logger.error(f"{self.collector_source} Error initializing the headless browser")
             return False, "Error initializing the headless browser", 0, 0
 
         logger.info(f"{self.collector_source} Requesting title page: {self.web_url}")
         try:
             browser.get(index_url)
         except Exception as error:
-            logger.exception(f"{self.collector_source} Error obtaining title page: {error}")
+            logger.exception(f"{self.collector_source} Obtaining title page failed: {error}")
             self.__dispose_of_headless_driver(browser)
             return False, "Error obtaining title page", 0, 0
 
@@ -674,12 +665,12 @@ class WebCollector(BaseCollector):
                     EC.presence_of_element_located(self.__get_element_locator(self.selectors["popup_close"]))
                 )
             except Exception as error:
-                logger.exception(f"{self.collector_source} Popup find error: {error}")
+                logger.exception(f"{self.collector_source} Popup find failed: {error}")
             if popup is not None:
                 try:
                     popup.click()
                 except Exception as error:
-                    logger.exception(f"{self.collector_source} Popup click error: {error}")
+                    logger.exception(f"{self.collector_source} Popup click failed: {error}")
 
         # if there is a "load more" selector, click on it!
         page = 1
@@ -718,11 +709,10 @@ class WebCollector(BaseCollector):
 
                 # safety cleanup
                 if not self.__close_other_tabs(browser, title_page_handle, fallback_url=index_url):
-                    logger.error(f"{self.collector_source} Error during page crawl (after-crawl clean up)")
+                    logger.error(f"{self.collector_source} Page crawl failed (after-crawl clean up)")
                     break
             except Exception as error:
-                logger.exception()
-                logger.error(f"{self.collector_source} Error during page crawl (exception): {error}")
+                logger.exception(f"{self.collector_source} Page crawl failed: {error}")
                 break
 
             if page >= self.pagination_limit or not self.selectors["next_page"]:
@@ -742,7 +732,7 @@ class WebCollector(BaseCollector):
                 break
 
         self.__dispose_of_headless_driver(browser)
-        BaseCollector.publish(self.news_items, self.source)
+        BaseCollector.publish(self.news_items, self.source, self.collector_source)
 
         return True, "", total_processed_articles, total_failed_articles
 
@@ -760,7 +750,7 @@ class WebCollector(BaseCollector):
         processed_articles, failed_articles = 0, 0
         article_items = self.__safe_find_elements_by(browser, self.selectors["single_article_link"])
         if article_items is None:
-            logger.info(f"{self.collector_source} Invalid page or incorrect selector for article items")
+            logger.warning(f"{self.collector_source} Invalid page or incorrect selector for article items")
             return 0, 0
 
         index_url_just_before_click = browser.current_url
@@ -779,11 +769,11 @@ class WebCollector(BaseCollector):
             try:
                 link = item.get_attribute("href")
                 if link is None:  # don't continue, it will crash in current situation
-                    logger.info(f"{self.collector_source} Warning: no link for article {count}/{len(article_items)}")
+                    logger.warning(f"{self.collector_source} No link for article {count}/{len(article_items)}")
                     continue
                 logger.info(f"{self.collector_source} Visiting article {count}/{len(article_items)}: {link}")
             except Exception:
-                logger.info(f"{self.collector_source} Failed to get link for article {count}/{len(article_items)}")
+                logger.warning(f"{self.collector_source} Failed to get link for article {count}/{len(article_items)}")
                 continue
 
             click_method = 1  # TODO: some day, make this user-configurable with tri-state enum
@@ -804,20 +794,14 @@ class WebCollector(BaseCollector):
                 news_item = self.__process_article_page(index_url, browser)
                 if news_item:
                     logger.debug(f"{self.collector_source} ... Title    : {news_item.title}")
-                    logger.debug(
-                        f"{self.collector_source} ... Review   : {news_item.review.replace('\r', '').replace('\n', ' ').strip()[:100]}"
-                    )
-                    logger.debug(
-                        f"{self.collector_source} ... Content  : {news_item.content.replace('\r', '').replace('\n', ' ').strip()[:100]}"
-                    )
-                    logger.debug(f"{self.collector_source} ... Author   : {news_item.author}")
+                    logger.debug(f"{self.collector_source} ... Review   : {news_item.review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                    logger.debug(f"{self.collector_source} ... Content  : {news_item.content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
                     logger.debug(f"{self.collector_source} ... Published: {news_item.published}")
                     self.news_items.append(news_item)
                 else:
-                    logger.info(f"{self.collector_source} Failed to parse an article")
+                    logger.warning(f"{self.collector_source} Parsing an article failed")
             except Exception as error:
-                logger.exception()
-                logger.error(f"{self.collector_source} Failed to parse an article (exception): {error}")
+                logger.exception(f"{self.collector_source} Parsing an article failed: {error}")
 
             if len(browser.window_handles) == 1:
                 back_clicks = 1
@@ -825,12 +809,12 @@ class WebCollector(BaseCollector):
                     browser.back()
                     back_clicks += 1
                     if back_clicks > 3:
-                        logger.info(f"{self.collector_source} Error during page crawl (cannot restore window after crawl)")
+                        logger.warning(f"{self.collector_source} Error during page crawl (cannot restore window after crawl)")
             elif not self.__close_other_tabs(browser, title_page_handle, fallback_url=index_url):
-                logger.info(f"{self.collector_source} Error during page crawl (after-crawl clean up)")
+                logger.warning(f"{self.collector_source} Error during page crawl (after-crawl clean up)")
                 break
             if count >= self.links_limit & self.links_limit > 0:
-                logger.info(f"{self.collector_source} Limit for article links reached ({self.links_limit})")
+                logger.debug(f"{self.collector_source} Limit for article links reached ({self.links_limit})")
                 break
 
         return processed_articles, failed_articles

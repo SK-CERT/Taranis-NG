@@ -55,9 +55,6 @@ class TwitterCollector(BaseCollector):
             source -- Source object.
         """
         try:
-            BaseCollector.update_last_attempt(source)
-            self.collector_source = f"{self.name} '{source.name}':"
-            logger.info(f"{self.collector_source} Collecting data from Twitter")
             news_items = []
             attributes = []
 
@@ -132,6 +129,7 @@ class TwitterCollector(BaseCollector):
 
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            BaseCollector.publish(news_items, source, self.collector_source)
+
         except Exception as error:
-            BaseCollector.print_exception(source, error)
+            logger.exception(f"{self.collector_source} Collection failed: {error}")

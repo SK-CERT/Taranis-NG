@@ -6,6 +6,7 @@ import string
 import uuid
 
 from .base_collector import BaseCollector
+from managers.log_manager import logger
 from shared.schema.news_item import NewsItemData
 from shared.schema.parameter import Parameter, ParameterType
 
@@ -31,7 +32,6 @@ class ScheduledTasksCollector(BaseCollector):
             source -- Source object.
         """
 
-        BaseCollector.update_last_attempt(source)
         news_items = []
         head, tail = os.path.split(source.parameter_values['TASK_COMMAND'])
         task_title = source.parameter_values['TASK_TITLE']
@@ -58,6 +58,7 @@ class ScheduledTasksCollector(BaseCollector):
 
             news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            BaseCollector.publish(news_items, source, self.collector_source)
+
         except Exception as error:
-            BaseCollector.print_exception(source, error)
+            logger.exception(f"{self.collector_source} Collection failed: {error}")
