@@ -49,9 +49,6 @@ class EmailCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
-        BaseCollector.update_last_attempt(source)
-        self.collector_source = f"{self.name} '{source.name}':"
-        logger.info(f"{self.collector_source} Collecting data from email")
         news_items = []
         email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
         email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]
@@ -156,7 +153,7 @@ class EmailCollector(BaseCollector):
                 connection.close()
                 connection.logout()
             except Exception as error:
-                logger.exception(f"{self.collector_source} Failed to fetch emails using IMAP: {error}")
+                logger.exception(f"{self.collector_source} Fetch emails using IMAP failed: {error}")
         elif email_server_type.lower() == "pop3":
             try:
                 if proxy_server:
@@ -178,9 +175,8 @@ class EmailCollector(BaseCollector):
 
                 connection.quit()
             except Exception as error:
-                logger.exception(f"{self.collector_source} Failed to fetch emails using POP3: {error}")
+                logger.exception(f"{self.collector_source} Fetch emails using POP3 failed: {error}")
         else:
             logger.error(f"{self.collector_source} Email server connection type is not supported: {email_server_type}")
 
-        BaseCollector.publish(news_items, source)
-        logger.info(f"{self.collector_source} Collection finished.")
+        BaseCollector.publish(news_items, source, self.collector_source)

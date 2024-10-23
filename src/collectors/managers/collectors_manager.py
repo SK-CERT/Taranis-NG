@@ -22,10 +22,10 @@ status_report_thread = None
 def reportStatus():
     """Continuously send status updates to the Core API."""
     while True:
-        logger.debug(f"[{__name__}] Sending status update...")
+        logger.debug(f"Sending status update...")
         response, status_code = CoreApi.update_collector_status()
         if status_code != 200:
-            logger.warning(f"[{__name__}] Core status update response: HTTP {status_code}, {response}")
+            logger.warning(f"Core status update response: HTTP {status_code}, {response}")
         # for debugging scheduler tasks
         # for key in collectors:
         #     for source in collectors[key].osint_sources:

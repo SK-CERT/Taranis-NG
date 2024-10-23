@@ -28,7 +28,6 @@ class BaseCollector:
         get_info(): Get information about the collector.
         update_last_attempt(source): Update the last attempt for a collector.
         ignore_exceptions(func): Decorator to wrap scheduled action with exception handling.
-        print_exception(source, error): Print the exception details.
         history(interval): Calculate the limit for retrieving historical data based on the given interval.
         filter_by_word_list(news_items, source): Filter news items based on word lists defined in the source.
         presanitize_html(html): Clean and sanitize the given HTML by removing certain tags and entities.
@@ -93,24 +92,10 @@ class BaseCollector:
             """
             try:
                 func(self, source)
-            except Exception as ex:
-                logger.exception(f"An unhandled exception occurred during scheduled collector run: {ex}")
+            except Exception as error:
+                logger.exception(f"An unhandled exception occurred during scheduled collector run: {error}")
 
         return wrapper
-
-    @staticmethod
-    def print_exception(source, error):
-        """Print the exception details.
-
-        Parameters:
-            source (OSINTSource): The OSINT source.
-            error (Exception): The exception object.
-        """
-        logger.warning(f"OSINTSource name: {source.name}")
-        if str(error).startswith("b"):
-            logger.warning(f"ERROR: {error[2:-1]}")
-        else:
-            logger.warning(f"ERROR: {error}")
 
     @staticmethod
     def history(interval):
@@ -230,14 +215,15 @@ class BaseCollector:
             item.link = BaseCollector.presanitize_html(item.link)  # TODO: replace with link sanitizer
 
     @staticmethod
-    def publish(news_items, source):
+    def publish(news_items, source, collector_source):
         """Publish the collected news items to the CoreApi.
 
         Parameters:
             news_items (list): A list of news items to be published.
             source (object): The source object from which the news items were collected.
+            collector_source (string): Collector readbale name
         """
-        logger.debug(f"{source.name}: Collected {len(news_items)} news items")
+        logger.debug(f"{collector_source} Collected {len(news_items)} news items")
         BaseCollector.sanitize_news_items(news_items, source)
         filtered_news_items = BaseCollector.filter_by_word_list(news_items, source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
@@ -246,7 +232,7 @@ class BaseCollector:
     def refresh(self):
         """Refresh the OSINT sources for the collector."""
         time.sleep(30)
-        logger.info(f"Core API requested a refresh of OSINT sources for {self.type}...")
+        logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
         # cancel all existing jobs
         # TODO: cannot cancel jobs that are running and are scheduled for further in time than 60 seconds
@@ -260,7 +246,7 @@ class BaseCollector:
 
         # get new node configuration
         response, code = CoreApi.get_osint_sources(self.type)
-        logger.debug(f"HTTP {code}: Got the following reply: {response}")
+        # logger.debug(f"HTTP {code}: Got the following reply: {response}")
 
         try:
             # if configuration was successfully received
@@ -268,28 +254,28 @@ class BaseCollector:
                 source_schema = osint_source.OSINTSourceSchemaBase(many=True)
                 self.osint_sources = source_schema.load(response)
 
-                logger.debug(f"{len(self.osint_sources)} sources loaded for {self.type}")
+                logger.debug(f"{self.name}: {len(self.osint_sources)} sources loaded")
 
                 # start collection
                 for source in self.osint_sources:
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == "" or interval == "0":
-                        logger.debug(f"disabled '{source.name}'")
+                        logger.info(f"{self.name} '{source.name}': Disabled")
                         continue
 
                     self.run_collector(source)
 
                     # run task every day at XY
                     if interval[0].isdigit() and ":" in interval:
-                        logger.debug(f"scheduling '{source.name}' at: {interval}")
+                        logger.debug(f"{self.name} '{source.name}': Scheduling at: {interval}")
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        logger.debug(f"scheduling '{source.name}' at: {day} {at}")
+                        logger.debug(f"{self.name} '{source.name}': Scheduling at: {day} {at}")
                         if day == "Monday":
                             source.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_collector, source)
                         elif day == "Tuesday":
@@ -306,7 +292,7 @@ class BaseCollector:
                             source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.run_collector, source)
                     # run task every XY minutes
                     else:
-                        logger.debug(f"scheduling '{source.name}' for {interval}")
+                        logger.debug(f"{self.name} '{source.name}': Scheduling for {interval}")
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
             else:
                 # TODO: send update to core with the error message
@@ -323,7 +309,11 @@ class BaseCollector:
             source: The source to collect data from.
         """
         runner = self.__class__()  # get right type of collector
+        runner.collector_source = f"{self.name} '{source.name}':"
+        logger.info(f"{runner.collector_source} Starting collector")
+        BaseCollector.update_last_attempt(source)
         runner.collect(source)
+        logger.info(f"{runner.collector_source} Collection finished")
 
     def initialize(self):
         """Initialize the collector."""
@@ -340,11 +330,13 @@ class BaseCollector:
         Returns:
            val (int): The value of the parameter, or the default value if the parameter is not found or is not a valid integer.
         """
+        val = default_value
         try:
-            val = int(source.parameter_values[name])
-            if val <= 0:
-                val = default_value
+            par_val = source.parameter_values[name]
+            if par_val != "":
+                val = int(par_val)
+                if val <= 0:
+                    val = default_value
         except Exception as error:
             logger.exception(f"Reading of int parameter failed: {error}")
-            val = default_value
         return val
