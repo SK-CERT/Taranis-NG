@@ -4,7 +4,6 @@ This module contains classes and schemas related to attributes, including enums,
 """
 
 from marshmallow import Schema, fields, post_load, EXCLUDE
-from marshmallow_enum import EnumField
 from enum import Enum, auto
 
 from shared.schema.presentation import PresentationSchema
@@ -43,8 +42,7 @@ class AttributeValidator(Enum):
 
 
 class AttributeEnumSchema(Schema):
-    """
-    Schema class for attribute enums.
+    """Schema class for attribute enums.
 
     This schema defines the structure for attribute enums.
     It includes fields for id, index, value, and description.
@@ -70,8 +68,7 @@ class AttributeEnum:
     """Class representing an attribute enum."""
 
     def __init__(self, id, index, value, description):
-        """
-        Initialize an Attribute object.
+        """Initialize an Attribute object.
 
         Args:
             index (int): The index of the attribute.
@@ -95,9 +92,9 @@ class AttributeBaseSchema(Schema):
     id = fields.Int()
     name = fields.Str()
     description = fields.Str(allow_none=True)
-    type = EnumField(AttributeType)
+    type = fields.Enum(AttributeType)
     default_value = fields.Str(allow_none=True)
-    validator = EnumField(AttributeValidator, allow_none=True)
+    validator = fields.Enum(AttributeValidator, allow_none=True)
     validator_parameter = fields.Str(allow_none=True)
 
     @post_load
@@ -122,8 +119,7 @@ class Attribute:
     """Class representing an attribute."""
 
     def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
-        """
-        Initialize an Attribute object.
+        """Initialize an Attribute object.
 
         Args:
             id (int): The ID of the attribute.
@@ -134,9 +130,6 @@ class Attribute:
             validator: The validator function for the attribute.
             validator_parameter: The parameter for the validator function.
             attribute_enums: Attribute enum values.
-
-        Returns:
-            None
         """
         self.id = id
         self.name = name
