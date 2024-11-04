@@ -49,8 +49,6 @@ class EmailCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
-        BaseCollector.update_last_attempt(source)
-        self.collector_source = f"{self.name} '{source.name}':"
         news_items = []
         email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
         email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]
