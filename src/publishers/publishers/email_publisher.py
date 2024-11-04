@@ -119,7 +119,10 @@ class EMAILPublisher(BasePublisher):
             logger.info(f"Encrypting email with file {encrypt}")
             envelope.encryption(key=open(encrypt))
 
-        logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{envelope}")
+        email_string = str(envelope)
+        if len(email_string) > 3000:
+            email_string = f"{email_string[:3000]}\n..."
+        logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{email_string}")
 
         envelope.smtp(smtp)
         try:
