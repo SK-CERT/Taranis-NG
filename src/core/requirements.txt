@@ -8,7 +8,7 @@ flask-oidc==1.4.0
 Flask-RESTful==0.3.10
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.5.1
-gevent==21.8.0
+gevent==21.12.0
 greenlet==1.1.1
 gunicorn==20.0.4
 idna==2.9
