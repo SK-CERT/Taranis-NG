@@ -11,7 +11,6 @@ from managers.auth_manager import auth_required, ACLCheck
 from model import attribute, report_item, report_item_type
 from model.permission import Permission
 
-
 class ReportItemTypes(Resource):
     """Report item types API endpoint."""
 
@@ -212,7 +211,7 @@ class ReportItemLock(Resource):
 
         Parameters:
             report_item_id (int): report item ID
-            field_id (int): field ID
+            field_id (str): field ID
         Returns:
             (dict): report item locks
         """
@@ -228,7 +227,7 @@ class ReportItemUnlock(Resource):
 
         Parameters:
             report_item_id (int): report item ID
-            field_id (int): field ID
+            field_id (str): field ID
         Returns:
             (dict): report item locks
         """
@@ -244,7 +243,7 @@ class ReportItemHoldLock(Resource):
 
         Parameters:
             report_item_id (int): report item ID
-            field_id (int): field ID
+            field_id (str): field ID
         Returns:
             (dict): report item locks
         """
@@ -375,9 +374,9 @@ def initialize(api):
     api.add_resource(ReportItem, "/api/v1/analyze/report-items/<int:report_item_id>")
     api.add_resource(ReportItemData, "/api/v1/analyze/report-items/<int:report_item_id>/data")
     api.add_resource(ReportItemLocks, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks")
-    api.add_resource(ReportItemLock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<int:field_id>/lock")
-    api.add_resource(ReportItemUnlock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<int:field_id>/unlock")
-    api.add_resource(ReportItemHoldLock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<int:field_id>/hold")
+    api.add_resource(ReportItemLock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<field_id>/lock")
+    api.add_resource(ReportItemUnlock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<field_id>/unlock")
+    api.add_resource(ReportItemHoldLock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<field_id>/hold")
     api.add_resource(ReportItemAttributeEnums, "/api/v1/analyze/report-item-attributes/<int:attribute_id>/enums")
     api.add_resource(ReportItemAddAttachment, "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes")
     api.add_resource(ReportItemRemoveAttachment, "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes/<int:attribute_id>")

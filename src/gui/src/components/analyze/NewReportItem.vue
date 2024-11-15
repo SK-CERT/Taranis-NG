@@ -548,9 +548,7 @@ export default {
                 } else if (field_id === 'completed') {
                     data.completed = this.report_item.completed
                 }
-
-                updateReportItem(this.report_item.id, data).then(() => {
-                })
+                updateReportItem(this.report_item.id, data).then(() => {})
             }
         },
 
@@ -583,12 +581,14 @@ export default {
                             this.report_item.completed = data.completed
                         }
                         // if more users work on the same report -> update locked field with new value
+                        // there is duplicity code attributes_mixin.js: report_item_updated() but runs later (up 2 seconds) this place is much more faster
                         if (data.update !== undefined) {
                             endLoop: for (let i = 0; i < this.attribute_groups.length; i++) {
                                 for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
                                     for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
                                         if (this.attribute_groups[i].attribute_group_items[j].values[k].id == data.attribute_id) {
                                             this.attribute_groups[i].attribute_group_items[j].values[k].value = data.attribute_value;
+                                            this.attribute_groups[i].attribute_group_items[j].values[k].value_description = data.attribute_value_description;
                                             break endLoop;
                                         }
                                     }
