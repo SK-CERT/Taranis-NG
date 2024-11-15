@@ -702,14 +702,12 @@ class ReportItem(db.Model):
                             if attribute.value != data["attribute_value"]:
                                 modified = True
                                 attribute.value = data["attribute_value"]
-                                data["attribute_value"] = ""
                                 attribute.user = user
                                 attribute.last_updated = datetime.now()
                             if data.get("value_description", False):
                                 if attribute.value_description != data["value_description"]:
                                     modified = True
                                     attribute.value_description = data["value_description"]
-                                    data["value_description"] = ""
                                     attribute.user = user
                                     attribute.last_updated = datetime.now()
                             break
