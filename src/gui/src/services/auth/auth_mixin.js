@@ -8,6 +8,16 @@ var AuthMixin = {
     }),
 
     methods: {
+        logout() {
+            this.$store.dispatch('logout').then(() => {
+                if (this.$store.getters.hasExternalLogoutUrl) {
+                    window.location = this.$store.getters.getLogoutURL;
+                } else {
+                    window.location.reload();
+                }
+            })
+        },
+
         isAuthenticated() {
             return AuthService.isAuthenticated()
         },

@@ -28,13 +28,18 @@ export default {
     },
     data: () => ({
         visible: null,
-        isDark: true
+        isDark: true,
+        sseConnection: null,
     }),
     mixins: [AuthMixin],
     methods: {
         connectSSE() {
             this.$sse(((typeof (process.env.VUE_APP_TARANIS_NG_CORE_SSE) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_SSE" : process.env.VUE_APP_TARANIS_NG_CORE_SSE) + "?jwt=" + this.$store.getters.getJWT, {format: 'json'})
                 .then(sse => {
+                    this.sseConnection = sse
+                    sse.onError(() => {
+                        this.reconnectSSE()
+                    });
                     sse.subscribe('news-items-updated', (data) => {
                         this.$root.$emit('news-items-updated', data)
                     });
@@ -50,7 +55,9 @@ export default {
                     sse.subscribe('report-item-unlocked', (data) => {
                         this.$root.$emit('report-item-unlocked', data)
                     });
-                });
+                }).catch(event => {
+                    this.sseConnection = event.currentTarget
+                })
         },
 
         reconnectSSE() {
@@ -116,6 +123,11 @@ export default {
             this.connectSSE()
         });
 
+    },
+    beforeDestroy() {
+        if (this.sseConnection !== null) {
+            this.sseConnection.close()
+        }
     }
 };
 </script>
