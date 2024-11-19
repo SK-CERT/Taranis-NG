@@ -6,7 +6,7 @@ from enum import Enum, auto
 from functools import wraps
 import jwt
 from flask import request
-from flask_jwt_extended import JWTManager, get_jwt_claims, get_jwt_identity, verify_jwt_in_request, get_raw_jwt
+from flask_jwt_extended import JWTManager, get_jwt_identity, verify_jwt_in_request, get_jwt
 from flask_jwt_extended.exceptions import JWTExtendedException
 
 from managers import log_manager, time_manager
@@ -287,7 +287,7 @@ def get_user_from_jwt_token():
     # does it encode an identity?
     identity = get_jwt_identity()
     if not identity:
-        log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_raw_jwt()}")
+        log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
         return None
 
     user = User.find(identity)
@@ -309,7 +309,8 @@ def get_perm_from_jwt_token(user):
     """
     try:
         # does it include permissions?
-        claims = get_jwt_claims()
+        jwt_data = get_jwt()
+        claims = jwt_data["user_claims"]
         if not claims or "permissions" not in claims:
             log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT")
             return None
@@ -470,7 +471,7 @@ def jwt_required(fn):
 
         identity = get_jwt_identity()
         if not identity:
-            log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_raw_jwt()}")
+            log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
             return {"error": "authorization failed"}, 401
 
         user = User.find(identity)
@@ -523,9 +524,9 @@ def decode_user_from_jwt(jwt_token):
     """
     decoded = None
     try:
-        decoded = jwt.decode(jwt_token, Config.JWT_SECRET_KEY)
-    except Exception as ex:  # e.g. "Signature has expired"
-        log_manager.store_auth_error_activity(f"Invalid JWT: {str(ex)}")
+        decoded = jwt.decode(jwt_token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
+    except Exception as error:  # e.g. "Signature has expired"
+        log_manager.store_auth_error_activity(f"Invalid JWT: {error}")
     if decoded is None:
         return None
     return User.find(decoded["sub"])

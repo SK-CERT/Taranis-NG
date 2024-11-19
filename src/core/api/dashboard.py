@@ -14,7 +14,7 @@ from model.tag_cloud import TagCloud
 class Dashboard(Resource):
     """Dashboard API class."""
 
-    @jwt_required
+    @jwt_required()
     def get(self):
         """Get the dashboard data.
 

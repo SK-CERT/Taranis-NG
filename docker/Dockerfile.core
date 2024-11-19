@@ -1,4 +1,4 @@
-FROM python:3.10-alpine3.14 AS build_shared
+FROM python:3.10-alpine3.19 AS build_shared
 
 WORKDIR /build_shared/
 
@@ -17,7 +17,7 @@ COPY ./src/core/sse/forward.c .
 RUN gcc -o forward forward.c
 
 
-FROM python:3.10-alpine3.14 AS production
+FROM python:3.10-alpine3.19 AS production
 
 WORKDIR /app/
 
@@ -45,6 +45,7 @@ RUN \
     apk add --no-cache --virtual .build-deps \
     gcc \
     g++ \
+    git \
     build-base\
     libc-dev\
     zlib-dev \

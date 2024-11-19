@@ -22,7 +22,7 @@ status_report_thread = None
 def reportStatus():
     """Continuously send status updates to the Core API."""
     while True:
-        logger.debug(f"Sending status update...")
+        logger.debug("Sending status update...")
         response, status_code = CoreApi.update_collector_status()
         if status_code != 200:
             logger.warning(f"Core status update response: HTTP {status_code}, {response}")

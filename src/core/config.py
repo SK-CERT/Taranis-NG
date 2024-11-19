@@ -43,6 +43,17 @@ class Config(object):
     """
 
     def read_secret(secret_name):
+        """Read a secret from a Docker secret file.
+
+        Args:
+            secret_name (str): The name of the secret to read.
+
+        Returns:
+            str: The content of the secret file.
+
+        Raises:
+            RuntimeError: If the secret file is not found.
+        """
         file_path = f"/run/secrets/{secret_name}"
         try:
             with open(file_path, "r") as secret_file:
@@ -50,13 +61,12 @@ class Config(object):
         except FileNotFoundError:
             raise RuntimeError(f"Secret '{secret_name}' not found.")
 
-
     REDIS_URL = os.getenv("REDIS_URL")
     DB_URL = os.getenv("DB_URL")
     DB_DATABASE = os.getenv("DB_DATABASE")
     DB_USER = os.getenv("DB_USER")
     DB_PASSWORD = read_secret("postgres_password")
-    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://{user}:{pw}@{url}/{db}".format(user=DB_USER, pw=DB_PASSWORD, url=DB_URL, db=DB_DATABASE)
+    SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_URL}/{DB_DATABASE}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = os.getenv("DEBUG_SQL", "false").lower() == "true"  # DEBUG SQL Queries
 

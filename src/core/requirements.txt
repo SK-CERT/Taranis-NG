@@ -1,36 +1,33 @@
-alembic==1.10.2
-certifi==2019.11.28
-Flask==1.1.4
-Flask-Cors==4.0.1
-Flask-JWT-Extended==3.25.1
+alembic==1.13.3
+eventlet==0.37.0
+Flask==3.1.0
+Flask-Cors==5.0.0
+Flask-JWT-Extended==4.7.0
 Flask-Migrate==2.5.2
-flask-oidc==1.4.0
+# flask-oidc==2.2.0
+git+https://github.com/puiterwijk/flask-oidc.git@b10e6bf881a3fe0c3972e4093648f2b77f32a97c
 Flask-RESTful==0.3.10
-Flask-Script==2.0.6
-Flask-SQLAlchemy==2.5.1
-gevent==21.8.0
-greenlet==1.1.1
-gunicorn==20.0.4
-idna==2.9
-Jinja2==2.11.3
+# Flask-Script==2.0.6
+Flask-SQLAlchemy==3.0.0
+Flask-SSE==1.0.0
+gevent==24.10.3
+gunicorn==23.0.0
+#flask 1 requires jinja < 3, solved by newer flask - newest version
+Jinja2==3.1.4
 ldap3==2.9.1
-Mako==1.1.0
-MarkupSafe==1.1.1
+# needs old jinja2, solved by newer flask - remove
+# markupsafe==2.0.1
 marshmallow==3.23.0
-psycogreen==1.0.2
-psycopg2-binary==2.9.6
-PyJWT==1.7.1
-python-dateutil==2.8.1
-python-dotenv==0.10.3
-python-editor==1.0.4
-python-keycloak==0.23.0
-pytz==2019.3
-requests==2.26.0
-schedule==0.6.0
-six==1.13.0
-sseclient-py==1.7
+#psycogreen==1.0.2
+#psycopg==3.2.3
+psycopg2==2.9.10
+pycryptodomex==3.21.0 # remove and use
+PyJWT==2.9.0
+python-dotenv==1.0.1
+python-keycloak==4.6.3
+requests==2.32.3
+schedule==1.2.2
+sseclient-py==1.8.0
 soupsieve==1.9.5
-SQLAlchemy==1.4.52
-urllib3==1.26.7
-Werkzeug==1.0.1
-pycryptodomex==3.17
+SQLAlchemy==1.4.54
+Werkzeug==3.1.3
