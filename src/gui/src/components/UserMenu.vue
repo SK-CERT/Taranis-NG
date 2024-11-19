@@ -48,10 +48,12 @@
 </template>
 
 <script>
+import AuthMixin from "@/services/auth/auth_mixin";
 import UserSettings from "./UserSettings";
 
 export default {
     name: "UserMenu",
+    mixins: [AuthMixin],
     components: {
         UserSettings
     },
@@ -67,9 +69,6 @@ export default {
         }
     },
     methods: {
-        logout() {
-            this.$store.dispatch('logout');
-        },
         settings() {
             this.$root.$emit('show-user-settings');
         },

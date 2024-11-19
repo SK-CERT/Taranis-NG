@@ -788,8 +788,12 @@ class WebCollector(BaseCollector):
                 news_item = self.__process_article_page(index_url, browser)
                 if news_item:
                     logger.debug(f"{self.collector_source} ... Title    : {news_item.title}")
-                    logger.debug(f"{self.collector_source} ... Review   : {news_item.review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-                    logger.debug(f"{self.collector_source} ... Content  : {news_item.content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                    logger.debug(
+                        f"{self.collector_source} ... Review   : {news_item.review.replace('\r', '').replace('\n', ' ').strip()[:100]}"
+                    )
+                    logger.debug(
+                        f"{self.collector_source} ... Content  : {news_item.content.replace('\r', '').replace('\n', ' ').strip()[:100]}"
+                    )
                     logger.debug(f"{self.collector_source} ... Published: {news_item.published}")
                     self.news_items.append(news_item)
                 else:
@@ -871,6 +875,6 @@ class WebCollector(BaseCollector):
                 key = "Additional_ID"
                 binary_mime_type = ""
                 binary_value = ""
-                attribute = NewsItemAttribute(uuid.uuid4(), key, value, binary_mime_type, binary_value)
+                attribute = NewsItemAttribute(key, value, binary_mime_type, binary_value)
                 news_item.attributes.append(attribute)
         return news_item

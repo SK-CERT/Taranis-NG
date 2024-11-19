@@ -177,12 +177,14 @@ gzcat cwec_latest.xml.zip | \
 ## About...
 
 This project was inspired by [Taranis3](https://github.com/NCSC-NL/taranis3),
-a great tool made by NCSC-NL. It aims to become a next generation of this
-category of tools. The project was made in collaboration with a wide
-group of European CSIRT teams who are developers and users of Taranis3,
-and would not be possible without their valuable input especially
-during the requirements collection phase. The architecture and design
-of new Taranis NG is a collective brain child of this community.
+a great tool made by NCSC-NL. Currently, NCSC-NL has a new tool for producing advisories, 
+with a different approach to communicating with the world. There was no funding to maintain or 
+further develop NCSC-NL's Taranis3.
+
+It aims to become a next generation of this category of tools. The project was made in collaboration 
+with a wide group of European CSIRT teams who are developers and users of Taranis3, and would not be 
+possible without their valuable input especially during the requirements collection phase.
+The architecture and design of new Taranis NG is a collective brain child of this community.
 
 This project has been co-funded by European Regional Development Fund as part of [Operational Programme Integrated Infrastructure (OPII)](https://www.opii.gov.sk/opii-en/titulka-en).
 

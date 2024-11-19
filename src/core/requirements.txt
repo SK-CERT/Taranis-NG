@@ -7,7 +7,6 @@ Flask-Migrate==2.5.2
 # flask-oidc==2.2.0
 git+https://github.com/puiterwijk/flask-oidc.git@b10e6bf881a3fe0c3972e4093648f2b77f32a97c
 Flask-RESTful==0.3.10
-# Flask-Script==2.0.6
 Flask-SQLAlchemy==3.0.0
 Flask-SSE==1.0.0
 gevent==24.10.3

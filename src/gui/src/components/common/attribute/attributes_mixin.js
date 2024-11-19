@@ -167,7 +167,7 @@ var AttributesMixin = {
             if (this.edit === true && this.report_item_id === data.report_item_id) {
                 if (data.user_id !== this.$store.getters.getUserId) {
                     for (let i = 0; i < this.values.length; i++) {
-                        if (this.values[i].id === data.field_id) {
+                        if (this.values[i].id == data.field_id) {     /* must be ==, various data type comparing! */
                             this.values[i].locked = true
                             break
                         }
@@ -180,7 +180,7 @@ var AttributesMixin = {
             if (this.edit === true && this.report_item_id === data.report_item_id) {
                 if (data.user_id !== this.$store.getters.getUserId) {
                     for (let i = 0; i < this.values.length; i++) {
-                        if (this.values[i].id === data.field_id) {
+                        if (this.values[i].id == data.field_id) {     /* must be ==, various data type comparing! */
                             this.values[i].locked = false
                             break
                         }
@@ -196,15 +196,16 @@ var AttributesMixin = {
                         getReportItemData(this.report_item_id, data_info).then((response) => {
                             let data = response.data
                             for (let i = 0; i < this.values.length; i++) {
-                                if (this.values[i].id === data.attribute_id) {
+                                if (this.values[i].id == data.attribute_id) {    /* must be ==, various data type comparing! */
                                     let value = data.attribute_value
                                     if (this.attribute_group.attribute.type === 'CPE') {
                                         value = value.replace("%", "*")
                                     } else if (this.attribute_group.attribute.type === 'BOOLEAN') {
                                         value = value === "true";
                                     }
+                                    /* it looks that in this moment are these values already updated?! DB reload? Slow code/event? */
                                     this.values[i].value = value
-                                    this.values[i].value_description = data.value_description
+                                    this.values[i].value_description = data.attribute_value_description
                                     this.values[i].last_updated = data.attribute_last_updated
                                     this.values[i].user = { name: data.attribute_user }
                                     break

@@ -31,11 +31,6 @@ const actions = {
 
     logout(context) {
         context.commit('clearJwtToken');
-        if (this.getters.hasExternalLogoutUrl) {
-            window.location = this.getters.getLogoutURL;
-        } else {
-            window.location.reload();
-        }
     },
 
     setVerticalView(context, data) {
