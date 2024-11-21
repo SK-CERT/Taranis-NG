@@ -1,3 +1,85 @@
+/* Copyright (c) 2019, FIRST.ORG, INC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *    disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/* This JavaScript contains two main functions. Both take CVSS metric values and calculate CVSS scores for Base,
+ * Temporal and Environmental metric groups, their associated severity ratings, and an overall Vector String.
+ *
+ * Use CVSS31.calculateCVSSFromMetrics if you wish to pass metric values as individual parameters.
+ * Use CVSS31.calculateCVSSFromVector if you wish to pass metric values as a single Vector String.
+ *
+ * Changelog
+ *
+ * 2019-06-01  Darius Wiles   Updates for CVSS version 3.1:
+ *
+ *                            1) The CVSS31.roundUp1 function now performs rounding using integer arithmetic to
+ *                               eliminate problems caused by tiny errors introduced during JavaScript math
+ *                               operations. Thanks to Stanislav Kontar of Red Hat for suggesting and testing
+ *                               various implementations.
+ *
+ *                            2) Environmental formulas changed to prevent the Environmental Score decreasing when
+ *                               the value of an Environmental metric is raised. The problem affected a small
+ *                               percentage of CVSS v3.0 metrics. The change is to the modifiedImpact
+ *                               formula, but only affects scores where the Modified Scope is Changed (or the
+ *                               Scope is Changed if Modified Scope is Not Defined).
+ *
+ *                            3) The JavaScript object containing everything in this file has been renamed from
+ *                               "CVSS" to "CVSS31" to allow both objects to be included without causing a
+ *                               naming conflict.
+ *
+ *                            4) Variable names and code order have changed to more closely reflect the formulas
+ *                               in the CVSS v3.1 Specification Document.
+ *
+ *                            5) A successful call to calculateCVSSFromMetrics now returns sub-formula values.
+ *
+ *                            Note that some sets of metrics will produce different scores between CVSS v3.0 and
+ *                            v3.1 as a result of changes 1 and 2. See the explanation of changes between these
+ *                            two standards in the CVSS v3.1 User Guide for more details.
+ *
+ * 2018-02-15  Darius Wiles   Added a missing pair of parentheses in the Environmental score, specifically
+ *                            in the code setting envScore in the main clause (not the else clause). It was changed
+ *                            from "min (...), 10" to "min ((...), 10)". This correction does not alter any final
+ *                            Environmental scores.
+ *
+ * 2015-08-04  Darius Wiles   Added CVSS.generateXMLFromMetrics and CVSS.generateXMLFromVector functions to return
+ *                            XML string representations of: a set of metric values; or a Vector String respectively.
+ *                            Moved all constants and functions to an object named "CVSS" to
+ *                            reduce the chance of conflicts in global variables when this file is combined with
+ *                            other JavaScript code. This will break all existing code that uses this file until
+ *                            the string "CVSS." is prepended to all references. The "Exploitability" metric has been
+ *                            renamed "Exploit Code Maturity" in the specification, so the same change has been made
+ *                            in the code in this file.
+ *
+ * 2015-04-24  Darius Wiles   Environmental formula modified to eliminate undesirable behavior caused by subtle
+ *                            differences in rounding between Temporal and Environmental formulas that often
+ *                            caused the latter to be 0.1 lower than than the former when all Environmental
+ *                            metrics are "Not defined". Also added a RoundUp1 function to simplify formulas.
+ *
+ * 2015-04-09  Darius Wiles   Added calculateCVSSFromVector function, license information, cleaned up code and improved
+ *                            comments.
+ *
+ * 2014-12-12  Darius Wiles   Initial release for CVSS 3.0 Preview 2.
+ */
+
+// This is modified version of the original CVSS31.js file from FIRST.ORG, INC. to be used as a Vue.js mixin.
+
 
 const Cvss31Mixin = ({
 
@@ -81,13 +163,13 @@ const Cvss31Mixin = ({
             }
         };
         CVSS31.severityRatings = [
-            {name: "none", bottom: 0, top: 0},
-            {name: "low", bottom: 0.1, top: 3.9},
-            {name: "medium", bottom: 4, top: 6.9},
-            {name: "high", bottom: 7, top: 8.9},
-            {name: "critical", bottom: 9, top: 10}
+            { name: "none", bottom: 0, top: 0 },
+            { name: "low", bottom: 0.1, top: 3.9 },
+            { name: "medium", bottom: 4, top: 6.9 },
+            { name: "high", bottom: 7, top: 8.9 },
+            { name: "critical", bottom: 9, top: 10 }
         ];
-        CVSS31.calculateCVSSFromMetrics = function(AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability) {
+        CVSS31.calculateCVSSFromMetrics = function (AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability) {
             var badMetrics = [];
             if (typeof AttackVector === "undefined" || AttackVector === "") {
                 badMetrics.push("AV")
@@ -145,30 +227,30 @@ const Cvss31Mixin = ({
             var MA = ModifiedAvailability || "X";
 
             var remapMetrics = [];
-            ( !CVSS31.Weight.AV.hasOwnProperty(AV) ? badMetrics.push("AV") : remapMetrics.push(AV) );
-            ( !CVSS31.Weight.AC.hasOwnProperty(AC) ? badMetrics.push("AC") : remapMetrics.push(AC) );
-            ( !CVSS31.Weight.PR.U.hasOwnProperty(PR) ? badMetrics.push("PR") : remapMetrics.push(PR) );
-            ( !CVSS31.Weight.UI.hasOwnProperty(UI) ? badMetrics.push("UI") : remapMetrics.push(UI) );
-            ( !CVSS31.Weight.S.hasOwnProperty(S) ? badMetrics.push("S") : remapMetrics.push(S) );
-            ( !CVSS31.Weight.CIA.hasOwnProperty(C) ? badMetrics.push("C") : remapMetrics.push(C) );
-            ( !CVSS31.Weight.CIA.hasOwnProperty(I) ? badMetrics.push("I") : remapMetrics.push(I) );
-            ( !CVSS31.Weight.CIA.hasOwnProperty(A) ? badMetrics.push("A") : remapMetrics.push(A) );
+            (!CVSS31.Weight.AV.hasOwnProperty(AV) ? badMetrics.push("AV") : remapMetrics.push(AV));
+            (!CVSS31.Weight.AC.hasOwnProperty(AC) ? badMetrics.push("AC") : remapMetrics.push(AC));
+            (!CVSS31.Weight.PR.U.hasOwnProperty(PR) ? badMetrics.push("PR") : remapMetrics.push(PR));
+            (!CVSS31.Weight.UI.hasOwnProperty(UI) ? badMetrics.push("UI") : remapMetrics.push(UI));
+            (!CVSS31.Weight.S.hasOwnProperty(S) ? badMetrics.push("S") : remapMetrics.push(S));
+            (!CVSS31.Weight.CIA.hasOwnProperty(C) ? badMetrics.push("C") : remapMetrics.push(C));
+            (!CVSS31.Weight.CIA.hasOwnProperty(I) ? badMetrics.push("I") : remapMetrics.push(I));
+            (!CVSS31.Weight.CIA.hasOwnProperty(A) ? badMetrics.push("A") : remapMetrics.push(A));
 
-            ( !(E === "X" || CVSS31.Weight.E.hasOwnProperty(E)) ? badMetrics.push("E") : remapMetrics.push(E) );
-            ( !(RL === "X" || CVSS31.Weight.RL.hasOwnProperty(RL)) ? badMetrics.push("RL") : remapMetrics.push(RL) );
-            ( !(RC === "X" || CVSS31.Weight.RC.hasOwnProperty(RC)) ? badMetrics.push("RC") : remapMetrics.push(RC) );
+            (!(E === "X" || CVSS31.Weight.E.hasOwnProperty(E)) ? badMetrics.push("E") : remapMetrics.push(E));
+            (!(RL === "X" || CVSS31.Weight.RL.hasOwnProperty(RL)) ? badMetrics.push("RL") : remapMetrics.push(RL));
+            (!(RC === "X" || CVSS31.Weight.RC.hasOwnProperty(RC)) ? badMetrics.push("RC") : remapMetrics.push(RC));
 
-            ( !(CR === "X" || CVSS31.Weight.CIAR.hasOwnProperty(CR)) ? badMetrics.push("CR") : remapMetrics.push(CR) );
-            ( !(IR === "X" || CVSS31.Weight.CIAR.hasOwnProperty(IR)) ? badMetrics.push("IR") : remapMetrics.push(IR) );
-            ( !(AR === "X" || CVSS31.Weight.CIAR.hasOwnProperty(AR)) ? badMetrics.push("AR") : remapMetrics.push(AR) );
-            ( !(MAV === "X" || CVSS31.Weight.AV.hasOwnProperty(MAV)) ? badMetrics.push("MAV") : remapMetrics.push(MAV) );
-            ( !(MAC === "X" || CVSS31.Weight.AC.hasOwnProperty(MAC)) ? badMetrics.push("MAC") : remapMetrics.push(MAC) );
-            ( !(MPR === "X" || CVSS31.Weight.PR.U.hasOwnProperty(MPR)) ? badMetrics.push("MPR") : remapMetrics.push(MPR) );
-            ( !(MUI === "X" || CVSS31.Weight.UI.hasOwnProperty(MUI)) ? badMetrics.push("MUI") : remapMetrics.push(MUI) );
-            ( !(MS === "X" || CVSS31.Weight.S.hasOwnProperty(MS)) ? badMetrics.push("MS") : remapMetrics.push(MS) );
-            ( !(MC === "X" || CVSS31.Weight.CIA.hasOwnProperty(MC)) ? badMetrics.push("MC") : remapMetrics.push(MC) );
-            ( !(MI === "X" || CVSS31.Weight.CIA.hasOwnProperty(MI)) ? badMetrics.push("MI") : remapMetrics.push(MI) );
-            ( !(MA === "X" || CVSS31.Weight.CIA.hasOwnProperty(MA)) ? badMetrics.push("MA") : remapMetrics.push(MA) );
+            (!(CR === "X" || CVSS31.Weight.CIAR.hasOwnProperty(CR)) ? badMetrics.push("CR") : remapMetrics.push(CR));
+            (!(IR === "X" || CVSS31.Weight.CIAR.hasOwnProperty(IR)) ? badMetrics.push("IR") : remapMetrics.push(IR));
+            (!(AR === "X" || CVSS31.Weight.CIAR.hasOwnProperty(AR)) ? badMetrics.push("AR") : remapMetrics.push(AR));
+            (!(MAV === "X" || CVSS31.Weight.AV.hasOwnProperty(MAV)) ? badMetrics.push("MAV") : remapMetrics.push(MAV));
+            (!(MAC === "X" || CVSS31.Weight.AC.hasOwnProperty(MAC)) ? badMetrics.push("MAC") : remapMetrics.push(MAC));
+            (!(MPR === "X" || CVSS31.Weight.PR.U.hasOwnProperty(MPR)) ? badMetrics.push("MPR") : remapMetrics.push(MPR));
+            (!(MUI === "X" || CVSS31.Weight.UI.hasOwnProperty(MUI)) ? badMetrics.push("MUI") : remapMetrics.push(MUI));
+            (!(MS === "X" || CVSS31.Weight.S.hasOwnProperty(MS)) ? badMetrics.push("MS") : remapMetrics.push(MS));
+            (!(MC === "X" || CVSS31.Weight.CIA.hasOwnProperty(MC)) ? badMetrics.push("MC") : remapMetrics.push(MC));
+            (!(MI === "X" || CVSS31.Weight.CIA.hasOwnProperty(MI)) ? badMetrics.push("MI") : remapMetrics.push(MI));
+            (!(MA === "X" || CVSS31.Weight.CIA.hasOwnProperty(MA)) ? badMetrics.push("MA") : remapMetrics.push(MA));
 
             if (!CVSS31.Weight.AV.hasOwnProperty(AV)) {
                 badMetrics.push("AV")
@@ -375,32 +457,32 @@ const Cvss31Mixin = ({
                 environmentalModifiedExploitability: modifiedExploitability,
                 vectorString: vectorString,
                 vectorValues: remapMetrics,
-                all:{
+                all: {
                     base: {
-                            name: "base",
-                            score: baseScore.toFixed(1),
-                            severity: CVSS31.severityRating(baseScore.toFixed(1)),
-                            iss: iss,
-                            impact: impact,
-                            exploitability: exploitability
-                        },
+                        name: "base",
+                        score: baseScore.toFixed(1),
+                        severity: CVSS31.severityRating(baseScore.toFixed(1)),
+                        iss: iss,
+                        impact: impact,
+                        exploitability: exploitability
+                    },
                     temporal: {
-                            name: "temporal",
-                            score: temporalScore.toFixed(1),
-                            severity: CVSS31.severityRating(temporalScore.toFixed(1))
-                        },
+                        name: "temporal",
+                        score: temporalScore.toFixed(1),
+                        severity: CVSS31.severityRating(temporalScore.toFixed(1))
+                    },
                     environmental: {
-                            name:"environmental",
-                            score: envScore.toFixed(1),
-                            severity: CVSS31.severityRating(envScore.toFixed(1)),
-                            miss: miss,
-                            impact: modifiedImpact,
-                            exploitability: modifiedExploitability
-                        }
+                        name: "environmental",
+                        score: envScore.toFixed(1),
+                        severity: CVSS31.severityRating(envScore.toFixed(1)),
+                        miss: miss,
+                        impact: modifiedImpact,
+                        exploitability: modifiedExploitability
+                    }
                 }
             }
         };
-        CVSS31.calculateCVSSFromVector = function(vectorString) {
+        CVSS31.calculateCVSSFromVector = function (vectorString) {
             var metricValues = {
                 AV: undefined,
                 AC: undefined,
@@ -462,7 +544,7 @@ const Cvss31Mixin = ({
                 return (Math.floor(int_input / 10000) + 1) / 10
             }
         };
-        CVSS31.severityRating = function(score) {
+        CVSS31.severityRating = function (score) {
             var severityRatingLength = CVSS31.severityRatings.length;
             var validatedScore = Number(score);
             if (isNaN(validatedScore)) {
@@ -537,7 +619,7 @@ const Cvss31Mixin = ({
                 X: "NOT_DEFINED"
             }
         };
-        CVSS31.generateXMLFromMetrics = function(AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability) {
+        CVSS31.generateXMLFromMetrics = function (AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability) {
             var xmlTemplate = '<?xml version="1.0" encoding="UTF-8"?>\n<cvssv3.1 xmlns="https://www.first.org/cvss/cvss-v3.1.xsd"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="https://www.first.org/cvss/cvss-v3.1.xsd https://www.first.org/cvss/cvss-v3.1.xsd"\n  >\n\n  <base_metrics>\n    <attack-vector>__AttackVector__</attack-vector>\n    <attack-complexity>__AttackComplexity__</attack-complexity>\n    <privileges-required>__PrivilegesRequired__</privileges-required>\n    <user-interaction>__UserInteraction__</user-interaction>\n    <scope>__Scope__</scope>\n    <confidentiality-impact>__Confidentiality__</confidentiality-impact>\n    <integrity-impact>__Integrity__</integrity-impact>\n    <availability-impact>__Availability__</availability-impact>\n    <base-score>__BaseScore__</base-score>\n    <base-severity>__BaseSeverityRating__</base-severity>\n  </base_metrics>\n\n  <temporal_metrics>\n    <exploit-code-maturity>__ExploitCodeMaturity__</exploit-code-maturity>\n    <remediation-level>__RemediationLevel__</remediation-level>\n    <report-confidence>__ReportConfidence__</report-confidence>\n    <temporal-score>__TemporalScore__</temporal-score>\n    <temporal-severity>__TemporalSeverityRating__</temporal-severity>\n  </temporal_metrics>\n\n  <environmental_metrics>\n    <confidentiality-requirement>__ConfidentialityRequirement__</confidentiality-requirement>\n    <integrity-requirement>__IntegrityRequirement__</integrity-requirement>\n    <availability-requirement>__AvailabilityRequirement__</availability-requirement>\n    <modified-attack-vector>__ModifiedAttackVector__</modified-attack-vector>\n    <modified-attack-complexity>__ModifiedAttackComplexity__</modified-attack-complexity>\n    <modified-privileges-required>__ModifiedPrivilegesRequired__</modified-privileges-required>\n    <modified-user-interaction>__ModifiedUserInteraction__</modified-user-interaction>\n    <modified-scope>__ModifiedScope__</modified-scope>\n    <modified-confidentiality-impact>__ModifiedConfidentiality__</modified-confidentiality-impact>\n    <modified-integrity-impact>__ModifiedIntegrity__</modified-integrity-impact>\n    <modified-availability-impact>__ModifiedAvailability__</modified-availability-impact>\n    <environmental-score>__EnvironmentalScore__</environmental-score>\n    <environmental-severity>__EnvironmentalSeverityRating__</environmental-severity>\n  </environmental_metrics>\n\n</cvssv3.1>\n';
             var result = CVSS31.calculateCVSSFromMetrics(AttackVector, AttackComplexity, PrivilegesRequired, UserInteraction, Scope, Confidentiality, Integrity, Availability, ExploitCodeMaturity, RemediationLevel, ReportConfidence, ConfidentialityRequirement, IntegrityRequirement, AvailabilityRequirement, ModifiedAttackVector, ModifiedAttackComplexity, ModifiedPrivilegesRequired, ModifiedUserInteraction, ModifiedScope, ModifiedConfidentiality, ModifiedIntegrity, ModifiedAvailability);
             if (result.success !== true) {
@@ -577,7 +659,7 @@ const Cvss31Mixin = ({
                 xmlString: xmlOutput
             }
         };
-        CVSS31.generateXMLFromVector = function(vectorString) {
+        CVSS31.generateXMLFromVector = function (vectorString) {
             var metricValues = {
                 AV: undefined,
                 AC: undefined,
