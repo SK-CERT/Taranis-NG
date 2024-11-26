@@ -38,7 +38,9 @@ export default {
                 .then(sse => {
                     this.sseConnection = sse
                     sse.onError(() => {
-                        this.reconnectSSE()
+                        if (this.$store.getters.getJWT != '') {
+                            this.reconnectSSE()
+                        }
                     });
                     sse.subscribe('news-items-updated', (data) => {
                         this.$root.$emit('news-items-updated', data)
