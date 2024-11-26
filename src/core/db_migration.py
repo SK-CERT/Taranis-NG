@@ -32,7 +32,3 @@ while True:
 def migrate():
     """Run the database migrations."""
     Migrate(app=app, db=db_manager.db)
-
-
-# if __name__ == "__main__":
-#     app.run()
