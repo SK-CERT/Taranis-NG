@@ -7,10 +7,10 @@ import socket
 import string
 import time
 import click
-import traceback
 
 from os import abort, getenv, read
 from flask import Flask
+from flask.cli import FlaskGroup
 
 from managers import db_manager
 from model import user, role, collector, collectors_node, permission, osint_source, apikey, attribute  # noqa: F401
@@ -18,24 +18,41 @@ from remote.collectors_api import CollectorsApi
 from managers.log_manager import logger
 
 
-app = Flask(__name__)
-app.config.from_object("config.Config")
+def create_app():
+    """Create and configure the Flask application.
 
-db_manager.initialize(app)
+    This function initializes the Flask application, loads the configuration
+    from the 'config.Config' class, and initializes the database manager.
+    It also waits for the database to be ready before returning the app instance.
+    Returns:
+        Flask: The initialized Flask application instance.
+    """
+    app = Flask(__name__)
+    app.config.from_object("config.Config")
+    db_manager.initialize(app)
 
-# wait for the database to be ready
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-while True:
-    try:
-        s.connect((app.config.get("DB_URL"), 5432))
-        s.close()
-        break
-    except socket.error as error:
-        logger.warning(f"Waiting for database: {error}")
-        time.sleep(0.1)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    while True:
+        try:
+            s.connect((app.config.get("DB_URL"), 5432))
+            s.close()
+            break
+        except socket.error as error:
+            logger.warning(f"Waiting for database: {error}")
+            time.sleep(0.1)
+    return app
 
 
-@app.cli.command("account")
+@click.group(cls=FlaskGroup, create_app=create_app)
+def cli():
+    """Command Line Interface (CLI) entry point for the application.
+
+    This function does not implement any functionality.
+    """
+    pass
+
+
+@cli.command()
 @click.option("--list", "-l", "opt_list", is_flag=True)
 @click.option("--create", "-c", "opt_create", is_flag=True)
 @click.option("--edit", "-e", "opt_edit", is_flag=True)
@@ -44,7 +61,7 @@ while True:
 @click.option("--name", "opt_name", default="")
 @click.option("--password", "opt_password")
 @click.option("--roles", "opt_roles")
-def account_management(opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, opt_password, opt_roles):
+def account(opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, opt_password, opt_roles):
     """Manage user accounts.
 
     Args:
@@ -59,7 +76,8 @@ def account_management(opt_list, opt_create, opt_edit, opt_delete, opt_username,
     """
     if opt_list:
         users = user.User.get_all()
-        for us in users:
+        ordered_users = sorted(users, key=lambda x: x.id)
+        for us in ordered_users:
             roles = []
             for r in us.roles:
                 roles.append(r.id)
@@ -85,7 +103,7 @@ def account_management(opt_list, opt_create, opt_edit, opt_delete, opt_username,
                 r = role.Role.find_by_name(ro)
 
             if not r:
-                logger.critical("The specified role '{}' does not exist!".format(ro))
+                logger.critical(f"The specified role '{ro}' does not exist!")
                 abort()
 
             roles.append(r)
@@ -94,7 +112,7 @@ def account_management(opt_list, opt_create, opt_edit, opt_delete, opt_username,
         db_manager.db.session.add(new_user)
         db_manager.db.session.commit()
 
-        print("User '{}' with id {} created.".format(opt_name, new_user.id))
+        print(f"User '{opt_name}' with id {new_user.id} created.")
 
     if opt_edit:
         if not opt_username:
@@ -120,7 +138,7 @@ def account_management(opt_list, opt_create, opt_edit, opt_delete, opt_username,
                     r = role.Role.find_by_name(ro)
 
                 if not r:
-                    logger.critical("The specified role '{}' does not exist!".format(ro))
+                    logger.critical(f"The specified role '{ro}' does not exist!")
                     abort()
 
                 roles.append(r)
@@ -136,10 +154,10 @@ def account_management(opt_list, opt_create, opt_edit, opt_delete, opt_username,
             abort()
 
         user.User.delete(u.id)
-        print("The user '{}' has been deleted.".format(opt_username))
+        print(f"The user '{opt_username}' has been deleted.")
 
 
-@app.cli.command("role")
+@cli.command("role")
 @click.option("--list", "-l", "opt_list", is_flag=True)
 @click.option("--create", "-c", "opt_create", is_flag=True)
 @click.option("--edit", "-e", "opt_edit", is_flag=True)
@@ -174,7 +192,7 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
             perms = []
             for p in ro.permissions:
                 perms.append(p.id)
-            print("Id: {}\n\tName: {}\n\tDescription: {}\n\tPermissions: {}".format(ro.id, ro.name, ro.description, perms))
+            print(f"Id: {ro.id}\n\tName: {ro.name}\n\tDescription: {ro.description}\n\tPermissions: {perms}")
         exit()
 
     if opt_create:
@@ -189,7 +207,7 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
             p = permission.Permission.find(pe)
 
             if not p:
-                logger.critical("The specified permission '{}' does not exist!".format(pe))
+                logger.critical(f"The specified permission '{pe}' does not exist!")
                 abort()
 
             perms.append(p)
@@ -198,7 +216,7 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
         db_manager.db.session.add(new_role)
         db_manager.db.session.commit()
 
-        print("Role '{}' with id {} created.".format(opt_name, new_role.id))
+        print(f"Role '{opt_name}' with id {new_role.id} created.")
 
     if opt_edit:
         if not opt_id or not opt_name:
@@ -214,7 +232,7 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
             abort()
 
 
-@app.cli.command("collector")
+@cli.command("collector")
 @click.option("--list", "-l", "opt_list", is_flag=True)
 @click.option("--create", "-c", "opt_create", is_flag=True)
 @click.option("--edit", "-e", "opt_edit", is_flag=True)
@@ -266,18 +284,14 @@ def collector_management(
             for c in node.collectors:
                 capabilities.append(c.type)
                 for s in c.sources:
-                    sources.append("{} ({})".format(s.name, s.id))
+                    sources.append(f"{s.name} ({s.id})")
+            if opt_show_api_key:
+                api_key_str = f"API key: {node.api_key}\n\t"
+            else:
+                api_key_str = ""
             print(
-                "Id: {}\n\tName: {}\n\tURL: {}\n\t{}Created: {}\n\tLast seen: {}\n\tCapabilities: {}\n\tSources: {}".format(
-                    node.id,
-                    node.name,
-                    node.api_url,
-                    "API key: {}\n\t".format(node.api_key) if opt_show_api_key else "",
-                    node.created,
-                    node.last_seen,
-                    capabilities,
-                    sources,
-                )
+                f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
+                f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}"
             )
         exit()
 
@@ -307,18 +321,18 @@ def collector_management(
                 status_code = 0
                 time.sleep(1)
             retries += 1
-            print("Retrying [{}/{}]...".format(retries, max_retries))
+            print(f"Retrying [{retries}/{max_retries}]...")
 
         if status_code != 200:
             print("Cannot create a new collector node!")
-            print("Response from collector: {}".format(collectors_info))
+            print(f"Response from collector: {collectors_info}")
             abort()
 
         collectors = collector.Collector.create_all(collectors_info)
         node = collectors_node.CollectorsNode.add_new(data, collectors)
         collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info(node.id)
 
-        print("Collector node '{}' with id {} created.".format(opt_name, node.id))
+        print(f"Collector node '{opt_name}' with id {node.id} created.")
 
     if opt_edit:
         if not opt_id or not opt_name:
@@ -360,15 +374,16 @@ def collector_management(
             # refresh collector node id
             collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
             if status_code == 200:
-                print("Collector node {} updated.".format(node.id))
+                print(f"Collector node {node.id} updated.")
             else:
-                print("Unable to update collector node {}.\n\tResponse: [{}] {}.".format(node.id, status_code, collectors_info))
+                print(f"Unable to update collector node {node.id}.\n\tResponse: [{status_code}] {collectors_info}.")
 
 
-@app.cli.command("dictionary")
-@click.option("--upload-cve", is_flag=True)
-@click.option("--upload-cpe", is_flag=True)
-def dictionary_management(upload_cve, upload_cpe):
+@cli.command("dictionary")
+@click.option("--upload-cve", "opt_cve", is_flag=True)
+@click.option("--upload-cpe", "opt_cpe", is_flag=True)
+@click.option("--upload-cwe", "opt_cwe", is_flag=True)
+def dictionary_management(opt_cve, opt_cpe, opt_cwe):
     """Manage the dictionaries by uploading and loading CVE and CPE files.
 
     This function uploads the CVE and CPE files and loads the dictionaries accordingly.
@@ -379,7 +394,7 @@ def dictionary_management(upload_cve, upload_cpe):
         upload_cve (bool): Indicates whether to upload the CVE file and load the CVE dictionary.
         upload_cpe (bool): Indicates whether to upload the CPE file and load the CPE dictionary.
     """
-    if upload_cve:
+    if opt_cve:
         cve_update_file = getenv("CVE_UPDATE_FILE")
         if cve_update_file is None:
             logger.critical("CVE_UPDATE_FILE is undefined")
@@ -389,11 +404,10 @@ def dictionary_management(upload_cve, upload_cpe):
         try:
             attribute.Attribute.load_dictionaries("cve")
         except Exception:
-            logger.debug(traceback.format_exc())
-            logger.critical("File structure was not recognized!")
+            logger.exception("File structure was not recognized!")
             abort()
 
-    if upload_cpe:
+    if opt_cpe:
         cpe_update_file = getenv("CPE_UPDATE_FILE")
         if cpe_update_file is None:
             logger.critical("CPE_UPDATE_FILE is undefined")
@@ -403,11 +417,23 @@ def dictionary_management(upload_cve, upload_cpe):
         try:
             attribute.Attribute.load_dictionaries("cpe")
         except Exception:
-            logger.debug(traceback.format_exc())
-            logger.critical("File structure was not recognized!")
+            logger.exception("File structure was not recognized!")
             abort()
 
-    app.logger.error("Dictionary was uploaded.")
+    if opt_cwe:
+        cwe_update_file = getenv("CWE_UPDATE_FILE")
+        if cwe_update_file is None:
+            logger.critical("CWE_UPDATE_FILE is undefined")
+            abort()
+
+        upload_to(cwe_update_file)
+        try:
+            attribute.Attribute.load_dictionaries("cwe")
+        except Exception:
+            logger.exception("File structure was not recognized!")
+            abort()
+
+    logger.info("Dictionary was uploaded.")
     exit()
 
 
@@ -425,12 +451,11 @@ def upload_to(filename):
                     break
                 out_file.write(chunk)
     except Exception:
-        logger.debug(traceback.format_exc())
-        logger.critical("Upload failed!")
+        logger.exception("Upload failed!")
         abort()
 
 
-@app.cli.command("apikey")
+@cli.command("apikey")
 @click.option("--list", "-l", "opt_list", is_flag=True)
 @click.option("--create", "-c", "opt_create", is_flag=True)
 @click.option("--delete", "-d", "opt_delete", is_flag=True)
@@ -454,9 +479,8 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
         apikeys = apikey.ApiKey.get_all()
         for k in apikeys:
             print(
-                "Id: {}\n\tName: {}\n\tKey: {}\n\tCreated: {}\n\tUser id: {}\n\tExpires: {}".format(
-                    k.id, k.name, k.key, k.created_at, k.user_id, k.expires_at
-                )
+                f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key}\n\tCreated: {k.created_at}\n\tUser id: {k.user_id}\n\t"
+                f"Expires: {k.expires_at}"
             )
         exit()
 
@@ -477,7 +501,7 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
         if opt_user:
             u = user.User.find(opt_user)
             if not u:
-                logger.critical("The specified user '{}' does not exist!".format(opt_user))
+                logger.critical(f"The specified user '{opt_user}' does not exist!")
                 abort()
 
         data = {
@@ -489,7 +513,7 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
         }
 
         k = apikey.ApiKey.add_new(data)
-        print("ApiKey '{}' with id {} created.".format(opt_name, k.id))
+        print(f"ApiKey '{opt_name}' with id {k.id} created.")
 
     if opt_delete:
         if not opt_name:
@@ -502,4 +526,8 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
             abort()
 
         apikey.ApiKey.delete(k.id)
-        print("ApiKey '{}' has been deleted.".format(opt_name))
+        print(f"ApiKey '{opt_name}' has been deleted.")
+
+
+if __name__ == "__main__":
+    cli()

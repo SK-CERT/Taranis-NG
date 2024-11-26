@@ -37,7 +37,7 @@ def reportStatus():
 
 def initialize():
     """Initialize the collectors."""
-    logger.info(f"Initializing collector...")
+    logger.info("Initializing collector...")
 
     # inform core that this collector node is alive
     status_report_thread = threading.Thread(target=reportStatus)
@@ -53,7 +53,7 @@ def initialize():
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
 
-    logger.info(f"Collector initialized.")
+    logger.info("Collector initialized.")
 
 
 def register_collector(collector):
