@@ -29,7 +29,6 @@ from publishers.twitter_publisher import TWITTERPublisher
 from publishers.wordpress_publisher import WORDPRESSPublisher
 from publishers.misp_publisher import MISPPublisher
 from shared.schema.publisher import PublisherInputSchema
-from managers.log_manager import logger
 
 publishers = {}
 
@@ -47,7 +46,7 @@ def initialize():
 def register_publisher(publisher):
     """Register a publisher.
 
-    Parameters:
+    Arguments:
         publisher: The publisher object to register.
     """
     publishers[publisher.type] = publisher
@@ -62,7 +61,6 @@ def get_registered_publishers_info():
     publishers_info = []
     for key in publishers:
         publishers_info.append(publishers[key].get_info())
-    logger.critical(publishers_info)
 
     return publishers_info
 
@@ -70,7 +68,7 @@ def get_registered_publishers_info():
 def publish(publisher_input_json):
     """Publish the given input using the appropriate publisher.
 
-    Parameters:
+    Arguments:
         publisher_input_json: The JSON input for the publisher.
 
     Raises:

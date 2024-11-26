@@ -1,32 +1,25 @@
-alembic==1.13.3
-eventlet==0.37.0
+alembic==1.14.0
 Flask==3.1.0
 Flask-Cors==5.0.0
-Flask-JWT-Extended==4.7.0
-Flask-Migrate==2.5.2
-# flask-oidc==2.2.0
-git+https://github.com/puiterwijk/flask-oidc.git@b10e6bf881a3fe0c3972e4093648f2b77f32a97c
+Flask-JWT-Extended==4.7.1
+Flask-Migrate==2.5.2 #  4.0.7
+flask-oidc==2.2.2
+# git+https://github.com/puiterwijk/flask-oidc.git@b10e6bf881a3fe0c3972e4093648f2b77f32a97c
 Flask-RESTful==0.3.10
-Flask-SQLAlchemy==3.0.0
-Flask-SSE==1.0.0
-gevent==24.10.3
+Flask-SQLAlchemy==3.0.5 # 3.1.2
+gevent==24.11.1
 gunicorn==23.0.0
-#flask 1 requires jinja < 3, solved by newer flask - newest version
 Jinja2==3.1.4
 ldap3==2.9.1
-# needs old jinja2, solved by newer flask - remove
-# markupsafe==2.0.1
-marshmallow==3.23.0
-#psycogreen==1.0.2
-#psycopg==3.2.3
-psycopg2==2.9.10
-pycryptodomex==3.21.0 # remove and use
-PyJWT==2.9.0
+marshmallow==3.23.1
+psycopg2==2.9.10 #psycopg==3.2.3
+pycryptodomex==3.21.0
+PyJWT==2.10.0
 python-dotenv==1.0.1
-python-keycloak==4.6.3
+python-keycloak==4.7.2
 requests==2.32.3
 schedule==1.2.2
 sseclient-py==1.8.0
-soupsieve==1.9.5
-SQLAlchemy==1.4.54
+# soupsieve==1.9.5 # 2.6.0
+SQLAlchemy==1.4.54 # 2.0.36
 Werkzeug==3.1.3

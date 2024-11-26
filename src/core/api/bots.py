@@ -20,8 +20,8 @@ class BotPresetsForBots(Resource):
             (dict): The new bot preset
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("api_key")
-        parser.add_argument("bot_type")
+        parser.add_argument("api_key", location="args")
+        parser.add_argument("bot_type", location="args")
         parameters = parser.parse_args()
         return bot_preset.BotPreset.get_all_for_bot_json(parameters)
 

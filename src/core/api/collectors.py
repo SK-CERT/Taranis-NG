@@ -23,8 +23,8 @@ class OSINTSourcesForCollectors(Resource):
             (dict): All OSINT sources for a collector
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("api_key")
-        parser.add_argument("collector_type")
+        parser.add_argument("api_key", location="args")
+        parser.add_argument("collector_type", location="args")
         parameters = parser.parse_args()
 
         node = collectors_node.CollectorsNode.get_by_id(collector_id)

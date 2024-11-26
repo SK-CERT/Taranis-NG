@@ -310,12 +310,11 @@ def get_perm_from_jwt_token(user):
     try:
         # does it include permissions?
         jwt_data = get_jwt()
-        claims = jwt_data["user_claims"]
-        if not claims or "permissions" not in claims:
+        if not jwt_data or "permissions" not in jwt_data:
             log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT")
             return None
 
-        all_users_perms = set(claims["permissions"])
+        all_users_perms = set(jwt_data["permissions"])
         return all_users_perms
     except Exception as ex:
         log_manager.store_auth_error_activity(f"Get permission from JWT error: {str(ex)}")
@@ -331,7 +330,6 @@ def auth_required(required_permissions, *acl_args):
 
     Returns:
         The decorated function.
-
     """
 
     def auth_required_wrap(fn):
@@ -365,8 +363,8 @@ def auth_required(required_permissions, *acl_args):
                 log_manager.store_user_auth_error_activity(user, f"Access denied by ACL for user: {user.username}")
                 return error
 
-            # allow
-            log_manager.store_user_activity(user, str(required_permissions_set), str(request.json))
+            # allow  check here
+            log_manager.store_user_activity(user, str(required_permissions_set), str(request.get_json(force=True, silent=True)))
             return fn(*args, **kwargs)
 
         return wrapper
@@ -377,7 +375,7 @@ def auth_required(required_permissions, *acl_args):
 def api_key_required(fn):
     """Enforce API key authentication.
 
-    Args:
+    Arguments:
         fn (function): The function to be decorated.
 
     Returns:
