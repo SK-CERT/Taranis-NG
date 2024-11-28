@@ -848,11 +848,11 @@ class WebCollector(BaseCollector):
             for unwanted in ["Published", "Updated"]:
                 published_str = re.sub(re.escape(unwanted), "", published_str, flags=re.IGNORECASE)
             published_str = published_str.strip()
-        else:
-            published_str = "today"
-        print(f"PUBLISHED: {published_str}")
         published = dateparser.parse(published_str, settings={"DATE_ORDER": "DMY"})
-        published_str = published.strftime("%d.%m.%Y - %H:%M")
+        if published:
+            published_str = published.strftime("%d.%m.%Y - %H:%M")
+        else:
+            datetime.datetime.now().strftime("%d.%m.%Y - %H:%M")
 
         link = current_url
 
