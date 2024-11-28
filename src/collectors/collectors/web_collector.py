@@ -844,10 +844,15 @@ class WebCollector(BaseCollector):
             article_description = self.__smart_truncate(article_full_text)
 
         published_str = self.__find_element_text_by(browser, self.selectors["published"])
-        if not published_str:
+        if published_str:
+            for unwanted in ["Published", "Updated"]:
+                published_str = re.sub(re.escape(unwanted), "", published_str, flags=re.IGNORECASE)
+            published_str = published_str.strip()
+        else:
             published_str = "today"
+        print(f"PUBLISHED: {published_str}")
         published = dateparser.parse(published_str, settings={"DATE_ORDER": "DMY"})
-        published_str = published.strftime("%Y-%m-%d %H:%M")  # remove microseconds/seconds from the screen, looks ugly
+        published_str = published.strftime("%d.%m.%Y - %H:%M")
 
         link = current_url
 
