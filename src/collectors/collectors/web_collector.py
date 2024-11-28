@@ -852,7 +852,7 @@ class WebCollector(BaseCollector):
         if published:
             published_str = published.strftime("%d.%m.%Y - %H:%M")
         else:
-            datetime.datetime.now().strftime("%d.%m.%Y - %H:%M")
+            published_str = datetime.datetime.now().strftime("%d.%m.%Y - %H:%M")
 
         link = current_url
 
