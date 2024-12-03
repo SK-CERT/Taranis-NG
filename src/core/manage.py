@@ -3,7 +3,6 @@
 """Module for managing the application from the command line."""
 
 import random
-import socket
 import string
 import time
 import click
@@ -30,16 +29,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object("config.Config")
     db_manager.initialize(app)
+    db_manager.wait_for_db(app)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    while True:
-        try:
-            s.connect((app.config.get("DB_URL"), 5432))
-            s.close()
-            break
-        except socket.error as error:
-            logger.warning(f"Waiting for database: {error}")
-            time.sleep(0.1)
     return app
 
 
@@ -293,6 +284,7 @@ def collector_management(
                 f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
                 f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}"
             )
+        print(f"Total: {len(collector_nodes)}")
         exit()
 
     if opt_create:
@@ -311,17 +303,18 @@ def collector_management(
         }
 
         print("Trying to contact a new collector node...")
-        retries, max_retries = 0, 30
-        while retries < max_retries:
+        attempt, retries, delay = 0, 5, 1
+        while attempt < retries:
             try:
                 collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info("")
                 break
             except:  # noqa: E722
+                attempt += 1
                 collectors_info = "Collector unavailable"
                 status_code = 0
-                time.sleep(1)
-            retries += 1
-            print(f"Retrying [{retries}/{max_retries}]...")
+                time.sleep(delay)
+                delay *= 2
+            print(f"Attempt [{attempt}/{retries}]...")
 
         if status_code != 200:
             print("Cannot create a new collector node!")
