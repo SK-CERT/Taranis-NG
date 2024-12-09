@@ -6,10 +6,10 @@ from shared.schema.parameter import ParameterType
 
 
 class ConfigBot(ConfigBase):
-    """XXX_2069."""
+    """Definition for bot modules."""
 
     def add_default(self) -> List[param_type]:
-        """XXX_2069."""
+        """Add default parameters."""
         return [
             param_type(
                 "REFRESH_INTERVAL",
@@ -21,7 +21,7 @@ class ConfigBot(ConfigBase):
         ]
 
     def __init__(self):
-        """XXX_2069."""
+        """Initialize bot modules."""
         self.modules: List[module_type] = []
 
         mod = module_type("ANALYST_BOT", "Analyst Bot", "Bot for news items analysis")

@@ -6,10 +6,10 @@ from shared.schema.parameter import ParameterType
 
 
 class ConfigPresenter(ConfigBase):
-    """XXX_2069."""
+    """Configuration for presenter modules."""
 
     def __init__(self):
-        """XXX_2069."""
+        """Initialize presenter modules."""
         self.modules: List[module_type] = []
 
         mod = module_type("HTML_PRESENTER", "HTML Presenter", "Presenter for generating html documents")

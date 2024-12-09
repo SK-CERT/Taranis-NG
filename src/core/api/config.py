@@ -47,7 +47,7 @@ class DictionariesReload(Resource):
     def get(self, dictionary_type):
         """Reload dictionaries.
 
-        Parameters:
+        Args:
             dictionary_type (str): The dictionary type
         Returns:
             (str, int): The result of the reload
@@ -93,7 +93,7 @@ class Attribute(Resource):
     def put(self, attribute_id):
         """Update an attribute.
 
-        Parameters:
+        Args:
             attribute_id (int): The attribute ID
         Returns:
             (str, int): The result of the update
@@ -109,7 +109,7 @@ class Attribute(Resource):
     def delete(self, attribute_id):
         """Delete an attribute.
 
-        Parameters:
+        Args:
             attribute_id (int): The attribute ID
         Returns:
             (str, int): The result of the delete
@@ -129,7 +129,7 @@ class AttributeEnums(Resource):
     def get(self, attribute_id):
         """Get all attribute enums.
 
-        Parameters:
+        Args:
             attribute_id (int): The attribute ID
         Returns:
             (dict): The attribute enums
@@ -149,7 +149,7 @@ class AttributeEnums(Resource):
     def post(self, attribute_id):
         """Create an attribute enum.
 
-        Parameters:
+        Args:
             attribute_id (int): The attribute ID
         Returns:
             (str, int): The result of the create
@@ -169,7 +169,7 @@ class AttributeEnum(Resource):
     def put(self, attribute_id, enum_id):
         """Update an attribute enum.
 
-        Parameters:
+        Args:
             attribute_id (int): The attribute ID
             enum_id (int): The enum ID
         Returns:
@@ -186,7 +186,7 @@ class AttributeEnum(Resource):
     def delete(self, attribute_id, enum_id):
         """Delete an attribute enum.
 
-        Parameters:
+        Args:
             attribute_id (int): The attribute ID
             enum_id (int): The enum ID
         Returns:
@@ -237,7 +237,7 @@ class ReportItemType(Resource):
     def put(self, type_id):
         """Update a report item type.
 
-        Parameters:
+        Args:
             type_id (int): The report item type ID
         Returns:
             (str, int): The result of the update
@@ -253,7 +253,7 @@ class ReportItemType(Resource):
     def delete(self, type_id):
         """Delete a report item type.
 
-        Parameters:
+        Args:
             type_id (int): The report item type ID
         Returns:
             (str, int): The result of the delete
@@ -303,7 +303,7 @@ class ProductType(Resource):
     def put(self, type_id):
         """Update a product type.
 
-        Parameters:
+        Args:
             type_id (int): The product type ID
         Returns:
             (str, int): The result of the update
@@ -319,7 +319,7 @@ class ProductType(Resource):
     def delete(self, type_id):
         """Delete a product type.
 
-        Parameters:
+        Args:
             type_id (int): The product type ID
         Returns:
             (str, int): The result of the delete
@@ -400,7 +400,7 @@ class Role(Resource):
     def put(self, role_id):
         """Update a role.
 
-        Parameters:
+        Args:
             role_id (int): The role ID
         Returns:
             (str, int): The result of the update
@@ -416,7 +416,7 @@ class Role(Resource):
     def delete(self, role_id):
         """Delete a role.
 
-        Parameters:
+        Args:
             role_id (int): The role ID
         Returns:
             (str, int): The result of the delete
@@ -466,7 +466,7 @@ class ACLEntry(Resource):
     def put(self, acl_id):
         """Update an ACL entry.
 
-        Parameters:
+        Args:
             acl_id (int): The ACL entry ID
         Returns:
             (str, int): The result of the update
@@ -482,7 +482,7 @@ class ACLEntry(Resource):
     def delete(self, acl_id):
         """Delete an ACL entry.
 
-        Parameters:
+        Args:
             acl_id (int): The ACL entry ID
         Returns:
             (str, int): The result of the delete
@@ -532,7 +532,7 @@ class Organization(Resource):
     def put(self, organization_id):
         """Update an organization.
 
-        Parameters:
+        Args:
             organization_id (int): The organization ID
         Returns:
             (str, int): The result of the update
@@ -548,7 +548,7 @@ class Organization(Resource):
     def delete(self, organization_id):
         """Delete an organization.
 
-        Parameters:
+        Args:
             organization_id (int): The organization ID
         Returns:
             (str, int): The result of the delete
@@ -600,7 +600,7 @@ class User(Resource):
     def put(self, user_id):
         """Update a user.
 
-        Parameters:
+        Args:
             user_id (int): The user ID
         Returns:
             (str, int): The result of the update
@@ -621,7 +621,7 @@ class User(Resource):
     def delete(self, user_id):
         """Delete a user.
 
-        Parameters:
+        Args:
             user_id (int): The user ID
         Returns:
             (str, int): The result of the delete
@@ -677,7 +677,7 @@ class ExternalUser(Resource):
     def put(self, user_id):
         """Update an external user.
 
-        Parameters:
+        Args:
             user_id (int): The user ID
         Returns:
             (str, int): The result of the update
@@ -694,7 +694,7 @@ class ExternalUser(Resource):
     def delete(self, user_id):
         """Delete an external user.
 
-        Parameters:
+        Args:
             user_id (int): The user ID
         Returns:
             (str, int): The result of the delete
@@ -744,7 +744,7 @@ class WordList(Resource):
     def delete(self, word_list_id):
         """Delete a word list.
 
-        Parameters:
+        Args:
             word_list_id (int): The word list ID
         Returns:
             (str, int): The result of the delete
@@ -760,7 +760,7 @@ class WordList(Resource):
     def put(self, word_list_id):
         """Update a word list.
 
-        Parameters:
+        Args:
             word_list_id (int): The word list ID
         Returns:
             (str, int): The result of the update
@@ -810,7 +810,7 @@ class CollectorsNode(Resource):
     def put(self, node_id):
         """Update a collectors node.
 
-        Parameters:
+        Args:
             node_id (int): The collectors node ID
         Returns:
             (str, int): The result of the update
@@ -826,7 +826,7 @@ class CollectorsNode(Resource):
     def delete(self, node_id):
         """Delete a collectors node.
 
-        Parameters:
+        Args:
             node_id (int): The collectors node ID
         Returns:
             (str, int): The result of the delete
@@ -876,7 +876,7 @@ class OSINTSource(Resource):
     def put(self, source_id):
         """Update an OSINT source.
 
-        Parameters:
+        Args:
             source_id (int): The OSINT source ID
         Returns:
             (str, int): The result of the update
@@ -894,7 +894,7 @@ class OSINTSource(Resource):
     def delete(self, source_id):
         """Delete an OSINT source.
 
-        Parameters:
+        Args:
             source_id (int): The OSINT source ID
         Returns:
             (str, int): The result of the delete
@@ -986,7 +986,7 @@ class OSINTSourceGroup(Resource):
     def put(self, group_id):
         """Update an OSINT source group.
 
-        Parameters:
+        Args:
             group_id (int): The OSINT source group ID
         Returns:
             (str, int): The result of the update
@@ -1007,7 +1007,7 @@ class OSINTSourceGroup(Resource):
     def delete(self, group_id):
         """Delete an OSINT source group.
 
-        Parameters:
+        Args:
             group_id (int): The OSINT source group ID
         Returns:
             (str, int): The result of the delete
@@ -1057,7 +1057,7 @@ class RemoteAccess(Resource):
     def put(self, remote_access_id):
         """Update a remote access.
 
-        Parameters:
+        Args:
             remote_access_id (int): The remote access ID
         Returns:
             (str, int): The result of the update
@@ -1075,7 +1075,7 @@ class RemoteAccess(Resource):
     def delete(self, remote_access_id):
         """Delete a remote access.
 
-        Parameters:
+        Args:
             remote_access_id (int): The remote access ID
         Returns:
             (str, int): The result of the delete
@@ -1125,7 +1125,7 @@ class RemoteNode(Resource):
     def put(self, remote_node_id):
         """Update a remote node.
 
-        Parameters:
+        Args:
             remote_node_id (int): The remote node ID
         Returns:
             (str, int): The result of the update
@@ -1142,7 +1142,7 @@ class RemoteNode(Resource):
     def delete(self, remote_node_id):
         """Delete a remote node.
 
-        Parameters:
+        Args:
             remote_node_id (int): The remote node ID
         Returns:
             (str, int): The result of the delete
@@ -1163,7 +1163,7 @@ class RemoteNodeConnect(Resource):
     def get(self, remote_node_id):
         """Connect to a remote node.
 
-        Parameters:
+        Args:
             remote_node_id (int): The remote node ID
         Returns:
             (str, int): The result of the connect
@@ -1213,7 +1213,7 @@ class PresentersNode(Resource):
     def put(self, node_id):
         """Update a presenters node.
 
-        Parameters:
+        Args:
             node_id (int): The presenters node ID
         Returns:
             (str, int): The result of the update
@@ -1229,7 +1229,7 @@ class PresentersNode(Resource):
     def delete(self, node_id):
         """Delete a presenters node.
 
-        Parameters:
+        Args:
             node_id (int): The presenters node ID
         Returns:
             (str, int): The result of the delete
@@ -1279,7 +1279,7 @@ class PublishersNode(Resource):
     def put(self, node_id):
         """Update a publisher node.
 
-        Parameters:
+        Args:
             node_id (int): The publisher node ID
         Returns:
             (str, int): The result of the update
@@ -1295,7 +1295,7 @@ class PublishersNode(Resource):
     def delete(self, node_id):
         """Delete a publisher node.
 
-        Parameters:
+        Args:
             node_id (int): The publisher node ID
         Returns:
             (str, int): The result of the delete
@@ -1345,7 +1345,7 @@ class PublisherPreset(Resource):
     def put(self, preset_id):
         """Update a publisher preset.
 
-        Parameters:
+        Args:
             preset_id (int): The publisher preset ID
         Returns:
             (str, int): The result of the update
@@ -1361,7 +1361,7 @@ class PublisherPreset(Resource):
     def delete(self, preset_id):
         """Delete a publisher preset.
 
-        Parameters:
+        Args:
             preset_id (int): The publisher preset ID
         Returns:
             (str, int): The result of the delete
@@ -1411,7 +1411,7 @@ class BotsNode(Resource):
     def put(self, node_id):
         """Update a bot node.
 
-        Parameters:
+        Args:
             node_id (int): The bot node ID
         Returns:
             (str, int): The result of the update
@@ -1427,7 +1427,7 @@ class BotsNode(Resource):
     def delete(self, node_id):
         """Delete a bot node.
 
-        Parameters:
+        Args:
             node_id (int): The bot node ID
         Returns:
             (str, int): The result of the delete
@@ -1477,7 +1477,7 @@ class BotPreset(Resource):
     def put(self, preset_id):
         """Update a bot preset.
 
-        Parameters:
+        Args:
             preset_id (int): The bot preset ID
         Returns:
             (str, int): The result of the update
@@ -1493,7 +1493,7 @@ class BotPreset(Resource):
     def delete(self, preset_id):
         """Delete a bot preset.
 
-        Parameters:
+        Args:
             preset_id (int): The bot preset ID
         Returns:
             (str, int): The result of the delete
@@ -1509,7 +1509,7 @@ class BotPreset(Resource):
 def initialize(api):
     """Initialize the API.
 
-    Parameters:
+    Args:
         api (Flask): The Flask application
     """
     api.add_resource(DictionariesReload, "/api/v1/config/reload-enum-dictionaries/<string:dictionary_type>")

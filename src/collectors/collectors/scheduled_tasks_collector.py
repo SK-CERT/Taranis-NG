@@ -14,7 +14,15 @@ from shared.schema.news_item import NewsItemData
 
 
 class ScheduledTasksCollector(BaseCollector):
-    """XXX_2069."""
+    """ScheduledTasksCollector is a class that collects data from scheduled tasks.
+
+    Attributes:
+        type (str): The type of the collector.
+        config (Config): Configuration object for the collector.
+        name (str): Name of the collector.
+        description (str): Description of the collector.
+        parameters (dict): Parameters for the collector.
+    """
 
     type = "SCHEDULED_TASKS_COLLECTOR"
     config = ConfigCollector().get_config_by_type(type)
@@ -26,8 +34,10 @@ class ScheduledTasksCollector(BaseCollector):
     def collect(self, source):
         """Collect data from scheduled tasks.
 
-        Arguments:
-            source -- Source object.
+        Args:
+            source (Source): The source object containing the parameters for the collection.
+        Raises:
+            Exception: If the collection fails for any reason.
         """
         news_items = []
         head, tail = os.path.split(source.parameter_values["TASK_COMMAND"])

@@ -30,7 +30,7 @@ class NewAssetCpeSchema(AssetCpeSchema):
     def make(self, data, **kwargs):
         """Use decorator to create an instance of the AssetCpe class from the provided data.
 
-        Parameters:
+        Args:
             data: A dictionary containing the data to initialize the AssetCpe instance.
 
         Returns:
@@ -46,9 +46,6 @@ class AssetCpe(db.Model):
         id (int): The unique identifier of the AssetCpe.
         value (str): The value of the AssetCpe.
         asset_id (int): The foreign key referencing the associated Asset object.
-
-    Methods:
-        __init__(value): Initializes a new instance of the AssetCpe class.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -58,7 +55,7 @@ class AssetCpe(db.Model):
     def __init__(self, value):
         """Initialize a new instance of the Asset class.
 
-        Parameters:
+        Args:
             value: The value of the asset.
         """
         self.id = None
@@ -70,9 +67,6 @@ class NewAssetSchema(AssetSchema):
 
     Attributes:
         asset_cpes (List[NewAssetCpeSchema]): A list of nested schemas for asset CPES.
-
-    Methods:
-        make(data, **kwargs): Post-load method that creates an Asset instance from the given data.
     """
 
     asset_cpes = fields.Nested(NewAssetCpeSchema, many=True)
@@ -81,7 +75,7 @@ class NewAssetSchema(AssetSchema):
     def make(self, data, **kwargs):
         """Post-load method that creates an Asset instance from the given data.
 
-        Parameters:
+        Args:
             data (dict): The data to create the Asset instance from.
             **kwargs: Additional keyword arguments.
 
@@ -104,21 +98,6 @@ class Asset(db.Model):
         asset_cpes (list[AssetCpe]): The list of asset CPEs associated with the asset.
         vulnerabilities (list[AssetVulnerability]): The list of vulnerabilities associated with the asset.
         vulnerabilities_count (int): The count of vulnerabilities associated with the asset.
-
-    Methods:
-        __init__(self, id, name, serial, description, asset_group_id, asset_cpes): Initializes a new instance of the Asset class.
-        reconstruct(self): Reconstructs the asset object after it is loaded from the database.
-        get_by_cpe(cls, cpes): Retrieves a list of assets based on the given CPEs.
-        remove_vulnerability(cls, report_item_id): Removes a vulnerability associated with the asset.
-        add_vulnerability(self, report_item): Adds a vulnerability to the asset.
-        update_vulnerabilities(self): Updates the vulnerabilities associated with the asset.
-        solve_vulnerability(cls, user, group_id, asset_id, report_item_id, solved): Solves or unsolves a vulnerability associated with the
-        asset.
-        get(cls, group_id, search, sort, vulnerable): Retrieves a list of assets based on the given criteria.
-        get_all_json(cls, user, group_id, search, sort, vulnerable): Retrieves a list of assets in JSON format based on the given criteria.
-        add(cls, user, group_id, data): Adds a new asset to the system.
-        update(cls, user, group_id, asset_id, data): Updates an existing asset in the system.
-        delete(cls, user, group_id, id): Deletes an asset from the system.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -135,7 +114,7 @@ class Asset(db.Model):
     def __init__(self, id, name, serial, description, asset_group_id, asset_cpes):
         """Initialize a new instance of the Asset class.
 
-        Parameters:
+        Args:
             id (int): The ID of the asset.
             name (str): The name of the asset.
             serial (str): The serial number of the asset.
@@ -157,7 +136,7 @@ class Asset(db.Model):
     def reconstruct(self):
         """Use decorator to create an instance of the AssetCpe class from the provided data.
 
-        Parameters:
+        Args:
             data: A dictionary containing the data to initialize the AssetCpe instance.
 
         Returns:
@@ -171,7 +150,7 @@ class Asset(db.Model):
     def get_by_cpe(cls, cpes):
         """Get assets by Common Platform Enumeration (CPE).
 
-        Parameters:
+        Args:
             cpes: A list of CPE values.
 
         Returns:
@@ -199,7 +178,7 @@ class Asset(db.Model):
     def remove_vulnerability(cls, report_item_id):
         """Remove a vulnerability from the asset.
 
-        Parameters:
+        Args:
             report_item_id: The ID of the report item associated with the vulnerability.
         """
         vulnerabilities = AssetVulnerability.get_by_report(report_item_id)
@@ -210,7 +189,7 @@ class Asset(db.Model):
     def add_vulnerability(self, report_item):
         """Add a vulnerability to the asset.
 
-        Parameters:
+        Args:
             report_item: The report item representing the vulnerability.
         """
         for vulnerability in self.vulnerabilities:
@@ -248,7 +227,7 @@ class Asset(db.Model):
     def solve_vulnerability(cls, user, group_id, asset_id, report_item_id, solved):
         """Solves a vulnerability for a specific asset.
 
-        Parameters:
+        Args:
             user (User): The user performing the action.
             group_id (int): The ID of the asset group.
             asset_id (int): The ID of the asset.
@@ -272,7 +251,7 @@ class Asset(db.Model):
     def get(cls, group_id, search, sort, vulnerable):
         """Retrieve assets based on the provided parameters.
 
-        Parameters:
+        Args:
             group_id (int): The ID of the asset group.
             search (str): The search string to filter assets by name, description, serial, or CPE value.
             sort (str): The sorting option for the assets. Can be "ALPHABETICAL" or "VULNERABILITIES_COUNT".
@@ -311,7 +290,7 @@ class Asset(db.Model):
     def get_all_json(cls, user, group_id, search, sort, vulnerable):
         """Get all assets in JSON format.
 
-        Parameters:
+        Args:
             user (User): The user object.
             group_id (int): The ID of the asset group.
             search (str): The search query for filtering assets.
@@ -331,7 +310,7 @@ class Asset(db.Model):
     def add(cls, user, group_id, data):
         """Add a new asset to the database.
 
-        Parameters:
+        Args:
             user (User): The user adding the asset.
             group_id (int): The ID of the asset group to which the asset belongs.
             data (dict): The data of the asset to be added.
@@ -348,7 +327,7 @@ class Asset(db.Model):
     def update(cls, user, group_id, asset_id, data):
         """Update an asset with the provided data.
 
-        Parameters:
+        Args:
             user (User): The user performing the update.
             group_id (int): The ID of the asset group.
             asset_id (int): The ID of the asset to update.
@@ -369,7 +348,7 @@ class Asset(db.Model):
     def delete(cls, user, group_id, id):
         """Delete an asset.
 
-        Parameters:
+        Args:
             user (User): The user performing the delete operation.
             group_id (int): The ID of the asset group.
             id (int): The ID of the asset to be deleted.
@@ -389,10 +368,6 @@ class AssetVulnerability(db.Model):
         asset_id (int): The ID of the asset associated with the vulnerability.
         report_item_id (int): The ID of the report item associated with the vulnerability.
         report_item (ReportItem): The report item associated with the vulnerability.
-
-    Methods:
-        __init__(asset_id, report_item_id): Initializes a new instance of the AssetVulnerability class.
-        get_by_report(report_id): Retrieves all vulnerabilities associated with a specific report.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -404,7 +379,7 @@ class AssetVulnerability(db.Model):
     def __init__(self, asset_id, report_item_id):
         """Initialize a new instance of the Asset class.
 
-        Parameters:
+        Args:
         asset_id (int): The ID of the asset.
         report_item_id (int): The ID of the report item.
         """
@@ -416,7 +391,7 @@ class AssetVulnerability(db.Model):
     def get_by_report(cls, report_id):
         """Get assets by report ID.
 
-        Parameters:
+        Args:
             report_id (int): The ID of the report.
 
         Returns:
@@ -432,9 +407,6 @@ class NewAssetGroupGroupSchema(AssetGroupSchema):
         users (list): A list of user IDs associated with the asset group.
         templates (list): A list of notification template IDs associated with the asset group.
 
-    Methods:
-        make(data, **kwargs): Post-load method that creates an AssetGroup object from the given data.
-
     Returns:
         AssetGroup: An instance of the AssetGroup class.
     """
@@ -446,7 +418,7 @@ class NewAssetGroupGroupSchema(AssetGroupSchema):
     def make(self, data, **kwargs):
         """Use decorator to create an instance of the AssetGroup class from the provided data.
 
-        Parameters:
+        Args:
             data: A dictionary containing the data to initialize the AssetGroup instance.
 
         Returns:
@@ -468,17 +440,6 @@ class AssetGroup(db.Model):
         title (str): The title of the asset group.
         subtitle (str): The subtitle of the asset group.
         tag (str): The tag of the asset group.
-
-    Methods:
-        __init__(self, id, name, description, users, templates): Initializes a new instance of the AssetGroup class.
-        reconstruct(self): Reconstructs the asset group object.
-        find(cls, group_id): Finds an asset group by its ID.
-        access_allowed(cls, user, group_id): Checks if the user has access to the asset group.
-        get(cls, search, organization): Retrieves asset groups based on search criteria and organization.
-        get_all_json(cls, user, search): Retrieves all asset groups in JSON format.
-        add(cls, user, data): Adds a new asset group.
-        delete(cls, user, group_id): Deletes an asset group.
-        update(cls, user, group_id, data): Updates an asset group.
     """
 
     id = db.Column(db.String(64), primary_key=True)
@@ -493,7 +454,7 @@ class AssetGroup(db.Model):
     def __init__(self, id, name, description, users, templates):
         """Initialize an instance of the Asset class.
 
-        Parameters:
+        Args:
             id (str): The unique identifier of the asset.
             name (str): The name of the asset.
             description (str): The description of the asset.
@@ -532,7 +493,7 @@ class AssetGroup(db.Model):
     def find(cls, group_id):
         """Find an asset group by its ID.
 
-        Parameters:
+        Args:
             group_id (int): The ID of the asset group to find.
 
         Returns:
@@ -546,7 +507,7 @@ class AssetGroup(db.Model):
         """
         Check if the access is allowed for a user in a specific group.
 
-        Parameters:
+        Args:
             user: The user object representing the user.
             group_id: The ID of the group to check access for.
 
@@ -561,7 +522,7 @@ class AssetGroup(db.Model):
         """
         Get assets based on search criteria and organization.
 
-        Parameters:
+        Args:
             search (str): A string representing the search criteria.
             organization: An organization object to filter the assets by.
 
@@ -583,7 +544,7 @@ class AssetGroup(db.Model):
     def get_all_json(cls, user, search):
         """Get all assets in JSON format.
 
-        Parameters:
+        Args:
             user (User): The user object.
             search (str): The search query.
 
@@ -615,7 +576,7 @@ class AssetGroup(db.Model):
     def add(cls, user, data):
         """Add a new asset group to the database.
 
-        Parameters:
+        Args:
             user: The user object representing the user adding the asset group.
             data: The data containing the information for the new asset group.
         """
@@ -637,7 +598,7 @@ class AssetGroup(db.Model):
     def delete(cls, user, group_id):
         """Delete a group if the user belongs to any of the organizations associated with the group.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user (User): The user object.
             group_id (int): The ID of the group to be deleted.
@@ -651,7 +612,7 @@ class AssetGroup(db.Model):
     def update(cls, user, group_id, data):
         """Update an asset group with the provided data.
 
-        Parameters:
+        Args:
             cls: The class object.
             user: The user performing the update.
             group_id: The ID of the asset group to update.

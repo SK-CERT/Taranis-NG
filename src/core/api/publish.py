@@ -30,10 +30,6 @@ class Products(Resource):
 
     Attributes:
         Resource: A base class for implementing API resources.
-
-    Methods:
-        get: Retrieves a list of products based on the provided filters.
-        post: Creates a new product.
     """
 
     @auth_required("PUBLISH_ACCESS")
@@ -80,7 +76,7 @@ class Products(Resource):
 class Product(Resource):
     """Represent a product resource.
 
-    Arguments:
+    Args:
         Resource -- The base class for API resources.
     """
 
@@ -88,7 +84,7 @@ class Product(Resource):
     def get(self, product_id):
         """Get the details of a product.
 
-        Arguments:
+        Args:
             product_id (int): The ID of the product.
 
         Returns:
@@ -100,7 +96,7 @@ class Product(Resource):
     def put(self, product_id):
         """Update a product.
 
-        Arguments:
+        Args:
             product_id (int): The ID of the product to be updated.
         """
         product.Product.update_product(product_id, request.json)
@@ -109,7 +105,7 @@ class Product(Resource):
     def delete(self, product_id):
         """Delete a product.
 
-        Arguments:
+        Args:
             product_id (int): The ID of the product to be deleted.
         """
         return product.Product.delete(product_id)
@@ -120,7 +116,7 @@ class PublishProduct(Resource):
 
     This class provides methods for publishing a product and handling the publish operation.
 
-    Arguments:
+    Args:
         Resource -- The base class for API resources.
 
     Returns:
@@ -131,7 +127,7 @@ class PublishProduct(Resource):
     def post(self, product_id, publisher_id):
         """Publish a product.
 
-        Arguments:
+        Args:
             product_id -- The ID of the product to be published.
             publisher_id -- The ID of the publisher.
 
@@ -154,15 +150,12 @@ class ProductsOverview(Resource):
 
     Attributes:
         Resource (class): The base class for creating API resources.
-
-    Methods:
-        get: Handles the GET request for retrieving product overview.
     """
 
     def get(self, product_id):
         """Get the product data for the given product ID.
 
-        Arguments:
+        Args:
             product_id (str): The ID of the product.
 
         Returns:
@@ -195,7 +188,7 @@ class ProductsOverview(Resource):
 def initialize(api):
     """Initialize the publish module.
 
-    Arguments:
+    Args:
         api -- The API instance to add resources to.
     """
     api.add_resource(Products, "/api/v1/publish/products")

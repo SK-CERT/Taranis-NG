@@ -7,7 +7,14 @@ from shared.schema.parameter import ParameterType
 
 @dataclass
 class param_type:
-    """XXX_2069."""
+    """Parameter type definition.
+
+    Attributes:
+        key (str): Parameter key.
+        name (str): Parameter name.
+        description (str): Parameter description.
+        type (ParameterType): Parameter type
+    """
 
     key: str
     name: str
@@ -17,7 +24,14 @@ class param_type:
 
 @dataclass
 class module_type:
-    """XXX_2069."""
+    """Module type definition.
+
+    Attributes:
+        type (str): Module type.
+        name (str): Module name.
+        description (str): Module description.
+        parameters (List[param_type]): Module parameters.
+    """
 
     type: str
     name: str
@@ -25,17 +39,23 @@ class module_type:
     parameters: List[param_type]
 
     def __init__(self, type, name, description):
-        """XXX_2069."""
+        """Initialize module type."""
         self.type = type
         self.name = name
         self.description = description
 
 
 class ConfigBase:
-    """XXX_2069."""
+    """Base definition for module types."""
 
     def get_config_by_type(self, type: str) -> module_type | None:
-        """XXX_2069."""
+        """Get module configuration by type.
+
+        Args:
+            type (str): Module type.
+        Returns:
+            module_type | None: Module configuration or None if not found.
+        """
         for mod in self.modules:
             if mod.type == type:
                 return mod

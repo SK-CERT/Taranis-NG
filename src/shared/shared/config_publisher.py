@@ -6,10 +6,10 @@ from shared.schema.parameter import ParameterType
 
 
 class ConfigPublisher(ConfigBase):
-    """XXX_2069."""
+    """Configuration for publisher modules."""
 
     def __init__(self):
-        """XXX_2069."""
+        """Initialize publisher modules."""
         self.modules: List[module_type] = []
 
         mod = module_type("EMAIL_PUBLISHER", "EMAIL Publisher", "Publisher for publishing by email")

@@ -10,7 +10,15 @@ from shared.config_publisher import ConfigPublisher
 
 
 class WORDPRESSPublisher(BasePublisher):
-    """XXX_2069."""
+    """Publisher for Wordpress.
+
+    Attributes:
+        type (str): Publisher type.
+        config (ConfigPublisher): Publisher configuration.
+        name (str): Publisher name.
+        description (str): Publisher description.
+        parameters (list): Publisher parameters.
+    """
 
     type = "WORDPRESS_PUBLISHER"
     config = ConfigPublisher().get_config_by_type(type)
@@ -19,7 +27,13 @@ class WORDPRESSPublisher(BasePublisher):
     parameters = config.parameters
 
     def publish(self, publisher_input):
-        """XXX_2069."""
+        """Publish data.
+
+        Args:
+            publisher_input (PublisherInput): Publisher input.
+        Raises:
+            Exception: If an error occurs
+        """
         try:
             user = publisher_input.parameter_values_map["WP_USER"]
             python_app_secret = publisher_input.parameter_values_map["WP_PYTHON_APP_SECRET"]

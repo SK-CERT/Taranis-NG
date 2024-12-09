@@ -8,25 +8,7 @@ from model.user import User
 
 
 class BaseAuthenticator:
-    """BaseAuthenticator class provides methods for handling authentication processes.
-
-    Methods:
-        get_required_credentials():
-            Returns an empty list indicating no specific credentials are required by default.
-        authenticate(credentials):
-            Authenticates the provided credentials and returns an error response if authentication fails.
-        refresh(user):
-            Generates a new JWT token for the given user.
-        logout(token):
-            Adds the provided token to the token blacklist if it is not None.
-        initialize(app):
-            Initializes the authenticator with the given application. Currently, this method does nothing.
-        generate_error():
-            Returns a dictionary with an error message and an HTTP status code 401.
-        generate_jwt(username):
-            Generates a JWT token for the user with the given username. If the user does not exist, logs an error and returns
-             an error response. Otherwise, logs a successful login activity and returns the generated JWT token.
-    """
+    """BaseAuthenticator class provides methods for handling authentication processes."""
 
     def get_required_credentials(self):
         """Retrieve the list of required credentials for authentication.

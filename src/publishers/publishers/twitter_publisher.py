@@ -8,7 +8,15 @@ from shared.config_publisher import ConfigPublisher
 
 
 class TWITTERPublisher(BasePublisher):
-    """XXX_2069."""
+    """Publisher for Twitter.
+
+    Attributes:
+        type (str): Publisher type.
+        config (ConfigPublisher): Publisher configuration.
+        name (str): Publisher name.
+        description (str): Publisher description.
+        parameters (list): Publisher parameters.
+    """
 
     type = "TWITTER_PUBLISHER"
     config = ConfigPublisher().get_config_by_type(type)
@@ -17,7 +25,13 @@ class TWITTERPublisher(BasePublisher):
     parameters = config.parameters
 
     def publish(self, publisher_input):
-        """XXX_2069."""
+        """Publish data.
+
+        Args:
+            publisher_input (PublisherInput): Publisher input.
+        Raises:
+            Exception: If an error occurs.
+        """
         try:
             api_key = publisher_input.parameter_values_map["TWITTER_API_KEY"]
             api_key_secret = publisher_input.parameter_values_map["TWITTER_API_KEY_SECRET"]

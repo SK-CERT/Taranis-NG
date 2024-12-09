@@ -94,7 +94,7 @@ class PublisherPreset(Resource):
     def put(self, id):
         """Update a publisher preset with the given ID using the provided JSON data.
 
-        Arguments:
+        Args:
             id (int): The ID of the publisher preset to update.
         Returns:
             Response: The response object indicating the result of the update operation.
@@ -105,7 +105,7 @@ class PublisherPreset(Resource):
     def delete(self, id):
         """Delete a publisher preset by its ID.
 
-        Arguments:
+        Args:
             id (int): The ID of the publisher preset to delete.
         Returns:
             bool: True if the deletion was successful, False otherwise.
@@ -138,7 +138,7 @@ class PublishersNode(Resource):
     def put(self, id):
         """Update a publisher's node with the given ID using the provided JSON data.
 
-        Arguments:
+        Args:
             id (int): The ID of the publisher's node to update.
         """
         publishers_manager.update_publishers_node(id, request.json)
@@ -147,7 +147,7 @@ class PublishersNode(Resource):
     def delete(self, id):
         """Delete a publisher by its ID.
 
-        Arguments:
+        Args:
             id (int): The ID of the publisher to delete.
         Returns:
             bool: True if the deletion was successful, False otherwise.
@@ -161,7 +161,7 @@ def initialize(api):
     This function adds various publisher-related resources to the provided API
     instance and sets up the necessary permissions for accessing, creating,
     updating, and deleting publisher nodes and presets.
-    Arguments:
+    Args:
         api: The API instance to which the resources and permissions will be added.
     Resources:
         - /api/publishers/nodes: Endpoint for PublisherNodes resource.

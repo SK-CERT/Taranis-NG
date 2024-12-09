@@ -6,10 +6,10 @@ from shared.schema.parameter import ParameterType
 
 
 class ConfigCollector(ConfigBase):
-    """XXX_2069."""
+    """Configuration for collector modules."""
 
     def add_default(self) -> List[param_type]:
-        """XXX_2069."""
+        """Add default parameters."""
         return [
             param_type(
                 "PROXY_SERVER", "Proxy server", "Type SOCKS5 proxy server as username:password@ip:port or ip:port", ParameterType.STRING
@@ -23,7 +23,7 @@ class ConfigCollector(ConfigBase):
         ]
 
     def __init__(self):
-        """XXX_2069."""
+        """Initialize collector modules."""
         self.modules: List[module_type] = []
 
         mod = module_type("ATOM_COLLECTOR", "Atom Collector", "Collector for gathering data from Atom feeds")

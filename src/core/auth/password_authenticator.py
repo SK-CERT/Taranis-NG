@@ -23,7 +23,7 @@ class PasswordAuthenticator(BaseAuthenticator):
     def authenticate(self, credentials):
         """Authenticate the user using a password.
 
-        Parameters:
+        Args:
             credentials (dict): The user's credentials.
         Returns:
             (dict): The authentication

@@ -11,13 +11,14 @@ from managers.log_manager import logger
 from auth.base_authenticator import BaseAuthenticator
 from packaging import version
 
+
 class KeycloakAuthenticator(BaseAuthenticator):
     """Keycloak authenticator class."""
 
     def authenticate(self, credentials):
         """Authenticate the user using Keycloak.
 
-        Parameters:
+        Args:
             credentials: The user's credentials.
         """
         # check if code and session_state are present in keycloak callback
@@ -32,7 +33,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
 
         # verify code and get JWT token from keycloak
         response = post(
-            url = link,
+            url=link,
             data={
                 "grant_type": "authorization_code",
                 "code": request.args["code"],  # code from url

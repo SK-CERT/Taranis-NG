@@ -17,13 +17,8 @@ from model.user import User
 class UserProfile(Resource):
     """UserProfile resource for handling user profile related operations.
 
-    Methods:
-        get():
-            Retrieves the profile information of the authenticated user.
-            Requires JWT authentication.
-        put():
-            Updates the profile information of the authenticated user with the provided JSON data.
-            Requires JWT authentication.
+    Attributes:
+        Resource: A base class for implementing API resources.
     """
 
     @jwt_required()
@@ -54,9 +49,8 @@ class UserProfile(Resource):
 class UserWordLists(Resource):
     """A resource class for handling user word lists.
 
-    Methods:
-        get():
-            Retrieves all word lists for the authenticated user in JSON format.
+    Attributes:
+        Resource: A base class for implementing API resources.
     """
 
     @auth_required("ASSESS_ACCESS")
@@ -72,9 +66,8 @@ class UserWordLists(Resource):
 class UserProductTypes(Resource):
     """Flask-RESTful resource that handles HTTP GET requests for retrieving all product types associated with the authenticated user.
 
-    Methods:
-        get():
-            Retrieves all product types in JSON format for the authenticated user.
+    Attributes:
+        Resource: A base class for implementing API resources.
     """
 
     @auth_required("PUBLISH_ACCESS")
@@ -90,9 +83,8 @@ class UserProductTypes(Resource):
 class UserPublisherPresets(Resource):
     """A resource for handling user publisher presets.
 
-    Methods:
-        get():
-            Retrieves all publisher presets in JSON format. Requires PUBLISH_ACCESS authentication.
+    Attributes:
+        Resource: A base class for implementing API resources.
     """
 
     @auth_required("PUBLISH_ACCESS")

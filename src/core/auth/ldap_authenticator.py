@@ -23,7 +23,7 @@ import os
 class LDAPAuthenticator(BaseAuthenticator):
     """Authenticate users against an LDAP server.
 
-    Args:
+    Attributes:
         BaseAuthenticator (_type_): _description_
 
     Returns:

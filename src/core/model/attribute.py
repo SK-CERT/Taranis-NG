@@ -18,7 +18,7 @@ from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, At
 class NewAttributeEnumSchema(AttributeEnumSchema):
     """Class for NewAttributeEnumSchema.
 
-    Arguments:
+    Args:
         AttributeEnumSchema -- Schema for attribute enums.
     """
 
@@ -26,7 +26,7 @@ class NewAttributeEnumSchema(AttributeEnumSchema):
     def make_attribute_enum(self, data, **kwargs):
         """Create a new attribute enum.
 
-        Arguments:
+        Args:
             data (dict): The data for the attribute enum.
 
         Returns:
@@ -38,7 +38,7 @@ class NewAttributeEnumSchema(AttributeEnumSchema):
 class AttributeEnum(db.Model):
     """Class for AttributeEnum.
 
-    Arguments:
+    Args:
         db -- The database object.
     """
 
@@ -54,7 +54,7 @@ class AttributeEnum(db.Model):
     def __init__(self, id, index, value, description):
         """Initialize the attribute enum.
 
-        Arguments:
+        Args:
             id (int): ID of the attribute enum.
             index (int): Index of the attribute enum.
             value (str): Value of the attribute enum.
@@ -74,7 +74,7 @@ class AttributeEnum(db.Model):
         """
         Count the number of attribute enums for an attribute.
 
-        Arguments:
+        Args:
             attribute_id (int): ID of the attribute.
 
         Returns:
@@ -86,7 +86,7 @@ class AttributeEnum(db.Model):
     def get_all_for_attribute(cls, attribute_id):
         """Get all attribute enums for an attribute.
 
-        Arguments:
+        Args:
             attribute_id (int): The ID of the attribute.
 
         Returns:
@@ -101,7 +101,7 @@ class AttributeEnum(db.Model):
 
         This method retrieves attribute enums for a given attribute ID, with optional search, offset, and limit parameters.
 
-        Arguments:
+        Args:
             attribute_id (int): ID of the attribute.
             search (str): Search string.
             offset (int): Offset for pagination.
@@ -126,7 +126,7 @@ class AttributeEnum(db.Model):
         """
         Find an attribute enum by value.
 
-        Arguments:
+        Args:
             attribute_id (int): ID of the attribute.
             value (str): Value of the attribute enum.
 
@@ -255,7 +255,7 @@ class NewAttributeSchema(AttributeBaseSchema):
     This schema extends the AttributeBaseSchema and defines the structure
     and validation rules for a new attribute.
 
-    Arguments:
+    Args:
         AttributeBaseSchema -- The base schema for attributes.
 
     Returns:
@@ -272,7 +272,7 @@ class NewAttributeSchema(AttributeBaseSchema):
         any additional processing or validation before creating the
         Attribute instance.
 
-        Arguments:
+        Args:
             data (dict): The loaded data.
 
         Returns:
@@ -299,21 +299,6 @@ class Attribute(db.Model):
         title (str): The title of the attribute.
         subtitle (str): The subtitle of the attribute.
         tag (str): The tag of the attribute.
-
-    Methods:
-        __init__: Initializes an Attribute object.
-        reconstruct: Reconstructs the attribute object.
-        get_all: Retrieves all attributes.
-        find_by_type: Finds an attribute by type.
-        get: Retrieves attributes based on search criteria.
-        get_all_json: Retrieves all attributes in JSON format.
-        create_attribute: Creates a new attribute.
-        add_attribute: Adds a new attribute.
-        update: Updates an attribute.
-        delete_attribute: Deletes an attribute.
-        load_cve_from_file: Loads CVE attributes from a file.
-        load_cpe_from_file: Loads CPE attributes from a file.
-        load_cwe_from_file: Loads CWE attributes from a file.
     """
 
     id = db.Column(db.Integer, primary_key=True)

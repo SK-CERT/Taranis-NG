@@ -127,7 +127,7 @@ def initialize(api):
     - Login: Endpoint for user login at "/api/v1/auth/login"
     - Refresh: Endpoint for refreshing authentication tokens at "/api/v1/auth/refresh"
     - Logout: Endpoint for user logout at "/api/v1/auth/logout"
-    Arguments:
+    Args:
         api (flask_restful.Api): The Flask-RESTful API object to which the resources will be added.
     """
     api.add_resource(Login, "/api/v1/auth/login")

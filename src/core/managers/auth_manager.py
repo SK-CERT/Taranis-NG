@@ -33,7 +33,7 @@ def cleanup_token_blacklist(app):
     """
     Clean up the token blacklist by deleting tokens older than one day.
 
-    Arguments:
+    Args:
         app -- The Flask application object.
     """
     with app.app_context():
@@ -46,7 +46,7 @@ def initialize(app):
 
     This function sets up the authentication manager based on the configured authenticator.
 
-    Arguments:
+    Args:
         app: The Flask application object.
     """
     global current_authenticator
@@ -86,7 +86,7 @@ def get_required_credentials():
 def authenticate(credentials):
     """Authenticate the user using the provided credentials.
 
-    Arguments:
+    Args:
         credentials -- The user's credentials.
 
     Returns:
@@ -98,7 +98,7 @@ def authenticate(credentials):
 def refresh(user):
     """Refresh the authentication token for the given user.
 
-    Arguments:
+    Args:
         user -- The user object for which the authentication token needs to be refreshed.
 
     Returns:
@@ -112,7 +112,7 @@ def logout(token):
 
     This function logs out the user by calling the `logout` method of the current authenticator.
 
-    Arguments:
+    Args:
         token (str): The authentication token of the user.
 
     Returns:
@@ -150,7 +150,7 @@ def check_acl(item_id, acl_check, user):
 
     This function determines whether the user has the necessary permissions to perform the specified ACL check on the item.
 
-    Arguments:
+    Args:
         item_id (str): The ID of the item.
         acl_check (str): The type of ACL check to perform.
         user (str): The user performing the ACL check.
@@ -192,7 +192,7 @@ def check_acl(item_id, acl_check, user):
 def no_auth(fn):
     """Allow access to the decorated function without authentication.
 
-    Arguments:
+    Args:
         fn (function): The function to be decorated.
 
     Returns:
@@ -212,7 +212,7 @@ def get_id_name_by_acl(acl):
 
     This function takes an ACL object and returns the corresponding ID name based on the ACL's name.
 
-    Arguments:
+    Args:
         acl -- The ACL object.
 
     Returns:
@@ -324,7 +324,7 @@ def get_perm_from_jwt_token(user):
 def auth_required(required_permissions, *acl_args):
     """Check if the user has the required permissions and ACL access.
 
-    Arguments:
+    Args:
         required_permissions (str or list): The required permissions for the user.
         *acl_args: Variable number of arguments representing the ACLs to check.
 
@@ -375,7 +375,7 @@ def auth_required(required_permissions, *acl_args):
 def api_key_required(fn):
     """Enforce API key authentication.
 
-    Arguments:
+    Args:
         fn (function): The function to be decorated.
 
     Returns:
@@ -416,7 +416,7 @@ def access_key_required(fn):
     This decorator can be used to protect routes or functions that require access key authorization.
     It checks if the request has a valid access key in the Authorization header.
 
-    Arguments:
+    Args:
         fn (function): The function to be decorated.
 
     Returns:
@@ -452,7 +452,7 @@ def access_key_required(fn):
 def jwt_required(fn):
     """Check if a valid JWT is present in the request headers.
 
-    Arguments:
+    Args:
         fn -- The function to be decorated.
 
     Returns:
@@ -514,7 +514,7 @@ def get_user_from_jwt():
 def decode_user_from_jwt(jwt_token):
     """Decode the user from a JWT token.
 
-    Arguments:
+    Args:
         jwt_token (str): The JWT token to decode.
 
     Returns:

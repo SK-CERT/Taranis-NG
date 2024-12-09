@@ -9,7 +9,15 @@ from remote.core_api import CoreApi
 
 
 class WordlistUpdaterBot(BaseBot):
-    """XXX_2069."""
+    """A bot that updates word lists based on a given preset configuration.
+
+    Attributes:
+        type (str): The type of the bot, set to "WORDLIST_UPDATER_BOT".
+        config (Config): The configuration object for the bot.
+        name (str): The name of the bot.
+        description (str): The description of the bot.
+        parameters (dict): The parameters for the bot.
+    """
 
     type = "WORDLIST_UPDATER_BOT"
     config = ConfigBot().get_config_by_type(type)
@@ -18,10 +26,21 @@ class WordlistUpdaterBot(BaseBot):
     parameters = config.parameters
 
     def execute(self, preset):
-        """XXX_2069."""
+        """Execute the word list updater bot with the given preset.
+
+        Args:
+            preset (object): An object containing the parameters for the bot execution.
+        """
 
         def load_file(source, word_list_format):
-            """XXX_2069."""
+            """Load a word list from a given source.
+
+            Args:
+                source (str): The path to the file or URL to load the word list from.
+                word_list_format (str): The format of the word list. Currently supports 'txt'.
+            Returns:
+                list: A list of words loaded from the specified source.
+            """
             if "http" in source and word_list_format == "txt":
                 response = requests.get(source)
                 content = response.text.strip().split("\r\n")
@@ -74,7 +93,15 @@ class WordlistUpdaterBot(BaseBot):
             BaseBot.print_exception(preset, error)
 
     def execute_on_event(self, preset, event_type, data):
-        """XXX_2069."""
+        """Execute an action based on the given event.
+
+        Args:
+            preset (object): The preset configuration object containing parameters.
+            event_type (str): The type of event that triggered this action.
+            data (dict): Additional data associated with the event.
+        Raises:
+            Exception: If there is an error accessing the parameters in the preset.
+        """
         try:
             data_url = preset.parameter_values["DATA_URL"]  # noqa F841
             format = preset.parameter_values["FORMAT"]  # noqa F841

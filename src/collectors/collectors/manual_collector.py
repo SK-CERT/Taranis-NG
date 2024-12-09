@@ -5,7 +5,7 @@ from shared.config_collector import ConfigCollector
 
 
 class ManualCollector(BaseCollector):
-    """XXX_2069."""
+    """Manual collector class."""
 
     type = "MANUAL_COLLECTOR"
     config = ConfigCollector().get_config_by_type(type)
@@ -15,5 +15,5 @@ class ManualCollector(BaseCollector):
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
-        """XXX_2069."""
+        """Collect data from source."""
         pass

@@ -10,7 +10,15 @@ from shared.config_publisher import ConfigPublisher
 
 
 class MISPPublisher(BasePublisher):
-    """XXX_2069."""
+    """MISP Publisher class.
+
+    Attributes:
+        type (str): Type of publisher.
+        config (ConfigPublisher): Configuration for publisher.
+        name (str): Name of publisher.
+        description (str): Description of publisher.
+        parameters (List[Parameter]): Parameters for publisher.
+    """
 
     type = "MISP_PUBLISHER"
     config = ConfigPublisher().get_config_by_type(type)
@@ -19,7 +27,13 @@ class MISPPublisher(BasePublisher):
     parameters = config.parameters
 
     def publish(self, publisher_input):
-        """XXX_2069."""
+        """Publish data to MISP.
+
+        Args:
+            publisher_input (PublisherInput): Publisher input.
+        Raises:
+            Exception: If an error occurs while publishing data.
+        """
         try:
             misp_url = publisher_input.parameter_values_map["MISP_URL"]
             misp_key = publisher_input.parameter_values_map["MISP_API_KEY"]

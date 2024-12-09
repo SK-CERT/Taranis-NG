@@ -374,7 +374,7 @@ def dictionary_management(opt_cve, opt_cpe, opt_cwe):
     If `upload_cve` is True, it uploads the CVE file and loads the CVE dictionary.
     If `upload_cpe` is True, it uploads the CPE file and loads the CPE dictionary.
 
-    Arguments:
+    Args:
         upload_cve (bool): Indicates whether to upload the CVE file and load the CVE dictionary.
         upload_cpe (bool): Indicates whether to upload the CPE file and load the CPE dictionary.
     """
@@ -424,7 +424,7 @@ def dictionary_management(opt_cve, opt_cpe, opt_cwe):
 def upload_to(filename):
     """Upload a file to the specified filename.
 
-    Arguments:
+    Args:
         filename (str): The name of the file to upload.
     """
     try:
@@ -451,7 +451,7 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
 
     This function provides functionality to list, create, and delete API keys.
 
-    Arguments:
+    Args:
         opt_list (bool): If True, list all existing API keys.
         opt_create (bool): If True, create a new API key.
         opt_delete (bool): If True, delete an existing API key.
