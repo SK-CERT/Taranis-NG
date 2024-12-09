@@ -9,7 +9,7 @@ from base64 import b64encode
 import jinja2
 
 from .base_presenter import BasePresenter
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_presenter import ConfigPresenter
 
 
 class MESSAGEPresenter(BasePresenter):
@@ -23,15 +23,10 @@ class MESSAGEPresenter(BasePresenter):
     """
 
     type = "MESSAGE_PRESENTER"
-    name = "MESSAGE Presenter"
-    description = "Presenter for generating message title and body"
-
-    parameters = [
-        Parameter(0, "TITLE_TEMPLATE_PATH", "Title template", "Path of message title template file", ParameterType.STRING),
-        Parameter(0, "BODY_TEMPLATE_PATH", "Body template", "Path to message body template file", ParameterType.STRING),
-    ]
-
-    parameters.extend(BasePresenter.parameters)
+    config = ConfigPresenter().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def generate(self, presenter_input):
         """Generate message parts from Jinja templates.

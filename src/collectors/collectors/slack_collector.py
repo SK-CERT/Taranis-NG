@@ -4,14 +4,14 @@ import datetime
 import hashlib
 import uuid
 import time
-import traceback
 import socket
 
 from slack import WebClient
+
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
-from shared.schema.parameter import Parameter, ParameterType
 
 
 # the slackclient project is in maintenance mode now, "slack_sdk" is successor: https://pypi.org/project/slack-sdk/
@@ -28,15 +28,10 @@ class SlackCollector(BaseCollector):
     """
 
     type = "SLACK_COLLECTOR"
-    name = "Slack Collector"
-    description = "Collector for gathering data from Slack"
-
-    parameters = [
-        Parameter(0, "SLACK_API_TOKEN", "Slack API token", "API token for Slack authentication.", ParameterType.STRING),
-        Parameter(0, "WORKSPACE_CHANNELS_ID", "Collected workspace's channels ID", "Channels which will be collected.", ParameterType.STRING),
-    ]
-
-    parameters.extend(BaseCollector.parameters)
+    config = ConfigCollector().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):

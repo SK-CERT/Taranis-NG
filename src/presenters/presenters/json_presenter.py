@@ -3,11 +3,12 @@
 Returns:
     _type_: _description_
 """
+
 from base64 import b64encode
 import json
 
 from .base_presenter import BasePresenter
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_presenter import ConfigPresenter
 
 
 class JSONPresenter(BasePresenter):
@@ -21,12 +22,10 @@ class JSONPresenter(BasePresenter):
     """
 
     type = "JSON_PRESENTER"
-    name = "JSON Presenter"
-    description = "Presenter for generating JSON files"
-
-    parameters = [Parameter(0, "JSON_INDENT", "JSON indent", "Indentation of JSON output", ParameterType.NUMBER)]
-
-    parameters.extend(BasePresenter.parameters)
+    config = ConfigPresenter().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def generate(self, presenter_input):
         """Generate method.

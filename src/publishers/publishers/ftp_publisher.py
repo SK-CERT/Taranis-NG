@@ -3,6 +3,7 @@
 Raises:
     Exception: _description_
 """
+
 import datetime
 import ftplib
 import os
@@ -11,9 +12,8 @@ from urllib.parse import urlsplit
 import paramiko
 import mimetypes
 
-
 from .base_publisher import BasePublisher
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_publisher import ConfigPublisher
 
 
 class FTPPublisher(BasePublisher):
@@ -27,12 +27,10 @@ class FTPPublisher(BasePublisher):
     """
 
     type = "FTP_PUBLISHER"
-    name = "FTP Publisher"
-    description = "Publisher for publishing to FTP server"
-
-    parameters = [Parameter(0, "FTP_URL", "FTP URL", "FTP server url", ParameterType.STRING)]
-
-    parameters.extend(BasePublisher.parameters)
+    config = ConfigPublisher().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def publish(self, publisher_input):
         """Publish to FTP or SFTP server.

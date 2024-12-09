@@ -1,29 +1,28 @@
+"""Publisher for MISP."""
+
 import json
 from base64 import b64decode
 import urllib3
 from pymisp import ExpandedPyMISP, MISPEvent
 
 from .base_publisher import BasePublisher
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_publisher import ConfigPublisher
 
 
 class MISPPublisher(BasePublisher):
+    """XXX_2069."""
+
     type = "MISP_PUBLISHER"
-    name = "MISP Publisher"
-    description = "Publisher for publishing in MISP"
-
-    parameters = [
-        Parameter(0, "MISP_URL", "MISP url", "MISP server https url", ParameterType.STRING),
-        Parameter(0, "MISP_API_KEY", "MISP API key", "User MISP API key", ParameterType.STRING)
-    ]
-
-    parameters.extend(BasePublisher.parameters)
+    config = ConfigPublisher().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def publish(self, publisher_input):
-
+        """XXX_2069."""
         try:
-            misp_url = publisher_input.parameter_values_map['MISP_URL']
-            misp_key = publisher_input.parameter_values_map['MISP_API_KEY']
+            misp_url = publisher_input.parameter_values_map["MISP_URL"]
+            misp_key = publisher_input.parameter_values_map["MISP_API_KEY"]
             misp_verifycert = False
 
             data = publisher_input.data[:]

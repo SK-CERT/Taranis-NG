@@ -134,6 +134,17 @@ class CollectorsNode(db.Model):
         """
         return cls.query.filter_by(id=id).first()
 
+    @classmethod
+    def get_by_name(cls, name):
+        """Get a node by name.
+
+        Parameters:
+            name (str): The name of the node
+        Returns:
+            (CollectorsNode): The CollectorsNode object
+        """
+        return cls.query.filter_by(name=name).first()
+
     def find_collector_by_type(self, collector_type):
         """Find a collector by type.
 

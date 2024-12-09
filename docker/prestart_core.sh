@@ -15,7 +15,7 @@ if [ "$(python ./manage.py collector --list | grep 'Total:' | cut -d ' ' -f2)" =
     echo "Reading API key from file..."
     API_KEY=$(cat "/run/secrets/api_key")
     python ./manage.py collector --create --name "Default Docker Collector" --description "A local collector node configured as a part of Taranis NG default installation." --api-url "http://collectors/" --api-key "$API_KEY"
-    ) &
+    )
 else
     echo "Default collector already exists or SKIP_DEFAULT_COLLECTOR is set to true."
 fi

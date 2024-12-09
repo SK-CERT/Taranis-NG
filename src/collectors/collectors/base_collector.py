@@ -12,7 +12,6 @@ from managers import time_manager
 from managers.log_manager import logger
 from remote.core_api import CoreApi
 from shared.schema import collector, osint_source, news_item
-from shared.schema.parameter import Parameter, ParameterType
 
 
 class BaseCollector:
@@ -39,19 +38,7 @@ class BaseCollector:
     type = "BASE_COLLECTOR"
     name = "Base Collector"
     description = "Base abstract type for all collectors"
-
-    parameters = [
-        Parameter(
-            0, "PROXY_SERVER", "Proxy server", "Type SOCKS5 proxy server as username:password@ip:port or ip:port", ParameterType.STRING
-        ),
-        Parameter(
-            0,
-            "REFRESH_INTERVAL",
-            "Refresh interval in minutes (0 to disable)",
-            "How often is this collector queried for new data",
-            ParameterType.NUMBER,
-        ),
-    ]
+    parameters = []
 
     def __init__(self):
         """Initialize the BaseCollector object."""

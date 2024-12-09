@@ -1,15 +1,19 @@
+"""Module for Manual collector."""
+
 from .base_collector import BaseCollector
+from shared.config_collector import ConfigCollector
 
 
 class ManualCollector(BaseCollector):
+    """XXX_2069."""
+
     type = "MANUAL_COLLECTOR"
-    name = "Manual Collector"
-    description = "Collector for manual input of news items"
-
-    parameters = []
-
-    parameters.extend(BaseCollector.parameters)
+    config = ConfigCollector().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):
+        """XXX_2069."""
         pass

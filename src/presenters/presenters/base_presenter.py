@@ -18,8 +18,7 @@ class BasePresenter:
     type = "BASE_PRESENTER"
     name = "Base Presenter"
     description = "Base abstract type for all presenters"
-
-    parameters = list()
+    parameters = []
 
     @staticmethod
     def json_default(value):

@@ -3,12 +3,13 @@
 Returns:
     dict: The presenter output containing the mime type and data of the generated text document.
 """
+
 import os
 from base64 import b64encode
 import jinja2
 
 from .base_presenter import BasePresenter
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_presenter import ConfigPresenter
 
 
 class TEXTPresenter(BasePresenter):
@@ -24,12 +25,10 @@ class TEXTPresenter(BasePresenter):
     """
 
     type = "TEXT_PRESENTER"
-    name = "TEXT Presenter"
-    description = "Presenter for generating text documents"
-
-    parameters = [Parameter(0, "TEXT_TEMPLATE_PATH", "TEXT template with its path", "Path of text template file", ParameterType.STRING)]
-
-    parameters.extend(BasePresenter.parameters)
+    config = ConfigPresenter().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def generate(self, presenter_input):
         """Generate the output text based on the presenter input.

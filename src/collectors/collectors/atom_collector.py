@@ -3,15 +3,14 @@
 import datetime
 import hashlib
 import uuid
-import traceback
 import feedparser
 import requests
 from bs4 import BeautifulSoup
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
-from shared.schema.parameter import Parameter, ParameterType
 
 
 class AtomCollector(BaseCollector):
@@ -30,23 +29,10 @@ class AtomCollector(BaseCollector):
     """
 
     type = "ATOM_COLLECTOR"
-    name = "Atom Collector"
-    description = "Collector for gathering data from Atom feeds"
-
-    parameters = [
-        Parameter(0, "ATOM_FEED_URL", "Atom feed URL", "Full url for Atom feed", ParameterType.STRING),
-        Parameter(0, "USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING),
-        Parameter(
-            0,
-            "LINKS_LIMIT",
-            "Limit for article links",
-            "OPTIONAL: Maximum number of article links to process. Default: all",
-            ParameterType.NUMBER,
-        ),
-    ]
-
-    parameters.extend(BaseCollector.parameters)
-
+    config = ConfigCollector().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
     news_items = []
 
     @BaseCollector.ignore_exceptions

@@ -4,7 +4,6 @@
 
 import random
 import string
-import time
 import click
 
 from os import abort, getenv, read
@@ -12,9 +11,20 @@ from flask import Flask
 from flask.cli import FlaskGroup
 
 from managers import db_manager
-from model import user, role, collector, collectors_node, permission, osint_source, apikey, attribute  # noqa: F401
+from model import (  # noqa: F401  Don't remove 'osint_source' reference otherwise relationship problems
+    user,
+    role,
+    collector,
+    collectors_node,
+    permission,
+    osint_source,
+    parameter,
+    apikey,
+    attribute,
+)
 from remote.collectors_api import CollectorsApi
 from managers.log_manager import logger
+from shared.config_collector import ConfigCollector
 
 
 def create_app():
@@ -292,39 +302,20 @@ def collector_management(
             logger.critical("Please specify the collector node name, API url and key!")
             abort()
 
-        data = {
-            "id": "",
-            "name": opt_name,
-            "description": opt_description if opt_description else "",
-            "api_url": opt_api_url,
-            "api_key": opt_api_key,
-            "collectors": [],
-            "status": "0",
-        }
-
-        print("Trying to contact a new collector node...")
-        attempt, retries, delay = 0, 5, 1
-        while attempt < retries:
-            try:
-                collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info("")
-                break
-            except:  # noqa: E722
-                attempt += 1
-                collectors_info = "Collector unavailable"
-                status_code = 0
-                time.sleep(delay)
-                delay *= 2
-            print(f"Attempt [{attempt}/{retries}]...")
-
-        if status_code != 200:
-            print("Cannot create a new collector node!")
-            print(f"Response from collector: {collectors_info}")
+        if collectors_node.CollectorsNode.get_by_name(opt_name):
+            logger.warning(f"Collector node '{opt_name}' already exists!")
             abort()
 
-        collectors = collector.Collector.create_all(collectors_info)
-        node = collectors_node.CollectorsNode.add_new(data, collectors)
-        collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info(node.id)
+        node = collectors_node.CollectorsNode(opt_name, opt_description, opt_api_url, opt_api_key)
+        modules = ConfigCollector().modules
+        for mod in modules:
+            col = collector.Collector(mod.name, mod.description, mod.type, [])
+            for par in mod.parameters:
+                col.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type))
+            node.collectors.append(col)
 
+        db_manager.db.session.add(node)
+        db_manager.db.session.commit()
         print(f"Collector node '{opt_name}' with id {node.id} created.")
 
     if opt_edit:
@@ -336,7 +327,7 @@ def collector_management(
             abort()
 
     if opt_delete:
-        if not opt_id or not opt_name:
+        if not opt_name:
             logger.critical("Collector node id or name not specified!")
             abort()
 

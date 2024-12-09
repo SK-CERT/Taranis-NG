@@ -3,12 +3,13 @@
 Returns:
     A dictionary containing the MIME type and the base64-encoded HTML data.
 """
+
 import os
 from base64 import b64encode
 import jinja2
 
 from .base_presenter import BasePresenter
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_presenter import ConfigPresenter
 
 
 class HTMLPresenter(BasePresenter):
@@ -22,12 +23,10 @@ class HTMLPresenter(BasePresenter):
     """
 
     type = "HTML_PRESENTER"
-    name = "HTML Presenter"
-    description = "Presenter for generating html documents"
-
-    parameters = [Parameter(0, "HTML_TEMPLATE_PATH", "HTML template with its path", "Path of html template file", ParameterType.STRING)]
-
-    parameters.extend(BasePresenter.parameters)
+    config = ConfigPresenter().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def generate(self, presenter_input):
         """Generate the HTML presentation.
