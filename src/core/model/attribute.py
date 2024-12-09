@@ -8,6 +8,7 @@ import os
 from xml.etree.ElementTree import iterparse
 from marshmallow import fields, post_load
 from sqlalchemy import orm, func, or_, and_
+from tqdm import tqdm
 
 from managers.log_manager import logger
 from managers.db_manager import db
@@ -529,14 +530,22 @@ class Attribute(db.Model):
 
         Args:
             id (int): The ID of the attribute.
-
-        Returns:
-            None
         """
         attribute = cls.query.get(id)
         AttributeEnum.delete_for_attribute(id)
         db.session.delete(attribute)
         db.session.commit()
+
+    def count_elements(file_path, tag):
+        """Count the number of elements with a specific tag in an XML file.
+
+        Args:
+            file_path (str): The path to the XML file.
+            tag (str): The tag name of the elements to count.
+        Returns:
+            int: The number of elements with the specified tag.
+        """
+        return sum(1 for event, elem in iterparse(file_path, events=("end",)) if elem.tag == tag)
 
     @classmethod
     def load_cve_from_file(cls, file_path):
@@ -544,36 +553,39 @@ class Attribute(db.Model):
 
         Args:
             file_path (str): The path to the file.
-
-        Returns:
-            None
         """
         attribute = cls.query.filter_by(type=AttributeType.CVE).first()
         AttributeEnum.delete_imported_for_attribute(attribute.id)
+        tag_desc = "{http://cve.mitre.org/cve/downloads/1.0}desc"
+        tag_item = "{http://cve.mitre.org/cve/downloads/1.0}item"
 
         item_count = 0
         block_item_count = 0
         desc = ""
-        for event, element in iterparse(file_path, events=("start", "end")):
-            if event == "end":
-                if element.tag == "{http://cve.mitre.org/cve/downloads/1.0}desc":
-                    desc = element.text
-                elif element.tag == "{http://cve.mitre.org/cve/downloads/1.0}item":
-                    attribute_enum = AttributeEnum(None, item_count, element.attrib["name"], desc)
-                    attribute_enum.attribute_id = attribute.id
-                    attribute_enum.imported = True
-                    db.session.add(attribute_enum)
-                    item_count += 1
-                    block_item_count += 1
-                    element.clear()
-                    desc = ""
-                    if block_item_count == 1000:
-                        logger.info(f"Processed CVE items: {item_count}")
-                        block_item_count = 0
-                        db.session.commit()
 
-        logger.info(f"Processed CVE items: {item_count}")
+        total_elements = cls.count_elements(file_path, tag_item)
+
+        with tqdm(total=total_elements, desc="Processing CVE items", unit="\u2009CVEs") as pbar:
+            for event, element in iterparse(file_path, events=("start", "end")):
+                if event == "end":
+                    if element.tag == tag_desc:
+                        desc = element.text
+                    elif element.tag == tag_item:
+                        attribute_enum = AttributeEnum(None, item_count, element.attrib["name"], desc)
+                        attribute_enum.attribute_id = attribute.id
+                        attribute_enum.imported = True
+                        db.session.add(attribute_enum)
+                        item_count += 1
+                        block_item_count += 1
+                        element.clear()
+                        desc = ""
+                        if block_item_count == 1000:
+                            block_item_count = 0
+                            db.session.commit()
+                        pbar.update(1)
+
         db.session.commit()
+        logger.info(f"Processed CVE items: {item_count}")
 
     @classmethod
     def load_cpe_from_file(cls, file_path):
@@ -581,36 +593,38 @@ class Attribute(db.Model):
 
         Args:
             file_path (str): The path to the file.
-
-        Returns:
-            None
         """
         attribute = cls.query.filter_by(type=AttributeType.CPE).first()
         AttributeEnum.delete_imported_for_attribute(attribute.id)
+        tag_item = "{http://cpe.mitre.org/dictionary/2.0}cpe-item"
+        tag_title = "{http://cpe.mitre.org/dictionary/2.0}title"
+
+        total_elements = cls.count_elements(file_path, tag_item)
 
         item_count = 0
         block_item_count = 0
         desc = ""
-        for event, element in iterparse(file_path, events=("start", "end")):
-            if event == "end":
-                if element.tag == "{http://cpe.mitre.org/dictionary/2.0}title":
-                    desc = element.text
-                elif element.tag == "{http://cpe.mitre.org/dictionary/2.0}cpe-item":
-                    attribute_enum = AttributeEnum(None, item_count, element.attrib["name"], desc)
-                    attribute_enum.attribute_id = attribute.id
-                    attribute_enum.imported = True
-                    db.session.add(attribute_enum)
-                    item_count += 1
-                    block_item_count += 1
-                    element.clear()
-                    desc = ""
-                    if block_item_count == 1000:
-                        logger.info(f"Processed CPE items: {item_count}")
-                        block_item_count = 0
-                        db.session.commit()
+        with tqdm(total=total_elements, desc="Processing CPE items", unit="\u2009CPEs") as pbar:
+            for event, element in iterparse(file_path, events=("start", "end")):
+                if event == "end":
+                    if element.tag == tag_title:
+                        desc = element.text
+                    elif element.tag == tag_item:
+                        attribute_enum = AttributeEnum(None, item_count, element.attrib["name"], desc)
+                        attribute_enum.attribute_id = attribute.id
+                        attribute_enum.imported = True
+                        db.session.add(attribute_enum)
+                        item_count += 1
+                        block_item_count += 1
+                        element.clear()
+                        desc = ""
+                        if block_item_count == 1000:
+                            block_item_count = 0
+                            db.session.commit()
+                        pbar.update(1)
 
-        logger.info(f"Processed CPE items: {item_count}")
         db.session.commit()
+        logger.info(f"Processed CPE items: {item_count}")
 
     @classmethod
     def load_cwe_from_file(cls, file_path):
@@ -618,33 +632,33 @@ class Attribute(db.Model):
 
         Args:
             file_path (str): The path to the file.
-
-        Returns:
-            None
         """
         attribute = cls.query.filter_by(type=AttributeType.CWE).first()
         AttributeEnum.delete_imported_for_attribute(attribute.id)
+        tag = "{http://cwe.mitre.org/cwe-7}Weakness"
+
+        total_elements = cls.count_elements(file_path, tag)
 
         item_count = 0
         block_item_count = 0
-        for event, element in iterparse(file_path, events=("start", "end")):
-            if event == "end":
-                if element.tag == "{http://cwe.mitre.org/cwe-7}Weakness":
-                    attribute_enum = AttributeEnum(None, item_count, element.attrib["ID"], element.attrib["Name"])
-                    attribute_enum.attribute_id = attribute.id
-                    attribute_enum.imported = True
-                    db.session.add(attribute_enum)
-                    item_count += 1
-                    block_item_count += 1
-                    element.clear()
-                    # desc = ""
-                    if block_item_count == 1000:
-                        logger.info(f"Processed CWE items: {item_count}")
-                        block_item_count = 0
-                        db.session.commit()
+        with tqdm(total=total_elements, desc="Processing CWE items", unit="\u2009CWEs") as pbar:
+            for event, element in iterparse(file_path, events=("start", "end")):
+                if event == "end":
+                    if element.tag == tag:
+                        attribute_enum = AttributeEnum(None, item_count, element.attrib["ID"], element.attrib["Name"])
+                        attribute_enum.attribute_id = attribute.id
+                        attribute_enum.imported = True
+                        db.session.add(attribute_enum)
+                        item_count += 1
+                        block_item_count += 1
+                        element.clear()
+                        if block_item_count == 1000:
+                            block_item_count = 0
+                            db.session.commit()
+                        pbar.update(1)
 
-        logger.info(f"Processed CWE items: {item_count}")
         db.session.commit()
+        logger.info(f"Processed CWE items: {item_count}")
 
     @classmethod
     def load_dictionaries(cls, dict_type):
@@ -653,9 +667,6 @@ class Attribute(db.Model):
 
         Args:
             dict_type (str): The type of dictionary to load.
-
-        Returns:
-            None
         """
         if dict_type == "cve":
             cve_update_file = os.getenv("CVE_UPDATE_FILE")

@@ -49,11 +49,10 @@ def wait_for_db(app, retries=5, delay=1):
         try:
             db_socket.connect((app.config.get("DB_URL"), 5432))
             db_socket.close()
-            print(f"Database is ready for connection after {attempt+1} atempt(s).")
             return
         except socket.error as error:
             attempt += 1
-            print(f"Waiting for database: {error}. Attempt {attempt+1} of {retries}.")
+            print(f"Waiting for database: {error}. Attempt {attempt} of {retries}.")
             time.sleep(delay)
             delay *= 2  # Exponential backoff
     print("Database is not ready after multiple attempts.")
