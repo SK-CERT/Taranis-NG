@@ -4,6 +4,7 @@
 
 import random
 import string
+import time
 import click
 
 from os import abort, getenv, read
@@ -316,7 +317,30 @@ def collector_management(
 
         db_manager.db.session.add(node)
         db_manager.db.session.commit()
-        print(f"Collector node '{opt_name}' with id {node.id} created.")
+        logger.info(f"Collector node '{opt_name}' created.")
+
+        logger.debug("Trying to contact a new collector node...")
+        attempt, retries, delay = 0, 5, 1
+        while attempt < retries:
+            try:
+                collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info(node.id)
+                break
+            except Exception as error:
+                attempt += 1
+                logger.warning(f"Attempt ({attempt}/{retries}): {error}")
+                status_code = 0
+                if attempt != retries:  # don't wait last attemt
+                    time.sleep(delay)
+                delay *= 2
+
+        if status_code == 200:
+            logger.info(f"Collector node '{opt_name}' registered.")
+        else:
+            logger.error(
+                "Unable to register a new collector node! Wait until the new Collector container starts and register it manually.\r\n"
+                f"1) running 'python manage.py collector --update --name \"{opt_name}\"'\r\n"
+                "2) from the Taranis configuration screen (just re-save the record)"
+            )
 
     if opt_edit:
         if not opt_id or not opt_name:
@@ -341,26 +365,29 @@ def collector_management(
         if opt_id:
             nodes = [collectors_node.CollectorsNode.get_by_id(opt_id)]
             if not nodes:
-                logger.critical("Collector node does not exit!")
+                logger.warning(f"Collector node '{opt_id}' does not exit!")
                 abort()
         elif opt_name:
             nodes, count = collectors_node.CollectorsNode.get(opt_name)
             if not count:
-                logger.critical("Collector node does not exit!")
+                logger.warning(f"Collector node '{opt_name}' does not exit!")
                 abort()
         else:
             nodes, count = collectors_node.CollectorsNode.get(None)
             if not count:
-                logger.critical("No collector nodes exist!")
+                logger.warning("No collector nodes exist!")
                 abort()
 
         for node in nodes:
             # refresh collector node id
-            collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
-            if status_code == 200:
-                print(f"Collector node {node.id} updated.")
-            else:
-                print(f"Unable to update collector node {node.id}.\n\tResponse: [{status_code}] {collectors_info}.")
+            try:
+                collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
+                if status_code == 200:
+                    logger.info(f"Collector node '{node.name}' updated.")
+                else:
+                    logger.warning(f"Unable to update collector node '{node.name}'.\n\tResponse: [{status_code}] {collectors_info}.")
+            except Exception as error:
+                logger.warning(f"Unable to update collector node '{node.name}'\r\n{error}")
 
 
 @cli.command("dictionary")
