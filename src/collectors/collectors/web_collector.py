@@ -19,8 +19,8 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from urllib.parse import urlparse
 import os
-import dateparser
 import re
+from dateutil.parser import parse
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
@@ -843,11 +843,15 @@ class WebCollector(BaseCollector):
         if not article_description:
             article_description = self.__smart_truncate(article_full_text)
 
+        extracted_date = None
         published_str = self.__find_element_text_by(browser, self.selectors["published"])
-        if not published_str:
-            published_str = "today"
-        published = dateparser.parse(published_str, settings={"DATE_ORDER": "DMY"})
-        published_str = published.strftime("%Y-%m-%d %H:%M")  # remove microseconds/seconds from the screen, looks ugly
+        if published_str:
+            extracted_date = parse(published_str, fuzzy=True)
+        now = datetime.datetime.now()
+        if extracted_date:
+            published_str = extracted_date.strftime("%d.%m.%Y - %H:%M")
+        else:
+            published_str = now.strftime("%d.%m.%Y - %H:%M")
 
         link = current_url
 
@@ -863,7 +867,7 @@ class WebCollector(BaseCollector):
             link,
             published_str,
             author,
-            datetime.datetime.now(),
+            now,
             article_full_text,
             self.source.id,
             [],
