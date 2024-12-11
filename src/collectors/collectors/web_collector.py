@@ -19,8 +19,8 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from urllib.parse import urlparse
 import os
-import dateparser
 import re
+from dateutil.parser import parse
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
@@ -843,17 +843,15 @@ class WebCollector(BaseCollector):
         if not article_description:
             article_description = self.__smart_truncate(article_full_text)
 
+        extracted_date = None
         published_str = self.__find_element_text_by(browser, self.selectors["published"])
         if published_str:
-            for unwanted in ["Published", "Updated"]:
-                published_str = re.sub(re.escape(unwanted), "", published_str, flags=re.IGNORECASE)
-            published_str = published_str.strip()
-        published = dateparser.parse(published_str, settings={"DATE_ORDER": "DMY"})
+            extracted_date = parse(published_str, fuzzy=True)
         now = datetime.datetime.now()
-        if published:
-            published_str = published.strftime("%d.%m.%Y - %H:%M")
+        if extracted_date:
+            published_str = extracted_date.strftime("%d.%m.%Y - %H:%M")
         else:
-            published_str = now
+            published_str = now.strftime("%d.%m.%Y - %H:%M")
 
         link = current_url
 
