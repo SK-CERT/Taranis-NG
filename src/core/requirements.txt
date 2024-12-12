@@ -14,7 +14,7 @@ marshmallow==3.23.1
 psycopg2==2.9.10
 #psycopg==3.2.3
 pycryptodomex==3.21.0
-PyJWT==2.10.0
+PyJWT==2.10.1
 python-dotenv==1.0.1
 python-keycloak==4.7.2
 requests==2.32.3
