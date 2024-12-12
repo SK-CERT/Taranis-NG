@@ -9,7 +9,7 @@ import os
 
 from managers.log_manager import logger
 from .base_publisher import BasePublisher
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_publisher import ConfigPublisher
 
 
 class SFTPPublisher(BasePublisher):
@@ -29,33 +29,10 @@ class SFTPPublisher(BasePublisher):
     """
 
     type = "SFTP_PUBLISHER"
-    name = "SFTP Publisher"
-    description = "Publisher for publishing to SFTP server"
-
-    parameters = [
-        Parameter(0, "SFTP_URL", "SFTP URL", "SFTP server URL", ParameterType.STRING),
-        Parameter(0, "PORT", "SSH port", "Port remote machine is using for SSH (default 22)", ParameterType.STRING),
-        Parameter(0, "SSH_KEY", "SSH key", "Private key which should be used for SSH connection", ParameterType.STRING),
-        Parameter(0, "SSH_KEY_PASSWORD", "SSH key password", "Password for the SSH private key", ParameterType.STRING),
-        Parameter(0, "USERNAME", "Username", "Username for SFTP", ParameterType.STRING),
-        Parameter(0, "PASSWORD", "Password", "Password for SFTP", ParameterType.STRING),
-        Parameter(
-            0,
-            "PATH",
-            "Remote path",
-            "Either absolute or relative path where the file should be saved on the remote machine",
-            ParameterType.STRING,
-        ),
-        Parameter(
-            0,
-            "FILENAME",
-            "Filename",
-            "Custom mame of the transported file without extension (default file_%d-%m-%Y_%H:%M)",
-            ParameterType.STRING,
-        ),
-        Parameter(0, "COMMAND", "Command", "Command to be executed on the remote machine", ParameterType.STRING),
-    ]
-    parameters.extend(BasePublisher.parameters)
+    config = ConfigPublisher().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def publish(self, publisher_input):
         """Publish to SFTP server.

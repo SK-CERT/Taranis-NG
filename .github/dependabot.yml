@@ -19,19 +19,21 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "slackclient"
-#  - package-ecosystem: "pip"
-#    directory: "/src/core"
-#    schedule:
-#      interval: "weekly"
-  - package-ecosystem: "pip" 
+  - package-ecosystem: "pip"
+    directory: "/src/core"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "SQLAlchemy"
+  - package-ecosystem: "pip"
     directory: "/src/presenters"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "pip" 
+  - package-ecosystem: "pip"
     directory: "/src/publishers"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "npm" 
+  - package-ecosystem: "npm"
     directory: "/src/gui"
     schedule:
       interval: "weekly"

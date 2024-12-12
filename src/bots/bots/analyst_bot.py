@@ -4,8 +4,8 @@ import re
 
 from .base_bot import BaseBot
 from managers.log_manager import logger
+from shared.config_bot import ConfigBot
 from shared.schema import news_item
-from shared.schema.parameter import Parameter, ParameterType
 from remote.core_api import CoreApi
 
 
@@ -28,17 +28,10 @@ class AnalystBot(BaseBot):
     """
 
     type = "ANALYST_BOT"
-    name = "Analyst Bot"
-    description = "Bot for news items analysis"
-
-    parameters = [
-        Parameter(0, "SOURCE_GROUP", "Source Group", "OSINT Source group to inspect", ParameterType.STRING),
-        Parameter(0, "REGULAR_EXPRESSION", "Regular Expression", "Regular expression for data analysis", ParameterType.STRING),
-        Parameter(0, "ATTRIBUTE_NAME", "Attribute name", "Name of attribute for extracted data", ParameterType.STRING),
-    ]
-
-    parameters.extend(BaseBot.parameters)
-
+    config = ConfigBot().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
     regexp = []
     attr_name = []
     news_items = []

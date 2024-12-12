@@ -20,7 +20,6 @@ class BasePublisher:
     type = "BASE_PUBLISHER"
     name = "Base Publisher"
     description = "Base abstract type for all publishers"
-
     parameters = []
 
     def get_info(self):

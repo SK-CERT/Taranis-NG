@@ -7,8 +7,8 @@ import tweepy
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
-from shared.schema.parameter import Parameter, ParameterType
 
 
 class TwitterCollector(BaseCollector):
@@ -26,26 +26,10 @@ class TwitterCollector(BaseCollector):
     """
 
     type = "TWITTER_COLLECTOR"
-    name = "Twitter Collector"
-    description = "Collector for gathering data from Twitter"
-
-    parameters = [
-        Parameter(0, "TWITTER_API_KEY", "Twitter API key", "API key of Twitter account", ParameterType.STRING),
-        Parameter(0, "TWITTER_API_KEY_SECRET", "Twitter API key secret", "API key secret of Twitter account", ParameterType.STRING),
-        Parameter(0, "TWITTER_ACCESS_TOKEN", "Twitter access token", "Twitter access token of Twitter account", ParameterType.STRING),
-        Parameter(
-            0,
-            "TWITTER_ACCESS_TOKEN_SECRET",
-            "Twitter access token secret",
-            "Twitter access token secret of Twitter account",
-            ParameterType.STRING,
-        ),
-        Parameter(0, "SEARCH_KEYWORDS", "Search by keywords", "Search tweets by keywords", ParameterType.STRING),
-        Parameter(0, "SEARCH_HASHTAGS", "Search by hashtags", "Search tweets by hashtags", ParameterType.STRING),
-        Parameter(0, "NUMBER_OF_TWEETS", "Number of tweets", "How many tweets will be provided", ParameterType.NUMBER),
-    ]
-
-    parameters.extend(BaseCollector.parameters)
+    config = ConfigCollector().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
     def collect(self, source):

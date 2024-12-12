@@ -3,12 +3,13 @@
 Returns:
     dict: The presenter output containing the MIME type and data.
 """
+
 import os
 from base64 import b64encode
 import jinja2
 
 from .base_presenter import BasePresenter
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_presenter import ConfigPresenter
 
 
 class MISPPresenter(BasePresenter):
@@ -24,12 +25,10 @@ class MISPPresenter(BasePresenter):
     """
 
     type = "MISP_PRESENTER"
-    name = "MISP Presenter"
-    description = "Presenter for generating MISP platform"
-
-    parameters = [Parameter(0, "MISP_TEMPLATE_PATH", "MISP template with its path", "Path of MISP template file", ParameterType.STRING)]
-
-    parameters.extend(BasePresenter.parameters)
+    config = ConfigPresenter().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def generate(self, presenter_input):
         """Generate the output data based on the presenter input.

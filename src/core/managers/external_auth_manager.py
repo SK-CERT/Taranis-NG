@@ -19,6 +19,7 @@ import os
 from keycloak import KeycloakAdmin
 from config import Config
 
+
 def keycloak_user_management_enabled():
     """Check if Keycloak user management is enabled.
 
@@ -63,19 +64,19 @@ def get_keycloak_admin():
         KeycloakAdmin: An instance of the KeycloakAdmin class.
     """
     return KeycloakAdmin(
-        server_url        = os.getenv("TARANIS_NG_KEYCLOAK_INTERNAL_URL"),
-        username          = os.getenv("KEYCLOAK_ADMIN_USERNAME"),
-        password          = get_keycloak_admin_password(),
-        realm_name        = os.getenv("KEYCLOAK_REALM_NAME"),
-        client_secret_key = get_keycloak_client_secret_key(),
-        verify            = (os.getenv("KEYCLOAK_VERIFY").lower() == "true"),
+        server_url=os.getenv("TARANIS_NG_KEYCLOAK_INTERNAL_URL"),
+        username=os.getenv("KEYCLOAK_ADMIN_USERNAME"),
+        password=get_keycloak_admin_password(),
+        realm_name=os.getenv("KEYCLOAK_REALM_NAME"),
+        client_secret_key=get_keycloak_client_secret_key(),
+        verify=(os.getenv("KEYCLOAK_VERIFY").lower() == "true"),
     )
 
 
 def create_user(user_data):
     """Create a user in the external authentication system.
 
-    Arguments:
+    Args:
         user_data (dict): A dictionary containing user data.
             - username (str): The username of the user.
             - password (str): The password of the user.
@@ -92,7 +93,7 @@ def update_user(user_data, original_username):
 
     This function updates the user information in the external authentication system, such as Keycloak.
 
-    Arguments:
+    Args:
         user_data (dict): A dictionary containing the updated user data.
         original_username (str): The original username of the user.
     """
@@ -113,7 +114,7 @@ def delete_user(username):
 
     This function deletes a user from the external authentication system, such as Keycloak.
 
-    Arguments:
+    Args:
         username (str): The username of the user to be deleted.
     """
     if keycloak_user_management_enabled():

@@ -85,6 +85,7 @@
             show_validation_error: false,
             show_error: false,
             node: {
+                id: "",
                 name: "",
                 description: "",
                 api_url: "",

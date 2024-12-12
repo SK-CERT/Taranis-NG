@@ -12,8 +12,8 @@ from bs4 import BeautifulSoup
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
-from shared.schema.parameter import Parameter, ParameterType
 
 
 class RSSCollector(BaseCollector):
@@ -24,22 +24,10 @@ class RSSCollector(BaseCollector):
     """
 
     type = "RSS_COLLECTOR"
-    name = "RSS Collector"
-    description = "Collector for gathering data from RSS and Atom feeds"
-
-    parameters = [
-        Parameter(0, "FEED_URL", "Feed URL", "Full URL for RSS or Atom feed", ParameterType.STRING),
-        Parameter(0, "USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING),
-        Parameter(
-            0,
-            "LINKS_LIMIT",
-            "Limit for article links",
-            "OPTIONAL: Maximum number of article links to process. Default: all",
-            ParameterType.NUMBER,
-        ),
-    ]
-
-    parameters.extend(BaseCollector.parameters)
+    config = ConfigCollector().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     news_items = []
 
@@ -50,6 +38,7 @@ class RSSCollector(BaseCollector):
         Arguments:
             source -- Source object.
         """
+
         def strip_html_tags(html_string):
             soup = BeautifulSoup(html_string, "html.parser")
             return soup.get_text(separator=" ", strip=True)

@@ -1,29 +1,44 @@
+"""Grouping bot."""
+
 import json
 import re
 
 from .base_bot import BaseBot
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_bot import ConfigBot
 from remote.core_api import CoreApi
 
 
 class GroupingBot(BaseBot):
+    """GroupingBot is a bot that processes news items from a specified source group.
+
+    It applies a regular expression to find specific patterns in the content, and
+    groups news items based on the findings.
+    Attributes:
+        type (str): The type of the bot, set to "GROUPING_BOT".
+        config (Config): Configuration object for the bot.
+        name (str): The name of the bot.
+        description (str): The description of the bot.
+        parameters (dict): The parameters for the bot.
+    """
+
     type = "GROUPING_BOT"
-    name = "Grouping Bot"
-    description = "Bot for grouping news items into aggregates"
-
-    parameters = [Parameter(0, "SOURCE_GROUP", "Source Group", "OSINT Source group to inspect", ParameterType.STRING),
-                  Parameter(0, "REGULAR_EXPRESSION", "Regular Expression", "Regular expression for items matching",
-                            ParameterType.STRING)
-                  ]
-
-    parameters.extend(BaseBot.parameters)
+    config = ConfigBot().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def execute(self, preset):
+        """Execute the grouping bot with the given preset.
 
+        Args:
+            preset (object): An object containing the parameters for execution.
+        Raises:
+            Exception: If an error occurs during execution, it is caught and logged.
+        """
         try:
-            source_group = preset.parameter_values['SOURCE_GROUP']
-            regexp = preset.parameter_values['REGULAR_EXPRESSION']
-            interval = preset.parameter_values['REFRESH_INTERVAL']
+            source_group = preset.parameter_values["SOURCE_GROUP"]
+            regexp = preset.parameter_values["REGULAR_EXPRESSION"]
+            interval = preset.parameter_values["REFRESH_INTERVAL"]
 
             limit = BaseBot.history(interval)
 
@@ -32,21 +47,19 @@ class GroupingBot(BaseBot):
 
             if data:
 
-                data_findings = []
+                data_findings = []  # noqa F841
 
                 for aggregate in data:
 
                     findings = []
 
-                    for news_item in aggregate['news_items']:
+                    for news_item in aggregate["news_items"]:
 
-                        content = news_item['news_item_data']['content']
+                        content = news_item["news_item_data"]["content"]
 
-                        analyzed_content = ''.join(content).split()
-                        analyzed_content = [item.replace('.', '') if item.endswith('.') else item
-                                            for item in analyzed_content]
-                        analyzed_content = [item.replace(',', '') if item.endswith(',') else item
-                                            for item in analyzed_content]
+                        analyzed_content = "".join(content).split()
+                        analyzed_content = [item.replace(".", "") if item.endswith(".") else item for item in analyzed_content]
+                        analyzed_content = [item.replace(",", "") if item.endswith(",") else item for item in analyzed_content]
 
                         analyzed_content = set(analyzed_content)
 
@@ -55,7 +68,7 @@ class GroupingBot(BaseBot):
                             finding = re.search("(" + regexp + ")", element)
 
                             if finding:
-                                finding = [news_item['id'], finding.group(1)]
+                                finding = [news_item["id"], finding.group(1)]
                                 findings.append(finding)
 
                     # NEXT PART OF CODE IS FOR FINDINGS IN ONE AGGREGATE
@@ -99,16 +112,10 @@ class GroupingBot(BaseBot):
                             items = []
 
                             for element in sublist:
-                                item = {
-                                    'type': 'ITEM',
-                                    'id': int(element)
-                                }
+                                item = {"type": "ITEM", "id": int(element)}
                                 items.append(item)
 
-                            data = {
-                                'action': 'GROUP',
-                                'items': items
-                            }
+                            data = {"action": "GROUP", "items": items}
                             CoreApi.news_items_grouping(data)
 
                 # NEXT PART OF CODE IS FOR FINDINGS IN ALL AGGREGATES
@@ -174,9 +181,18 @@ class GroupingBot(BaseBot):
             BaseBot.print_exception(preset, error)
 
     def execute_on_event(self, preset, event_type, data):
+        """Execute actions based on the given event.
+
+        Args:
+            preset (object): The preset configuration containing parameter values.
+            event_type (str): The type of event that triggered this execution.
+            data (dict): Additional data related to the event.
+        Raises:
+            Exception: If there is an error accessing the parameter values in the preset.
+        """
         try:
-            source_group = preset.parameter_values['SOURCE_GROUP']
-            regexp = preset.parameter_values['REGULAR_EXPRESSION']
+            source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
+            regexp = preset.parameter_values["REGULAR_EXPRESSION"]  # noqa F841
 
         except Exception as error:
             BaseBot.print_exception(preset, error)

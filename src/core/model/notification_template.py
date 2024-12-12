@@ -12,8 +12,6 @@ class NewEmailRecipientSchema(EmailRecipientSchema):
 
     Attributes:
         Inherits EmailRecipientSchema.
-    Methods:
-        make(data, **kwargs): A method decorated with @post_load that creates an EmailRecipient instance from the given data.
     Returns:
         An instance of EmailRecipient.
     """
@@ -22,7 +20,7 @@ class NewEmailRecipientSchema(EmailRecipientSchema):
     def make(self, data, **kwargs):
         """Create an instance of EmailRecipient using the provided data.
 
-        Parameters:
+        Args:
             data (dict): A dictionary containing the data for creating the EmailRecipient instance.
             **kwargs: Additional keyword arguments.
         Returns:
@@ -39,8 +37,6 @@ class EmailRecipient(db.Model):
         email (str): The email address of the recipient.
         name (str): The name of the recipient.
         notification_template_id (int): The ID of the associated notification template.
-    Methods:
-        __init__(email, name): Initializes a new instance of the EmailRecipient class.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -52,7 +48,7 @@ class EmailRecipient(db.Model):
     def __init__(self, email, name):
         """Initialize a NotificationTemplate object.
 
-        Parameters:
+        Args:
             email (str): The email address associated with the template.
             name (str): The name of the template.
         Attributes:
@@ -70,8 +66,6 @@ class NewNotificationTemplateSchema(NotificationTemplateSchema):
 
     Attributes:
         recipients (list): A list of NewEmailRecipientSchema objects representing the recipients of the notification.
-    Methods:
-        make(data, **kwargs): A post-load method that creates a NotificationTemplate object from the given data.
     """
 
     recipients = fields.Nested(NewEmailRecipientSchema, many=True)
@@ -80,7 +74,7 @@ class NewNotificationTemplateSchema(NotificationTemplateSchema):
     def make(self, data, **kwargs):
         """Create a new `NotificationTemplate` object based on the given data.
 
-        Parameters:
+        Args:
             data (dict): A dictionary containing the data for the notification template.
             **kwargs: Additional keyword arguments.
         Returns:
@@ -100,21 +94,6 @@ class NotificationTemplate(db.Model):
         message_body (str): The body of the notification message.
         recipients (list): The list of email recipients for the notification.
         organizations (list): The list of organizations associated with the template.
-    Methods:
-        __init__(self, id, name, description, message_title, message_body, recipients):
-            Initializes a new instance of the NotificationTemplate class.
-        find(cls, id):
-            Finds a notification template by its ID.
-        get(cls, search, organization):
-            Retrieves notification templates based on search criteria and organization.
-        get_all_json(cls, user, search):
-            Retrieves all notification templates in JSON format.
-        add(cls, user, data):
-            Adds a new notification template.
-        delete(cls, user, template_id):
-            Deletes a notification template.
-        update(cls, user, template_id, data):
-            Updates a notification template.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -130,7 +109,7 @@ class NotificationTemplate(db.Model):
     def __init__(self, id, name, description, message_title, message_body, recipients):
         """Initialize a NotificationTemplate object.
 
-        Parameters:
+        Args:
             id (int): The ID of the notification template.
             name (str): The name of the notification template.
             description (str): The description of the notification template.
@@ -174,7 +153,7 @@ class NotificationTemplate(db.Model):
     def find(cls, id):
         """Find a notification template by its ID.
 
-        Parameters:
+        Args:
             cls: The class object.
             id: The ID of the notification template.
         Returns:
@@ -187,7 +166,7 @@ class NotificationTemplate(db.Model):
     def get(cls, search, organization):
         """Retrieve notification templates based on search criteria and organization.
 
-        Parameters:
+        Args:
             search (str): The search string to filter notification templates by name or description.
             organization (str): The organization to filter notification templates.
         Returns:
@@ -217,7 +196,7 @@ class NotificationTemplate(db.Model):
     def get_all_json(cls, user, search):
         """Retrieve all notification templates in JSON format.
 
-        Parameters:
+        Args:
             cls (class): The class itself.
             user (User): The user object.
             search (str): The search query.
@@ -235,7 +214,7 @@ class NotificationTemplate(db.Model):
     def add(cls, user, data):
         """Add a new notification template to the database.
 
-        Parameters:
+        Args:
             cls: The class object.
             user: The user object.
             data: The data for the new notification template.
@@ -250,7 +229,7 @@ class NotificationTemplate(db.Model):
     def delete(cls, user, template_id):
         """Delete a notification template.
 
-        Parameters:
+        Args:
             cls (class): The class itself.
             user (User): The user performing the delete operation.
             template_id (int): The ID of the template to be deleted.
@@ -264,7 +243,7 @@ class NotificationTemplate(db.Model):
     def update(cls, user, template_id, data):
         """Update a notification template.
 
-        Parameters:
+        Args:
             cls: The class object.
             user: The user performing the update.
             template_id: The ID of the template to update.

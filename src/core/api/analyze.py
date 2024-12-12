@@ -11,6 +11,7 @@ from managers.auth_manager import auth_required, ACLCheck
 from model import attribute, report_item, report_item_type
 from model.permission import Permission
 
+
 class ReportItemTypes(Resource):
     """Report item types API endpoint."""
 
@@ -101,7 +102,7 @@ class ReportItem(Resource):
     def get(self, report_item_id):
         """Get a report item.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
         Returns:
             (dict): report item details
@@ -112,7 +113,7 @@ class ReportItem(Resource):
     def put(self, report_item_id):
         """Update a report item.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
         Returns:
             data (dict): updated report item details
@@ -130,7 +131,7 @@ class ReportItem(Resource):
     def delete(self, report_item_id):
         """Delete a report item.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
         Returns:
             result (bool): True if the report item was deleted successfully
@@ -150,7 +151,7 @@ class ReportItemData(Resource):
     def get(self, report_item_id):
         """Get updated report item data.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
         Returns:
             (dict): updated report item data
@@ -191,7 +192,7 @@ class ReportItemLocks(Resource):
     def get(self, report_item_id):
         """Get report item locks.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
         Returns:
             (dict): report item locks
@@ -209,7 +210,7 @@ class ReportItemLock(Resource):
     def put(self, report_item_id, field_id):
         """Lock a report item field.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
             field_id (str): field ID
         Returns:
@@ -225,7 +226,7 @@ class ReportItemUnlock(Resource):
     def put(self, report_item_id, field_id):
         """Unlock a report item field.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
             field_id (str): field ID
         Returns:
@@ -241,7 +242,7 @@ class ReportItemHoldLock(Resource):
     def put(self, report_item_id, field_id):
         """Hold a report item lock.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
             field_id (str): field ID
         Returns:
@@ -257,7 +258,7 @@ class ReportItemAttributeEnums(Resource):
     def get(self, attribute_id):
         """Get report item attribute enums.
 
-        Parameters:
+        Args:
             attribute_id (int): attribute ID
         Returns:
             (dict): report item attribute enums
@@ -281,7 +282,7 @@ class ReportItemAddAttachment(Resource):
     def post(self, report_item_id):
         """Add a report item attachment.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
         Returns:
             data (dict): updated report item details
@@ -307,7 +308,7 @@ class ReportItemRemoveAttachment(Resource):
     def delete(self, report_item_id, attribute_id):
         """Remove a report item attachment.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
             attribute_id (int): attribute ID
         Returns:
@@ -327,7 +328,7 @@ class ReportItemDownloadAttachment(Resource):
     def get(self, report_item_id, attribute_id):
         """Download a report item attachment.
 
-        Parameters:
+        Args:
             report_item_id (int): report item ID
             attribute_id (int): attribute ID
         Returns:
@@ -365,7 +366,7 @@ class ReportItemDownloadAttachment(Resource):
 def initialize(api):
     """Initialize API endpoints.
 
-    Parameters:
+    Args:
         api (flask_rest): an instance of flask_rest
     """
     api.add_resource(ReportItemTypes, "/api/v1/analyze/report-item-types")

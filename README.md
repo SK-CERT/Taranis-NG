@@ -139,8 +139,8 @@ dictionaries and a current list of CVEs preloaded in Taranis NG.
 
 2. Upload the dictionary to the proper path, and import into the database
 ```bash
-gzcat official-cpe-dictionary_v2.3.xml.gz | \
-    docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cpe
+zcat official-cpe-dictionary_v2.3.xml.gz | \
+    docker exec -i taranis-ng-core-1 python manage.py dictionary --upload-cpe
 ```
 
 3. Download the official CVE list from
@@ -149,8 +149,8 @@ in xml.gz format.
 
 4. Upload the dictionary to the proper path, and import into the database
 ```bash
-gzcat allitems.xml.gz | \
-    docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cve
+zcat allitems.xml.gz | \
+    docker exec -i taranis-ng-core-1 python manage.py dictionary --upload-cve
 ```
 
 5. Download the official CWE list from
@@ -159,9 +159,11 @@ in xml.zip format.
 
 6. Upload the dictionary to the proper path, and import into the database
 ```bash
-gzcat cwec_latest.xml.zip | \
-    docker exec -i taranis-ng_core_1 python manage.py dictionary --upload-cwe
+zcat cwec_latest.xml.zip | \
+    docker exec -i taranis-ng-core-1 python manage.py dictionary --upload-cwe
 ```
+
+Some Linux distributions might provide gzcat instead of zcat.
 
 ### Using the default stop lists for better tag cloud
 
@@ -177,12 +179,12 @@ gzcat cwec_latest.xml.zip | \
 ## About...
 
 This project was inspired by [Taranis3](https://github.com/NCSC-NL/taranis3),
-a great tool made by NCSC-NL. Currently, NCSC-NL has a new tool for producing advisories, 
-with a different approach to communicating with the world. There was no funding to maintain or 
+a great tool made by NCSC-NL. Currently, NCSC-NL has a new tool for producing advisories,
+with a different approach to communicating with the world. There was no funding to maintain or
 further develop NCSC-NL's Taranis3.
 
-It aims to become a next generation of this category of tools. The project was made in collaboration 
-with a wide group of European CSIRT teams who are developers and users of Taranis3, and would not be 
+It aims to become a next generation of this category of tools. The project was made in collaboration
+with a wide group of European CSIRT teams who are developers and users of Taranis3, and would not be
 possible without their valuable input especially during the requirements collection phase.
 The architecture and design of new Taranis NG is a collective brain child of this community.
 

@@ -20,8 +20,8 @@ class BotPresetsForBots(Resource):
             (dict): The new bot preset
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("api_key")
-        parser.add_argument("bot_type")
+        parser.add_argument("api_key", location="args")
+        parser.add_argument("bot_type", location="args")
         parameters = parser.parse_args()
         return bot_preset.BotPreset.get_all_for_bot_json(parameters)
 
@@ -72,7 +72,7 @@ class UpdateNewsItemAttributes(Resource):
     def put(self, news_item_data_id):
         """Update news item attributes.
 
-        Parameters:
+        Args:
             news_item_data_id (str): The news item data ID
         Returns:
             (dict): The updated news item attributes
@@ -87,7 +87,7 @@ class GetNewsItemsAggregate(Resource):
     def get(self, group_id):
         """Get news items aggregate.
 
-        Parameters:
+        Args:
             group_id (str): The group ID
         Returns:
             (dict): The news items aggregate
@@ -102,7 +102,7 @@ class Categories(Resource):
     def get(self, category_id):
         """Get word list categories.
 
-        Parameters:
+        Args:
             category_id (int): The category ID
         Returns:
             (dict): The word list categories
@@ -113,7 +113,7 @@ class Categories(Resource):
     def put(self, category_id):
         """Update word list categories.
 
-        Parameters:
+        Args:
             category_id (int): The category ID
         Returns:
             (dict): The updated word list categories
@@ -128,7 +128,7 @@ class Entries(Resource):
     def delete(self, category_id, entry_name):
         """Delete word list entries.
 
-        Parameters:
+        Args:
             category_id (int): The category ID
             entry_name (str): The entry name
         Returns:
@@ -140,7 +140,7 @@ class Entries(Resource):
     def put(self, category_id, entry_name):
         """Update word list entries.
 
-        Parameters:
+        Args:
             category_id (int): The category ID
             entry_name (str): The entry name
         Returns:
@@ -152,7 +152,7 @@ class Entries(Resource):
 def initialize(api):
     """Initialize bots API endpoints.
 
-    Parameters:
+    Args:
         api (object): The API object
     """
     api.add_resource(BotPresetsForBots, "/api/v1/bots/bots-presets")

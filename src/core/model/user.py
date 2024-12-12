@@ -21,8 +21,6 @@ class NewUserSchema(UserSchemaBase):
         roles (Nested): A nested field representing the roles of the user.
         permissions (Nested): A nested field representing the permissions of the user.
         organizations (Nested): A nested field representing the organizations the user belongs to.
-    Methods:
-        make(self, data, **kwargs): A post-load method that creates a User object from the given data.
     Returns:
         User: A User object created from the given data.
     """
@@ -35,7 +33,7 @@ class NewUserSchema(UserSchemaBase):
     def make(self, data, **kwargs):
         """Create a new User object based on the provided data.
 
-        Parameters:
+        Args:
             data (dict): A dictionary containing the user data.
             **kwargs: Additional keyword arguments.
         Returns:
@@ -76,43 +74,6 @@ class User(db.Model):
         title (str): The title of the user.
         subtitle (str): The subtitle of the user.
         tag (str): The tag associated with the user.
-    Methods:
-        __init__(self, id, username, name, password, organizations, roles, permissions):
-            Initializes a new User object.
-        reconstruct(self):
-            Reconstructs the user object.
-        find(cls, username):
-            Finds a user by username.
-        find_by_id(cls, user_id):
-            Finds a user by ID.
-        get_all(cls):
-            Retrieves all users.
-        get(cls, search, organization):
-            Retrieves users based on search criteria and organization.
-        get_all_json(cls, search):
-            Retrieves all users in JSON format.
-        get_all_external_json(cls, user, search):
-            Retrieves all users in JSON format for an external user.
-        add_new(cls, data):
-            Adds a new user.
-        add_new_external(cls, user, permissions, data):
-            Adds a new external user.
-        update(cls, user_id, data):
-            Updates a user.
-        update_external(cls, user, permissions, user_id, data):
-            Updates an external user.
-        delete(cls, id):
-            Deletes a user.
-        delete_external(cls, user, id):
-            Deletes an external user.
-        get_permissions(self):
-            Retrieves all permissions of the user.
-        get_current_organization_name(self):
-            Retrieves the name of the current organization the user belongs to.
-        get_profile_json(cls, user):
-            Retrieves the user's profile in JSON format.
-        update_profile(cls, user, data):
-            Updates the user's profile.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -130,7 +91,7 @@ class User(db.Model):
     def __init__(self, id, username, name, password, organizations, roles, permissions):
         """Initialize a User object with the given parameters.
 
-        Parameters:
+        Args:
             id (int): The user's ID.
             username (str): The user's username.
             name (str): The user's name.
@@ -178,7 +139,7 @@ class User(db.Model):
     def find(cls, username):
         """Find a user by their username.
 
-        Parameters:
+        Args:
             cls: The class object.
             username: The username of the user to find.
         Returns:
@@ -191,7 +152,7 @@ class User(db.Model):
     def find_by_id(cls, user_id):
         """Find a user by their ID.
 
-        Parameters:
+        Args:
             cls: The class object.
             user_id: The ID of the user to find.
         Returns:
@@ -213,7 +174,7 @@ class User(db.Model):
     def get(cls, search, organization):
         """Retrieve users based on search criteria and organization.
 
-        Parameters:
+        Args:
             cls: The class object.
             search (str): The search string to filter users by name or username.
             organization: The organization to filter users by.
@@ -237,7 +198,7 @@ class User(db.Model):
     def get_all_json(cls, search):
         """Retrieve all users matching the given search criteria and returns them as a JSON object.
 
-        Parameters:
+        Args:
             cls: The class object.
             search: The search criteria.
         Returns:
@@ -251,7 +212,7 @@ class User(db.Model):
     def get_all_external_json(cls, user, search):
         """Retrieve all external JSON data for a given user.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user (User): The user object.
             search (str): The search query.
@@ -269,7 +230,7 @@ class User(db.Model):
     def add_new(cls, data):
         """Add a new user to the database.
 
-        Parameters:
+        Args:
             data: A dictionary containing the user data.
         """
         new_user_schema = NewUserSchema()
@@ -281,7 +242,7 @@ class User(db.Model):
     def add_new_external(cls, user, permissions, data):
         """Add a new external user to the system.
 
-        Parameters:
+        Args:
             cls: The class object.
             user: The user object.
             permissions: The list of permissions.
@@ -303,7 +264,7 @@ class User(db.Model):
     def update(cls, user_id, data):
         """Update a user with the given user_id using the provided data.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user_id (int): The ID of the user to be updated.
             data (dict): The data containing the updated user information.
@@ -336,7 +297,7 @@ class User(db.Model):
     def update_external(cls, user, permissions, user_id, data):
         """Update an external user with the provided data.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user (User): The current user performing the update.
             permissions (list): The list of permissions.
@@ -363,7 +324,7 @@ class User(db.Model):
     def delete(cls, id):
         """Delete a user from the database.
 
-        Parameters:
+        Args:
             cls (class): The class representing the user model.
             id (int): The ID of the user to be deleted.
         """
@@ -375,7 +336,7 @@ class User(db.Model):
     def delete_external(cls, user, id):
         """Delete an external user from the database.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user (User): The user performing the deletion.
             id (int): The ID of the user to be deleted.
@@ -416,7 +377,7 @@ class User(db.Model):
     def get_profile_json(cls, user):
         """Return the JSON representation of a user's profile.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user (User): The user object.
         Returns:
@@ -429,7 +390,7 @@ class User(db.Model):
     def update_profile(cls, user, data):
         """Update the user's profile with the provided data.
 
-        Parameters:
+        Args:
             cls (class): The class object.
             user (User): The user object to update the profile for.
             data (dict): The data containing the updated profile information.
@@ -493,17 +454,13 @@ class UserPermission(db.Model):
 
 
 class NewHotkeySchema(HotkeySchema):
-    """Represents a schema for creating a new hotkey.
-
-    Methods:
-        make(data, **kwargs): Creates a new Hotkey instance based on the provided data.
-    """
+    """Represents a schema for creating a new hotkey."""
 
     @post_load
     def make(self, data, **kwargs):
         """Create a new Hotkey instance based on the given data.
 
-        Parameters:
+        Args:
             data (dict): A dictionary containing the data for the Hotkey.
             **kwargs: Additional keyword arguments.
         Returns:
@@ -518,8 +475,6 @@ class NewUserProfileSchema(UserProfileSchema):
     Attributes:
         word_lists (List[Nested[WordListIdSchema]]): A list of nested schemas for word lists.
         hotkeys (List[Nested[NewHotkeySchema]]): A list of nested schemas for hotkeys.
-    Methods:
-        make(data, **kwargs): Post-load method that creates a UserProfile instance from the given data.
     """
 
     word_lists = fields.List(fields.Nested(WordListIdSchema))
@@ -529,7 +484,7 @@ class NewUserProfileSchema(UserProfileSchema):
     def make(self, data, **kwargs):
         """Create a new UserProfile instance based on the given data.
 
-        Parameters:
+        Args:
             data (dict): A dictionary containing the data for the UserProfile.
             **kwargs: Additional keyword arguments.
         Returns:
@@ -548,8 +503,6 @@ class UserProfile(db.Model):
         language (str): The language code for the user's preferred language.
         hotkeys (list): A list of hotkeys associated with the user profile.
         word_lists (list): A list of word lists associated with the user profile.
-    Methods:
-        __init__(spellcheck, dark_theme, language, hotkeys, word_lists): Initializes a new instance of the UserProfile class.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -563,7 +516,7 @@ class UserProfile(db.Model):
     def __init__(self, spellcheck, dark_theme, language, hotkeys, word_lists):
         """Initialize a User object with the given parameters.
 
-        Parameters:
+        Args:
             spellcheck (bool): Indicates whether spellcheck is enabled for the user.
             dark_theme (bool): Indicates whether the user has enabled dark theme.
             language (str): The language preference of the user.
@@ -604,8 +557,8 @@ class Hotkey(db.Model):
         key (str): The key associated with the hotkey.
         alias (str): The alias for the hotkey.
         user_profile_id (int): The foreign key referencing the user profile.
-    Methods:
-        __init__(key_code, key, alias): Initializes a new instance of the Hotkey class.
+    Args:
+        db.Model: The base class for all models in the application.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -618,7 +571,7 @@ class Hotkey(db.Model):
     def __init__(self, key_code, key, alias):
         """Initialize a User object.
 
-        Parameters:
+        Args:
             key_code (str): The key code of the user.
             key (str): The key of the user.
             alias (str): The alias of the user.

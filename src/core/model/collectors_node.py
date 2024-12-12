@@ -17,7 +17,7 @@ class NewCollectorsNodeSchema(CollectorsNodeSchema):
     def make_collectors_node(self, data, **kwargs):
         """Create Collectors Node object.
 
-        Parameters:
+        Args:
             data (dict): The data to load
         Returns:
             (CollectorsNode): The CollectorsNode object
@@ -54,7 +54,7 @@ class CollectorsNode(db.Model):
     def __init__(self, name, description, api_url, api_key):
         """Initialize CollectorsNode object.
 
-        Parameters:
+        Args:
             name (str): The name of the node
             description (str): The description of the node
             api_url (str): The API URL of the node
@@ -76,7 +76,7 @@ class CollectorsNode(db.Model):
     def exists_by_api_key(cls, api_key):
         """Check if a node exists by API key.
 
-        Parameters:
+        Args:
             api_key (str): The API key
         Returns:
             (bool): True if the node exists, False otherwise
@@ -87,7 +87,7 @@ class CollectorsNode(db.Model):
     def get_by_api_key(cls, api_key):
         """Get a node by API key.
 
-        Parameters:
+        Args:
             api_key (str): The API key
         Returns:
             (CollectorsNode): The CollectorsNode object
@@ -107,7 +107,7 @@ class CollectorsNode(db.Model):
     def get(cls, search):
         """Get nodes.
 
-        Parameters:
+        Args:
             search (str): The search string
         Returns:
             (list): The list of nodes
@@ -127,17 +127,28 @@ class CollectorsNode(db.Model):
     def get_by_id(cls, id):
         """Get a node by ID.
 
-        Parameters:
+        Args:
             id (str): The ID of the node
         Returns:
             (CollectorsNode): The CollectorsNode object
         """
         return cls.query.filter_by(id=id).first()
 
+    @classmethod
+    def get_by_name(cls, name):
+        """Get a node by name.
+
+        Args:
+            name (str): The name of the node
+        Returns:
+            (CollectorsNode): The CollectorsNode object
+        """
+        return cls.query.filter_by(name=name).first()
+
     def find_collector_by_type(self, collector_type):
         """Find a collector by type.
 
-        Parameters:
+        Args:
             collector_type (str): The collector type
         Returns:
             (Collector): The collector object or None
@@ -152,7 +163,7 @@ class CollectorsNode(db.Model):
     def get_all_json(cls, search):
         """Get all nodes in JSON format.
 
-        Parameters:
+        Args:
             search (str): The search string
         Returns:
             (dict): The nodes in JSON format
@@ -180,7 +191,7 @@ class CollectorsNode(db.Model):
     def add_new(cls, node_data, collectors):
         """Add a new node.
 
-        Parameters:
+        Args:
             node_data (dict): The node data
             collectors (list): The collectors
         Returns:
@@ -197,7 +208,7 @@ class CollectorsNode(db.Model):
     def update(cls, node_id, node_data, collectors):
         """Update a node.
 
-        Parameters:
+        Args:
             node_id (str): The ID of the node
             node_data (dict): The node data
             collectors (list): The collectors
@@ -225,7 +236,7 @@ class CollectorsNode(db.Model):
     def delete(cls, node_id):
         """Delete a node.
 
-        Parameters:
+        Args:
             node_id (str): The ID of the node
         """
         node = cls.query.get(node_id)

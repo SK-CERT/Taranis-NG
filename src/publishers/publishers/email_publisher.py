@@ -5,7 +5,7 @@ from base64 import b64decode
 import os
 from managers.log_manager import logger
 from .base_publisher import BasePublisher
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_publisher import ConfigPublisher
 from envelope import Envelope
 import mimetypes
 
@@ -24,24 +24,10 @@ class EMAILPublisher(BasePublisher):
     """
 
     type = "EMAIL_PUBLISHER"
-    name = "EMAIL Publisher"
-    description = "Publisher for publishing by email"
-
-    parameters = [
-        Parameter(0, "SMTP_SERVER", "SMTP server", "SMTP server for sending emails", ParameterType.STRING),
-        Parameter(0, "SMTP_SERVER_PORT", "SMTP server port", "SMTP server port for sending emails", ParameterType.STRING),
-        Parameter(0, "EMAIL_USERNAME", "Email username", "Username for email account", ParameterType.STRING),
-        Parameter(0, "EMAIL_PASSWORD", "Email password", "Password for email account", ParameterType.STRING),
-        Parameter(0, "EMAIL_SENDER", "Email sender", "Email address of the sender", ParameterType.STRING),
-        Parameter(0, "EMAIL_RECIPIENT", "Email recipient", "Email address of the recipient", ParameterType.STRING),
-        Parameter(0, "EMAIL_SUBJECT", "Email subject", "Text of email subject", ParameterType.STRING),
-        Parameter(0, "EMAIL_MESSAGE", "Email message", "Text of email message", ParameterType.STRING),
-        Parameter(0, "EMAIL_SIGN", "Email signature", "File used for signing or auto", ParameterType.STRING),
-        Parameter(0, "EMAIL_SIGN_PASSWORD", "Email signature password", "Password for signing file", ParameterType.STRING),
-        Parameter(0, "EMAIL_ENCRYPT", "Email encryption", "File used for encryption or auto", ParameterType.STRING),
-    ]
-
-    parameters.extend(BasePublisher.parameters)
+    config = ConfigPublisher().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def publish(self, publisher_input):
         """Publish an email using the provided publisher input.

@@ -6,7 +6,7 @@ from enum import Enum, auto
 from functools import wraps
 import jwt
 from flask import request
-from flask_jwt_extended import JWTManager, get_jwt_claims, get_jwt_identity, verify_jwt_in_request, get_raw_jwt
+from flask_jwt_extended import JWTManager, get_jwt_identity, verify_jwt_in_request, get_jwt
 from flask_jwt_extended.exceptions import JWTExtendedException
 
 from managers import log_manager, time_manager
@@ -33,7 +33,7 @@ def cleanup_token_blacklist(app):
     """
     Clean up the token blacklist by deleting tokens older than one day.
 
-    Arguments:
+    Args:
         app -- The Flask application object.
     """
     with app.app_context():
@@ -46,7 +46,7 @@ def initialize(app):
 
     This function sets up the authentication manager based on the configured authenticator.
 
-    Arguments:
+    Args:
         app: The Flask application object.
     """
     global current_authenticator
@@ -86,7 +86,7 @@ def get_required_credentials():
 def authenticate(credentials):
     """Authenticate the user using the provided credentials.
 
-    Arguments:
+    Args:
         credentials -- The user's credentials.
 
     Returns:
@@ -98,7 +98,7 @@ def authenticate(credentials):
 def refresh(user):
     """Refresh the authentication token for the given user.
 
-    Arguments:
+    Args:
         user -- The user object for which the authentication token needs to be refreshed.
 
     Returns:
@@ -112,7 +112,7 @@ def logout(token):
 
     This function logs out the user by calling the `logout` method of the current authenticator.
 
-    Arguments:
+    Args:
         token (str): The authentication token of the user.
 
     Returns:
@@ -150,7 +150,7 @@ def check_acl(item_id, acl_check, user):
 
     This function determines whether the user has the necessary permissions to perform the specified ACL check on the item.
 
-    Arguments:
+    Args:
         item_id (str): The ID of the item.
         acl_check (str): The type of ACL check to perform.
         user (str): The user performing the ACL check.
@@ -192,7 +192,7 @@ def check_acl(item_id, acl_check, user):
 def no_auth(fn):
     """Allow access to the decorated function without authentication.
 
-    Arguments:
+    Args:
         fn (function): The function to be decorated.
 
     Returns:
@@ -212,7 +212,7 @@ def get_id_name_by_acl(acl):
 
     This function takes an ACL object and returns the corresponding ID name based on the ACL's name.
 
-    Arguments:
+    Args:
         acl -- The ACL object.
 
     Returns:
@@ -287,7 +287,7 @@ def get_user_from_jwt_token():
     # does it encode an identity?
     identity = get_jwt_identity()
     if not identity:
-        log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_raw_jwt()}")
+        log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
         return None
 
     user = User.find(identity)
@@ -309,12 +309,12 @@ def get_perm_from_jwt_token(user):
     """
     try:
         # does it include permissions?
-        claims = get_jwt_claims()
-        if not claims or "permissions" not in claims:
+        jwt_data = get_jwt()
+        if not jwt_data or "permissions" not in jwt_data:
             log_manager.store_user_auth_error_activity(user, "Missing permissions in JWT")
             return None
 
-        all_users_perms = set(claims["permissions"])
+        all_users_perms = set(jwt_data["permissions"])
         return all_users_perms
     except Exception as ex:
         log_manager.store_auth_error_activity(f"Get permission from JWT error: {str(ex)}")
@@ -324,13 +324,12 @@ def get_perm_from_jwt_token(user):
 def auth_required(required_permissions, *acl_args):
     """Check if the user has the required permissions and ACL access.
 
-    Arguments:
+    Args:
         required_permissions (str or list): The required permissions for the user.
         *acl_args: Variable number of arguments representing the ACLs to check.
 
     Returns:
         The decorated function.
-
     """
 
     def auth_required_wrap(fn):
@@ -364,8 +363,8 @@ def auth_required(required_permissions, *acl_args):
                 log_manager.store_user_auth_error_activity(user, f"Access denied by ACL for user: {user.username}")
                 return error
 
-            # allow
-            log_manager.store_user_activity(user, str(required_permissions_set), str(request.json))
+            # allow  check here
+            log_manager.store_user_activity(user, str(required_permissions_set), str(request.get_json(force=True, silent=True)))
             return fn(*args, **kwargs)
 
         return wrapper
@@ -417,7 +416,7 @@ def access_key_required(fn):
     This decorator can be used to protect routes or functions that require access key authorization.
     It checks if the request has a valid access key in the Authorization header.
 
-    Arguments:
+    Args:
         fn (function): The function to be decorated.
 
     Returns:
@@ -453,7 +452,7 @@ def access_key_required(fn):
 def jwt_required(fn):
     """Check if a valid JWT is present in the request headers.
 
-    Arguments:
+    Args:
         fn -- The function to be decorated.
 
     Returns:
@@ -470,7 +469,7 @@ def jwt_required(fn):
 
         identity = get_jwt_identity()
         if not identity:
-            log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_raw_jwt()}")
+            log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
             return {"error": "authorization failed"}, 401
 
         user = User.find(identity)
@@ -515,7 +514,7 @@ def get_user_from_jwt():
 def decode_user_from_jwt(jwt_token):
     """Decode the user from a JWT token.
 
-    Arguments:
+    Args:
         jwt_token (str): The JWT token to decode.
 
     Returns:
@@ -523,9 +522,9 @@ def decode_user_from_jwt(jwt_token):
     """
     decoded = None
     try:
-        decoded = jwt.decode(jwt_token, Config.JWT_SECRET_KEY)
-    except Exception as ex:  # e.g. "Signature has expired"
-        log_manager.store_auth_error_activity(f"Invalid JWT: {str(ex)}")
+        decoded = jwt.decode(jwt_token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
+    except Exception as error:  # e.g. "Signature has expired"
+        log_manager.store_auth_error_activity(f"Invalid JWT: {error}")
     if decoded is None:
         return None
     return User.find(decoded["sub"])

@@ -17,14 +17,14 @@ class OSINTSourcesForCollectors(Resource):
     def get(self, collector_id):
         """Get all OSINT sources for a collector.
 
-        Parameters:
+        Args:
             collector_id (str): The collector ID
         Returns:
             (dict): All OSINT sources for a collector
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("api_key")
-        parser.add_argument("collector_type")
+        parser.add_argument("api_key", location="args")
+        parser.add_argument("collector_type", location="args")
         parameters = parser.parse_args()
 
         node = collectors_node.CollectorsNode.get_by_id(collector_id)
@@ -43,7 +43,7 @@ class OSINTSourceLastAttempt(Resource):
     def get(self, osint_source_id):
         """Get the last attempt for an OSINT source.
 
-        Parameters:
+        Args:
             osint_source_id (str): The OSINT source ID
         Returns:
             (dict): Empty dictionary
@@ -74,7 +74,7 @@ class OSINTSourceStatusUpdate(Resource):
     def put(self, osint_source_id):
         """Update the status of an OSINT source.
 
-        Parameters:
+        Args:
             osint_source_id (str): The OSINT source ID
         Returns:
             (dict): Empty dictionary
@@ -101,7 +101,7 @@ class CollectorStatusUpdate(Resource):
     def get(self, collector_id):
         """Update the status of a collector.
 
-        Parameters:
+        Args:
             collector_id (str): The collector ID
         Returns:
             (dict): Empty dictionary

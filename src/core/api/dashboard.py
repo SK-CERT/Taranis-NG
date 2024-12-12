@@ -14,7 +14,7 @@ from model.tag_cloud import TagCloud
 class Dashboard(Resource):
     """Dashboard API class."""
 
-    @jwt_required
+    @jwt_required()
     def get(self):
         """Get the dashboard data.
 
@@ -50,7 +50,7 @@ class Dashboard(Resource):
 def initialize(api):
     """Initialize the dashboard API.
 
-    Parameters:
+    Args:
         api (Flask): The Flask app.
     """
     api.add_resource(Dashboard, "/api/v1/dashboard-data")

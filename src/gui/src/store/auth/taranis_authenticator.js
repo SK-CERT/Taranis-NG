@@ -55,7 +55,7 @@ const getters = {
 
     getUserData(state) {
         const data = JSON.parse(atob(state.jwt.split('.')[1]));
-        return data.user_claims
+        return data
     },
 
     getSubjectName(state) {

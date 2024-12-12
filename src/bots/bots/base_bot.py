@@ -6,7 +6,6 @@ import traceback
 from managers import time_manager
 from managers.log_manager import logger
 from shared.schema import bot, bot_preset
-from shared.schema.parameter import Parameter, ParameterType
 from remote.core_api import CoreApi
 
 
@@ -32,18 +31,7 @@ class BaseBot:
     type = "BASE_BOT"
     name = "Base Bot"
     description = "Base abstract type for all bots"
-
-    # real values are stored in 'parameter' table
-    parameters = [
-        Parameter(
-            0,
-            "REFRESH_INTERVAL",
-            "Refresh interval (0 to disable)",
-            "How often and when is this bot doing its job. Examples:<ul><li>10 --- perform the task every 10 minutes</li><li>10:30"
-            " --- perform the task every day at 10:30</li><li>Tuesday,10:30 --- perform the task every Tuesday at 10:30</li></ul>",
-            ParameterType.NUMBER,
-        )
-    ]
+    parameters = []
 
     def __init__(self):
         """Initialize the BaseBot class."""

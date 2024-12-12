@@ -36,7 +36,7 @@ sys_logger.setLevel(logging_level)
 def sensitive_value(value):
     """Encrypt or mask sensitive data based on the logging mode.
 
-    Parameters:
+    Args:
         value (str): The sensitive data to be encrypted or masked.
     Returns:
         (str): The encrypted string if logging mode is set to 'encrypt', the masked string if logging mode is set to 'no',
@@ -68,7 +68,7 @@ def sensitive_value(value):
 def decrypt(enc_dict, password):
     """Decrypt the given encrypted dictionary using the provided password.
 
-    Parameters:
+    Args:
         enc_dict (str): The encrypted dictionary in the format "cipher_text*salt*nonce*tag".
         password (str): The password used to generate the private key.
     Returns:
@@ -108,7 +108,7 @@ def generate_escaped_data(request_data):
 
     Prepare the "data" argument for logging: use request.body or supplied parameter, strip whitespace, truncate to 4k of text
 
-    Parameters:
+    Args:
         request_data: The request data to generate escaped data from.
     Returns:
         data (str): The generated escaped data.
@@ -161,7 +161,7 @@ def resolve_resource():
 def store_activity(activity_type, activity_detail, request_data=None):
     """Store an activity record in the log.
 
-    Parameters:
+    Args:
         activity_type (str): The type of activity.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
@@ -184,7 +184,7 @@ def store_activity(activity_type, activity_detail, request_data=None):
 def store_user_activity(user, activity_type, activity_detail, request_data=None):
     """Store a user activity record in the log.
 
-    Parameters:
+    Args:
         user (User): The user associated with the activity.
         activity_type (str): The type of activity.
         activity_detail (str): The details of the activity.
@@ -208,7 +208,7 @@ def store_user_activity(user, activity_type, activity_detail, request_data=None)
 def store_access_error_activity(user, activity_detail, request_data=None):
     """Store an access error activity record in the log.
 
-    Parameters:
+    Args:
         user (User): The user associated with the activity.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
@@ -242,7 +242,7 @@ def store_access_error_activity(user, activity_detail, request_data=None):
 def store_data_error_activity(user, activity_detail, request_data=None):
     """Store a data error activity record in the log.
 
-    Parameters:
+    Args:
         user (User): The user associated with the activity.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
@@ -277,7 +277,7 @@ def store_data_error_activity(user, activity_detail, request_data=None):
 def store_data_error_activity_no_user(activity_detail, request_data=None):
     """Store a data error activity record in the log without a user.
 
-    Parameters:
+    Args:
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
@@ -310,7 +310,7 @@ def store_data_error_activity_no_user(activity_detail, request_data=None):
 def store_auth_error_activity(activity_detail, request_data=None):
     """Store an authentication error activity record in the log.
 
-    Parameters:
+    Args:
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
@@ -342,7 +342,7 @@ def store_auth_error_activity(activity_detail, request_data=None):
 def store_user_auth_error_activity(user, activity_detail, request_data=None):
     """Store a user authentication error activity record in the log.
 
-    Parameters:
+    Args:
         user (User): The user associated with the activity.
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
@@ -376,7 +376,7 @@ def store_user_auth_error_activity(user, activity_detail, request_data=None):
 def store_system_activity(system_id, system_name, activity_type, activity_detail, request_data=None):
     """Store a system activity record in the log.
 
-    Parameters:
+    Args:
         system_id (int): The ID of the system.
         system_name (str): The name of the system.
         activity_type (str): The type of activity.
@@ -401,7 +401,7 @@ def store_system_activity(system_id, system_name, activity_type, activity_detail
 def store_system_error_activity(system_id, system_name, activity_type, activity_detail, request_data=None):
     """Store a system error activity record in the log.
 
-    Parameters:
+    Args:
         system_id (int): The ID of the system.
         system_name (str): The name of the system.
         activity_type (str): The type of activity.

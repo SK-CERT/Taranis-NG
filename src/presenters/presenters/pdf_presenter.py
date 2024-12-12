@@ -3,7 +3,7 @@
 Returns:
     dict: mime type and base64 encoded data of the generated PDF document
 """
-import datetime
+
 import os
 import tempfile
 from base64 import b64encode
@@ -11,7 +11,7 @@ import jinja2
 from weasyprint import HTML
 
 from .base_presenter import BasePresenter
-from shared.schema.parameter import Parameter, ParameterType
+from shared.config_presenter import ConfigPresenter
 
 
 class PDFPresenter(BasePresenter):
@@ -22,12 +22,10 @@ class PDFPresenter(BasePresenter):
     """
 
     type = "PDF_PRESENTER"
-    name = "PDF Presenter"
-    description = "Presenter for generating PDF documents"
-
-    parameters = [Parameter(0, "PDF_TEMPLATE_PATH", "Template path", "Path of header template file", ParameterType.STRING)]
-
-    parameters.extend(BasePresenter.parameters)
+    config = ConfigPresenter().get_config_by_type(type)
+    name = config.name
+    description = config.description
+    parameters = config.parameters
 
     def generate(self, presenter_input):
         """Generate PDF document.
@@ -39,8 +37,8 @@ class PDFPresenter(BasePresenter):
             dict: mime type and base64 encoded data of the generated PDF document
         """
         try:
-            output_html = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix='.html', delete_on_close=False).name
-            output_pdf = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix='.pdf', delete_on_close=False).name
+            output_html = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix=".html", delete_on_close=False).name
+            output_pdf = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix=".pdf", delete_on_close=False).name
             head, tail = os.path.split(presenter_input.parameter_values_map["PDF_TEMPLATE_PATH"])
 
             input_data = BasePresenter.generate_input_data(presenter_input)

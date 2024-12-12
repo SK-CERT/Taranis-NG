@@ -48,7 +48,7 @@ class NewsItemsByGroup(Resource):
     def get(self, group_id):
         """Get news items by group.
 
-        Parameters:
+        Args:
             group_id (str): The group ID
         Returns:
             (dict): The news items by group
@@ -93,7 +93,7 @@ class NewsItem(Resource):
     def get(self, item_id):
         """Get a news item.
 
-        Parameters:
+        Args:
             item_id (str): The news item ID
         Returns:
             (dict): The news item
@@ -104,7 +104,7 @@ class NewsItem(Resource):
     def put(self, item_id):
         """Update a news item.
 
-        Parameters:
+        Args:
             item_id (str): The news item ID
         Returns:
             (dict): The response
@@ -121,7 +121,7 @@ class NewsItem(Resource):
     def delete(self, item_id):
         """Delete a news item.
 
-        Parameters:
+        Args:
             item_id (str): The news item ID
         Returns:
             (dict): The response
@@ -139,7 +139,7 @@ class NewsItemAggregate(Resource):
     def put(self, aggregate_id):
         """Update a news item aggregate.
 
-        Parameters:
+        Args:
             aggregate_id (str): The aggregate ID
         Returns:
             (dict): The response
@@ -156,7 +156,7 @@ class NewsItemAggregate(Resource):
     def delete(self, aggregate_id):
         """Delete a news item aggregate.
 
-        Parameters:
+        Args:
             aggregate_id (str): The aggregate ID
         Returns:
             (dict): The response
@@ -198,7 +198,7 @@ class DownloadAttachment(Resource):
     def get(self, item_data_id, attribute_id):
         """Download attachment.
 
-        Parameters:
+        Args:
             item_data_id (str): The item data ID
             attribute_id (str): The attribute ID
 

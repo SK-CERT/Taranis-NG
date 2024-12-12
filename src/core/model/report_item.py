@@ -50,7 +50,7 @@ class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
 
     This schema is used to validate and deserialize data for creating a new report item attribute.
 
-    Arguments:
+    Args:
         ReportItemAttributeBaseSchema -- The base schema for report item attributes.
 
     Returns:
@@ -63,7 +63,7 @@ class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
 
         This method takes in data and creates a ReportItemAttribute object.
 
-        Arguments:
+        Args:
             data (dict): A dictionary containing the data for the report item attribute.
 
         Returns:
@@ -94,11 +94,6 @@ class ReportItemAttribute(db.Model):
         report_item (ReportItem): The report item that the attribute belongs to.
         user_id (int): The ID of the user who created the attribute.
         user (User): The user who created the attribute.
-
-    Methods:
-        __init__: Initializes a new instance of the ReportItemAttribute class.
-        find: Finds a report item attribute by its ID.
-
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -115,7 +110,9 @@ class ReportItemAttribute(db.Model):
     current = db.Column(db.Boolean, default=True)
 
     attribute_group_item_id = db.Column(db.Integer, db.ForeignKey("attribute_group_item.id"))
-    # for nice output there should be order_by also for AttributeGroup.index but there is problem reference sub table: AttributeGroupItem.attribute_group.index
+    """for nice output there should be order_by also for AttributeGroup.index
+     but there is problem reference sub table: AttributeGroupItem.attribute_group.index
+    """
     attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True, lazy="joined", order_by=[AttributeGroupItem.index, id])
     attribute_group_item_title = db.Column(db.String)
 
@@ -138,7 +135,7 @@ class ReportItemAttribute(db.Model):
     ):
         """Initialize a ReportItem object.
 
-        Arguments:
+        Args:
             id (int): The ID of the report item.
             value (str): The value of the report item.
             value_description (str): The description of the value.
@@ -177,7 +174,7 @@ class NewReportItemSchema(ReportItemBaseSchema):
 
     This schema defines the structure and validation rules for creating a new report item.
 
-    Arguments:
+    Args:
         ReportItemBaseSchema -- The base schema for report items.
 
     Returns:
@@ -192,7 +189,7 @@ class NewReportItemSchema(ReportItemBaseSchema):
     def make(self, data, **kwargs):
         """Create a new ReportItem object.
 
-        Arguments:
+        Args:
             data (dict): A dictionary containing the data for the ReportItem.
 
         Returns:
@@ -204,7 +201,7 @@ class NewReportItemSchema(ReportItemBaseSchema):
 class ReportItemRemoteReportItem(db.Model):
     """A class representing the relationship between a report item and a remote report item.
 
-    Arguments:
+    Args:
         db -- The database object used for defining the model.
     """
 
@@ -269,7 +266,7 @@ class ReportItem(db.Model):
     def __init__(self, id, uuid, title, title_prefix, report_item_type_id, news_item_aggregates, remote_report_items, attributes, completed):
         """Initialize a new instance of the ReportItem class.
 
-        Arguments:
+        Args:
             id (int): The ID of the report item.
             uuid (str): The UUID of the report item.
             title (str): The title of the report item.
@@ -318,7 +315,7 @@ class ReportItem(db.Model):
     def count_all(cls, is_completed):
         """Count the number of report items based on completion status.
 
-        Arguments:
+        Args:
             is_completed (bool): A flag indicating whether to count completed or incomplete report items.
         Returns:
             int: The count of report items matching the completion status.
@@ -329,7 +326,7 @@ class ReportItem(db.Model):
     def find(cls, report_item_id):
         """Find a report item by its ID.
 
-        Arguments:
+        Args:
             report_item_id (int): The ID of the report item.
         Returns:
             ReportItem: The report item with the specified ID.
@@ -341,7 +338,7 @@ class ReportItem(db.Model):
     def find_by_uuid(cls, report_item_uuid):
         """Find a report item by its UUID.
 
-        Arguments:
+        Args:
             report_item_uuid (str): The UUID of the report item.
         Returns:
             ReportItem: The report item with the specified UUID.
@@ -353,7 +350,7 @@ class ReportItem(db.Model):
     def allowed_with_acl(cls, report_item_id, user, see, access, modify):
         """Check if the user is allowed to perform actions on a report item based on ACL.
 
-        Arguments:
+        Args:
             report_item_id (int): The ID of the report item.
             user (User): The user object.
             see (bool): Whether the user can see the report item.
@@ -420,7 +417,7 @@ class ReportItem(db.Model):
     def get(cls, group, filter, offset, limit, user):
         """Retrieve report items based on specified criteria.
 
-        Arguments:
+        Args:
             group (str): The remote user group.
             filter (dict): The filter criteria.
             offset (int): The offset for pagination.
@@ -500,7 +497,7 @@ class ReportItem(db.Model):
     def identical(cls, uuid):
         """Check if a report item with the given UUID exists.
 
-        Arguments:
+        Args:
             uuid -- The UUID of the report item to check.
         Returns:
             True if a report item with the given UUID exists, False otherwise.
@@ -512,7 +509,7 @@ class ReportItem(db.Model):
         """Retrieve report items by Common Platform Enumeration (CPE).
 
         This method queries the database to retrieve report items that match the provided CPEs.
-        Arguments:
+        Args:
             cpes (list): A list of CPEs to search for.
         Returns:
             list: A list of report item IDs that match the provided CPEs.
@@ -540,7 +537,7 @@ class ReportItem(db.Model):
         """Get the JSON representation of report items.
 
         This method retrieves report items based on the provided parameters and returns them in JSON format.
-        Arguments:
+        Args:
             group (str): The group parameter.
             filter (str): The filter parameter.
             offset (int): The offset parameter.
@@ -573,7 +570,7 @@ class ReportItem(db.Model):
     def get_detail_json(cls, id):
         """Get the detailed JSON representation of a report item.
 
-        Arguments:
+        Args:
             cls -- The class object.
             id -- The ID of the report item.
         Returns:
@@ -609,7 +606,7 @@ class ReportItem(db.Model):
 
         This method takes in report_item_data and user as arguments and adds a new report item to the database.
         It performs authorization checks to ensure that the user has the necessary permissions to add the report item.
-        Arguments:
+        Args:
             report_item_data (dict): The data for the report item.
             user (User): The user adding the report item.
         Returns:
@@ -640,7 +637,7 @@ class ReportItem(db.Model):
         and adds the report items to the database. If a report item with the
         same UUID already exists, it updates the existing report item with the
         new data.
-        Arguments:
+        Args:
             report_item_data (list): A list of report item data.
             remote_node_name (str): The name of the remote node.
         """
@@ -665,7 +662,7 @@ class ReportItem(db.Model):
     def update_report_item(cls, id, data, user):
         """Update a report item with the given data.
 
-        Arguments:
+        Args:
             id (int): The ID of the report item.
             data (dict): The data to update the report item with.
             user (User): The user performing the update.
@@ -784,7 +781,7 @@ class ReportItem(db.Model):
         """Get the updated data for a report item.
 
         This method retrieves the updated data for a report item based on the provided ID and data.
-        Arguments:
+        Args:
             cls (class): The class object.
             id (int): The ID of the report item.
             data (dict): The data containing the updates.
@@ -845,7 +842,7 @@ class ReportItem(db.Model):
     def add_attachment(cls, id, attribute_group_item_id, user, file, description):
         """Add an attachment to a report item.
 
-        Arguments:
+        Args:
             id (int): The ID of the report item.
             attribute_group_item_id (int): The ID of the attribute group item.
             user (User): The user who is adding the attachment.
@@ -883,7 +880,7 @@ class ReportItem(db.Model):
     def remove_attachment(cls, id, attribute_id, user):
         """Remove an attachment from a report item.
 
-        Arguments:
+        Args:
             cls (ReportItem): The class object.
             id (int): The ID of the report item.
             attribute_id (int): The ID of the attribute to be removed.
@@ -921,7 +918,7 @@ class ReportItem(db.Model):
     def delete_report_item(cls, id):
         """Delete a report item by its ID.
 
-        Arguments:
+        Args:
             id (int): The ID of the report item to be deleted.
         Returns:
             tuple: A tuple containing the status message and the HTTP status code.
