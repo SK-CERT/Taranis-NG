@@ -6,4 +6,4 @@ gunicorn==23.0.0
 Jinja2==3.1.4
 marshmallow==3.23.1
 python-dotenv==1.0.1
-weasyprint==63.0
+weasyprint==63.1
