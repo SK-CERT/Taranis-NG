@@ -10,7 +10,7 @@ from enum import Enum, auto
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import orm
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import ENUM
 
 

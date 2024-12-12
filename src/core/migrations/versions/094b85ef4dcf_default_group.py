@@ -5,30 +5,31 @@ Revises: 7607d7d98f71
 Create Date: 2021-11-22 11:14:22.259612
 
 """
+
 import uuid
 from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm, and_
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 # revision identifiers, used by Alembic.
-revision = '094b85ef4dcf'
-down_revision = '7607d7d98f71'
+revision = "094b85ef4dcf"
+down_revision = "7607d7d98f71"
 branch_labels = None
 depends_on = None
 
 
 class OSINTSourceRev094b85ef4dcf(Base):
-    __tablename__ = 'osint_source'
+    __tablename__ = "osint_source"
     id = sa.Column(sa.String(64), primary_key=True)
 
 
 class OSINTSourceGroupRev094b85ef4dcf(Base):
-    __tablename__ = 'osint_source_group'
+    __tablename__ = "osint_source_group"
     id = sa.Column(sa.String(64), primary_key=True)
     name = sa.Column(sa.String(), nullable=False)
     description = sa.Column(sa.String())
@@ -48,13 +49,13 @@ class OSINTSourceGroupRev094b85ef4dcf(Base):
 
 
 class OSINTSourceGroupOSINTSourceRev094b85ef4dcf(Base):
-    __tablename__ = 'osint_source_group_osint_source'
-    osint_source_group_id = sa.Column(sa.String, sa.ForeignKey('osint_source_group.id'), primary_key=True)
-    osint_source_id = sa.Column(sa.String, sa.ForeignKey('osint_source.id'), primary_key=True)
+    __tablename__ = "osint_source_group_osint_source"
+    osint_source_group_id = sa.Column(sa.String, sa.ForeignKey("osint_source_group.id"), primary_key=True)
+    osint_source_id = sa.Column(sa.String, sa.ForeignKey("osint_source.id"), primary_key=True)
 
 
 class NewsItemDataRev094b85ef4dcf(Base):
-    __tablename__ = 'news_item_data'
+    __tablename__ = "news_item_data"
     id = sa.Column(sa.String(64), primary_key=True)
     hash = sa.Column(sa.String())
     title = sa.Column(sa.String())
@@ -67,18 +68,18 @@ class NewsItemDataRev094b85ef4dcf(Base):
     collected = sa.Column(sa.DateTime)
     published = sa.Column(sa.String())
     updated = sa.Column(sa.DateTime, default=datetime.now())
-    osint_source_id = sa.Column(sa.String, sa.ForeignKey('osint_source.id'), nullable=True)
+    osint_source_id = sa.Column(sa.String, sa.ForeignKey("osint_source.id"), nullable=True)
 
 
 class NewsItemRev094b85ef4dcf(Base):
-    __tablename__ = 'news_item'
+    __tablename__ = "news_item"
     id = sa.Column(sa.Integer, primary_key=True)
-    news_item_data_id = sa.Column(sa.String, sa.ForeignKey('news_item_data.id'))
-    news_item_aggregate_id = sa.Column(sa.Integer, sa.ForeignKey('news_item_aggregate.id'))
+    news_item_data_id = sa.Column(sa.String, sa.ForeignKey("news_item_data.id"))
+    news_item_aggregate_id = sa.Column(sa.Integer, sa.ForeignKey("news_item_aggregate.id"))
 
 
 class NewsItemAggregateRev094b85ef4dcf(Base):
-    __tablename__ = 'news_item_aggregate'
+    __tablename__ = "news_item_aggregate"
     id = sa.Column(sa.Integer, primary_key=True)
     title = sa.Column(sa.String())
     description = sa.Column(sa.String())
@@ -89,19 +90,18 @@ class NewsItemAggregateRev094b85ef4dcf(Base):
     dislikes = sa.Column(sa.Integer, default=0)
     relevance = sa.Column(sa.Integer, default=0)
     comments = sa.Column(sa.String(), default="")
-    osint_source_group_id = sa.Column(sa.String, sa.ForeignKey('osint_source_group.id'))
+    osint_source_group_id = sa.Column(sa.String, sa.ForeignKey("osint_source_group.id"))
 
 
 class NewsItemAggregateSearchIndexRev094b85ef4dcf(Base):
-    __tablename__ = 'news_item_aggregate_search_index'
+    __tablename__ = "news_item_aggregate_search_index"
     id = sa.Column(sa.Integer, primary_key=True)
     data = sa.Column(sa.String)
-    news_item_aggregate_id = sa.Column(sa.Integer, sa.ForeignKey('news_item_aggregate.id'))
+    news_item_aggregate_id = sa.Column(sa.Integer, sa.ForeignKey("news_item_aggregate.id"))
 
     @staticmethod
     def prepare(session, aggregate):
-        search_index = session.query(NewsItemAggregateSearchIndexRev094b85ef4dcf).filter_by(
-            news_item_aggregate_id=aggregate.id).first()
+        search_index = session.query(NewsItemAggregateSearchIndexRev094b85ef4dcf).filter_by(news_item_aggregate_id=aggregate.id).first()
         if search_index is None:
             search_index = NewsItemAggregateSearchIndexRev094b85ef4dcf()
             search_index.news_item_aggregate_id = aggregate.id
@@ -111,8 +111,7 @@ class NewsItemAggregateSearchIndexRev094b85ef4dcf(Base):
         data += " " + aggregate.description
         data += " " + aggregate.comments
 
-        for news_item in session.query(NewsItemRev094b85ef4dcf).filter(
-                NewsItemRev094b85ef4dcf.news_item_aggregate_id == aggregate.id):
+        for news_item in session.query(NewsItemRev094b85ef4dcf).filter(NewsItemRev094b85ef4dcf.news_item_aggregate_id == aggregate.id):
             news_item_data = session.query(NewsItemDataRev094b85ef4dcf).get(news_item.news_item_data_id)
             data += " " + news_item_data.title
             data += " " + news_item_data.review
@@ -128,7 +127,7 @@ def upgrade():
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
-    op.add_column('osint_source_group', sa.Column('default', sa.Boolean(), nullable=True))
+    op.add_column("osint_source_group", sa.Column("default", sa.Boolean(), nullable=True))
 
     for group in session.query(OSINTSourceGroupRev094b85ef4dcf):
         group.default = False
@@ -143,8 +142,10 @@ def upgrade():
     session.commit()
 
     query = session.query(OSINTSourceRev094b85ef4dcf)
-    query = query.outerjoin(OSINTSourceGroupOSINTSourceRev094b85ef4dcf,
-                            OSINTSourceRev094b85ef4dcf.id == OSINTSourceGroupOSINTSourceRev094b85ef4dcf.osint_source_id)
+    query = query.outerjoin(
+        OSINTSourceGroupOSINTSourceRev094b85ef4dcf,
+        OSINTSourceRev094b85ef4dcf.id == OSINTSourceGroupOSINTSourceRev094b85ef4dcf.osint_source_id,
+    )
     query = query.filter(OSINTSourceGroupOSINTSourceRev094b85ef4dcf.osint_source_group_id == None)
     unmapped_sources = set()
     for osint_source in query:
@@ -156,10 +157,8 @@ def upgrade():
         session.commit()
 
     query = session.query(NewsItemDataRev094b85ef4dcf)
-    query = query.outerjoin(NewsItemRev094b85ef4dcf,
-                            NewsItemDataRev094b85ef4dcf.id == NewsItemRev094b85ef4dcf.news_item_data_id)
-    query = query.filter(
-        and_(NewsItemRev094b85ef4dcf.id == None, NewsItemDataRev094b85ef4dcf.osint_source_id.in_(unmapped_sources)))
+    query = query.outerjoin(NewsItemRev094b85ef4dcf, NewsItemDataRev094b85ef4dcf.id == NewsItemRev094b85ef4dcf.news_item_data_id)
+    query = query.filter(and_(NewsItemRev094b85ef4dcf.id == None, NewsItemDataRev094b85ef4dcf.osint_source_id.in_(unmapped_sources)))
     for news_item_data in query:
         groups = OSINTSourceGroupRev094b85ef4dcf.get_all_with_source(session, news_item_data.osint_source_id)
         for group in groups:
@@ -184,5 +183,5 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_column('osint_source_group', 'default')
+    op.drop_column("osint_source_group", "default")
     # ### end Alembic commands ###
