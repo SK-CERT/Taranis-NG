@@ -60,6 +60,8 @@ services:
       LDAP_SERVER: "${LDAP_SERVER}"
       LDAP_BASE_DN: "${LDAP_BASE_DN}"
       LDAP_CA_CERT_PATH:
+      SQLALCHEMY_WARN_20: "1"
+      PYTHONWARNINGS: "default"
 
       OPENID_LOGOUT_URL: ""
       WORKERS_PER_CORE: "1"
