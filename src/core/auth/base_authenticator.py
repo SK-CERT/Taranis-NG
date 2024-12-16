@@ -89,10 +89,12 @@ class BaseAuthenticator:
             access_token = create_access_token(
                 identity=user.username,
                 additional_claims={
-                    "id": user.id,
-                    "name": user.name,
-                    "organization_name": user.get_current_organization_name(),
-                    "permissions": user.get_permissions(),
+                    "user_claims": {
+                        "id": user.id,
+                        "name": user.name,
+                        "organization_name": user.get_current_organization_name(),
+                        "permissions": user.get_permissions(),
+                    }
                 },
             )
 
