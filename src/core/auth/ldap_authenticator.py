@@ -24,18 +24,11 @@ class LDAPAuthenticator(BaseAuthenticator):
     """Authenticate users against an LDAP server.
 
     Attributes:
-        BaseAuthenticator (_type_): _description_
-
-    Returns:
-        _type_: _description_
+        BaseAuthenticator (class): The base authenticator class.
     """
 
     def __init__(self):
-        """Initialize the LDAPAuthenticator class.
-
-        Returns:
-            _type_: _description_
-        """
+        """Initialize the LDAPAuthenticator class."""
         self.LDAP_SERVER = os.getenv("LDAP_SERVER")
         self.LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
         # Check if the LDAP CA certificate path is set in the environment variables or the certificate is in the default path
@@ -53,7 +46,7 @@ class LDAPAuthenticator(BaseAuthenticator):
         """Get the username and the password.
 
         Returns:
-            _type_: _description_
+            list: The list of required credentials.
         """
         return ["username", "password"]
 
@@ -61,10 +54,9 @@ class LDAPAuthenticator(BaseAuthenticator):
         """Try to authenticate the user against the LDAP server.
 
         Args:
-            credentials (_type_): _description_
-
+            credentials (dict): The user's credentials.
         Returns:
-            _type_: _description_
+            dict: The authentication result.
         """
         tls = Tls(ca_certs_file=self.LDAP_CA_CERT_PATH, validate=ssl.CERT_REQUIRED, version=ssl.PROTOCOL_TLSv1_2)
         server = Server(self.LDAP_SERVER, use_ssl=True, tls=tls, get_info=ALL)

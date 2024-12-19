@@ -52,14 +52,7 @@ class CollectorsNode(db.Model):
     collectors = db.relationship("Collector", back_populates="node", cascade="all")
 
     def __init__(self, name, description, api_url, api_key):
-        """Initialize CollectorsNode object.
-
-        Args:
-            name (str): The name of the node
-            description (str): The description of the node
-            api_url (str): The API URL of the node
-            api_key (str): The API key of the node
-        """
+        """Initialize CollectorsNode object."""
         self.id = str(uuid.uuid4())
         self.name = name
         self.description = description
@@ -215,7 +208,7 @@ class CollectorsNode(db.Model):
         """
         new_node_schema = NewCollectorsNodeSchema()
         updated_node = new_node_schema.load(node_data)
-        node = cls.query.get(node_id)
+        node = db.session.get(cls, node_id)
         node.name = updated_node.name
         node.description = updated_node.description
         node.api_url = updated_node.api_url
@@ -239,7 +232,7 @@ class CollectorsNode(db.Model):
         Args:
             node_id (str): The ID of the node
         """
-        node = cls.query.get(node_id)
+        node = db.session.get(cls, node_id)
         for collector in node.collectors:
             if len(collector.sources) > 0:
                 raise Exception("Collectors has mapped sources")

@@ -46,16 +46,7 @@ class EmailRecipient(db.Model):
     notification_template_id = db.Column(db.Integer, db.ForeignKey("notification_template.id"))
 
     def __init__(self, email, name):
-        """Initialize a NotificationTemplate object.
-
-        Args:
-            email (str): The email address associated with the template.
-            name (str): The name of the template.
-        Attributes:
-            id (None): The ID of the template (initially set to None).
-            email (str): The email address associated with the template.
-            name (str): The name of the template.
-        """
+        """Initialize a NotificationTemplate object."""
         self.id = None
         self.email = email
         self.name = name
@@ -107,26 +98,7 @@ class NotificationTemplate(db.Model):
     organizations = db.relationship("Organization", secondary="notification_template_organization")
 
     def __init__(self, id, name, description, message_title, message_body, recipients):
-        """Initialize a NotificationTemplate object.
-
-        Args:
-            id (int): The ID of the notification template.
-            name (str): The name of the notification template.
-            description (str): The description of the notification template.
-            message_title (str): The title of the notification message.
-            message_body (str): The body of the notification message.
-            recipients (list): A list of recipients for the notification.
-        Attributes:
-            id (int): The ID of the notification template.
-            name (str): The name of the notification template.
-            description (str): The description of the notification template.
-            message_title (str): The title of the notification message.
-            message_body (str): The body of the notification message.
-            recipients (list): A list of recipients for the notification.
-            title (str): The title of the notification template.
-            subtitle (str): The subtitle of the notification template.
-            tag (str): The tag of the notification template.
-        """
+        """Initialize a NotificationTemplate object."""
         self.id = None
         self.name = name
         self.description = description
@@ -139,12 +111,7 @@ class NotificationTemplate(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
-        """Reconstruct the notification template.
-
-        This method updates the title, subtitle, and tag attributes of the notification template object.
-        The title is set to the name attribute, the subtitle is set to the description attribute,
-        and the tag is set to "mdi-email-outline".
-        """
+        """Reconstruct the notification template."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-email-outline"
@@ -159,7 +126,7 @@ class NotificationTemplate(db.Model):
         Returns:
             The notification template with the specified ID.
         """
-        group = cls.query.get(id)
+        group = db.session.get(cls, id)
         return group
 
     @classmethod
@@ -234,7 +201,7 @@ class NotificationTemplate(db.Model):
             user (User): The user performing the delete operation.
             template_id (int): The ID of the template to be deleted.
         """
-        template = cls.query.get(template_id)
+        template = db.session.get(cls, template_id)
         if any(org in user.organizations for org in template.organizations):
             db.session.delete(template)
             db.session.commit()
@@ -251,7 +218,7 @@ class NotificationTemplate(db.Model):
         """
         new_template_schema = NewNotificationTemplateSchema()
         updated_template = new_template_schema.load(data)
-        template = cls.query.get(template_id)
+        template = db.session.get(cls, template_id)
         if any(org in user.organizations for org in template.organizations):
             template.name = updated_template.name
             template.description = updated_template.description

@@ -89,17 +89,7 @@ class User(db.Model):
     profile = db.relationship("UserProfile", cascade="all", lazy="joined")
 
     def __init__(self, id, username, name, password, organizations, roles, permissions):
-        """Initialize a User object with the given parameters.
-
-        Args:
-            id (int): The user's ID.
-            username (str): The user's username.
-            name (str): The user's name.
-            password (str): The user's password.
-            organizations (list): A list of organizations the user belongs to.
-            roles (list): A list of roles assigned to the user.
-            permissions (list): A list of permissions granted to the user.
-        """
+        """Initialize a User object with the given parameters."""
         self.id = None
         self.username = username
         self.name = name
@@ -126,11 +116,7 @@ class User(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
-        """Reconstruct the user object.
-
-        This method updates the `title`, `subtitle`, and `tag` attributes of the user object
-          based on the current `name` and `username` values.
-        """
+        """Reconstruct the user object."""
         self.title = self.name
         self.subtitle = self.username
         self.tag = "mdi-account"
@@ -158,7 +144,7 @@ class User(db.Model):
         Returns:
             The user object if found, None otherwise.
         """
-        user = cls.query.get(user_id)
+        user = db.session.get(cls, user_id)
         return user
 
     @classmethod
@@ -271,7 +257,7 @@ class User(db.Model):
         """
         schema = UpdateUserSchema()
         updated_user = schema.load(data)
-        user = cls.query.get(user_id)
+        user = db.session.get(cls, user_id)
         user.username = updated_user["username"]
         user.name = updated_user["name"]
         if updated_user["password"]:  # update password only when user fill it
@@ -306,7 +292,7 @@ class User(db.Model):
         """
         schema = NewUserSchema()
         updated_user = schema.load(data)
-        existing_user = cls.query.get(user_id)
+        existing_user = db.session.get(cls, user_id)
 
         if any(org in user.organizations for org in existing_user.organizations):
             existing_user.username = updated_user.username
@@ -328,7 +314,7 @@ class User(db.Model):
             cls (class): The class representing the user model.
             id (int): The ID of the user to be deleted.
         """
-        user = cls.query.get(id)
+        user = db.session.get(cls, id)
         db.session.delete(user)
         db.session.commit()
 
@@ -341,7 +327,7 @@ class User(db.Model):
             user (User): The user performing the deletion.
             id (int): The ID of the user to be deleted.
         """
-        existing_user = cls.query.get(id)
+        existing_user = db.session.get(cls, id)
         if any(org in user.organizations for org in existing_user.organizations):
             db.session.delete(existing_user)
             db.session.commit()
@@ -514,15 +500,7 @@ class UserProfile(db.Model):
     word_lists = db.relationship("WordList", secondary="user_profile_word_list", lazy="joined")
 
     def __init__(self, spellcheck, dark_theme, language, hotkeys, word_lists):
-        """Initialize a User object with the given parameters.
-
-        Args:
-            spellcheck (bool): Indicates whether spellcheck is enabled for the user.
-            dark_theme (bool): Indicates whether the user has enabled dark theme.
-            language (str): The language preference of the user.
-            hotkeys (list): A list of hotkeys configured by the user.
-            word_lists (list): A list of WordList objects associated with the user.
-        """
+        """Initialize a User object with the given parameters."""
         self.id = None
         self.spellcheck = spellcheck
         self.dark_theme = dark_theme
@@ -569,13 +547,7 @@ class Hotkey(db.Model):
     user_profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"))
 
     def __init__(self, key_code, key, alias):
-        """Initialize a User object.
-
-        Args:
-            key_code (str): The key code of the user.
-            key (str): The key of the user.
-            alias (str): The alias of the user.
-        """
+        """Initialize a User object."""
         self.id = None
         self.key_code = key_code
         self.key = key

@@ -38,8 +38,14 @@ class NewAttributeEnumSchema(AttributeEnumSchema):
 class AttributeEnum(db.Model):
     """Class for AttributeEnum.
 
-    Args:
-        db -- The database object.
+    Attributes:
+        id (int): The ID of the attribute enum.
+        index (int): The index of the attribute enum.
+        value (str): The value of the attribute enum.
+        description (str): The description of the attribute enum.
+        imported (bool): Indicates whether the attribute enum was imported.
+        attribute_id (int): The ID of the attribute.
+        attribute (Attribute): The attribute object
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -52,14 +58,7 @@ class AttributeEnum(db.Model):
     attribute = db.relationship("Attribute", back_populates="attribute_enums")
 
     def __init__(self, id, index, value, description):
-        """Initialize the attribute enum.
-
-        Args:
-            id (int): ID of the attribute enum.
-            index (int): Index of the attribute enum.
-            value (str): Value of the attribute enum.
-            description (str): Description of the attribute enum.
-        """
+        """Initialize the attribute enum."""
         if id is not None and id != -1:
             self.id = id
         else:
@@ -230,7 +229,7 @@ class AttributeEnum(db.Model):
         attribute_enums_schema = NewAttributeEnumSchema(many=True)
         attribute_enums = attribute_enums_schema.load(data)
         for attribute_enum in attribute_enums:
-            original_attribute_enum = cls.query.get(enum_id)
+            original_attribute_enum = db.session.get(cls, enum_id)
             original_attribute_enum.value = attribute_enum.value
             original_attribute_enum.description = attribute_enum.description
             original_attribute_enum.imported = False
@@ -245,7 +244,7 @@ class AttributeEnum(db.Model):
         Args:
             attribute_enum_id (int): The enum ID of the attribute to be deleted.
         """
-        db.session.delete(cls.query.get(attribute_enum_id))
+        db.session.delete(db.session.get(cls, attribute_enum_id))
         db.session.commit()
 
 
@@ -318,21 +317,7 @@ class Attribute(db.Model):
     )
 
     def __init__(self, id, name, description, type, default_value, validator, validator_parameter, attribute_enums):
-        """Initialize an Attribute object.
-
-        Args:
-            id (int): The ID of the attribute.
-            name (str): The name of the attribute.
-            description (str): The description of the attribute.
-            type (str): The type of the attribute.
-            default_value (str): The default value of the attribute.
-            validator (str): The validator for the attribute.
-            validator_parameter (str): The parameter for the validator.
-            attribute_enums (list): The list of attribute enums.
-
-        Returns:
-            None
-        """
+        """Initialize an Attribute object."""
         self.id = None
         self.name = name
         self.description = description
@@ -347,16 +332,7 @@ class Attribute(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
-        """
-        Reconstructs the attribute object.
-
-        This method is called when the attribute object is loaded from the database.
-        It sets the title and subtitle attributes based on the name and description attributes.
-        It also sets the tag attribute based on the type of the attribute.
-
-        Returns:
-            None
-        """
+        """Reconstruct the attribute object."""
         self.title = self.name
         self.subtitle = self.description
 
@@ -500,7 +476,7 @@ class Attribute(db.Model):
         """
         schema = NewAttributeSchema()
         updated_attribute = schema.load(data)
-        attribute = cls.query.get(attribute_id)
+        attribute = db.session.get(cls, attribute_id)
         attribute.name = updated_attribute.name
         attribute.description = updated_attribute.description
         attribute.type = updated_attribute.type
@@ -516,7 +492,7 @@ class Attribute(db.Model):
         Args:
             id (int): The ID of the attribute.
         """
-        attribute = cls.query.get(id)
+        attribute = db.session.get(cls, id)
         AttributeEnum.delete_for_attribute(id)
         db.session.delete(attribute)
         db.session.commit()
