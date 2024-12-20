@@ -168,8 +168,8 @@ class NewReportItemSchema(ReportItemBaseSchema):
         An instance of the NewReportItemSchema class.
     """
 
-    news_item_aggregates = fields.Nested(NewsItemAggregateIdSchema, many=True, missing=[])
-    remote_report_items = fields.Nested(ReportItemIdSchema, many=True, missing=[])
+    news_item_aggregates = fields.Nested(NewsItemAggregateIdSchema, many=True, load_default=[])
+    remote_report_items = fields.Nested(ReportItemIdSchema, many=True, load_default=[])
     attributes = fields.Nested(NewReportItemAttributeSchema, many=True)
 
     @post_load
