@@ -7,7 +7,7 @@ Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
 gevent==24.11.1
 gunicorn==23.0.0
-marshmallow==3.23.1
+marshmallow==3.23.2
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
