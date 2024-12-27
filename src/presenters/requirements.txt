@@ -3,7 +3,7 @@ Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
 gevent==24.11.1
 gunicorn==23.0.0
-Jinja2==3.1.4
+Jinja2==3.1.5
 marshmallow==3.23.2
 python-dotenv==1.0.1
 weasyprint==63.1
