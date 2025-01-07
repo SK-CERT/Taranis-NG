@@ -10,7 +10,6 @@ from alembic import op
 from datetime import datetime
 from sqlalchemy import orm, Column, ForeignKey, String, Integer, DateTime, Boolean, Enum, text
 from sqlalchemy.orm import declarative_base
-import sqlalchemy as sa
 
 Base = declarative_base()
 
@@ -19,9 +18,6 @@ revision = "1c4eed243364"
 down_revision = "4f24c634cd22"
 branch_labels = None
 depends_on = None
-
-# from sqlalchemy.orm import relationship
-# metadata = Base.metadata
 
 
 class ReportItemType_1c4eed243364(Base):
