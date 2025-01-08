@@ -222,7 +222,7 @@ class ACLEntry(db.Model):
 
         if see is False and access is False and modify is False:
             return query.filter(
-                or_(ACLEntry.id.is_(None), ACLEntry.everyone.is_(True), ACLEntryUser.user_id.is_(user.id), ACLEntryRole.role_id.in_(roles))
+                or_(ACLEntry.id.is_(None), ACLEntry.everyone.is_(True), ACLEntryUser.user_id == user.id, ACLEntryRole.role_id.in_(roles))
             )
 
         if see:
