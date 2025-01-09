@@ -1,3 +1,5 @@
+"""Report item type model."""
+
 from marshmallow import fields, post_load
 from sqlalchemy import orm, func, or_, and_
 import sqlalchemy
@@ -5,20 +7,52 @@ from sqlalchemy.sql.expression import cast
 
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
-from model.attribute import Attribute
 from shared.schema.acl_entry import ItemType
-from shared.schema.report_item_type import AttributeGroupItemSchema, AttributeGroupBaseSchema, ReportItemTypeBaseSchema, ReportItemTypePresentationSchema
+from shared.schema.report_item_type import (
+    AttributeGroupItemSchema,
+    AttributeGroupBaseSchema,
+    ReportItemTypeBaseSchema,
+    ReportItemTypePresentationSchema,
+)
 
 
 class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
+    """New attribute group item schema.
+
+    Attributes:
+        attribute_id (int): Attribute id.
+    """
+
     attribute_id = fields.Integer()
 
     @post_load
     def make_attribute_group_item(self, data, **kwargs):
+        """Make attribute group item.
+
+        Args:
+            data (dict): Data.
+        Returns:
+            AttributeGroupItem: Attribute group item.
+        """
         return AttributeGroupItem(**data)
 
 
 class AttributeGroupItem(db.Model):
+    """Attribute group item model.
+
+    Attributes:
+        id (int): Id.
+        title (str): Title.
+        description (str): Description.
+        index (int): Index.
+        min_occurrence (int): Min occurrence.
+        max_occurrence (int): Max occurrence.
+        attribute_group_id (int): Attribute group id.
+        attribute_group (AttributeGroup): Attribute group.
+        attribute_id (int): Attribute id.
+        attribute (Attribute): Attribute.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
@@ -27,13 +61,14 @@ class AttributeGroupItem(db.Model):
     min_occurrence = db.Column(db.Integer)
     max_occurrence = db.Column(db.Integer)
 
-    attribute_group_id = db.Column(db.Integer, db.ForeignKey('attribute_group.id'))
+    attribute_group_id = db.Column(db.Integer, db.ForeignKey("attribute_group.id"))
     attribute_group = db.relationship("AttributeGroup", back_populates="attribute_group_items", viewonly=True, lazy="joined")
 
-    attribute_id = db.Column(db.Integer, db.ForeignKey('attribute.id'))
+    attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id"))
     attribute = db.relationship("Attribute", lazy="joined")
 
     def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute_id):
+        """Initialize attribute group item."""
         if id is not None and id != -1:
             self.id = id
         else:
@@ -48,18 +83,52 @@ class AttributeGroupItem(db.Model):
 
     @classmethod
     def find(cls, id):
-        return cls.query.get(id)
+        """Find attribute group item.
+
+        Args:
+            id (int): Id.
+        Returns:
+            AttributeGroupItem: Attribute group item.
+        """
+        return db.session.get(cls, id)
 
 
 class NewAttributeGroupSchema(AttributeGroupBaseSchema):
-    attribute_group_items = fields.Nested('NewAttributeGroupItemSchema', many=True)
+    """New attribute group schema.
+
+    Attributes:
+        attribute_group_items (list): Attribute group items.
+    """
+
+    attribute_group_items = fields.Nested("NewAttributeGroupItemSchema", many=True)
 
     @post_load
     def make_attribute_group(self, data, **kwargs):
+        """Make attribute group.
+
+        Args:
+            data (dict): Data.
+        Returns:
+            AttributeGroup: Attribute group.
+        """
         return AttributeGroup(**data)
 
 
 class AttributeGroup(db.Model):
+    """Attribute group model.
+
+    Attributes:
+        id (int): Id.
+        title (str): Title.
+        description (str): Description.
+        section (int): Section.
+        section_title (str): Section title.
+        index (int): Index.
+        report_item_type_id (int): Report item type id.
+        report_item_type (ReportItemType): Report item type.
+        attribute_group_items (list): Attribute group items.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
@@ -68,13 +137,15 @@ class AttributeGroup(db.Model):
     section_title = db.Column(db.String())
     index = db.Column(db.Integer)
 
-    report_item_type_id = db.Column(db.Integer, db.ForeignKey('report_item_type.id'))
+    report_item_type_id = db.Column(db.Integer, db.ForeignKey("report_item_type.id"))
     report_item_type = db.relationship("ReportItemType")
 
-    attribute_group_items = db.relationship('AttributeGroupItem', back_populates="attribute_group",
-                                            cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroupItem.index)
+    attribute_group_items = db.relationship(
+        "AttributeGroupItem", back_populates="attribute_group", cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroupItem.index
+    )
 
     def __init__(self, id, title, description, section, section_title, index, attribute_group_items):
+        """Initialize attribute group."""
         if id is not None and id != -1:
             self.id = id
         else:
@@ -88,6 +159,11 @@ class AttributeGroup(db.Model):
         self.attribute_group_items = attribute_group_items
 
     def update(self, updated_attribute_group):
+        """Update attribute group.
+
+        Args:
+            updated_attribute_group (AttributeGroup): Updated attribute group.
+        """
         self.title = updated_attribute_group.title
         self.description = updated_attribute_group.description
         self.section = updated_attribute_group.section
@@ -123,22 +199,48 @@ class AttributeGroup(db.Model):
 
 
 class NewReportItemTypeSchema(ReportItemTypeBaseSchema):
-    attribute_groups = fields.Nested('NewAttributeGroupSchema', many=True)
+    """New report item type schema.
+
+    Attributes:
+        attribute_groups (list): Attribute groups.
+    """
+
+    attribute_groups = fields.Nested("NewAttributeGroupSchema", many=True)
 
     @post_load
     def make_report_item_type(self, data, **kwargs):
+        """Make report item type.
+
+        Args:
+            data (dict): Data.
+        Returns:
+            ReportItemType: Report item type.
+        """
         return ReportItemType(**data)
 
 
 class ReportItemType(db.Model):
+    """Report item type model.
+
+    Attributes:
+        id (int): Id.
+        title (str): Title.
+        description (str): Description.
+        attribute_groups (list): Attribute groups.
+        subtitle (str): Subtitle.
+        tag (str): Tag.
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
 
-    attribute_groups = db.relationship('AttributeGroup', back_populates="report_item_type",
-                                       cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroup.index)
+    attribute_groups = db.relationship(
+        "AttributeGroup", back_populates="report_item_type", cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroup.index
+    )
 
     def __init__(self, id, title, description, attribute_groups):
+        """Initialize report item type."""
         self.id = None
         self.title = title
         self.description = description
@@ -148,25 +250,48 @@ class ReportItemType(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
+        """Reconstruct."""
         self.subtitle = self.description
         self.tag = "mdi-file-table-outline"
 
     @classmethod
     def find(cls, id):
-        return cls.query.get(id)
+        """Find report item type.
+
+        Args:
+            id (int): Id.
+        Returns:
+            ReportItemType: Report item type.
+        """
+        return db.session.get(cls, id)
 
     @classmethod
     def get_all(cls):
+        """Get all report item types.
+
+        Returns:
+            list: Report item types.
+        """
         return cls.query.order_by(ReportItemType.title).all()
 
     @classmethod
     def allowed_with_acl(cls, report_item_type_id, user, see, access, modify):
+        """Check if user is allowed with acl.
 
-        query = db.session.query(ReportItemType.id).distinct().group_by(ReportItemType.id).filter(
-            ReportItemType.id == report_item_type_id)
+        Args:
+            report_item_type_id (int): Report item type id.
+            user (User): User.
+            see (bool): See.
+            access (bool): Access.
+            modify (bool): Modify.
+        Returns:
+            bool: True if allowed, False otherwise.
+        """
+        query = db.session.query(ReportItemType.id).distinct().group_by(ReportItemType.id).filter(ReportItemType.id == report_item_type_id)
 
-        query = query.outerjoin(ACLEntry, and_(cast(ReportItemType.id, sqlalchemy.String) == ACLEntry.item_id,
-                                               ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE))
+        query = query.outerjoin(
+            ACLEntry, and_(cast(ReportItemType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE)
+        )
 
         query = ACLEntry.apply_query(query, user, see, access, modify)
 
@@ -174,30 +299,55 @@ class ReportItemType(db.Model):
 
     @classmethod
     def get(cls, search, user, acl_check):
+        """Get report item types.
+
+        Args:
+            search (str): Search.
+            user (User): User.
+            acl_check (bool): Acl check.
+        Returns:
+            list: Report item types.
+        """
         query = cls.query.distinct().group_by(ReportItemType.id)
 
         if acl_check is True:
-            query = query.outerjoin(ACLEntry, and_(cast(ReportItemType.id, sqlalchemy.String) == ACLEntry.item_id,
-                                                   ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE))
+            query = query.outerjoin(
+                ACLEntry,
+                and_(cast(ReportItemType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE),
+            )
             query = ACLEntry.apply_query(query, user, True, False, False)
 
         if search is not None:
-            search_string = '%' + search.lower() + '%'
-            query = query.filter(or_(
-                func.lower(ReportItemType.title).like(search_string),
-                func.lower(ReportItemType.description).like(search_string)))
+            search_string = "%" + search.lower() + "%"
+            query = query.filter(
+                or_(func.lower(ReportItemType.title).like(search_string), func.lower(ReportItemType.description).like(search_string))
+            )
 
         return query.order_by(ReportItemType.title).all(), query.count()
 
     @classmethod
     def get_all_json(cls, search, user, acl_check):
+        """Get all report item types in json format.
+
+        Args:
+            search (str): Search.
+            user (User): User.
+            acl_check (bool): Acl check.
+        Returns:
+            dict: Report item types.
+        """
         report_item_types, count = cls.get(search, user, acl_check)
 
         report_item_type_schema = ReportItemTypePresentationSchema(many=True)
-        return {'total_count': count, 'items': report_item_type_schema.dump(report_item_types)}
+        return {"total_count": count, "items": report_item_type_schema.dump(report_item_types)}
 
     @classmethod
     def add_report_item_type(cls, report_item_type_data):
+        """Add report item type.
+
+        Args:
+            report_item_type_data (dict): Report item type data.
+        """
         report_item_type_schema = NewReportItemTypeSchema()
         report_item_type = report_item_type_schema.load(report_item_type_data)
         db.session.add(report_item_type)
@@ -205,9 +355,15 @@ class ReportItemType(db.Model):
 
     @classmethod
     def update(cls, report_type_id, data):
+        """Update report item type.
+
+        Args:
+            report_type_id (int): Report type id.
+            data (dict): Data.
+        """
         schema = NewReportItemTypeSchema()
         updated_report_type = schema.load(data)
-        report_type = cls.query.get(report_type_id)
+        report_type = db.session.get(cls, report_type_id)
         report_type.title = updated_report_type.title
         report_type.description = updated_report_type.description
 
@@ -237,6 +393,11 @@ class ReportItemType(db.Model):
 
     @classmethod
     def delete_report_item_type(cls, id):
-        report_item_type = cls.query.get(id)
+        """Delete report item type.
+
+        Args:
+            id (int): Id.
+        """
+        report_item_type = db.session.get(cls, id)
         db.session.delete(report_item_type)
         db.session.commit()

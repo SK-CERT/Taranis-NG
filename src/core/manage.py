@@ -42,6 +42,11 @@ def create_app():
     db_manager.initialize(app)
     db_manager.wait_for_db(app)
 
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        db_manager.db.session.remove()
+        db_manager.db.engine.dispose()
+
     return app
 
 
@@ -84,7 +89,6 @@ def account(opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, 
             for r in us.roles:
                 roles.append(r.id)
             print(f"Id: {us.id}\n\tUsername: {us.username}\n\tName: {us.name}\n\tRoles: {roles}")
-        exit()
 
     if opt_create:
         if not opt_username or not opt_password or not opt_roles:
@@ -195,7 +199,6 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
             for p in ro.permissions:
                 perms.append(p.id)
             print(f"Id: {ro.id}\n\tName: {ro.name}\n\tDescription: {ro.description}\n\tPermissions: {perms}")
-        exit()
 
     if opt_create:
         if not opt_name or not opt_permissions:
@@ -296,7 +299,6 @@ def collector_management(
                 f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}"
             )
         print(f"Total: {len(collector_nodes)}")
-        exit()
 
     if opt_create:
         if not opt_name or not opt_api_url or not opt_api_key:
@@ -445,7 +447,6 @@ def dictionary_management(opt_cve, opt_cpe, opt_cwe):
             abort()
 
     logger.info("Dictionary was uploaded.")
-    exit()
 
 
 def upload_to(filename):
@@ -493,7 +494,6 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
                 f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key}\n\tCreated: {k.created_at}\n\tUser id: {k.user_id}\n\t"
                 f"Expires: {k.expires_at}"
             )
-        exit()
 
     if opt_create:
         if not opt_name:

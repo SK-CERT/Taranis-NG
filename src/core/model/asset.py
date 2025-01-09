@@ -53,11 +53,7 @@ class AssetCpe(db.Model):
     asset_id = db.Column(db.Integer, db.ForeignKey("asset.id"))
 
     def __init__(self, value):
-        """Initialize a new instance of the Asset class.
-
-        Args:
-            value: The value of the asset.
-        """
+        """Initialize a new instance of the Asset class."""
         self.id = None
         self.value = value
 
@@ -112,16 +108,7 @@ class Asset(db.Model):
     vulnerabilities_count = db.Column(db.Integer, default=0)
 
     def __init__(self, id, name, serial, description, asset_group_id, asset_cpes):
-        """Initialize a new instance of the Asset class.
-
-        Args:
-            id (int): The ID of the asset.
-            name (str): The name of the asset.
-            serial (str): The serial number of the asset.
-            description (str): The description of the asset.
-            asset_group_id (int): The ID of the asset group the asset belongs to.
-            asset_cpes (list): A list of Common Platform Enumeration (CPE) values associated with the asset.
-        """
+        """Initialize a new instance of the Asset class."""
         self.id = None
         self.name = name
         self.serial = serial
@@ -134,14 +121,7 @@ class Asset(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
-        """Use decorator to create an instance of the AssetCpe class from the provided data.
-
-        Args:
-            data: A dictionary containing the data to initialize the AssetCpe instance.
-
-        Returns:
-            An instance of the AssetCpe class initialized with the provided data.
-        """
+        """Use decorator to create an instance of the AssetCpe class from the provided data."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-laptop"
@@ -170,7 +150,7 @@ class Asset(db.Model):
 
             result = db.engine.execute(text(query_string.format(inner_query)), params)
 
-            return [cls.query.get(row[0]) for row in result]
+            return [db.session.get(cls, row._mapping[0]) for row in result]
         else:
             return []
 
@@ -234,7 +214,7 @@ class Asset(db.Model):
             report_item_id (int): The ID of the report item.
             solved (bool): Indicates whether the vulnerability is solved or not.
         """
-        asset = cls.query.get(asset_id)
+        asset = db.session.get(cls, asset_id)
         if AssetGroup.access_allowed(user, asset.asset_group_id):
             for vulnerability in asset.vulnerabilities:
                 if vulnerability.report_item_id == report_item_id:
@@ -333,7 +313,7 @@ class Asset(db.Model):
             asset_id (int): The ID of the asset to update.
             data (dict): The data to update the asset with.
         """
-        asset = cls.query.get(asset_id)
+        asset = db.session.get(cls, asset_id)
         if AssetGroup.access_allowed(user, asset.asset_group_id):
             schema = NewAssetSchema()
             updated_asset = schema.load(data)
@@ -353,7 +333,7 @@ class Asset(db.Model):
             group_id (int): The ID of the asset group.
             id (int): The ID of the asset to be deleted.
         """
-        asset = cls.query.get(id)
+        asset = db.session.get(cls, id)
         if AssetGroup.access_allowed(user, asset.asset_group_id):
             db.session.delete(asset)
             db.session.commit()
@@ -377,12 +357,7 @@ class AssetVulnerability(db.Model):
     report_item = db.relationship("ReportItem")
 
     def __init__(self, asset_id, report_item_id):
-        """Initialize a new instance of the Asset class.
-
-        Args:
-        asset_id (int): The ID of the asset.
-        report_item_id (int): The ID of the report item.
-        """
+        """Initialize a new instance of the Asset class."""
         self.id = None
         self.asset_id = asset_id
         self.report_item_id = report_item_id
@@ -452,15 +427,7 @@ class AssetGroup(db.Model):
     users = db.relationship("User", secondary="asset_group_user")
 
     def __init__(self, id, name, description, users, templates):
-        """Initialize an instance of the Asset class.
-
-        Args:
-            id (str): The unique identifier of the asset.
-            name (str): The name of the asset.
-            description (str): The description of the asset.
-            users (list): A list of User objects associated with the asset.
-            templates (list): A list of NotificationTemplate objects associated with the asset.
-        """
+        """Initialize an instance of the Asset class."""
         self.id = str(uuid.uuid4())
         self.name = name
         self.description = description
@@ -479,12 +446,7 @@ class AssetGroup(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
-        """Reconstruct the asset object.
-
-        This method is called when the asset object is loaded from the database. It sets the `title` attribute to the value of the `name`
-         attribute and the `subtitle` attribute to the value of the `description` attribute. It also sets the `tag` attribute
-         to "mdi-folder-multiple".
-        """
+        """Reconstruct the asset object."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-folder-multiple"
@@ -499,7 +461,7 @@ class AssetGroup(db.Model):
         Returns:
             group (AssetGroup): The asset group with the specified ID.
         """
-        group = cls.query.get(group_id)
+        group = db.session.get(cls, group_id)
         return group
 
     @classmethod
@@ -514,7 +476,7 @@ class AssetGroup(db.Model):
         Returns:
             True if the access is allowed, False otherwise.
         """
-        group = cls.query.get(group_id)
+        group = db.session.get(cls, group_id)
         return any(org in user.organizations for org in group.organizations)
 
     @classmethod
@@ -603,7 +565,7 @@ class AssetGroup(db.Model):
             user (User): The user object.
             group_id (int): The ID of the group to be deleted.
         """
-        group = cls.query.get(group_id)
+        group = db.session.get(cls, group_id)
         if any(org in user.organizations for org in group.organizations):
             db.session.delete(group)
             db.session.commit()
@@ -620,7 +582,7 @@ class AssetGroup(db.Model):
         """
         new_group_schema = NewAssetGroupGroupSchema()
         updated_group = new_group_schema.load(data)
-        group = cls.query.get(group_id)
+        group = db.session.get(cls, group_id)
         if any(org in user.organizations for org in group.organizations):
             group.name = updated_group.name
             group.description = updated_group.description

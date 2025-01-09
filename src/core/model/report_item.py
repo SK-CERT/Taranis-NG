@@ -4,19 +4,6 @@ The ReportItem class represents a report item, which is a component of a larger 
 created timestamp, and more. The class also includes methods for finding report item attributes by ID.
 
 The module also defines several schemas for creating and validating report items and their attributes.
-
-Classes:
-    - ReportItem: A class representing a report item.
-    - ReportItemAttribute: A class representing an attribute of a report item.
-    - ReportItemRemoteReportItem: A class representing the relationship between a report item and a remote report item.
-
-Schemas:
-    - NewReportItemSchema: Schema for creating a new report item.
-    - NewReportItemAttributeSchema: Schema for creating a new report item attribute.
-
-Relationships:
-    - ReportItem has a many-to-one relationship with User and ReportItemType.
-    - ReportItem has a many-to-many relationship with NewsItemAggregate and ReportItem.
 """
 
 from datetime import datetime
@@ -165,7 +152,7 @@ class ReportItemAttribute(db.Model):
             ReportItemAttribute: The report item attribute with the specified ID, or None if not found.
 
         """
-        report_item_attribute = cls.query.get(attribute_id)
+        report_item_attribute = db.session.get(cls, attribute_id)
         return report_item_attribute
 
 
@@ -181,8 +168,8 @@ class NewReportItemSchema(ReportItemBaseSchema):
         An instance of the NewReportItemSchema class.
     """
 
-    news_item_aggregates = fields.Nested(NewsItemAggregateIdSchema, many=True, missing=[])
-    remote_report_items = fields.Nested(ReportItemIdSchema, many=True, missing=[])
+    news_item_aggregates = fields.Nested(NewsItemAggregateIdSchema, many=True, load_default=[])
+    remote_report_items = fields.Nested(ReportItemIdSchema, many=True, load_default=[])
     attributes = fields.Nested(NewReportItemAttributeSchema, many=True)
 
     @post_load
@@ -264,19 +251,7 @@ class ReportItem(db.Model):
     report_item_cpes = db.relationship("ReportItemCpe", cascade="all, delete-orphan")
 
     def __init__(self, id, uuid, title, title_prefix, report_item_type_id, news_item_aggregates, remote_report_items, attributes, completed):
-        """Initialize a new instance of the ReportItem class.
-
-        Args:
-            id (int): The ID of the report item.
-            uuid (str): The UUID of the report item.
-            title (str): The title of the report item.
-            title_prefix (str): The prefix of the report item's title.
-            report_item_type_id (int): The ID of the report item type.
-            news_item_aggregates (list): A list of news item aggregates associated with the report item.
-            remote_report_items (list): A list of remote report items associated with the report item.
-            attributes (dict): A dictionary of attributes for the report item.
-            completed (bool): Indicates whether the report item is completed or not.
-        """
+        """Initialize a new instance of the ReportItem class."""
         self.id = id
 
         if uuid is None:
@@ -303,11 +278,7 @@ class ReportItem(db.Model):
 
     @orm.reconstructor
     def reconstruct(self):
-        """Reconstructs the report item.
-
-        This method clears the subtitle, sets the tag to "mdi-file-table-outline",
-        and sorts the attributes based on the attribute group index, attribute group item index, and attribute ID.
-        """
+        """Reconstructs the report item."""
         self.subtitle = ""
         self.tag = "mdi-file-table-outline"
 
@@ -331,7 +302,7 @@ class ReportItem(db.Model):
         Returns:
             ReportItem: The report item with the specified ID.
         """
-        report_item = cls.query.get(report_item_id)
+        report_item = db.session.get(cls, report_item_id)
         return report_item
 
     @classmethod
@@ -528,7 +499,7 @@ class ReportItem(db.Model):
 
             result = db.engine.execute(text(query_string.format(inner_query)), params)
 
-            return [row[0] for row in result]
+            return [row._mapping[0] for row in result]
         else:
             return []
 
@@ -576,7 +547,7 @@ class ReportItem(db.Model):
         Returns:
             The detailed JSON representation of the report item.
         """
-        report_item = cls.query.get(id)
+        report_item = db.session.get(cls, id)
         report_item_schema = ReportItemSchema()
         return report_item_schema.dump(report_item)
 
@@ -591,12 +562,12 @@ class ReportItem(db.Model):
             db.session.query(ReportItem.remote_user)
             .distinct()
             .group_by(ReportItem.remote_user)
-            .filter(ReportItem.remote_user.isnot(None))
+            .filter(ReportItem.remote_user.is_not(None))
             .all()
         )
         groups = set()
         for row in result:
-            groups.add(row[0])
+            groups.add(row._mapping[0])
 
         return list(groups)
 
@@ -671,7 +642,7 @@ class ReportItem(db.Model):
         """
         modified = False
         new_attribute = None
-        report_item = cls.query.get(id)
+        report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data:
                 if "title" in data:
@@ -788,7 +759,7 @@ class ReportItem(db.Model):
         Returns:
             dict: The updated data for the report item.
         """
-        report_item = cls.query.get(id)
+        report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data:
                 if "title" in data:
@@ -855,7 +826,7 @@ class ReportItem(db.Model):
                 - "report_item_id" (int): The ID of the report item.
                 - "attribute_id" (int): The ID of the newly created attribute.
         """
-        report_item = cls.query.get(id)
+        report_item = db.session.get(cls, id)
         file_data = file.read()
         new_attribute = ReportItemAttribute(
             None, file.filename, "", file.mimetype, len(file_data), description, attribute_group_item_id, None
@@ -892,7 +863,7 @@ class ReportItem(db.Model):
                 - report_item_id (int): The ID of the report item.
                 - attribute_id (int): The ID of the attribute that was deleted.
         """
-        report_item = cls.query.get(id)
+        report_item = db.session.get(cls, id)
         attribute_to_delete = None
         for attribute in report_item.attributes:
             if attribute.id == attribute_id:
@@ -925,7 +896,7 @@ class ReportItem(db.Model):
                 The status message is "success" if the report item was deleted successfully.
                 The HTTP status code is 200 if the report item was deleted successfully.
         """
-        report_item = cls.query.get(id)
+        report_item = db.session.get(cls, id)
         if report_item is not None:
             db.session.delete(report_item)
             db.session.commit()
@@ -961,10 +932,6 @@ class ReportItemCpe(db.Model):
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"))
 
     def __init__(self, value):
-        """Initialize a ReportItemCpe object.
-
-        Args:
-            value (any): The value of the report item.
-        """
+        """Initialize a ReportItemCpe object."""
         self.id = None
         self.value = value

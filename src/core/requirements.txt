@@ -5,14 +5,13 @@ Flask-JWT-Extended==4.7.1
 Flask-Migrate==4.0.7
 flask-oidc==2.2.2
 Flask-RESTful==0.3.10
-Flask-SQLAlchemy==3.0.5 # 3.1.1 - needs SQLAlchemy 2.0.16
+Flask-SQLAlchemy==3.1.1
 gevent==24.11.1
 gunicorn==23.0.0
-Jinja2==3.1.5
-ldap3==2.9.1
-marshmallow==3.23.3
-psycopg2==2.9.10
-#psycopg==3.2.3
+Jinja2==3.1.4
+git+https://github.com/cannatag/ldap3.git@refs/pull/983/head
+marshmallow==3.23.1
+psycopg[binary]==3.2.3
 pycryptodomex==3.21.0
 PyJWT==2.10.1
 python-dotenv==1.0.1
@@ -20,6 +19,6 @@ python-keycloak==5.1.1
 requests==2.32.3
 schedule==1.2.2
 sseclient-py==1.8.0
-SQLAlchemy==1.4.54 # 2.0.36
+SQLAlchemy==2.0.36
 tqdm==4.67.1
 Werkzeug==3.1.3

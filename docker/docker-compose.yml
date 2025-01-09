@@ -79,13 +79,13 @@ services:
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
 
       traefik.http.routers.taranis-api-443.entrypoints: "websecure"
-      traefik.http.routers.taranis-api-443.rule: "PathPrefix(`/api/`)"
+      traefik.http.routers.taranis-api-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/api/`)"
       traefik.http.routers.taranis-api-443.tls: "true"
       traefik.http.routers.taranis-api-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-api-443.service: "taranis-api"
 
       traefik.http.routers.taranis-sse-443.entrypoints: "websecure"
-      traefik.http.routers.taranis-sse-443.rule: "PathPrefix(`/sse`)"
+      traefik.http.routers.taranis-sse-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/sse`)"
       traefik.http.routers.taranis-sse-443.tls: "true"
       traefik.http.routers.taranis-sse-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-sse-443.service: "taranis-api"
@@ -257,7 +257,7 @@ services:
       traefik.http.routers.taranis-gui-80.middlewares: "redirect-to-443"
 
       traefik.http.routers.taranis-gui-443.entrypoints: "websecure"
-      traefik.http.routers.taranis-gui-443.rule: "PathPrefix(`/`)"
+      traefik.http.routers.taranis-gui-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/`)"
       traefik.http.routers.taranis-gui-443.tls: "true"
       traefik.http.routers.taranis-gui-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-gui-443.service: "taranis-gui"
