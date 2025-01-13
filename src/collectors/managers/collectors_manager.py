@@ -5,7 +5,6 @@ import threading
 import time
 
 from managers.log_manager import logger
-from collectors.atom_collector import AtomCollector
 from collectors.email_collector import EmailCollector
 from collectors.manual_collector import ManualCollector
 from collectors.rss_collector import RSSCollector
@@ -49,7 +48,6 @@ def initialize():
     register_collector(TwitterCollector())
     register_collector(EmailCollector())
     register_collector(SlackCollector())
-    register_collector(AtomCollector())
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
 

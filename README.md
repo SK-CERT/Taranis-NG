@@ -18,8 +18,7 @@ that mention vulnerabilities in the software.
 | Collector | web                  | crawl web sites                       |
 |           | twitter              | receive tweets                        |
 |           | email                | read e-mails                          |
-|           | atom                 | read atom feeds                       |
-|           | rss                  | read RSS feeds                        |
+|           | rss                  | read RSS, Atom feeds                  |
 |           | slack                | read [Slack](https://slack.com/) messages |
 |           | manual entry         | enter news item manually              |
 |           | scheduled tasks      | populate feed automatically           |
