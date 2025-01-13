@@ -185,6 +185,16 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 | `NGINX_WORKERS`               | Number of NginX worker threads to spawn. | `4` |
 | `NGINX_CONNECTIONS`           | Maximum number of allowed connections per one worker thread. | `16` |
 
+## Note
+If you see in logs this message:
+```
+redis-1       | 1:C 07 Jan 2025 08:35:21.560 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+```
+Run following in your host OS:
+```bash
+sysctl -w vm.overcommit_memory=1
+```
+
 ## Management script how-to
 
 Taranis NG core container comes with a simple management script that may be used to set up and configure the instance without manual interaction with the database.

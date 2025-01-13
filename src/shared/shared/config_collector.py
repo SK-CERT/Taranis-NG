@@ -26,22 +26,6 @@ class ConfigCollector(ConfigBase):
         """Initialize collector modules."""
         self.modules: List[module_type] = []
 
-        mod = module_type("ATOM_COLLECTOR", "Atom Collector", "Collector for gathering data from Atom feeds")
-        mod.parameters = self.add_default()
-        mod.parameters.extend(
-            [
-                param_type("ATOM_FEED_URL", "Atom feed URL", "Full url for Atom feed", ParameterType.STRING),
-                param_type("USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING),
-                param_type(
-                    "LINKS_LIMIT",
-                    "Limit for article links",
-                    "OPTIONAL: Maximum number of article links to process. Default: all",
-                    ParameterType.NUMBER,
-                ),
-            ]
-        )
-        self.modules.append(mod)
-
         mod = module_type("EMAIL_COLLECTOR", "EMAIL Collector", "Collector for gathering data from emails")
         mod.parameters = self.add_default()
         mod.parameters.extend(
