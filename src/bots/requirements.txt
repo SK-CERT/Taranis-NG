@@ -3,7 +3,7 @@ Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
 gevent==24.11.1
 gunicorn==23.0.0
-marshmallow==3.23.3
+marshmallow==3.25.1
 oauthlib==3.2.2
 PySocks==1.7.1
 python-dotenv==1.0.1
