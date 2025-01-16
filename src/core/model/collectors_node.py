@@ -173,8 +173,8 @@ class CollectorsNode(db.Model):
             try:
                 time_inactive = datetime.now() - max(nodes[i].created, nodes[i].last_seen)
                 items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"
-            except Exception as ex:  # noqa F841
-                logger.exception("Cannot update collector status.")
+            except Exception as ex:
+                logger.exception(f"Cannot update collector status: {ex}")
                 # if never collected before
                 items[i]["status"] = "red"
 

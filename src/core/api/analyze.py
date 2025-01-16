@@ -73,7 +73,7 @@ class ReportItems(Resource):
             if "limit" in request.args and request.args["limit"]:
                 limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
-            logger.debug(ex)
+            logger.exception(f"Get ReportItems failed: {ex}")
             return "", 400
 
         return report_item.ReportItem.get_json(group, filter, offset, limit, auth_manager.get_user_from_jwt())
@@ -175,7 +175,7 @@ class ReportItemData(Resource):
             if "remote_report_item_ids" in request.args and request.args["remote_report_item_ids"]:
                 data["remote_report_item_ids"] = request.args["remote_report_item_ids"].split("--")
         except Exception as ex:
-            logger.debug(ex)
+            logger.exception(f"Get ReportItemData failed: {ex}")
             return "", 400
 
         user = auth_manager.get_user_from_jwt()
