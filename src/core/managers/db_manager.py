@@ -43,6 +43,8 @@ def wait_for_db(app, retries=5, delay=1):
     Raises:
         ConnectionError: If the database is not ready after the specified number of retries.
     """
+    from managers.log_manager import logger  # must be here, because circular import error
+
     db_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     attempt = 0
     while attempt < retries:
@@ -50,10 +52,10 @@ def wait_for_db(app, retries=5, delay=1):
             db_socket.connect((app.config.get("DB_URL"), 5432))
             db_socket.close()
             return
-        except socket.error as error:
+        except socket.error as ex:
             attempt += 1
-            print(f"Waiting for database: {error}. Attempt {attempt} of {retries}.")
+            logger.warrning(f"Waiting for database: {ex}. Attempt {attempt} of {retries}.")
             time.sleep(delay)
             delay *= 2  # Exponential backoff
-    print("Database is not ready after multiple attempts.")
+    logger.error("Database is not ready after multiple attempts.")
     raise ConnectionError("Database is not ready after multiple attempts.")

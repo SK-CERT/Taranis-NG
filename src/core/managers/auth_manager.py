@@ -244,7 +244,7 @@ def get_user_from_api_key():
         user = User.find_by_id(api_key.user_id)
         return user
     except Exception as ex:
-        log_manager.store_auth_error_activity(f"API key check presence error: {str(ex)}")
+        log_manager.store_auth_error_activity("API key check presence error", ex)
         return None
 
 
@@ -266,7 +266,7 @@ def get_perm_from_user(user):
             all_users_perms = all_users_perms.union(role_perms)
         return all_users_perms
     except Exception as ex:
-        log_manager.store_auth_error_activity(f"Get permission from user error: {str(ex)}")
+        log_manager.store_auth_error_activity("Get permission from user error", ex)
         return None
 
 
@@ -280,8 +280,8 @@ def get_user_from_jwt_token():
     """
     try:
         verify_jwt_in_request()
-    except JWTExtendedException:
-        log_manager.store_auth_error_activity("Missing JWT")
+    except JWTExtendedException as ex:
+        log_manager.store_auth_error_activity("Missing JWT", ex)
         return None
 
     # does it encode an identity?
@@ -320,7 +320,7 @@ def get_perm_from_jwt_token(user):
         all_users_perms = set(jwt_data["permissions"])
         return all_users_perms
     except Exception as ex:
-        log_manager.store_auth_error_activity(f"Get permission from JWT error: {str(ex)}")
+        log_manager.store_auth_error_activity("Get permission from JWT error", ex)
         return None
 
 
@@ -466,8 +466,8 @@ def jwt_required(fn):
     def wrapper(*args, **kwargs):
         try:
             verify_jwt_in_request()
-        except JWTExtendedException:
-            log_manager.store_auth_error_activity("Missing JWT")
+        except JWTExtendedException as ex:
+            log_manager.store_auth_error_activity("Missing JWT", ex)
             return {"error": "authorization required"}, 401
 
         identity = get_jwt_identity()
@@ -526,8 +526,8 @@ def decode_user_from_jwt(jwt_token):
     decoded = None
     try:
         decoded = jwt.decode(jwt_token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
-    except Exception as error:  # e.g. "Signature has expired"
-        log_manager.store_auth_error_activity(f"Invalid JWT: {error}")
+    except Exception as ex:  # e.g. "Signature has expired"
+        log_manager.store_auth_error_activity("Invalid JWT", ex)
     if decoded is None:
         return None
     return User.find(decoded["sub"])

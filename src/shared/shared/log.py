@@ -51,8 +51,8 @@ class TaranisLogger:
         if syslog_address:
             try:
                 sys_log_handler = logging.handlers.SysLogHandler(address=syslog_address, socktype=socket.SOCK_STREAM)
-            except Exception:
-                print("Unable to connect to syslog server!")
+            except Exception as ex:
+                print(f"Unable to connect to syslog server: {ex}")
 
         # Configure the root logger for all other modules
         module_logger = logging.getLogger()
@@ -139,6 +139,7 @@ class TaranisLogFormatter(logging.Formatter):
 
     def __init__(self):
         """Initialize a TaranisLogFormatter object."""
+        # same colors are used in gunicorn_conf.py
         grey_bold = "\x1b[1;38;5;246m"
         cyan_bold = "\x1b[1;36m"
         yellow_bold = "\x1b[1;38;5;214m"

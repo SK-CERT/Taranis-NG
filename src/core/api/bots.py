@@ -59,7 +59,7 @@ class NewsItemData(Resource):
             if "limit" in request.args and request.args["limit"]:
                 limit = request.args["limit"]
         except Exception as ex:
-            logger.debug(ex)
+            logger.exception(f"Get NewsItemData failed: {ex}")
             return "", 400
 
         return news_item.NewsItemData.get_all_news_items_data(limit)

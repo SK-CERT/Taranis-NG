@@ -166,19 +166,7 @@ def store_activity(activity_type, activity_detail, request_data=None):
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
-    LogRecord.store(
-        resolve_ip_address(),
-        None,
-        None,
-        None,
-        None,
-        None,
-        activity_type,
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(None, None, None, None, None, None, activity_type, activity_detail, request_data)
 
 
 def store_user_activity(user, activity_type, activity_detail, request_data=None):
@@ -190,19 +178,7 @@ def store_user_activity(user, activity_type, activity_detail, request_data=None)
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
-    LogRecord.store(
-        resolve_ip_address(),
-        user.id,
-        user.name,
-        None,
-        None,
-        None,
-        activity_type,
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(None, user.id, user.name, None, None, None, activity_type, activity_detail, request_data)
 
 
 def store_access_error_activity(user, activity_detail, request_data=None):
@@ -214,32 +190,21 @@ def store_access_error_activity(user, activity_detail, request_data=None):
         request_data (dict, optional): The data associated with the request.
     """
     ip = resolve_ip_address()
-    log_text = f"TARANIS NG Access Error (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
-    f" Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    log_text = (
+        f"TARANIS NG Access Error (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
+        f"Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    )
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.debug(ex)
+            logger.exception(f"Storing access error failed: {ex}")
 
-    print(log_text)
     db.session.rollback()
-    LogRecord.store(
-        ip,
-        user.id,
-        user.name,
-        None,
-        None,
-        None,
-        "ACCESS_ERROR",
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(ip, user.id, user.name, None, None, None, "ACCESS_ERROR", activity_detail, request_data)
 
 
-def store_data_error_activity(user, activity_detail, request_data=None):
+def store_data_error_activity(user, activity_detail, exception=None, request_data=None):
     """Store a data error activity record in the log.
 
     Args:
@@ -247,96 +212,68 @@ def store_data_error_activity(user, activity_detail, request_data=None):
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
+    if exception:
+        logger.exception(f"{activity_detail}: {exception}")
     db.session.rollback()
     ip = resolve_ip_address()
-    log_text = f"TARANIS NG Data Error (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
-    f" Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
-
+    log_text = (
+        f"TARANIS NG Data Error (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()}, "
+        f"Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    )
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.debug(ex)
+            logger.exception(f"Storing data error failed: {ex}")
 
-    print(log_text)
-    LogRecord.store(
-        ip,
-        user.id,
-        user.name,
-        None,
-        None,
-        None,
-        "DATA_ERROR",
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(ip, user.id, user.name, None, None, None, "DATA_ERROR", activity_detail, request_data)
 
 
-def store_data_error_activity_no_user(activity_detail, request_data=None):
+def store_data_error_activity_no_user(activity_detail, exception=None, request_data=None):
     """Store a data error activity record in the log without a user.
 
     Args:
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
+    if exception:
+        logger.exception(f"{activity_detail}: {exception}")
     db.session.rollback()
     ip = resolve_ip_address()
-    log_text = f"TARANIS NG Public Access Data Error (IP: {ip}, Method: {resolve_method()}, Resource: {resolve_resource()},"
-    f" Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    log_text = (
+        f"TARANIS NG Public Access Data Error (IP: {ip}, Method: {resolve_method()}, Resource: {resolve_resource()}, "
+        f"Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    )
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.debug(ex)
+            logger.exception(f"Storing data error (no user) failed: {ex}")
 
-    print(log_text)
-    LogRecord.store(
-        ip,
-        None,
-        None,
-        None,
-        None,
-        None,
-        "PUBLIC_ACCESS_DATA_ERROR",
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(ip, None, None, None, None, None, "PUBLIC_ACCESS_DATA_ERROR", activity_detail, request_data)
 
 
-def store_auth_error_activity(activity_detail, request_data=None):
+def store_auth_error_activity(activity_detail, exception=None, request_data=None):
     """Store an authentication error activity record in the log.
 
     Args:
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
+    if exception:
+        logger.exception(f"{activity_detail}: {exception}")
     db.session.rollback()
-    log_text = f"TARANIS NG Auth Error (Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail},"
-    f" Activity Data: {generate_escaped_data(request_data)})"
+    log_text = (
+        f"TARANIS NG Auth Error (Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail}, "
+        f"Activity Data: {generate_escaped_data(request_data)})"
+    )
     if sys_logger is not None:
         try:
             sys_logger.error(log_text)
         except Exception() as ex:
-            logger.debug(ex)
+            logger.exception(f"Storing authentication error failed: {ex}")
 
-    print(log_text)
-    LogRecord.store(
-        resolve_ip_address(),
-        None,
-        None,
-        None,
-        None,
-        None,
-        "AUTH_ERROR",
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(None, None, None, None, None, None, "AUTH_ERROR", activity_detail, request_data)
 
 
 def store_user_auth_error_activity(user, activity_detail, request_data=None):
@@ -349,28 +286,17 @@ def store_user_auth_error_activity(user, activity_detail, request_data=None):
     """
     db.session.rollback()
     ip = resolve_ip_address()
-    log_text = f"TARANIS NG Auth Critical (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
-    f" Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    log_text = (
+        f"TARANIS NG Auth Critical (IP: {ip}, User ID: {user.id}, User Name: {user.name}, Method: {resolve_method()},"
+        f"Resource: {resolve_resource()}, Activity Detail: {activity_detail}, Activity Data: {generate_escaped_data(request_data)})"
+    )
     if sys_logger is not None:
         try:
             sys_logger.error(log_text)
         except Exception() as ex:
-            logger.debug(ex)
+            logger.exception(f"Storing user authentication error failed: {ex}")
 
-    print(log_text)
-    LogRecord.store(
-        ip,
-        user.id,
-        user.name,
-        None,
-        None,
-        None,
-        "AUTH_ERROR",
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(ip, user.id, user.name, None, None, None, "AUTH_ERROR", activity_detail, request_data)
 
 
 def store_system_activity(system_id, system_name, activity_type, activity_detail, request_data=None):
@@ -383,19 +309,7 @@ def store_system_activity(system_id, system_name, activity_type, activity_detail
         activity_detail (str): The details of the activity.
         request_data (dict, optional): The data associated with the request.
     """
-    LogRecord.store(
-        resolve_ip_address(),
-        None,
-        None,
-        system_id,
-        system_name,
-        None,
-        activity_type,
-        resolve_resource(),
-        activity_detail,
-        resolve_method(),
-        generate_escaped_data(request_data),
-    )
+    store_record(None, None, None, system_id, system_name, None, activity_type, activity_detail, request_data)
 
 
 def store_system_error_activity(system_id, system_name, activity_type, activity_detail, request_data=None):
@@ -410,23 +324,44 @@ def store_system_error_activity(system_id, system_name, activity_type, activity_
     """
     db.session.rollback()
     ip = resolve_ip_address()
-    log_text = f"TARANIS NG System Critical (System ID: {ip}, System Name: {system_id}, Activity Type: {system_name},"
-    f" Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail},"
-    f" Activity Data: {generate_escaped_data(request_data)})"
+    log_text = (
+        f"TARANIS NG System Critical (System ID: {ip}, System Name: {system_id}, Activity Type: {system_name}, "
+        f"Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail}, "
+        f"Activity Data: {generate_escaped_data(request_data)})"
+    )
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
         except Exception() as ex:
-            logger.debug(ex)
+            logger.exception(f"Storing system error failed: {ex}")
 
-    print(log_text)
+    store_record(ip, None, None, system_id, system_name, None, activity_type, activity_detail, request_data)
+
+
+def store_record(ip_address, user_id, user_name, system_id, system_name, module_id, activity_type, activity_detail, request_data):
+    """Store a system activity record in the log.
+
+    Args:
+        ip_address (str): IP Address (None for auto resolving).
+        user_id (int): The user ID associated with the activity.
+        user_name (str): The user name associated with the activity.
+        system_id (int): The ID of the system.
+        system_name (str): The name of the system.
+        module_id (str): The ID of the module.
+        activity_type (str): The type of activity.
+        activity_detail (str): The details of the activity.
+        request_data (dict, optional): The data associated with the request.
+    """
+    if ip_address is None:
+        ip_address = resolve_ip_address()
+
     LogRecord.store(
-        resolve_ip_address(),
-        None,
-        None,
+        ip_address,
+        user_id,
+        user_name,
         system_id,
         system_name,
-        None,
+        module_id,
         activity_type,
         resolve_resource(),
         activity_detail,
