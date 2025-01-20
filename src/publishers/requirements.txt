@@ -1,4 +1,4 @@
-envelope==2.0.5
+envelope==2.1.0
 Flask==3.1.0
 Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
