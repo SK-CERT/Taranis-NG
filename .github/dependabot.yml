@@ -23,8 +23,6 @@ updates:
     directory: "/src/core"
     schedule:
       interval: "weekly"
-    ignore:
-      - dependency-name: "SQLAlchemy"
   - package-ecosystem: "pip"
     directory: "/src/presenters"
     schedule:
