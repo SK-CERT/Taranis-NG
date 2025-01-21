@@ -62,7 +62,7 @@ class BaseCollector:
         """
         response, status_code = CoreApi.update_collector_last_attepmt(source.id)
         if status_code != 200:
-            logger.critical(f"Update last attempt: HTTP {status_code}, response: {response}")
+            logger.error(f"Update last attempt: Code {status_code}" f"{', response: ' + response if response is not None else ''}")
 
     @staticmethod
     def ignore_exceptions(func):
@@ -283,7 +283,7 @@ class BaseCollector:
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
             else:
                 # TODO: send update to core with the error message
-                logger.warning(f"configuration not received, code: {code}, response: {response}")
+                logger.error(f"OSINT sources not received, Code {code}" f"{', response: ' + response if response is not None else ''}")
                 pass
         except Exception as error:
             logger.exception(f"Refreshing of sources failed: {error}")

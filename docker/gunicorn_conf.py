@@ -103,7 +103,7 @@ class CustomGunicornLogger(Logger):
         for handler in self.error_log.handlers:
             handler.addFilter(RemoveStrings())
         # Formatter to remove timestamps and add color
-        formatter = ColorizedFormatter("[%(levelname)s] %(message)s")
+        formatter = ColorizedFormatter("[%(levelname)s]  %(message)s")
         for handler in self.error_log.handlers:
             handler.setFormatter(formatter)
 
