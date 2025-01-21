@@ -98,9 +98,9 @@ def upgrade():
             stmt = collector_table.delete().where(collector_table.c.id == atom_collector_id)
             conn.execute(stmt)
 
-        # delete Atom Collector Parameters
-        stmt = parameter_value_table.delete().where(parameter_value_table.c.parameter_id.in_(atom_collector_parameter_ids))
-        conn.execute(stmt)
+            # delete Atom Collector Parameter Values
+            stmt = parameter_value_table.delete().where(parameter_value_table.c.parameter_id.in_(atom_collector_parameter_ids))
+            conn.execute(stmt)
 
 
 def downgrade():
