@@ -44,8 +44,8 @@ class TaranisLogger:
             taranis_stream_handler.setFormatter(TaranisLogFormatter())
             module_stream_handler.setFormatter(TaranisLogFormatter())
         else:
-            taranis_stream_handler.setFormatter(logging.Formatter("[%(levelname)s] - %(message)s"))
-            module_stream_handler.setFormatter(logging.Formatter("[%(levelname)s] - %(message)s"))
+            taranis_stream_handler.setFormatter(logging.Formatter("[%(levelname)s]  %(message)s"))
+            module_stream_handler.setFormatter(logging.Formatter("[%(levelname)s]  %(message)s"))
 
         sys_log_handler = None
         if syslog_address:
@@ -146,7 +146,7 @@ class TaranisLogFormatter(logging.Formatter):
         red_bold = "\x1b[1;31m"
         white_bold_on_red = "\x1b[1;37m\x1b[41m"
         reset = "\x1b[0m"
-        self.format_string = "[%(levelname)s] - %(message)s"
+        self.format_string = "[%(levelname)s]  %(message)s"
         self.FORMATS = {
             logging.DEBUG: grey_bold + self.format_string + reset,
             logging.INFO: cyan_bold + self.format_string + reset,
