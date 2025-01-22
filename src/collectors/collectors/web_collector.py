@@ -1,31 +1,31 @@
 """Module for Web collector."""
 
+import copy
 import datetime
 import hashlib
-import subprocess
-import uuid
-import time
-import copy
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from urllib.parse import urlparse
 import os
 import re
-from dateutil.parser import parse
-
+import selenium
+import subprocess
+import time
+import uuid
 from .base_collector import BaseCollector
+from dateutil.parser import parse
 from managers.log_manager import logger
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
+from urllib.parse import urlparse
 
 
 class WebCollector(BaseCollector):
@@ -59,6 +59,7 @@ class WebCollector(BaseCollector):
     name = config.name
     description = config.description
     parameters = config.parameters
+    logger.debug(f"Selenium version: {selenium.__version__}")
 
     @staticmethod
     def __get_prefix_and_selector(element_selector):
