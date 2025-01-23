@@ -298,6 +298,7 @@ def collector_management(
                 f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
                 f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}"
             )
+        # We need print here, because the prestart_core.sh relies on the output
         print(f"Total: {len(collector_nodes)}")
 
     if opt_create:
