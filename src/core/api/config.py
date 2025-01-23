@@ -1085,7 +1085,7 @@ class RemoteNode(Resource):
             (str, int): The result of the update
         """
         try:
-            if remote.RemoteNode.update(id, request.json) is False:
+            if remote.RemoteNode.update(remote_node_id, request.json) is False:
                 remote_manager.disconnect_from_node(remote_node_id)
         except Exception as ex:
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remote node", ex)
@@ -1102,7 +1102,7 @@ class RemoteNode(Resource):
         """
         try:
             remote_manager.disconnect_from_node(remote_node_id)
-            return remote.RemoteNode.delete(id)
+            return remote.RemoteNode.delete(remote_node_id)
         except Exception as ex:
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remote node", ex)
             return "", 400
