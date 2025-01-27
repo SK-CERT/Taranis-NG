@@ -4,6 +4,6 @@ Flask-RESTful==0.3.10
 gevent==24.11.1
 gunicorn==23.0.0
 Jinja2==3.1.5
-marshmallow==3.25.1
+marshmallow==3.26.0
 python-dotenv==1.0.1
 weasyprint==63.1
