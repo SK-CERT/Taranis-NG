@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Debian Security Advisories",
+            "description": "These are the recent Debian Security Advisories (DSA) posted to the debian-security-announce list. ",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "https://www.debian.org/security/dsa",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "15",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}
