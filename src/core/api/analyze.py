@@ -349,7 +349,7 @@ class ReportItemDownloadAttachment(Resource):
 
                         return send_file(
                             io.BytesIO(report_item_attribute.binary_data),
-                            attachment_filename=report_item_attribute.value,
+                            download_name=report_item_attribute.value,
                             mimetype=report_item_attribute.binary_mime_type,
                             as_attachment=True,
                         )

@@ -882,9 +882,7 @@ class OSINTSourcesExport(Resource):
         """
         try:
             data = collectors_manager.export_osint_sources(request.json)
-            return send_file(
-                io.BytesIO(data), attachment_filename="osint_sources_export.json", mimetype="application/json", as_attachment=True
-            )
+            return send_file(io.BytesIO(data), download_name="osint_sources_export.json", mimetype="application/json", as_attachment=True)
         except Exception as ex:
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not export OSINT source", ex)
             return "", 400
