@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "MSRC Security Update Guide",
+            "description": "MSRC Security Update Guide",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://api.msrc.microsoft.com/update-guide/rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        }
+    ]
+}

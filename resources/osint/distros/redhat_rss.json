@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Red Hat Security Errata",
+            "description": "Red Hat security advisories released in the last three days",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://access.redhat.com/security/data/meta/v1/rhsa.rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        }
+    ]
+}

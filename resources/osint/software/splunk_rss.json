@@ -2,16 +2,22 @@
     "version": 1,
     "data": [
         {
-            "name": "Debian Security Advisories",
-            "description": "These are the recent Debian Security Advisories (DSA) posted to the debian-security-announce list. ",
+            "name": "Splunk Security Announcements",
+            "description": "Splunk Security Announcements",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
             "parameter_values": [
                 {
-                    "value": "https://www.debian.org/security/dsa",
+                    "value": "",
                     "parameter": {
-                        "key": "FEED_URL"
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
                     }
                 },
                 {
@@ -27,15 +33,9 @@
                     }
                 },
                 {
-                    "value": "",
+                    "value": "https://advisory.splunk.com/feed.xml",
                     "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "15",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
+                        "key": "FEED_URL"
                     }
                 }
             ]

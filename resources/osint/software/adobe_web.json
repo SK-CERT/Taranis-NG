@@ -1,0 +1,152 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Adobe Security Bulletins and Advisories",
+            "description": "Adobe Security Bulletins and Advisories",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://helpx.adobe.com/security/security-bulletin.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "no",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody a",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody tr:nth-child(2) td:nth-child(1) p",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:.page-description",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:.first-heading + div",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:tbody tr:nth-child(2) td:nth-child(2) p",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                }
+            ]
+        }
+    ]
+}

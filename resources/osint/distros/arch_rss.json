@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Arch Linux Security Advisories",
+            "description": "Feed containing the last published Arch Linux Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://security.archlinux.org/advisory/feed.atom",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        }
+    ]
+}

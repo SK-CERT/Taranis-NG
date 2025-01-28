@@ -1,0 +1,44 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "FortiGuard Labs | FortiGuard Center - IR Advisories",
+            "description": "The following is a list of advisories for issues resolved in Fortinet products. The resolution of such issues is coordinated by the Fortinet Product Security Incident Response Team (PSIRT), a dedicated, global team that manages the receipt, investigation, and public reporting of information about security vulnerabilities and issues related to Fortinet products and services.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://filestore.fortinet.com/fortiguard/rss/ir.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        }
+    ]
+}
