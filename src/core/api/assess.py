@@ -223,7 +223,7 @@ class DownloadAttachment(Resource):
                         log_manager.store_user_activity(user, "ASSESS_ACCESS", str({"file": attribute.value}))
                         return send_file(
                             io.BytesIO(attribute.binary_data),
-                            attachment_filename=attribute.value,
+                            download_name=attribute.value,
                             mimetype=attribute.binary_mime_type,
                             as_attachment=True,
                         )
