@@ -764,6 +764,7 @@ const messages_cs = {
             delete_items: "Smazat analýzy",
             publish_items: "Vytvořit z analýz report",
             delete_item: "Smazat analýzu",
+            remove_item: 'Odstranit analýzu',
             publish_item: "Vytvořit report z analýzy",
         }
     },
@@ -826,6 +827,7 @@ const messages_cs = {
             like_item: "To se mi líbí",
             dislike_item: "To se mi nelíbí",
             delete_item: "Smazat novinku",
+            remove_item: 'Odstranit novinku',
         },
         shortcuts: {
             enter_filter_mode: "Zapnut mód zkratek 'filtr'. Ukončete klávesou Escape.",
@@ -1061,7 +1063,8 @@ const messages_cs = {
             yes: "Ano",
             no: "Ne",
             cancel: "Zrušit",
-            delete: "Jste si jisti, že chcete odstranit tuto položku?",
+            delete: "Jste si jisti, že chcete smazat tuto položku?",
+            remove: "Jste si jisti, že chcete odstranit tuto položku?",
         },
     }
 };

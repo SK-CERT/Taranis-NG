@@ -94,8 +94,8 @@
                         </v-col>
                     </v-row>
                     <v-row>
-                        <MessageBox class="justify-center" v-if="showPublishConfirmation"
-                                    @buttonYes="publishProduct" @buttonCancel="showPublishConfirmation = false"
+                        <MessageBox class="justify-center" v-if="msgbox_visible"
+                                    @buttonYes="publishProduct" @buttonCancel="msgbox_visible = false"
                                     :title="$t('product.publish_confirmation')" :message="product.title">
                         </MessageBox>
                     </v-row>
@@ -147,7 +147,7 @@
                 product_type_id: null,
                 report_items: [],
             },
-            showPublishConfirmation: false,
+            msgbox_visible: false,
         }),
         mixins: [AuthMixin],
         watch: {
@@ -193,11 +193,11 @@
             },
 
             publishConfirmation() {
-                this.showPublishConfirmation = true;
+                this.msgbox_visible = true;
             },
 
             publishProduct() {
-                this.showPublishConfirmation = false;
+                this.msgbox_visible = false;
                 for (let i = 0; i < this.publisher_presets.length; i++) {
                     if (this.publisher_presets[i].selected) {
                         this.$validator.validateAll().then(() => {

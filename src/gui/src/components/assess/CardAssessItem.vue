@@ -97,7 +97,7 @@
                                                     <v-icon :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
                                                 </v-btn>
 
-                                                <v-btn v-if="canDelete" icon @click.stop="toggleDeletePopup" data-btn="delete" :title="$t('assess.tooltip.delete_item')">
+                                                <v-btn v-if="canDelete" icon @click.stop="showMsgBox" data-btn="delete" :title="$t('assess.tooltip.delete_item')">
                                                     <v-icon color="accent">mdi-delete</v-icon>
                                                 </v-btn>
 
@@ -112,8 +112,8 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="showDeletePopup"
-                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+            <MessageBox class="justify-center" v-if="msgbox_visible"
+                        @buttonYes="handleMsgBox" @buttonCancel="msgbox_visible = false"
                         :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title">
             </MessageBox>
         </v-row>
@@ -142,7 +142,7 @@
         data: () => ({
             toolbar: false,
             selected: false,
-            showDeletePopup: false,
+            msgbox_visible: false,
         }),
         computed: {
             canAccess() {
@@ -321,11 +321,11 @@
                     this.$el.querySelector(".card .layout").classList.remove('focus');
                 }
             },
-            toggleDeletePopup() {
-                this.showDeletePopup = !this.showDeletePopup;
+            showMsgBox() {
+                this.msgbox_visible = true;
             },
-            handleDeletion() {
-                this.showDeletePopup = false;
+            handleMsgBox() {
+                this.msgbox_visible = false;
                 this.cardItemToolbar('delete')
             }
         },
