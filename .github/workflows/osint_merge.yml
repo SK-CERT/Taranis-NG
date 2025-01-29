@@ -1,0 +1,37 @@
+name: Merge OSINT JSON Files
+
+on:
+  push:
+    paths:
+      - 'resources/osint/*.json'  # Watch for changes in this folder
+    branches:
+      - main
+      - osint-sources
+
+jobs:
+  merge_json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Merge OSINT JSON Files
+        run: |
+          python resources/osint/osint_merge.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add resources/osint/*.json
+          git commit -m "Auto-merged OSINT JSON files" || exit 0
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
