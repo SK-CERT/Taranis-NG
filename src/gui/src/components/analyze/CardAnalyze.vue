@@ -34,7 +34,7 @@
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canDelete" icon class="red"
-                                                       @click.stop="toggleDeletePopup('delete')"
+                                                       @click.stop="showMsgBox('delete')"
                                                        :title="$t('analyze.tooltip.delete_item')">
                                                     <v-icon color="white">mdi-trash-can-outline</v-icon>
                                                 </v-btn>
@@ -45,11 +45,12 @@
                                                 </v-btn>
                                             </v-col>
                                         </v-row>
-                                        <v-row v-if="publish_selector"
+                                        <v-row v-if="!multiSelectActive && publish_selector"
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canModify" icon
-                                                       @click.stop="toggleDeletePopup('remove')">
+                                                       @click.stop="showMsgBox('remove')"
+                                                       :title="$t('analyze.tooltip.remove_item')">
                                                     <v-icon color="accent">mdi-minus-circle-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
@@ -63,9 +64,9 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="showDeletePopup"
-                        @buttonYes="handleDeletion" @buttonCancel="revertPopupAction"
-                        :title="$t('common.messagebox.delete')" :message="card.title">
+            <MessageBox class="justify-center" v-if="msgbox_visible"
+                        @buttonYes="handleMsgBox" @buttonCancel="cancelMsgBox"
+                        :title="$t(msgBoxTitle)" :message="card.title">
             </MessageBox>
         </v-row>
     </v-container>
@@ -89,8 +90,8 @@
             toolbar: false,
             selected: false,
             status: "in_progress",
-            showDeletePopup: false,
-            popupAction: "",
+            msgbox_visible: false,
+            msgbox_action: "",
         }),
         computed: {
 
@@ -117,11 +118,21 @@
                     return ""
                 }
             },
+
             itemStatus() {
                 if (this.card.completed) {
                     return "completed"
                 } else {
                     return "in_progress"
+                }
+            },
+
+            msgBoxTitle() {
+                switch (this.msgbox_action) {
+                    case "remove":
+                        return "common.messagebox.remove";
+                    default:
+                        return "common.messagebox.delete";
                 }
             }
         },
@@ -144,9 +155,11 @@
                     }
                 }
             },
+
             deleteClicked(data) {
                 this.$root.$emit('delete-report-item', data)
             },
+
             cardItemToolbar(action) {
                 switch (action) {
                     case "delete":
@@ -172,19 +185,19 @@
                 this.selected = false
             },
 
-            toggleDeletePopup(action) {
-                this.popupAction = action;
-                this.showDeletePopup = !this.showDeletePopup;
+            showMsgBox(action) {
+                this.msgbox_action = action;
+                this.msgbox_visible = true;
             },
 
-            revertPopupAction() {
-                this.popupAction = ""
-                this.showDeletePopup = !this.showDeletePopup;
+            cancelMsgBox() {
+                this.msgbox_action = ""
+                this.msgbox_visible = false;
             },
 
-            handleDeletion() {
-                this.showDeletePopup = false;
-                this.cardItemToolbar(this.popupAction);
+            handleMsgBox() {
+                this.msgbox_visible = false;
+                this.cardItemToolbar(this.msgbox_action);
             }
         },
         mounted() {

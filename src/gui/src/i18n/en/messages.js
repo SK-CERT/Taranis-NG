@@ -766,6 +766,7 @@ const messages_en = {
             delete_items: 'Delete report items',
             publish_items: 'Create product from report items',
             delete_item: 'Delete report item',
+            remove_item: 'Remove report item',
             publish_item: 'Create product from report item',
         }
     },
@@ -828,6 +829,7 @@ const messages_en = {
             like_item: 'Like news item',
             dislike_item: 'Dislike news item',
             delete_item: 'Delete news item',
+            remove_item: 'Remove news item',
         },
         shortcuts: {
             enter_filter_mode: 'Entered shortcut mode "filter". Exit with Escape.',
@@ -1078,6 +1080,7 @@ const messages_en = {
             no: "No",
             cancel: "Cancel",
             delete: "Are you sure you want to delete following item?",
+            remove: "Are you sure you want to remove following item?",
         },
     }
 };

@@ -488,7 +488,6 @@ class ReportItem(db.Model):
         if len(cpes) > 0:
             query_string = "SELECT DISTINCT report_item_id FROM report_item_cpe WHERE value LIKE ANY(:cpes) OR {}"
             params = {"cpes": cpes}
-
             inner_query = ""
             for i in range(len(cpes)):
                 if i > 0:
@@ -497,9 +496,10 @@ class ReportItem(db.Model):
                 inner_query += ":" + param + " LIKE value"
                 params[param] = cpes[i]
 
-            result = db.engine.execute(text(query_string.format(inner_query)), params)
+            result = db.session.execute(text(query_string.format(inner_query)), params)
+            report_item_ids = [row[0] for row in result]
 
-            return [row._mapping[0] for row in result]
+            return report_item_ids
         else:
             return []
 

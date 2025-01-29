@@ -54,7 +54,7 @@
                                :card="value"
                                :showToolbar="true"
                                data_set="assess_report_item"
-                               @remove-item-from-selector="toggleDeletePopup(value)"
+                               @remove-item-from-selector="showMsgBox(value)"
                                @show-single-aggregate-detail="showSingleAggregateDetail(value)"
                                @show-aggregate-detail="showAggregateDetail(value)"
                                @show-item-detail="showItemDetail(value)" />
@@ -66,9 +66,9 @@
             <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" />
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="showDeletePopup"
-                        @buttonYes="removeFromSelector(to_delete)" @buttonCancel="showDeletePopup = false"
-                        :title="$t('common.messagebox.delete')" :message="to_delete.title">
+            <MessageBox class="justify-center" v-if="msgbox_visible"
+                        @buttonYes="removeFromSelector(to_delete)" @buttonCancel="msgbox_visible = false"
+                        :title="$t('common.messagebox.remove')" :message="to_delete.title">
             </MessageBox>
         </v-row>
     </v-container>
@@ -113,7 +113,7 @@
             groups: [],
             links: [],
             selected_group_id: "",
-            showDeletePopup: false,
+            msgbox_visible: false,
             to_delete: Object,
         }),
         mixins: [AuthMixin],
@@ -196,7 +196,7 @@
             },
 
             removeFromSelector(aggregate) {
-                this.showDeletePopup = false;
+                this.msgbox_visible = false;
                 let data = {}
                 data.delete = true
                 data.aggregate_id = aggregate.id
@@ -246,10 +246,9 @@
                 }
             },
 
-            toggleDeletePopup(aggregate) {
-                this.showDeletePopup = !this.showDeletePopup;
+            showMsgBox(aggregate) {
+                this.msgbox_visible = true;
                 this.to_delete = aggregate;
-
             },
         },
 

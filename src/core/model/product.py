@@ -201,7 +201,7 @@ class Product(db.Model):
             for report_item in product.report_items:
                 report_item.see = True
                 report_item.access = True
-                report_item.modify = False
+                report_item.modify = True
 
         products_schema = ProductPresentationSchema(many=True)
         return {"total_count": count, "items": products_schema.dump(products)}

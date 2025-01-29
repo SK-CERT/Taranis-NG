@@ -139,7 +139,6 @@ class Asset(db.Model):
         if len(cpes) > 0:
             query_string = "SELECT DISTINCT asset_id FROM asset_cpe WHERE value LIKE ANY(:cpes) OR {}"
             params = {"cpes": cpes}
-
             inner_query = ""
             for i in range(len(cpes)):
                 if i > 0:
@@ -148,9 +147,10 @@ class Asset(db.Model):
                 inner_query += ":" + param + " LIKE value"
                 params[param] = cpes[i]
 
-            result = db.engine.execute(text(query_string.format(inner_query)), params)
+            result = db.session.execute(text(query_string.format(inner_query)), params)
+            asset_ids = [row[0] for row in result]
 
-            return [db.session.get(cls, row._mapping[0]) for row in result]
+            return [db.session.get(cls, pk) for pk in asset_ids]
         else:
             return []
 

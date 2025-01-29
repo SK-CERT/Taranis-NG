@@ -27,7 +27,7 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="toggleDeletePopup">
+                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="showMsgBox">
                                                 <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
@@ -40,8 +40,8 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="showDeletePopup"
-                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+            <MessageBox class="justify-center" v-if="msgbox_visible"
+                        @buttonYes="handleMsgBox" @buttonCancel="msgbox_visible = false"
                         :title="$t('common.messagebox.delete')" :message="card.name">
             </MessageBox>
         </v-row>
@@ -61,7 +61,7 @@
         mixins: [AuthMixin],
         data: () => ({
             toolbar: false,
-            showDeletePopup: false,
+            msgbox_visible: false,
         }),
         computed: {
             cardStatus() {
@@ -91,11 +91,11 @@
                         break;
                 }
             },
-            toggleDeletePopup() {
-                this.showDeletePopup = !this.showDeletePopup;
+            showMsgBox() {
+                this.msgbox_visible = true;
             },
-            handleDeletion() {
-                this.showDeletePopup = false;
+            handleMsgBox() {
+                this.msgbox_visible = false;
                 this.cardItemToolbar('delete')
             }
 

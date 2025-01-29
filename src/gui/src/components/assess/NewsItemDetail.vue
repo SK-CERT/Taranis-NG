@@ -14,7 +14,7 @@
                             <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')" :title="$t('assess.tooltip.ungroup_item')">
                                 <v-icon small color="accent">mdi-ungroup</v-icon>
                             </v-btn>
-                            <v-btn v-if="canDelete" small icon @click.stop="toggleDeletePopup" :title="$t('assess.tooltip.delete_item')">
+                            <v-btn v-if="canDelete" small icon @click.stop="showMsgBox" :title="$t('assess.tooltip.delete_item')">
                                 <v-icon small color="accent">mdi-delete</v-icon>
                             </v-btn>
                             <a v-if="canAccess" :href="news_item.news_item_data.link" target="_blank" rel="noreferrer" :title="$t('assess.tooltip.open_source')">
@@ -102,8 +102,8 @@
             </v-dialog>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="showDeletePopup"
-                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+            <MessageBox class="justify-center" v-if="msgbox_visible"
+                        @buttonYes="handleMsgBox" @buttonCancel="msgbox_visible = false"
                         :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title">
             </MessageBox>
         </v-row>
@@ -132,7 +132,7 @@
             visible: false,
             news_item: { news_item_data: {} },
             toolbar: false,
-            showDeletePopup: false,
+            msgbox_visible: false,
         }),
         computed: {
             canAccess() {
@@ -250,11 +250,11 @@
                     return "accent"
                 }
             },
-            toggleDeletePopup() {
-                this.showDeletePopup = !this.showDeletePopup;
+            showMsgBox() {
+                this.msgbox_visible = true;
             },
-            handleDeletion() {
-                this.showDeletePopup = false;
+            handleMsgBox() {
+                this.msgbox_visible = false;
                 this.cardItemToolbar('delete')
             }
         }

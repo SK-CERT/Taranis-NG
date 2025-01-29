@@ -156,9 +156,10 @@ const messages_sk = {
             yes: "Áno",
             no: "Nie",
             cancel: "Zrušiť",
-            delete: "Ste si istý, že chcete odstrániť túto položku?",
+            delete: "Ste si istý, že chcete zmazať túto položku?",
+            remove: "Ste si istý, že chcete odstrániť túto položku?",
         },
-    }
+    },
 };
 
 export default messages_sk
