@@ -1,0 +1,1430 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Fujitsu PSIRT Product Security Feed (Atom)",
+            "description": "The Fujitsu Product Security Incident Response Team",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://support.ts.fujitsu.com/ProductSecurity/syndicate/Fujitsu-PSIRT-ProductSecurity-Feed-Atom.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Intel Product Security Advisories",
+            "description": "The latest security information on Intel products.",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "https://www.intel.com/content/www/us/en/security-center/default.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "no",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody a",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "5",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "xpath://th[contains(text(), 'Intel ID:')]/following-sibling::th[1]",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "xpath://h3[contains(text(), 'Summary:')]/following-sibling::p[1]",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "xpath://p[contains(text(), 'CVEID:')]/following-sibling::p[1]",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "xpath://td[contains(text(), 'Original release')]/following-sibling::td[1]",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bosch Rexroth Security Advisories",
+            "description": "Bosch Rexroth Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://psirt.bosch.com/security-advisories/bosch-rexroth-feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bosch Smart Home Security Advisories",
+            "description": "Bosch Smart Home Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://psirt.bosch.com/security-advisories/bosch-smart-home-feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Synology Product Security Advisory",
+            "description": "Synology Product Security Advisory Feed.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.synology.com/api/rssfeed/security/en-global",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "QNAP Security Advisories",
+            "description": "QNAP designs and delivers high-quality network attached storage (NAS) and professional network video recorder (NVR) solutions to users from home, SOHO to small, medium businesses.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.qnap.com/en/security-advisory/feed",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bosch Building Technologies Security Advisories",
+            "description": "Bosch Building Technologies Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://psirt.bosch.com/security-advisories/bosch-building-technologies-feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Debian Security",
+            "description": "Debian Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "https://www.debian.org/security/dsa",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "15",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Gentoo Linux security advisories",
+            "description": "This feed contains new Gentoo Linux security advisories. Contact security@gentoo.org with questions.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://security.gentoo.org/glsa/feed.rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "FreeBSD Security Advisories and Errata notices",
+            "description": "Security advisories and Errata notices published from the FreeBSD Project",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.freebsd.org/security/feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Red Hat Security Errata",
+            "description": "Red Hat security advisories released in the last three days",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://access.redhat.com/security/data/meta/v1/rhsa.rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Ubuntu Security Notices",
+            "description": "Recent content on Ubuntu security notices",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://ubuntu.com/security/notices/rss.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Arch Linux Security Advisories",
+            "description": "Feed containing the last published Arch Linux Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://security.archlinux.org/advisory/feed.atom",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Alibaba Cloud Linux 3 Security Advisories",
+            "description": "Security Updates for Alibaba Cloud Linux 3 ",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://mirrors.aliyun.com/alinux/3/cve/rss.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AWS Latest Bulletins",
+            "description": "Amazon Web Services Security Bulletins",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://aws.amazon.com/security/security-bulletins/rss/feed/",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Google Cloud - Security Bulletins",
+            "description": "Google Cloud - Security Bulletins",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://cloud.google.com/feeds/google-cloud-security-bulletins.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Hewlett Packard Enterprise Critical Product Security Vulnerability Alerts",
+            "description": "Hewlett Packard Enterprise Critical Product Security Vulnerability Alerts",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://support.hpe.com/hpesc/public/api/document/sec_bull_rss_feed",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Palo Alto Networks Security Advisories",
+            "description": "Palo Alto Networks Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://security.paloaltonetworks.com/rss.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Arista Networks :: Security Advisories",
+            "description": "Arista Networks :: Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://www.arista.com/en/support/advisories-notices/security-advisory-rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cisco Security Advisory",
+            "description": "Cisco Security Advisory RSS Feed",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "2",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "1",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Juniper Security Advisories",
+            "description": "These are the 40 most recently published articles.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://supportportal.juniper.net/knowledgerss?type=Security",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "FortiGuard Labs | FortiGuard Center - IR Advisories",
+            "description": "The following is a list of advisories for issues resolved in Fortinet products. The resolution of such issues is coordinated by the Fortinet Product Security Incident Response Team (PSIRT), a dedicated, global team that manages the receipt, investigation, and public reporting of information about security vulnerabilities and issues related to Fortinet products and services.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://filestore.fortinet.com/fortiguard/rss/ir.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Huawei Security Bulletin",
+            "description": "Timely acquire security Notices and Security Advisories released by Huawei Product Security Incident Response Team (PSIRT) to know the latest information related with Huawei product vulnerabilities.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "2",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "1",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.huawei.com/en/rss-feeds/psirt/rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fortinet - PSIRT Blog",
+            "description": "Official blog feed of Fortinet",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://feeds.fortinet.com/fortinet/blog/psirt",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Ivanti Blog: Security Advisory",
+            "description": "Ivanti Blog: Security Advisory",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://www.ivanti.com/blog/topics/security-advisory/rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "F5 Labs All",
+            "description": "RSS for all F5 Labs content.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://www.f5.com/labs/rss-feeds/all.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Splunk Security Announcements",
+            "description": "Splunk Security Announcements",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://advisory.splunk.com/feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MSRC Security Update Guide",
+            "description": "MSRC Security Update Guide",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://api.msrc.microsoft.com/update-guide/rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Adobe Security Bulletins and Advisories",
+            "description": "Adobe Security Bulletins and Advisories",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://helpx.adobe.com/security/security-bulletin.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "no",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody a",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody tr:nth-child(2) td:nth-child(1) p",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:.page-description",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:.first-heading + div",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:tbody tr:nth-child(2) td:nth-child(2) p",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Oracle Security Alerts",
+            "description": "Security Alerts Issued by Oracle",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "1",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "2",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://www.oracle.com/ocom/groups/public/@otn/documents/webcontent/rss-otn-sec.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Salesforce Security Advisories",
+            "description": "Salesforce Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://security.salesforce.com/en/security-advisories/rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        }
+    ]
+}
