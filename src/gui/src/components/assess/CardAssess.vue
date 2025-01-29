@@ -124,7 +124,7 @@
                                                             mdi-thumb-down
                                                         </v-icon>
                                                     </v-btn>
-                                                    <v-btn v-if="canDelete" icon @click.stop="toggleDeletePopup()"
+                                                    <v-btn v-if="canDelete" icon @click.stop="showMsgBox()"
                                                            :title="$t('assess.tooltip.delete_item')"
                                                            data-btn="delete">
                                                         <v-icon color="accent">{{ UI.ICON.DELETE }}</v-icon>
@@ -134,7 +134,8 @@
                                             <v-row v-if="analyze_selector && analyze_can_modify"
                                                    v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                                 <v-col v-bind="UI.CARD.COL.TOOLS">
-                                                    <v-btn icon @click.stop="cardItemToolbar('remove')">
+                                                    <v-btn icon @click.stop="cardItemToolbar('remove')"
+                                                           :title="$t('assess.tooltip.remove_item')">
                                                         <v-icon color="accent">mdi-minus-circle-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
@@ -149,8 +150,8 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="showDeletePopup"
-                        @buttonYes="handleDeletion" @buttonCancel="showDeletePopup = false"
+            <MessageBox class="justify-center" v-if="msgbox_visible"
+                        @buttonYes="handleMsgBox" @buttonCancel="msgbox_visible = false"
                         :title="$t('common.messagebox.delete')" :message="card.title">
             </MessageBox>
         </v-row>
@@ -191,7 +192,7 @@
             toolbar: false,
             opened: false,
             selected: false,
-            showDeletePopup: false,
+            msgbox_visible: false,
         }),
         computed: {
             canAccess() {
@@ -427,11 +428,13 @@
                     this.$el.querySelector(".card .layout").classList.remove('focus');
                 }
             },
-            toggleDeletePopup() {
-                this.showDeletePopup = !this.showDeletePopup;
+            showMsgBox() {
+                console.trace('showMsgBox');
+                this.msgbox_visible = true;
             },
-            handleDeletion() {
-                this.showDeletePopup = false;
+            handleMsgBox() {
+                console.trace('handleMsgBox', this.msgbox_action);
+                this.msgbox_visible = false;
                 this.cardItemToolbar('delete')
             }
         },
