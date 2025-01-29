@@ -32,12 +32,16 @@ jobs:
         run: |
           python resources/osint/osint_merge.py
 
-      - name: Commit and Push Changes
+      - name: Configure Git
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Add and commit changes
+        run: |
           git add resources/osint/*.json
           git commit -m "Auto-merged OSINT JSON files" || exit 0
-          git push
+      - name: Push changes
+        run: |
+          git push origin HEAD:main>
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
