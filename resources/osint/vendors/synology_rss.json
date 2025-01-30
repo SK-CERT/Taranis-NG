@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "Synology Product Security Advisory",
-            "description": "Synology Product Security Advisory Feed.",
+            "description": "Synology Product Security Advisory Feed",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },

@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "Alibaba Cloud Linux 3 Security Advisories",
-            "description": "Security Updates for Alibaba Cloud Linux 3 ",
+            "description": "Security Updates for Alibaba Cloud Linux 3",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },

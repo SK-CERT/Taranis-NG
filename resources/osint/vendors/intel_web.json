@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "Intel Product Security Advisories",
-            "description": "The latest security information on Intel products.",
+            "description": "The latest security information on Intel products",
             "collector": {
                 "type": "WEB_COLLECTOR"
             },

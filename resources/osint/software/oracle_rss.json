@@ -1,1 +1,44 @@
-{"version": 1, "data": [{"name": "Oracle Security Alerts", "description": "Security Alerts Issued by Oracle", "collector": {"type": "RSS_COLLECTOR"}, "parameter_values": [{"value": "", "parameter": {"key": "PROXY_SERVER"}}, {"value": "1", "parameter": {"key": "REFRESH_INTERVAL"}}, {"value": "", "parameter": {"key": "USER_AGENT"}}, {"value": "2", "parameter": {"key": "LINKS_LIMIT"}}, {"value": "https://www.oracle.com/ocom/groups/public/@otn/documents/webcontent/rss-otn-sec.xml", "parameter": {"key": "FEED_URL"}}]}]}
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Oracle Security Alerts",
+            "description": "Security Alerts Issued by Oracle",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "1",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "2",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://www.oracle.com/ocom/groups/public/@otn/documents/webcontent/rss-otn-sec.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        }
+    ]
+}
