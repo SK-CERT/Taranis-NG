@@ -4,8 +4,6 @@ on:
   push:
     paths:
       - 'resources/osint/*/*.json'
-      - 'resources/osint/blogs/*.json'
-      - 'resources/osint/cloud/*.json'
     branches:
       - main
   pull_request:
@@ -20,8 +18,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v5
