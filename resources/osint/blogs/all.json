@@ -2,45 +2,6 @@
     "version": 1,
     "data": [
         {
-            "name": "Fortinet - PSIRT Blog",
-            "description": "Official blog feed of Fortinet",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                },
-                {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "https://feeds.fortinet.com/fortinet/blog/psirt",
-                    "parameter": {
-                        "key": "FEED_URL"
-                    }
-                }
-            ]
-        },
-        {
             "name": "Ivanti Blog: Security Advisory",
             "description": "Ivanti Blog: Security Advisory",
             "collector": {
@@ -80,8 +41,47 @@
             ]
         },
         {
+            "name": "Fortinet - PSIRT Blog",
+            "description": "Official blog feed of Fortinet",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://feeds.fortinet.com/fortinet/blog/psirt",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
             "name": "F5 Labs All",
-            "description": "RSS for all F5 Labs content.",
+            "description": "RSS for all F5 Labs content z",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },

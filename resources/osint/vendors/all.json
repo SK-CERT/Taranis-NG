@@ -2,6 +2,45 @@
     "version": 1,
     "data": [
         {
+            "name": "QNAP Security Advisories",
+            "description": "QNAP designs and delivers high-quality network attached storage (NAS) and professional network video recorder (NVR) solutions to users from home, SOHO to small, medium businesses.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.qnap.com/en/security-advisory/feed",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Fujitsu PSIRT Product Security Feed (Atom)",
             "description": "The Fujitsu Product Security Incident Response Team",
             "collector": {
@@ -34,6 +73,162 @@
                 },
                 {
                     "value": "https://support.ts.fujitsu.com/ProductSecurity/syndicate/Fujitsu-PSIRT-ProductSecurity-Feed-Atom.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bosch Building Technologies Security Advisories",
+            "description": "Bosch Building Technologies Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://psirt.bosch.com/security-advisories/bosch-building-technologies-feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bosch Smart Home Security Advisories",
+            "description": "Bosch Smart Home Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://psirt.bosch.com/security-advisories/bosch-smart-home-feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bosch Rexroth Security Advisories",
+            "description": "Bosch Rexroth Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://psirt.bosch.com/security-advisories/bosch-rexroth-feed.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Synology Product Security Advisory",
+            "description": "Synology Product Security Advisory Feed.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.synology.com/api/rssfeed/security/en-global",
                     "parameter": {
                         "key": "FEED_URL"
                     }
@@ -183,201 +378,6 @@
                     "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Bosch Rexroth Security Advisories",
-            "description": "Bosch Rexroth Security Advisories",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                },
-                {
-                    "value": "https://psirt.bosch.com/security-advisories/bosch-rexroth-feed.xml",
-                    "parameter": {
-                        "key": "FEED_URL"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Bosch Smart Home Security Advisories",
-            "description": "Bosch Smart Home Security Advisories",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                },
-                {
-                    "value": "https://psirt.bosch.com/security-advisories/bosch-smart-home-feed.xml",
-                    "parameter": {
-                        "key": "FEED_URL"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Synology Product Security Advisory",
-            "description": "Synology Product Security Advisory Feed.",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                },
-                {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
-                    "value": "https://www.synology.com/api/rssfeed/security/en-global",
-                    "parameter": {
-                        "key": "FEED_URL"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "QNAP Security Advisories",
-            "description": "QNAP designs and delivers high-quality network attached storage (NAS) and professional network video recorder (NVR) solutions to users from home, SOHO to small, medium businesses.",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                },
-                {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
-                    "value": "https://www.qnap.com/en/security-advisory/feed",
-                    "parameter": {
-                        "key": "FEED_URL"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Bosch Building Technologies Security Advisories",
-            "description": "Bosch Building Technologies Security Advisories",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                },
-                {
-                    "value": "https://psirt.bosch.com/security-advisories/bosch-building-technologies-feed.xml",
-                    "parameter": {
-                        "key": "FEED_URL"
                     }
                 }
             ]
