@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "F5 Labs All",
-            "description": "RSS for all F5 Labs content z",
+            "description": "RSS for all F5 Labs content",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
