@@ -3,16 +3,14 @@ name: Merge OSINT JSON Files
 on:
   push:
     paths:
-      - 'resources/osint/*.json'
+      - 'resources/osint/*/*.json'
     branches:
       - main
-      - osint-sources
   pull_request:
     paths:
-      - 'resources/osint/*.json'
+      - 'resources/osint/*/*.json'
     branches:
       - main
-      - osint-sources
 
 jobs:
   merge_osint_json_files:
