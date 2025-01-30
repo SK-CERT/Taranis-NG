@@ -2,8 +2,8 @@
     "version": 1,
     "data": [
         {
-            "name": "Hewlett Packard Enterprise Critical Product Security Vulnerability Alerts",
-            "description": "Hewlett Packard Enterprise Critical Product Security Vulnerability Alerts",
+            "name": "Arista Networks :: Security Advisories",
+            "description": "Arista Networks :: Security Advisories",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -27,52 +27,13 @@
                     }
                 },
                 {
-                    "value": "https://support.hpe.com/hpesc/public/api/document/sec_bull_rss_feed",
-                    "parameter": {
-                        "key": "FEED_URL"
-                    }
-                },
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "USER_AGENT"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "FortiGuard Labs | FortiGuard Center - IR Advisories",
-            "description": "The following is a list of advisories for issues resolved in Fortinet products. The resolution of such issues is coordinated by the Fortinet Product Security Incident Response Team (PSIRT), a dedicated, global team that manages the receipt, investigation, and public reporting of information about security vulnerabilities and issues related to Fortinet products and services.",
-            "collector": {
-                "type": "RSS_COLLECTOR"
-            },
-            "parameter_values": [
-                {
-                    "value": "",
-                    "parameter": {
-                        "key": "PROXY_SERVER"
-                    }
-                },
-                {
-                    "value": "180",
-                    "parameter": {
-                        "key": "REFRESH_INTERVAL"
-                    }
-                },
-                {
                     "value": "",
                     "parameter": {
                         "key": "USER_AGENT"
                     }
                 },
                 {
-                    "value": "10",
-                    "parameter": {
-                        "key": "LINKS_LIMIT"
-                    }
-                },
-                {
-                    "value": "https://filestore.fortinet.com/fortiguard/rss/ir.xml",
+                    "value": "https://www.arista.com/en/support/advisories-notices/security-advisory-rss",
                     "parameter": {
                         "key": "FEED_URL"
                     }
@@ -119,8 +80,47 @@
             ]
         },
         {
-            "name": "Palo Alto Networks Security Advisories",
-            "description": "Palo Alto Networks Security Advisories",
+            "name": "FortiGuard Labs | FortiGuard Center - IR Advisories",
+            "description": "The following is a list of advisories for issues resolved in Fortinet products. The resolution of such issues is coordinated by the Fortinet Product Security Incident Response Team (PSIRT), a dedicated, global team that manages the receipt, investigation, and public reporting of information about security vulnerabilities and issues related to Fortinet products and services.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://filestore.fortinet.com/fortiguard/rss/ir.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Hewlett Packard Enterprise Critical Product Security Vulnerability Alerts",
+            "description": "Hewlett Packard Enterprise Critical Product Security Vulnerability Alerts",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -144,15 +144,15 @@
                     }
                 },
                 {
-                    "value": "",
+                    "value": "https://support.hpe.com/hpesc/public/api/document/sec_bull_rss_feed",
                     "parameter": {
-                        "key": "USER_AGENT"
+                        "key": "FEED_URL"
                     }
                 },
                 {
-                    "value": "https://security.paloaltonetworks.com/rss.xml",
+                    "value": "",
                     "parameter": {
-                        "key": "FEED_URL"
+                        "key": "USER_AGENT"
                     }
                 }
             ]
@@ -198,7 +198,7 @@
         },
         {
             "name": "Juniper Security Advisories",
-            "description": "These are the 40 most recently published articles.",
+            "description": "These are the 40 most recently published articles",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -236,8 +236,8 @@
             ]
         },
         {
-            "name": "Arista Networks :: Security Advisories",
-            "description": "Arista Networks :: Security Advisories",
+            "name": "Palo Alto Networks Security Advisories",
+            "description": "Palo Alto Networks Security Advisories",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -267,7 +267,7 @@
                     }
                 },
                 {
-                    "value": "https://www.arista.com/en/support/advisories-notices/security-advisory-rss",
+                    "value": "https://security.paloaltonetworks.com/rss.xml",
                     "parameter": {
                         "key": "FEED_URL"
                     }
