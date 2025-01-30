@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'resources/osint/*/*.json'
+      - 'resources/osint/blogs/*.json'
+      - 'resources/osint/cloud/*.json'
     branches:
       - main
   pull_request:
