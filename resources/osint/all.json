@@ -588,7 +588,7 @@
         },
         {
             "name": "F5 Labs All",
-            "description": "RSS for all F5 Labs content.",
+            "description": "RSS for all F5 Labs content x",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
