@@ -1,1 +1,44 @@
-{"version": 1, "data": [{"name": "Huawei Security Bulletin", "description": "Timely acquire security Notices and Security Advisories released by Huawei Product Security Incident Response Team (PSIRT) to know the latest information related with Huawei product vulnerabilities.", "collector": {"type": "RSS_COLLECTOR"}, "parameter_values": [{"value": "", "parameter": {"key": "PROXY_SERVER"}}, {"value": "", "parameter": {"key": "USER_AGENT"}}, {"value": "2", "parameter": {"key": "LINKS_LIMIT"}}, {"value": "1", "parameter": {"key": "REFRESH_INTERVAL"}}, {"value": "https://www.huawei.com/en/rss-feeds/psirt/rss", "parameter": {"key": "FEED_URL"}}]}]}
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Huawei Security Bulletin",
+            "description": "Timely acquire security Notices and Security Advisories released by Huawei Product Security Incident Response Team (PSIRT) to know the latest information related with Huawei product vulnerabilities.",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.huawei.com/en/rss-feeds/psirt/rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        }
+    ]
+}
