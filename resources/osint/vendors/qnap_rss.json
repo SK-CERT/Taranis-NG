@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "QNAP Security Advisories",
-            "description": "QNAP designs and delivers high-quality network attached storage (NAS) and professional network video recorder (NVR) solutions to users from home, SOHO to small, medium businesses.",
+            "description": "QNAP Security Advisories",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },

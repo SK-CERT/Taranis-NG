@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "Gentoo Linux security advisories",
-            "description": "This feed contains new Gentoo Linux security advisories. Contact security@gentoo.org with questions.",
+            "description": "This feed contains new Gentoo Linux security advisories. Contact security@gentoo.org with questions",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
