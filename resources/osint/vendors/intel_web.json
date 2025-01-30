@@ -1,0 +1,152 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Intel Product Security Advisories",
+            "description": "The latest security information on Intel products.",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "https://www.intel.com/content/www/us/en/security-center/default.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "no",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody a",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "5",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "xpath://th[contains(text(), 'Intel ID:')]/following-sibling::th[1]",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "xpath://h3[contains(text(), 'Summary:')]/following-sibling::p[1]",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "xpath://p[contains(text(), 'CVEID:')]/following-sibling::p[1]",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "xpath://td[contains(text(), 'Original release')]/following-sibling::td[1]",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}

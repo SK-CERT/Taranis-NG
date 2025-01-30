@@ -1,0 +1,122 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Alibaba Cloud Linux 3 Security Advisories",
+            "description": "Security Updates for Alibaba Cloud Linux 3 ",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://mirrors.aliyun.com/alinux/3/cve/rss.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AWS Latest Bulletins",
+            "description": "Amazon Web Services Security Bulletins",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://aws.amazon.com/security/security-bulletins/rss/feed/",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Google Cloud - Security Bulletins",
+            "description": "Google Cloud - Security Bulletins",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "https://cloud.google.com/feeds/google-cloud-security-bulletins.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                }
+            ]
+        }
+    ]
+}
