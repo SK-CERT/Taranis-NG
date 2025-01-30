@@ -6,11 +6,6 @@ on:
       - 'resources/osint/*/*.json'
     branches:
       - main
-  pull_request:
-    paths:
-      - 'resources/osint/*/*.json'
-    branches:
-      - main
 
 jobs:
   merge_osint_json_files:
