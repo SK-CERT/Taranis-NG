@@ -36,6 +36,7 @@ jobs:
       - name: Add and commit changes
         run: |
           git add resources/osint/*.json
+          git add resources/osint/*/*.json
           git commit -m "Auto-merged OSINT JSON files" || exit 0
 
       - name: Push changes
