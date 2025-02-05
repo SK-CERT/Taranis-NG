@@ -3,7 +3,7 @@
     "data": [
         {
             "name": "Juniper Security Advisories",
-            "description": "These are the 40 most recently published articles.",
+            "description": "These are the 40 most recently published articles",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },

@@ -487,12 +487,6 @@ span.cs_metric_score {
     margin-right: 0;
 }
 
-/* --- EnumSelector.vue --- */
-tbody tr {
-    user-select: none !important;
-    cursor: pointer;
-}
-
 /* --- Navigation.vue --- */
 .navigation .v-list-item--active:not(.theme--dark) {
     background-color: rgba(255, 255, 255, 0.3);

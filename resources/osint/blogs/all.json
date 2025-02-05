@@ -2,8 +2,8 @@
     "version": 1,
     "data": [
         {
-            "name": "Ivanti Blog: Security Advisory",
-            "description": "Ivanti Blog: Security Advisory",
+            "name": "F5 Labs All",
+            "description": "RSS for all F5 Labs content",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -33,7 +33,7 @@
                     }
                 },
                 {
-                    "value": "https://www.ivanti.com/blog/topics/security-advisory/rss",
+                    "value": "https://www.f5.com/labs/rss-feeds/all.xml",
                     "parameter": {
                         "key": "FEED_URL"
                     }
@@ -80,8 +80,8 @@
             ]
         },
         {
-            "name": "F5 Labs All",
-            "description": "RSS for all F5 Labs content",
+            "name": "Ivanti Blog: Security Advisory",
+            "description": "Ivanti Blog: Security Advisory",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -111,7 +111,7 @@
                     }
                 },
                 {
-                    "value": "https://www.f5.com/labs/rss-feeds/all.xml",
+                    "value": "https://www.ivanti.com/blog/topics/security-advisory/rss",
                     "parameter": {
                         "key": "FEED_URL"
                     }

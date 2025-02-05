@@ -2,8 +2,8 @@
     "version": 1,
     "data": [
         {
-            "name": "Google Cloud - Security Bulletins",
-            "description": "Google Cloud - Security Bulletins",
+            "name": "AWS Latest Bulletins",
+            "description": "Amazon Web Services Security Bulletins",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -33,7 +33,7 @@
                     }
                 },
                 {
-                    "value": "https://cloud.google.com/feeds/google-cloud-security-bulletins.xml",
+                    "value": "https://aws.amazon.com/security/security-bulletins/rss/feed/",
                     "parameter": {
                         "key": "FEED_URL"
                     }
@@ -42,7 +42,7 @@
         },
         {
             "name": "Alibaba Cloud Linux 3 Security Advisories",
-            "description": "Security Updates for Alibaba Cloud Linux 3 ",
+            "description": "Security Updates for Alibaba Cloud Linux 3",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -80,8 +80,8 @@
             ]
         },
         {
-            "name": "AWS Latest Bulletins",
-            "description": "Amazon Web Services Security Bulletins",
+            "name": "Google Cloud - Security Bulletins",
+            "description": "Google Cloud - Security Bulletins",
             "collector": {
                 "type": "RSS_COLLECTOR"
             },
@@ -111,7 +111,7 @@
                     }
                 },
                 {
-                    "value": "https://aws.amazon.com/security/security-bulletins/rss/feed/",
+                    "value": "https://cloud.google.com/feeds/google-cloud-security-bulletins.xml",
                     "parameter": {
                         "key": "FEED_URL"
                     }

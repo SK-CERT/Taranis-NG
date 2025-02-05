@@ -59,10 +59,10 @@ const vuetify = new Vuetify({
 
 Vue.use(VueI18n);
 
-let bash_locale = "$VUE_APP_TARANIS_NG_LOCALE";
+let lang = typeof(process.env.VUE_APP_TARANIS_NG_LOCALE) == "undefined" ? "en" : process.env.VUE_APP_TARANIS_NG_LOCALE
 
 const i18n = new VueI18n({
-    locale: bash_locale,
+    locale: lang, // later we overwrite this to user language
     fallbackLocale: 'en',
     messages
 });
