@@ -1,6 +1,6 @@
 # **TaranisNG backend setup**
 1. Install **Postgresql** database and create database e.g. taranisdb
-2. Install **Python 3.10** or later
+2. Install **Python 3.13** or later
 3. In taranis-ng-common, taranis-ng-collectors and taranis-ng-core install and activate python virtual environment:
     `virtualenv -p python3.7 venv`
     `source venv/bin/activate`

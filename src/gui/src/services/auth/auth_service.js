@@ -27,7 +27,6 @@ const AuthService = {
     },
 
     hasPermission(permission) {
-
         return store.getters.getPermissions.includes(permission)
     },
 
