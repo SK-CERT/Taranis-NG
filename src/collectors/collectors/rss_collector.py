@@ -39,6 +39,14 @@ class RSSCollector(BaseCollector):
         """
 
         def strip_html_tags(html_string):
+            """Strip HTML tags from the given string.
+
+            Arguments:
+                html_string (string): The HTML string.
+
+            Returns:
+                string: The string without HTML tags.
+            """
             soup = BeautifulSoup(html_string, "html.parser")
             return soup.get_text(separator=" ", strip=True)
 
@@ -73,16 +81,21 @@ class RSSCollector(BaseCollector):
                         return True
                     elif last_modified:
                         last_modified = date_parse(last_modified)
-                        logger.debug(f"{self.collector_source} Last-Modified: {last_modified}")
                         if last_collected >= last_modified:
-                            logger.debug(f"{self.collector_source} Content has not been modified since {last_collected}.")
+                            logger.debug(
+                                f"{self.collector_source} Content has not been modified since {last_collected} "
+                                "(Last-Modified: {last_modified})"
+                            )
                             return True
                         else:
-                            logger.debug(f"{self.collector_source} Content has been modified since {last_collected}")
+                            logger.debug(
+                                f"{self.collector_source} Content has been modified since {last_collected} (Last-Modified: {last_modified})"
+                            )
                             return False
                     else:
-                        logger.debug(f"{self.collector_source} Last-Modified header not found.")
-                        logger.debug(f"{self.collector_source} Content has been modified since {last_collected}")
+                        logger.debug(
+                            f"{self.collector_source} Content has been modified since {last_collected} (Last-Modified header not received)"
+                        )
                         return False
             except urllib.error.HTTPError as e:
                 if e.code == 304:
@@ -99,19 +112,18 @@ class RSSCollector(BaseCollector):
             """Fetch the feed data, using proxy if provided, and check modification status.
 
             Arguments:
-                feed_url -- The URL of the feed.
-                last_collected -- The datetime of the last collection.
-                proxy_handler -- The proxy handler to use for the request (default: None).
+                feed_url (string): The URL of the feed.
+                last_collected (string): The datetime of the last collection.
+                proxy_handler (SocksiPyHandler): The proxy handler to use for the request (default: None).
 
             Returns:
-                dict -- The parsed feed data or an empty dictionary if not modified.
+                dict: The parsed feed data or an empty dictionary if not modified.
             """
 
             def fetch_feed(url, handler=None):
                 """Fetch the feed using feedparser with optional handler."""
                 if user_agent:
                     feedparser.USER_AGENT = user_agent
-                    logger.debug(f"{self.collector_source} Using user agent: {user_agent}")
                 if handler:
                     return feedparser.parse(url, handlers=[handler])
                 return feedparser.parse(url)
@@ -133,8 +145,10 @@ class RSSCollector(BaseCollector):
         user_agent = source.parameter_values["USER_AGENT"]
         proxy_handler = BaseCollector.get_proxy_handler(source, self.collector_source)
         opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
-
-        logger.info(f"{self.collector_source} Requesting feed URL: {feed_url}")
+        if user_agent:
+            logger.info(f"{self.collector_source} Requesting feed URL: {feed_url} (User-Agent: {user_agent})")
+        else:
+            logger.info(f"{self.collector_source} Requesting feed URL: {feed_url}")
         feed = get_feed(feed_url, last_collected, user_agent, proxy_handler)
         if feed:
             try:
@@ -246,5 +260,5 @@ class RSSCollector(BaseCollector):
                 logger.exception(f"{self.collector_source} Collection failed: {error}")
 
         else:
-            logger.info(f"{self.collector_source} Will not collect the feed because nothing changed.")
+            logger.info(f"{self.collector_source} Will not collect the feed because nothing has changed.")
             BaseCollector.publish([], source, self.collector_source)
