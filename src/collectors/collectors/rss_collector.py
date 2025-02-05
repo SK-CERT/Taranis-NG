@@ -84,7 +84,7 @@ class RSSCollector(BaseCollector):
                         if last_collected >= last_modified:
                             logger.debug(
                                 f"{self.collector_source} Content has not been modified since {last_collected} "
-                                "(Last-Modified: {last_modified})"
+                                f"(Last-Modified: {last_modified})"
                             )
                             return True
                         else:
