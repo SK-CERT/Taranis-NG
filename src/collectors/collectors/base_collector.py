@@ -1,12 +1,15 @@
 """Module for Base collector."""
 
+import bleach
 import datetime
 import hashlib
-import uuid
-import bleach
 import re
+import socks
 import time
+import urllib.request
+import uuid
 from functools import wraps
+from sockshandler import SocksiPyHandler
 
 from managers import time_manager
 from managers.log_manager import logger
@@ -31,8 +34,12 @@ class BaseCollector:
         filter_by_word_list(news_items, source): Filter news items based on word lists defined in the source.
         presanitize_html(html): Clean and sanitize the given HTML by removing certain tags and entities.
         sanitize_news_items(news_items, source): Sanitize news items by setting default values for any missing attributes.
-        publish(news_items, source): Publish the collected news items to the CoreApi.
+        publish(news_items, source, collector_source): Publish the collected news items to the CoreApi.
         refresh(): Refresh the OSINT sources for the collector.
+        get_proxy_handler(source, collector_source): Get the proxy handler for the collector.
+        run_collector(source): Run the collector on the given source.
+        initialize(): Initialize the collector.
+        read_int_parameter(name, default_value, source): Read an integer parameter from a source dictionary
     """
 
     type = "BASE_COLLECTOR"
@@ -238,7 +245,7 @@ class BaseCollector:
         try:
             # if configuration was successfully received
             if code == 200 and response is not None:
-                source_schema = osint_source.OSINTSourceSchemaBase(many=True)
+                source_schema = osint_source.OSINTSourceSchema(many=True)
                 self.osint_sources = source_schema.load(response)
 
                 logger.debug(f"{self.name}: {len(self.osint_sources)} sources loaded")
@@ -288,6 +295,51 @@ class BaseCollector:
         except Exception as error:
             logger.exception(f"Refreshing of sources failed: {error}")
             pass
+
+    @staticmethod
+    def get_proxy_handler(source, collector_source):
+        """Retrieve a proxy handler based on the provided source and collector source.
+
+        Args:
+            source (object): An object containing parameter values, including the proxy server information.
+            collector_source (str): A string identifier for the collector source, used for logging purposes.
+        Returns:
+            urllib.request.ProxyHandler or SocksiPyHandler or None:
+            - Returns a ProxyHandler for HTTP, HTTPS, or FTP proxies.
+            - Returns a SocksiPyHandler for SOCKS4 or SOCKS5 proxies.
+            - Returns None if no valid proxy server is found or if the proxy server is set to "none".
+        """
+        if "PROXY_SERVER" in source.parameter_values:
+            proxy_server = source.parameter_values["PROXY_SERVER"]
+        else:
+            logger.error(f"{collector_source} No proxy parameter found!")
+            proxy_server = None
+        if not proxy_server:
+            return None
+        elif proxy_server == "none":  # WTF?
+            return urllib.request.ProxyHandler({})
+        else:
+            proxy = re.search(r"^(http|https|socks4|socks5|ftp)://([a-zA-Z0-9\-\.\_]+):(\d+)/?$", proxy_server)
+            if proxy:
+                scheme, host, port = proxy.groups()
+                if scheme in ["http", "https", "ftp"]:
+                    logger.debug(f"{collector_source} Using {scheme} proxy: {host}:{port}")
+                    return urllib.request.ProxyHandler(
+                        {
+                            "http": f"{scheme}://{host}:{port}",
+                            "https": f"{scheme}://{host}:{port}",
+                            "ftp": f"{scheme}://{host}:{port}",
+                        }
+                    )
+                elif scheme == "socks4":
+                    logger.debug(f"{collector_source} Using socks4 proxy: {host}:{port}")
+                    return SocksiPyHandler(socks.SOCKS4, host, int(port))
+                elif scheme == "socks5":
+                    logger.debug(f"{collector_source} Using socks5 proxy: {host}:{port}")
+                    return SocksiPyHandler(socks.SOCKS5, host, int(port))
+            else:
+                logger.error(f"{collector_source} Invalid proxy server: {proxy_server}")
+                return None
 
     def run_collector(self, source):
         """Run the collector on the given source.

@@ -87,7 +87,7 @@
                     }
                 },
                 {
-                    "value": "5",
+                    "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
