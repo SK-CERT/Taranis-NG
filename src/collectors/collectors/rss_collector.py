@@ -73,33 +73,37 @@ class RSSCollector(BaseCollector):
 
             request = urllib.request.Request(url, method="HEAD", headers=headers)
 
+            last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
             try:
                 with opener(request) as response:
                     last_modified = response.headers.get("Last-Modified")
                     if response.status == 304:
-                        logger.debug(f"{self.collector_source} Content has not been modified since {last_collected}")
+                        logger.debug(f"{self.collector_source} Content has not been modified since {last_collected_str}")
                         return True
                     elif last_modified:
                         last_modified = date_parse(last_modified)
+                        last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
                         if last_collected >= last_modified:
                             logger.debug(
-                                f"{self.collector_source} Content has not been modified since {last_collected} "
-                                f"(Last-Modified: {last_modified})"
+                                f"{self.collector_source} Content has not been modified since {last_collected_str} "
+                                f"(Last-Modified: {last_modified_str})"
                             )
                             return True
                         else:
                             logger.debug(
-                                f"{self.collector_source} Content has been modified since {last_collected} (Last-Modified: {last_modified})"
+                                f"{self.collector_source} Content has been modified since {last_collected_str} "
+                                f"(Last-Modified: {last_modified_str})"
                             )
                             return False
                     else:
                         logger.debug(
-                            f"{self.collector_source} Content has been modified since {last_collected} (Last-Modified header not received)"
+                            f"{self.collector_source} Content has been modified since {last_collected_str} "
+                            f"(Last-Modified: header not received)"
                         )
                         return False
             except urllib.error.HTTPError as e:
                 if e.code == 304:
-                    logger.debug(f"{self.collector_source} Content has not been modified since {last_collected}")
+                    logger.debug(f"{self.collector_source} Content has not been modified since {last_collected_str}")
                     return True
                 else:
                     logger.exception(f"{self.collector_source} HTTP error occurred: {e}")
