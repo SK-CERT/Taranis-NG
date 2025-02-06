@@ -72,7 +72,7 @@
                     }
                 },
                 {
-                    "value": "15",
+                    "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }

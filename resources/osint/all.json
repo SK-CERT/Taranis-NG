@@ -441,13 +441,13 @@
                     }
                 },
                 {
-                    "value": "2",
+                    "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
                 },
                 {
-                    "value": "1",
+                    "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -492,7 +492,7 @@
                     }
                 },
                 {
-                    "value": "15",
+                    "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -831,13 +831,13 @@
                     }
                 },
                 {
-                    "value": "2",
+                    "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
                 },
                 {
-                    "value": "1",
+                    "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -936,7 +936,7 @@
                     }
                 },
                 {
-                    "value": "5",
+                    "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
@@ -1128,7 +1128,7 @@
                     }
                 },
                 {
-                    "value": "1",
+                    "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -1140,7 +1140,7 @@
                     }
                 },
                 {
-                    "value": "2",
+                    "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
