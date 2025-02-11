@@ -1,4 +1,4 @@
-beautifulsoup4==4.13.1
+beautifulsoup4==4.13.3
 bleach==6.2.0
 dateparser==1.2.0
 feedparser==6.0.11
