@@ -3,6 +3,7 @@
 import bleach
 import datetime
 import hashlib
+import pytz
 import re
 import socks
 import time
@@ -10,6 +11,8 @@ import urllib.request
 import uuid
 from functools import wraps
 from sockshandler import SocksiPyHandler
+from urllib.parse import urlparse
+from dateutil.parser import parse as date_parse
 
 from managers import time_manager
 from managers.log_manager import logger
@@ -297,49 +300,108 @@ class BaseCollector:
             pass
 
     @staticmethod
-    def get_proxy_handler(source, collector_source):
-        """Retrieve a proxy handler based on the provided source and collector source.
+    def get_proxy_handler(parsed_proxy):
+        """Get the proxy handler for the collector.
 
-        Args:
-            source (object): An object containing parameter values, including the proxy server information.
-            collector_source (str): A string identifier for the collector source, used for logging purposes.
+        Parameters:
+            parsed_proxy (urlparse object): The parsed proxy URL.
+            collector_source (string): Collector readable name
         Returns:
-            urllib.request.ProxyHandler or SocksiPyHandler or None:
-            - Returns a ProxyHandler for HTTP, HTTPS, or FTP proxies.
-            - Returns a SocksiPyHandler for SOCKS4 or SOCKS5 proxies.
-            - Returns None if no valid proxy server is found or if the proxy server is set to "none".
+            (object): The proxy handler for the collector.
         """
-        if "PROXY_SERVER" in source.parameter_values:
-            proxy_server = source.parameter_values["PROXY_SERVER"]
-        else:
-            logger.error(f"{collector_source} No proxy parameter found!")
-            proxy_server = None
-        if not proxy_server:
+        if parsed_proxy.scheme in ["http", "https"]:
+            return urllib.request.ProxyHandler(
+                {
+                    "http": f"{parsed_proxy.scheme}://{parsed_proxy.hostname}:{parsed_proxy.port}",
+                    "https": f"{parsed_proxy.scheme}://{parsed_proxy.hostname}:{parsed_proxy.port}",
+                }
+            )
+        elif parsed_proxy.scheme in ["socks4", "socks5"]:
+            socks_type = socks.SOCKS5 if parsed_proxy.scheme == "socks5" else socks.SOCKS4
+            return SocksiPyHandler(socks_type, parsed_proxy.hostname, int(parsed_proxy.port))
+
+    @staticmethod
+    def get_parsed_proxy(proxy_string, collector_source):
+        """Get the parsed proxy URL for the collector.
+
+        Parameters:
+            proxy_string (str): The proxy URL string.
+            collector_source (string): Collector readable name
+        Returns:
+            (urlparse object): The parsed proxy URL for the collector.
+        """
+        if proxy_string is None or proxy_string.lower() == "none":
+            logger.debug(f"{collector_source} No proxy server specified. Not using proxy.")
             return None
-        elif proxy_server == "none":  # WTF?
-            return urllib.request.ProxyHandler({})
+        parsed_proxy = urlparse(proxy_string)
+        if parsed_proxy.scheme in ["http", "https", "socks4", "socks5"]:
+            logger.debug(f"{collector_source} Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
+            return parsed_proxy
         else:
-            proxy = re.search(r"^(http|https|socks4|socks5|ftp)://([a-zA-Z0-9\-\.\_]+):(\d+)/?$", proxy_server)
-            if proxy:
-                scheme, host, port = proxy.groups()
-                if scheme in ["http", "https", "ftp"]:
-                    logger.debug(f"{collector_source} Using {scheme} proxy: {host}:{port}")
-                    return urllib.request.ProxyHandler(
-                        {
-                            "http": f"{scheme}://{host}:{port}",
-                            "https": f"{scheme}://{host}:{port}",
-                            "ftp": f"{scheme}://{host}:{port}",
-                        }
+            logger.warning(f"{collector_source} Invalid proxy server: {proxy_string}. Not using proxy.")
+            return None
+
+    @staticmethod
+    def not_modified(collector_source, url, last_collected, opener, user_agent=None):
+        """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
+
+        Arguments:
+            url (string): The URL of the content.
+            last_collected (datetime): The datetime of the last collection.
+            opener (function): The function to open the URL.
+            user_agent (string): The User-Agent string to use for the request (default: None).
+
+        Returns:
+            bool: True if the content has not been modified since the given date, False otherwise.
+        """
+        # Ensure last_collected is offset-aware
+        if last_collected.tzinfo is None:
+            last_collected = last_collected.replace(tzinfo=pytz.UTC)
+
+        last_collected_str = last_collected.strftime("%a, %d %b %Y %H:%M:%S GMT")
+        headers = {"If-Modified-Since": last_collected_str}
+        if user_agent:
+            headers["User-Agent"] = user_agent
+
+        request = urllib.request.Request(url, method="HEAD", headers=headers)
+
+        last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
+        try:
+            with opener(request) as response:
+                last_modified = response.headers.get("Last-Modified")
+                if response.status == 304:
+                    logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
+                    return True
+                elif last_modified:
+                    last_modified = date_parse(last_modified)
+                    last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
+                    if last_collected >= last_modified:
+                        logger.debug(
+                            f"{collector_source} Content has not been modified since {last_collected_str} "
+                            f"(Last-Modified: {last_modified_str})"
+                        )
+                        return True
+                    else:
+                        logger.debug(
+                            f"{collector_source} Content has been modified since {last_collected_str} "
+                            f"(Last-Modified: {last_modified_str})"
+                        )
+                        return False
+                else:
+                    logger.debug(
+                        f"{collector_source} Content has been modified since {last_collected_str} " f"(Last-Modified: header not received)"
                     )
-                elif scheme == "socks4":
-                    logger.debug(f"{collector_source} Using socks4 proxy: {host}:{port}")
-                    return SocksiPyHandler(socks.SOCKS4, host, int(port))
-                elif scheme == "socks5":
-                    logger.debug(f"{collector_source} Using socks5 proxy: {host}:{port}")
-                    return SocksiPyHandler(socks.SOCKS5, host, int(port))
+                    return False
+        except urllib.error.HTTPError as e:
+            if e.code == 304:
+                logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
+                return True
             else:
-                logger.error(f"{collector_source} Invalid proxy server: {proxy_server}")
-                return None
+                logger.exception(f"{collector_source} HTTP error occurred: {e}")
+                return False
+        except Exception as e:
+            logger.exception(f"{collector_source} An error occurred: {e}")
+            return False
 
     def run_collector(self, source):
         """Run the collector on the given source.

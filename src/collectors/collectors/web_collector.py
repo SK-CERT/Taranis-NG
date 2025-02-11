@@ -340,27 +340,12 @@ class WebCollector(BaseCollector):
         self.web_driver_type = self.source.parameter_values["WEBDRIVER"]
         self.client_cert_directory = self.source.parameter_values["CLIENT_CERT_DIR"]
 
-        set_proxy = False
-        self.proxy = ""
-        param_proxy = self.source.parameter_values["PROXY_SERVER"]
-        if re.search(r"^(https?|socks[45])://", param_proxy.lower()):
-            set_proxy = True
-            self.proxy = param_proxy
-        elif re.search(r"^.*:\d+$/", param_proxy.lower()):
-            set_proxy = True
-            self.proxy = f"http://{param_proxy}"
-
-        if set_proxy:
-            results = re.match(r"(https?)://([^/]+)/?$", self.proxy)
-            if results:
-                self.proxy_port = 8080
-                self.proxy_proto = results.group(1)
-                self.proxy_host = results.group(2)
-            results = re.match(r"(https?)://([^/]+):(\d+)/?$", self.proxy)
-            if results:
-                self.proxy_proto = results.group(1)
-                self.proxy_host = results.group(2)
-                self.proxy_port = results.group(3)
+        # Use get_proxy_handler from BaseCollector
+        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"], self.collector_source)
+        if parsed_proxy:
+            self.proxy = parsed_proxy
+        else:
+            self.proxy = None
 
         return True
 
@@ -385,20 +370,15 @@ class WebCollector(BaseCollector):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--incognito")
-        chrome_service = ChromeService(executable_path=chrome_driver_executable)
         if self.user_agent:
             chrome_options.add_argument("user-agent=" + self.user_agent)
         if self.tor_service.lower() == "yes":
             socks_proxy = "socks5://127.0.0.1:9050"
             chrome_options.add_argument(f"--proxy-server={socks_proxy}")
         elif self.proxy:
-            webdriver.DesiredCapabilities.CHROME["proxy"] = {
-                "proxyType": "manual",
-                "httpProxy": self.proxy,
-                "ftpProxy": self.proxy,
-                "sslProxy": self.proxy,
-            }
+            chrome_options.add_argument(f"--proxy-server={self.proxy.geturl()}")
 
+        chrome_service = ChromeService(executable_path=chrome_driver_executable)
         driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
         logger.debug("Chrome driver initialized.")
         return driver
@@ -433,13 +413,15 @@ class WebCollector(BaseCollector):
 
         elif self.proxy:
             firefox_options.set_preference("network.proxy.type", 1)  # manual proxy config
-            firefox_options.set_preference("network.proxy.http", self.proxy_host)
-            firefox_options.set_preference("network.proxy.http_port", int(self.proxy_port))
-            firefox_options.set_preference("network.proxy.ssl", self.proxy_host)
-            firefox_options.set_preference("network.proxy.ssl_port", int(self.proxy_port))
-            firefox_options.set_preference("network.proxy.ftp", self.proxy)
-            firefox_options.set_preference("network.proxy.ftp_port", int(self.proxy_port))
             firefox_options.set_preference("network.proxy.no_proxies_on", f"localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8")
+            if self.proxy.scheme in ["http", "https"]:
+                firefox_options.set_preference("network.proxy.http", self.proxy.hostname)
+                firefox_options.set_preference("network.proxy.http_port", int(self.proxy.port))
+                firefox_options.set_preference("network.proxy.ssl", self.proxy.hostname)
+                firefox_options.set_preference("network.proxy.ssl_port", int(self.proxy.port))
+            elif self.proxy.scheme in ["socks5", "socks4"]:
+                firefox_options.set_preference("network.proxy.socks", self.proxy.hostname)
+                firefox_options.set_preference("network.proxy.socks_port", int(self.proxy.port))
         else:
             firefox_options.set_preference("network.proxy.type", 0)  # no proxy
 

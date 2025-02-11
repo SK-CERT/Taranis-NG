@@ -3,11 +3,9 @@
 import datetime
 import feedparser
 import hashlib
-import pytz
 import urllib.request
 import uuid
 from bs4 import BeautifulSoup
-from dateutil.parser import parse as date_parse
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
@@ -50,68 +48,6 @@ class RSSCollector(BaseCollector):
             soup = BeautifulSoup(html_string, "html.parser")
             return soup.get_text(separator=" ", strip=True)
 
-        def not_modified(url, last_collected, opener, user_agent=None):
-            """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
-
-            Arguments:
-                url (string): The URL of the content.
-                last_collected (datetime): The datetime of the last collection.
-                opener (function): The function to open the URL.
-                user_agent (string): The User-Agent string to use for the request (default: None).
-
-            Returns:
-                bool: True if the content has not been modified since the given date, False otherwise.
-            """
-            # Ensure last_collected is offset-aware
-            if last_collected.tzinfo is None:
-                last_collected = last_collected.replace(tzinfo=pytz.UTC)
-
-            last_collected_str = last_collected.strftime("%a, %d %b %Y %H:%M:%S GMT")
-            headers = {"If-Modified-Since": last_collected_str}
-            if user_agent:
-                headers["User-Agent"] = user_agent
-
-            request = urllib.request.Request(url, method="HEAD", headers=headers)
-
-            last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
-            try:
-                with opener(request) as response:
-                    last_modified = response.headers.get("Last-Modified")
-                    if response.status == 304:
-                        logger.debug(f"{self.collector_source} Content has not been modified since {last_collected_str}")
-                        return True
-                    elif last_modified:
-                        last_modified = date_parse(last_modified)
-                        last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
-                        if last_collected >= last_modified:
-                            logger.debug(
-                                f"{self.collector_source} Content has not been modified since {last_collected_str} "
-                                f"(Last-Modified: {last_modified_str})"
-                            )
-                            return True
-                        else:
-                            logger.debug(
-                                f"{self.collector_source} Content has been modified since {last_collected_str} "
-                                f"(Last-Modified: {last_modified_str})"
-                            )
-                            return False
-                    else:
-                        logger.debug(
-                            f"{self.collector_source} Content has been modified since {last_collected_str} "
-                            f"(Last-Modified: header not received)"
-                        )
-                        return False
-            except urllib.error.HTTPError as e:
-                if e.code == 304:
-                    logger.debug(f"{self.collector_source} Content has not been modified since {last_collected_str}")
-                    return True
-                else:
-                    logger.exception(f"{self.collector_source} HTTP error occurred: {e}")
-                    return False
-            except Exception as e:
-                logger.exception(f"{self.collector_source} An error occurred: {e}")
-                return False
-
         def get_feed(feed_url, last_collected=None, user_agent=None, proxy_handler=None):
             """Fetch the feed data, using proxy if provided, and check modification status.
 
@@ -137,7 +73,7 @@ class RSSCollector(BaseCollector):
 
             # Check if the feed has been modified since the last collection
             if last_collected:
-                if not_modified(feed_url, last_collected, opener, user_agent):
+                if BaseCollector.not_modified(self.collector_source, feed_url, last_collected, opener, user_agent):
                     return None
 
             logger.debug(f"{self.collector_source} Fetching feed from URL: {feed_url}")
@@ -147,7 +83,11 @@ class RSSCollector(BaseCollector):
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
         last_collected = source.last_collected
         user_agent = source.parameter_values["USER_AGENT"]
-        proxy_handler = BaseCollector.get_proxy_handler(source, self.collector_source)
+        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.collector_source)
+        if parsed_proxy:
+            proxy_handler = BaseCollector.get_proxy_handler(parsed_proxy)
+        else:
+            proxy_handler = None
         opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
         if user_agent:
             logger.info(f"{self.collector_source} Requesting feed URL: {feed_url} (User-Agent: {user_agent})")
