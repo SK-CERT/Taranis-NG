@@ -10,6 +10,7 @@ import json
 import datetime
 import types
 import re
+from cvss import CVSS2, CVSS3, CVSS4, exceptions as cvss_exceptions
 
 
 class BasePresenter:
@@ -155,6 +156,33 @@ class BasePresenter:
                 max_tlp = "CLEAR"
             return max_tlp
 
+        def calculate_cvss(self, cvss_vector):
+            """Calculate the CVSS score from the CVSS vector.
+
+            Parameters:
+                cvss_vector (str): The CVSS vector to calculate the score from or base score value.
+
+            Returns:
+                dict: The standardized CVSS JSON.
+            """
+            try:
+                if cvss_vector.startswith("CVSS:3."):
+                    c = CVSS3(cvss_vector)
+                    cvss_dict = c.as_json()
+                elif cvss_vector.startswith("CVSS:4.0/"):
+                    c = CVSS4(cvss_vector)
+                    cvss_dict = c.as_json()
+                else:
+                    c = CVSS2(cvss_vector)
+                    cvss_dict = c.as_json()
+            except cvss_exceptions.CVSS2MalformedError as error:
+                try:
+                    cvss_dict = {"baseScore": float(cvss_vector)}
+                except ValueError:
+                    logger.error(f"Error parsing CVSS - not valid vector or 0≤ number ≤10: {error}")
+
+            return cvss_dict
+
         def link_renumbering(self, text, report_links, product_links):
             """Replace the numbers enclosed in brackets in the given text with the corresponding indices from product_links.
 
@@ -221,6 +249,9 @@ class BasePresenter:
                             report.attrs.recommendations = self.link_renumbering(
                                 report.attrs.recommendations, report.attrs.links, product_links
                             )
+                    if hasattr(report.attrs, "cvss"):
+                        report.attrs.cvss = self.calculate_cvss(report.attrs.cvss)
+
             # If there are vulnerability reports, set the max TLP and product links
             if vul_report_count > 0:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)

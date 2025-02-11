@@ -117,7 +117,12 @@
             status: "",
             rules: {
                 vector: value => {
-                const pattern = /(^CVSS:3\.1\/((AV:[NALP]|AC:[LH]|PR:[UNLH]|UI:[NR]|S:[UC]|[CIA]:[NLH]|E:[XUPFH]|RL:[XOTWU]|RC:[XURC]|[CIA]R:[XLMH]|MAV:[XNALP]|MAC:[XLH]|MPR:[XUNLH]|MUI:[XNR]|MS:[XUC]|M[CIA]:[XNLH])\/)*(AV:[NALP]|AC:[LH]|PR:[UNLH]|UI:[NR]|S:[UC]|[CIA]:[NLH]|E:[XUPFH]|RL:[XOTWU]|RC:[XURC]|[CIA]R:[XLMH]|MAV:[XNALP]|MAC:[XLH]|MPR:[XUNLH]|MUI:[XNR]|MS:[XUC]|M[CIA]:[XNLH])$)|(^(10(\.0)?|[0-9](\.[0-9])?)$)/
+                    const cvss2Pattern = /^AV:[NAL]\/AC:[HML]\/Au:[MSN]\/C:[NPC]\/I:[NPC]\/A:[NPC]$/;
+                    const cvss3Pattern = /^CVSS:3\.[01]\/((AV:[NALP]|AC:[LH]|PR:[NLH]|UI:[NR]|S:[UC]|C:[HLN]|I:[HLN]|A:[HLN])\/)*(AV:[NALP]|AC:[LH]|PR:[NLH]|UI:[NR]|S:[UC]|C:[HLN]|I:[HLN]|A:[HLN])$/;
+                    const cvss4Pattern = /^CVSS:4\.0\/(AV:[NALP]\/AC:[LH]\/AT:[NP]\/PR:[NLH]\/UI:[NPA]\/VC:[HLN]\/VI:[HLN]\/VA:[HLN]\/SC:[HLN]\/SI:[HLN]\/SA:[HLN])(\/E:[XAPU])?(\/CR:[XHML])?(\/IR:[XHML])?(\/AR:[XHML])?(\/MAV:[XNALP])?(\/MAC:[XLH])?(\/MAT:[XNP])?(\/MPR:[XNLH])?(\/MUI:[XNPA])?(\/MVC:[XHLN])?(\/MVI:[XHLN])?(\/MVA:[XHLN])?(\/MSC:[XHLN])?(\/MSI:[XSHLN])?(\/MSA:[XSHLN])?(\/S:[XNP])?(\/AU:[XNY])?(\/R:[XAUI])?(\/V:[XDC])?(\/RE:[XLMH])?(\/U:(X|Clear|Green|Amber|Red))?$/;
+                    const floatPattern = /^(10(\.0)?|[0-9](\.[0-9])?)$/;
+
+                    const pattern = new RegExp(`${cvss2Pattern.source}|${cvss3Pattern.source}|${cvss4Pattern.source}|${floatPattern.source}`);
                     return value == '' || pattern.test(value) || 'Invalid or Incomplete Vector String'
                 }
             }
@@ -139,7 +144,8 @@
                 const value = parseFloat(e);
                 if (value >= 0 && value <= 10) {
                     // OK
-                } else {
+                }
+                else {
                     this.score = this.clc.calculateCVSSFromVector(this.calcValue);
                 }
                 setTimeout(() => {
@@ -155,7 +161,12 @@
                 if (value >= 0 && value <= 10) {
                     this.values[0].value = this.calcValue;
                     this.onKeyUp(0);
-                } else {
+                }
+                else if (this.calcValue.startsWith("CVSS:3.0/") || this.calcValue.startsWith("CVSS:4.0/") || this.calcValue.startsWith("AV:")) {
+                    this.values[0].value = this.calcValue;
+                    this.onKeyUp(0);
+                }
+                else {
                     let vsReport = this.clc.calculateCVSSFromVector(this.calcValue);
                     if (vsReport.success) {
                         this.score = vsReport;
@@ -169,7 +180,8 @@
             const value = parseFloat(this.values[0].value);
             if (value >= 0 && value <= 10) {
                 this.calcValue = this.values[0].value;
-            } else if (this.values[0].value !== "") {
+            }
+            else if (this.values[0].value !== "") {
                 this.calcValue = this.values[0].value;
                 this.score = this.clc.calculateCVSSFromVector(this.calcValue);
             } else {
