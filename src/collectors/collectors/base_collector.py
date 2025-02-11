@@ -330,7 +330,7 @@ class BaseCollector:
         Returns:
             (urlparse object): The parsed proxy URL for the collector.
         """
-        if proxy_string is None or proxy_string.lower() == "none":
+        if proxy_string in [None, ""] or proxy_string.lower() == "none":
             logger.debug(f"{collector_source} No proxy server specified. Not using proxy.")
             return None
         parsed_proxy = urlparse(proxy_string)
