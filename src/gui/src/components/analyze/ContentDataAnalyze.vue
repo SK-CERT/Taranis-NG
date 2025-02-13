@@ -134,7 +134,7 @@
         },
 
         mounted() {
-            this.updateData(false, false);
+            this.updateData();
 
             this.$root.$on('report-item-updated', this.report_item_updated);
             this.$root.$on('report-items-updated', this.report_item_updated);
