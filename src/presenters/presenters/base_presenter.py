@@ -10,7 +10,7 @@ import json
 import datetime
 import types
 import re
-from cvss import CVSS2, CVSS3, CVSS4, exceptions as cvss_exceptions
+from cvss import CVSS2, CVSS3, CVSS4
 
 
 class BasePresenter:
@@ -175,11 +175,12 @@ class BasePresenter:
                 else:
                     c = CVSS2(cvss_vector)
                     cvss_dict = c.as_json()
-            except cvss_exceptions.CVSS2MalformedError as error:
+            except Exception as error:
                 try:
                     cvss_dict = {"baseScore": float(cvss_vector)}
                 except ValueError:
                     logger.error(f"Error parsing CVSS - not valid vector or 0≤ number ≤10: {error}")
+                    cvss_dict = {}
 
             return cvss_dict
 
