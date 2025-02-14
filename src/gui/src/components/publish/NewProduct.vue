@@ -21,7 +21,7 @@
                     <v-spacer></v-spacer>
                     <v-btn v-if="canModify" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{ $t('report_item.save') }}</span>
+                        <span>{{ $t('product.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 

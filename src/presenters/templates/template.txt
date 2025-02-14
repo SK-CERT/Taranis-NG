@@ -6,7 +6,7 @@ This template cannot be used for item of type "{{ report_item.type }}". It can o
 
 ## Vulnerability
 
-CVSS VECTOR: {% if report_item.attrs.cvss %}{{ report_item.attrs.cvss | default('unspecified') }}{% endif %}
+CVSS VECTOR: {{ report_item.attrs.cvss.vectorString | default("N/A") }}
 TLP: {{ report_item.attrs.tlp }}
 CONFIDENTIALITY: {{ report_item.attrs.confidentiality | default('Public') }}
 DESCRIPTION: {{ report_item.attrs.description }}
