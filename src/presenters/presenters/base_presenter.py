@@ -175,11 +175,26 @@ class BasePresenter:
                 else:
                     c = CVSS2(cvss_vector)
                     cvss_dict = c.as_json()
-            except Exception as error:
+            except Exception:
                 try:
-                    cvss_dict = {"baseScore": float(cvss_vector)}
+                    if cvss_vector == "":
+                        cvss_dict = {}
+                    else:
+                        num = float(cvss_vector)
+                        # based on CVSS 3.1
+                        if num >= 9:
+                            desc = "CRITICAL"
+                        elif num >= 7:
+                            desc = "HIGH"
+                        elif num >= 4:
+                            desc = "MEDIUM"
+                        elif num >= 0.1:
+                            desc = "LOW"
+                        else:
+                            desc = "NONE"
+                        cvss_dict = {"baseScore": num, "baseSeverity": desc}
                 except ValueError:
-                    logger.error(f"Error parsing CVSS - not valid vector or 0≤ number ≤10: {error}")
+                    logger.error(f"CVSS parsing failed: '{cvss_vector}' is not a valid vector or number.")
                     cvss_dict = {}
 
             return cvss_dict
