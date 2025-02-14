@@ -314,7 +314,7 @@ class ReportItem(db.Model):
         Returns:
             ReportItem: The report item with the specified UUID.
         """
-        report_item = cls.query.filter_by(uuid=report_item_uuid)
+        report_item = cls.query.filter_by(uuid=report_item_uuid).first()
         return report_item
 
     @classmethod
@@ -567,7 +567,7 @@ class ReportItem(db.Model):
         )
         groups = set()
         for row in result:
-            groups.add(row._mapping[0])
+            groups.add(row[0])
 
         return list(groups)
 
@@ -612,20 +612,36 @@ class ReportItem(db.Model):
             report_item_data (list): A list of report item data.
             remote_node_name (str): The name of the remote node.
         """
-        report_item_schema = NewReportItemSchema(many=True)
-        report_items = report_item_schema.load(report_item_data)
-
-        for report_item in report_items:
-            original_report_item = cls.find_by_uuid(report_item.uuid)
-            if original_report_item is None:
-                report_item.remote_user = remote_node_name
-                db.session.add(report_item)
+        # JP: It looks that this function is unfinished. New data creates just "report_item_attribute" records
+        # but not "attribute_group_item" records, so on GUI you can't see report content.
+        # It's because there is no enough information in source data to correctly build groups and items.
+        # You miss this info: Group name, Group order, Group items, Group items order
+        # TODO: this needs to be finished if we have enough source data
+        # or create way to correctly display data with our internal definition based on name matching (performance)
+        schema = NewReportItemSchema()
+        for item_data in report_item_data:
+            new_report_item = schema.load(item_data)  # this create new record!
+            existing_report_item = cls.find_by_uuid(new_report_item.uuid)
+            if existing_report_item is None:
+                # print("New report item:", vars(new_report_item), flush=True)
+                new_report_item.remote_user = remote_node_name
+                db.session.add(new_report_item)
             else:
-                original_report_item.title = report_item.title
-                original_report_item.title_prefix = report_item.title_prefix
-                original_report_item.completed = report_item.completed
-                original_report_item.last_updated = datetime.now()
-                original_report_item.attributes = report_item.attributes
+                # print("Updating existing report item:", vars(existing_report_item), flush=True)
+                # Beware! input data doesnt't contain ID (it's from remote system) so schema.load() ALWAYS create new record!
+                # This is workaround to avoid of creating duplicity data
+                new_report_item.id = existing_report_item.id
+                new_report_item.last_updated = datetime.now()
+                db.session.merge(new_report_item)
+                # this code we can use for future attribute parsing:
+                # for key, value in item_data.items():
+                #     if key == "attributes":
+                #         existing_report_item.attributes.clear()
+                #         for attr in value:
+                #             attribute = AttributeModel.find_or_create(attr)
+                #             existing_report_item.attributes.append(attribute)
+                #     elif key != "id":
+                #         setattr(existing_report_item, key, value)
 
         db.session.commit()
 

@@ -63,7 +63,7 @@ class ReportItems(Resource):
 
             group = None
             if "group" in request.args and request.args["group"]:
-                group = int(request.args["group"])
+                group = request.args["group"]
 
             offset = None
             if "offset" in request.args and request.args["offset"]:

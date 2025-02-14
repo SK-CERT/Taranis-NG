@@ -68,18 +68,29 @@ class TaranisSSE(Resource):
     def get(self):
         """Get Response."""
         try:
-            if request.args.get("jwt") is not None:
-                if auth_manager.decode_user_from_jwt(request.args.get("jwt")) is None:
-                    return "", 403
-            elif request.args.get("api_key") is not None:
-                if bots_manager.verify_api_key(request.args.get("api_key")) is False:
-                    return "", 403
+            jwt_token = request.args.get("jwt")
+            api_key = request.args.get("api_key")
+
+            if jwt_token is not None:
+                if auth_manager.decode_user_from_jwt(jwt_token) is None:
+                    msg = "SSE: decoding user from jwt failed."
+                    logger.warning(msg)
+                    return msg, 403
+            elif api_key is not None:
+                if bots_manager.verify_api_key(api_key) is False:
+                    msg = "SSE: invalid API key."
+                    logger.warning(msg)
+                    return msg, 403
             else:
-                return "", 403
+                msg = "SSE: missing authentication credentials."
+                logger.warning(msg)
+                return msg, 403
 
             return Response(self.stream(), mimetype="text/event-stream")
-        except Exception as e:
-            return str(e), 500
+        except Exception as ex:
+            msg = "SSE: Error in streaming response"
+            logger.exception(msg, ex)
+            return msg + " " + str(ex), 500
 
 
 def initialize(api):
