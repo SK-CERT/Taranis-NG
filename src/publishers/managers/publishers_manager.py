@@ -13,6 +13,7 @@ The module also imports the following classes:
 - FTPPublisher: Represents an FTP publisher.
 - SFTPPublisher: Represents an SFTP publisher.
 - EMAILPublisher: Represents an email publisher.
+- MASTODONPublisher: Represents a Mastodon publisher.
 - TWITTERPublisher: Represents a Twitter publisher.
 - WORDPRESSPublisher: Represents a WordPress publisher.
 - MISPPublisher: Represents a MISP publisher.
@@ -25,6 +26,7 @@ The module imports the following modules:
 from publishers.ftp_publisher import FTPPublisher
 from publishers.sftp_publisher import SFTPPublisher
 from publishers.email_publisher import EMAILPublisher
+from publishers.mastodon_publisher import MASTODONPublisher
 from publishers.twitter_publisher import TWITTERPublisher
 from publishers.wordpress_publisher import WORDPRESSPublisher
 from publishers.misp_publisher import MISPPublisher
@@ -38,6 +40,7 @@ def initialize():
     register_publisher(FTPPublisher())
     register_publisher(SFTPPublisher())
     register_publisher(EMAILPublisher())
+    register_publisher(MASTODONPublisher())
     register_publisher(TWITTERPublisher())
     register_publisher(WORDPRESSPublisher())
     register_publisher(MISPPublisher())
