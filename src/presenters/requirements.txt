@@ -1,4 +1,4 @@
-cvss==3.3
+cvss==3.4
 Flask==3.1.0
 Flask-Cors==5.0.0
 Flask-RESTful==0.3.10
