@@ -9,7 +9,17 @@ Classes:
 - ftp_publisher: A publisher for FTP.
 - sftp_publisher: A publisher for SFTP.
 - email_publisher: A publisher for email.
+- mastodon_publisher: A publisher for Mastodon.
 - twitter_publisher: A publisher for Twitter.
 - wordpress_publisher: A publisher for WordPress.
 """
-__all__ = ["base_publisher", "ftp_publisher", "sftp_publisher", "email_publisher", "twitter_publisher", "wordpress_publisher"]
+
+__all__ = [
+    "base_publisher",
+    "ftp_publisher",
+    "sftp_publisher",
+    "email_publisher",
+    "mastodon_publisher",
+    "twitter_publisher",
+    "wordpress_publisher",
+]

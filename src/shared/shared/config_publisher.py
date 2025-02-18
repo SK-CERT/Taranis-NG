@@ -77,6 +77,15 @@ class ConfigPublisher(ConfigBase):
         ]
         self.modules.append(mod)
 
+        mod = module_type("MASTODON_PUBLISHER", "Mastodon Publisher", "Publisher for posting to Mastodon account")
+        mod.parameters = [
+            param_type("MASTODON_ACCESS_TOKEN", "Mastodon access token", "Mastodon access token of Mastodon account", ParameterType.STRING),
+            param_type("MASTODON_API_BASE_URL", "Mastodon API base URL", "Defaults to 'https://mastodon.social'", ParameterType.STRING),
+            param_type("VISIBILITY", "Visibility", "direct, private, unlisted or public", ParameterType.STRING),
+            param_type("SENSITIVE", "Sensitive", "True or False", ParameterType.STRING),
+        ]
+        self.modules.append(mod)
+
         mod = module_type("WORDPRESS_PUBLISHER", "Wordpress Publisher", "Publisher for publishing on Wordpress webpage")
         mod.parameters = [
             param_type("WP_URL", "Wordpress URL address", "URL address of wordpress webpage", ParameterType.STRING),
