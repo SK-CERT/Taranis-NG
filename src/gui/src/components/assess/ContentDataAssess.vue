@@ -228,7 +228,6 @@
 
         mounted() {
             this.$root.$on('news-items-updated', this.news_items_updated);
-            this.$root.$on('force-reindex', this.forceReindex);
         },
 
         beforeDestroy() {

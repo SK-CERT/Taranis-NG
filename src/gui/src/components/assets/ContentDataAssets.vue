@@ -12,16 +12,19 @@
 
     export default {
         name: "ContentData",
+
         components: {
             CardAsset,
             CardCompact
         },
+
         props: {
             name: String,
             action: String,
             getter: String,
             cardItem: String
         },
+
         data: () => ({
             collections: [],
             filter: {
@@ -30,6 +33,7 @@
                 sort: "ALPHABETICAL"
             },
         }),
+
         methods: {
             updateData() {
 
@@ -45,16 +49,19 @@
                         });
                 }
             },
+
             cardLayout: function () {
 
                 return this.cardItem;
             }
         },
+
         watch: {
             $route() {
                 this.updateData();
             }
         },
+
         mounted() {
             this.updateData();
             this.$root.$on('notification', () => {
@@ -67,6 +74,12 @@
                 this.filter = filter;
                 this.updateData()
             });
+        },
+
+        beforeDestroy() {
+            this.$root.$off('notification')
+            this.$root.$off('update-data')
+            this.$root.$off('update-assets-filter')
         }
     }
 </script>
