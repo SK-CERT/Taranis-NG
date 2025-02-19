@@ -16,14 +16,17 @@
 
     export default {
         name: "ContentDataAnalyze",
+
         components: {
             CardAnalyze,
         },
+
         props: {
             publish_selector: Boolean,
             selection: Array,
             cardItem: String
         },
+
         data: () => ({
             collections: [],
             data_loaded: false,
@@ -35,16 +38,20 @@
                 sort: "DATE_DESC"
             }
         }),
+
         methods: {
             showReportItemDetail(report_item){
                 this.$emit('show-report-item-detail', report_item)
             },
-            showRemoteReportItemDetail(report_item){
+
+            showRemoteReportItemDetail(report_item) {
                 this.$emit('show-remote-report-item-detail', report_item)
             },
-            removeReportItemFromSelector(report_item){
+
+            removeReportItemFromSelector(report_item) {
                 this.$emit('remove-report-item-from-selector', report_item)
             },
+
             preselected(item_id) {
                 if (this.selection != null) {
 
@@ -70,7 +77,6 @@
             },
 
             updateData(append, reload_all) {
-
                 this.data_loaded = false;
 
                 if (append === false) {
@@ -127,6 +133,7 @@
                 this.updateData(false, false);
             },
         },
+
         computed: {
             multiSelectActive() {
                 return this.$store.getters.getMultiSelect;
@@ -139,7 +146,7 @@
             this.$root.$on('report-item-updated', this.report_item_updated);
             this.$root.$on('report-items-updated', this.report_item_updated);
         },
-        created() {},
+
         beforeDestroy() {
             this.$root.$off('report-item-updated', this.report_item_updated);
             this.$root.$off('report-items-updated', this.report_item_updated);

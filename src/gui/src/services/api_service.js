@@ -18,14 +18,14 @@ const ApiService = {
     },
 
     get(resource, data = {}) {
-        //window.console.debug("GET:", resource);
+        // console.debug("GET:", resource);
         return axios.get(resource, data)
     },
 
     getWithCancel(resType, resource) {
         // resType: cancel key that abort request (support for multiple cancels)
         if (resType in abortControllers) {
-            // window.console.debug("CANCEL", resType);
+            // console.debug("CANCEL", resType);
             abortControllers[resType].abort();
         }
 
@@ -33,13 +33,13 @@ const ApiService = {
         let promise = axios.get(resource, {
             signal: abortControllers[resType].signal
         }).catch(function (e) {
-                if (axios.isCancel(e)) {
-                    window.console.debug("request canceled:", resource);
-                } else {
-                    throw e;
-                }
-            });
-        // window.console.debug("GET CANCEL:", resource, promise);
+            if (axios.isCancel(e)) {
+                console.debug("request canceled:", resource);
+            } else {
+                throw e;
+            }
+        });
+        // console.debug("GET CANCEL:", resource, promise);
         return promise;
     },
 
