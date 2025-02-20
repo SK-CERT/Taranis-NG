@@ -58,98 +58,99 @@ class RSSCollector(BaseCollector):
                 logger.debug(f"{self.collector_source} Fetching feed from URL: {feed_url}")
                 return await fetch_feed(session, feed_url)
 
-        async def process_feed_entry(feed_entry, user_agent, proxy):
+        async def process_feed_entry(feed_entry, user_agent, proxy, semaphore):
             """Process a single feed entry asynchronously."""
-            author = feed_entry.get("author", "")
-            title = feed_entry.get("title", "")
-            published = feed_entry.get("published", "")
-            published_parsed = feed_entry.get("published_parsed", "")
-            updated = feed_entry.get("updated", "")
-            updated_parsed = feed_entry.get("updated_parsed", "")
-            summary = feed_entry.get("summary", "")
-            content = feed_entry.get("content", "")
-            date = ""
-            review = ""
-            article = ""
-            link_for_article = feed_entry.get("link", "")
-            if summary:
-                review = strip_html_tags(summary[:500])
-            if content:
-                article = strip_html_tags(content[0].get("value", ""))
+            async with semaphore:
+                author = feed_entry.get("author", "")
+                title = feed_entry.get("title", "")
+                published = feed_entry.get("published", "")
+                published_parsed = feed_entry.get("published_parsed", "")
+                updated = feed_entry.get("updated", "")
+                updated_parsed = feed_entry.get("updated_parsed", "")
+                summary = feed_entry.get("summary", "")
+                content = feed_entry.get("content", "")
+                date = ""
+                review = ""
+                article = ""
+                link_for_article = feed_entry.get("link", "")
+                if summary:
+                    review = strip_html_tags(summary[:500])
+                if content:
+                    article = strip_html_tags(content[0].get("value", ""))
 
-            if not link_for_article:
-                logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
-                return None
-            elif not article:
-                logger.info(f"{self.collector_source} Visiting an article: {link_for_article}")
-                html_article = ""
-                try:
-                    headers = {"User-Agent": user_agent} if user_agent else {}
-                    connector = aiohttp_socks.ProxyConnector.from_url(proxy) if proxy else None
-                    async with aiohttp.ClientSession(headers=headers, connector=connector) as session:
-                        async with session.get(link_for_article) as response:
-                            html_article = await response.text()
+                if not link_for_article:
+                    logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
+                    return None
+                elif not article:
+                    logger.info(f"{self.collector_source} Visiting an article: {link_for_article}")
+                    html_article = ""
+                    try:
+                        headers = {"User-Agent": user_agent} if user_agent else {}
+                        connector = aiohttp_socks.ProxyConnector.from_url(proxy) if proxy else None
+                        async with aiohttp.ClientSession(headers=headers, connector=connector) as session:
+                            async with session.get(link_for_article) as response:
+                                html_article = await response.text()
 
-                    soup = BeautifulSoup(html_article, features="html.parser")
+                        soup = BeautifulSoup(html_article, features="html.parser")
 
-                    if html_article:
-                        article_text = [p.text.strip() for p in soup.findAll("p")]
-                        replaced_str = "\xa0"
-                        article_sanit = [w.replace(replaced_str, " ") for w in article_text]
-                        article_sanit = " ".join(article_sanit)
-                        # use HTML article if it is longer than summary
-                        if len(article_sanit) > len(summary):
-                            article = article_sanit
-                        logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
-                except Exception as error:
-                    logger.exception(f"{self.collector_source} Fetch article failed: {error}")
+                        if html_article:
+                            article_text = [p.text.strip() for p in soup.findAll("p")]
+                            replaced_str = "\xa0"
+                            article_sanit = [w.replace(replaced_str, " ") for w in article_text]
+                            article_sanit = " ".join(article_sanit)
+                            # use HTML article if it is longer than summary
+                            if len(article_sanit) > len(summary):
+                                article = article_sanit
+                            logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
+                    except Exception as error:
+                        logger.exception(f"{self.collector_source} Fetch article failed: {error}")
 
-            # use summary if article is empty
-            if summary and not article:
-                article = strip_html_tags(summary)
-                logger.debug(f"{self.collector_source} Using summary for article: {article}")
-            # use first 500 characters of article if summary is empty
-            elif not summary and article:
-                review = article[:500]
-                logger.debug(f"{self.collector_source} Using first 500 characters of article for summary: {review}")
+                # use summary if article is empty
+                if summary and not article:
+                    article = strip_html_tags(summary)
+                    logger.debug(f"{self.collector_source} Using summary for article: {article}")
+                # use first 500 characters of article if summary is empty
+                elif not summary and article:
+                    review = article[:500]
+                    logger.debug(f"{self.collector_source} Using first 500 characters of article for summary: {review}")
 
-            # use published date if available, otherwise use updated date
-            if published_parsed:
-                date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                logger.debug(f"{self.collector_source} Using parsed 'published' date")
-            elif updated_parsed:
-                date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                logger.debug(f"{self.collector_source} Using parsed 'updated' date")
-            elif published:
-                date = published
-                logger.debug(f"{self.collector_source} Using 'published' date")
-            elif updated:
-                date = updated
-                logger.debug(f"{self.collector_source} Using 'updated' date")
+                # use published date if available, otherwise use updated date
+                if published_parsed:
+                    date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
+                    logger.debug(f"{self.collector_source} Using parsed 'published' date")
+                elif updated_parsed:
+                    date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
+                    logger.debug(f"{self.collector_source} Using parsed 'updated' date")
+                elif published:
+                    date = published
+                    logger.debug(f"{self.collector_source} Using 'published' date")
+                elif updated:
+                    date = updated
+                    logger.debug(f"{self.collector_source} Using 'updated' date")
 
-            logger.debug(f"{self.collector_source} ... Title    : {title}")
-            logger.debug(f"{self.collector_source} ... Review   : {review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-            logger.debug(f"{self.collector_source} ... Content  : {article.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-            logger.debug(f"{self.collector_source} ... Published: {date}")
+                logger.debug(f"{self.collector_source} ... Title    : {title}")
+                logger.debug(f"{self.collector_source} ... Review   : {review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                logger.debug(f"{self.collector_source} ... Content  : {article.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                logger.debug(f"{self.collector_source} ... Published: {date}")
 
-            for_hash = author + title + link_for_article
+                for_hash = author + title + link_for_article
 
-            news_item = NewsItemData(
-                uuid.uuid4(),
-                hashlib.sha256(for_hash.encode()).hexdigest(),
-                title,
-                review,
-                feed_url,
-                link_for_article,
-                date,
-                author,
-                datetime.datetime.now(),
-                article,
-                source.id,
-                [],
-            )
+                news_item = NewsItemData(
+                    uuid.uuid4(),
+                    hashlib.sha256(for_hash.encode()).hexdigest(),
+                    title,
+                    review,
+                    feed_url,
+                    link_for_article,
+                    date,
+                    author,
+                    datetime.datetime.now(),
+                    article,
+                    source.id,
+                    [],
+                )
 
-            return news_item
+                return news_item
 
         feed_url = source.parameter_values["FEED_URL"]
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
@@ -170,9 +171,10 @@ class RSSCollector(BaseCollector):
             try:
                 logger.debug(f"{self.collector_source} Feed returned {len(feed['entries'])} entries.")
 
+                semaphore = asyncio.Semaphore(5)  # Limit the number of concurrent tasks to 5
                 tasks = []
                 for feed_entry in feed["entries"]:
-                    tasks.append(process_feed_entry(feed_entry, user_agent, proxy))
+                    tasks.append(process_feed_entry(feed_entry, user_agent, proxy, semaphore))
 
                 news_items = loop.run_until_complete(asyncio.gather(*tasks))
 
