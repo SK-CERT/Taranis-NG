@@ -80,9 +80,15 @@ class ConfigPublisher(ConfigBase):
         mod = module_type("MASTODON_PUBLISHER", "Mastodon Publisher", "Publisher for posting to Mastodon account")
         mod.parameters = [
             param_type("MASTODON_ACCESS_TOKEN", "Mastodon access token", "Mastodon access token of Mastodon account", ParameterType.STRING),
-            param_type("MASTODON_API_BASE_URL", "Mastodon API base URL", "Defaults to 'https://mastodon.social'", ParameterType.STRING),
-            param_type("VISIBILITY", "Visibility", "direct, private, unlisted or public", ParameterType.STRING),
-            param_type("SENSITIVE", "Sensitive", "True or False", ParameterType.STRING),
+            param_type(
+                "MASTODON_API_BASE_URL",
+                "Mastodon API base URL",
+                "Defaults to 'https://mastodon.social'",
+                ParameterType.STRING,
+                "https://mastodon.social",
+            ),
+            param_type("VISIBILITY", "Visibility", "direct, private, unlisted or public", ParameterType.STRING, "public"),
+            param_type("SENSITIVE", "Sensitive", "True or False", ParameterType.STRING, "False"),
         ]
         self.modules.append(mod)
 
