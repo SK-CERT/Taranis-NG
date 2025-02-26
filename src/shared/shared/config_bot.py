@@ -17,6 +17,7 @@ class ConfigBot(ConfigBase):
                 "How often and when is this bot doing its job. Examples:<ul><li>10 --- perform the task every 10 minutes</li><li>10:30"
                 " --- perform the task every day at 10:30</li><li>Tuesday,10:30 --- perform the task every Tuesday at 10:30</li></ul>",
                 ParameterType.NUMBER,
+                "180",
             )
         ]
 
@@ -28,9 +29,15 @@ class ConfigBot(ConfigBase):
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect", ParameterType.STRING),
-                param_type("REGULAR_EXPRESSION", "Regular Expression", "Regular expression for data analysis", ParameterType.STRING),
-                param_type("ATTRIBUTE_NAME", "Attribute name", "Name of attribute for extracted data", ParameterType.STRING),
+                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect", ParameterType.STRING, "Default"),
+                param_type(
+                    "REGULAR_EXPRESSION",
+                    "Regular Expression",
+                    "Regular expression for data analysis",
+                    ParameterType.STRING,
+                    "CVE-\\d{4}-\\d+",
+                ),
+                param_type("ATTRIBUTE_NAME", "Attribute name", "Name of attribute for extracted data", ParameterType.STRING, "CVE"),
             ]
         )
         self.modules.append(mod)

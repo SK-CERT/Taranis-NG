@@ -112,7 +112,7 @@
                     <div class="mt-2 text_bold">CVSS vector</div>
                 </td>
                 <td class="py-0" colspan="5">
-                    <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss|e }} </span></div>
+                    <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss.vectorString|e }} </span></div>
                 </td>
             </tr>
         </table>

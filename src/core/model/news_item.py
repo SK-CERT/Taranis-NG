@@ -75,7 +75,7 @@ class NewsItemData(db.Model):
 
     collected = db.Column(db.DateTime)
     published = db.Column(db.String())
-    updated = db.Column(db.DateTime, default=datetime.now())
+    updated = db.Column(db.DateTime)
 
     attributes = db.relationship("NewsItemAttribute", secondary="news_item_data_news_item_attribute", lazy="selectin")
 
@@ -100,6 +100,7 @@ class NewsItemData(db.Model):
         self.content = content
         self.attributes = attributes
         self.osint_source_id = osint_source_id
+        self.updated = datetime.now()
 
     @classmethod
     def allowed_with_acl(cls, news_item_data_id, user, see, access, modify):
@@ -154,7 +155,7 @@ class NewsItemData(db.Model):
         Returns:
             News item data
         """
-        return cls.query.filter(NewsItemData.hash == hash).all()
+        return cls.query.filter(NewsItemData.hash == hash).first()
 
     @classmethod
     def count_all(cls):
@@ -243,7 +244,6 @@ class NewsItemData(db.Model):
             osint_source_ids.add(osint_source.id)
 
         last_sync_time = datetime.now()
-
         query = cls.query.filter(
             NewsItemData.updated >= last_synced, NewsItemData.updated <= last_sync_time, NewsItemData.osint_source_id.in_(osint_source_ids)
         )
@@ -342,7 +342,7 @@ class NewsItem(db.Model):
         result = query.all()
         total_relevance = 0
         for row in result:
-            total_relevance += int(row._mapping[0])
+            total_relevance += int(row[0])
 
         return total_relevance
 

@@ -15,12 +15,12 @@ class ConfigPublisher(ConfigBase):
         mod = module_type("EMAIL_PUBLISHER", "EMAIL Publisher", "Publisher for publishing by email")
         mod.parameters = [
             param_type("SMTP_SERVER", "SMTP server", "SMTP server for sending emails", ParameterType.STRING),
-            param_type("SMTP_SERVER_PORT", "SMTP server port", "SMTP server port for sending emails", ParameterType.STRING),
+            param_type("SMTP_SERVER_PORT", "SMTP server port", "SMTP server port for sending emails", ParameterType.STRING, "587"),
             param_type("EMAIL_USERNAME", "Email username", "Username for email account", ParameterType.STRING),
             param_type("EMAIL_PASSWORD", "Email password", "Password for email account", ParameterType.STRING),
             param_type("EMAIL_SENDER", "Email sender", "Email address of the sender", ParameterType.STRING),
             param_type("EMAIL_RECIPIENT", "Email recipient", "Email address of the recipient", ParameterType.STRING),
-            param_type("EMAIL_SUBJECT", "Email subject", "Text of email subject", ParameterType.STRING),
+            param_type("EMAIL_SUBJECT", "Email subject", "Text of email subject", ParameterType.STRING, "Security Warning"),
             param_type("EMAIL_MESSAGE", "Email message", "Text of email message", ParameterType.STRING),
             param_type("EMAIL_SIGN", "Email signature", "File used for signing or auto", ParameterType.STRING),
             param_type("EMAIL_SIGN_PASSWORD", "Email signature password", "Password for signing file", ParameterType.STRING),

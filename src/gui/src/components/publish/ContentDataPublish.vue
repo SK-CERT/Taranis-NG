@@ -12,9 +12,11 @@
 
     export default {
         name: "ContentDataPublish",
+
         components: {
             CardProduct,
         },
+
         data: () => ({
             collections: [],
             data_loaded: false,
@@ -24,6 +26,7 @@
                 sort: "DATE_DESC"
             }
         }),
+
         methods: {
             infiniteScrolling(entries, observer, isIntersecting) {
 
@@ -33,7 +36,6 @@
             },
 
             updateData(append, reload_all) {
-
                 this.data_loaded = false;
 
                 if (append === false) {
@@ -67,11 +69,13 @@
                     });
             }
         },
+
         watch: {
             $route() {
                 this.updateData(false, false);
             }
         },
+
         mounted() {
             this.updateData();
             this.$root.$on('notification', () => {
@@ -82,9 +86,10 @@
                 this.updateData(false, false)
             });
         },
-        created() {
-        },
+
         beforeDestroy() {
+            this.$root.$off('notification');
+            this.$root.$off('update-products-filter');
         }
     }
 </script>

@@ -81,9 +81,9 @@
             },
             filterSearch() {
                 clearTimeout(this.timeout);
-
+                let self = this;
                 this.timeout = setTimeout(function () {
-                    this.$root.$emit('update-assets-filter', this.filter);
+                    self.$root.$emit('update-assets-filter', self.filter);
                 }, 300);
             },
             changeTheme() {
