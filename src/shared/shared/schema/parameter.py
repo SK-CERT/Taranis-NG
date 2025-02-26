@@ -29,6 +29,7 @@ class ParameterSchema(Schema):
         name (fields.Str): The name of the parameter.
         description (fields.Str): A brief description of the parameter.
         type (fields.Enum): The type of the parameter, which is an enumeration of ParameterType.
+        default_value (fields.Str): Default value.
     Methods:
         make_parameter(data, **kwargs):
             Creates a Parameter instance from the deserialized data.
@@ -39,6 +40,7 @@ class ParameterSchema(Schema):
     name = fields.Str()
     description = fields.Str()
     type = fields.Enum(ParameterType)
+    default_value = fields.Str()
 
     @post_load
     def make_parameter(self, data, **kwargs):
@@ -61,7 +63,7 @@ class Parameter:
             Initializes a new Parameter instance.
     """
 
-    def __init__(self, id, key, name, description, type):
+    def __init__(self, id, key, name, description, type, default_value):
         """Initialize a new Parameter instance.
 
         Args:
@@ -76,6 +78,7 @@ class Parameter:
         self.name = name
         self.description = description
         self.type = type
+        self.default_value = default_value
 
 
 class ParameterExportSchema(Schema):

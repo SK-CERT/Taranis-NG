@@ -315,7 +315,7 @@ def collector_management(
         for mod in modules:
             col = collector.Collector(mod.name, mod.description, mod.type, [])
             for par in mod.parameters:
-                col.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type))
+                col.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type, par.default_value))
             node.collectors.append(col)
 
         db_manager.db.session.add(node)

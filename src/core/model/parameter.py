@@ -30,6 +30,7 @@ class Parameter(db.Model):
         name (str): Name of parameter.
         description (str): Description of parameter.
         type (ParameterType): Type of parameter.
+        default_value (str): Default value.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -37,10 +38,12 @@ class Parameter(db.Model):
     name = db.Column(db.String(), nullable=False)
     description = db.Column(db.String())
     type = db.Column(db.Enum(ParameterType))
+    default_value = db.Column(db.String(), nullable=True)
 
-    def __init__(self, key, name, description, type):
+    def __init__(self, key, name, description, type, default_value):
         """Initialize Parameter Model."""
         self.key = key
         self.name = name
         self.description = description
         self.type = type
+        self.default_value = default_value

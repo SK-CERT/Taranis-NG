@@ -20,6 +20,7 @@ class param_type:
     name: str
     description: str
     type: ParameterType
+    default_value: str = ""
 
 
 @dataclass
