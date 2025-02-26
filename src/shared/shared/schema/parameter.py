@@ -40,7 +40,7 @@ class ParameterSchema(Schema):
     name = fields.Str()
     description = fields.Str()
     type = fields.Enum(ParameterType)
-    default_value = fields.Str()
+    default_value = fields.Str(allow_none=True)
 
     @post_load
     def make_parameter(self, data, **kwargs):
