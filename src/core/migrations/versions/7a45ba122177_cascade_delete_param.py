@@ -85,8 +85,6 @@ def upgrade():
 
 
 def downgrade():
-    bind = op.get_bind()
-    session = orm.Session(bind=bind)
 
     delete_previous()
     # parameter -> collector_parameter, bot_parameter, publisher_parameter
