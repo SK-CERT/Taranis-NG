@@ -19,6 +19,7 @@ class ConfigCollector(ConfigBase):
                 "Refresh interval in minutes (0 to disable)",
                 "How often is this collector queried for new data",
                 ParameterType.NUMBER,
+                "180",
             ),
         ]
 
@@ -54,6 +55,7 @@ class ConfigCollector(ConfigBase):
                     "Limit for article links",
                     "OPTIONAL: Maximum number of article links to process. Default: all",
                     ParameterType.NUMBER,
+                    "10",
                 ),
             ]
         )
@@ -173,6 +175,7 @@ class ConfigCollector(ConfigBase):
                     "Limit for article links",
                     "OPTIONAL: Maximum number of article links to process. Default: all",
                     ParameterType.NUMBER,
+                    "10",
                 ),
                 # parsing a single article
                 param_type("TITLE_SELECTOR", "SELECTOR at ARTICLE: Article title", "Selector for article title", ParameterType.STRING),

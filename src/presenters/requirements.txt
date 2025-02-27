@@ -1,10 +1,10 @@
 cvss==3.4
 Flask==3.1.0
-Flask-Cors==5.0.0
+Flask-Cors==5.0.1
 Flask-RESTful==0.3.10
 gevent==24.11.1
 gunicorn==23.0.0
 Jinja2==3.1.5
 marshmallow==3.26.1
 python-dotenv==1.0.1
-weasyprint==64.0
+weasyprint==64.1
