@@ -26,14 +26,15 @@ class RSSCollector(BaseCollector):
 
     news_items = []
 
+    @staticmethod
+    def strip_html_tags(html_string):
+        """Strip HTML tags from the given string."""
+        soup = BeautifulSoup(html_string, "html.parser")
+        return soup.get_text(separator=" ", strip=True)
+
     @BaseCollector.ignore_exceptions
     def collect(self, source):
         """Collect data from RSS or Atom feed."""
-
-        def strip_html_tags(html_string):
-            """Strip HTML tags from the given string."""
-            soup = BeautifulSoup(html_string, "html.parser")
-            return soup.get_text(separator=" ", strip=True)
 
         async def fetch_feed(session, url):
             """Fetch the feed using feedparser."""
@@ -43,17 +44,12 @@ class RSSCollector(BaseCollector):
 
         async def get_feed(feed_url, last_collected=None, user_agent=None):
             """Fetch the feed data, using proxy if provided, and check modification status."""
-            headers = {}
-            if user_agent:
-                headers["User-Agent"] = user_agent
-
+            headers = {"User-Agent": user_agent} if user_agent else {}
             connector = aiohttp_socks.ProxyConnector.from_url(proxy) if proxy else None
 
             async with aiohttp.ClientSession(headers=headers, connector=connector) as session:
-                # Check if the feed has been modified since the last collection
-                if last_collected:
-                    if await BaseCollector.not_modified(self.collector_source, feed_url, last_collected, session, user_agent):
-                        return None
+                if last_collected and await BaseCollector.not_modified(self.collector_source, feed_url, last_collected, session, user_agent):
+                    return None
 
                 logger.debug(f"{self.collector_source} Fetching feed from URL: {feed_url}")
                 return await fetch_feed(session, feed_url)
@@ -74,9 +70,9 @@ class RSSCollector(BaseCollector):
                 article = ""
                 link_for_article = feed_entry.get("link", "")
                 if summary:
-                    review = strip_html_tags(summary[:500])
+                    review = RSSCollector.strip_html_tags(summary[:500])
                 if content:
-                    article = strip_html_tags(content[0].get("value", ""))
+                    article = RSSCollector.strip_html_tags(content[0].get("value", ""))
 
                 if not link_for_article:
                     logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
@@ -98,23 +94,19 @@ class RSSCollector(BaseCollector):
                             replaced_str = "\xa0"
                             article_sanit = [w.replace(replaced_str, " ") for w in article_text]
                             article_sanit = " ".join(article_sanit)
-                            # use HTML article if it is longer than summary
                             if len(article_sanit) > len(summary):
                                 article = article_sanit
                             logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
                     except Exception as error:
                         logger.exception(f"{self.collector_source} Fetch article failed: {error}")
 
-                # use summary if article is empty
                 if summary and not article:
-                    article = strip_html_tags(summary)
+                    article = RSSCollector.strip_html_tags(summary)
                     logger.debug(f"{self.collector_source} Using summary for article: {article}")
-                # use first 500 characters of article if summary is empty
                 elif not summary and article:
                     review = article[:500]
                     logger.debug(f"{self.collector_source} Using first 500 characters of article for summary: {review}")
 
-                # use published date if available, otherwise use updated date
                 if published_parsed:
                     date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
                     logger.debug(f"{self.collector_source} Using parsed 'published' date")
@@ -164,21 +156,22 @@ class RSSCollector(BaseCollector):
         else:
             logger.info(f"{self.collector_source} Requesting feed URL: {feed_url}")
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        feed = loop.run_until_complete(get_feed(feed_url, last_collected, user_agent))
+        feed = asyncio.run(get_feed(feed_url, last_collected, user_agent))
         if feed:
             try:
                 logger.debug(f"{self.collector_source} Feed returned {len(feed['entries'])} entries.")
 
                 semaphore = asyncio.Semaphore(5)  # Limit the number of concurrent tasks to 5
-                tasks = []
-                for feed_entry in feed["entries"]:
-                    tasks.append(process_feed_entry(feed_entry, user_agent, proxy, semaphore))
+                tasks = [process_feed_entry(feed_entry, user_agent, proxy, semaphore) for feed_entry in feed["entries"]]
+
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
 
                 news_items = loop.run_until_complete(asyncio.gather(*tasks))
 
-                # Filter out None values
                 news_items = [item for item in news_items if item is not None]
 
                 if links_limit > 0:
