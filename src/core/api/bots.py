@@ -12,25 +12,24 @@ from model import bot_preset, news_item, word_list
 class BotPresetsForBots(Resource):
     """Bot presets for bots API endpoint."""
 
-    @api_key_required
-    def post(self):
+    @api_key_required("bots")
+    def post(self, bots_node=None):
         """Add a new bot preset.
 
         Returns:
             (dict): The new bot preset
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("api_key", location="args")
         parser.add_argument("bot_type", location="args")
         parameters = parser.parse_args()
-        return bot_preset.BotPreset.get_all_for_bot_json(parameters)
+        return bot_preset.BotPreset.get_all_for_bot_json(bots_node, parameters.bot_type)
 
 
 class BotGroupAction(Resource):
     """Bot group action API endpoint."""
 
-    @api_key_required
-    def put(self):
+    @api_key_required("bots")
+    def put(self, bots_node=None):
         """Group action for news items.
 
         Returns:
@@ -47,8 +46,8 @@ class BotGroupAction(Resource):
 class NewsItemData(Resource):
     """News item data API endpoint."""
 
-    @api_key_required
-    def get(self):
+    @api_key_required("bots")
+    def get(self, bots_node=None):
         """Get all news items data.
 
         Returns:
@@ -68,8 +67,8 @@ class NewsItemData(Resource):
 class UpdateNewsItemAttributes(Resource):
     """Update news item attributes API endpoint."""
 
-    @api_key_required
-    def put(self, news_item_data_id):
+    @api_key_required("bots")
+    def put(self, news_item_data_id, bots_node=None):
         """Update news item attributes.
 
         Args:
@@ -83,8 +82,8 @@ class UpdateNewsItemAttributes(Resource):
 class GetNewsItemsAggregate(Resource):
     """Get news items aggregate API endpoint."""
 
-    @api_key_required
-    def get(self, group_id):
+    @api_key_required("bots")
+    def get(self, group_id, bots_node=None):
         """Get news items aggregate.
 
         Args:
@@ -98,8 +97,8 @@ class GetNewsItemsAggregate(Resource):
 class Categories(Resource):
     """Word list categories API endpoint."""
 
-    @api_key_required
-    def get(self, category_id):
+    @api_key_required("bots")
+    def get(self, category_id, bots_node=None):
         """Get word list categories.
 
         Args:
@@ -109,8 +108,8 @@ class Categories(Resource):
         """
         return word_list.WordListCategory.get_categories(category_id)
 
-    @api_key_required
-    def put(self, category_id):
+    @api_key_required("bots")
+    def put(self, category_id, bots_node=None):
         """Update word list categories.
 
         Args:
@@ -124,8 +123,8 @@ class Categories(Resource):
 class Entries(Resource):
     """Word list entries API endpoint."""
 
-    @api_key_required
-    def delete(self, category_id, entry_name):
+    @api_key_required("bots")
+    def delete(self, category_id, entry_name, bots_node=None):
         """Delete word list entries.
 
         Args:
@@ -136,8 +135,8 @@ class Entries(Resource):
         """
         return word_list.WordListEntry.delete_entries(category_id, entry_name)
 
-    @api_key_required
-    def put(self, category_id, entry_name):
+    @api_key_required("bots")
+    def put(self, category_id, entry_name, bots_node=None):
         """Update word list entries.
 
         Args:

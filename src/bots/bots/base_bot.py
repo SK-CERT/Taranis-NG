@@ -1,8 +1,7 @@
 """BaseBot class represents the base abstract type for all bots."""
 
 import datetime
-import traceback
-
+import time
 from managers import time_manager
 from managers.log_manager import logger
 from shared.schema import bot, bot_preset
@@ -23,7 +22,6 @@ class BaseBot:
         execute(source): Executes the bot's task.
         execute_on_event(preset, event_type, data): Executes the bot's task based on an event.
         process_event(event_type, data): Processes an event and executes the bot's task for each preset.
-        print_exception(preset, error): Prints the exception details for a bot preset.
         history(interval): Returns the history limit based on the given interval.
         initialize(): Initializes the bot and schedules its execution based on the presets.
     """
@@ -57,21 +55,6 @@ class BaseBot:
             self.execute_on_event(preset, event_type, data)
 
     @staticmethod
-    def print_exception(preset, error):
-        """Print the bot preset ID, name, error message, and traceback.
-
-        Parameters:
-            preset: The bot preset object.
-            error: The error message.
-        """
-        print("Bot Preset:", preset.id, preset.name)
-        if str(error).startswith("b"):
-            print(f"ERROR:{error[2:-1]}")
-        else:
-            print(f"ERROR: {error}")
-        print("TRACEBACK:", traceback.format_exc(), flush=True)
-
-    @staticmethod
     def history(interval):
         """Generate a timestamp limit based on the given interval.
 
@@ -101,10 +84,12 @@ class BaseBot:
 
     def initialize(self):
         """Initialize the bot by retrieving bot presets and scheduling jobs based on the preset intervals."""
+        time.sleep(20)  # wait for the CORE
         response, code = CoreApi.get_bots_presets(self.type)
         if code == 200 and response is not None:
             preset_schema = bot_preset.BotPresetSchemaBase(many=True)
             self.bot_presets = preset_schema.load(response)
+            logger.debug(f"{self.name}: {len(self.bot_presets)} presets loaded")
 
             for preset in self.bot_presets:
                 interval = preset.parameter_values["REFRESH_INTERVAL"]
@@ -141,3 +126,6 @@ class BaseBot:
                     else:
                         logger.debug(f"scheduling '{preset.name}' for {interval}")
                         time_manager.schedule_job_minutes(int(interval), self.execute, preset)
+
+        else:
+            logger.error(f"Bots presets not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")

@@ -5,7 +5,6 @@ import uuid
 from sqlalchemy import func, or_, orm
 
 from managers.db_manager import db
-from model.bots_node import BotsNode
 from model.parameter_value import NewParameterValueSchema
 from shared.schema.bot_preset import BotPresetSchema, BotPresetPresentationSchema
 
@@ -122,18 +121,18 @@ class BotPreset(db.Model):
         return {"total_count": count, "items": bot_schema.dump(bots)}
 
     @classmethod
-    def get_all_for_bot_json(cls, parameters):
+    def get_all_for_bot_json(cls, bots_node, bot_type):
         """Get all BotPreset objects for a bot in JSON format.
 
         Args:
-            parameters: Parameters for the query.
+            bots_node: Bots Node.
+            bot_type: Bot type.
         Returns:
             JSON object with a list of BotPreset objects.
         """
-        node = BotsNode.get_by_api_key(parameters.api_key)
-        if node is not None:
-            for bot in node.bots:
-                if bot.type == parameters.bot_type:
+        if bots_node is not None:
+            for bot in bots_node.bots:
+                if bot.type == bot_type:
                     presets_schema = BotPresetSchema(many=True)
                     return presets_schema.dump(bot.presets)
 

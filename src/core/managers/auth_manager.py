@@ -15,11 +15,13 @@ from auth.openid_authenticator import OpenIDAuthenticator
 from auth.password_authenticator import PasswordAuthenticator
 from auth.ldap_authenticator import LDAPAuthenticator
 from model.collectors_node import CollectorsNode
+from model.publishers_node import PublishersNode
+from model.bots_node import BotsNode
+from model.remote import RemoteAccess
 from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 from model.product_type import ProductType
-from model.remote import RemoteAccess
 from model.report_item import ReportItem
 from model.token_blacklist import TokenBlacklist
 from model.user import User
@@ -237,11 +239,11 @@ def get_user_from_api_key():
     try:
         if "Authorization" not in request.headers or not request.headers["Authorization"].__contains__("Bearer "):
             return None
-        key_string = request.headers["Authorization"].replace("Bearer ", "")
-        api_key = ApiKey.find_by_key(key_string)
-        if not api_key:
+        api_key = get_api_key()
+        apikey = ApiKey.find_by_key(api_key)
+        if not apikey:
             return None
-        user = User.find_by_id(api_key.user_id)
+        user = User.find_by_id(apikey.user_id)
         return user
     except Exception as ex:
         log_manager.store_auth_error_activity("API key check presence error", ex)
@@ -375,81 +377,64 @@ def auth_required(required_permissions, *acl_args):
     return auth_required_wrap
 
 
-def api_key_required(fn):
-    """Enforce API key authentication.
+def api_key_required(key_type=None):
+    """Enforce API key authentication with additional resource type parameter.
 
     Args:
-        fn (function): The function to be decorated.
+        resource_type: The type of resource being accessed.
 
     Returns:
         function: The decorated function.
     """
 
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        error = ({"error": "not authorized"}, 401)
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            error = ({"error": "not authorized"}, 401)
 
-        # do we have the authorization header?
-        if "Authorization" not in request.headers:
-            log_manager.store_auth_error_activity("Missing Authorization header for external access")
-            return error
+            # do we have the authorization header?
+            if "Authorization" not in request.headers:
+                log_manager.store_auth_error_activity("Missing Authorization header for external access")
+                return error
 
-        # is it properly encoded?
-        auth_header = request.headers["Authorization"]
-        if not auth_header.startswith("Bearer"):
-            log_manager.store_auth_error_activity("Missing Authorization Bearer for external access")
-            return error
+            # is it properly encoded?
+            auth_header = request.headers["Authorization"]
+            if not auth_header.startswith("Bearer"):
+                log_manager.store_auth_error_activity("Missing Authorization Bearer for external access")
+                return error
+            api_key = get_api_key()
 
-        # does it match some of our collector's keys?
-        api_key = auth_header.replace("Bearer ", "")
-        if not CollectorsNode.exists_by_api_key(api_key):
-            api_key = log_manager.sensitive_value(api_key)
-            log_manager.store_auth_error_activity(f"Incorrect api key: {api_key} for external access")
-            return error
+            if key_type == "collectors":
+                master_class = CollectorsNode
+            elif key_type == "publishers":
+                master_class = PublishersNode
+            elif key_type == "bots":
+                master_class = BotsNode
+            elif key_type == "remote":
+                master_class = RemoteAccess
+            else:
+                log_manager.store_auth_error_activity(f"Incorrect validation type: {key_type}")
+                return error
 
-        # allow
-        return fn(*args, **kwargs)
+            # import inspect
+            # for frame in inspect.stack():
+            #     if 'self' in frame.frame.f_locals:
+            #         class_name = frame.frame.f_locals['self'].__class__.__name__
+            #         break
+            # print(f"api_key_required: {key_type},  {class_name}.{fn.__name__}", flush=True)
+            validated_object = master_class.get_by_api_key(api_key)
+            if not validated_object:
+                api_key = log_manager.sensitive_value(api_key)
+                log_manager.store_auth_error_activity(f"Incorrect api key: {api_key} for external access with type '{key_type}'")
+                return error
 
-    return wrapper
+            kwargs.update({key_type + "_node": validated_object})
 
+            return fn(*args, **kwargs)
 
-def access_key_required(fn):
-    """Check for access key authorization.
+        return wrapper
 
-    This decorator can be used to protect routes or functions that require access key authorization.
-    It checks if the request has a valid access key in the Authorization header.
-
-    Args:
-        fn (function): The function to be decorated.
-
-    Returns:
-        function: The decorated function.
-    """
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        error = ({"error": "not authorized"}, 401)
-
-        # do we have the authorization header?
-        if "Authorization" not in request.headers:
-            log_manager.store_auth_error_activity("Missing Authorization header for remote access")
-            return error
-
-        # is it properly encoded?
-        auth_header = request.headers["Authorization"]
-        if not auth_header.startswith("Bearer"):
-            log_manager.store_auth_error_activity("Missing Authorization Bearer for remote access")
-            return error
-
-        # does it match some of our remote peer's access keys?
-        if not RemoteAccess.exists_by_access_key(auth_header.replace("Bearer ", "")):
-            log_manager.store_auth_error_activity(f"Incorrect access key: {auth_header.replace('Bearer ', '')} for remote access")
-            return error
-
-        # allow
-        return fn(*args, **kwargs)
-
-    return wrapper
+    return decorator
 
 
 def jwt_required(fn):
@@ -486,14 +471,14 @@ def jwt_required(fn):
     return wrapper
 
 
-def get_access_key():
-    """Get the access key from the request headers.
+def get_api_key():
+    """Get the API key from the request headers.
 
-    This function retrieves the access key from the "Authorization" header of the request.
-    The access key is expected to be in the format "Bearer <access_key>".
+    This function retrieves the API key from the "Authorization" header of the request.
+    The API key is expected to be in the format "Bearer <api_key>".
 
     Returns:
-        The access key extracted from the request headers.
+        The API key extracted from the request headers.
     """
     return request.headers["Authorization"].replace("Bearer ", "")
 

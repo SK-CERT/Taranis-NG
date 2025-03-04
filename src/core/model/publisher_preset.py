@@ -6,7 +6,6 @@ import uuid
 
 from managers.db_manager import db
 from model.parameter_value import NewParameterValueSchema
-from model.publishers_node import PublishersNode
 from shared.schema.publisher_preset import PublisherPresetSchema, PublisherPresetPresentationSchema
 
 
@@ -137,17 +136,17 @@ class PublisherPreset(db.Model):
         return {"total_count": count, "items": publisher_schema.dump(publishers)}
 
     @classmethod
-    def get_all_for_publisher_json(cls, parameters):
+    def get_all_for_publisher_json(cls, publisher_node, publisher_type):
         """Get all publisher presets for a publisher in JSON format.
 
         Args:
-            parameters: Parameters
+            publisher_node (PublisherNode): Publisher node object.
+            publisher_type (str): Publisher type.
         Returns:
             dict: Publisher presets
         """
-        node = PublishersNode.get_by_api_key(parameters.api_key)
-        for publisher in node.publishers:
-            if publisher.type == parameters.publisher_type:
+        for publisher in publisher_node.publishers:
+            if publisher.type == publisher_type:
                 presets_schema = PublisherPresetSchema(many=True)
                 return presets_schema.dump(publisher.sources)
 

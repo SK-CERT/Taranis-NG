@@ -4,13 +4,7 @@ import os
 import requests
 import urllib
 from config import Config
-from shared.log import TaranisLogger
-
-
-taranis_logging_level_str = os.environ.get("TARANIS_LOG_LEVEL", "DEBUG")
-modules_logging_level_str = os.environ.get("MODULES_LOG_LEVEL", "WARNING")
-
-logger = TaranisLogger(taranis_logging_level_str, modules_logging_level_str, True, os.environ.get("SYSLOG_ADDRESS"))
+from managers.log_manager import logger
 
 
 class CoreApi:
@@ -75,8 +69,9 @@ class CoreApi:
             )
             return response.json(), response.status_code
         except Exception as ex:
-            logger.exception(f"Get OSINT sources failed: {ex}")
-            return None, 400
+            msg = "Get OSINT sources failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
     @classmethod
     def update_collector_status(cls):
@@ -99,8 +94,9 @@ class CoreApi:
             response = requests.get(f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(id)}", headers=cls.headers)
             return response.json(), response.status_code
         except Exception as ex:
-            logger.exception(f"Update collector status failed: {ex}")
-            return None, 400
+            msg = "Update collector status failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
     @classmethod
     def update_collector_last_attepmt(cls, source_id):
@@ -118,8 +114,9 @@ class CoreApi:
             )
             return response.json(), response.status_code
         except Exception as ex:
-            logger.exception(f"Update collector last attemt failed: {ex}")
-            return None, 400
+            msg = "Update collector last attemt failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
     @classmethod
     def add_news_items(cls, news_items):
@@ -140,5 +137,6 @@ class CoreApi:
             response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers)
             return response.status_code
         except Exception as ex:
-            logger.exception(f"Add news items failed: {ex}")
-            return None, 400
+            msg = "Add news items failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400

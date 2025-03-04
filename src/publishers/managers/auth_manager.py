@@ -24,9 +24,10 @@ def api_key_required(fn):
     """Check if the API key is valid.
 
     Args:
-        fn (function): _description_
+        fn -- The function to be decorated.
+
     Returns:
-        _type_: _description_
+        wrapper: Wrapper function for the API endpoints.
     """
 
     @wraps(fn)

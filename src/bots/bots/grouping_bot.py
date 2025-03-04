@@ -4,6 +4,7 @@ import json
 import re
 
 from .base_bot import BaseBot
+from managers.log_manager import logger
 from shared.config_bot import ConfigBot
 from remote.core_api import CoreApi
 
@@ -178,7 +179,7 @@ class GroupingBot(BaseBot):
                 #         CoreApi.news_items_grouping(data)
 
         except Exception as error:
-            BaseBot.print_exception(preset, error)
+            logger.exception(f"{preset.name}: Grouping failed: {error}")
 
     def execute_on_event(self, preset, event_type, data):
         """Execute actions based on the given event.
@@ -195,4 +196,4 @@ class GroupingBot(BaseBot):
             regexp = preset.parameter_values["REGULAR_EXPRESSION"]  # noqa F841
 
         except Exception as error:
-            BaseBot.print_exception(preset, error)
+            logger.exception(f"{preset.name}: Execute on event failed: {error}")

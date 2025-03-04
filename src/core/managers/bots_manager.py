@@ -1,3 +1,5 @@
+"""This module contains the bot manager."""
+
 from model.bots_node import BotsNode
 from model.bot import Bot
 from model.bot_preset import BotPreset
@@ -6,6 +8,14 @@ from shared.schema.bots_node import BotsNode as BotsNodeSchema
 
 
 def add_bots_node(data):
+    """Add a new bots node.
+
+    Parameters:
+        data (dict): The data for creating the bots node.
+
+    Returns:
+        int: The status code of the operation.
+    """
     node = BotsNodeSchema.create(data)
     bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info()
     if status_code == 200:
@@ -16,6 +26,15 @@ def add_bots_node(data):
 
 
 def update_bots_node(node_id, data):
+    """Update an existing bots node.
+
+    Parameters:
+        node_id (int): The ID of the bots node to update.
+        data (dict): The data for updating the bots node.
+
+    Returns:
+        int: The status code of the operation.
+    """
     node = BotsNodeSchema.create(data)
     bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info()
     if status_code == 200:
@@ -25,9 +44,10 @@ def update_bots_node(node_id, data):
     return status_code
 
 
-def verify_api_key(api_key):
-    return BotsNode.exists_by_api_key(api_key)
-
-
 def add_bot_preset(data):
+    """Add a new bot preset.
+
+    Parameters:
+        data (dict): The data for creating the bot preset.
+    """
     BotPreset.add_new(data)

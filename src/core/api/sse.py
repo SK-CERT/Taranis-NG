@@ -5,7 +5,9 @@ import socket
 import json
 from flask import Response, stream_with_context
 from flask import request
-from managers import auth_manager, bots_manager
+from managers import auth_manager
+from model.bots_node import BotsNode
+from model.remote import RemoteAccess
 from managers.log_manager import logger
 
 
@@ -71,21 +73,35 @@ class TaranisSSE(Resource):
             jwt_token = request.args.get("jwt")
             api_key = request.args.get("api_key")
 
+            auth_type = ""
             if jwt_token is not None:
+                auth_type = "JWT"
                 if auth_manager.decode_user_from_jwt(jwt_token) is None:
                     msg = "SSE: decoding user from jwt failed."
                     logger.warning(msg)
                     return msg, 403
             elif api_key is not None:
-                if bots_manager.verify_api_key(api_key) is False:
-                    msg = "SSE: invalid API key."
-                    logger.warning(msg)
-                    return msg, 403
+                msg = f"SSE: invalid API key '{api_key}'"
+                auth_type = "API key"
+                api_type = request.args.get("channel")
+                if api_type == "remote":
+                    auth_type += ", Remote"
+                    if not RemoteAccess.get_by_api_key(api_key):
+                        msg += auth_type
+                        logger.warning(msg)
+                        return msg, 403
+                else:
+                    auth_type += ", Bots"
+                    if not BotsNode.get_by_api_key(api_key):
+                        msg += auth_type
+                        logger.warning(msg)
+                        return msg, 403
             else:
                 msg = "SSE: missing authentication credentials."
                 logger.warning(msg)
                 return msg, 403
 
+            logger.info(f"SSE streaming response {request.remote_addr} ({auth_type})")
             return Response(self.stream(), mimetype="text/event-stream")
         except Exception as ex:
             msg = "SSE: Error in streaming response"

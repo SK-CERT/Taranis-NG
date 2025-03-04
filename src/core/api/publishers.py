@@ -56,8 +56,8 @@ class PublisherPresets(Resource):
             search = request.args["search"]
         return publisher_preset.PublisherPreset.get_all_json(search)
 
-    @api_key_required
-    def post(self):
+    @api_key_required("publishers")
+    def post(self, publishers_node=None):
         """Handle POST requests to retrieve all publisher presets for a given publisher.
 
         This method parses the request arguments to extract the API key and collector type,
@@ -66,10 +66,9 @@ class PublisherPresets(Resource):
             dict: A dictionary containing all publisher presets for the specified publisher in JSON format.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("api_key", location="args")
-        parser.add_argument("collector_type", location="args")
+        parser.add_argument("publisher_type", location="args")
         parameters = parser.parse_args()
-        return publisher_preset.PublisherPreset.get_all_for_publisher_json(parameters)
+        return publisher_preset.PublisherPreset.get_all_for_publisher_json(publishers_node, parameters.publisher_type)
 
 
 class AddPublisherPreset(Resource):
