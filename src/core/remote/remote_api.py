@@ -1,6 +1,7 @@
 """Remote node API."""
 
 import requests
+from managers.log_manager import logger
 
 
 class RemoteApi:
@@ -28,8 +29,10 @@ class RemoteApi:
         try:
             response = requests.get(self.api_url + "/api/v1/remote/connect", headers=self.headers)
             return response.json(), response.status_code
-        except requests.exceptions.ConnectionError:
-            return {}, 503
+        except Exception as ex:
+            msg = "Connect to the remote node failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     def disconnect(self):
         """Disconnect from the remote node.
@@ -39,8 +42,10 @@ class RemoteApi:
         """
         try:
             requests.get(self.api_url + "/api/v1/remote/disconnect", headers=self.headers)
-        except requests.exceptions.ConnectionError:
-            return {}, 503
+        except Exception as ex:
+            msg = "Disconnect from the remote node failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     def get_news_items(self):
         """Retrieve news items from the remote node.
@@ -51,8 +56,10 @@ class RemoteApi:
         try:
             response = requests.get(self.api_url + "/api/v1/remote/sync-news-items", headers=self.headers)
             return response.json(), response.status_code
-        except requests.exceptions.ConnectionError:
-            return {}, 503
+        except Exception as ex:
+            msg = "Retrieve news items from the remote node failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     def confirm_news_items_sync(self, data):
         """Confirm the synchronization of news items.
@@ -66,8 +73,10 @@ class RemoteApi:
         try:
             response = requests.put(self.api_url + "/api/v1/remote/sync-news-items", headers=self.headers, json=data)
             return response.status_code
-        except requests.exceptions.ConnectionError:
-            return {}, 503
+        except Exception as ex:
+            msg = "Confirm the synchronization of news items failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     def get_report_items(self):
         """Retrieve report items from the remote node.
@@ -78,8 +87,10 @@ class RemoteApi:
         try:
             response = requests.get(self.api_url + "/api/v1/remote/sync-report-items", headers=self.headers)
             return response.json(), response.status_code
-        except requests.exceptions.ConnectionError:
-            return {}, 503
+        except Exception as ex:
+            msg = "Retrieve report items from the remote node failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     def confirm_report_items_sync(self, data):
         """Confirm the synchronization of report items.
@@ -93,5 +104,7 @@ class RemoteApi:
         try:
             response = requests.put(self.api_url + "/api/v1/remote/sync-report-items", headers=self.headers, json=data)
             return response.status_code
-        except requests.exceptions.ConnectionError:
-            return {}, 503
+        except Exception as ex:
+            msg = "Confirm the synchronization of report items failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503

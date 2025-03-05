@@ -56,7 +56,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Get bots presets failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def get_news_items_data(cls, limit):
@@ -77,7 +77,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Get news items data failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def update_news_item_attributes(cls, id, attributes):
@@ -96,7 +96,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Update the attributes of a news item failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def delete_word_list_category_entries(cls, id, name):
@@ -117,7 +117,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Delete entries from a word list category failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def update_word_list_category_entries(cls, id, name, entries):
@@ -139,7 +139,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Update the entries of a word list category failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def get_categories(cls, id):
@@ -161,7 +161,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Get the categories for a bot failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def add_word_list_category(cls, id, category):
@@ -186,7 +186,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Add a word list category failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def get_news_items_aggregate(cls, source_group, limit):
@@ -213,7 +213,7 @@ class CoreApi:
         except Exception as ex:
             msg = "Get news items aggregate by source group failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503
 
     @classmethod
     def news_items_grouping(cls, data):
@@ -236,4 +236,4 @@ class CoreApi:
         except Exception as ex:
             msg = "Group news items failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, 503

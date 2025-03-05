@@ -81,21 +81,20 @@ class TaranisSSE(Resource):
                     logger.warning(msg)
                     return msg, 403
             elif api_key is not None:
-                msg = f"SSE: invalid API key '{api_key}'"
                 auth_type = "API key"
                 api_type = request.args.get("channel")
                 if api_type == "remote":
                     auth_type += ", Remote"
-                    if not RemoteAccess.get_by_api_key(api_key):
-                        msg += auth_type
-                        logger.warning(msg)
-                        return msg, 403
+                    master_class = RemoteAccess
                 else:
                     auth_type += ", Bots"
-                    if not BotsNode.get_by_api_key(api_key):
-                        msg += auth_type
-                        logger.warning(msg)
-                        return msg, 403
+                    master_class = BotsNode
+                validated_object = master_class.get_by_api_key(api_key)
+                if not validated_object:
+                    msg = f"SSE: invalid {auth_type}: '{api_key}'"
+                    logger.warning(msg)
+                    return msg, 403
+
             else:
                 msg = "SSE: missing authentication credentials."
                 logger.warning(msg)
