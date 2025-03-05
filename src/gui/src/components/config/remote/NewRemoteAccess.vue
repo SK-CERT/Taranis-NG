@@ -47,10 +47,10 @@
                         </v-col>
                         <v-col cols="12">
                             <v-text-field :disabled="!canUpdate"
-                                          :label="$t('remote_access.access_key')"
-                                          name="access_key"
+                                          :label="$t('remote_access.api_key')"
+                                          name="api_key"
                                           type="text"
-                                          v-model="remote_access.access_key"
+                                          v-model="remote_access.api_key"
                                           :spellcheck="$store.state.settings.spellcheck"
                             />
                         </v-col>
@@ -165,7 +165,7 @@
                 id: -1,
                 name: "",
                 description: "",
-                access_key: "",
+                api_key: "",
                 enabled: false,
                 osint_sources: [],
                 report_item_types: [],
@@ -187,7 +187,7 @@
                 this.remote_access.id = -1
                 this.remote_access.name = ""
                 this.remote_access.description = ""
-                this.remote_access.access_key = ""
+                this.remote_access.api_key = ""
                 this.remote_access.enabled = false
                 this.remote_access.osint_sources = []
                 this.remote_access.report_item_types = []
@@ -293,7 +293,7 @@
                 this.remote_access.id = data.id;
                 this.remote_access.name = data.name;
                 this.remote_access.description = data.description;
-                this.remote_access.access_key = data.access_key;
+                this.remote_access.api_key = data.api_key;
                 this.remote_access.enabled = data.enabled;
             });
         },

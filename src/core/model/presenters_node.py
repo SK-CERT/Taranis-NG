@@ -63,17 +63,6 @@ class PresentersNode(db.Model):
         self.tag = "mdi-server-network"
 
     @classmethod
-    def exists_by_api_key(cls, api_key):
-        """Exists by API key.
-
-        Args:
-            api_key (str): API key.
-        Returns:
-            bool: True if exists, False otherwise.
-        """
-        return db.session.query(db.exists().where(PresentersNode.api_key == api_key)).scalar()
-
-    @classmethod
     def get_by_api_key(cls, api_key):
         """Get by API key.
 

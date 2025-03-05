@@ -72,7 +72,9 @@ class BaseCollector:
         """
         response, status_code = CoreApi.update_collector_last_attepmt(source.id)
         if status_code != 200:
-            logger.error(f"Update last attempt: Code {status_code}" f"{', response: ' + response if response is not None else ''}")
+            logger.error(
+                f"Update last attempt failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
+            )
 
     @staticmethod
     def ignore_exceptions(func):
@@ -228,7 +230,7 @@ class BaseCollector:
 
     def refresh(self):
         """Refresh the OSINT sources for the collector."""
-        time.sleep(30)
+        time.sleep(20)  # wait for the CORE
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
         # cancel all existing jobs
@@ -243,8 +245,6 @@ class BaseCollector:
 
         # get new node configuration
         response, code = CoreApi.get_osint_sources(self.type)
-        # logger.debug(f"HTTP {code}: Got the following reply: {response}")
-
         try:
             # if configuration was successfully received
             if code == 200 and response is not None:
@@ -292,8 +292,7 @@ class BaseCollector:
                         logger.debug(f"{self.name} '{source.name}': Scheduling for {interval}")
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
             else:
-                # TODO: send update to core with the error message
-                logger.error(f"OSINT sources not received, Code {code}" f"{', response: ' + response if response is not None else ''}")
+                logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
                 pass
         except Exception as error:
             logger.exception(f"Refreshing of sources failed: {error}")

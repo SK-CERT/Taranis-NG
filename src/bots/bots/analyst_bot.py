@@ -61,18 +61,17 @@ class AnalystBot(BaseBot):
 
             bots_params = dict(zip(attr_name, regexp))
             limit = BaseBot.history(interval)
-            logger.info(f"{preset.name}: running with date limit {limit}")
+            logger.info(f"{preset.name}  ({self.name})")
             news_items_data, code = CoreApi.get_news_items_data(limit)
             if code == 200 and news_items_data is not None:
+                logger.debug(f"{preset.name}: News items found: {len(news_items_data)}, since {limit}")
                 for item in news_items_data:
                     if item:
                         news_item_id = item["id"]
                         title = item["title"]
                         preview = item["review"]
                         content = item["content"]
-
                         analyzed_text = " ".join([title, preview, content])
-
                         attributes = []
                         for key, value in bots_params.items():
                             uniq_list = []
@@ -87,7 +86,7 @@ class AnalystBot(BaseBot):
                                     uniq_list.append(found_value)
 
                             # app is checking combination ID + Value in DB before INSERT (attribute_value_identical)
-                            #  so check for some duplicity here (faster)
+                            # so check for some duplicity here (faster)
                             for found_value in uniq_list:
                                 binary_mime_type = ""
                                 binary_value = ""
@@ -95,12 +94,17 @@ class AnalystBot(BaseBot):
                                 attributes.append(news_attribute)
 
                         if len(attributes) > 0:
-                            logger.debug(f"Processing item id: {news_item_id}, {item['collected']}, Found: {len(attributes)}")
+                            logger.debug(f"Found: {len(attributes)}, {title}, {item['collected']}")
                             news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
                             CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
+            else:
+                logger.error(
+                    f"{preset.name}: News items not received, Code: {code}"
+                    f"{', response: ' + str(news_items_data) if news_items_data is not None else ''}"
+                )
 
         except Exception as error:
-            BaseBot.print_exception(preset, error)
+            logger.exception(f"{preset.name}: Failed to parse attributes: {error}")
 
     def execute_on_event(self, preset, event_type, data):
         """Execute the specified preset on the given event.
@@ -118,4 +122,4 @@ class AnalystBot(BaseBot):
             attr_name = preset.parameter_values["ATTRIBUTE_NAME"]  # noqa F841
 
         except Exception as error:
-            BaseBot.print_exception(preset, error)
+            logger.exception(f"{preset.name}: Execute on event failed: {error}")

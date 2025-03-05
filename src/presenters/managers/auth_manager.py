@@ -21,10 +21,11 @@ if os.getenv("SSL_VERIFICATION") == "False":
 
 
 def api_key_required(fn):
-    """Check for API key in the request header.
+    """Check if the API key is valid.
 
     Arguments:
         fn -- The function to be decorated.
+
     Returns:
         wrapper: Wrapper function for the API endpoints.
     """

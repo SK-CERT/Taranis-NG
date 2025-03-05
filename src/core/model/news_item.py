@@ -1449,16 +1449,14 @@ class NewsItemAttribute(db.Model):
     remote_node_id = db.Column(db.Integer, db.ForeignKey("remote_node.id"), nullable=True)
     remote_user = db.Column(db.String())
 
-    def __init__(self, key, value, binary_mime_type, binary_value):
+    def __init__(self, key, value, binary_mime_type, binary_value=None):
         """Initialize news item attribute."""
         # self.id = id
         self.id = None
         self.key = key
         self.value = value
         self.binary_mime_type = binary_mime_type
-
-        if binary_value:
-            self.binary_data = base64.b64decode(binary_value)
+        self.binary_data = base64.b64decode(binary_value) if binary_value else None
 
     @classmethod
     def find(cls, attribute_id):

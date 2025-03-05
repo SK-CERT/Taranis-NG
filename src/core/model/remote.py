@@ -6,6 +6,7 @@ from marshmallow import post_load, fields
 from sqlalchemy import orm, func, or_, and_
 
 from managers.db_manager import db
+from managers.log_manager import logger
 from model.osint_source import OSINTSource
 from model.report_item_type import ReportItemType
 from shared.schema.osint_source import OSINTSourceIdSchema
@@ -47,7 +48,7 @@ class RemoteAccess(db.Model):
         description: Description of the Remote Access.
         enabled: Whether the Remote Access is enabled.
         connected: Whether the Remote Access is connected.
-        access_key: Access key for the Remote Access.
+        api_key: API key for the Remote Access.
         osint_sources: List of OSINT sources.
         report_item_types: List of report item types.
         event_id: Unique identifier for the Remote Access.
@@ -61,7 +62,7 @@ class RemoteAccess(db.Model):
 
     enabled = db.Column(db.Boolean)
     connected = db.Column(db.Boolean, default=False)
-    access_key = db.Column(db.String(), unique=True)
+    api_key = db.Column(db.String(), unique=True)
 
     osint_sources = db.relationship("OSINTSource", secondary="remote_access_osint_source")
     report_item_types = db.relationship("ReportItemType", secondary="remote_access_report_item_type")
@@ -70,13 +71,13 @@ class RemoteAccess(db.Model):
     last_synced_news_items = db.Column(db.DateTime, default=datetime.now())
     last_synced_report_items = db.Column(db.DateTime, default=datetime.now())
 
-    def __init__(self, id, name, description, enabled, access_key, osint_sources, report_item_types):
+    def __init__(self, id, name, description, enabled, api_key, osint_sources, report_item_types):
         """Initialize a new Remote Access object."""
         self.id = None
         self.name = name
         self.description = description
         self.enabled = enabled
-        self.access_key = access_key
+        self.api_key = api_key
         self.event_id = str(uuid_generator.uuid4())
         self.title = ""
         self.subtitle = ""
@@ -105,27 +106,15 @@ class RemoteAccess(db.Model):
             self.status = "orange"
 
     @classmethod
-    def exists_by_access_key(cls, access_key):
-        """Check if a Remote Access exists by access key.
+    def get_by_api_key(cls, api_key):
+        """Get a node by API key.
 
         Args:
-            access_key: Access key to check.
+            api_key (str): The API key
         Returns:
-            bool: Whether the Remote Access exists.
+            (CollectorsNode): The CollectorsNode object
         """
-        return db.session.query(db.exists().where(RemoteAccess.access_key == access_key)).scalar()
-
-    @classmethod
-    def find_by_access_key(cls, access_key):
-        """Find a Remote Access by access key.
-
-        Args:
-            access_key: Access key to find.
-        Returns:
-            RemoteAccess: Remote Access object.
-        """
-        remote_access = cls.query.filter(RemoteAccess.access_key == access_key).scalar()
-        return remote_access
+        return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
     def get(cls, search):
@@ -258,50 +247,49 @@ class RemoteAccess(db.Model):
         else:
             remote_access.enabled = updated_remote_access.enabled
 
-        if remote_access.access_key != updated_remote_access.access_key or not remote_access.enabled:
+        if remote_access.api_key != updated_remote_access.api_key or not remote_access.enabled:
             disconnect = True
             remote_access.connected = False
             remote_access.event_id = str(uuid_generator.uuid4())
 
-        remote_access.access_key = updated_remote_access.access_key
+        remote_access.api_key = updated_remote_access.api_key
         db.session.commit()
 
         return event_id, disconnect
 
-    @classmethod
-    def connect(cls, access_key):
-        """Connect to a Remote Access.
+    def connect(self):
+        """Remote Access is connecting.
 
-        Args:
-            access_key: Access key for the Remote Access.
         Returns:
             dict: Information about the connection.
             int: HTTP status code.
         """
-        remote_access = cls.query.filter(RemoteAccess.access_key == access_key).scalar()
-        if remote_access.enabled:
-            remote_access.connected = True
-            db.session.commit()
-            return {
-                "event_id": remote_access.event_id,
-                "last_synced_news_items": format(remote_access.last_synced_news_items),
-                "last_synced_report_items": format(remote_access.last_synced_report_items),
-                "news_items_provided": len(remote_access.osint_sources) > 0,
-                "report_items_provided": len(remote_access.report_item_types) > 0,
-            }
-        else:
-            return {"error": "unauthorized"}, 401
+        try:
+            logger.info(f"Remote Access is connecting: {self.name}")
+            if self.enabled:
+                self.connected = True
+                db.session.commit()
+                return {
+                    "event_id": self.event_id,
+                    "last_synced_news_items": format(self.last_synced_news_items),
+                    "last_synced_report_items": format(self.last_synced_report_items),
+                    "news_items_provided": len(self.osint_sources) > 0,
+                    "report_items_provided": len(self.report_item_types) > 0,
+                }
+            else:
+                return {"error": "unauthorized"}, 401
 
-    @classmethod
-    def disconnect(cls, access_key):
-        """Disconnect from a Remote Access.
+        except Exception as ex:
+            msg = f"Remote Access connecting failed: {ex}"
+            logger.exception(msg)
+            return {"error": msg}, 400
 
-        Args:
-            access_key: Access key for the Remote Access.
-        """
-        remote_access = cls.query.filter(RemoteAccess.access_key == access_key).scalar()
-        remote_access.connected = False
+    def disconnect(self):
+        """Disconnecting Remote Access."""
+        logger.info(f"Disconnecting Remote Access: {self.name}")
+        self.connected = False
         db.session.commit()
+        return {}
 
     def update_news_items_sync(self, data):
         """Update the last time news items were synced.
@@ -371,7 +359,7 @@ class RemoteNode(db.Model):
         enabled: Whether the Remote Node is enabled.
         remote_url: URL of the Remote Node.
         events_url: URL of the Remote Node events.
-        access_key: Access key for the Remote Node.
+        api_key: API key for the Remote Node.
         sync_news_items: Whether to sync news items.
         osint_source_group_id: ID of the OSINT source group.
         sync_report_items: Whether to sync report items.
@@ -387,7 +375,7 @@ class RemoteNode(db.Model):
     enabled = db.Column(db.Boolean)
     remote_url = db.Column(db.String())
     events_url = db.Column(db.String())
-    access_key = db.Column(db.String())
+    api_key = db.Column(db.String())
 
     sync_news_items = db.Column(db.Boolean)
     osint_source_group_id = db.Column(db.String, db.ForeignKey("osint_source_group.id"))
@@ -398,7 +386,7 @@ class RemoteNode(db.Model):
     last_synced_report_items = db.Column(db.DateTime)
 
     def __init__(
-        self, id, name, description, enabled, remote_url, events_url, access_key, sync_news_items, sync_report_items, osint_source_group_id
+        self, id, name, description, enabled, remote_url, events_url, api_key, sync_news_items, sync_report_items, osint_source_group_id
     ):
         """Initialize a new Remote Node object."""
         self.id = None
@@ -407,7 +395,7 @@ class RemoteNode(db.Model):
         self.remote_url = remote_url
         self.events_url = events_url
         self.enabled = enabled
-        self.access_key = access_key
+        self.api_key = api_key
         self.sync_news_items = sync_news_items
         self.sync_report_items = sync_report_items
         self.osint_source_group_id = osint_source_group_id
@@ -510,7 +498,7 @@ class RemoteNode(db.Model):
         remote_node.enabled = updated_remote_node.enabled
         remote_node.remote_url = updated_remote_node.remote_url
         remote_node.events_url = updated_remote_node.events_url
-        remote_node.access_key = updated_remote_node.access_key
+        remote_node.api_key = updated_remote_node.api_key
         remote_node.sync_news_items = updated_remote_node.sync_news_items
         remote_node.sync_report_items = updated_remote_node.sync_report_items
         remote_node.osint_source_group_id = updated_remote_node.osint_source_group_id

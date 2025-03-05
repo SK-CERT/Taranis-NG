@@ -24,7 +24,9 @@ def reportStatus():
         logger.debug("Sending status update...")
         response, status_code = CoreApi.update_collector_status()
         if status_code != 200:
-            logger.error(f"Core status update response: Code {status_code}" f"{', response: ' + response if response is not None else ''}")
+            logger.error(
+                f"Core status update response failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
+            )
         # for debugging scheduler tasks
         # for key in collectors:
         #     for source in collectors[key].osint_sources:

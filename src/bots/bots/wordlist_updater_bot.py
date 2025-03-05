@@ -3,6 +3,7 @@
 import requests
 
 from .base_bot import BaseBot
+from managers.log_manager import logger
 from shared.config_bot import ConfigBot
 from shared.schema import word_list
 from remote.core_api import CoreApi
@@ -90,7 +91,7 @@ class WordlistUpdaterBot(BaseBot):
             CoreApi.update_word_list_category_entries(word_list_id, word_list_category_name, word_list_entries_schema.dump(entries))
 
         except Exception as error:
-            BaseBot.print_exception(preset, error)
+            logger.exception(f"{preset.name}: Word list updater failed: {error}")
 
     def execute_on_event(self, preset, event_type, data):
         """Execute an action based on the given event.
@@ -107,4 +108,4 @@ class WordlistUpdaterBot(BaseBot):
             format = preset.parameter_values["FORMAT"]  # noqa F841
 
         except Exception as error:
-            BaseBot.print_exception(preset, error)
+            logger.exception(f"{preset.name}: Execute on event failed: {error}")

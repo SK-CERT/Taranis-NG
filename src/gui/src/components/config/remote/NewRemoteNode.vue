@@ -48,7 +48,7 @@
                         <v-col cols="12">
                             <v-text-field :disabled="!canUpdate"
                                           :label="$t('remote_node.remote_url')"
-                                          name="access_key"
+                                          name="remote_url"
                                           type="text"
                                           v-model="remote_node.remote_url"
                                           :spellcheck="$store.state.settings.spellcheck"
@@ -57,7 +57,7 @@
                         <v-col cols="12">
                             <v-text-field :disabled="!canUpdate"
                                           :label="$t('remote_node.event_url')"
-                                          name="access_key"
+                                          name="events_url"
                                           type="text"
                                           v-model="remote_node.events_url"
                                           :spellcheck="$store.state.settings.spellcheck"
@@ -65,10 +65,10 @@
                         </v-col>
                         <v-col cols="12">
                             <v-text-field :disabled="!canUpdate"
-                                          :label="$t('remote_node.access_key')"
-                                          name="access_key"
+                                          :label="$t('remote_node.api_key')"
+                                          name="api_key"
                                           type="text"
-                                          v-model="remote_node.access_key"
+                                          v-model="remote_node.api_key"
                                           :spellcheck="$store.state.settings.spellcheck"
                             />
                         </v-col>
@@ -166,7 +166,7 @@
                 description: "",
                 remote_url: "",
                 events_url: "",
-                access_key: "",
+                api_key: "",
                 enabled: false,
                 sync_news_items: false,
                 sync_report_items: false,
@@ -347,7 +347,7 @@
                 this.remote_node.description = data.description;
                 this.remote_node.remote_url = data.remote_url;
                 this.remote_node.events_url = data.events_url;
-                this.remote_node.access_key = data.access_key;
+                this.remote_node.api_key = data.api_key;
                 this.remote_node.enabled = data.enabled;
                 this.remote_node.sync_news_items = data.sync_news_items;
                 this.remote_node.sync_report_items = data.sync_report_items;

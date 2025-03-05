@@ -1,9 +1,13 @@
+"""Module for News item schema."""
+
 from marshmallow import Schema, fields, post_load, EXCLUDE
 
 from shared.schema.acl_entry import ACLEntryStatusSchema
 
 
 class NewsItemAttributeBaseSchema(Schema):
+    """Schema for base attributes of a news item."""
+
     id = fields.Int()
     key = fields.Str()
     value = fields.Str()
@@ -11,12 +15,33 @@ class NewsItemAttributeBaseSchema(Schema):
 
 
 class NewsItemAttributeSchema(NewsItemAttributeBaseSchema):
+    """Schema for attributes of a news item with binary value."""
+
+    binary_value = fields.Str()
+
+
+class NewsItemAttributeRemoteSchema(Schema):
+    """Schema for remote attributes of a news item."""
+
+    key = fields.Str()
+    value = fields.Str()
+    binary_mime_type = fields.Str()
     binary_value = fields.Str()
 
 
 class NewsItemAttribute:
+    """Class representing a news item attribute."""
+
     def __init__(self, key, value, binary_mime_type, binary_value):
-        # self.id = id
+        """
+        Initialize a NewsItemAttribute instance.
+
+        Parameters:
+            key (str): The key of the attribute.
+            value (str): The value of the attribute.
+            binary_mime_type (str): The MIME type of the binary value.
+            binary_value (str): The binary value of the attribute.
+        """
         self.key = key
         self.value = value
         self.binary_mime_type = binary_mime_type
@@ -24,7 +49,11 @@ class NewsItemAttribute:
 
 
 class NewsItemDataBaseSchema(Schema):
+    """Base schema for news item data."""
+
     class Meta:
+        """Meta class for defining options for the NewsItemData schema."""
+
         unknown = EXCLUDE
 
     id = fields.Str(load_default=None, allow_none=True)
@@ -41,15 +70,20 @@ class NewsItemDataBaseSchema(Schema):
 
 
 class NewsItemDataSchema(NewsItemDataBaseSchema):
+    """Schema for news item data with content and attributes."""
+
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeSchema, many=True)
 
     @post_load
     def make(self, data, **kwargs):
+        """Create a NewsItemData instance after loading."""
         return NewsItemData(**data)
 
 
 class NewsItemRemoteSchema(Schema):
+    """Schema for remote news item data."""
+
     hash = fields.Str()
     title = fields.Str()
     review = fields.Str()
@@ -59,17 +93,21 @@ class NewsItemRemoteSchema(Schema):
     author = fields.Str()
     collected = fields.DateTime("%d.%m.%Y - %H:%M")
     content = fields.Str()
-    attributes = fields.Nested(NewsItemAttributeSchema, many=True)
+    attributes = fields.Nested(NewsItemAttributeRemoteSchema, many=True)
     relevance = fields.Int()
 
 
 class NewsItemDataPresentationSchema(NewsItemDataBaseSchema):
+    """Schema for presenting news item data."""
+
     remote_source = fields.Str()
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeBaseSchema, many=True)
 
 
 class NewsItemData:
+    """Class representing news item data."""
+
     def __init__(
         self,
         id,
@@ -85,6 +123,23 @@ class NewsItemData:
         osint_source_id,
         attributes,
     ):
+        """
+        Initialize a NewsItemData instance.
+
+        Parameters:
+            id (str): The ID of the news item.
+            hash (str): The hash of the news item.
+            title (str): The title of the news item.
+            review (str): The review of the news item.
+            source (str): The source of the news item.
+            link (str): The link to the news item.
+            published (str): The published date of the news item.
+            author (str): The author of the news item.
+            collected (datetime): The collected date of the news item.
+            content (str): The content of the news item.
+            osint_source_id (str): The OSINT source ID of the news item.
+            attributes (list): The attributes of the news item.
+        """
         self.id = id
         self.hash = hash
         self.title = title
@@ -100,6 +155,8 @@ class NewsItemData:
 
 
 class NewsItemBaseSchema(Schema):
+    """Base schema for a news item."""
+
     id = fields.Int()
     likes = fields.Int()
     dislikes = fields.Int()
@@ -111,12 +168,23 @@ class NewsItemBaseSchema(Schema):
 
 
 class NewsItemTag:
+    """Class representing a news item tag."""
+
     def __init__(self, name, tag_type):
+        """
+        Initialize a NewsItemTag instance.
+
+        Parameters:
+            name (str): The name of the tag.
+            tag_type (str): The type of the tag.
+        """
         self.name = name
         self.tag_type = tag_type
 
 
 class NewsItemTagSchema(Schema):
+    """Schema for a news item tag."""
+
     id = fields.Int()
     name = fields.Str()
     tag_type = fields.Str()
@@ -124,14 +192,20 @@ class NewsItemTagSchema(Schema):
 
 
 class NewsItemPresentationSchema(NewsItemBaseSchema, ACLEntryStatusSchema):
+    """Schema for presenting a news item with ACL entry status."""
+
     pass
 
 
 class NewsItemSchema(NewsItemBaseSchema):
+    """Schema for a news item."""
+
     news_item_data = fields.Nested(NewsItemDataPresentationSchema)
 
 
 class NewsItemAggregateSchema(Schema):
+    """Schema for aggregating news items."""
+
     id = fields.Int()
     title = fields.Str()
     description = fields.Str()
@@ -149,16 +223,29 @@ class NewsItemAggregateSchema(Schema):
 
 
 class NewsItemAggregateIdSchema(Schema):
+    """Schema for news item aggregate ID."""
+
     class Meta:
+        """Meta class for defining options for the NewsItemAggregateId schema."""
+
         unknown = EXCLUDE
 
     id = fields.Int()
 
     @post_load
     def make(self, data, **kwargs):
+        """Create a NewsItemAggregateId instance after loading."""
         return NewsItemAggregateId(**data)
 
 
 class NewsItemAggregateId:
+    """Class representing a news item aggregate ID."""
+
     def __init__(self, id):
+        """
+        Initialize a NewsItemAggregateId instance.
+
+        Parameters:
+            id (int): The ID of the news item aggregate.
+        """
         self.id = id

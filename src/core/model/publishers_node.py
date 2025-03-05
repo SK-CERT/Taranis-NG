@@ -63,17 +63,6 @@ class PublishersNode(db.Model):
         self.tag = "mdi-server-network"
 
     @classmethod
-    def exists_by_api_key(cls, api_key):
-        """Check if a publisher node exists by API key.
-
-        Args:
-            api_key (str): API key.
-        Returns:
-            bool: True if the publisher node exists, False otherwise
-        """
-        return db.session.query(db.exists().where(PublishersNode.api_key == api_key)).scalar()
-
-    @classmethod
     def get_by_api_key(cls, api_key):
         """Get a publisher node by API key.
 

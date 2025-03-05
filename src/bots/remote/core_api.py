@@ -1,9 +1,10 @@
 """This module provides a class to interact with the Taranis-NG Core API."""
 
-import json
 import os
 import requests
+import urllib
 from config import Config
+from managers.log_manager import logger
 
 
 class CoreApi:
@@ -47,11 +48,15 @@ class CoreApi:
         """
         try:
             response = requests.post(
-                cls.api_url + "/api/v1/bots/bots-presets", json={"api_key": Config.API_KEY, "bot_type": bot_type}, headers=cls.headers
+                f"{cls.api_url}/api/v1/bots/bots-presets?api_key={urllib.parse.quote(Config.API_KEY)}"
+                f"&bot_type={urllib.parse.quote(bot_type)}",
+                headers=cls.headers,
             )
             return response.json(), response.status_code
-        except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError):
-            return {}, 503
+        except Exception as ex:
+            msg = "Get bots presets failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def get_news_items_data(cls, limit):
@@ -69,8 +74,10 @@ class CoreApi:
         try:
             response = requests.get(cls.api_url + "/api/v1/bots/news-item-data?limit=" + limit, headers=cls.headers)
             return response.json(), response.status_code
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Get news items data failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def update_news_item_attributes(cls, id, attributes):
@@ -86,8 +93,10 @@ class CoreApi:
         try:
             response = requests.put(cls.api_url + "/api/v1/bots/news-item-data/" + id + "/attributes", json=attributes, headers=cls.headers)
             return response.status_code
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Update the attributes of a news item failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def delete_word_list_category_entries(cls, id, name):
@@ -105,8 +114,10 @@ class CoreApi:
         try:
             response = requests.delete(cls.api_url + "/api/v1/bots/word-list-categories/" + id + "/entries/" + name, headers=cls.headers)
             return response.status_code
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Delete entries from a word list category failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def update_word_list_category_entries(cls, id, name, entries):
@@ -125,8 +136,10 @@ class CoreApi:
                 cls.api_url + "/api/v1/bots/word-list-categories/" + id + "/entries/" + name, json=entries, headers=cls.headers
             )
             return response.status_code
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Update the entries of a word list category failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def get_categories(cls, id):
@@ -145,8 +158,10 @@ class CoreApi:
         try:
             response = requests.get(cls.api_url + "/api/v1/bots/word-list-categories/" + id, headers=cls.headers)
             return response.json()
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Get the categories for a bot failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def add_word_list_category(cls, id, category):
@@ -168,8 +183,10 @@ class CoreApi:
         try:
             response = requests.put(cls.api_url + "/api/v1/bots/word-list-categories/" + id, json=category, headers=cls.headers)
             return response.status_code
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Add a word list category failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def get_news_items_aggregate(cls, source_group, limit):
@@ -193,8 +210,10 @@ class CoreApi:
                 cls.api_url + "/api/v1/bots/news-item-aggregates-by-group/" + source_group, json={"limit": limit}, headers=cls.headers
             )
             return response.json()
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Get news items aggregate by source group failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
 
     @classmethod
     def news_items_grouping(cls, data):
@@ -214,5 +233,7 @@ class CoreApi:
         try:
             response = requests.put(cls.api_url + "/api/v1/bots/news-item-aggregates-group-action", json=data, headers=cls.headers)
             return response.status_code
-        except Exception:
-            return None, 400
+        except Exception as ex:
+            msg = "Group news items failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503

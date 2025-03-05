@@ -63,17 +63,6 @@ class BotsNode(db.Model):
         self.tag = "mdi-server-network"
 
     @classmethod
-    def exists_by_api_key(cls, api_key):
-        """Check if a node exists by API key.
-
-        Args:
-            api_key: API key to check.
-        Returns:
-            True if the node exists, False otherwise.
-        """
-        return db.session.query(db.exists().where(BotsNode.api_key == api_key)).scalar()
-
-    @classmethod
     def get_by_api_key(cls, api_key):
         """Get a node by API key.
 
