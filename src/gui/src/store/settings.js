@@ -2,49 +2,7 @@ import {getProfile} from "@/api/user";
 import {updateProfile} from "@/api/user";
 
 const state = {
-    hotkeys: [
-        // switch views
-        {character: 'v', alias: 'enter_view_mode'},
-        {character: 'd', alias: 'dashboard_view'},
-        {character: 'C', alias: 'global_configuration_view'},
-        // assess = aggregate_open
-        {character: 'z', alias: 'analyze_view'},
-        {character: 'p', alias: 'publish_view'},
-        {character: 'm', alias: 'my_assets_view'},
-        {character: 'c', alias: 'configuration_view'},
-        // assess: source group navigation
-        {character: 'K', alias: 'source_group_up', icon: 'mdi-arrow-up-bold-box-outline'},
-        {character: 'J', alias: 'source_group_down', icon: 'mdi-arrow-up-bold-box-outline'},
-        // assess: new item navigation
-        {key_code: 38, key: 'ArrowUp', alias: 'collection_up', icon: 'mdi-arrow-up-bold-box-outline'},
-        {key_code: 40, key: 'ArrowDown', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
-        {key_code: 37, key: 'ArrowLeft', alias: 'close_item', icon: 'mdi-close-circle-outline'},
-        {key_code: 39, key: 'ArrowRight', alias: 'show_item', icon: 'mdi-text-box'},
-        {character: 'k', alias: 'collection_up', icon: 'mdi-arrow-up-bold-box-outline'},
-        {character: 'j', alias: 'collection_down', icon: 'mdi-arrow-down-bold-box-outline'},
-        {character: 'h', alias: 'close_item', icon: 'mdi-close-circle-outline'},
-        {character: 'l', alias: 'show_item', icon: 'mdi-text-box'},
-        {key_code: 13, key: 'Enter', alias: 'show_item', icon: 'mdi-text-box'},
-        {key_code: 27, key: 'Escape', alias: 'close_item', icon: 'mdi-close-circle-outline'},
-        {key_code: 35, key: 'End', alias: 'end'},
-        {key_code: 36, key: 'Home', alias: 'home'},
-        // assess: news item actions
-        {character: 'r', alias: 'read_item', icon: 'mdi-eye'},
-        {character: 'i', alias: 'important_item', icon: 'mdi-star'},
-        {character: 'u', alias: 'like_item', icon: 'mdi-thumb-up'},
-        {character: 'U', alias: 'unlike_item', icon: 'mdi-thumb-down'},
-        {key_code: 46, key: 'Delete', alias: 'delete_item', icon: 'mdi-delete'},
-        {character: 's', alias: 'selection', icon: 'mdi-checkbox-multiple-marked-outline'},
-        {character: 'g', alias: 'group', icon: 'mdi-group'},
-        {character: 'G', alias: 'ungroup', icon: 'mdi-ungroup'},
-        {character: 'n', alias: 'new_product', icon: 'mdi-file-outline'},
-        {character: 'a', alias: 'aggregate_open', icon: 'mdi-arrow-right-drop-circle'},
-        {character: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app'},
-        {key_code: 191, key: 'Slash', alias: 'open_search', icon: 'mdi-card-search'},
-        {character: 'R', alias: 'reload'},
-        // assess: filter actions
-        {character: 'f', alias: 'enter_filter_mode'},
-    ],
+    hotkeys: [],
     spellcheck: true,
     dark_theme: false,
     language: "",
@@ -54,7 +12,6 @@ const state = {
 const actions = {
 
     getUserProfile(context) {
-
         return getProfile()
             .then(response => {
                 context.commit('setUserProfile', response.data);
@@ -62,12 +19,16 @@ const actions = {
     },
 
     saveUserProfile(context, data) {
-
         return updateProfile(data)
             .then(response => {
                 context.commit('setUserProfile', response.data);
             })
     },
+
+    resetHotkeys(context) {
+        context.commit('resetHotkeys');
+    }
+
 };
 
 const mutations = {
@@ -77,14 +38,62 @@ const mutations = {
         state.dark_theme = profile.dark_theme
         state.language = profile.language
         state.word_lists = profile.word_lists
+        mutations.resetHotkeys(state);
+
         for (let i = 0; i < state.hotkeys.length; i++) {
             for (let j = 0; j < profile.hotkeys.length; j++) {
                 if (state.hotkeys[i].alias === profile.hotkeys[j].alias) {
                     state.hotkeys[i].key = profile.hotkeys[j].key
-                    state.hotkeys[i].key_code = profile.hotkeys[j].key_code
+                    break;
                 }
             }
         }
+    },
+
+    resetHotkeys(state) {
+        // we can't process .code, .keyCode property because they can be same up to 4 different .key values. Example: rR = KeyR,82  /? = Slash,191
+        state.hotkeys = [
+            // assess: new item navigation
+            { key: 'ArrowUp', alias: 'collection_up_1', icon: 'mdi-arrow-up' },
+            { key: 'k', alias: 'collection_up_2', icon: 'mdi-arrow-up' },
+            { key: 'ArrowDown', alias: 'collection_down_1', icon: 'mdi-arrow-down' },
+            { key: 'j', alias: 'collection_down_2', icon: 'mdi-arrow-down' },
+            { key: 'Enter', alias: 'show_item_1', icon: 'mdi-text-box-outline' },
+            { key: 'ArrowRight', alias: 'show_item_2', icon: 'mdi-text-box-outline' },
+            { key: 'l', alias: 'show_item_3', icon: 'mdi-text-box-outline' },
+            { key: 'Escape', alias: 'close_item_1', icon: 'mdi-close-box-outline' },
+            { key: 'ArrowLeft', alias: 'close_item_2', icon: 'mdi-close-box-outline' },
+            { key: 'h', alias: 'close_item_3', icon: 'mdi-close-box-outline' },
+            { key: 'Home', alias: 'home', icon: 'mdi-arrow-collapse-up' },
+            { key: 'End', alias: 'end', icon: 'mdi-arrow-collapse-down' },
+            // assess: OSINT source group navigation
+            { key: 'K', alias: 'source_group_up', icon: 'mdi-arrow-up-circle-outline' },
+            { key: 'J', alias: 'source_group_down', icon: 'mdi-arrow-down-circle-outline' },
+            // assess: news item actions
+            { key: 'r', alias: 'read_item', icon: 'mdi-eye-outline' },
+            { key: 'i', alias: 'important_item', icon: 'mdi-star-outline' },
+            { key: 'u', alias: 'like_item', icon: 'mdi-thumb-up-outline' },
+            { key: 'U', alias: 'unlike_item', icon: 'mdi-thumb-down-outline' },
+            { key: 'Delete', alias: 'delete_item', icon: 'mdi-delete-outline' },
+            { key: 's', alias: 'selection', icon: 'mdi-checkbox-multiple-marked-outline' },
+            { key: 'g', alias: 'group', icon: 'mdi-group' },
+            { key: 'G', alias: 'ungroup', icon: 'mdi-ungroup' },
+            { key: 'n', alias: 'new_product', icon: 'mdi-file-outline' },
+            { key: 'a', alias: 'aggregate_open', icon: 'mdi-google-circles-extended' },
+            { key: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app' },
+            { key: '/', alias: 'open_search', icon: 'mdi-card-search-outline' },
+            { key: 'R', alias: 'reload', icon: 'mdi-reload' },
+            // switch views
+            { key: 'v', alias: 'enter_view_mode', icon: 'mdi-view-headline' },
+            { key: 'd', alias: 'dashboard_view', icon: 'mdi-view-dashboard-variant-outline' },
+            { key: 'C', alias: 'global_configuration_view', icon: 'mdi-cog-outline' },
+            { key: 'z', alias: 'analyze_view', icon: 'mdi-google-circles-communities' },
+            { key: 'p', alias: 'publish_view', icon: 'mdi mdi-publish' },
+            { key: 'm', alias: 'my_assets_view', icon: 'mdi-file-multiple-outline' },
+            { key: 'c', alias: 'configuration_view', icon: 'mdi-ballot-outline' },
+            // assess: filter actions
+            { key: 'f', alias: 'enter_filter_mode', icon: 'mdi-filter-outline' },
+        ];
     }
 };
 

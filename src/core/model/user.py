@@ -531,7 +531,6 @@ class Hotkey(db.Model):
 
     Attributes:
         id (int): The unique identifier for the hotkey.
-        key_code (int): The code of the key associated with the hotkey.
         key (str): The key associated with the hotkey.
         alias (str): The alias for the hotkey.
         user_profile_id (int): The foreign key referencing the user profile.
@@ -540,15 +539,13 @@ class Hotkey(db.Model):
     """
 
     id = db.Column(db.Integer, primary_key=True)
-    key_code = db.Column(db.Integer)
     key = db.Column(db.String)
     alias = db.Column(db.String)
 
     user_profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"))
 
-    def __init__(self, key_code, key, alias):
+    def __init__(self, key, alias):
         """Initialize a User object."""
         self.id = None
-        self.key_code = key_code
         self.key = key
         self.alias = alias

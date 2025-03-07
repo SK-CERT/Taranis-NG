@@ -83,13 +83,12 @@
                                 <v-row no-gutters class="ma-0">
                                     <v-tooltip top v-for="shortcut in shortcuts" :key="shortcut.alias">
                                         <template v-slot:activator="{on}">
-                                            <v-btn  :id=shortcut.alias v-on="on"
-                                                    class="ma-1" style="width: calc(100% / 3 - 8px);"
-                                                    @click.stop="pressKeyDialog(shortcut.alias)"
-                                                    @blur="pressKeyVisible = false"
-                                            >
+                                            <v-btn :id=shortcut.alias v-on="on"
+                                                   class="ma-1" style="width: calc(100% / 3 - 8px);"
+                                                   @click.stop="pressKeyDialog(shortcut.alias)"
+                                                   @blur="pressKeyVisible = false">
                                                 <v-icon left>{{shortcut.icon}}</v-icon>
-                                                <span v-if="shortcut.key != 'undefined'" class="caption">{{shortcut.key}}</span>
+                                                <span v-if="shortcut.key != 'undefined'" style="text-transform: none;" class="caption">{{shortcut.key}}</span>
                                                 <v-icon v-else color="error">mdi-alert</v-icon>
                                             </v-btn>
                                         </template>
@@ -97,7 +96,13 @@
                                             {{ $t('settings.' + shortcut.alias) }}
                                         </span>
                                     </v-tooltip>
-
+                                </v-row>
+                                <v-row no-gutters class="ma-0">
+                                    <v-spacer></v-spacer>
+                                    <v-btn text @click="resetHotkeys()">
+                                        <v-icon left>mdi-reload</v-icon>
+                                        <span>{{$t('settings.reset_keys')}}</span>
+                                    </v-btn>
                                 </v-row>
                             </v-container>
                         </v-tab-item>
@@ -201,6 +206,12 @@
             },
 
             pressKey(event) {
+                // Beware! pressed keys are active also on background window when you try setting a new hotkey
+                // wait for a "real" key, don't cancel dialog on modifier key, otherwise you can't choose uppercase letters and other keys
+                if (event.key == "Alt" || event.key == "Shift" || event.key == "Control" ) {
+                    return;
+                }
+
                 let key = event;
                 let hotkeyIndex = this.shortcuts.map(function(e){ return e.alias; }).indexOf(this.hotkeyAlias);
 
@@ -208,20 +219,24 @@
 
                 this.pressKeyVisible = false;
 
-                // check doubles and clear
+                // check duplicity and clear
                 this.shortcuts.forEach(
                     (doubleKey, i) => {
-                        if( doubleKey.key_code == key.keyCode && i != hotkeyIndex ) {
-                            this.shortcuts[i].key_code = 0;
+                        if (doubleKey.key == key.key && i != hotkeyIndex) {
                             this.shortcuts[i].key = 'undefined';
                         }
                     }
                 );
 
                 // assigned new key
-                this.shortcuts[hotkeyIndex].key_code = key.keyCode;
-                this.shortcuts[hotkeyIndex].key = key.code;
+                this.shortcuts[hotkeyIndex].key = key.key;
             },
+
+            resetHotkeys() {
+                this.$store.dispatch('resetHotkeys');
+                this.shortcuts = JSON.parse(JSON.stringify(this.$store.getters.getProfileHotkeys)) // Deep copy
+            },
+
         },
         mounted() {
             this.$root.$on('show-user-settings', () => {
@@ -230,7 +245,7 @@
                 this.dark_theme = this.$store.getters.getProfileDarkTheme
                 this.language = this.$store.getters.getProfileLanguage
                 this.selected_word_lists = this.$store.getters.getProfileWordLists
-                this.shortcuts = this.$store.getters.getProfileHotkeys
+                this.shortcuts = JSON.parse(JSON.stringify(this.$store.getters.getProfileHotkeys)) // Deep copy, don't change the original object until save
             });
 
             if (this.checkPermission(Permissions.ASSESS_ACCESS)) {

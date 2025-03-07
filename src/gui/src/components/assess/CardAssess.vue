@@ -429,11 +429,11 @@
                 }
             },
             showMsgBox() {
-                console.trace('showMsgBox');
+                // console.trace('showMsgBox');
                 this.msgbox_visible = true;
             },
             handleMsgBox() {
-                console.trace('handleMsgBox', this.msgbox_action);
+                // console.trace('handleMsgBox', this.msgbox_action);
                 this.msgbox_visible = false;
                 this.cardItemToolbar('delete')
             }
