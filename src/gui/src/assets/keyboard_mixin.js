@@ -27,16 +27,19 @@ const keyboardMixin = targetId => ({
         multiSelectActive() {
             return this.$store.getters.getMultiSelect;
         },
+
         state() {
             return this.keyboard_state;
-        }
+        },
+
     },
 
     watch: {
         keyboard_state(val) {
             this.keyboard_state = val;
             //window.console.debug("state>", this.state);
-        }
+        },
+
     },
 
     methods: {
@@ -81,6 +84,10 @@ const keyboardMixin = targetId => ({
                 temp = this.card_items[this.pos];
             }
 
+            if (this.card_items[this.pos] === undefined) {
+                return;
+            }
+
             let dialog = this.card_items[this.pos].dataset.type;
 
             // Multi Select Button
@@ -92,8 +99,8 @@ const keyboardMixin = targetId => ({
             card.show = this.card_items[this.pos].querySelector(".card");
             card.id = this.card_items[this.pos].dataset.id;
             card.close = document.querySelector("[data-dialog='" + dialog + "-detail'] [data-btn='close']");
-            // In multi select mode the buttons are not availale in the list and SHOW_ITEM mode, extract the URL from the span element for the active element instead
-            let card_link = this.card_items[this.pos].querySelector(".col-11 .info--text");
+            // Agregate items miss url link
+            let card_link = this.card_items[this.pos].querySelector(".info--text");
             if (card_link) {
                 card.link_url = card_link.textContent.trim();
             } else {
@@ -137,27 +144,24 @@ const keyboardMixin = targetId => ({
         },
 
         keyAction(press) {
-            //let dialog = document.querySelectorAll(".v-dialog--active").length ? true : false;
-            // window.console.debug("state:", this.state, "keyboard_state:", this.keyboard_state, "keyAction:", press);
-            // define here, as it's not allowed in the case-switch
+            // console.debug("key:", press.key, press.keyCode, press.code, press.shiftKey, ", state:", this.state, ", keyboard_state:", this.keyboard_state);
             let search_field = document.getElementById('search')
 
-            let keyAlias = '';
+            let keyAlias = "";
             for (let i = 0; i < this.shortcuts.length; i++) {
                 // ignore all presses with Ctrl or Alt key, they have a different meaning
-                if (!(press.ctrlKey || press.altKey) && (this.shortcuts[i].character == press.key || this.shortcuts[i].key_code == press.keyCode)) {
+                // we can't process .code, .keyCode property because they can be same up to 4 different .key values. Example: rR = KeyR,82  /? = Slash,191
+                if (!(press.ctrlKey || press.altKey) && (this.shortcuts[i].key == press.key)) {
                     keyAlias = this.shortcuts[i].alias;
                     break;
                 }
             }
-            // window.console.debug("keyAlias:", keyAlias, ", type:", document.activeElement.type, ", class:", document.activeElement.className, ", activeElement:", document.activeElement);
+            // console.debug("keyAlias:", keyAlias, ", type:", document.activeElement.type, ", class:", document.activeElement.className, ", activeElement:", document.activeElement);
+            // when search field, editor, text or textarea is active, ignore all keypresses except Escape
             if ((document.activeElement == search_field ||
                  document.activeElement.className.includes("ql-editor") ||
                  document.activeElement.type == "text" ||
-                 document.activeElement.type == "textarea") && (keyAlias !== 'close_item' || press.keyCode !== 27)) {
-                // when search field, editor, text or textarea is active, ignore all keypresses except Escape
-                // example problem: Assess, create report from item and you type N in description field -> all is canceled and it creates new report again
-                // maybe we should check some specific shortcuts on "v-card" class? It's easier, less conditions
+                document.activeElement.type == "textarea") && (press.keyCode !== 27)) {
                 return;
             }
 
@@ -168,7 +172,8 @@ const keyboardMixin = targetId => ({
 
                 } else if(this.state === 'DEFAULT' && this.keyboard_state === 'DEFAULT') {
                     switch (keyAlias) {
-                        case 'collection_up':
+                        case 'collection_up_1':
+                        case 'collection_up_2':
                             press.preventDefault();
                             if (this.pos == 0) {
                                 // pass
@@ -176,7 +181,9 @@ const keyboardMixin = targetId => ({
                                 this.setNewsItem(this.pos-1);
                             }
                             break;
-                        case 'collection_down':
+
+                        case 'collection_down_1':
+                        case 'collection_down_2':
                             press.preventDefault();
                             if (this.pos == this.card_items.length - 1) {
                                 // pass
@@ -184,21 +191,27 @@ const keyboardMixin = targetId => ({
                                 this.setNewsItem(this.pos+1);
                             }
                             break;
+
                         case 'end':
                             press.preventDefault()
                             this.setNewsItem(this.card_items.length - 1);
                             break;
+
                         case 'home':
                             press.preventDefault()
                             this.setNewsItem(0);
                             break;
-                        case 'show_item':
+
+                        case 'show_item_1':
+                        case 'show_item_2':
+                        case 'show_item_3':
                             if (!this.isItemOpen) {
                                 //this.keyboard_state = 'SHOW_ITEM';
                                 this.card.show.click();
                                 this.isItemOpen = true;
                             }
                             break;
+
                         case 'aggregate_open':
                             if (this.card.aggregate) {
                                 this.card.aggregate.click();
@@ -234,6 +247,7 @@ const keyboardMixin = targetId => ({
                             this.$router.push('/assess/group/' + groups[index].id)
                             break;
                         }
+
                         case 'source_group_down': {
                             let groups = this.$store.getters.getOSINTSourceGroups.items;
                             let active_group_element = document.querySelector('.v-list-item--active');
@@ -314,11 +328,15 @@ const keyboardMixin = targetId => ({
                             break;
 
                         case 'group':
-                            this.card.group.click();
+                            if (this.card.group) {
+                                this.card.group.click();
+                            }
                             break;
 
                         case 'ungroup':
-                            this.card.ungroup.click();
+                            if (this.card.ungroup) {
+                                this.card.ungroup.click();
+                            }
                             break;
 
                         case 'new_product':
@@ -366,16 +384,21 @@ const keyboardMixin = targetId => ({
                 } else if(this.state === 'SHOW_ITEM' && this.keyboard_state === 'SHOW_ITEM') {
                     switch (keyAlias) {
                         // scroll the dialog instead of the window behind
-                        case 'collection_up':
+                        case 'collection_up_1':
+                        case 'collection_up_2':
                             press.preventDefault();
                             document.querySelector('.v-dialog--active').scrollBy(0, -100);
                             break;
-                        case 'collection_down':
+
+                        case 'collection_down_1':
+                        case 'collection_down_2':
                             press.preventDefault();
                             document.querySelector('.v-dialog--active').scrollBy(0, 100);
                             break;
 
-                        case 'close_item':
+                        case 'close_item_1':
+                        case 'close_item_2':
+                        case 'close_item_3':
                             if(document.activeElement.className !== 'ql-editor') {
                                 this.isItemOpen = false;
                                 this.keyRemaper();
@@ -428,7 +451,9 @@ const keyboardMixin = targetId => ({
                     }
                 } else if(this.state === 'NEW_PRODUCT' && this.keyboard_state === 'DEFAULT') {
                     switch(keyAlias) {
-                        case 'close_item':
+                        case 'close_item_1':
+                        case 'close_item_2':
+                        case 'close_item_3':
                             if(document.activeElement.className !== 'ql-editor') {
                                 this.isItemOpen = false;
                                 this.keyRemaper();
@@ -459,7 +484,9 @@ const keyboardMixin = targetId => ({
                             this.keyboard_state = 'DEFAULT';
                             break;
 
-                        case 'close_item':
+                        case 'close_item_1':
+                        case 'close_item_2':
+                        case 'close_item_3':
                             // exit mode
                             this.keyboard_state = 'DEFAULT';
                             break;
@@ -480,7 +507,7 @@ const keyboardMixin = targetId => ({
                             break;
                         }
                     }
-                    if (keyAlias === 'close_item') {
+                    if (keyAlias.startsWith('close_item')) {
                         // exit mode
                         this.keyboard_state = 'DEFAULT';
                     }
@@ -497,7 +524,7 @@ const keyboardMixin = targetId => ({
 
             // some item is in focus
             } else {
-                if(this.state === 'DEFAULT' && keyAlias === 'close_item') {
+                if (this.state === 'DEFAULT' && keyAlias.startsWith('close_item')) {
                     // Pressing Esc in the search field removes the focus
                     if(document.activeElement == search_field) {
                         // clear the focus
@@ -510,7 +537,11 @@ const keyboardMixin = targetId => ({
         },
 
         scrollPos() {
-            window.scrollTo(0, document.querySelectorAll("#selector_assess .card-item")[this.pos].offsetTop - 350);
+            let cards = document.querySelectorAll("#selector_assess .card-item")
+            if (cards[this.pos] === undefined) {
+                return;
+            }
+            window.scrollTo(0, cards[this.pos].offsetTop - 350);
         },
 
         newPosition(newPos, isFromDetail) {
