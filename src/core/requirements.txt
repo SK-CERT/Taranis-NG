@@ -1,4 +1,4 @@
-alembic==1.14.1
+alembic==1.15.1
 Flask==3.1.0
 Flask-Cors==5.0.1
 Flask-JWT-Extended==4.7.1
