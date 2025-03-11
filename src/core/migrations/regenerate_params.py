@@ -19,9 +19,23 @@ from shared.config_bot import ConfigBot
 from shared.config_presenter import ConfigPresenter
 from shared.config_publisher import ConfigPublisher
 from model import attribute  # noqa: F401  Don't remove this line otherwise relationship problems
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, Session
+
 
 Base = declarative_base()
+
+
+def regenerate_all(connection):
+    """Regenerate all nodes.
+
+    Args:
+        connection: Connection to DTB.
+    """
+    session = Session(bind=connection)
+    RegenerateParameters("bots", session)
+    RegenerateParameters("collectors", session)
+    RegenerateParameters("presenters", session)
+    RegenerateParameters("publishers", session)
 
 
 # this allow us add new module/parameters to nodes without deleting and manually recreating it (we don't loose existing data)

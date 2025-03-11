@@ -12,11 +12,14 @@ from flask import Flask
 from flask.cli import FlaskGroup
 
 from managers import db_manager
-from model import (  # noqa: F401  Don't remove 'osint_source' reference otherwise relationship problems
+from model import (  # noqa: F401  Don't remove 'osint_source' and bot_preset reference otherwise relationship problems
     user,
     role,
     collector,
     collectors_node,
+    bot,
+    bots_node,
+    bot_preset,
     permission,
     osint_source,
     parameter,
@@ -24,8 +27,10 @@ from model import (  # noqa: F401  Don't remove 'osint_source' reference otherwi
     attribute,
 )
 from remote.collectors_api import CollectorsApi
+from remote.bots_api import BotsApi
 from managers.log_manager import logger
 from shared.config_collector import ConfigCollector
+from shared.config_bot import ConfigBot
 
 
 def create_app():
@@ -328,11 +333,11 @@ def collector_management(
             try:
                 collectors_info, status_code = CollectorsApi(opt_api_url, opt_api_key).get_collectors_info(node.id)
                 break
-            except Exception as ex:
+            except Exception as error:
                 attempt += 1
-                logger.warning(f"Attempt ({attempt}/{retries}): {ex}")
+                logger.warning(f"Attempt ({attempt}/{retries}): {error}")
                 status_code = 0
-                if attempt != retries:  # don't wait last attemt
+                if attempt != retries:  # don't wait last attempt
                     time.sleep(delay)
                 delay *= 2
 
@@ -390,6 +395,161 @@ def collector_management(
                     logger.error(f"Unable to update collector node '{node.name}'.\n\tResponse: [{status_code}] {collectors_info}.")
             except Exception as ex:
                 logger.exception(f"Unable to update collector node '{node.name}'\n{ex}")
+
+
+@cli.command("bot")
+@click.option("--list", "-l", "opt_list", is_flag=True)
+@click.option("--create", "-c", "opt_create", is_flag=True)
+@click.option("--edit", "-e", "opt_edit", is_flag=True)
+@click.option("--delete", "-d", "opt_delete", is_flag=True)
+@click.option("--update", "-u", "opt_update", is_flag=True)
+@click.option("--all", "-a", "opt_all", is_flag=True)
+@click.option("--show-api-key", "opt_show_api_key", is_flag=True)
+@click.option("--id", "opt_id")
+@click.option("--name", "opt_name")
+@click.option("--description", "opt_description", default="")
+@click.option("--api-url", "opt_api_url")
+@click.option("--api-key", "opt_api_key")
+def bot_management(
+    opt_list,
+    opt_create,
+    opt_edit,
+    opt_delete,
+    opt_update,
+    opt_all,
+    opt_show_api_key,
+    opt_id,
+    opt_name,
+    opt_description,
+    opt_api_url,
+    opt_api_key,
+):
+    """Manage bots.
+
+    Args:
+        opt_list (bool): List all bots.
+        opt_create (bool): Create a new bot.
+        opt_edit (bool): Edit an existing bot.
+        opt_delete (bool): Delete an existing bot.
+        opt_update (bool): Update bots.
+        opt_all (bool): Update all bots.
+        opt_show_api_key (bool): Show API key in the output.
+        opt_id (str): ID of the bot.
+        opt_name (str): Name of the bot.
+        opt_description (str): Description of the bot.
+        opt_api_url (str): API URL of the bot.
+        opt_api_key (str): API key of the bot.
+    """
+    if opt_list:
+        bot_nodes = bots_node.BotsNode.get_all()
+
+        for node in bot_nodes:
+            capabilities = []
+            presets = []
+            for c in node.bots:
+                capabilities.append(c.type)
+                for s in c.presets:
+                    presets.append(f"{s.name} ({s.id})")
+            if opt_show_api_key:
+                api_key_str = f"API key: {node.api_key}\n\t"
+            else:
+                api_key_str = ""
+            logger.info(
+                f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
+                f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tPresets: {presets}"
+            )
+        # We need print here, because the prestart_core.sh relies on the output
+        print(f"Total: {len(bot_nodes)}")
+
+    if opt_create:
+        if not opt_name or not opt_api_url or not opt_api_key:
+            logger.error("Please specify the bot node name, API url and key!")
+            abort()
+
+        if bots_node.BotsNode.get_by_name(opt_name):
+            logger.warning(f"Bot node '{opt_name}' already exists!")
+            abort()
+
+        node = bots_node.BotsNode(opt_id, opt_name, opt_description, opt_api_url, opt_api_key)
+        modules = ConfigBot().modules
+        for mod in modules:
+            bott = bot.Bot(mod.name, mod.description, mod.type, [])
+            for par in mod.parameters:
+                bott.parameters.append(parameter.Parameter(par.key, par.name, par.description, par.type, par.default_value))
+            node.bots.append(bott)
+
+        db_manager.db.session.add(node)
+        db_manager.db.session.commit()
+        logger.info(f"Bot node '{opt_name}' created.")
+
+        logger.debug("Trying to contact a new bot node...")
+        attempt, retries, delay = 0, 5, 1
+        while attempt < retries:
+            try:
+                bots_info, status_code = BotsApi(opt_api_url, opt_api_key).get_bots_info()
+                break
+            except Exception as error:
+                attempt += 1
+                logger.warning(f"Attempt ({attempt}/{retries}): {error}")
+                status_code = 0
+                if attempt != retries:  # don't wait last attempt
+                    time.sleep(delay)
+                delay *= 2
+
+        if status_code == 200:
+            logger.info(f"Bot node '{opt_name}' registered.")
+        else:
+            logger.error(
+                "Unable to register a new bot node! Wait until the new Bot container starts and register it manually.\n"
+                f"1) running 'python manage.py bot --update --name \"{opt_name}\"'\n"
+                "2) from the Taranis configuration screen (just re-save the record)"
+            )
+
+    if opt_edit:
+        if not opt_id or not opt_name:
+            logger.error("Bot node id or name not specified!")
+            abort()
+        if not opt_name or not opt_description or not opt_api_url or not opt_api_key:
+            logger.error("Please specify a new name, description, API url or key!")
+            abort()
+
+    if opt_delete:
+        if not opt_name:
+            logger.error("Bot node id or name not specified!")
+            abort()
+
+    if opt_update:
+        if not opt_all and not opt_id and not opt_name:
+            logger.error("Bot node id or name not specified!\n" "If you want to update all bots, pass the --all parameter.")
+            abort()
+
+        nodes = None
+        if opt_id:
+            nodes = [bots_node.BotsNode.get_by_id(opt_id)]
+            if not nodes:
+                logger.error(f"Bot node '{opt_id}' does not exit!")
+                abort()
+        elif opt_name:
+            nodes, count = bots_node.BotsNode.get(opt_name)
+            if not count:
+                logger.error(f"Bot node '{opt_name}' does not exit!")
+                abort()
+        else:
+            nodes, count = bots_node.BotsNode.get(None)
+            if not count:
+                logger.error("No bot nodes exist!")
+                abort()
+
+        for node in nodes:
+            # refresh bot node id
+            try:
+                bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info(node.id)
+                if status_code == 200:
+                    logger.info(f"Bot node '{node.name}' updated.")
+                else:
+                    logger.error(f"Unable to update bot node '{node.name}'.\n\tResponse: [{status_code}] {bots_info}.")
+            except Exception as error:
+                logger.exception(f"Unable to update bot node '{node.name}'\n{error}")
 
 
 @cli.command("dictionary")

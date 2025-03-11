@@ -1,8 +1,9 @@
 """BotsNode model."""
 
+import uuid
+from datetime import datetime
 from marshmallow import post_load
 from sqlalchemy import func, or_, orm
-import uuid
 
 from managers.db_manager import db
 from shared.schema.bots_node import BotsNodeSchema, BotsNodePresentationSchema
@@ -41,6 +42,9 @@ class BotsNode(db.Model):
 
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String(), nullable=False)
+
+    created = db.Column(db.DateTime, default=datetime.now)
+    last_seen = db.Column(db.DateTime, default=datetime.now)
 
     bots = db.relationship("Bot", back_populates="node", cascade="all")
 
@@ -98,6 +102,28 @@ class BotsNode(db.Model):
             query = query.filter(or_(func.lower(BotsNode.name).like(search_string), func.lower(BotsNode.description).like(search_string)))
 
         return query.order_by(db.asc(BotsNode.name)).all(), query.count()
+
+    @classmethod
+    def get_by_id(cls, id):
+        """Get a node by ID.
+
+        Args:
+            id (str): The ID of the node
+        Returns:
+            (BotsNode): The BotsNode object
+        """
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def get_by_name(cls, name):
+        """Get a node by name.
+
+        Args:
+            name (str): The name of the node
+        Returns:
+            (BotsNode): The BotsNode object
+        """
+        return cls.query.filter_by(name=name).first()
 
     @classmethod
     def get_all_json(cls, search):
@@ -167,4 +193,10 @@ class BotsNode(db.Model):
                 raise Exception("Bots has mapped presets")
 
         db.session.delete(node)
+        db.session.commit()
+
+    def updateLastSeen(self):
+        """Update the last seen date of the node."""
+        self.last_seen = datetime.now()
+        db.session.add(self)
         db.session.commit()
