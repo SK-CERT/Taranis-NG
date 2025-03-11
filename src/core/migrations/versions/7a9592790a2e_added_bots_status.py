@@ -7,6 +7,7 @@ Create Date: 2025-03-11 11:22:44.583578
 """
 
 from alembic import op
+from migrations.regenerate_params import regenerate_all
 import sqlalchemy as sa
 
 
@@ -20,6 +21,10 @@ depends_on = None
 def upgrade():
     op.add_column("bots_node", sa.Column("created", sa.DateTime()))
     op.add_column("bots_node", sa.Column("last_seen", sa.DateTime()))
+
+    # move this code to latest migration if needed
+    conn = op.get_bind()
+    regenerate_all(conn)
 
 
 def downgrade():

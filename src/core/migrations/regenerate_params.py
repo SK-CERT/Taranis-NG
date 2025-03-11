@@ -36,6 +36,7 @@ def regenerate_all(connection):
     RegenerateParameters("collectors", session)
     RegenerateParameters("presenters", session)
     RegenerateParameters("publishers", session)
+    print("Regenerated all nodes parameters", flush=True)
 
 
 # this allow us add new module/parameters to nodes without deleting and manually recreating it (we don't loose existing data)
