@@ -10,7 +10,7 @@ from sqlalchemy import pool
 from alembic import context
 from flask import current_app
 
-from migrations import regenerate
+from migrations.regenerate_params import regenerate_all
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -86,8 +86,8 @@ def run_migrations_online():
 
         with context.begin_transaction():
             context.run_migrations()
-            regenerate.regenerate_all(connection)
-            logger.info("Regenerated all parameters")
+            regenerate_all(connection)
+            logger.info("Regenerated all nodes parameters")
 
 
 if context.is_offline_mode():

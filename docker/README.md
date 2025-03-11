@@ -152,8 +152,6 @@ Any configuration options are available at [https://hub.docker.com/_/postgres](h
 | `DB_POOL_TIMEOUT`           | SQLAlchemy QueuePool connection timeout. | `5` |
 | `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/realms/master/protocol/openid-connect/logout` |
 | `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
-| `SKIP_DEFAULT_COLLECTOR`    | Set to `true` to prevent initialization of a default docker collector node | `` |
-| `SKIP_DEFAULT_BOT`          | Set to `true` to prevent initialization of a default docker bot node | `` |
 
 | Secrets file                | Description | Example |
 |-----------------------------|-------------|----------|

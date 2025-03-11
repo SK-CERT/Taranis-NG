@@ -87,9 +87,9 @@ After installation, you have to connect the core application with collectors,
 presenters, and publishers. There is no limit to how many of these you have.
 The default docker installation deploys one instance of each for you automatically.
 
-Adding a bot node: TL;DR: no action needed. Longer version: This is done automatically on startup if no bot nodes are defined, unless you define `SKIP_DEFAULT_BOT=true` environment variable. To verify: Log in as an `admin`, then navigate to Configuration -> Bots nodes. You should see `Default Docker Bot` in the list.
+Adding a bot node: TL;DR: no action needed. Longer version: This is done automatically on startup if no bot nodes are defined. To verify: Log in as an `admin`, then navigate to Configuration -> Bots nodes. You should see `Default Docker Bot` in the list.
 
-Adding a collector node: TL;DR: no action needed. Longer version: This is done automatically on startup if no collector nodes are defined, unless you define `SKIP_DEFAULT_COLLECTOR=true` environment variable. To verify: Log in as an `admin`, then navigate to Configuration -> Collectors nodes. You should see `Default Docker Collector` in the list.
+Adding a collector node: TL;DR: no action needed. Longer version: This is done automatically on startup if no collector nodes are defined. To verify: Log in as an `admin`, then navigate to Configuration -> Collectors nodes. You should see `Default Docker Collector` in the list.
 
 Adding a presenter node: Log in as an `admin`, then navigate to Configuration
 -> Presenters nodes. Click `Add new`. Enter any name and description. For URL,
