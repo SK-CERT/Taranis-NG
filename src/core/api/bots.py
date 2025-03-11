@@ -22,6 +22,9 @@ class BotPresetsForBots(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("bot_type", location="args")
         parameters = parser.parse_args()
+
+        bots_node.updateLastSeen()
+
         return bot_preset.BotPreset.get_all_for_bot_json(bots_node, parameters.bot_type)
 
 
