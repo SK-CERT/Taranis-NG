@@ -7,8 +7,6 @@ Create Date: 2025-02-21 15:20:44.659875
 """
 
 from alembic import op
-from migrations.regenerate_params import RegenerateParameters
-from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import inspect
 import sqlalchemy as sa
@@ -24,7 +22,6 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    session = orm.Session(bind=conn)
 
     delete_previous()
     # parameter -> collector_parameter, bot_parameter, publisher_parameter
@@ -79,9 +76,6 @@ def upgrade():
     columns = [column["name"] for column in inspector.get_columns("parameter")]
     if "default_value" not in columns:
         op.add_column("parameter", sa.Column("default_value", sa.String(), nullable=True))
-
-    # rebuild collectors
-    RegenerateParameters("collectors", session)
 
 
 def downgrade():
