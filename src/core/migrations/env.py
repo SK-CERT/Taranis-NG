@@ -7,8 +7,10 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from alembic import context
+from alembic import context, script
+from alembic.runtime.migration import MigrationContext
 from flask import current_app
+from migrations.regenerate_params import regenerate_all
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -83,7 +85,18 @@ def run_migrations_online():
         )
 
         with context.begin_transaction():
+            mc = MigrationContext.configure(connection)
+            current_rev = mc.get_current_revision()
+            script_dir = script.ScriptDirectory.from_config(config)
+            head_rev = script_dir.get_current_head()
+            dirty = current_rev != head_rev
+
             context.run_migrations()
+
+            current_rev = mc.get_current_revision()
+            # run only in Upgrade mode and at Latest version
+            if (current_rev == head_rev) and dirty:
+                regenerate_all(connection)
 
 
 if context.is_offline_mode():
