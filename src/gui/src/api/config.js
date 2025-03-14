@@ -156,6 +156,14 @@ export function deleteExternalUser(user) {
     return ApiService.delete('/config/external-users/' + user.id)
 }
 
+export function getAllSettings(filter) {
+    return ApiService.get('/config/settings?search=' + filter.search)
+}
+
+export function updateSetting(setting) {
+    return ApiService.put('/config/settings/' + setting.id, setting)
+}
+
 export function getAllWordLists(filter) {
     return ApiService.get('/config/word-lists?search=' + filter.search)
 }

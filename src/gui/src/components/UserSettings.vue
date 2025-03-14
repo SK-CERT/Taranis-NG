@@ -153,7 +153,7 @@
             spellcheck: null,
             pressKeyVisible: false,
             shortcuts: [],
-            hotkeyAlias: String,
+            hotkeyAlias: '',
             headers: [
                 {
                     text: 'Name',
