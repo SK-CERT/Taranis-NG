@@ -251,7 +251,7 @@ export default {
     }),
     methods: {
         wordClickHandler(name, value, vm) {
-            window.console.log('wordClickHandler', name, value, vm);
+            console.log('Word:', name, 'Quantity:', value);
         },
 
         refreshTagCloud() {

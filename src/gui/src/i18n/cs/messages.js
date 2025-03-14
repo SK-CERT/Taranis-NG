@@ -92,7 +92,8 @@ const messages_cs = {
         notification_templates: "Šablony oznámení",
         remote_access: "Vzdálený přístup",
         remote_nodes: "Vzdálené instance",
-        local: "Lokální"
+        local: "Lokální",
+        settings: "Nastavení aplikace",
     },
 
     notification: {
@@ -893,7 +894,12 @@ const messages_cs = {
         group: "Seskupit",
         ungroup: "Zrušit seskupení",
         new_product: "Nový produkt",
-        aggregate_open: "Otevřít sloučenou novinku"
+        aggregate_open: "Otevřít sloučenou novinku",
+        successful_edit: "Nastavení bylo upraveno",
+        error: "Nepodařilo se uložit toto nastavení!",
+        boolean_error: "Hodnota musí být buď 'True' nebo 'False'!",
+        integer_error: "Hodnota musí být platné celé číslo!",
+        decimal_error: "Hodnota musí být platné desetinné číslo!",
     },
 
     word_list: {

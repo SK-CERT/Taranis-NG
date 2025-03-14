@@ -235,7 +235,6 @@ const keyboardMixin = targetId => ({
                             let active_group_element = document.querySelector('.v-list-item--active');
                             let active_group_id = active_group_element.pathname.split('/')[3];
                             let index;
-                            console.log(groups)// eslint-disable-line
                             for (index = 0; index < groups.length; index++) {
                                 if (groups[index].id === active_group_id) {
                                     break
@@ -253,7 +252,6 @@ const keyboardMixin = targetId => ({
                             let active_group_element = document.querySelector('.v-list-item--active');
                             let active_group_id = active_group_element.pathname.split('/')[3];
                             let index;
-                            console.log(groups)// eslint-disable-line
                             for (index = 0; index < groups.length; index++) {
                                 if (groups[index].id === active_group_id) {
                                     break

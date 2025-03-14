@@ -71,6 +71,7 @@ export default {
         },
 
         initUserSettings() {
+            this.$store.dispatch('getAllSettings', { search: '' });
             this.$store.dispatch('getUserProfile').then(() => {
                 this.$vuetify.theme.dark = this.$store.getters.getProfileDarkTheme
                 this.$i18n.locale = this.$store.getters.getProfileLanguage

@@ -32,7 +32,7 @@
 
         <v-spacer style="height:8px"></v-spacer>
 
-        <NewReportItem ref="reportItemDialog" :read_only="true"/>
+        <NewReportItem ref="reportItemDialog" :read_only="readOnlySelector"/>
 
         <component publish_selector class="item-selector" v-bind:is="cardLayout()" v-for="value in values" :card="value"
                    :key="value.id"
@@ -49,6 +49,7 @@
     import NewReportItem from "@/components/analyze/NewReportItem";
     import Permissions from "@/services/auth/permissions";
     import AuthMixin from "@/services/auth/auth_mixin";
+    import Settings, { getSettingBoolean }  from "@/services/settings";
 
     export default {
         name: "ReportItemSelector",
@@ -67,12 +68,13 @@
         },
         data: () => ({
             dialog: false,
-            value: ""
+            value: "",
+            readOnlySelector: true,
         }),
         computed: {
             canModify() {
                 return this.edit === false || (this.checkPermission(Permissions.PUBLISH_UPDATE) && this.modify === true)
-            }
+            },
         },
         methods: {
             newDataLoaded(count) {
@@ -124,6 +126,9 @@
                 this.$store.dispatch("multiSelectReport", false)
                 this.dialog = false;
             }
+        },
+        mounted() {
+            this.readOnlySelector = getSettingBoolean(Settings.REPORT_SELECTOR_READ_ONLY);
         }
     }
 </script>

@@ -299,6 +299,16 @@ export const router = new Router({
             meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_REPORT_TYPE_ACCESS]}
         },
         {
+            path: '/config/settings',
+            name: 'settings',
+            components: {
+                default: () => import('./views/admin/SettingsView.vue'),
+                nav: () => import('./views/nav/ConfigNav.vue')
+
+            },
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_SETTINGS_ACCESS] }
+        },
+        {
             path: '/config/wordlists',
             name: 'word_lists',
             components: {

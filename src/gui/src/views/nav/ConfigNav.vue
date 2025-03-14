@@ -34,13 +34,14 @@
                 { id: 17, icon: 'mdi-application-variable-outline', title: 'nav_menu.attributes', route: '/config/reportitems/attributes', permission: 'CONFIG_ATTRIBUTE_ACCESS', translate: '1' },
                 { id: 18, icon: 'mdi-file-table-outline', title: 'nav_menu.report_types', route: '/config/reportitems/types', permission: 'CONFIG_REPORT_TYPE_ACCESS', translate: '1' },
                 { id: 19, separator: '1' },
-                { id: 20, icon: 'mdi-format-list-text', title: 'nav_menu.word_lists', route: '/config/wordlists', permission: 'CONFIG_WORD_LIST_ACCESS', translate: '1' },
-                { id: 21, separator: '1'},
-                { id: 22, icon: 'mdi-remote-desktop', title: 'nav_menu.remote_access', route: '/config/remote/access', permission: 'CONFIG_REMOTE_ACCESS_ACCESS', translate: '1' },
-                { id: 23, icon: 'mdi-share-variant', title: 'nav_menu.remote_nodes', route: '/config/remote/nodes', permission: 'CONFIG_REMOTE_NODE_ACCESS', translate: '1' },
-                { id: 24, separator: '1'},
-                { id: 25, icon: 'mdi-server-network', title: 'nav_menu.bots_nodes', route: '/config/bots/nodes', permission: 'CONFIG_BOTS_NODE_ACCESS', translate: '1' },
-                { id: 26, icon: 'mdi-robot', title: 'nav_menu.bot_presets', route: '/config/bots/presets', permission: 'CONFIG_BOT_PRESET_ACCESS', translate: '1' },
+                { id: 20, icon: 'mdi-server-network', title: 'nav_menu.bots_nodes', route: '/config/bots/nodes', permission: 'CONFIG_BOTS_NODE_ACCESS', translate: '1' },
+                { id: 21, icon: 'mdi-robot', title: 'nav_menu.bot_presets', route: '/config/bots/presets', permission: 'CONFIG_BOT_PRESET_ACCESS', translate: '1' },
+                { id: 22, separator: '1' },
+                { id: 23, icon: 'mdi-remote-desktop', title: 'nav_menu.remote_access', route: '/config/remote/access', permission: 'CONFIG_REMOTE_ACCESS_ACCESS', translate: '1' },
+                { id: 24, icon: 'mdi-share-variant', title: 'nav_menu.remote_nodes', route: '/config/remote/nodes', permission: 'CONFIG_REMOTE_NODE_ACCESS', translate: '1' },
+                { id: 25, separator: '1' },
+                { id: 26, icon: 'mdi-cog-outline', title: 'nav_menu.settings', route: '/config/settings', permission: 'CONFIG_SETTINGS_ACCESS', translate: '1' },
+                { id: 27, icon: 'mdi-format-list-text', title: 'nav_menu.word_lists', route: '/config/wordlists', permission: 'CONFIG_WORD_LIST_ACCESS', translate: '1' },
             ]
         })
     }

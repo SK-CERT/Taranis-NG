@@ -32,6 +32,7 @@ from model import (
     report_item_type,
     role,
     user,
+    setting,
     word_list,
 )
 from model.news_item import NewsItemAggregate
@@ -676,6 +677,72 @@ class ExternalUser(Resource):
             return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
         except Exception as ex:
             log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete external user", ex)
+            return "", 400
+
+
+class Settings(Resource):
+    """Settings API endpoint."""
+
+    @auth_required("CONFIG_SETTINGS_ACCESS")
+    def get(self):
+        """Get all settings.
+
+        Returns:
+            (dict): The Settings
+        """
+        search = None
+        if "search" in request.args and request.args["search"]:
+            search = request.args["search"]
+        return setting.Setting.get_all_json(search)
+
+    # @auth_required("CONFIG_SETTINGS_CREATE")
+    # def post(self):
+    #     """Create a setting.
+
+    #     Returns:
+    #         (str, int): The result of the create
+    #     """
+    #     try:
+    #         setting.Setting.add_new(request.json)
+    #     except Exception as ex:
+    #         log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create setting", ex)
+    #         return "", 400
+
+
+class Setting(Resource):
+    """Settings API endpoint."""
+
+    # @auth_required("CONFIG_SETTINGS_DELETE")
+    # def delete(self, setting_id):
+    #     """Delete a setting.
+
+    #     Parameters:
+    #         settings_id (int): The setting ID
+    #     Returns:
+    #         (str, int): The result of the delete
+    #     """
+    #     try:
+    #         return setting.Setting.delete(setting_id)
+    #     except Exception as ex:
+    #         log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete setting", ex)
+    #         return "", 400
+
+    @auth_required("CONFIG_SETTINGS_UPDATE")
+    def put(self, setting_id):
+        """Update a setting.
+
+        Parameters:
+            setting_id (int): The setting ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            user = auth_manager.get_user_from_jwt()
+            setting.Setting.update_value(setting_id, request.json, user.name)
+            json = setting.Setting.get_json(setting_id)
+            return json, 200
+        except Exception as ex:
+            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update setting", ex)
             return "", 400
 
 
@@ -1474,6 +1541,8 @@ def initialize(api):
     api.add_resource(ExternalUsers, "/api/v1/config/external-users")
     api.add_resource(ExternalUser, "/api/v1/config/external-users/<int:user_id>")
 
+    api.add_resource(Settings, "/api/v1/config/settings")
+    api.add_resource(Setting, "/api/v1/config/settings/<int:setting_id>")
     api.add_resource(WordLists, "/api/v1/config/word-lists")
     api.add_resource(WordList, "/api/v1/config/word-lists/<int:word_list_id>")
 
@@ -1544,6 +1613,11 @@ def initialize(api):
     Permission.add("CONFIG_REPORT_TYPE_CREATE", "Config report item type create", "Create report item type configuration")
     Permission.add("CONFIG_REPORT_TYPE_UPDATE", "Config report item type update", "Update report item type configuration")
     Permission.add("CONFIG_REPORT_TYPE_DELETE", "Config report item type delete", "Delete report item type configuration")
+
+    Permission.add("CONFIG_SETTINGS_ACCESS", "Config settings access", "Access to settings configuration")
+    Permission.add("CONFIG_SETTINGS_CREATE", "Config setting create", "Create setting configuration")
+    Permission.add("CONFIG_SETTINGS_UPDATE", "Config setting update", "Update setting configuration")
+    Permission.add("CONFIG_SETTINGS_DELETE", "Config setting delete", "Delete setting configuration")
 
     Permission.add("CONFIG_WORD_LIST_ACCESS", "Config word lists access", "Access to word lists configuration")
     Permission.add("CONFIG_WORD_LIST_CREATE", "Config word list create", "Create word list configuration")

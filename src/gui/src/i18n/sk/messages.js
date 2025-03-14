@@ -82,7 +82,8 @@ const messages_sk = {
         notification_templates: "Šablóny oznámení",
         remote_access: "Vzdialený prístup",
         remote_nodes: "Vzdialené inštancie",
-        local: "Lokálne"
+        local: "Lokálne",
+        settings: "Nastavenia aplikácie",
     },
 
     notification: {
@@ -149,6 +150,14 @@ const messages_sk = {
         publish: "Publikovať produkt",
         publish_confirmation: "Ste si istý, že chcete publikovať tento produkt?",
         total_count: "Počet produktov: "
+    },
+
+    settings: {
+        successful_edit: "Nastavenie bolo úspešne uložené",
+        error: "Nepodarilo sa uložiť toto nastavenie!",
+        boolean_error: "Hodnota musí byť buď 'True' alebo 'False'!",
+        integer_error: "Hodnota musí byť platné celé číslo!",
+        decimal_error: "Hodnota musí byť platné desatinné číslo!",
     },
 
     common: {

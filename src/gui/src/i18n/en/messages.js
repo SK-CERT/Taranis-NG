@@ -92,7 +92,8 @@ const messages_en = {
         notification_templates: "Notification Templates",
         remote_access: "Remote Access",
         remote_nodes: "Remote Nodes",
-        local: "Local"
+        local: "Local",
+        settings: "Application Settings",
     },
 
     notification: {
@@ -926,6 +927,17 @@ const messages_en = {
         reload: "Reload",
         open_item_source: "Open Item Source",
         reset_keys: "Reset Hotkeys",
+        successful_edit: "Setting was successfully updated",
+        error: "Could not save this setting!",
+        boolean_error: "Value must be either 'True' or 'False'!",
+        integer_error: "Value must be a valid integer!",
+        decimal_error: "Value must be a valid decimal number!",
+        default_value: "Default value",
+        update_value: "Update value",
+        description: "Description",
+        value: "Value",
+        updated_by: "Updated by",
+        updated_at: "Updated at",
     },
 
     word_list: {
