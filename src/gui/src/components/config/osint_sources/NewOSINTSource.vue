@@ -238,26 +238,32 @@ export default {
             if (data.value === false) {
                 this.osint_source_groups[0].isSelectable = false
                 this.selected_osint_source_groups = [this.osint_source_groups[0]]
+            } else {
+                this.selected_osint_source_groups = this.osint_source_groups
             }
         },
 
         itemSelected(data) {
-            if (data.value === true && this.selected_osint_source_groups.length === 1) {
-                for (let i = 0; i < this.osint_source_groups.length; i++) {
-                    if (this.selected_osint_source_groups[0].id === this.osint_source_groups[i].id) {
-                        this.osint_source_groups[i].isSelectable = true
-                        break;
-                    }
-                }
-            } else if (data.value === false && this.selected_osint_source_groups.length === 2) {
-                for (let i = 0; i < this.osint_source_groups.length; i++) {
+            if (data.value === false) {
+                if (this.selected_osint_source_groups.length === 2) { // disable last one
                     for (let j = 0; j < this.selected_osint_source_groups.length; j++) {
-                        if (this.selected_osint_source_groups[j].id === this.osint_source_groups[i].id &&
-                            this.selected_osint_source_groups[j].id !== data.item.id) {
-                            this.osint_source_groups[i].isSelectable = false
-                            return;
+                        if (this.selected_osint_source_groups[j].id !== data.item.id) {
+                            for (let i = 0; i < this.osint_source_groups.length; i++) {
+                                if (this.osint_source_groups[i].id === this.selected_osint_source_groups[j].id) {
+                                    this.osint_source_groups[i].isSelectable = false;
+                                    return;
+                                }
+                            }
+
                         }
                     }
+                } else if (this.selected_osint_source_groups.length === 1) { // add first one as default and disable
+                    this.osint_source_groups[0].isSelectable = false;
+                    this.selected_osint_source_groups = [this.osint_source_groups[0]];
+                }
+            } else  {
+                for (let i = 0; i < this.osint_source_groups.length; i++) {
+                    this.osint_source_groups[i].isSelectable = true;
                 }
             }
         },
@@ -419,12 +425,11 @@ export default {
                 }
             }
 
-            if (this.selected_osint_source_groups.length === 1) {
-                for (let i = 0; i < this.osint_source_groups.length; i++) {
-                    if (this.selected_osint_source_groups[0].id === this.osint_source_groups[i].id) {
-                        this.osint_source_groups[i].isSelectable = false
-                        break;
-                    }
+            for (let i = 0; i < this.osint_source_groups.length; i++) {
+                if (this.selected_osint_source_groups.length === 1 && this.osint_source_groups[i].id === this.selected_osint_source_groups[0].id) {
+                    this.osint_source_groups[i].isSelectable = false
+                } else {
+                    this.osint_source_groups[i].isSelectable = true
                 }
             }
         });
