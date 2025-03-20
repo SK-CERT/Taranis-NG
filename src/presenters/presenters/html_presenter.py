@@ -41,7 +41,7 @@ class HTMLPresenter(BasePresenter):
             head, tail = os.path.split(presenter_input.parameter_values_map["HTML_TEMPLATE_PATH"])
             input_data = BasePresenter.generate_input_data(presenter_input)
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
-            env.filters["strfdate"] = BasePresenter._filter_datetime
+            BasePresenter.load_filters(env)
             output_text = env.get_template(tail).render(data=input_data).encode()
             base64_bytes = b64encode(output_text)
             data = base64_bytes.decode("UTF-8")

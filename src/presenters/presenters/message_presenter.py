@@ -45,6 +45,7 @@ class MESSAGEPresenter(BasePresenter):
             head, tail = os.path.split(template_path)
             input_data = BasePresenter.generate_input_data(presenter_input)
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
+            BasePresenter.load_filters(env)
             func_dict = {
                 "vars": vars,
             }

@@ -12,6 +12,8 @@ import types
 import re
 from cvss import CVSS2, CVSS3, CVSS4
 
+from . import jinja_filters
+
 
 class BasePresenter:
     """Base presenter class."""
@@ -306,14 +308,12 @@ class BasePresenter:
         data_obj = json.loads(data_json)
         return data_obj
 
-    # used in JINJA templating for formating "string date" to "date"
-    def _filter_datetime(date, fmtin=None, fmtout=None):
-        if date == "":
-            return ""
-        if not fmtin:
-            fmtin = "%Y.%m.%d"
-        date = datetime.datetime.strptime(date, fmtin)
-        native = date.replace(tzinfo=None)
-        if not fmtout:
-            fmtout = "%-d.%-m.%Y"
-        return native.strftime(fmtout)
+    @staticmethod
+    def load_filters(env):
+        """Load custom filters into the Jinja2 environment.
+
+        Args:
+            env (jinja2.Environment): The Jinja2 environment to load filters into.
+        """
+        env.filters["strfdate"] = jinja_filters.filter_strfdate
+        env.filters["regex_replace"] = jinja_filters.filter_regex_replace
