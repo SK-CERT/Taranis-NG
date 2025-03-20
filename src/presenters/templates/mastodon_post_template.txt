@@ -1,0 +1,3 @@
+{{ data.product.description | regex_replace('\[(\d+)\]', '[↓]') | trim | truncate(435, True, '...', 0) }}
+
+You can view the whole report at: https://example.com/reports/{{ data.product.id }}

@@ -45,7 +45,7 @@ class TEXTPresenter(BasePresenter):
             input_data = BasePresenter.generate_input_data(presenter_input)
 
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
-            env.filters["strfdate"] = BasePresenter._filter_datetime
+            BasePresenter.load_filters(env)
 
             func_dict = {
                 "vars": vars,
