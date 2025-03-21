@@ -15,9 +15,6 @@
                             <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')" :title="$t('assess.tooltip.ungroup_item')">
                                 <v-icon small color="accent">mdi-ungroup</v-icon>
                             </v-btn>
-                            <v-btn v-if="canDelete" small icon @click.stop="showMsgBox" :title="$t('assess.tooltip.delete_item')">
-                                <v-icon small color="accent">mdi-delete</v-icon>
-                            </v-btn>
                             <v-btn v-if="canCreateReport" small icon @click.stop="cardItemToolbar('new')" :title="$t('assess.tooltip.analyze_item')">
                                 <v-icon small color="accent">mdi-file-outline</v-icon>
                             </v-btn>
@@ -32,6 +29,9 @@
                             </v-btn>
                             <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('unlike')" :title="$t('assess.tooltip.dislike_item')">
                                 <v-icon small :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
+                            </v-btn>
+                            <v-btn v-if="canDelete" small icon @click.stop="showMsgBox" :title="$t('assess.tooltip.delete_item')">
+                                <v-icon small color="accent">mdi-delete</v-icon>
                             </v-btn>
                         </div>
 
