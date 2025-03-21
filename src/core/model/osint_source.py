@@ -186,7 +186,7 @@ class OSINTSource(db.Model):
                 )
             )
 
-        return query.order_by(db.asc(OSINTSource.name)).all(), query.count()
+        return query.order_by(func.lower(OSINTSource.name)).all(), query.count()
 
     @classmethod
     def get_by_id(cls, id):
