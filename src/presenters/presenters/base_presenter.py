@@ -317,3 +317,4 @@ class BasePresenter:
         """
         env.filters["strfdate"] = jinja_filters.filter_strfdate
         env.filters["regex_replace"] = jinja_filters.filter_regex_replace
+        env.filters["truncate_on_symbol"] = jinja_filters.filter_truncate_on_symbol
