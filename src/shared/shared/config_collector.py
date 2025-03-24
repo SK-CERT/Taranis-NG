@@ -36,6 +36,7 @@ class ConfigCollector(ConfigBase):
                 param_type("EMAIL_SERVER_PORT", "Email server port", "Port of email server", ParameterType.NUMBER),
                 param_type("EMAIL_USERNAME", "Username", "Username of email account", ParameterType.STRING),
                 param_type("EMAIL_PASSWORD", "Password", "Password of email account", ParameterType.STRING),
+                param_type("EMAIL_SENDER", "Sender (optional)", "Address of the sender (used for sorting)", ParameterType.STRING),
             ]
         )
         self.modules.append(mod)
