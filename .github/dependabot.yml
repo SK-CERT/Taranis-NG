@@ -9,29 +9,43 @@ updates:
     directory: "/docker"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies docker"
   - package-ecosystem: "pip"
     directory: "/src/bots"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies pip"
   - package-ecosystem: "pip"
     directory: "/src/collectors"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies pip"
     ignore:
       - dependency-name: "slackclient"
   - package-ecosystem: "pip"
     directory: "/src/core"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies pip"
   - package-ecosystem: "pip"
     directory: "/src/presenters"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies pip"
   - package-ecosystem: "pip"
     directory: "/src/publishers"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies pip"
   - package-ecosystem: "npm"
     directory: "/src/gui"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies npm"
