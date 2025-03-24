@@ -1,0 +1,62 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Adobe Security Bulletin Notifications",
+            "description": "Security Notification Service for Adobe Products available at https://www.adobe.com/subscription/adbeSecurityNotifications.html",
+            "collector": {
+                "type": "EMAIL_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_TYPE"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_HOSTNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_PORT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_PASSWORD"
+                    }
+                },
+                {
+                    "value": "mail@mail.adobe.com",
+                    "parameter": {
+                        "key": "EMAIL_SENDER"
+                    }
+                },
+                {
+                    "value": "60",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}

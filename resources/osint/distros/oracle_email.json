@@ -1,0 +1,62 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Oracle El-errata Announcements",
+            "description": "Errata Announcements for Oracle Linux available at https://oss.oracle.com/mailman/listinfo/el-errata",
+            "collector": {
+                "type": "EMAIL_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "el-errata@oss.oracle.com",
+                    "parameter": {
+                        "key": "EMAIL_SENDER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_TYPE"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_HOSTNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_PORT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_PASSWORD"
+                    }
+                },
+                {
+                    "value": "60",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}
