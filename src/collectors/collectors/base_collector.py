@@ -1,16 +1,14 @@
 """Module for Base collector."""
 
+import aiohttp
 import bleach
 import datetime
 import hashlib
 import pytz
 import re
-import socks
 import time
-import urllib.request
 import uuid
 from functools import wraps
-from sockshandler import SocksiPyHandler
 from urllib.parse import urlparse
 from dateutil.parser import parse as date_parse
 
@@ -299,27 +297,6 @@ class BaseCollector:
             pass
 
     @staticmethod
-    def get_proxy_handler(parsed_proxy):
-        """Get the proxy handler for the collector.
-
-        Parameters:
-            parsed_proxy (urlparse object): The parsed proxy URL.
-            collector_source (string): Collector readable name
-        Returns:
-            (object): The proxy handler for the collector.
-        """
-        if parsed_proxy.scheme in ["http", "https"]:
-            return urllib.request.ProxyHandler(
-                {
-                    "http": f"{parsed_proxy.scheme}://{parsed_proxy.hostname}:{parsed_proxy.port}",
-                    "https": f"{parsed_proxy.scheme}://{parsed_proxy.hostname}:{parsed_proxy.port}",
-                }
-            )
-        elif parsed_proxy.scheme in ["socks4", "socks5"]:
-            socks_type = socks.SOCKS5 if parsed_proxy.scheme == "socks5" else socks.SOCKS4
-            return SocksiPyHandler(socks_type, parsed_proxy.hostname, int(parsed_proxy.port))
-
-    @staticmethod
     def get_parsed_proxy(proxy_string, collector_source):
         """Get the parsed proxy URL for the collector.
 
@@ -341,7 +318,7 @@ class BaseCollector:
             return None
 
     @staticmethod
-    def not_modified(collector_source, url, last_collected, opener, user_agent=None):
+    async def not_modified(collector_source, url, last_collected, session, user_agent=None):
         """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
 
         Arguments:
@@ -362,11 +339,9 @@ class BaseCollector:
         if user_agent:
             headers["User-Agent"] = user_agent
 
-        request = urllib.request.Request(url, method="HEAD", headers=headers)
-
         last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
         try:
-            with opener(request) as response:
+            async with session.head(url, headers=headers) as response:
                 last_modified = response.headers.get("Last-Modified")
                 if response.status == 304:
                     logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
@@ -388,11 +363,11 @@ class BaseCollector:
                         return False
                 else:
                     logger.debug(
-                        f"{collector_source} Content has been modified since {last_collected_str} " f"(Last-Modified: header not received)"
+                        f"{collector_source} Content has been modified since {last_collected_str} (Last-Modified: header not received)"
                     )
                     return False
-        except urllib.error.HTTPError as e:
-            if e.code == 304:
+        except aiohttp.ClientResponseError as e:
+            if e.status == 304:
                 logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
                 return True
             else:
