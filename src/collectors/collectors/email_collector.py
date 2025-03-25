@@ -41,24 +41,13 @@ class EmailCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
-        news_items = []
-        email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
-        email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]
-        email_server_port = source.parameter_values["EMAIL_SERVER_PORT"]
-        email_username = source.parameter_values["EMAIL_USERNAME"]
-        email_password = source.parameter_values["EMAIL_PASSWORD"]
-        proxy_server = source.parameter_values["PROXY_SERVER"]
-        email_sender_address = source.parameter_values["EMAIL_SENDER"]
 
-        def proxy_tunnel():
+        def proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port):
             logger.debug(f"{self.collector_source} Establishing proxy tunnel")
             server = f"{email_server_hostname.lower()}"
             port = email_server_port
 
-            server_proxy = proxy_server.rsplit(":", 1)[0]
-            server_proxy_port = proxy_server.rsplit(":", 1)[-1]
-
-            proxy = (str(server_proxy), int(server_proxy_port))
+            proxy = (f"{parsed_proxy.scheme}://{parsed_proxy.hostname}", parsed_proxy.port)
             con = f"CONNECT {server}:{port} HTTP/1.0\r\nConnection: close\r\n\r\n"
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -154,11 +143,13 @@ class EmailCollector(BaseCollector):
 
                 news_items.append(news_item)
 
-        def fetch_emails_imap():
+        def fetch_emails_imap(
+            email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, proxy_server=None
+        ):
             logger.debug(f"{self.collector_source} Fetching emails using IMAP")
             try:
-                if proxy_server:
-                    proxy_tunnel()
+                if parsed_proxy:
+                    proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port)
 
                 connection = imaplib.IMAP4_SSL(email_server_hostname.lower(), email_server_port)
                 connection.login(email_username, email_password)
@@ -166,17 +157,21 @@ class EmailCollector(BaseCollector):
 
                 if email_sender_address not in ["", None]:
                     typ, data = connection.search(None, "FROM", f'"{email_sender_address}"')
-
                 else:
                     typ, data = connection.search(None, "ALL")
 
                 if typ != "OK":
                     logger.error(f"{self.collector_source} Failed to search emails {typ}")
 
-                i = len(data[0].split())
-                for x in range(i):
-                    latest_email_uid = data[0].split()[x]
-                    typ, email_data = connection.fetch(latest_email_uid, "(RFC822)")
+                email_uids = data[0].split()
+                total_emails = len(email_uids)
+
+                if emails_limit in ["", None] or emails_limit > total_emails:
+                    emails_limit = total_emails
+                start_index = max(0, total_emails - emails_limit)
+                email_uids_to_process = email_uids[start_index:total_emails]
+                for uid in email_uids_to_process:
+                    typ, email_data = connection.fetch(uid, "(RFC822)")
                     raw_email = email_data[0][1]
                     raw_email_string = raw_email.decode("utf-8")
                     email_message = email.message_from_string(raw_email_string, policy=policy.default)
@@ -187,11 +182,13 @@ class EmailCollector(BaseCollector):
             except Exception as error:
                 logger.exception(f"{self.collector_source} Failed to fetch emails using IMAP: {error}")
 
-        def fetch_emails_pop3():
+        def fetch_emails_pop3(
+            email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, parsed_proxy
+        ):
             logger.debug(f"{self.collector_source} Fetching emails using POP3")
             try:
-                if proxy_server:
-                    proxy_tunnel()
+                if parsed_proxy:
+                    proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port)
 
                 connection = poplib.POP3_SSL(email_server_hostname.lower(), email_server_port)
                 connection.user(email_username)
@@ -199,25 +196,45 @@ class EmailCollector(BaseCollector):
 
                 num_messages = len(connection.list()[1])
 
-                for i in range(num_messages):
-                    raw_email = b"\n".join(connection.retr(i + 1)[1])
-                    email_message = email.message_from_bytes(raw_email)
-                    if email_sender_address not in ["", None]:
-                        sender_from_email = email.utils.parseaddr(email_message["From"])
-                        if email_sender_address in sender_from_email:
-                            logger.debug(f"Sender email address matches: {email_sender_address} = {sender_from_email}")
+                if emails_limit in ["", None] or emails_limit > num_messages:
+                    emails_limit = num_messages  # Process all emails if emails_limit is not provided
+
+                processed_emails = 0
+                for i in range(num_messages, 0, -1):  # emails are listed in reverse order
+                    if processed_emails < emails_limit:
+                        raw_email = b"\n".join(connection.retr(i + 1)[1])
+                        email_message = email.message_from_bytes(raw_email)
+                        if email_sender_address not in ["", None]:
+                            sender_from_email = email.utils.parseaddr(email_message["From"])
+                            if email_sender_address in sender_from_email:
+                                processed_emails += 1
+                                logger.debug(f"Sender email address matches: {email_sender_address} = {sender_from_email}")
+                                process_email(email_message)
+                        else:
                             process_email(email_message)
-                    else:
-                        process_email(email_message)
 
                 connection.quit()
             except Exception as error:
                 logger.exception(f"{self.collector_source} Failed to fetch emails using POP3: {error}")
 
+        news_items = []
+        email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
+        email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]
+        email_server_port = source.parameter_values["EMAIL_SERVER_PORT"]
+        email_username = source.parameter_values["EMAIL_USERNAME"]
+        email_password = source.parameter_values["EMAIL_PASSWORD"]
+        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.collector_source)
+        email_sender_address = source.parameter_values["EMAIL_SENDER"]
+        emails_limit = int(source.parameter_values["EMAILS_LIMIT"])
+
         if email_server_type.casefold() == "imap":
-            fetch_emails_imap()
+            fetch_emails_imap(
+                email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, parsed_proxy
+            )
         elif email_server_type.casefold() == "pop3":
-            fetch_emails_pop3()
+            fetch_emails_pop3(
+                email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, parsed_proxy
+            )
         else:
             logger.error(f"{self.collector_source} Email server connection type is not supported: {email_server_type}")
 

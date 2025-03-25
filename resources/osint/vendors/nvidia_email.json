@@ -51,6 +51,12 @@
                     }
                 },
                 {
+                    "value": "10",
+                    "parameter": {
+                        "key": "EMAILS_LIMIT"
+                    }
+                },
+                {
                     "value": "60",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"

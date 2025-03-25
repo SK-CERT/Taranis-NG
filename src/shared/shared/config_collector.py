@@ -37,6 +37,9 @@ class ConfigCollector(ConfigBase):
                 param_type("EMAIL_USERNAME", "Username", "Username of email account", ParameterType.STRING),
                 param_type("EMAIL_PASSWORD", "Password", "Password of email account", ParameterType.STRING),
                 param_type("EMAIL_SENDER", "Sender (optional)", "Address of the sender (used for sorting)", ParameterType.STRING),
+                param_type(
+                    "EMAILS_LIMIT", "Limit for emails (optional)", "Limit number of emails to process. Default: all", ParameterType.NUMBER, ""
+                ),
             ]
         )
         self.modules.append(mod)
@@ -50,13 +53,18 @@ class ConfigCollector(ConfigBase):
         mod.parameters.extend(
             [
                 param_type("FEED_URL", "Feed URL", "Full URL for RSS or Atom feed", ParameterType.STRING),
-                param_type("USER_AGENT", "User agent", "Type of user agent", ParameterType.STRING),
+                param_type(
+                    "USER_AGENT",
+                    "User agent",
+                    "String sent in the request header to identify itself to the web server (e.g. browser type, version, OS...)",
+                    ParameterType.STRING,
+                ),
                 param_type(
                     "LINKS_LIMIT",
                     "Limit for article links",
                     "OPTIONAL: Maximum number of article links to process. Default: all",
                     ParameterType.NUMBER,
-                    "10",
+                    "",
                 ),
             ]
         )
@@ -114,7 +122,12 @@ class ConfigCollector(ConfigBase):
                 param_type("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome|firefox)", ParameterType.STRING),
                 # TODO: change to BOOLEAN, implement defaults, default False
                 param_type("TOR", "Do you want to use Tor service? Enter Yes or No", "Using Tor service (yes|no)", ParameterType.STRING),
-                param_type("USER_AGENT", "User agent", "Set user agent", ParameterType.STRING),
+                param_type(
+                    "USER_AGENT",
+                    "User agent",
+                    "String sent in the request header to identify itself to the web server (e.g. browser type, version, OS...)",
+                    ParameterType.STRING,
+                ),
                 # authentication options
                 param_type(
                     "AUTH_USERNAME",
@@ -176,7 +189,7 @@ class ConfigCollector(ConfigBase):
                     "Limit for article links",
                     "OPTIONAL: Maximum number of article links to process. Default: all",
                     ParameterType.NUMBER,
-                    "10",
+                    "",
                 ),
                 # parsing a single article
                 param_type("TITLE_SELECTOR", "SELECTOR at ARTICLE: Article title", "Selector for article title", ParameterType.STRING),
