@@ -1,0 +1,68 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Siemens ProductCERT Security Advisories",
+            "description": "Siemens Security Advisories mailing list available at https://www.siemens.com/global/en/products/services/cert.html#SubscribetoSecurityAdvisories",
+            "collector": {
+                "type": "EMAIL_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_TYPE"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_HOSTNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_PORT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_PASSWORD"
+                    }
+                },
+                {
+                    "value": "productcert@siemens.com",
+                    "parameter": {
+                        "key": "EMAIL_SENDER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "EMAILS_LIMIT"
+                    }
+                },
+                {
+                    "value": "60",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}

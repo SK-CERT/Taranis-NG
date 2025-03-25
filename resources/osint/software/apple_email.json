@@ -1,0 +1,68 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Apple Product Security Notifications",
+            "description": "Apple product security notifications and announcements available at https://lists.apple.com/mailman/listinfo/security-announce",
+            "collector": {
+                "type": "EMAIL_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_TYPE"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_HOSTNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_PORT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_PASSWORD"
+                    }
+                },
+                {
+                    "value": "security-announce@lists.apple.com",
+                    "parameter": {
+                        "key": "EMAIL_SENDER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "EMAILS_LIMIT"
+                    }
+                },
+                {
+                    "value": "60",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,68 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "NVIDIA Product Security Notifications",
+            "description": "NVIDIA Security Bulletins and Notices available at https://www.nvidia.com/en-us/security/",
+            "collector": {
+                "type": "EMAIL_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_TYPE"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_HOSTNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_SERVER_PORT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "EMAIL_PASSWORD"
+                    }
+                },
+                {
+                    "value": "no-reply-productsecurity@nvidia.com",
+                    "parameter": {
+                        "key": "EMAIL_SENDER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "EMAILS_LIMIT"
+                    }
+                },
+                {
+                    "value": "60",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                }
+            ]
+        }
+    ]
+}
