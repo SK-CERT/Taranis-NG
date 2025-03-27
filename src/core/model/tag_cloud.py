@@ -96,11 +96,12 @@ class TagCloud(db.Model):
         """
         title = news_item_data.title.lower()
         # \u00C0-\u024F is for accented characters, Latin-1 + Latin Extended-A + B
-        title = re.sub(r"[^a-zA-Z0-9\u00C0-\u024F ]", r"", title)
+        search = r"[^a-zA-Z0-9\u00C0-\u024F ]"
+        title = re.sub(search, "", title)
         review = news_item_data.review.lower()
-        review = re.sub(r"[^a-zA-Z0-9\u00C0-\u024F ]", r"", review)
+        review = re.sub(search, "", review)
         content = news_item_data.content.lower()
-        content = re.sub(r"[^a-zA-Z0-9\u00C0-\u024F ]", r"", content)
+        content = re.sub(search, "", content)
         return title, review, content
 
     @staticmethod

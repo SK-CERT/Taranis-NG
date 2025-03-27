@@ -1,10 +1,8 @@
 """Module for Base collector."""
 
-import bleach
 import datetime
 import hashlib
 import pytz
-import re
 import socks
 import time
 import urllib.request
@@ -13,10 +11,10 @@ from functools import wraps
 from sockshandler import SocksiPyHandler
 from urllib.parse import urlparse
 from dateutil.parser import parse as date_parse
-
 from managers import time_manager
 from managers.log_manager import logger
 from remote.core_api import CoreApi
+from shared import common
 from shared.schema import collector, osint_source, news_item
 
 
@@ -35,7 +33,6 @@ class BaseCollector:
         ignore_exceptions(func): Decorator to wrap scheduled action with exception handling.
         history(interval): Calculate the limit for retrieving historical data based on the given interval.
         filter_by_word_list(news_items, source): Filter news items based on word lists defined in the source.
-        presanitize_html(html): Clean and sanitize the given HTML by removing certain tags and entities.
         sanitize_news_items(news_items, source): Sanitize news items by setting default values for any missing attributes.
         publish(news_items, source, collector_source): Publish the collected news items to the CoreApi.
         refresh(): Refresh the OSINT sources for the collector.
@@ -155,24 +152,6 @@ class BaseCollector:
             return news_items
 
     @staticmethod
-    def presanitize_html(html):
-        """Clean and sanitize the given HTML by removing certain tags and entities.
-
-        Parameters:
-            html (str): The HTML string to be sanitized.
-        Returns:
-           clean (str): The sanitized HTML string.
-        """
-        # these re.sub are not security sensitive ; bleach is supposed to fix the remaining stuff
-        html = re.sub(r"(?i)(&nbsp;|\xa0)", " ", html, re.DOTALL)
-        html = re.sub(r"(?i)<head[^>/]*>.*?</head[^>/]*>", "", html, re.DOTALL)
-        html = re.sub(r"(?i)<script[^>/]*>.*?</script[^>/]*>", "", html, re.DOTALL)
-        html = re.sub(r"(?i)<style[^>/]*>.*?</style[^>/]*>", "", html, re.DOTALL)
-
-        clean = bleach.clean(html, tags=["p", "b", "i", "b", "u", "pre"], strip=True)
-        return clean
-
-    @staticmethod
     def sanitize_news_items(news_items, source):
         """Sanitize the given news_items by setting default values for any missing attributes.
 
@@ -206,12 +185,10 @@ class BaseCollector:
                 item.osint_source_id = source.id
             if item.attributes is None:
                 item.attributes = []
-            item.title = BaseCollector.presanitize_html(item.title)
-            item.review = BaseCollector.presanitize_html(item.review)
-            item.content = BaseCollector.presanitize_html(item.content)
-            item.author = BaseCollector.presanitize_html(item.author)
-            item.source = BaseCollector.presanitize_html(item.source)  # TODO: replace with link sanitizer
-            item.link = BaseCollector.presanitize_html(item.link)  # TODO: replace with link sanitizer
+            item.title = common.strip_html(item.title)
+            item.review = common.strip_html(item.review)
+            item.content = common.strip_html(item.content)
+            item.author = common.strip_html(item.author)
 
     @staticmethod
     def publish(news_items, source, collector_source):
@@ -330,7 +307,6 @@ class BaseCollector:
             (urlparse object): The parsed proxy URL for the collector.
         """
         if proxy_string in [None, ""] or proxy_string.lower() == "none":
-            logger.debug(f"{collector_source} No proxy server specified. Not using proxy.")
             return None
         parsed_proxy = urlparse(proxy_string)
         if parsed_proxy.scheme in ["http", "https", "socks4", "socks5"]:
@@ -440,3 +416,20 @@ class BaseCollector:
         except Exception as error:
             logger.exception(f"Reading of int parameter failed: {error}")
         return val
+
+    @staticmethod
+    def print_news_item(collector_source, itm):
+        """Print news item detials.
+
+        Parameters:
+            collector_source (str): Collector name.
+            itm (NewsItemData): News Item object.
+        """
+        if itm.title:
+            logger.debug(f"{collector_source} __ Title    : {itm.title}")
+        if itm.review:
+            logger.debug(f"{collector_source} __ Review   : {itm.review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+        if itm.content:
+            logger.debug(f"{collector_source} __ Content  : {itm.content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+        if itm.published:
+            logger.debug(f"{collector_source} __ Published: {itm.published}")

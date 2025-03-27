@@ -49,7 +49,7 @@ class ScheduledTasksCollector(BaseCollector):
             else:
                 task_command = os.popen("." + source.parameter_values["TASK_COMMAND"]).read()
 
-            preview = source.parameter_values["TASK_DESCRIPTION"]
+            review = source.parameter_values["TASK_DESCRIPTION"]
             author = ""
             osint_source = "TaranisNG System"
             link = ""
@@ -64,7 +64,7 @@ class ScheduledTasksCollector(BaseCollector):
                 uuid.uuid4(),
                 hashlib.sha256(random_string.encode()).hexdigest(),
                 task_title,
-                preview,
+                review,
                 osint_source,
                 link,
                 published,

@@ -23,6 +23,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from shared import common
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
 from urllib.parse import urlparse
@@ -205,22 +206,6 @@ class WebCollector(BaseCollector):
             return ret
         except NoSuchElementException as e:  # noqa F841
             return None
-
-    @staticmethod
-    def __smart_truncate(content, length=500, suffix="..."):
-        """Truncate the given content to a specified length and adds a suffix if necessary.
-
-        Parameters:
-            content (str): The content to be truncated.
-            length (int): The maximum length of the truncated content. Default is 500.
-            suffix (str): The suffix to be added at the end of the truncated content. Default is "...".
-        Returns:
-            (str): The truncated content.
-        """
-        if len(content) <= length:
-            return content
-        else:
-            return " ".join(re.compile(r"\s+").split(content[: length + 1])[0:-1]) + suffix
 
     @staticmethod
     def __wait_for_new_tab(browser, timeout, current_tab):
@@ -644,14 +629,7 @@ class WebCollector(BaseCollector):
             try:
                 news_item = self.__process_article_page(index_url, browser)
                 if news_item:
-                    logger.debug(f"{self.collector_source} ... Title    : {news_item.title}")
-                    logger.debug(
-                        f"{self.collector_source} ... Review   : {news_item.review.replace('\r', '').replace('\n', ' ').strip()[:100]}"
-                    )
-                    logger.debug(
-                        f"{self.collector_source} ... Content  : {news_item.content.replace('\r', '').replace('\n', ' ').strip()[:100]}"
-                    )
-                    logger.debug(f"{self.collector_source} ... Published: {news_item.published}")
+                    BaseCollector.print_news_item(self.collector_source, news_item)
                     self.news_items.append(news_item)
                 else:
                     logger.warning(f"{self.collector_source} Parsing an article failed")
@@ -698,7 +676,7 @@ class WebCollector(BaseCollector):
         if self.word_limit > 0:
             article_description = " ".join(re.compile(r"\s+").split(article_description)[: self.word_limit])
         if not article_description:
-            article_description = self.__smart_truncate(article_full_text)
+            article_description = common.smart_truncate(article_full_text)
 
         extracted_date = None
         published_str = self.__find_element_text_by(browser, self.selectors["published"])
