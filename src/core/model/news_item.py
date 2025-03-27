@@ -3,14 +3,13 @@
 import base64
 import uuid
 from datetime import datetime, timedelta
-
 from marshmallow import post_load, fields
 from sqlalchemy import orm, and_, or_, func
-
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSourceGroup, OSINTSource
 from model.tag_cloud import TagCloud
+from shared import common
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import NewsItemDataSchema, NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemSchema, NewsItemRemoteSchema
 
@@ -892,6 +891,11 @@ class NewsItemAggregate(db.Model):
             news_item_data.id = str(uuid.uuid4())
         if not news_item_data.hash:
             news_item_data.hash = news_item_data.id
+        # sanitize news item from user manual input
+        news_item_data.title = common.strip_html(news_item_data.title)
+        news_item_data.review = common.smart_truncate(common.strip_html(news_item_data.review))
+        news_item_data.content = common.strip_html(news_item_data.content)
+        news_item_data.author = common.strip_html(news_item_data.author)
         db.session.add(news_item_data)
         cls.create_new_for_all_groups(news_item_data)
         TagCloud.generate_tag_cloud_words(news_item_data)

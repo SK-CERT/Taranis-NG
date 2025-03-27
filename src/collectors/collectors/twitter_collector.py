@@ -88,19 +88,19 @@ class TwitterCollector(BaseCollector):
                     tweet_id = tweet.id_str
                     link = f"https://twitter.com/{tweet.user.screen_name}/status/{tweet.id}"
                     author = tweet.author.name
-                    preview = tweet.text.encode("utf-8")
+                    content = tweet.text.encode("utf-8")
+                    review = content  # max 280 chars - it's ok
                     published = tweet.created_at
                     title = "Twitter post from " + "@" + author
-                    content = ""
                     url = ""
 
-                    for_hash = author + tweet_id + str(preview)
+                    for_hash = author + tweet_id + str(review)
 
                     news_item = NewsItemData(
                         uuid.uuid4(),
                         hashlib.sha256(for_hash.encode()).hexdigest(),
                         title,
-                        preview,
+                        review,
                         url,
                         link,
                         published,

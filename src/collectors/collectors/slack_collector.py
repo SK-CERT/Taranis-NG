@@ -10,6 +10,7 @@ from slack import WebClient
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared import common
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -83,7 +84,7 @@ class SlackCollector(BaseCollector):
                     logger.debug(f"{self.collector_source} Message: {0}".format(count))
                     published = time.ctime(float(message["ts"]))
                     content = message["text"]
-                    preview = content[:500]
+                    review = common.smart_truncate(content)
 
                     user_id = message["user"]
                     user_name = slack_client.users_profile_get(user=user_id)
@@ -112,7 +113,7 @@ class SlackCollector(BaseCollector):
                         uuid.uuid4(),
                         hashlib.sha256(for_hash.encode()).hexdigest(),
                         title,
-                        preview,
+                        review,
                         url,
                         link,
                         published,

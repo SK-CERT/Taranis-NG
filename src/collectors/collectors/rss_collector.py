@@ -6,9 +6,9 @@ import hashlib
 import urllib.request
 import uuid
 from bs4 import BeautifulSoup
-
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared import common
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -35,18 +35,6 @@ class RSSCollector(BaseCollector):
         Arguments:
             source: Source object.
         """
-
-        def strip_html_tags(html_string):
-            """Strip HTML tags from the given string.
-
-            Arguments:
-                html_string (string): The HTML string.
-
-            Returns:
-                string: The string without HTML tags.
-            """
-            soup = BeautifulSoup(html_string, "html.parser")
-            return soup.get_text(separator=" ", strip=True)
 
         def get_feed(feed_url, last_collected=None, user_agent=None, proxy_handler=None):
             """Fetch the feed data, using proxy if provided, and check modification status.
@@ -110,51 +98,50 @@ class RSSCollector(BaseCollector):
                     updated = feed_entry.get("updated", "")
                     updated_parsed = feed_entry.get("updated_parsed", "")
                     summary = feed_entry.get("summary", "")
-                    content = feed_entry.get("content", "")
+                    content_rss = feed_entry.get("content", "")
                     date = ""
                     review = ""
-                    article = ""
+                    content = ""
                     link_for_article = feed_entry.get("link", "")
                     if summary:
-                        review = strip_html_tags(summary[:500])
-                    if content:
-                        article = strip_html_tags(content[0].get("value", ""))
+                        review = common.smart_truncate(common.strip_html(summary))
+                    if content_rss:
+                        content = common.strip_html(content_rss[0].get("value", ""))
 
                     if not link_for_article:
                         logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
                         continue
-                    elif not article:
+                    elif not content:
                         logger.info(f"{self.collector_source} Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
-                        html_article = ""
+                        content_html = ""
                         try:
                             request = urllib.request.Request(link_for_article)
                             request.add_header("User-Agent", user_agent)
 
                             with opener(request) as response:
-                                html_article = response.read()
+                                content_html = response.read()
 
-                            soup = BeautifulSoup(html_article, features="html.parser")
+                            if content_html:
+                                soup = BeautifulSoup(content_html, features="html.parser")
+                                content_html_text = [p.text.strip() for p in soup.findAll("p")]
+                                content_sanit = [w.replace("\xa0", " ") for w in content_html_text]
+                                content_sanit = " ".join(content_sanit)
+                                # use web content if it's longer than summary, if not we use summary in next step
+                                if len(content_sanit) > len(summary):
+                                    content = content_sanit
+                                    logger.debug(f"{self.collector_source} Using web text for content")
 
-                            if html_article:
-                                article_text = [p.text.strip() for p in soup.findAll("p")]
-                                replaced_str = "\xa0"
-                                article_sanit = [w.replace(replaced_str, " ") for w in article_text]
-                                article_sanit = " ".join(article_sanit)
-                                # use HTML article if it is longer than summary
-                                if len(article_sanit) > len(summary):
-                                    article = article_sanit
-                                logger.debug(f"{self.collector_source} Got an article: {link_for_article}")
                         except Exception as error:
-                            logger.exception(f"{self.collector_source} Fetch article failed: {error}")
+                            logger.exception(f"{self.collector_source} Fetch web content failed: {error}")
 
-                    # use summary if article is empty
-                    if summary and not article:
-                        article = strip_html_tags(summary)
-                        logger.debug(f"{self.collector_source} Using summary for article: {article}")
-                    # use first 500 characters of article if summary is empty
-                    elif not summary and article:
-                        review = article[:500]
-                        logger.debug(f"{self.collector_source} Using first 500 characters of article for summary: {review}")
+                    # use summary if content is empty
+                    if summary and not content:
+                        content = common.strip_html(summary)
+                        logger.debug(f"{self.collector_source} Using review for content")
+                    # use first 500 characters of content if summary is empty
+                    elif not summary and content:
+                        review = common.smart_truncate(content)
+                        logger.debug(f"{self.collector_source} Using first 500 characters of content for review")
 
                     # use published date if available, otherwise use updated date
                     if published_parsed:
@@ -170,11 +157,6 @@ class RSSCollector(BaseCollector):
                         date = updated
                         logger.debug(f"{self.collector_source} Using 'updated' date")
 
-                    logger.debug(f"{self.collector_source} ... Title    : {title}")
-                    logger.debug(f"{self.collector_source} ... Review   : {review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-                    logger.debug(f"{self.collector_source} ... Content  : {article.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-                    logger.debug(f"{self.collector_source} ... Published: {date}")
-
                     for_hash = author + title + link_for_article
 
                     news_item = NewsItemData(
@@ -187,11 +169,12 @@ class RSSCollector(BaseCollector):
                         date,
                         author,
                         datetime.datetime.now(),
-                        article,
+                        content,
                         source.id,
                         [],
                     )
 
+                    BaseCollector.print_news_item(self.collector_source, news_item)
                     news_items.append(news_item)
 
                     if count >= links_limit & links_limit > 0:

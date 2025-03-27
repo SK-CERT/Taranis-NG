@@ -12,6 +12,7 @@ import socket
 
 from .base_collector import BaseCollector
 from managers.log_manager import logger
+from shared import common
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
 
@@ -83,7 +84,7 @@ class EmailCollector(BaseCollector):
                     if charset is None:
                         charset = "utf-8"
                     content = text_data.decode(charset)
-                    review = content[:500]
+                    review = common.smart_truncate(content)
 
                     for_hash = author + title + message_id
 
