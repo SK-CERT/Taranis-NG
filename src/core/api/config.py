@@ -81,8 +81,9 @@ class Attributes(Resource):
         try:
             attribute.Attribute.add_attribute(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create attribute", ex)
-            return "", 400
+            msg = "Could not create attribute"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Attribute(Resource):
@@ -100,8 +101,9 @@ class Attribute(Resource):
         try:
             attribute.Attribute.update(attribute_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update attribute", ex)
-            return "", 400
+            msg = "Could not update attribute"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_ATTRIBUTE_DELETE")
     def delete(self, attribute_id):
@@ -115,8 +117,9 @@ class Attribute(Resource):
         try:
             return attribute.Attribute.delete_attribute(attribute_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete attribute", ex)
-            return "", 400
+            msg = "Could not delete attribute"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class AttributeEnums(Resource):
@@ -154,8 +157,9 @@ class AttributeEnums(Resource):
         try:
             attribute.AttributeEnum.add(attribute_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create attribute enum", ex)
-            return "", 400
+            msg = "Could not create attribute enum"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class AttributeEnum(Resource):
@@ -174,8 +178,9 @@ class AttributeEnum(Resource):
         try:
             attribute.AttributeEnum.update(enum_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update attribute enum", ex)
-            return "", 400
+            msg = "Could not update attribute enum"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_ATTRIBUTE_DELETE")
     def delete(self, attribute_id, enum_id):
@@ -190,8 +195,9 @@ class AttributeEnum(Resource):
         try:
             return attribute.AttributeEnum.delete(enum_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete attribute enum", ex)
-            return "", 400
+            msg = "Could not delete attribute enum"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ReportItemTypesConfig(Resource):
@@ -219,8 +225,9 @@ class ReportItemTypesConfig(Resource):
         try:
             report_item_type.ReportItemType.add_report_item_type(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create report type", ex)
-            return "", 400
+            msg = "Could not create report type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ReportItemType(Resource):
@@ -238,8 +245,9 @@ class ReportItemType(Resource):
         try:
             report_item_type.ReportItemType.update(type_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update report type", ex)
-            return "", 400
+            msg = "Could not update report type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_REPORT_TYPE_DELETE")
     def delete(self, type_id):
@@ -253,8 +261,9 @@ class ReportItemType(Resource):
         try:
             return report_item_type.ReportItemType.delete_report_item_type(type_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete report type", ex)
-            return "", 400
+            msg = "Could not delete report type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ProductTypes(Resource):
@@ -282,8 +291,9 @@ class ProductTypes(Resource):
         try:
             product_type.ProductType.add_new(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create product type", ex)
-            return "", 400
+            msg = "Could not create product type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ProductType(Resource):
@@ -301,8 +311,9 @@ class ProductType(Resource):
         try:
             product_type.ProductType.update(type_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update product type", ex)
-            return "", 400
+            msg = "Could not update product type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_PRODUCT_TYPE_DELETE")
     def delete(self, type_id):
@@ -316,8 +327,9 @@ class ProductType(Resource):
         try:
             return product_type.ProductType.delete(type_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete product type", ex)
-            return "", 400
+            msg = "Could not delete product type"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Permissions(Resource):
@@ -376,8 +388,9 @@ class Roles(Resource):
         try:
             role.Role.add_new(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create role", ex)
-            return "", 400
+            msg = "Could not create role"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Role(Resource):
@@ -395,8 +408,9 @@ class Role(Resource):
         try:
             role.Role.update(role_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update role", ex)
-            return "", 400
+            msg = "Could not update role"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_ROLE_DELETE")
     def delete(self, role_id):
@@ -410,8 +424,9 @@ class Role(Resource):
         try:
             return role.Role.delete(role_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete role", ex)
-            return "", 400
+            msg = "Could not delete role"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ACLEntries(Resource):
@@ -439,8 +454,9 @@ class ACLEntries(Resource):
         try:
             acl_entry.ACLEntry.add_new(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create acl entry", ex)
-            return "", 400
+            msg = "Could not create acl entry"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ACLEntry(Resource):
@@ -458,8 +474,9 @@ class ACLEntry(Resource):
         try:
             acl_entry.ACLEntry.update(acl_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update acl entry", ex)
-            return "", 400
+            msg = "Could not update acl entry"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_ACL_DELETE")
     def delete(self, acl_id):
@@ -473,8 +490,9 @@ class ACLEntry(Resource):
         try:
             return acl_entry.ACLEntry.delete(acl_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete acl entry", ex)
-            return "", 400
+            msg = "Could not delete acl entry"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Organizations(Resource):
@@ -502,8 +520,9 @@ class Organizations(Resource):
         try:
             organization.Organization.add_new(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create organization", ex)
-            return "", 400
+            msg = "Could not create organization"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Organization(Resource):
@@ -521,8 +540,9 @@ class Organization(Resource):
         try:
             organization.Organization.update(organization_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update organization", ex)
-            return "", 400
+            msg = "Could not update organization"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_ORGANIZATION_DELETE")
     def delete(self, organization_id):
@@ -536,8 +556,9 @@ class Organization(Resource):
         try:
             return organization.Organization.delete(organization_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete organization", ex)
-            return "", 400
+            msg = "Could not delete organization"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Users(Resource):
@@ -565,8 +586,9 @@ class Users(Resource):
         try:
             external_auth_manager.create_user(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create user in external auth system", ex)
-            return "", 400
+            msg = "Could not create user in external auth system"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
         user.User.add_new(request.json)
 
@@ -589,8 +611,9 @@ class User(Resource):
         try:
             external_auth_manager.update_user(request.json, original_username)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update user in external auth system", ex)
-            return "", 400
+            msg = "Could not update user in external auth system"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
         user.User.update(user_id, request.json)
 
@@ -611,8 +634,9 @@ class User(Resource):
         try:
             external_auth_manager.delete_user(original_username)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete user in external auth system", ex)
-            return "", 400
+            msg = "Could not delete user in external auth system"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ExternalUsers(Resource):
@@ -641,8 +665,9 @@ class ExternalUsers(Resource):
             permissions = auth_manager.get_external_permissions_ids()
             user.User.add_new_external(auth_manager.get_user_from_jwt(), permissions, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create external user", ex)
-            return "", 400
+            msg = "Could not create external user"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class ExternalUser(Resource):
@@ -661,8 +686,9 @@ class ExternalUser(Resource):
             permissions = auth_manager.get_external_permissions_ids()
             user.User.update_external(auth_manager.get_user_from_jwt(), permissions, user_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update external user", ex)
-            return "", 400
+            msg = "Could not update external user"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, user_id):
@@ -676,8 +702,9 @@ class ExternalUser(Resource):
         try:
             return user.User.delete_external(auth_manager.get_user_from_jwt(), user_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete external user", ex)
-            return "", 400
+            msg = "Could not delete external user"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class Settings(Resource):
@@ -742,8 +769,9 @@ class Setting(Resource):
             json = setting.Setting.get_json(setting_id)
             return json, 200
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update setting", ex)
-            return "", 400
+            msg = "Could not update setting"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class WordLists(Resource):
@@ -771,8 +799,9 @@ class WordLists(Resource):
         try:
             word_list.WordList.add_new(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create word list", ex)
-            return "", 400
+            msg = "Could not create word list"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class WordList(Resource):
@@ -790,8 +819,9 @@ class WordList(Resource):
         try:
             return word_list.WordList.delete(word_list_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete word list", ex)
-            return "", 400
+            msg = "Could not delete word list"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_WORD_LIST_UPDATE")
     def put(self, word_list_id):
@@ -805,8 +835,9 @@ class WordList(Resource):
         try:
             word_list.WordList.update(word_list_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update word list", ex)
-            return "", 400
+            msg = "Could not update word list"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class CollectorsNodes(Resource):
@@ -834,8 +865,9 @@ class CollectorsNodes(Resource):
         try:
             return "", collectors_manager.add_collectors_node(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create collectors node", ex)
-            return "", 400
+            msg = "Could not create collectors node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class CollectorsNode(Resource):
@@ -853,8 +885,9 @@ class CollectorsNode(Resource):
         try:
             collectors_manager.update_collectors_node(node_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update collectors node", ex)
-            return "", 400
+            msg = "Could not update collectors node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_COLLECTORS_NODE_DELETE")
     def delete(self, node_id):
@@ -868,8 +901,9 @@ class CollectorsNode(Resource):
         try:
             collectors_node.CollectorsNode.delete(node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete collectors node", ex)
-            return "", 400
+            msg = "Could not delete collectors node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class OSINTSources(Resource):
@@ -897,8 +931,9 @@ class OSINTSources(Resource):
         try:
             collectors_manager.add_osint_source(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create OSINT source", ex)
-            return "", 400
+            msg = "Could not create OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class OSINTSource(Resource):
@@ -918,8 +953,9 @@ class OSINTSource(Resource):
             if default_group is not None:
                 NewsItemAggregate.reassign_to_new_groups(updated_osint_source.id, default_group.id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update OSINT source", ex)
-            return "", 400
+            msg = "Could not update OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_OSINT_SOURCE_DELETE")
     def delete(self, source_id):
@@ -933,8 +969,9 @@ class OSINTSource(Resource):
         try:
             collectors_manager.delete_osint_source(source_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete OSINT source", ex)
-            return "", 400
+            msg = "Could not delete OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class OSINTSourcesExport(Resource):
@@ -951,8 +988,9 @@ class OSINTSourcesExport(Resource):
             data = collectors_manager.export_osint_sources(request.json)
             return send_file(io.BytesIO(data), download_name="osint_sources_export.json", mimetype="application/json", as_attachment=True)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not export OSINT source", ex)
-            return "", 400
+            msg = "Could not export OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class OSINTSourcesImport(Resource):
@@ -971,8 +1009,9 @@ class OSINTSourcesImport(Resource):
                 collectors_node_id = request.form["collectors_node_id"]
                 collectors_manager.import_osint_sources(collectors_node_id, file)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not import OSINT source", ex)
-            return "", 400
+            msg = "Could not import OSINT source"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class OSINTSourceGroups(Resource):
@@ -1000,8 +1039,9 @@ class OSINTSourceGroups(Resource):
         try:
             osint_source.OSINTSourceGroup.add(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create OSINT source group", ex)
-            return "", 400
+            msg = "Could not create OSINT source group"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class OSINTSourceGroup(Resource):
@@ -1024,8 +1064,9 @@ class OSINTSourceGroup(Resource):
                     NewsItemAggregate.reassign_to_new_groups(source.id, default_group.id)
             return message, code
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update OSINT source group", ex)
-            return "", 400
+            msg = "Could not update OSINT source group"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_DELETE")
     def delete(self, group_id):
@@ -1039,8 +1080,9 @@ class OSINTSourceGroup(Resource):
         try:
             return osint_source.OSINTSourceGroup.delete(group_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete OSINT source group", ex)
-            return "", 400
+            msg = "Could not delete OSINT source group"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class RemoteAccesses(Resource):
@@ -1068,8 +1110,9 @@ class RemoteAccesses(Resource):
         try:
             remote.RemoteAccess.add(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create remote access", ex)
-            return "", 400
+            msg = "Could not create remote access"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class RemoteAccess(Resource):
@@ -1089,8 +1132,9 @@ class RemoteAccess(Resource):
             if disconnect:
                 sse_manager.remote_access_disconnect([event_id])
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remote access", ex)
-            return "", 400
+            msg = "Could not update remote access"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
     def delete(self, remote_access_id):
@@ -1104,8 +1148,9 @@ class RemoteAccess(Resource):
         try:
             return remote.RemoteAccess.delete(remote_access_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remote access", ex)
-            return "", 400
+            msg = "Could not delete remote access"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class RemoteNodes(Resource):
@@ -1133,8 +1178,9 @@ class RemoteNodes(Resource):
         try:
             remote.RemoteNode.add(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create remote node", ex)
-            return "", 400
+            msg = "Could not create remote node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class RemoteNode(Resource):
@@ -1153,8 +1199,9 @@ class RemoteNode(Resource):
             if remote.RemoteNode.update(remote_node_id, request.json) is False:
                 remote_manager.disconnect_from_node(remote_node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update remote node", ex)
-            return "", 400
+            msg = "Could not update remote node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
     def delete(self, remote_node_id):
@@ -1169,8 +1216,9 @@ class RemoteNode(Resource):
             remote_manager.disconnect_from_node(remote_node_id)
             return remote.RemoteNode.delete(remote_node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete remote node", ex)
-            return "", 400
+            msg = "Could not delete remote node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class RemoteNodeConnect(Resource):
@@ -1188,8 +1236,9 @@ class RemoteNodeConnect(Resource):
         try:
             return remote_manager.connect_to_node(remote_node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not connect to node", ex)
-            return "", 400
+            msg = "Could not connect to node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class PresentersNodes(Resource):
@@ -1217,8 +1266,9 @@ class PresentersNodes(Resource):
         try:
             return "", presenters_manager.add_presenters_node(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create presenters node", ex)
-            return "", 400
+            msg = "Could not create presenters node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class PresentersNode(Resource):
@@ -1236,8 +1286,9 @@ class PresentersNode(Resource):
         try:
             presenters_manager.update_presenters_node(node_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update presenters node", ex)
-            return "", 400
+            msg = "Could not update presenters node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_PRESENTERS_NODE_DELETE")
     def delete(self, node_id):
@@ -1251,8 +1302,9 @@ class PresentersNode(Resource):
         try:
             return presenters_node.PresentersNode.delete(node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete presenters node", ex)
-            return "", 400
+            msg = "Could not delete presenters node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class PublisherNodes(Resource):
@@ -1280,8 +1332,9 @@ class PublisherNodes(Resource):
         try:
             return "", publishers_manager.add_publishers_node(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create publishers node", ex)
-            return "", 400
+            msg = "Could not create publishers node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class PublishersNode(Resource):
@@ -1299,8 +1352,9 @@ class PublishersNode(Resource):
         try:
             publishers_manager.update_publishers_node(node_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update publishers node", ex)
-            return "", 400
+            msg = "Could not update publishers node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_PUBLISHERS_NODE_DELETE")
     def delete(self, node_id):
@@ -1314,8 +1368,9 @@ class PublishersNode(Resource):
         try:
             return publishers_node.PublishersNode.delete(node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete publishers node", ex)
-            return "", 400
+            msg = "Could not delete publishers node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class PublisherPresets(Resource):
@@ -1343,8 +1398,9 @@ class PublisherPresets(Resource):
         try:
             publishers_manager.add_publisher_preset(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create publishers preset", ex)
-            return "", 400
+            msg = "Could not create publishers preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class PublisherPreset(Resource):
@@ -1362,8 +1418,9 @@ class PublisherPreset(Resource):
         try:
             publisher_preset.PublisherPreset.update(preset_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update publishers preset", ex)
-            return "", 400
+            msg = "Could not update publishers preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_PUBLISHER_PRESET_DELETE")
     def delete(self, preset_id):
@@ -1377,8 +1434,9 @@ class PublisherPreset(Resource):
         try:
             return publisher_preset.PublisherPreset.delete(preset_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete publishers preset", ex)
-            return "", 400
+            msg = "Could not delete publishers preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class BotNodes(Resource):
@@ -1406,8 +1464,9 @@ class BotNodes(Resource):
         try:
             return "", bots_manager.add_bots_node(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create bots node", ex)
-            return "", 400
+            msg = "Could not create bots node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class BotsNode(Resource):
@@ -1425,8 +1484,9 @@ class BotsNode(Resource):
         try:
             bots_manager.update_bots_node(node_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update bots node", ex)
-            return "", 400
+            msg = "Could not update bots node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_BOTS_NODE_DELETE")
     def delete(self, node_id):
@@ -1440,8 +1500,9 @@ class BotsNode(Resource):
         try:
             return bots_node.BotsNode.delete(node_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete bots node", ex)
-            return "", 400
+            msg = "Could not delete bots node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class BotPresets(Resource):
@@ -1469,8 +1530,9 @@ class BotPresets(Resource):
         try:
             bots_manager.add_bot_preset(request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create bots preset", ex)
-            return "", 400
+            msg = "Could not create bots preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 class BotPreset(Resource):
@@ -1488,8 +1550,9 @@ class BotPreset(Resource):
         try:
             bot_preset.BotPreset.update(preset_id, request.json)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not update bots preset", ex)
-            return "", 400
+            msg = "Could not update bots preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
     @auth_required("CONFIG_BOT_PRESET_DELETE")
     def delete(self, preset_id):
@@ -1503,8 +1566,9 @@ class BotPreset(Resource):
         try:
             return bot_preset.BotPreset.delete(preset_id)
         except Exception as ex:
-            log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete bots preset", ex)
-            return "", 400
+            msg = "Could not delete bots preset"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
 
 
 def initialize(api):

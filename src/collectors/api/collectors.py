@@ -26,7 +26,9 @@ class Collectors(Resource):
         if "id" in request.json:
             logger.debug(f"Got ID for collector: {request.json['id']}")
             return collectors_manager.get_registered_collectors_info(request.json["id"])
-        return "", 400
+        msg = "Collector ID missing"
+        logger.warning(msg)
+        return {"error": msg}, 400
 
 
 class Collector(Resource):

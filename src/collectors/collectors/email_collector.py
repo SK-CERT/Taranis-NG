@@ -226,7 +226,7 @@ class EmailCollector(BaseCollector):
         email_password = source.parameter_values["EMAIL_PASSWORD"]
         parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.collector_source)
         email_sender_address = source.parameter_values["EMAIL_SENDER"]
-        emails_limit = int(source.parameter_values["EMAILS_LIMIT"])
+        emails_limit = BaseCollector.read_int_parameter("EMAILS_LIMIT", "", source)
 
         if email_server_type.casefold() == "imap":
             fetch_emails_imap(
@@ -237,6 +237,6 @@ class EmailCollector(BaseCollector):
                 email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, parsed_proxy
             )
         else:
-            logger.error(f"{self.collector_source} Email server connection type is not supported: {email_server_type}")
+            logger.error(f"{self.collector_source} Email server connection type is not supported: '{email_server_type}'")
 
         BaseCollector.publish(news_items, source, self.collector_source)

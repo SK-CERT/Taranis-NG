@@ -105,7 +105,7 @@ class TaranisSSE(Resource):
         except Exception as ex:
             msg = "SSE: Error in streaming response"
             logger.exception(msg, ex)
-            return msg + " " + str(ex), 500
+            return msg, 500
 
 
 def initialize(api):

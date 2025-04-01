@@ -56,7 +56,7 @@ class CoreApi:
         """
         result = cls.read_collector_config_id()
         if "error" in result:
-            return None, 500
+            return result, 500
         else:
             id = result["id"]
 
@@ -85,7 +85,7 @@ class CoreApi:
         """
         result = cls.read_collector_config_id()
         if "error" in result:
-            return None, 500
+            return result, 500
         else:
             id = result["id"]
 
