@@ -73,8 +73,9 @@ class ReportItems(Resource):
             if "limit" in request.args and request.args["limit"]:
                 limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
-            logger.exception(f"Get ReportItems failed: {ex}")
-            return "", 400
+            msg = "Get ReportItems failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
         return report_item.ReportItem.get_json(group, filter, offset, limit, auth_manager.get_user_from_jwt())
 
@@ -175,12 +176,15 @@ class ReportItemData(Resource):
             if "remote_report_item_ids" in request.args and request.args["remote_report_item_ids"]:
                 data["remote_report_item_ids"] = request.args["remote_report_item_ids"].split("--")
         except Exception as ex:
-            logger.exception(f"Get ReportItemData failed: {ex}")
-            return "", 400
+            msg = "Get ReportItemData failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
         user = auth_manager.get_user_from_jwt()
         if auth_manager.check_acl(report_item_id, ACLCheck.REPORT_ITEM_ACCESS, user) is False:
-            return "", 401
+            msg = "ACL check failed"
+            logger.warning(msg)
+            return {"error": msg}, 401
 
         return report_item.ReportItem.get_updated_data(report_item_id, data)
 

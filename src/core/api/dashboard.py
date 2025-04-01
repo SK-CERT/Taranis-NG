@@ -26,8 +26,9 @@ class Dashboard(Resource):
             if "tag_cloud_day" in request.args and request.args["tag_cloud_day"]:
                 tag_cloud_day = min(int(request.args["tag_cloud_days"]), 7)
         except Exception as ex:
-            logger.exception(f"Get Dashboard failed: {ex}")
-            return "", 400
+            msg = "Get Dashboard failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
         total_news_items = NewsItemData.count_all()
         total_products = Product.count_all()

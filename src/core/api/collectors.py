@@ -26,7 +26,9 @@ class OSINTSourcesForCollectors(Resource):
         parser.add_argument("collector_type", location="args")
         parameters = parser.parse_args()
         if collectors_node.id != collector_id:
-            return "", 404
+            msg = "Forbidden: Collector ID does not match"
+            logger.warning(msg)
+            return {"error": msg}, 403
 
         collectors_node.updateLastSeen()
 
@@ -48,7 +50,9 @@ class OSINTSourceLastAttempt(Resource):
         """
         source = osint_source.OSINTSource.get_by_id(osint_source_id)
         if not source:
-            return {}, 404
+            msg = "OSINT source with this ID does not exists"
+            logger.warning(msg)
+            return {"error": msg}, 404
         source.update_last_attempt(osint_source_id)
         return {}, 200
 
@@ -79,14 +83,17 @@ class OSINTSourceStatusUpdate(Resource):
         """
         source = osint_source.OSINTSource.get_by_id(osint_source_id)
         if not source:
-            return {}, 404
+            msg = "OSINT source with this ID does not exists"
+            logger.warning(msg)
+            return {"error": msg}, 404
 
         try:
             osint_source_status_schema = OSINTSourceUpdateStatusSchema()
             osint_source_status = osint_source_status_schema.load(request.json)  # noqa F841
         except Exception as ex:
-            logger.exception(f"Put OSINTSourceStatusUpdate failed: {ex}")
-            return {}, 400
+            msg = "Put OSINTSourceStatusUpdate failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
         return {}, 200
 
@@ -105,13 +112,16 @@ class CollectorStatusUpdate(Resource):
             (int): The response code
         """
         if collectors_node.id != collector_id:
-            return "", 404
+            msg = "Forbidden: Collector ID does not match"
+            logger.warning(msg)
+            return {"error": msg}, 403
 
         try:
             collectors_node.updateLastSeen()
         except Exception as ex:
-            logger.exception(f"Get CollectorStatusUpdate failed: {ex}")
-            return {}, 400
+            msg = "Get CollectorStatusUpdate failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
 
         return {}, 200
 

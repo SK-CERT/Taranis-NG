@@ -3,6 +3,7 @@
 Returns:
     _description_
 """
+
 from presenters.pdf_presenter import PDFPresenter
 from presenters.html_presenter import HTMLPresenter
 from presenters.text_presenter import TEXTPresenter
@@ -64,4 +65,4 @@ def generate(presenter_input_json):
         presenter_output_schema = PresenterOutputSchema()
         return presenter_output_schema.dump(presenter_output)
     else:
-        return "", 500
+        return "Generating presenter output failed", 500

@@ -106,8 +106,9 @@ class Keycloak(Resource):
             response = Response(resp.content, resp.status_code, headers)
             return response
         except Exception as ex:
-            logger.exception(f"Keycloak proxy failed: {ex}")
-            return {"error": "Internal server error"}, 500
+            msg = "Keycloak proxy failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 500
 
     def get(self, path):
         """Proxy GET function."""
