@@ -104,7 +104,7 @@ class RSSCollector(BaseCollector):
                     content = ""
                     link_for_article = feed_entry.get("link", "")
                     if summary:
-                        review = common.smart_truncate(common.strip_html(summary))
+                        review = common.strip_html(summary)
                     if content_rss:
                         content = common.strip_html(content_rss[0].get("value", ""))
 
@@ -140,8 +140,11 @@ class RSSCollector(BaseCollector):
                         logger.debug(f"{self.collector_source} Using review for content")
                     # use first 500 characters of content if summary is empty
                     elif not summary and content:
-                        review = common.smart_truncate(content)
+                        review = content
                         logger.debug(f"{self.collector_source} Using first 500 characters of content for review")
+
+                    title = common.smart_truncate(title, 200)
+                    review = common.smart_truncate(review)
 
                     # use published date if available, otherwise use updated date
                     if published_parsed:

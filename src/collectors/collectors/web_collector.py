@@ -300,9 +300,6 @@ class WebCollector(BaseCollector):
         # parse other arguments
         self.user_agent = self.source.parameter_values["USER_AGENT"]
         self.tor_service = self.source.parameter_values["TOR"]
-
-        # self.interval = self.source.parameter_values['REFRESH_INTERVAL']
-
         self.pagination_limit = BaseCollector.read_int_parameter("PAGINATION_LIMIT", 1, self.source)
         self.links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, self.source)
         self.word_limit = BaseCollector.read_int_parameter("WORD_LIMIT", 0, self.source)
@@ -665,18 +662,21 @@ class WebCollector(BaseCollector):
 
         title = self.__find_element_text_by(browser, self.selectors["title"])
 
-        article_full_text = self.__find_element_text_by(browser, self.selectors["article_full_text"])
+        content = self.__find_element_text_by(browser, self.selectors["article_full_text"])
         if self.word_limit > 0:
-            article_full_text = " ".join(re.compile(r"\s+").split(article_full_text)[: self.word_limit])
+            content = " ".join(re.compile(r"\s+").split(content)[: self.word_limit])
 
         if self.selectors["article_description"]:
-            article_description = self.__find_element_text_by(browser, self.selectors["article_description"])
+            review = self.__find_element_text_by(browser, self.selectors["article_description"])
         else:
-            article_description = ""
+            review = ""
         if self.word_limit > 0:
-            article_description = " ".join(re.compile(r"\s+").split(article_description)[: self.word_limit])
-        if not article_description:
-            article_description = common.smart_truncate(article_full_text)
+            review = " ".join(re.compile(r"\s+").split(review)[: self.word_limit])
+        if not review:
+            review = content
+
+        title = common.smart_truncate(title, 200)
+        review = common.smart_truncate(review)
 
         extracted_date = None
         published_str = self.__find_element_text_by(browser, self.selectors["published"])
@@ -692,18 +692,18 @@ class WebCollector(BaseCollector):
 
         author = self.__find_element_text_by(browser, self.selectors["author"])
 
-        for_hash = author + title + article_description
+        for_hash = author + title + review
         news_item = NewsItemData(
             uuid.uuid4(),
             hashlib.sha256(for_hash.encode()).hexdigest(),
             title,
-            article_description,
+            review,
             self.web_url,
             link,
             published_str,
             author,
             now,
-            article_full_text,
+            content,
             self.source.id,
             [],
         )

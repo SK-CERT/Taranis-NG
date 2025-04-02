@@ -426,10 +426,10 @@ class BaseCollector:
             itm (NewsItemData): News Item object.
         """
         if itm.title:
-            logger.debug(f"{collector_source} __ Title    : {itm.title}")
+            logger.debug(f"{collector_source} __ Title    : {itm.title[:100]}")
         if itm.review:
-            logger.debug(f"{collector_source} __ Review   : {itm.review.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+            logger.debug(f"{collector_source} __ Review   : {itm.review[:100]}")
         if itm.content:
-            logger.debug(f"{collector_source} __ Content  : {itm.content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+            logger.debug(f"{collector_source} __ Content  : {common.clean_whitespace(itm.content)[:100]}")
         if itm.published:
             logger.debug(f"{collector_source} __ Published: {itm.published}")
