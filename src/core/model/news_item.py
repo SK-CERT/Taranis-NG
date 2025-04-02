@@ -892,7 +892,7 @@ class NewsItemAggregate(db.Model):
         if not news_item_data.hash:
             news_item_data.hash = news_item_data.id
         # sanitize news item from user manual input
-        news_item_data.title = common.strip_html(news_item_data.title)
+        news_item_data.title = common.smart_truncate(common.strip_html(news_item_data.title), 200)
         news_item_data.review = common.smart_truncate(common.strip_html(news_item_data.review))
         news_item_data.content = common.strip_html(news_item_data.content)
         news_item_data.author = common.strip_html(news_item_data.author)
