@@ -12,6 +12,6 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 requests==2.32.3
 schedule==1.2.2
-selenium==4.30.0
+selenium==4.31.0
 slackclient==2.9.4
 tweepy==4.15.0
