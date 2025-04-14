@@ -2,7 +2,7 @@
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-btn v-bind="UI.BUTTON.ADD_NEW" @click="addUser">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{$t('user.add_btn')}}</span>
+            <span>{{ $t('user.add_btn') }}</span>
         </v-btn>
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible">
             <v-card v-bind="UI.DIALOG.BASEMENT">
@@ -19,46 +19,57 @@
                     <v-spacer></v-spacer>
                     <v-btn text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{$t('user.save')}}</span>
+                        <span>{{ $t('user.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
                 <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
                     <v-row no-gutters>
                         <v-col cols="6" class="pa-1">
-                            <v-text-field
-                                :label="$t('user.username')"
-                                name="username"
-                                type="text"
-                                v-model="user.username"
-                                v-validate="'required'"
-                                data-vv-name="username"
-                                :error-messages="errors.collect('username')"
-                            />
+                            <v-text-field :label="$t('user.username')"
+                                          name="username"
+                                          type="text"
+                                          v-model="user.username"
+                                          v-validate="'required'"
+                                          data-vv-name="username"
+                                          :error-messages="errors.collect('username')" />
                         </v-col>
                         <v-col cols="6" class="pa-1">
-                            <v-text-field
-                                :label="$t('user.name')"
-                                name="name"
-                                v-model="user.name"
-                            />
+                            <v-text-field :label="$t('user.name')"
+                                          name="name"
+                                          v-model="user.name" />
+                        </v-col>
+                        <v-col cols="6" class="pa-1">
+                            <v-text-field ref="password"
+                                          type="password"
+                                          v-model="pwd"
+                                          v-validate=" checkPassEdit ? 'required' : '' "
+                                          :error-messages="errors.collect('password_check')"
+                                          :label="$t('user.password')"
+                                          data-vv-name="password_check" />
+                        </v-col>
+                        <v-col cols="6" class="pa-1">
+                            <v-text-field v-model="repwd"
+                                          type="password"
+                                          v-validate=" checkPassEdit ? 'required|confirmed:password' : '' "
+                                          :error-messages="errors.collect('password_check')"
+                                          :label="$t('user.password_check')"
+                                          data-vv-name="password_check" />
                         </v-col>
                     </v-row>
 
                     <v-row no-gutters>
-                        <v-col cols="12" class="pa-1">
-                            <v-data-table
-                                v-model="selected_permissions"
-                                :headers="headers"
-                                :items="permissions"
-                                item-key="id"
-                                show-select
-                                class="elevation-1"
-                            >
+                        <v-col cols="12" class="pt-2">
+                            <v-data-table v-model="selected_permissions"
+                                          :headers="headers"
+                                          :items="permissions"
+                                          item-key="id"
+                                          show-select
+                                          class="elevation-1">
 
                                 <template v-slot:top>
                                     <v-toolbar flat>
-                                        <v-toolbar-title>{{$t('user.permissions')}}</v-toolbar-title>
+                                        <v-toolbar-title>{{ $t('user.permissions') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
 
@@ -67,30 +78,31 @@
                     </v-row>
 
                     <v-row no-gutters class="pt-2">
-                        <v-col cols="12">
+                        <v-col>
                             <v-alert v-if="show_validation_error" dense type="error" text>
-                                {{$t('user.validation_error')}}
+                                {{ $t('user.validation_error') }}
                             </v-alert>
                             <v-alert v-if="show_error" dense type="error" text>
-                                {{$t('user.error')}}
+                                {{ $t('user.error') }}
                             </v-alert>
                         </v-col>
                     </v-row>
+
                 </v-form>
             </v-card>
         </v-dialog>
     </v-row>
+
 </template>
 
 <script>
     import AuthMixin from "../../../services/auth/auth_mixin";
-    import {createNewExternalUser} from "@/api/config";
-    import {updateExternalUser} from "@/api/config";
+    import { createNewExternalUser, updateExternalUser } from "@/api/config";
 
     export default {
         name: "NewExternalUser",
         components: {},
-        props: {add_button: Boolean},
+        props: { add_button: Boolean },
         data: () => ({
 
             headers: [
@@ -99,7 +111,7 @@
                     align: 'start',
                     value: 'name',
                 },
-                {text: 'Description', value: 'description'},
+                { text: 'Description', value: 'description' },
             ],
 
             visible: false,
@@ -108,6 +120,8 @@
             show_error: false,
             selected_permissions: [],
             permissions: [],
+            pwd: "",
+            repwd: "",
             user: {
                 id: -1,
                 username: "",
@@ -117,6 +131,16 @@
                 organizations: [],
             }
         }),
+        computed: {
+            checkPassEdit() {
+                if (this.edit) {
+                    return this.pwd !== "" || this.repwd !== "";
+
+                } else {
+                    return true;
+                }
+            },
+        },
         methods: {
             addUser() {
                 this.visible = true;
@@ -127,12 +151,16 @@
                 this.user.roles = []
                 this.user.organizations = []
                 this.selected_permissions = []
+                this.pwd = ""
+                this.repwd = ""
                 this.$validator.reset();
             },
 
             cancel() {
                 this.$validator.reset();
                 this.visible = false;
+                this.pwd = "";
+                this.repwd = "";
             },
 
             add() {
@@ -151,6 +179,12 @@
                                 }
                             )
                         }
+
+                        if (this.edit === false || this.pwd !== "") {
+                            this.user.password = this.pwd
+                        }
+                        this.pwd = "";
+                        this.repwd = "";
 
                         if (this.edit) {
 
@@ -200,7 +234,7 @@
         },
         mixins: [AuthMixin],
         mounted() {
-            this.$store.dispatch('getAllExternalPermissions', {search: ''})
+            this.$store.dispatch('getAllExternalPermissions', { search: '' })
                 .then(() => {
                     this.permissions = this.$store.getters.getAllPermissions.items
                 });
@@ -209,6 +243,8 @@
                 this.visible = true;
                 this.edit = true;
                 this.show_error = false;
+                this.pwd = "";
+                this.repwd = "";
 
                 this.selected_roles = data.roles;
                 this.selected_permissions = data.permissions;
