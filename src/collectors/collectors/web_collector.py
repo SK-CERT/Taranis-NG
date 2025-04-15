@@ -8,6 +8,7 @@ import re
 import selenium
 import subprocess
 import time
+import urllib.request
 import uuid
 from .base_collector import BaseCollector
 from dateutil.parser import parse
@@ -322,6 +323,8 @@ class WebCollector(BaseCollector):
         self.web_driver_type = self.source.parameter_values["WEBDRIVER"]
         self.client_cert_directory = self.source.parameter_values["CLIENT_CERT_DIR"]
 
+        self.last_collected = self.source.last_collected
+
         # Use get_proxy_handler from BaseCollector
         parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"], self.collector_source)
         if parsed_proxy:
@@ -461,15 +464,31 @@ class WebCollector(BaseCollector):
         if self.tor_service.lower() == "yes":
             self.__run_tor()
 
-        if self.interpret_as == "uri":
-            result, message, total_processed_articles, total_failed_articles = self.__browse_title_page(self.web_url)
+        if self.proxy:
+            proxy_handler = BaseCollector.get_proxy_handler(self.proxy)
+        else:
+            proxy_handler = None
+        opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
+        not_modified = False
+        if self.last_collected:
+            if not_modified := BaseCollector.not_modified(self.collector_source, self.web_url, self.last_collected, opener, self.user_agent):
+                logger.info(f"{self.collector_source} Will not collect the feed because nothing has changed.")
+                BaseCollector.publish([], self.source, self.collector_source)
 
-        elif self.interpret_as == "directory":
-            logger.info(f"{self.collector_source} Searching for html files in {self.web_url}")
-            for file_name in os.listdir(self.web_url):
-                if file_name.lower().endswith(".html"):
-                    html_file = f"file://{self.web_url}/{file_name}"
-                    result, message = self.__browse_title_page(html_file)
+        if not not_modified:
+            if self.interpret_as == "uri":
+                total_failed_articles = self.__browse_title_page(self.web_url)
+
+            elif self.interpret_as == "directory":
+                logger.info(f"{self.collector_source} Searching for html files in {self.web_url}")
+                for file_name in os.listdir(self.web_url):
+                    if file_name.lower().endswith(".html"):
+                        html_file = f"file://{self.web_url}/{file_name}"
+                        total_failed_articles = self.__browse_title_page(html_file)
+
+            if total_failed_articles > 0:
+                logger.warning(f"{self.collector_source} {total_failed_articles} article(s) failed")
+            BaseCollector.publish(self.news_items, self.source, self.collector_source)
 
     def __browse_title_page(self, index_url):
         """Spawn a browser, download the title page for parsing, call parser.
@@ -532,12 +551,10 @@ class WebCollector(BaseCollector):
             page += 1
 
         title_page_handle = browser.current_window_handle
-        total_processed_articles, total_failed_articles = 0, 0
+        total_failed_articles = 0
         while True:
             try:
-                processed_articles, failed_articles = self.__process_title_page_articles(browser, title_page_handle, index_url)
-
-                total_processed_articles += processed_articles
+                failed_articles = self.__process_title_page_articles(browser, title_page_handle, index_url)
                 total_failed_articles += failed_articles
 
                 # safety cleanup
@@ -565,9 +582,8 @@ class WebCollector(BaseCollector):
                 break
 
         self.__dispose_of_headless_driver(browser)
-        BaseCollector.publish(self.news_items, self.source, self.collector_source)
 
-        return True, "", total_processed_articles, total_failed_articles
+        return total_failed_articles
 
     def __process_title_page_articles(self, browser, title_page_handle, index_url):
         """Parse the title page for articles.
@@ -577,14 +593,13 @@ class WebCollector(BaseCollector):
             title_page_handle (str): The handle of the title page tab.
             index_url (str): The URL of the title page.
         Returns:
-            (processed_articles, failed_articles) (tuple): A tuple containing the number of processed articles and
-                the number of failed articles.
+            failed_articles (int): A number of failed articles.
         """
-        processed_articles, failed_articles = 0, 0
+        failed_articles = 0
         article_items = self.__safe_find_elements_by(browser, self.selectors["single_article_link"])
         if article_items is None:
             logger.warning(f"{self.collector_source} Invalid page or incorrect selector for article items")
-            return 0, 0
+            return 1
 
         index_url_just_before_click = browser.current_url
 
@@ -602,13 +617,15 @@ class WebCollector(BaseCollector):
             try:
                 link = item.get_attribute("href")
                 if link is None:  # don't continue, it will crash in current situation
+                    failed_articles += 1
                     logger.warning(f"{self.collector_source} No link for article {count}/{len(article_items)}")
                     continue
-                logger.info(f"{self.collector_source} Visiting article {count}/{len(article_items)}: {link}")
             except Exception:
+                failed_articles += 1
                 logger.warning(f"{self.collector_source} Failed to get link for article {count}/{len(article_items)}")
                 continue
 
+            logger.info(f"{self.collector_source} Visiting article {count}/{len(article_items)}: {link}")
             click_method = 1  # TODO: some day, make this user-configurable with tri-state enum
             if click_method == 1:
                 browser.switch_to.new_window("tab")
@@ -624,13 +641,15 @@ class WebCollector(BaseCollector):
             time.sleep(1)
 
             try:
-                news_item = self.__process_article_page(index_url, browser)
+                news_item = self.__process_article_page(browser)
                 if news_item:
                     BaseCollector.print_news_item(self.collector_source, news_item)
                     self.news_items.append(news_item)
                 else:
+                    failed_articles += 1
                     logger.warning(f"{self.collector_source} Parsing an article failed")
             except Exception as error:
+                failed_articles += 1
                 logger.exception(f"{self.collector_source} Parsing an article failed: {error}")
 
             if len(browser.window_handles) == 1:
@@ -647,13 +666,12 @@ class WebCollector(BaseCollector):
                 logger.debug(f"{self.collector_source} Limit for article links reached ({self.links_limit})")
                 break
 
-        return processed_articles, failed_articles
+        return failed_articles
 
-    def __process_article_page(self, index_url, browser):
+    def __process_article_page(self, browser):
         """Parse a single article.
 
         Parameters:
-            index_url (str): The URL of the title page.
             browser (WebDriver): The browser instance.
         Returns:
             news_item (NewsItemData): The parsed news item.
