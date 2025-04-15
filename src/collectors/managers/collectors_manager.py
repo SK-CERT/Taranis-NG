@@ -27,12 +27,7 @@ def reportStatus():
             logger.error(
                 f"Core status update response failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
             )
-        # for debugging scheduler tasks
-        # for key in collectors:
-        #     for source in collectors[key].osint_sources:
-        #         if hasattr(source, "scheduler_job"):
-        #             logger.debug("Last run: {}, Next run: {}, {}".format(source.scheduler_job.last_run or "never",
-        #                source.scheduler_job.next_run or "never", source.name))
+
         time.sleep(55)
 
 

@@ -1,49 +1,62 @@
+"""This module provides functions to schedule jobs at specific intervals using the schedule library."""
+
 import threading
 import schedule
 import time
 
 
 def schedule_job_every_day(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every day at a specific time."""
     return schedule.every().day.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_minutes(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every X minutes."""
     return schedule.every(interval).minutes.do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_monday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Monday at a specific time."""
     return schedule.every().monday.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_tuesday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Tuesday at a specific time."""
     return schedule.every().tuesday.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_wednesday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Wednesday at a specific time."""
     return schedule.every().wednesday.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_thursday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Thursday at a specific time."""
     return schedule.every().thursday.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_friday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Friday at a specific time."""
     return schedule.every().friday.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_saturday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Saturday at a specific time."""
     return schedule.every().saturday.at(interval).do(job_func, *args, **kwargs)
 
 
 def schedule_job_on_sunday(interval, job_func, *args, **kwargs):
+    """Schedule a job to run every Sunday at a specific time."""
     return schedule.every().sunday.at(interval).do(job_func, *args, **kwargs)
 
 
-def cancel_job(scheduler_job):
-    schedule.cancel_job(scheduler_job)
+def cancel_all_jobs():
+    """Cancel all scheduled jobs."""
+    schedule.clear()
 
 
 def run_scheduler():
+    """Run the scheduler in a separate thread."""
     scheduler_event = threading.Event()
 
     class ScheduleThread(threading.Thread):
