@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import pytz
+import socket
 import socks
 import time
 import urllib.request
@@ -210,14 +211,7 @@ class BaseCollector:
         time.sleep(20)  # wait for the CORE
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
-        # cancel all existing jobs
-        # TODO: cannot cancel jobs that are running and are scheduled for further in time than 60 seconds
-        # updating of the configuration needs to be done more gracefully
-        for source in self.osint_sources:
-            try:
-                time_manager.cancel_job(source.scheduler_job)
-            except Exception:
-                pass
+        time_manager.cancel_all_jobs()
         self.osint_sources = []
 
         # get new node configuration
@@ -242,14 +236,14 @@ class BaseCollector:
 
                     # run task every day at XY
                     if interval[0].isdigit() and ":" in interval:
-                        logger.debug(f"{self.name} '{source.name}': Scheduling at: {interval}")
+                        logger.debug(f"{self.name} '{source.name}': Scheduling for: {interval}")
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        logger.debug(f"{self.name} '{source.name}': Scheduling at: {day} {at}")
+                        logger.debug(f"{self.name} '{source.name}': Scheduling for: {day} {at}")
                         if day == "Monday":
                             source.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_collector, source)
                         elif day == "Tuesday":
@@ -266,8 +260,8 @@ class BaseCollector:
                             source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.run_collector, source)
                     # run task every XY minutes
                     else:
-                        logger.debug(f"{self.name} '{source.name}': Scheduling for {interval}")
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
+                        logger.debug(f"{self.name} '{source.name}': Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
             else:
                 logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
                 pass
@@ -342,7 +336,7 @@ class BaseCollector:
 
         last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
         try:
-            with opener(request) as response:
+            with opener(request, timeout=10) as response:
                 last_modified = response.headers.get("Last-Modified")
                 if response.status == 304:
                     logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
@@ -367,15 +361,18 @@ class BaseCollector:
                         f"{collector_source} Content has been modified since {last_collected_str} " f"(Last-Modified: header not received)"
                     )
                     return False
-        except urllib.error.HTTPError as e:
-            if e.code == 304:
+        except urllib.error.HTTPError as error:
+            if error.code == 304:
                 logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
                 return True
             else:
-                logger.exception(f"{collector_source} HTTP error occurred: {e}")
+                logger.exception(f"{collector_source} HTTP error occurred: {error}")
                 return False
-        except Exception as e:
-            logger.exception(f"{collector_source} An error occurred: {e}")
+        except socket.timeout:
+            logger.debug(f"{collector_source} Request timed out for {request.full_url}")
+            return False
+        except Exception as error:
+            logger.exception(f"{collector_source} An error occurred: {error}")
             return False
 
     def run_collector(self, source):
@@ -389,7 +386,11 @@ class BaseCollector:
         logger.info(f"{runner.collector_source} Starting collector")
         BaseCollector.update_last_attempt(source)
         runner.collect(source)
-        logger.info(f"{runner.collector_source} Collection finished")
+        if hasattr(source, "scheduler_job"):
+            next_run_str = f"next run at {source.scheduler_job.next_run}"
+        else:
+            next_run_str = "not yet scheduled"
+        logger.info(f"{runner.collector_source} Collection finished ({next_run_str})")
 
     def initialize(self):
         """Initialize the collector."""
