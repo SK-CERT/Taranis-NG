@@ -30,16 +30,14 @@
                                         v-model="selected_node"
                                         :items="nodes"
                                         item-text="name"
-                                        :label="$t('bot_preset.node')"
-                            />
+                                        :label="$t('bot_preset.node')" />
                         </v-col>
                         <v-col cols="12">
                             <v-combobox v-if="selected_node" :disabled="edit"
                                         v-model="selected_bot"
                                         :items="selected_node.bots"
                                         item-text="name"
-                                        :label="$t('bot_preset.bot')"
-                            />
+                                        :label="$t('bot_preset.bot')" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters>
@@ -52,16 +50,14 @@
                                           v-validate="'required'"
                                           data-vv-name="name"
                                           :error-messages="errors.collect('name')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                          :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
                             <v-textarea v-if="selected_bot" :disabled="!canUpdate"
                                         :label="$t('bot_preset.description')"
                                         name="description"
                                         v-model="preset.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                        :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters>
@@ -70,8 +66,7 @@
                                             ui="text"
                                             :sources="selected_bot.parameters"
                                             :values="values"
-                                            :disabled="!canUpdate"
-                            />
+                                            :disabled="!canUpdate" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters class="pt-2">
@@ -91,8 +86,8 @@
 </template>
 
 <script>
-    import {createNewBotPreset} from "@/api/config";
-    import {updateBotPreset} from "@/api/config";
+    import { createNewBotPreset } from "@/api/config";
+    import { updateBotPreset } from "@/api/config";
     import FormParameters from "../../common/FormParameters";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
@@ -141,6 +136,15 @@
                 this.preset.bot_id = ""
                 this.values = []
                 this.preset.parameter_values = []
+
+                // Automatically select the first node and bot if available
+                if (this.nodes.length > 0) {
+                    this.selected_node = this.nodes[0];
+                    if (this.selected_node.bots.length > 0) {
+                        this.selected_bot = this.selected_node.bots[0];
+                    }
+                }
+
                 this.$validator.reset();
             },
 
@@ -206,8 +210,17 @@
                 })
             }
         },
+        watch: {
+            selected_bot(newBot) {
+                if (newBot && newBot.parameters) {
+                    this.values = newBot.parameters.map(param => param.default_value || "");
+                } else {
+                    this.values = [];
+                }
+            }
+        },
         mounted() {
-            this.$store.dispatch('getAllBotsNodes', {search: ''})
+            this.$store.dispatch('getAllBotsNodes', { search: '' })
                 .then(() => {
                     this.nodes = this.$store.getters.getBotsNodes.items
                 });

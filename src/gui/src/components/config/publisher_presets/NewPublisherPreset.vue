@@ -30,16 +30,14 @@
                                         v-model="selected_node"
                                         :items="nodes"
                                         item-text="name"
-                                        :label="$t('publisher_preset.node')"
-                            />
+                                        :label="$t('publisher_preset.node')" />
                         </v-col>
                         <v-col cols="12">
                             <v-combobox v-if="selected_node" :disabled="edit"
                                         v-model="selected_publisher"
                                         :items="selected_node.publishers"
                                         item-text="name"
-                                        :label="$t('publisher_preset.publisher')"
-                            />
+                                        :label="$t('publisher_preset.publisher')" />
                         </v-col>
                     </v-row>
 
@@ -53,16 +51,14 @@
                                           v-validate="'required'"
                                           data-vv-name="name"
                                           :error-messages="errors.collect('name')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                          :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
                             <v-textarea v-if="selected_publisher" :disabled="!canUpdate"
                                         :label="$t('publisher_preset.description')"
                                         name="description"
                                         v-model="preset.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                        :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                     </v-row>
 
@@ -72,15 +68,13 @@
                                         :label="$t('publisher_preset.use_for_notifications')"
                                         name="use_for_notifications"
                                         v-model="preset.use_for_notifications"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                        :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
                             <FormParameters v-if="selected_publisher" :disabled="!canUpdate"
                                             ui="text"
                                             :sources="selected_publisher.parameters"
-                                            :values="values"
-                            />
+                                            :values="values" />
                         </v-col>
                     </v-row>
 
@@ -101,8 +95,8 @@
 </template>
 
 <script>
-    import {createNewPublisherPreset} from "@/api/config";
-    import {updatePublisherPreset} from "@/api/config";
+    import { createNewPublisherPreset } from "@/api/config";
+    import { updatePublisherPreset } from "@/api/config";
     import FormParameters from "../../common/FormParameters";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
@@ -139,7 +133,6 @@
                 return this.checkPermission(Permissions.CONFIG_PUBLISHER_PRESET_UPDATE) || !this.edit
             },
         },
-
         methods: {
             addPreset() {
                 this.visible = true
@@ -154,6 +147,15 @@
                 this.preset.publisher_id = ""
                 this.values = []
                 this.preset.parameter_values = []
+
+                // Automatically select the first node and publisher if available
+                if (this.nodes.length > 0) {
+                    this.selected_node = this.nodes[0];
+                    if (this.selected_node.publishers.length > 0) {
+                        this.selected_publisher = this.selected_node.publishers[0];
+                    }
+                }
+
                 this.$validator.reset();
             },
 
@@ -219,8 +221,17 @@
                 })
             }
         },
+        watch: {
+            selected_publisher(newPublisher) {
+                if (newPublisher && newPublisher.parameters) {
+                    this.values = newPublisher.parameters.map(param => param.default_value || "");
+                } else {
+                    this.values = [];
+                }
+            }
+        },
         mounted() {
-            this.$store.dispatch('getAllPublishersNodes', {search: ''})
+            this.$store.dispatch('getAllPublishersNodes', { search: '' })
                 .then(() => {
                     this.nodes = this.$store.getters.getPublishersNodes.items
                 });

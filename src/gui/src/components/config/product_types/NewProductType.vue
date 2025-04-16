@@ -31,16 +31,14 @@
                                         v-model="selected_node"
                                         :items="nodes"
                                         item-text="name"
-                                        :label="$t('product_type.node')"
-                            />
+                                        :label="$t('product_type.node')" />
                         </v-col>
                         <v-col cols="12">
                             <v-combobox v-if="selected_node" :disabled="edit"
                                         v-model="selected_presenter"
                                         :items="selected_node.presenters"
                                         item-text="name"
-                                        :label="$t('product_type.presenter')"
-                            />
+                                        :label="$t('product_type.presenter')" />
                         </v-col>
                     </v-row>
 
@@ -54,16 +52,14 @@
                                           v-validate="'required'"
                                           data-vv-name="name"
                                           :error-messages="errors.collect('name')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                          :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
                             <v-textarea v-if="selected_presenter" :disabled="!canUpdate"
                                         :label="$t('product_type.description')"
                                         name="description"
                                         v-model="product.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                        :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                     </v-row>
 
@@ -72,8 +68,7 @@
                             <FormParameters v-if="selected_presenter" :disabled="!canUpdate"
                                             ui="text"
                                             :sources="selected_presenter.parameters"
-                                            :values="values"
-                            />
+                                            :values="values" />
                         </v-col>
                     </v-row>
 
@@ -103,12 +98,10 @@
                         </v-toolbar>
                         <v-card>
                             <v-card-title>
-                                <v-combobox
-                                    v-model="selected_type"
-                                    :items="report_types"
-                                    item-text="title"
-                                    :label="$t('product_type.choose_report_type')"
-                                />
+                                <v-combobox v-model="selected_type"
+                                            :items="report_types"
+                                            item-text="title"
+                                            :label="$t('product_type.choose_report_type')" />
                             </v-card-title>
 
                             <v-card-text>
@@ -119,28 +112,31 @@
                                             {{ '{' }}% for report_item in data.report_items %{{ '}' }}
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.report_items_object.name')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsage('name')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.report_items_object.name') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsage('name')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.report_items_object.name_prefix')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsage('name_prefix')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.report_items_object.name_prefix') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsage('name_prefix')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.report_items_object.type')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsage('type')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.report_items_object.type') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsage('type')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
                                             {{ '{' }}% endfor %{{ '}' }}
@@ -156,68 +152,76 @@
                                             {{ '{' }}% for news_item in report_item.news_items %{{ '}' }}
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.title')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('title')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.title') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('title')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.review')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('review')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.review') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('review')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.content')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('content')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.content') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('content')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.author')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('author')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.author') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('author')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.source')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('source')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.source') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('source')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.link')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('link')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.link') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('link')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.published')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('published')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.published') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('published')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
-                                            <span><strong>{{
-                                                    $t('product_type.news_items_object.collected')
-                                                }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="variableUsageNewsItems('collected')"></span></span>
+                                            <span>
+                                                <strong>
+                                                    {{ $t('product_type.news_items_object.collected') }}
+                                                </strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                 style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                 v-html="variableUsageNewsItems('collected')"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
                                             {{ '{' }}% endfor %{{ '}' }}
@@ -236,10 +240,11 @@
                                         </v-card-text>
                                         <v-card-text v-for="attribute_item in attribute_group.attribute_group_items"
                                                      :key="attribute_item.id">
-                                            <span><strong>{{ attribute_item.title }}</strong>: <span
-                                                class="pl-3 pr-3 pt-1 pb-1"
-                                                style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
-                                                v-html="attributeUsage(attribute_item)"></span></span>
+                                            <span>
+                                                <strong>{{ attribute_item.title }}</strong>: <span class="pl-3 pr-3 pt-1 pb-1"
+                                                                                                   style="background-color: #efefef; border-style: solid; border-width: 1px; font-style: italic; font-size: 16px"
+                                                                                                   v-html="attributeUsage(attribute_item)"></span>
+                                            </span>
                                         </v-card-text>
                                         <v-card-text>
                                             {{ '{' }}% endfor %{{ '}' }}
@@ -296,7 +301,6 @@ export default {
             return this.checkPermission(Permissions.CONFIG_PRODUCT_TYPE_UPDATE) || !this.edit
         }
     },
-
     methods: {
         closeHelpDialog() {
             this.help_dialog = false;
@@ -332,6 +336,15 @@ export default {
             this.product.presenter_id = ""
             this.values = []
             this.product.parameter_values = []
+
+            // Automatically select the first node and presenter if available
+            if (this.nodes.length > 0) {
+                this.selected_node = this.nodes[0];
+                if (this.selected_node.presenters.length > 0) {
+                    this.selected_presenter = this.selected_node.presenters[0];
+                }
+            }
+
             this.$validator.reset();
         },
 
@@ -394,6 +407,15 @@ export default {
                     this.show_validation_error = true;
                 }
             })
+        }
+    },
+    watch: {
+        selected_presenter(newPresenter) {
+            if (newPresenter && newPresenter.parameters) {
+                this.values = newPresenter.parameters.map(param => param.default_value || "");
+            } else {
+                this.values = [];
+            }
         }
     },
     mounted() {
