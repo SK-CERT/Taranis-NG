@@ -77,7 +77,7 @@ class ScheduledTasksCollector(BaseCollector):
 
             news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source, self.collector_source)
+            BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.exception(f"{self.collector_source} Collection failed: {error}")
+            logger.exception(f"Collection failed: {error}")

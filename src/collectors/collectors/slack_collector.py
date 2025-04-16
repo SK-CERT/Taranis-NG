@@ -72,7 +72,7 @@ class SlackCollector(BaseCollector):
 
         try:
             for channel_id in channels_list:
-                logger.info(f"{self.collector_source} Channel: {channel_id}")
+                logger.info(f"Channel: {channel_id}")
                 channel_info = slack_client.conversations_info(channel=channel_id)
                 channel_name = channel_info["channel"]["name"]
 
@@ -81,7 +81,7 @@ class SlackCollector(BaseCollector):
                 count = 0
                 for message in data["messages"]:
                     count += 1
-                    logger.debug(f"{self.collector_source} Message: {0}".format(count))
+                    logger.debug(f"Message: {0}".format(count))
                     published = time.ctime(float(message["ts"]))
                     content = message["text"]
                     review = common.smart_truncate(content)
@@ -104,10 +104,10 @@ class SlackCollector(BaseCollector):
                     url = ""
                     for_hash = user_id + channel_id + content
 
-                    logger.debug(f"{self.collector_source} ... Title    : {title}")
-                    logger.debug(f"{self.collector_source} ... Content  : {content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-                    logger.debug(f"{self.collector_source} ... Author   : {author}")
-                    logger.debug(f"{self.collector_source} ... Published: {published}")
+                    logger.debug(f"... Title    : {title}")
+                    logger.debug(f"... Content  : {content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                    logger.debug(f"... Author   : {author}")
+                    logger.debug(f"... Published: {published}")
 
                     news_item = NewsItemData(
                         uuid.uuid4(),
@@ -125,7 +125,7 @@ class SlackCollector(BaseCollector):
                     )
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source, self.collector_source)
+            BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.exception(f"{self.collector_source} Collection failed: {error}")
+            logger.exception(f"Collection failed: {error}")

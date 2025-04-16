@@ -4,7 +4,7 @@ import logging.handlers
 import sys
 import socket
 import logging
-from typing import Optional
+from typing import Optional, Dict, Tuple
 
 
 class TaranisLogger:
@@ -40,6 +40,11 @@ class TaranisLogger:
         # Create separate stream handlers for each logger
         taranis_stream_handler = logging.StreamHandler(stream=sys.stdout)
         module_stream_handler = logging.StreamHandler(stream=sys.stdout)
+
+        self.log_level_mapping: Dict[str, Tuple[Optional[str], Optional[str]]] = {}  # Mapping of log levels to target attributes
+        self.dynamic_target = None  # Dynamic target object (e.g., source)
+        self.module_name = None  # Module name for log messages
+
         if colored:
             taranis_stream_handler.setFormatter(TaranisLogFormatter())
             module_stream_handler.setFormatter(TaranisLogFormatter())
@@ -78,13 +83,63 @@ class TaranisLogger:
         # Set the primary logger to taranis
         self.logger = taranis_logger
 
+    def set_module_name(self, module_name: str):
+        """Set the module name for log messages.
+
+        Parameters:
+            module_name (str): The name of the module to include in log messages.
+        """
+        self.module_name = module_name
+
+    def _format_message(self, message: str) -> str:
+        """Format the log message to include the module name if set.
+
+        Parameters:
+            message (str): The original log message.
+
+        Returns:
+            str: The formatted log message.
+        """
+        if self.module_name:
+            return f"{self.module_name}: {message}"
+        return message
+
+    def set_log_level_target(self, level: str, attribute: Optional[str]):
+        """Set the target attribute for a specific log level.
+
+        Parameters:
+            level (str): The log level (e.g., "debug", "error", "exception", etc.).
+            attribute (str): The attribute of the dynamic target where the message should be stored.
+        """
+        self.log_level_mapping[level.lower()] = attribute
+
+    def set_dynamic_target(self, target: Optional[object]):
+        """Set the dynamic target object (e.g., source).
+
+        Parameters:
+            target (object): The dynamic target object.
+        """
+        self.dynamic_target = target
+
+    def _store_message(self, level: str, message: str):
+        """Store the message in the target attribute for the given log level.
+
+        Parameters:
+            level (str): The log level (e.g., "debug", "error", "exception", etc.).
+            message (str): The message to be stored.
+        """
+        attribute = self.log_level_mapping.get(level.lower())
+        if self.dynamic_target is not None and attribute is not None:
+            setattr(self.dynamic_target, attribute, message)
+
     def debug(self, message):
         """Log a debug message.
 
         Parameters:
             message (str): The message to be logged.
         """
-        self.logger.debug(message)
+        self._store_message("debug", message)
+        self.logger.debug(self._format_message(message))
 
     def error(self, message):
         """Log an error message.
@@ -92,7 +147,8 @@ class TaranisLogger:
         Parameters:
             message (str): The message to be logged.
         """
-        self.logger.error(message)
+        self._store_message("error", message)
+        self.logger.error(self._format_message(message))
 
     def exception(self, message="Traceback:"):
         """Log an exception with an optional message.
@@ -100,7 +156,8 @@ class TaranisLogger:
         Parameters:
             message (str, optional): An optional message to include in the log. Defaults to "Traceback:".
         """
-        self.logger.exception(message)
+        self._store_message("exception", message)
+        self.logger.exception(self._format_message(message))
 
     def info(self, message):
         """Log an info message.
@@ -108,7 +165,8 @@ class TaranisLogger:
         Parameters:
             message (str): The message to be logged.
         """
-        self.logger.info(message)
+        self._store_message("info", message)
+        self.logger.info(self._format_message(message))
 
     def warning(self, message):
         """Log an warning message.
@@ -116,7 +174,8 @@ class TaranisLogger:
         Parameters:
             message (str): The message to be logged.
         """
-        self.logger.warning(message)
+        self._store_message("warning", message)
+        self.logger.warning(self._format_message(message))
 
     def critical(self, message):
         """Log a critical message.
@@ -124,7 +183,8 @@ class TaranisLogger:
         Parameters:
             message (str): The message to be logged.
         """
-        self.logger.critical(message)
+        self._store_message("critical", message)
+        self.logger.critical(self._format_message(message))
 
 
 class TaranisLogFormatter(logging.Formatter):

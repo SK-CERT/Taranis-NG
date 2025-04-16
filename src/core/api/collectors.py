@@ -57,6 +57,31 @@ class OSINTSourceLastAttempt(Resource):
         return {}, 200
 
 
+class OSINTSourceLastErrorMessage(Resource):
+    """OSINT source last error message API endpoint."""
+
+    @api_key_required("collectors")
+    def get(self, osint_source_id, collectors_node=None):
+        """Get the last error message for an OSINT source.
+
+        Args:
+            osint_source_id (str): The OSINT source ID
+        Returns:
+            (dict): Empty dictionary
+            (int): The response code
+        """
+        source = osint_source.OSINTSource.get_by_id(osint_source_id)
+        if not source:
+            msg = "OSINT source with this ID does not exists"
+            logger.error(msg)
+            return {"error": msg}, 404
+
+        error_message = request.args.get("message", None)
+
+        source.update_last_error_message(osint_source_id, error_message)
+        return {}, 200
+
+
 class AddNewsItems(Resource):
     """Add news items API endpoint."""
 
@@ -131,5 +156,6 @@ def initialize(api):
     api.add_resource(OSINTSourcesForCollectors, "/api/v1/collectors/<string:collector_id>/osint-sources")
     api.add_resource(OSINTSourceStatusUpdate, "/api/v1/collectors/osint-sources/<string:osint_source_id>")
     api.add_resource(OSINTSourceLastAttempt, "/api/v1/collectors/osint-sources/<string:osint_source_id>/attempt")
+    api.add_resource(OSINTSourceLastErrorMessage, "/api/v1/collectors/osint-sources/<string:osint_source_id>/error_message")
     api.add_resource(CollectorStatusUpdate, "/api/v1/collectors/<string:collector_id>")
     api.add_resource(AddNewsItems, "/api/v1/collectors/news-items")

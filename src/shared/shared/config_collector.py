@@ -21,6 +21,13 @@ class ConfigCollector(ConfigBase):
                 ParameterType.NUMBER,
                 "180",
             ),
+            param_type(
+                "WARNING_INTERVAL",
+                "Warning interval in days (0 to disable)",
+                "How long to wait before warning about no new data",
+                ParameterType.NUMBER,
+                "0",
+            ),
         ]
 
     def __init__(self):

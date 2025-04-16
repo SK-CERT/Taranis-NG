@@ -67,10 +67,23 @@ class BaseCollector:
         Parameters:
             source: The source object representing the collector.
         """
-        response, status_code = CoreApi.update_collector_last_attepmt(source.id)
+        response, status_code = CoreApi.update_collector_last_attempt(source.id)
         if status_code != 200:
             logger.error(
                 f"Update last attempt failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
+            )
+
+    @staticmethod
+    def update_last_error_message(source):
+        """Update the last attempt for a collector.
+
+        Parameters:
+            source: The source object representing the collector.
+        """
+        response, status_code = CoreApi.update_collector_last_error_message(source.id, source.last_error_message)
+        if status_code != 200:
+            logger.error(
+                f"Update last error message failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
             )
 
     @staticmethod
@@ -191,15 +204,14 @@ class BaseCollector:
             item.author = common.strip_html(item.author)
 
     @staticmethod
-    def publish(news_items, source, collector_source):
+    def publish(news_items, source):
         """Publish the collected news items to the CoreApi.
 
         Parameters:
             news_items (list): A list of news items to be published.
             source (object): The source object from which the news items were collected.
-            collector_source (string): Collector readbale name
         """
-        logger.debug(f"{collector_source} Collected {len(news_items)} news items")
+        logger.debug(f"Collected {len(news_items)} news items")
         BaseCollector.sanitize_news_items(news_items, source)
         filtered_news_items = BaseCollector.filter_by_word_list(news_items, source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
@@ -232,24 +244,27 @@ class BaseCollector:
 
                 # start collection
                 for source in self.osint_sources:
+                    logger.set_dynamic_target(source)
+                    logger.set_module_name(f"{self.name} '{source.name}'")
+                    source.last_error_message = None
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == "" or interval == "0":
-                        logger.info(f"{self.name} '{source.name}': Disabled")
+                        logger.info("Disabled")
                         continue
 
                     self.run_collector(source)
 
                     # run task every day at XY
                     if interval[0].isdigit() and ":" in interval:
-                        logger.debug(f"{self.name} '{source.name}': Scheduling at: {interval}")
+                        logger.debug(f"Scheduling at: {interval}")
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        logger.debug(f"{self.name} '{source.name}': Scheduling at: {day} {at}")
+                        logger.debug(f"Scheduling at: {day} {at}")
                         if day == "Monday":
                             source.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_collector, source)
                         elif day == "Tuesday":
@@ -266,7 +281,7 @@ class BaseCollector:
                             source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.run_collector, source)
                     # run task every XY minutes
                     else:
-                        logger.debug(f"{self.name} '{source.name}': Scheduling for {interval}")
+                        logger.debug(f"Scheduling for {interval}")
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
             else:
                 logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
@@ -276,7 +291,7 @@ class BaseCollector:
             pass
 
     @staticmethod
-    def get_proxy_handler(parsed_proxy):
+    def get_proxy_handler(parsed_proxy) -> object:
         """Get the proxy handler for the collector.
 
         Parameters:
@@ -297,7 +312,7 @@ class BaseCollector:
             return SocksiPyHandler(socks_type, parsed_proxy.hostname, int(parsed_proxy.port))
 
     @staticmethod
-    def get_parsed_proxy(proxy_string, collector_source):
+    def get_parsed_proxy(proxy_string, collector_source) -> object:
         """Get the parsed proxy URL for the collector.
 
         Parameters:
@@ -310,14 +325,14 @@ class BaseCollector:
             return None
         parsed_proxy = urlparse(proxy_string)
         if parsed_proxy.scheme in ["http", "https", "socks4", "socks5"]:
-            logger.debug(f"{collector_source} Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
+            logger.debug(f"Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
             return parsed_proxy
         else:
-            logger.warning(f"{collector_source} Invalid proxy server: {proxy_string}. Not using proxy.")
+            logger.warning(f"Invalid proxy server: {proxy_string}. Not using proxy.")
             return None
 
     @staticmethod
-    def not_modified(collector_source, url, last_collected, opener, user_agent=None):
+    def not_modified(collector_source, url, last_collected, opener, user_agent=None) -> bool:
         """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
 
         Arguments:
@@ -345,51 +360,45 @@ class BaseCollector:
             with opener(request) as response:
                 last_modified = response.headers.get("Last-Modified")
                 if response.status == 304:
-                    logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
+                    logger.debug(f"Content has not been modified since {last_collected_str}")
                     return True
                 elif last_modified:
                     last_modified = date_parse(last_modified)
                     last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
                     if last_collected >= last_modified:
-                        logger.debug(
-                            f"{collector_source} Content has not been modified since {last_collected_str} "
-                            f"(Last-Modified: {last_modified_str})"
-                        )
+                        logger.debug(f"Content has not been modified since {last_collected_str} " f"(Last-Modified: {last_modified_str})")
                         return True
                     else:
-                        logger.debug(
-                            f"{collector_source} Content has been modified since {last_collected_str} "
-                            f"(Last-Modified: {last_modified_str})"
-                        )
+                        logger.debug(f"Content has been modified since {last_collected_str} " f"(Last-Modified: {last_modified_str})")
                         return False
                 else:
-                    logger.debug(
-                        f"{collector_source} Content has been modified since {last_collected_str} " f"(Last-Modified: header not received)"
-                    )
+                    logger.debug(f"Content has been modified since {last_collected_str} " f"(Last-Modified: header not received)")
                     return False
         except urllib.error.HTTPError as e:
             if e.code == 304:
-                logger.debug(f"{collector_source} Content has not been modified since {last_collected_str}")
+                logger.debug(f"Content has not been modified since {last_collected_str}")
                 return True
             else:
-                logger.exception(f"{collector_source} HTTP error occurred: {e}")
+                logger.exception(f"HTTP error occurred: {e}")
                 return False
         except Exception as e:
-            logger.exception(f"{collector_source} An error occurred: {e}")
+            logger.exception(f"An error occurred: {e}")
             return False
 
-    def run_collector(self, source):
+    def run_collector(self, source) -> None:
         """Run the collector on the given source.
 
         Parameters:
             source: The source to collect data from.
         """
         runner = self.__class__()  # get right type of collector
-        runner.collector_source = f"{self.name} '{source.name}':"
-        logger.info(f"{runner.collector_source} Starting collector")
-        BaseCollector.update_last_attempt(source)
+        runner.collector_source = f"{self.name} '{source.name}'"
+        logger.set_module_name(runner.collector_source)
+        logger.info("Starting collector")
+        self.update_last_attempt(source)
         runner.collect(source)
-        logger.info(f"{runner.collector_source} Collection finished")
+        self.update_last_error_message(source)
+        logger.info("Collection finished")
 
     def initialize(self):
         """Initialize the collector."""
@@ -418,18 +427,17 @@ class BaseCollector:
         return val
 
     @staticmethod
-    def print_news_item(collector_source, itm):
+    def print_news_item(itm):
         """Print news item detials.
 
         Parameters:
-            collector_source (str): Collector name.
             itm (NewsItemData): News Item object.
         """
         if itm.title:
-            logger.debug(f"{collector_source} __ Title    : {itm.title[:100]}")
+            logger.debug(f"__ Title    : {itm.title[:100]}")
         if itm.review:
-            logger.debug(f"{collector_source} __ Review   : {itm.review[:100]}")
+            logger.debug(f"__ Review   : {itm.review[:100]}")
         if itm.content:
-            logger.debug(f"{collector_source} __ Content  : {common.clean_whitespace(itm.content)[:100]}")
+            logger.debug(f"__ Content  : {common.clean_whitespace(itm.content)[:100]}")
         if itm.published:
-            logger.debug(f"{collector_source} __ Published: {itm.published}")
+            logger.debug(f"__ Published: {itm.published}")
