@@ -61,7 +61,7 @@ class RSSCollector(BaseCollector):
 
             # Check if the feed has been modified since the last collection
             if last_collected:
-                if BaseCollector.not_modified(self.collector_source, feed_url, last_collected, opener, user_agent):
+                if BaseCollector.not_modified(feed_url, last_collected, opener, user_agent):
                     return None
 
             logger.debug(f"Fetching feed from URL: {feed_url}")
@@ -71,7 +71,7 @@ class RSSCollector(BaseCollector):
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
         last_collected = source.last_collected
         user_agent = source.parameter_values["USER_AGENT"]
-        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.collector_source)
+        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"])
         if parsed_proxy:
             proxy_handler = BaseCollector.get_proxy_handler(parsed_proxy)
         else:

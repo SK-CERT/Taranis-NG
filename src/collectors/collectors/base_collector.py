@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import pytz
+import socket
 import socks
 import time
 import urllib.request
@@ -34,9 +35,9 @@ class BaseCollector:
         history(interval): Calculate the limit for retrieving historical data based on the given interval.
         filter_by_word_list(news_items, source): Filter news items based on word lists defined in the source.
         sanitize_news_items(news_items, source): Sanitize news items by setting default values for any missing attributes.
-        publish(news_items, source, collector_source): Publish the collected news items to the CoreApi.
+        publish(news_items, source): Publish the collected news items to the CoreApi.
         refresh(): Refresh the OSINT sources for the collector.
-        get_proxy_handler(source, collector_source): Get the proxy handler for the collector.
+        get_proxy_handler(source): Get the proxy handler for the collector.
         run_collector(source): Run the collector on the given source.
         initialize(): Initialize the collector.
         read_int_parameter(name, default_value, source): Read an integer parameter from a source dictionary
@@ -222,14 +223,7 @@ class BaseCollector:
         time.sleep(20)  # wait for the CORE
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
-        # cancel all existing jobs
-        # TODO: cannot cancel jobs that are running and are scheduled for further in time than 60 seconds
-        # updating of the configuration needs to be done more gracefully
-        for source in self.osint_sources:
-            try:
-                time_manager.cancel_job(source.scheduler_job)
-            except Exception:
-                pass
+        time_manager.cancel_all_jobs()
         self.osint_sources = []
 
         # get new node configuration
@@ -257,14 +251,14 @@ class BaseCollector:
 
                     # run task every day at XY
                     if interval[0].isdigit() and ":" in interval:
-                        logger.debug(f"Scheduling at: {interval}")
+                        logger.debug(f"Scheduling for {interval} daily")
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        logger.debug(f"Scheduling at: {day} {at}")
+                        logger.debug(f"Scheduling for {day} {at}")
                         if day == "Monday":
                             source.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_collector, source)
                         elif day == "Tuesday":
@@ -281,8 +275,8 @@ class BaseCollector:
                             source.scheduler_job = time_manager.schedule_job_on_sunday(at, self.run_collector, source)
                     # run task every XY minutes
                     else:
-                        logger.debug(f"Scheduling for {interval}")
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
+                        logger.debug(f"Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
             else:
                 logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
                 pass
@@ -296,7 +290,6 @@ class BaseCollector:
 
         Parameters:
             parsed_proxy (urlparse object): The parsed proxy URL.
-            collector_source (string): Collector readable name
         Returns:
             (object): The proxy handler for the collector.
         """
@@ -312,12 +305,11 @@ class BaseCollector:
             return SocksiPyHandler(socks_type, parsed_proxy.hostname, int(parsed_proxy.port))
 
     @staticmethod
-    def get_parsed_proxy(proxy_string, collector_source) -> object:
+    def get_parsed_proxy(proxy_string) -> object:
         """Get the parsed proxy URL for the collector.
 
         Parameters:
             proxy_string (str): The proxy URL string.
-            collector_source (string): Collector readable name
         Returns:
             (urlparse object): The parsed proxy URL for the collector.
         """
@@ -332,7 +324,7 @@ class BaseCollector:
             return None
 
     @staticmethod
-    def not_modified(collector_source, url, last_collected, opener, user_agent=None) -> bool:
+    def not_modified(url, last_collected, opener, user_agent=None) -> bool:
         """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
 
         Arguments:
@@ -354,35 +346,39 @@ class BaseCollector:
             headers["User-Agent"] = user_agent
 
         request = urllib.request.Request(url, method="HEAD", headers=headers)
+        log_prefix = "Check-if-modified -"
 
         last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
         try:
-            with opener(request) as response:
+            with opener(request, timeout=5) as response:
                 last_modified = response.headers.get("Last-Modified")
                 if response.status == 304:
-                    logger.debug(f"Content has not been modified since {last_collected_str}")
+                    logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
                     return True
                 elif last_modified:
                     last_modified = date_parse(last_modified)
                     last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
                     if last_collected >= last_modified:
-                        logger.debug(f"Content has not been modified since {last_collected_str} " f"(Last-Modified: {last_modified_str})")
+                        logger.debug(f"{log_prefix} NOT modified since {last_collected_str} (Last-Modified: {last_modified_str})")
                         return True
                     else:
-                        logger.debug(f"Content has been modified since {last_collected_str} " f"(Last-Modified: {last_modified_str})")
+                        logger.debug(f"{log_prefix} YES, modified since {last_collected_str} (Last-Modified: {last_modified_str})")
                         return False
                 else:
-                    logger.debug(f"Content has been modified since {last_collected_str} " f"(Last-Modified: header not received)")
+                    logger.debug(f"{log_prefix} IDK if modified since {last_collected_str} (Last-Modified: header not received)")
                     return False
-        except urllib.error.HTTPError as e:
-            if e.code == 304:
-                logger.debug(f"Content has not been modified since {last_collected_str}")
+        except urllib.error.HTTPError as error:
+            if error.code == 304:
+                logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
                 return True
             else:
-                logger.exception(f"HTTP error occurred: {e}")
+                logger.exception(f"{log_prefix} HTTP error occurred: {error}")
                 return False
-        except Exception as e:
-            logger.exception(f"An error occurred: {e}")
+        except socket.timeout:
+            logger.debug(f"{log_prefix} Request timed out for {request.full_url}")
+            return False
+        except Exception as error:
+            logger.exception(f"{log_prefix} An error occurred: {error}")
             return False
 
     def run_collector(self, source) -> None:
@@ -397,8 +393,12 @@ class BaseCollector:
         logger.info("Starting collector")
         self.update_last_attempt(source)
         runner.collect(source)
+        if hasattr(source, "scheduler_job"):
+            next_run_str = f"next run at {source.scheduler_job.next_run}"
+        else:
+            next_run_str = "not yet scheduled"
+        logger.info(f"Collection finished ({next_run_str})")
         self.update_last_error_message(source)
-        logger.info("Collection finished")
 
     def initialize(self):
         """Initialize the collector."""

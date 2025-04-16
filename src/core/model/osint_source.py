@@ -377,7 +377,6 @@ class OSINTSource(db.Model):
             osint_source_id (int): Osint source Id.
             error_message (str): Error message.
         """
-        print(f"Update last error message for OSINT source {osint_source_id} with message: {error_message}")
         osint_source = db.session.get(cls, osint_source_id)
         osint_source.last_error_message = error_message
         db.session.commit()
