@@ -106,6 +106,7 @@ class OSINTSourceSchema(Schema):
         collector_id (fields.Str): The unique identifier of the collector associated with the OSINT source.
         last_attempted (fields.DateTime): The date and time when the OSINT source was last attempted to be collected.
         last_collected (fields.DateTime): The date and time when the OSINT source was last collected
+        last_error_message (fields.Str): The error message from the last collection attempt.
     """
 
     class Meta:
@@ -126,6 +127,7 @@ class OSINTSourceSchema(Schema):
     collector_id = fields.Str()
     last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
     last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
+    last_error_message = fields.Str(allow_none=True)
 
     @post_load
     def make_osint_source(self, data, **kwargs):
@@ -160,16 +162,8 @@ class OSINTSourcePresentationSchema(OSINTSourceSchema, PresentationSchema):
     """OSINTSourcePresentationSchema is a schema class for defining the structure of an OSINT source presentation schema.
 
     Attributes:
-        id (fields.Str): The unique identifier of the OSINT source.
-        name (fields.Str): The name of the OSINT source.
-        parameter_values (fields.List): A list of parameter values associated with the OSINT source.
-        word_lists (fields.List): A list of word lists associated with the OSINT source.
-        description (fields.Str): A brief description of the OSINT source.
-        collector_id (fields.Str): The unique identifier of the collector associated with the OSINT source.
-        last_attempted (fields.DateTime): The date and time when the OSINT source was last attempted to be collected.
-        last_collected (fields.DateTime): The date and time when the OSINT source was last collected
         collector (fields.Nested): A nested field representing the collector associated with the OSINT source.
-        osint_source_groups (fields.Nested): A nested field representing the OSINT source groups associated with the OSINT source.
+        osint_source_groups (fields.List): A list of OSINT source groups associated with the OSINT source.
     """
 
     collector = fields.Nested(CollectorSchema)
@@ -231,7 +225,9 @@ class OSINTSourceId:
 class OSINTSource:
     """Class to represent an OSINT source."""
 
-    def __init__(self, id, name, parameter_values, word_lists, description, collector_id, last_attempted, last_collected):
+    def __init__(
+        self, id, name, parameter_values, word_lists, description, collector_id, last_attempted, last_collected, last_error_message=None
+    ):
         """Initialize an instance of the class.
 
         Args:
@@ -243,6 +239,7 @@ class OSINTSource:
             collector_id (str): The unique identifier of the collector associated with the OSINT source.
             last_attempted (datetime): The date and time when the OSINT source was last attempted to be collected.
             last_collected (datetime): The date and time when the OSINT source was last collected.
+            last_error_message (str, optional): The error message from the last collection attempt.
         """
         self.id = id
         self.name = name
@@ -256,6 +253,7 @@ class OSINTSource:
         self.collector_id = collector_id
         self.last_attempted = last_attempted
         self.last_collected = last_collected
+        self.last_error_message = last_error_message
 
 
 class OSINTSourceGroupSchema(OSINTSourceGroupSchemaBase):

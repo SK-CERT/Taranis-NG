@@ -206,6 +206,7 @@ const messages_en = {
         description: "Description",
         last_attempt: "Last attempt",
         last_collected: "Last collected",
+        last_error_message: "Last error message",
         successful: "New OSINT source was successfully added",
         successful_edit: "OSINT source was successfully updated",
         removed: "OSINT source was successfully deleted",
