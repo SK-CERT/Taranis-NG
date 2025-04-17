@@ -17,7 +17,7 @@
                                     <v-icon center>{{card.tag}}</v-icon>
                                 </v-col>
                                 <v-col>
-                                    <div class="grey--text">{{$t('card_item.title')}}</div>
+                                    <div class="grey--text">{{card.collector.name}}</div>
                                     <div>{{card.name}}</div>
                                 </v-col>
                                 <v-col>
@@ -33,8 +33,8 @@
                                     <div>{{card.last_collected}}</div>
                                 </v-col>
                                 <v-col>
-                                    <div class="grey--text">{{$t('osint_source.type')}}</div>
-                                    <div>{{card.collector.type}}</div>
+                                    <div class="grey--text">{{$t('osint_source.last_error_message')}}</div>
+                                    <div>{{card.last_error_message}}</div>
                                 </v-col>
                                 <!--HOVER TOOLBAR-->
                                 <v-col :style="UI.STYLE.card_hover_toolbar">

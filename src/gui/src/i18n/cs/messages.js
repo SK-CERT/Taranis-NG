@@ -206,6 +206,7 @@ const messages_cs = {
         description: "Popis",
         last_attempt: "Poslední pokus",
         last_collected: "Poslední sběr",
+        last_error_message: "Poslední chyba",
         successful: "Nový zdroj OSINT byl přidán",
         successful_edit: "Zdroj OSINT byl upraven",
         removed: "Zdroj OSINT byl úspěšně smazán",

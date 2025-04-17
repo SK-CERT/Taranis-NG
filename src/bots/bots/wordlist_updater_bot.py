@@ -32,6 +32,7 @@ class WordlistUpdaterBot(BaseBot):
         Args:
             preset (object): An object containing the parameters for the bot execution.
         """
+        self.log_prefix = f"{self.name} {preset.name}"
 
         def load_file(source, word_list_format):
             """Load a word list from a given source.
@@ -91,7 +92,7 @@ class WordlistUpdaterBot(BaseBot):
             CoreApi.update_word_list_category_entries(word_list_id, word_list_category_name, word_list_entries_schema.dump(entries))
 
         except Exception as error:
-            logger.exception(f"{preset.name}: Word list updater failed: {error}")
+            logger.exception(f"Word list updater failed: {error}")
 
     def execute_on_event(self, preset, event_type, data):
         """Execute an action based on the given event.
@@ -108,4 +109,4 @@ class WordlistUpdaterBot(BaseBot):
             format = preset.parameter_values["FORMAT"]  # noqa F841
 
         except Exception as error:
-            logger.exception(f"{preset.name}: Execute on event failed: {error}")
+            logger.exception(f"Execute on event failed: {error}")

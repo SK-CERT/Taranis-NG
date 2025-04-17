@@ -14,6 +14,8 @@ from managers.log_manager import logger
 class TaranisSSE(Resource):
     """SSE API endpoint."""
 
+    log_prefix = "SSE"
+
     @stream_with_context
     def stream(self):
         """Stream data."""
@@ -77,7 +79,7 @@ class TaranisSSE(Resource):
             if jwt_token is not None:
                 auth_type = "JWT"
                 if auth_manager.decode_user_from_jwt(jwt_token) is None:
-                    msg = "SSE: decoding user from jwt failed."
+                    msg = "decoding user from jwt failed."
                     logger.warning(msg)
                     return msg, 403
             elif api_key is not None:
@@ -91,19 +93,19 @@ class TaranisSSE(Resource):
                     master_class = BotsNode
                 validated_object = master_class.get_by_api_key(api_key)
                 if not validated_object:
-                    msg = f"SSE: invalid {auth_type}: '{api_key}'"
+                    msg = f"invalid {auth_type}: '{api_key}'"
                     logger.warning(msg)
                     return msg, 403
 
             else:
-                msg = "SSE: missing authentication credentials."
+                msg = "missing authentication credentials."
                 logger.warning(msg)
                 return msg, 403
 
-            logger.info(f"SSE streaming response {request.remote_addr} ({auth_type})")
+            logger.info(f"streaming response {request.remote_addr} ({auth_type})")
             return Response(self.stream(), mimetype="text/event-stream")
         except Exception as ex:
-            msg = "SSE: Error in streaming response"
+            msg = "Error in streaming response"
             logger.exception(msg, ex)
             return msg, 500
 

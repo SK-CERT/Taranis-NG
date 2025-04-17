@@ -45,6 +45,7 @@ class AnalystBot(BaseBot):
         Raises:
             Exception: If an error occurs during execution.
         """
+        self.log_prefix = f"{self.name} {preset.name}"
         try:
             source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
             regexp = preset.parameter_values["REGULAR_EXPRESSION"]
@@ -61,10 +62,9 @@ class AnalystBot(BaseBot):
 
             bots_params = dict(zip(attr_name, regexp))
             limit = BaseBot.history(interval)
-            logger.info(f"{preset.name}  ({self.name})")
             news_items_data, code = CoreApi.get_news_items_data(limit)
             if code == 200 and news_items_data is not None:
-                logger.debug(f"{preset.name}: News items found: {len(news_items_data)}, since {limit}")
+                logger.debug(f"News items found: {len(news_items_data)}, since {limit}")
                 for item in news_items_data:
                     if item:
                         news_item_id = item["id"]
@@ -99,12 +99,11 @@ class AnalystBot(BaseBot):
                             CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
             else:
                 logger.error(
-                    f"{preset.name}: News items not received, Code: {code}"
-                    f"{', response: ' + str(news_items_data) if news_items_data is not None else ''}"
+                    f"News items not received, Code: {code}" f"{', response: ' + str(news_items_data) if news_items_data is not None else ''}"
                 )
 
         except Exception as error:
-            logger.exception(f"{preset.name}: Failed to parse attributes: {error}")
+            logger.exception(f"Failed to parse attributes: {error}")
 
     def execute_on_event(self, preset, event_type, data):
         """Execute the specified preset on the given event.
@@ -122,4 +121,4 @@ class AnalystBot(BaseBot):
             attr_name = preset.parameter_values["ATTRIBUTE_NAME"]  # noqa F841
 
         except Exception as error:
-            logger.exception(f"{preset.name}: Execute on event failed: {error}")
+            logger.exception(f"Execute on event failed: {error}")

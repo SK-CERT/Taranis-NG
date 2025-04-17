@@ -4,6 +4,7 @@ from base64 import b64decode
 from mastodon import Mastodon
 
 from .base_publisher import BasePublisher
+from managers.log_manager import logger
 from shared.config_publisher import ConfigPublisher
 
 
@@ -32,6 +33,7 @@ class MASTODONPublisher(BasePublisher):
         Raises:
             Exception: If an error occurs.
         """
+        self.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
             access_token = publisher_input.parameter_values_map["MASTODON_ACCESS_TOKEN"]
             api_base_url = publisher_input.parameter_values_map["MASTODON_API_BASE_URL"]
@@ -63,4 +65,4 @@ class MASTODONPublisher(BasePublisher):
             mastodon.status_post(status=status, sensitive=sensitive, visibility=visibility, spoiler_text=spoiler_text)
 
         except Exception as error:
-            BasePublisher.print_exception(self, error)
+            logger.exception(f"Publishing fail: {error}")

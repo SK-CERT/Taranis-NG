@@ -41,6 +41,7 @@ class EMAILPublisher(BasePublisher):
         Raises:
             Exception: If an error occurs while sending the email.
         """
+        self.log_prefix = f"{self.name} '{publisher_input.name}'"
         smtp_server = publisher_input.parameter_values_map["SMTP_SERVER"]
         smtp_server_port = publisher_input.parameter_values_map["SMTP_SERVER_PORT"]
         user = publisher_input.parameter_values_map["EMAIL_USERNAME"]
@@ -121,4 +122,4 @@ class EMAILPublisher(BasePublisher):
                 logger.critical("Email sending failed")
 
         except Exception as error:
-            BasePublisher.print_exception(self, error)
+            logger.exception(f"Publishing fail: {error}")

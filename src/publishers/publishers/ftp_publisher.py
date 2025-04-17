@@ -13,6 +13,7 @@ import paramiko
 import mimetypes
 
 from .base_publisher import BasePublisher
+from managers.log_manager import logger
 from shared.config_publisher import ConfigPublisher
 
 
@@ -41,6 +42,7 @@ class FTPPublisher(BasePublisher):
         Raises:
             Exception: _description_
         """
+        self.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
             ftp_url = publisher_input.parameter_values_map["FTP_URL"]
             mime_type = publisher_input.mime_type[:]
@@ -79,6 +81,6 @@ class FTPPublisher(BasePublisher):
             else:
                 raise Exception("Schema '{}' not supported, choose 'ftp' or 'sftp'".format(ftp_data.scheme))
         except Exception as error:
-            BasePublisher.print_exception(self, error)
+            logger.exception(f"Publishing fail: {error}")
         finally:
             os.remove(filename)

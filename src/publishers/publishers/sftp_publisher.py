@@ -46,6 +46,7 @@ class SFTPPublisher(BasePublisher):
             Exception: If there is an error during the publishing process.
 
         """
+        self.log_prefix = f"{self.name} '{publisher_input.name}'"
         url = publisher_input.parameter_values_map["SFTP_URL"]
         port = publisher_input.parameter_values_map["PORT"]
         username = publisher_input.parameter_values_map["USERNAME"]
@@ -129,4 +130,4 @@ class SFTPPublisher(BasePublisher):
                     logger.debug(f"Error: {error}")
             sftp.close()
         except Exception as error:
-            BasePublisher.print_exception(self, error)
+            logger.exception(f"Publishing fail: {error}")

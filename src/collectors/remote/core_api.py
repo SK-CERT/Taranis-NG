@@ -19,7 +19,7 @@ class CoreApi:
         get_osint_sources(collector_type): Retrieves the OSINT sources for a given collector type.
         update_collector_status(): Updates the status of the collector.
         add_news_items(news_items): Adds news items to the collector.
-        update_collector_last_attepmt(source_id): Updates the last attempt time for a given source.
+        update_collector_last_attempt(source_id): Updates the last attempt time for a given source.
     """
 
     api_url = os.getenv("TARANIS_NG_CORE_URL")
@@ -98,7 +98,7 @@ class CoreApi:
             return {"error": msg}, 503
 
     @classmethod
-    def update_collector_last_attepmt(cls, source_id):
+    def update_collector_last_attempt(cls, source_id):
         """Update collector's "last attempted" record with current datetime.
 
         Args:
@@ -118,12 +118,33 @@ class CoreApi:
             return {"error": msg}, 503
 
     @classmethod
+    def update_collector_last_error_message(cls, source_id, error_message):
+        """Update collector's "last error message" record with current one.
+
+        Args:
+            source_id (str): The ID of the source.
+            error_message (str): The error message to update.
+
+        Returns:
+            tuple: A tuple containing the JSON response and the HTTP status code.
+        """
+        try:
+            encoded_message = f"?message={urllib.parse.quote(error_message)}" if error_message else ""
+            url = f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/error_message{encoded_message}"
+            response = requests.get(url, headers=cls.headers)
+            return response.json(), response.status_code
+        except Exception as ex:
+            msg = "Update collector last error message failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 503
+
+    @classmethod
     def add_news_items(cls, news_items):
         """Add news items to the collector.
 
         This method sends a POST request to the API endpoint for adding news items to the collector.
 
-        Arguments:
+        Args:
             news_items (list): A list of news items to be added.
 
         Returns:

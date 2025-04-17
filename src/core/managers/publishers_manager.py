@@ -3,6 +3,7 @@
 Returns:
     _type_: _description_
 """
+
 from model.publishers_node import PublishersNode
 from model.publisher import Publisher
 from model.publisher_preset import PublisherPreset
@@ -80,7 +81,9 @@ def publish(preset, data, message_title, message_body, recipients):
         message_title = data.get("message_title", None)
         message_body = data.get("message_body", None)
 
-    input_data = PublisherInput(publisher.type, preset.parameter_values, data_mime, data_data, message_title, message_body, recipients)
+    input_data = PublisherInput(
+        preset.name, publisher.type, preset.parameter_values, data_mime, data_data, message_title, message_body, recipients
+    )
     input_schema = PublisherInputSchema()
 
     return PublishersApi(node.api_url, node.api_key).publish(input_schema.dump(input_data))

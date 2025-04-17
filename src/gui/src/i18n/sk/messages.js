@@ -127,6 +127,7 @@ const messages_sk = {
         description: "Popis",
         last_attempt: "Posledný pokus",
         last_collected: "Posledný zber",
+        last_error_message: "Posledná chyba",
         successful: "Nový OSINT zdroj bol úspešne pridaný"
     },
 
