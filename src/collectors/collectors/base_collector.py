@@ -239,19 +239,19 @@ class BaseCollector:
                 # start collection
                 for source in self.osint_sources:
                     logger.set_dynamic_target(source)
-                    logger.set_module_name(f"{self.name} '{source.name}'")
                     source.last_error_message = None
+                    source.log_prefix = f"{self.name} '{source.name}':"
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == "" or interval == "0":
-                        logger.info("Disabled")
+                        logger.info(f"{source.log_prefix} Disabled")
                         continue
 
                     self.run_collector(source)
 
                     # run task every day at XY
                     if interval[0].isdigit() and ":" in interval:
-                        logger.debug(f"Scheduling for {interval} daily")
+                        logger.debug(f"{source.log_prefix} Scheduling for {interval} daily")
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
@@ -276,7 +276,7 @@ class BaseCollector:
                     # run task every XY minutes
                     else:
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
-                        logger.debug(f"Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
+                        logger.debug(f"{source.log_prefix} Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
             else:
                 logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
                 pass
@@ -388,16 +388,14 @@ class BaseCollector:
             source: The source to collect data from.
         """
         runner = self.__class__()  # get right type of collector
-        runner.collector_source = f"{self.name} '{source.name}'"
-        logger.set_module_name(runner.collector_source)
-        logger.info("Starting collector")
+        logger.info(f"{source.log_prefix} Starting collection")
         self.update_last_attempt(source)
         runner.collect(source)
         if hasattr(source, "scheduler_job"):
             next_run_str = f"next run at {source.scheduler_job.next_run}"
         else:
             next_run_str = "not yet scheduled"
-        logger.info(f"Collection finished ({next_run_str})")
+        logger.info(f"{source.log_prefix} Collection finished {next_run_str}")
         self.update_last_error_message(source)
 
     def initialize(self):

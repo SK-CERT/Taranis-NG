@@ -61,7 +61,7 @@ class WebCollector(BaseCollector):
     name = config.name
     description = config.description
     parameters = config.parameters
-    logger.debug(f"Selenium version: {selenium.__version__}")
+    logger.debug(f"{name}: Selenium version: {selenium.__version__}")
 
     @staticmethod
     def __get_prefix_and_selector(element_selector):
@@ -457,6 +457,7 @@ class WebCollector(BaseCollector):
         Parameters:
             source (Source): The source to collect news items from.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
         self.source = source
         self.__parse_settings()
         self.news_items = []
@@ -487,7 +488,7 @@ class WebCollector(BaseCollector):
                         total_failed_articles = self.__browse_title_page(html_file)
 
             if total_failed_articles > 0:
-                logger.warning(f"{total_failed_articles} article(s) failed")
+                logger.debug(f"{total_failed_articles} article(s) failed")
             BaseCollector.publish(self.news_items, self.source)
 
     def __browse_title_page(self, index_url):
@@ -620,9 +621,9 @@ class WebCollector(BaseCollector):
                     failed_articles += 1
                     logger.warning(f"No link for article {count}/{len(article_items)}")
                     continue
-            except Exception:
+            except Exception as error:
                 failed_articles += 1
-                logger.warning(f"Failed to get link for article {count}/{len(article_items)}")
+                logger.exception(f"Failed to get link for article {count}/{len(article_items)}: {error}")
                 continue
 
             logger.info(f"Visiting article {count}/{len(article_items)}: {link}")

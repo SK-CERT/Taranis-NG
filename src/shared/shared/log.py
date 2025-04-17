@@ -83,16 +83,30 @@ class TaranisLogger:
         # Set the primary logger to taranis
         self.logger = taranis_logger
 
-    def set_module_name(self, module_name: str):
-        """Set the module name for log messages.
+    def _get_log_prefix(self) -> str:
+        """Retrieve the value of the log_prefix attribute from the calling class.
 
-        Parameters:
-            module_name (str): The name of the module to include in log messages.
+        Returns:
+            str: The value of log_prefix or a default if not set.
         """
-        self.module_name = module_name
+        try:
+            import inspect
+
+            frame = inspect.currentframe()
+            while frame:
+                # Get the 'self' object from the calling frame
+                caller = frame.f_locals.get("self")
+                if caller and hasattr(caller, "log_prefix"):
+                    return getattr(caller, "log_prefix", "DefaultPrefix")
+                frame = frame.f_back
+        except Exception:
+            pass
+
+        # Default log prefix if none is found
+        return "DefaultPrefix"
 
     def _format_message(self, message: str) -> str:
-        """Format the log message to include the module name if set.
+        """Format the log message to include the log_prefix attribute.
 
         Parameters:
             message (str): The original log message.
@@ -100,9 +114,8 @@ class TaranisLogger:
         Returns:
             str: The formatted log message.
         """
-        if self.module_name:
-            return f"{self.module_name}: {message}"
-        return message
+        log_prefix = self._get_log_prefix()
+        return f"{log_prefix}: {message}"
 
     def set_log_level_target(self, level: str, attribute: Optional[str]):
         """Set the target attribute for a specific log level.

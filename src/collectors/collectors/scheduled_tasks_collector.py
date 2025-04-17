@@ -39,6 +39,7 @@ class ScheduledTasksCollector(BaseCollector):
         Raises:
             Exception: If the collection fails for any reason.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
         news_items = []
         head, tail = os.path.split(source.parameter_values["TASK_COMMAND"])
         task_title = source.parameter_values["TASK_TITLE"]

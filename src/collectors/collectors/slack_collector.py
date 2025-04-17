@@ -41,6 +41,7 @@ class SlackCollector(BaseCollector):
         Arguments:
             source: Source object.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
         news_items = []
         proxy_server = source.parameter_values["PROXY_SERVER"]
 

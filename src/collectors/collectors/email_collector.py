@@ -42,6 +42,7 @@ class EmailCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
 
         def proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port):
             logger.debug("Establishing proxy tunnel")

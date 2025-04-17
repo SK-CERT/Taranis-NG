@@ -38,6 +38,7 @@ class TwitterCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
         try:
             news_items = []
             attributes = []

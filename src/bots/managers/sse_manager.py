@@ -13,15 +13,17 @@ def initialize():
     """Start the SSE thread to listen to the Core's events."""
 
     class SSEThread(threading.Thread):
+        log_prefix = "SSE"
+
         @classmethod
         def run(cls):
             try:
                 url = os.getenv("TARANIS_NG_CORE_SSE")
-                logger.info(f"SSE connecting to Core: {url}")
+                logger.info(f"connecting to Core: {url}")
                 response = requests.get(f"{url}?api_key={Config.API_KEY}", stream=True)
                 client = sseclient.SSEClient(response)
                 for event in client.events():
-                    logger.debug(f"SSE process event: {event.event}, data: {event.data}")
+                    logger.debug(f"process event: {event.event}, data: {event.data}")
                     bots_manager.process_event(event.event, event.data)
 
             except requests.exceptions.ConnectionError as ex:
