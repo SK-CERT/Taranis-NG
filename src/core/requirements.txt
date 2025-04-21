@@ -7,7 +7,7 @@ Flask-Migrate==4.1.0
 flask-oidc==2.3.1
 Flask-RESTful==0.3.10
 Flask-SQLAlchemy==3.1.1
-gevent==24.11.1
+gevent==25.4.1
 gunicorn==23.0.0
 Jinja2==3.1.6
 git+https://github.com/cannatag/ldap3.git@refs/pull/983/head
