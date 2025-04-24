@@ -268,6 +268,9 @@ class WebCollector(BaseCollector):
 
         # parse the URL
         web_url = self.source.parameter_values["WEB_URL"]
+        if not web_url:
+            logger.error("Web URL is not set. Skipping collection.")
+            return False
 
         if web_url.lower().startswith("file://"):
             file_part = web_url[7:]
@@ -278,7 +281,7 @@ class WebCollector(BaseCollector):
                 self.interpret_as = "directory"
                 self.web_url = file_part
             else:
-                logger.warning(f"Missing file {web_url}")
+                logger.error(f"Missing file {web_url}")
                 return False
 
         elif re.search(r"^[a-z0-9]+://", web_url.lower()):
@@ -459,7 +462,9 @@ class WebCollector(BaseCollector):
         """
         self.log_prefix = f"{self.name} '{source.name}'"
         self.source = source
-        self.__parse_settings()
+        if not self.__parse_settings():
+            BaseCollector.publish([], source)
+            return
         self.news_items = []
 
         if self.tor_service.lower() == "yes":

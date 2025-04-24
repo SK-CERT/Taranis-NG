@@ -69,6 +69,10 @@ class RSSCollector(BaseCollector):
             return fetch_feed(feed_url, proxy_handler)
 
         feed_url = source.parameter_values["FEED_URL"]
+        if not feed_url:
+            logger.error("Feed URL is not set. Skipping collection.")
+            BaseCollector.publish([], source)
+            return
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
         last_collected = source.last_collected
         user_agent = source.parameter_values["USER_AGENT"]

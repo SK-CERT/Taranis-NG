@@ -115,7 +115,11 @@ class TaranisLogger:
             str: The formatted log message.
         """
         log_prefix = self._get_log_prefix()
-        return f"{log_prefix}: {message}"
+        if log_prefix:
+            whole_message = f"{log_prefix}: {message}"
+        else:
+            whole_message = message
+        return whole_message
 
     def set_log_level_target(self, level: str, attribute: Optional[str]):
         """Set the target attribute for a specific log level.
