@@ -2,7 +2,7 @@ cvss==3.4
 Flask==3.1.0
 Flask-Cors==5.0.1
 Flask-RESTful==0.3.10
-gevent==24.11.1
+gevent==25.4.1
 gunicorn==23.0.0
 Jinja2==3.1.6
 marshmallow==3.26.1
