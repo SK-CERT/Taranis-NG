@@ -97,13 +97,13 @@ class TaranisLogger:
                 # Get the 'self' object from the calling frame
                 caller = frame.f_locals.get("self")
                 if caller and hasattr(caller, "log_prefix"):
-                    return getattr(caller, "log_prefix", "DefaultPrefix")
+                    return getattr(caller, "log_prefix", "")
                 frame = frame.f_back
         except Exception:
             pass
 
         # Default log prefix if none is found
-        return "DefaultPrefix"
+        return ""
 
     def _format_message(self, message: str) -> str:
         """Format the log message to include the log_prefix attribute.

@@ -394,8 +394,8 @@ class BaseCollector:
         if hasattr(source, "scheduler_job"):
             next_run_str = f"next run at {source.scheduler_job.next_run}"
         else:
-            next_run_str = "not yet scheduled"
-        logger.info(f"{source.log_prefix} Collection finished {next_run_str}")
+            next_run_str = "next run not yet scheduled"
+        logger.info(f"{source.log_prefix} Collection finished, {next_run_str}")
         self.update_last_error_message(source)
 
     def initialize(self):
