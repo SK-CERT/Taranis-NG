@@ -93,9 +93,7 @@ class RSSCollector(BaseCollector):
 
                 news_items = []
 
-                count = 0
-                for feed_entry in feed["entries"]:
-                    count += 1
+                for count, feed_entry in enumerate(feed["entries"], 1):
                     author = feed_entry.get("author", "")
                     title = feed_entry.get("title", "")
                     published = feed_entry.get("published", "")
@@ -185,7 +183,7 @@ class RSSCollector(BaseCollector):
                     BaseCollector.print_news_item(news_item)
                     news_items.append(news_item)
 
-                    if count >= links_limit & links_limit > 0:
+                    if links_limit > 0 and count >= links_limit:
                         logger.debug(f"Limit for article links ({links_limit}) has been reached.")
                         break
 

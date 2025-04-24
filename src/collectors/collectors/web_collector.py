@@ -609,10 +609,8 @@ class WebCollector(BaseCollector):
 
         index_url_just_before_click = browser.current_url
 
-        count = 0
         # print(browser.page_source, flush=True)
-        for item in article_items:
-            count += 1
+        for count, item in enumerate(article_items, 1):
             # try:
             #     print("H: {0} {1:.200}".format(count, item.get_attribute('outerHTML')), flush=True)
             # except Exception as ex:
@@ -668,7 +666,7 @@ class WebCollector(BaseCollector):
             elif not self.__close_other_tabs(browser, title_page_handle, fallback_url=index_url):
                 logger.warning("Error during page crawl (after-crawl clean up)")
                 break
-            if count >= self.links_limit & self.links_limit > 0:
+            if self.links_limit > 0 and count >= self.links_limit:
                 logger.debug(f"Limit for article links reached ({self.links_limit})")
                 break
 

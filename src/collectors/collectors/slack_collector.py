@@ -79,10 +79,8 @@ class SlackCollector(BaseCollector):
 
                 # in future we can use parameter "oldest" - Only messages after this Unix timestamp will be included in results
                 data = slack_client.conversations_history(channel=channel_id, limit=30)
-                count = 0
-                for message in data["messages"]:
-                    count += 1
-                    logger.debug(f"Message: {0}".format(count))
+                for count, message in enumerate(data["messages"], 1):
+                    logger.debug(f"Message: {count}")
                     published = time.ctime(float(message["ts"]))
                     content = message["text"]
                     review = common.smart_truncate(content)
