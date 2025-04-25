@@ -11,7 +11,7 @@ from flask_jwt_extended import jwt_required
 from managers import auth_manager
 from managers.auth_manager import auth_required
 from model import word_list, product_type, publisher_preset
-from model.user import User
+from model.user import User, Hotkey
 
 
 class UserProfile(Resource):
@@ -44,6 +44,38 @@ class UserProfile(Resource):
         """
         user = auth_manager.get_user_from_jwt()
         return User.update_profile(user, request.json)
+
+
+class UserHotkeys(Resource):
+    """UserHotkeys resource for handling user hotkeys related operations.
+
+    Attributes:
+        Resource: A base class for implementing API resources.
+    """
+
+    @jwt_required()
+    def get(self):
+        """Retrieve the hotkeys of the authenticated user.
+
+        This method extracts the user information from the JWT (JSON Web Token)
+        and returns the user's hotkeys in JSON format.
+        Returns:
+            dict: A dictionary containing the user's hotkeys information in JSON format.
+        """
+        user = auth_manager.get_user_from_jwt()
+        return Hotkey.get_json(user)
+
+    @jwt_required()
+    def put(self):
+        """Update the hotkeys of the authenticated user.
+
+        This method retrieves the user from the JWT token and updates their hotkeys
+        with the data provided in the JSON request body.
+        Returns:
+            Response: The response from the Hotkey.update method.
+        """
+        user = auth_manager.get_user_from_jwt()
+        return Hotkey.update(user, request.json)
 
 
 class UserWordLists(Resource):
@@ -106,11 +138,13 @@ def initialize(api):
         api (Api): The API instance to which the resources will be added.
     Resources:
         - UserProfile: Endpoint for user profile at "/api/v1/users/my-profile".
+        - UserHotkeys: Endpoint for user hotkeys at "/api/v1/users/my-hotkeys".
         - UserWordLists: Endpoint for user word lists at "/api/v1/users/my-word-lists".
         - UserProductTypes: Endpoint for user product types at "/api/v1/users/my-product-types".
         - UserPublisherPresets: Endpoint for user publisher presets at "/api/v1/users/my-publisher-presets".
     """
     api.add_resource(UserProfile, "/api/v1/users/my-profile")
+    api.add_resource(UserHotkeys, "/api/v1/users/my-hotkeys")
     api.add_resource(UserWordLists, "/api/v1/users/my-word-lists")
     api.add_resource(UserProductTypes, "/api/v1/users/my-product-types")
     api.add_resource(UserPublisherPresets, "/api/v1/users/my-publisher-presets")

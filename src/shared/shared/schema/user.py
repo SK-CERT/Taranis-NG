@@ -95,4 +95,3 @@ class UserProfileSchema(Schema):
     dark_theme = fields.Bool()
     language = fields.Str()
     word_lists = fields.List(fields.Nested(WordListSchema))
-    hotkeys = fields.Nested(HotkeySchema, many=True)
