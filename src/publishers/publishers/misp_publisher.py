@@ -6,6 +6,7 @@ import urllib3
 from pymisp import ExpandedPyMISP, MISPEvent
 
 from .base_publisher import BasePublisher
+from managers.log_manager import logger
 from shared.config_publisher import ConfigPublisher
 
 
@@ -34,6 +35,7 @@ class MISPPublisher(BasePublisher):
         Raises:
             Exception: If an error occurs while publishing data.
         """
+        self.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
             misp_url = publisher_input.parameter_values_map["MISP_URL"]
             misp_key = publisher_input.parameter_values_map["MISP_API_KEY"]
@@ -52,4 +54,4 @@ class MISPPublisher(BasePublisher):
             event.load(event_json)
             misp.add_event(event)
         except Exception as error:
-            BasePublisher.print_exception(self, error)
+            logger.exception(f"Publishing fail: {error}")

@@ -12,7 +12,7 @@ class ConfigPublisher(ConfigBase):
         """Initialize publisher modules."""
         self.modules: List[module_type] = []
 
-        mod = module_type("EMAIL_PUBLISHER", "EMAIL Publisher", "Publisher for publishing by email")
+        mod = module_type("EMAIL_PUBLISHER", "Email Publisher", "Publisher for publishing by email")
         mod.parameters = [
             param_type("SMTP_SERVER", "SMTP server", "SMTP server for sending emails", ParameterType.STRING),
             param_type("SMTP_SERVER_PORT", "SMTP server port", "SMTP server port for sending emails", ParameterType.STRING, "587"),

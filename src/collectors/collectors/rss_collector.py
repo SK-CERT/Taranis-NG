@@ -35,6 +35,7 @@ class RSSCollector(BaseCollector):
         Arguments:
             source: Source object.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
 
         def get_feed(feed_url, last_collected=None, user_agent=None, proxy_handler=None):
             """Fetch the feed data, using proxy if provided, and check modification status.
@@ -61,36 +62,38 @@ class RSSCollector(BaseCollector):
 
             # Check if the feed has been modified since the last collection
             if last_collected:
-                if BaseCollector.not_modified(self.collector_source, feed_url, last_collected, opener, user_agent):
+                if BaseCollector.not_modified(feed_url, last_collected, opener, user_agent):
                     return None
 
-            logger.debug(f"{self.collector_source} Fetching feed from URL: {feed_url}")
+            logger.debug(f"Fetching feed from URL: {feed_url}")
             return fetch_feed(feed_url, proxy_handler)
 
         feed_url = source.parameter_values["FEED_URL"]
+        if not feed_url:
+            logger.error("Feed URL is not set. Skipping collection.")
+            BaseCollector.publish([], source)
+            return
         links_limit = BaseCollector.read_int_parameter("LINKS_LIMIT", 0, source)
         last_collected = source.last_collected
         user_agent = source.parameter_values["USER_AGENT"]
-        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.collector_source)
+        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"])
         if parsed_proxy:
             proxy_handler = BaseCollector.get_proxy_handler(parsed_proxy)
         else:
             proxy_handler = None
         opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
         if user_agent:
-            logger.info(f"{self.collector_source} Requesting feed URL: {feed_url} (User-Agent: {user_agent})")
+            logger.info(f"Requesting feed URL: {feed_url} (User-Agent: {user_agent})")
         else:
-            logger.info(f"{self.collector_source} Requesting feed URL: {feed_url}")
+            logger.info(f"Requesting feed URL: {feed_url}")
         feed = get_feed(feed_url, last_collected, user_agent, proxy_handler)
         if feed:
             try:
-                logger.debug(f"{self.collector_source} Feed returned {len(feed['entries'])} entries.")
+                logger.debug(f"Feed returned {len(feed['entries'])} entries.")
 
                 news_items = []
 
-                count = 0
-                for feed_entry in feed["entries"]:
-                    count += 1
+                for count, feed_entry in enumerate(feed["entries"], 1):
                     author = feed_entry.get("author", "")
                     title = feed_entry.get("title", "")
                     published = feed_entry.get("published", "")
@@ -109,10 +112,10 @@ class RSSCollector(BaseCollector):
                         content = common.strip_html(content_rss[0].get("value", ""))
 
                     if not link_for_article:
-                        logger.debug(f"{self.collector_source} Skipping an empty link in feed entry '{title}'.")
+                        logger.debug(f"Skipping an empty link in feed entry '{title}'.")
                         continue
                     elif not content:
-                        logger.info(f"{self.collector_source} Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
+                        logger.info(f"Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
                         content_html = ""
                         try:
                             request = urllib.request.Request(link_for_article)
@@ -129,19 +132,19 @@ class RSSCollector(BaseCollector):
                                 # use web content if it's longer than summary, if not we use summary in next step
                                 if len(content_sanit) > len(summary):
                                     content = content_sanit
-                                    logger.debug(f"{self.collector_source} Using web text for content")
+                                    logger.debug("Using web text for content")
 
                         except Exception as error:
-                            logger.exception(f"{self.collector_source} Fetch web content failed: {error}")
+                            logger.exception(f"Fetch web content failed: {error}")
 
                     # use summary if content is empty
                     if summary and not content:
                         content = common.strip_html(summary)
-                        logger.debug(f"{self.collector_source} Using review for content")
+                        logger.debug("Using review for content")
                     # use first 500 characters of content if summary is empty
                     elif not summary and content:
                         review = content
-                        logger.debug(f"{self.collector_source} Using first 500 characters of content for review")
+                        logger.debug("Using first 500 characters of content for review")
 
                     title = common.smart_truncate(title, 200)
                     review = common.smart_truncate(review)
@@ -149,16 +152,16 @@ class RSSCollector(BaseCollector):
                     # use published date if available, otherwise use updated date
                     if published_parsed:
                         date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                        logger.debug(f"{self.collector_source} Using parsed 'published' date")
+                        logger.debug("Using parsed 'published' date")
                     elif updated_parsed:
                         date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                        logger.debug(f"{self.collector_source} Using parsed 'updated' date")
+                        logger.debug("Using parsed 'updated' date")
                     elif published:
                         date = published
-                        logger.debug(f"{self.collector_source} Using 'published' date")
+                        logger.debug("Using 'published' date")
                     elif updated:
                         date = updated
-                        logger.debug(f"{self.collector_source} Using 'updated' date")
+                        logger.debug("Using 'updated' date")
 
                     for_hash = author + title + link_for_article
 
@@ -177,18 +180,18 @@ class RSSCollector(BaseCollector):
                         [],
                     )
 
-                    BaseCollector.print_news_item(self.collector_source, news_item)
+                    BaseCollector.print_news_item(news_item)
                     news_items.append(news_item)
 
-                    if count >= links_limit & links_limit > 0:
-                        logger.debug(f"{self.collector_source} Limit for article links ({links_limit}) has been reached.")
+                    if links_limit > 0 and count >= links_limit:
+                        logger.debug(f"Limit for article links ({links_limit}) has been reached.")
                         break
 
-                BaseCollector.publish(news_items, source, self.collector_source)
+                BaseCollector.publish(news_items, source)
 
             except Exception as error:
-                logger.exception(f"{self.collector_source} Collection failed: {error}")
+                logger.exception(f"Collection failed: {error}")
 
         else:
-            logger.info(f"{self.collector_source} Will not collect the feed because nothing has changed.")
-            BaseCollector.publish([], source, self.collector_source)
+            logger.info("Will not collect the feed because nothing has changed.")
+            BaseCollector.publish([], source)

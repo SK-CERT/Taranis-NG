@@ -42,9 +42,10 @@ class EmailCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
+        self.log_prefix = f"{self.name} '{source.name}'"
 
         def proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port):
-            logger.debug(f"{self.collector_source} Establishing proxy tunnel")
+            logger.debug("Establishing proxy tunnel")
             server = f"{email_server_hostname.lower()}"
             port = email_server_port
 
@@ -60,7 +61,7 @@ class EmailCollector(BaseCollector):
             email_string = email_message.as_string()
             if len(email_string) > 3000:
                 email_string = f"{email_string[:3000]}\n..."
-            logger.debug(f"{self.collector_source} Processing email: {email_string}")
+            logger.debug(f"Processing email: {email_string}")
             review = ""
             content = ""
             address = ""
@@ -69,7 +70,7 @@ class EmailCollector(BaseCollector):
             attributes = []
 
             title = str(email.header.make_header(email.header.decode_header(email_message["Subject"])))
-            logger.debug(f"{self.collector_source} Processing email: {title}")
+            logger.debug(f"Processing email: {title}")
             author = str(email.header.make_header(email.header.decode_header(email_message["From"])))
             address = email.utils.parseaddr(email_message["From"])[1]
             message_id = str(email.header.make_header(email.header.decode_header(email_message["Message-ID"])))
@@ -79,7 +80,7 @@ class EmailCollector(BaseCollector):
             for part in email_message.walk():
                 if part.get_content_type() == "text/plain":
                     charset = part.get_content_charset()
-                    logger.debug(f"{self.collector_source} Detected encoding of email '{title}': {charset}")
+                    logger.debug(f"Detected encoding of email '{title}': {charset}")
                     text_data = part.get_payload(decode=True)
                     if charset is None:
                         charset = "utf-8"
@@ -110,7 +111,7 @@ class EmailCollector(BaseCollector):
                     binary_mime_type = part.get_content_type()
                     match binary_mime_type:
                         case "message/rfc822":
-                            logger.debug(f"{self.collector_source} Found an attached email")
+                            logger.debug("Found an attached email")
                             attached = part.get_payload()
                             if isinstance(attached, list):
                                 attached_email = attached[0]
@@ -120,13 +121,13 @@ class EmailCollector(BaseCollector):
                             process_email(attached_email)
 
                         case "application/pkcs7-signature" | "application/x-pkcs7-signature":
-                            logger.debug(f"{self.collector_source} Found a X.509 signature attachment")
+                            logger.debug("Found a X.509 signature attachment")
                             # binary_value = part.get_payload()
                             # Skip signature attachments for now
                             continue
 
                         case "application/pgp-signature":
-                            logger.debug(f"{self.collector_source} Found a PGP signature attachment")
+                            logger.debug("Found a PGP signature attachment")
                             # binary_value = part.get_payload()
                             # Skip signature attachments for now
                             continue
@@ -134,20 +135,20 @@ class EmailCollector(BaseCollector):
                         case _:
                             # Handle other binary attachments
                             if file_name:
-                                logger.debug(f"{self.collector_source} Found an attachment '{file_name}' with MIME type '{binary_mime_type}'")
+                                logger.debug(f"Found an attachment '{file_name}' with MIME type '{binary_mime_type}'")
                                 binary_value = part.get_payload()
                                 if binary_value:
                                     news_attribute = NewsItemAttribute(binary_mime_type, file_name, binary_mime_type, binary_value)
                                     news_item.attributes.append(news_attribute)
                                 else:
-                                    logger.error(f"{self.collector_source} Attachment is empty or could not be decoded: {file_name}")
+                                    logger.error(f"Attachment is empty or could not be decoded: {file_name}")
 
                 news_items.append(news_item)
 
         def fetch_emails_imap(
             email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, proxy_server=None
         ):
-            logger.debug(f"{self.collector_source} Fetching emails using IMAP")
+            logger.debug("Fetching emails using IMAP")
             try:
                 if parsed_proxy:
                     proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port)
@@ -162,7 +163,7 @@ class EmailCollector(BaseCollector):
                     typ, data = connection.search(None, "ALL")
 
                 if typ != "OK":
-                    logger.error(f"{self.collector_source} Failed to search emails {typ}")
+                    logger.error(f"Failed to search emails {typ}")
 
                 email_uids = data[0].split()
                 total_emails = len(email_uids)
@@ -181,12 +182,12 @@ class EmailCollector(BaseCollector):
                 connection.close()
                 connection.logout()
             except Exception as error:
-                logger.exception(f"{self.collector_source} Failed to fetch emails using IMAP: {error}")
+                logger.exception(f"Failed to fetch emails using IMAP: {error}")
 
         def fetch_emails_pop3(
             email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, parsed_proxy
         ):
-            logger.debug(f"{self.collector_source} Fetching emails using POP3")
+            logger.debug("Fetching emails using POP3")
             try:
                 if parsed_proxy:
                     proxy_tunnel(parsed_proxy, email_server_hostname, email_server_port)
@@ -216,7 +217,7 @@ class EmailCollector(BaseCollector):
 
                 connection.quit()
             except Exception as error:
-                logger.exception(f"{self.collector_source} Failed to fetch emails using POP3: {error}")
+                logger.exception(f"Failed to fetch emails using POP3: {error}")
 
         news_items = []
         email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
@@ -224,7 +225,7 @@ class EmailCollector(BaseCollector):
         email_server_port = source.parameter_values["EMAIL_SERVER_PORT"]
         email_username = source.parameter_values["EMAIL_USERNAME"]
         email_password = source.parameter_values["EMAIL_PASSWORD"]
-        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.collector_source)
+        parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"])
         email_sender_address = source.parameter_values["EMAIL_SENDER"]
         emails_limit = BaseCollector.read_int_parameter("EMAILS_LIMIT", "", source)
 
@@ -237,6 +238,6 @@ class EmailCollector(BaseCollector):
                 email_server_hostname, email_server_port, email_username, email_password, email_sender_address, emails_limit, parsed_proxy
             )
         else:
-            logger.error(f"{self.collector_source} Email server connection type is not supported: '{email_server_type}'")
+            logger.error(f"Email server connection type is not supported: '{email_server_type}'")
 
-        BaseCollector.publish(news_items, source, self.collector_source)
+        BaseCollector.publish(news_items, source)

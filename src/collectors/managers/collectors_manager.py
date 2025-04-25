@@ -48,7 +48,7 @@ def initialize():
     register_collector(ManualCollector())
     register_collector(ScheduledTasksCollector())
 
-    logger.info("Collector initialized.")
+    logger.info("Collectors initialized.")
 
 
 def register_collector(collector):

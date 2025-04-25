@@ -360,13 +360,25 @@ class OSINTSource(db.Model):
 
     @classmethod
     def update_last_attempt(cls, osint_source_id):
-        """Update collector's "last attempted" record with current datetime.
+        """Update collector's "last attempted" record with the current datetime.
 
         Args:
             osint_source_id (int): Osint source Id.
         """
         osint_source = db.session.get(cls, osint_source_id)
         osint_source.last_attempted = datetime.now()
+        db.session.commit()
+
+    @classmethod
+    def update_last_error_message(cls, osint_source_id, error_message) -> None:
+        """Update collector's "last error message" with the current one.
+
+        Args:
+            osint_source_id (int): Osint source Id.
+            error_message (str): Error message.
+        """
+        osint_source = db.session.get(cls, osint_source_id)
+        osint_source.last_error_message = error_message
         db.session.commit()
 
 
