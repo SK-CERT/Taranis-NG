@@ -179,14 +179,18 @@
             },
 
             save() {
-                this.$store.dispatch('saveUserProfile', {
-                    spellcheck: this.spellcheck,
-                    dark_theme: this.dark_theme,
-                    language: this.language,
-                    hotkeys: this.shortcuts,
-                    word_lists: this.selected_word_lists,
-                }).then(() => {
+                Promise.all([
+                    this.$store.dispatch('saveUserProfile', {
+                        spellcheck: this.spellcheck,
+                        dark_theme: this.dark_theme,
+                        language: this.language,
+                        word_lists: this.selected_word_lists,
+                    }),
+                    this.$store.dispatch('saveUserHotkeys', this.shortcuts )
+                ]).then(() => {
                     this.visible = false;
+                }).catch(error => {
+                    console.error('Save user profile error:', error);
                 });
             },
 

@@ -74,7 +74,7 @@ class CustomGunicornLogger(Logger):
     def setup(self, cfg):
         """Set up a custom logger."""
         super().setup(cfg)
-        filter_strings = ["Closing connection.", "/isalive"]
+        filter_strings = ["Closing connection.", "/isalive", "OPTIONS /api"]
         # print(cfg, flush=True)
 
         class RemoveStrings(logging.Filter):

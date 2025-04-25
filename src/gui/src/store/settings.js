@@ -1,5 +1,4 @@
-import {getProfile} from "@/api/user";
-import {updateProfile} from "@/api/user";
+import { getProfile, updateProfile, getHotkeys, updateHotkeys } from "@/api/user";
 
 const state = {
     hotkeys: [],
@@ -25,6 +24,20 @@ const actions = {
             })
     },
 
+    getUserHotkeys(context) {
+        return getHotkeys()
+            .then(response => {
+                context.commit('setUserHotkeys', response.data);
+            })
+    },
+
+    saveUserHotkeys(context, data) {
+        return updateHotkeys(data)
+            .then(response => {
+                context.commit('setUserHotkeys', response.data);
+            })
+    },
+
     resetHotkeys(context) {
         context.commit('resetHotkeys');
     }
@@ -38,12 +51,15 @@ const mutations = {
         state.dark_theme = profile.dark_theme
         state.language = profile.language
         state.word_lists = profile.word_lists
+    },
+
+    setUserHotkeys(state, hotkeys) {
         mutations.resetHotkeys(state);
 
         for (let i = 0; i < state.hotkeys.length; i++) {
-            for (let j = 0; j < profile.hotkeys.length; j++) {
-                if (state.hotkeys[i].alias === profile.hotkeys[j].alias) {
-                    state.hotkeys[i].key = profile.hotkeys[j].key
+            for (let j = 0; j < hotkeys.length; j++) {
+                if (state.hotkeys[i].alias === hotkeys[j].alias) {
+                    state.hotkeys[i].key = hotkeys[j].key
                     break;
                 }
             }

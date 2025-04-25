@@ -14,6 +14,78 @@ from shared.schema.word_list import WordListIdSchema
 from werkzeug.security import generate_password_hash
 
 
+class NewHotkeySchema(HotkeySchema):
+    """Represents a schema for creating a new hotkey."""
+
+    @post_load
+    def make(self, data, **kwargs):
+        """Create a new Hotkey instance based on the given data.
+
+        Args:
+            data (dict): A dictionary containing the data for the Hotkey.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            Hotkey: A new Hotkey instance.
+        """
+        return Hotkey(**data)
+
+
+class Hotkey(db.Model):
+    """Represents a hotkey for a user.
+
+    Attributes:
+        id (int): The unique identifier for the hotkey.
+        key (str): The key associated with the hotkey.
+        alias (str): The alias for the hotkey.
+        user_id (int): The foreign key referencing the user.
+    Args:
+        db.Model: The base class for all models in the application.
+    """
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String)
+    alias = db.Column(db.String)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+    def __init__(self, key, alias):
+        """Initialize a User object."""
+        self.id = None
+        self.key = key
+        self.alias = alias
+
+    @classmethod
+    def get_json(cls, user):
+        """Return the JSON representation of a user's hotkeys.
+
+        Args:
+            cls (class): The class object.
+            user (User): The user object.
+        Returns:
+            dict: The JSON representation of the user's hotkeys.
+        """
+        schema = HotkeySchema(many=True)
+        data = schema.dump(user.hotkeys)
+        return data
+
+    @classmethod
+    def update(cls, user, data):
+        """Update the user's hotkeys with the provided data.
+
+        Args:
+            cls (class): The class object.
+            user (User): The user object to update the hotkeys for.
+            data (dict): The data containing the updated hotkeys information.
+        Returns:
+            dict: The updated hotkeys information in JSON format.
+        """
+        schema = NewHotkeySchema(many=True)
+        updated_data = schema.load(data)
+        user.hotkeys = updated_data
+        db.session.commit()
+
+        return cls.get_json(user)
+
+
 class NewUserSchema(UserSchemaBase):
     """NewUserSchema class for defining the schema of a new user.
 
@@ -87,6 +159,7 @@ class User(db.Model):
 
     profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"))
     profile = db.relationship("UserProfile", cascade="all", lazy="joined")
+    hotkeys = db.relationship(Hotkey, cascade="all, delete-orphan", lazy="joined")
 
     def __init__(self, id, username, name, password, organizations, roles, permissions):
         """Initialize a User object with the given parameters."""
@@ -109,7 +182,9 @@ class User(db.Model):
             for permission in permissions:
                 self.permissions.append(Permission.find(permission.id))
 
-        self.profile = UserProfile(True, False, None, [], [])
+        self.hotkeys = []
+
+        self.profile = UserProfile(True, False, None, [])
         self.title = ""
         self.subtitle = ""
         self.tag = ""
@@ -396,8 +471,6 @@ class User(db.Model):
             if WordList.allowed_with_acl(word_list.id, user, True, False, False):
                 user.profile.word_lists.append(word_list)
 
-        user.profile.hotkeys = updated_profile.hotkeys
-
         db.session.commit()
 
         return cls.get_profile_json(user)
@@ -439,22 +512,6 @@ class UserPermission(db.Model):
     permission_id = db.Column(db.String, db.ForeignKey("permission.id"), primary_key=True)
 
 
-class NewHotkeySchema(HotkeySchema):
-    """Represents a schema for creating a new hotkey."""
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a new Hotkey instance based on the given data.
-
-        Args:
-            data (dict): A dictionary containing the data for the Hotkey.
-            **kwargs: Additional keyword arguments.
-        Returns:
-            Hotkey: A new Hotkey instance.
-        """
-        return Hotkey(**data)
-
-
 class NewUserProfileSchema(UserProfileSchema):
     """Schema for creating a new user profile.
 
@@ -464,7 +521,6 @@ class NewUserProfileSchema(UserProfileSchema):
     """
 
     word_lists = fields.List(fields.Nested(WordListIdSchema))
-    hotkeys = fields.List(fields.Nested(NewHotkeySchema))
 
     @post_load
     def make(self, data, **kwargs):
@@ -487,7 +543,6 @@ class UserProfile(db.Model):
         spellcheck (bool): Indicates whether spellcheck is enabled for the user.
         dark_theme (bool): Indicates whether dark theme is enabled for the user.
         language (str): The language code for the user's preferred language.
-        hotkeys (list): A list of hotkeys associated with the user profile.
         word_lists (list): A list of word lists associated with the user profile.
     """
 
@@ -496,17 +551,14 @@ class UserProfile(db.Model):
     spellcheck = db.Column(db.Boolean, default=True)
     dark_theme = db.Column(db.Boolean, default=False)
     language = db.Column(db.String(2))
-    hotkeys = db.relationship("Hotkey", cascade="all, delete-orphan", lazy="joined")
     word_lists = db.relationship("WordList", secondary="user_profile_word_list", lazy="joined")
 
-    def __init__(self, spellcheck, dark_theme, language, hotkeys, word_lists):
+    def __init__(self, spellcheck, dark_theme, language, word_lists):
         """Initialize a User object with the given parameters."""
         self.id = None
         self.spellcheck = spellcheck
         self.dark_theme = dark_theme
         self.language = language
-        self.hotkeys = hotkeys
-
         self.word_lists = []
         from model.word_list import WordList
 
@@ -524,28 +576,3 @@ class UserProfileWordList(db.Model):
 
     user_profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"), primary_key=True)
     word_list_id = db.Column(db.Integer, db.ForeignKey("word_list.id"), primary_key=True)
-
-
-class Hotkey(db.Model):
-    """Represents a hotkey for a user.
-
-    Attributes:
-        id (int): The unique identifier for the hotkey.
-        key (str): The key associated with the hotkey.
-        alias (str): The alias for the hotkey.
-        user_profile_id (int): The foreign key referencing the user profile.
-    Args:
-        db.Model: The base class for all models in the application.
-    """
-
-    id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String)
-    alias = db.Column(db.String)
-
-    user_profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"))
-
-    def __init__(self, key, alias):
-        """Initialize a User object."""
-        self.id = None
-        self.key = key
-        self.alias = alias

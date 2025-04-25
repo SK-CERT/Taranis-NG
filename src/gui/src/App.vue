@@ -76,6 +76,7 @@ export default {
                 this.$vuetify.theme.dark = this.$store.getters.getProfileDarkTheme
                 this.$i18n.locale = this.$store.getters.getProfileLanguage
             });
+            this.$store.dispatch('getUserHotkeys');
         }
     },
     updated() {
