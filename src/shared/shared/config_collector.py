@@ -23,10 +23,10 @@ class ConfigCollector(ConfigBase):
             ),
             param_type(
                 "WARNING_INTERVAL",
-                "Warning interval in days (0 to disable)",
-                "How long to wait before warning about no new data",
+                "No new data warning interval in days (0 to disable)",
+                "How long to wait before marking the source with a warning due to no new data received",
                 ParameterType.NUMBER,
-                "0",
+                "30",
             ),
         ]
 

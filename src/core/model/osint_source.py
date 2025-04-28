@@ -1,7 +1,7 @@
 """OSINT Source model and schema definitions."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from marshmallow import post_load, fields
 from sqlalchemy import orm, func, or_, and_
@@ -67,6 +67,7 @@ class OSINTSource(db.Model):
         state (int): State of the source.
         last_error_message (str): Last error message.
         last_data (JSON): Last collected data.
+        status (str): Status of the source (not mapped to the database).
     """
 
     id = db.Column(db.String(64), primary_key=True)
@@ -86,6 +87,7 @@ class OSINTSource(db.Model):
     state = db.Column(db.SmallInteger, default=0)
     last_error_message = db.Column(db.String, default=None)
     last_data = db.Column(JSON, default=None)
+    status = None
 
     def __init__(self, id, name, description, collector_id, parameter_values, word_lists, osint_source_groups):
         """Initialize OSINT source object.
@@ -211,8 +213,23 @@ class OSINTSource(db.Model):
         sources, count = cls.get(search)
         for source in sources:
             source.osint_source_groups = OSINTSourceGroup.get_for_osint_source(source.id)
-        sources_schema = OSINTSourcePresentationSchema(many=True)
-        return {"total_count": count, "items": sources_schema.dump(sources)}
+            source.status = "green"
+            for param in source.parameter_values:  # list, we can't access item by key
+                if param.parameter.key == "REFRESH_INTERVAL":
+                    if param.value == "" or param.value == "0":
+                        source.status = "gray"
+                        break  # don't check other parameters - high priority
+                if param.parameter.key == "WARNING_INTERVAL":
+                    if param.value != "" and param.value != "0":
+                        if source.last_collected and (source.last_collected + timedelta(days=int(param.value))) < datetime.now():
+                            source.status = "orange"
+                    # don't break, we need to check also REFRESH_INTERVAL because has higher priority
+            if source.last_error_message and source.status != "gray":
+                source.status = "red"  # disabled has higher priority, owerwrite other status
+
+        schema = OSINTSourcePresentationSchema(many=True)
+        items = schema.dump(sources)
+        return {"total_count": count, "items": items}
 
     @classmethod
     def get_all_manual_json(cls, user):

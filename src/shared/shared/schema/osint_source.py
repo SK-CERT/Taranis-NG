@@ -107,6 +107,7 @@ class OSINTSourceSchema(Schema):
         last_attempted (fields.DateTime): The date and time when the OSINT source was last attempted to be collected.
         last_collected (fields.DateTime): The date and time when the OSINT source was last collected
         last_error_message (fields.Str): The error message from the last collection attempt.
+        status (fields.Str): The status of the OSINT source (e.g., "green", "gray").
     """
 
     class Meta:
@@ -128,6 +129,7 @@ class OSINTSourceSchema(Schema):
     last_attempted = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
     last_collected = fields.DateTime("%d.%m.%Y - %H:%M:%S", allow_none=True)
     last_error_message = fields.Str(allow_none=True)
+    status = fields.Str(dump_only=True)  # skip this field during deserialization
 
     @post_load
     def make_osint_source(self, data, **kwargs):

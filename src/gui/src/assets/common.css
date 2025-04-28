@@ -38,6 +38,10 @@
     border-left: 4px solid red;
 }
 
+.card .status.status-gray {
+    border-left: 4px solid gray;
+}
+
 .v-expansion-panel > .v-expansion-panel-header,
 .v-expansion-panel--active > .v-expansion-panel-header {
     min-height: 32px;

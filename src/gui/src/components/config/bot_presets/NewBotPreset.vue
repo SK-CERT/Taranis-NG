@@ -212,10 +212,12 @@
         },
         watch: {
             selected_bot(newBot) {
-                if (newBot && newBot.parameters) {
-                    this.values = newBot.parameters.map(param => param.default_value || "");
-                } else {
-                    this.values = [];
+                if (!this.edit) {
+                    if (newBot && newBot.parameters) {
+                        this.values = newBot.parameters.map(param => param.default_value || "");
+                    } else {
+                        this.values = [];
+                    }
                 }
             }
         },
