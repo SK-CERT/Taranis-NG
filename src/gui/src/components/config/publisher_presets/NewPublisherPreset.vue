@@ -223,10 +223,12 @@
         },
         watch: {
             selected_publisher(newPublisher) {
-                if (newPublisher && newPublisher.parameters) {
-                    this.values = newPublisher.parameters.map(param => param.default_value || "");
-                } else {
-                    this.values = [];
+                if (!this.edit) {
+                    if (newPublisher && newPublisher.parameters) {
+                        this.values = newPublisher.parameters.map(param => param.default_value || "");
+                    } else {
+                        this.values = [];
+                    }
                 }
             }
         },

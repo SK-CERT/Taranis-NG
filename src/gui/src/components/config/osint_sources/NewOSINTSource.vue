@@ -361,10 +361,12 @@
         },
         watch: {
             selected_collector(newCollector) {
-                if (newCollector && newCollector.parameters) {
-                    this.values = newCollector.parameters.map(param => param.default_value || "");
-                } else {
-                    this.values = [];
+                if (!this.edit) {
+                    if (newCollector && newCollector.parameters) {
+                        this.values = newCollector.parameters.map(param => param.default_value || "");
+                    } else {
+                        this.values = [];
+                    }
                 }
             }
         },

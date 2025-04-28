@@ -411,10 +411,12 @@ export default {
     },
     watch: {
         selected_presenter(newPresenter) {
-            if (newPresenter && newPresenter.parameters) {
-                this.values = newPresenter.parameters.map(param => param.default_value || "");
-            } else {
-                this.values = [];
+            if (!this.edit) {
+                if (newPresenter && newPresenter.parameters) {
+                    this.values = newPresenter.parameters.map(param => param.default_value || "");
+                } else {
+                    this.values = [];
+                }
             }
         }
     },
