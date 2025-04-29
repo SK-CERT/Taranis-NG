@@ -2,7 +2,7 @@ envelope==2.1.1
 Flask==3.1.0
 Flask-Cors==5.0.1
 Flask-RESTful==0.3.10
-gevent==25.4.1
+gevent==25.4.2
 gunicorn==23.0.0
 marshmallow==3.26.1
 Mastodon.py==2.0.1
