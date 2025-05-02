@@ -14,12 +14,11 @@ const keyboardMixin = targetId => ({
         keyboard_state: 'DEFAULT',
         view_href_map: [
             {key: 'dashboard_view', href: '/dashboard'},
-            {key: 'global_configuration_view', href: '/config'},
             {key: 'aggregate_open', href: '/assess'},
             {key: 'analyze_view', href: '/analyze/local'},
             {key: 'publish_view', href: '/publish'},
             {key: 'my_assets_view', href: '/myassets'},
-            {key: 'configuration_view', href: '/config/external'},
+            {key: 'configuration_view', href: '/config'},
         ],
     }),
 

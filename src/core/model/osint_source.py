@@ -225,7 +225,7 @@ class OSINTSource(db.Model):
                             source.status = "orange"
                     # don't break, we need to check also REFRESH_INTERVAL because has higher priority
             if source.last_error_message and source.status != "gray":
-                source.status = "red"  # disabled has higher priority, owerwrite other status
+                source.status = "red"  # disabled has higher priority, overwrite other status
 
         schema = OSINTSourcePresentationSchema(many=True)
         items = schema.dump(sources)

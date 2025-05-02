@@ -355,30 +355,31 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_external(cls, user, permissions, user_id, data):
+    def update_external(cls, current_user, assets_permissions, user_id, data):
         """Update an external user with the provided data.
 
         Args:
             cls (class): The class object.
-            user (User): The current user performing the update.
-            permissions (list): The list of permissions.
+            current_user (User): The current user performing the update.
+            assets_permissions (list): The list of ASSETS permissions.
             user_id (int): The ID of the user to be updated.
             data (dict): The data to update the user with.
         """
-        schema = NewUserSchema()
-        updated_user = schema.load(data)
-        existing_user = db.session.get(cls, user_id)
+        schema = UpdateUserSchema()
+        user_data = schema.load(data)
+        user = db.session.get(cls, user_id)
 
-        if any(org in user.organizations for org in existing_user.organizations):
-            existing_user.username = updated_user.username
-            existing_user.name = updated_user.name
-
-            for permission in updated_user.permissions[:]:
-                if permission.id not in permissions:
-                    updated_user.permissions.remove(permission)
-
-            existing_user.permissions = updated_user.permissions
-
+        if any(org in current_user.organizations for org in user.organizations):
+            user.username = user_data["username"]
+            user.name = user_data["name"]
+            if user_data["password"]:  # update password only when user fill it
+                user.password = generate_password_hash(user_data["password"])
+            user.permissions = []
+            for p in user_data["permissions"]:
+                perm = Permission.find(p.id)
+                if perm:
+                    if perm.id in assets_permissions:
+                        user.permissions.append(perm)
             db.session.commit()
 
     @classmethod

@@ -76,6 +76,7 @@ const messages_sk = {
         roles: "Role",
         acls: "ACL",
         users: "Užívatelia",
+        external_users: "Externí užívatelia",
         organizations: "Organizácie",
         word_lists: "Slovníky",
         asset_groups: "Skupiny aktív",

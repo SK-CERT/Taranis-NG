@@ -57,13 +57,6 @@
                     show: true
                 },
                 {
-                    title: 'main_menu.config',
-                    icon: 'mdi-ballot-outline',
-                    permission: 'CONFIG_ACCESS',
-                    route: '/config',
-                    show: true
-                },
-                {
                     title: 'main_menu.enter',
                     icon: 'mdi-location-enter',
                     permission: 'ASSESS_CREATE',
@@ -101,10 +94,10 @@
                 {
                     title: 'main_menu.config',
                     icon: 'mdi-ballot-outline',
-                    permission: 'MY_ASSETS_CONFIG',
-                    route: '/config/external',
+                    permission: 'CONFIG_ACCESS',
+                    route: '/config',
                     show: true
-                }
+                },
             ],
             darkTheme: false
         }),

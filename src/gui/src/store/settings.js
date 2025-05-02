@@ -102,7 +102,6 @@ const mutations = {
             // switch views
             { key: 'v', alias: 'enter_view_mode', icon: 'mdi-view-headline' },
             { key: 'd', alias: 'dashboard_view', icon: 'mdi-view-dashboard-variant-outline' },
-            { key: 'C', alias: 'global_configuration_view', icon: 'mdi-cog-outline' },
             { key: 'z', alias: 'analyze_view', icon: 'mdi-google-circles-communities' },
             { key: 'p', alias: 'publish_view', icon: 'mdi mdi-publish' },
             { key: 'm', alias: 'my_assets_view', icon: 'mdi-file-multiple-outline' },

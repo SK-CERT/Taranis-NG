@@ -226,7 +226,7 @@ manage.py role \
     --description "Custom role with analysis and assessment access" \
     --permissions "ANALYZE_ACCESS, ANALYZE_CREATE, ANALYZE_UPDATE, \
     ANALYZE_DELETE, ASSESS_ACCESS, ASSESS_CREATE, ASSESS_UPDATE, \
-    ASSESS_DELETE, MY_ASSETS_ACCESS, MY_ASSETS_CREATE, MY_ASSETS_CONFIG"
+    ASSESS_DELETE, MY_ASSETS_ACCESS, MY_ASSETS_CREATE"
 ```
 
 Command output:
@@ -249,7 +249,7 @@ Command output:
 Id: 3
 	Name: Custom role 1
 	Description: Custom role with analysis and assessment access
-	Permissions: ['ANALYZE_ACCESS', 'ANALYZE_CREATE', 'ANALYZE_UPDATE', 'ANALYZE_DELETE', 'ASSESS_ACCESS', 'ASSESS_CREATE', 'ASSESS_UPDATE', 'ASSESS_DELETE', 'MY_ASSETS_ACCESS', 'MY_ASSETS_CREATE', 'MY_ASSETS_CONFIG']
+	Permissions: ['ANALYZE_ACCESS', 'ANALYZE_CREATE', 'ANALYZE_UPDATE', 'ANALYZE_DELETE', 'ASSESS_ACCESS', 'ASSESS_CREATE', 'ASSESS_UPDATE', 'ASSESS_DELETE', 'MY_ASSETS_ACCESS', 'MY_ASSETS_CREATE']
 ```
 
 ##### Create a new [collector, bot] node
