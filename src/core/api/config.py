@@ -3,6 +3,7 @@
 import io
 from flask import request, send_file
 from flask_restful import Resource
+from flask_jwt_extended import jwt_required
 
 from managers import (
     auth_manager,
@@ -710,7 +711,7 @@ class ExternalUser(Resource):
 class Settings(Resource):
     """Settings API endpoint."""
 
-    @auth_required("CONFIG_SETTINGS_ACCESS")
+    @jwt_required()
     def get(self):
         """Get all settings.
 

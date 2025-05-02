@@ -86,6 +86,7 @@ const messages_cs = {
         roles: "Role",
         acls: "ACL",
         users: "Uživatelé",
+        external_users: "Externí uživatelé",
         organizations: "Organizace",
         word_lists: "Seznamy slov",
         asset_groups: "Skupiny aktiv",

@@ -1,7 +1,7 @@
 <template>
     <ViewLayout>
         <template v-slot:panel>
-            <ToolbarFilter title='nav_menu.users' total_count_title="user.total_count"
+            <ToolbarFilter title='nav_menu.external_users' total_count_title="user.total_count"
                            total_count_getter="getUsers">
                 <template v-slot:addbutton>
                     <NewExternalUser/>

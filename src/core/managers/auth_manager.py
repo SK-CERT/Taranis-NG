@@ -520,7 +520,7 @@ def decode_user_from_jwt(jwt_token):
 
 def get_external_permissions_ids():
     """Get the external permissions IDs."""
-    return ["MY_ASSETS_ACCESS", "MY_ASSETS_CREATE", "MY_ASSETS_CONFIG"]
+    return ["MY_ASSETS_ACCESS", "MY_ASSETS_CREATE", "MY_ASSETS_CONFIG", "CONFIG_ACCESS"]
 
 
 def get_external_permissions():

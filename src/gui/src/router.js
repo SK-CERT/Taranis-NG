@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
-import {store} from '@/store/store'
+import { store } from '@/store/store'
 import AuthService from "@/services/auth/auth_service";
 import Permissions from "@/services/auth/permissions";
 
@@ -16,7 +16,7 @@ export const router = new Router({
             path: '/',
             name: 'home',
             component: Home,
-            meta: {requiresAuth: true, requiresPerm: []}
+            meta: { requiresAuth: true, requiresPerm: [] }
         },
         {
             path: '/enter*',
@@ -26,7 +26,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/EnterNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.ASSESS_CREATE]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.ASSESS_CREATE] }
         },
         {
             path: '/assess*',
@@ -36,7 +36,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/AssessNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS] }
         },
         {
             path: '/analyze*',
@@ -46,7 +46,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/AnalyzeNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.ANALYZE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.ANALYZE_ACCESS] }
         },
         {
             path: '/publish',
@@ -56,7 +56,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/PublishNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.PUBLISH_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.PUBLISH_ACCESS] }
         },
         {
             path: '/myassets*',
@@ -66,7 +66,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/MyAssetsNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_ACCESS] }
         },
         {
             path: '/dashboard',
@@ -76,47 +76,37 @@ export const router = new Router({
                 nav: () => import('./views/nav/DashboardNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS]}
-        },
-        {
-            path: '/config/external',
-            name: 'config-external',
-            components: {
-                default: () => import('./views/admin/ExternalConfigView.vue'),
-                nav: () => import('./views/nav/ExternalConfigNav.vue')
-
-            },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS] }
         },
         {
             path: '/config/external/users',
             name: 'users-external',
             components: {
                 default: () => import('./views/admin/ExternalUsersView.vue'),
-                nav: () => import('./views/nav/ExternalConfigNav.vue')
+                nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
         },
         {
             path: '/config/external/groups',
             name: 'groups-external',
             components: {
                 default: () => import('./views/admin/AssetGroupsView.vue'),
-                nav: () => import('./views/nav/ExternalConfigNav.vue')
+                nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
         },
         {
             path: '/config/external/templates',
             name: 'templates-external',
             components: {
                 default: () => import('./views/admin/NotificationTemplatesView.vue'),
-                nav: () => import('./views/nav/ExternalConfigNav.vue')
+                nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
         },
         {
             path: '/config',
@@ -126,7 +116,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ACCESS] }
         },
         {
             path: '/config/organizations',
@@ -136,7 +126,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_ORGANIZATION_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ORGANIZATION_ACCESS] }
         },
         {
             path: '/config/roles',
@@ -146,7 +136,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_ROLE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ROLE_ACCESS] }
         },
         {
             path: '/config/acls',
@@ -156,7 +146,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_ACL_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ACL_ACCESS] }
         },
         {
             path: '/config/users',
@@ -166,7 +156,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_USER_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_USER_ACCESS] }
         },
         {
             path: '/config/collectors/nodes',
@@ -176,7 +166,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_COLLECTORS_NODE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_COLLECTORS_NODE_ACCESS] }
         },
         {
             path: '/config/collectors/sources',
@@ -186,7 +176,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_OSINT_SOURCE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_OSINT_SOURCE_ACCESS] }
         },
         {
             path: '/config/collectors/groups',
@@ -196,7 +186,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_OSINT_SOURCE_GROUP_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_OSINT_SOURCE_GROUP_ACCESS] }
         },
         {
             path: '/config/presenters/nodes',
@@ -206,7 +196,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_PRESENTERS_NODE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_PRESENTERS_NODE_ACCESS] }
         },
         {
             path: '/config/publishers/nodes',
@@ -216,7 +206,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_PUBLISHERS_NODE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_PUBLISHERS_NODE_ACCESS] }
         },
         {
             path: '/config/publishers/presets',
@@ -226,7 +216,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_PUBLISHER_PRESET_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_PUBLISHER_PRESET_ACCESS] }
         },
         {
             path: '/config/remote/access',
@@ -236,7 +226,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_REMOTE_ACCESS_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_REMOTE_ACCESS_ACCESS] }
         },
         {
             path: '/config/remote/NODES',
@@ -246,7 +236,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_REMOTE_NODE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_REMOTE_NODE_ACCESS] }
         },
         {
             path: '/config/bots/nodes',
@@ -256,7 +246,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_BOTS_NODE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_BOTS_NODE_ACCESS] }
         },
         {
             path: '/config/bots/presets',
@@ -266,7 +256,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_BOT_PRESET_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_BOT_PRESET_ACCESS] }
         },
         {
             path: '/config/product/types',
@@ -276,7 +266,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_PRODUCT_TYPE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_PRODUCT_TYPE_ACCESS] }
         },
         {
             path: '/config/reportitems/attributes',
@@ -286,7 +276,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_ATTRIBUTE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ATTRIBUTE_ACCESS] }
         },
         {
             path: '/config/reportitems/types',
@@ -296,7 +286,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_REPORT_TYPE_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_REPORT_TYPE_ACCESS] }
         },
         {
             path: '/config/settings',
@@ -316,7 +306,7 @@ export const router = new Router({
                 nav: () => import('./views/nav/ConfigNav.vue')
 
             },
-            meta: {requiresAuth: true, requiresPerm: [Permissions.CONFIG_WORD_LIST_ACCESS]}
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_WORD_LIST_ACCESS] }
         },
         {
             path: '/login',
@@ -336,7 +326,7 @@ router.beforeEach((to, from, next) => {
 
                 next({
                     path: store.getters.getLoginURL,
-                    query: {redirect: to.path}
+                    query: { redirect: to.path }
                 })
             } else {
 
@@ -344,20 +334,18 @@ router.beforeEach((to, from, next) => {
             }
         } else if (to.path === "/") {
             if (AuthService.hasPermission(Permissions.ASSESS_ACCESS)) {
-                next({path: "/dashboard"})
+                next({ path: "/dashboard" })
             } else if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
-                next({path: "/config"})
+                next({ path: "/config" })
             } else if (AuthService.hasPermission(Permissions.MY_ASSETS_ACCESS)) {
-                next({path: "/myassets"})
-            } else if (AuthService.hasPermission(Permissions.MY_ASSETS_CONFIG)) {
-                next({path: "/config/external"})
+                next({ path: "/myassets" })
             }
         } else {
             if (to.meta.requiresPerm.length > 0) {
                 if (AuthService.hasAnyPermission(to.meta.requiresPerm)) {
                     next()
                 } else {
-                    next({path: "/"})
+                    next({ path: "/" })
                 }
             } else {
                 next()
