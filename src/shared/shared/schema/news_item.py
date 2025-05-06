@@ -153,6 +153,17 @@ class NewsItemData:
         self.osint_source_id = osint_source_id
         self.attributes = attributes
 
+    def print_news_item(self, logger):
+        """Print news item details using the provided logger."""
+        if self.title:
+            logger.debug(f"__ Title    : {self.title[:100]}")
+        if self.review:
+            logger.debug(f"__ Review   : {self.review[:100]}")
+        if self.content:
+            logger.debug(f"__ Content  : {self.content.split()[:100]}")
+        if self.published:
+            logger.debug(f"__ Published: {self.published}")
+
 
 class NewsItemBaseSchema(Schema):
     """Base schema for a news item."""

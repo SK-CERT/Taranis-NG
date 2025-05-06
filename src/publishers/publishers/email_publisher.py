@@ -41,7 +41,8 @@ class EMAILPublisher(BasePublisher):
         Raises:
             Exception: If an error occurs while sending the email.
         """
-        self.log_prefix = f"{self.name} '{publisher_input.name}'"
+        self.logger = logger
+        self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         smtp_server = publisher_input.parameter_values_map["SMTP_SERVER"]
         smtp_server_port = publisher_input.parameter_values_map["SMTP_SERVER_PORT"]
         user = publisher_input.parameter_values_map["EMAIL_USERNAME"]
@@ -97,29 +98,29 @@ class EMAILPublisher(BasePublisher):
         if sign == "auto":
             envelope.signature(key=sign)
         elif os.path.isfile(sign):
-            logger.info(f"Signing email with file {sign}")
+            self.logger.info(f"Signing email with file {sign}")
             envelope.signature(key=open(sign), passphrase=sign_password)
 
         if encrypt == "auto":
             envelope.encryption(key=encrypt)
         elif os.path.isfile(encrypt):
-            logger.info(f"Encrypting email with file {encrypt}")
+            self.logger.info(f"Encrypting email with file {encrypt}")
             envelope.encryption(key=open(encrypt))
 
         email_string = str(envelope)
         if len(email_string) > 3000:
             email_string = f"{email_string[:3000]}\n..."
-        logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{email_string}")
+        self.logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{email_string}")
 
         envelope.smtp(smtp)
         try:
             sent = envelope.send()
             success = bool(sent)
             if success:
-                logger.info("Email sent successfully")
+                self.logger.info("Email sent successfully")
                 Envelope.smtp_quit()
             else:
-                logger.critical("Email sending failed")
+                self.logger.critical("Email sending failed")
 
         except Exception as error:
-            logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Publishing fail: {error}")

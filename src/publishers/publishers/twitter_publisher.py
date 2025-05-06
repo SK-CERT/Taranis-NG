@@ -34,7 +34,8 @@ class TWITTERPublisher(BasePublisher):
         Raises:
             Exception: If an error occurs.
         """
-        self.log_prefix = f"{self.name} '{publisher_input.name}'"
+        self.logger = logger
+        self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
             api_key = publisher_input.parameter_values_map["TWITTER_API_KEY"]
             api_key_secret = publisher_input.parameter_values_map["TWITTER_API_KEY_SECRET"]
@@ -53,4 +54,4 @@ class TWITTERPublisher(BasePublisher):
             if len(bytes_data) <= 240:
                 api.update_status(bytes_data)
         except Exception as error:
-            logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Publishing fail: {error}")

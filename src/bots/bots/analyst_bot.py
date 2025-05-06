@@ -3,7 +3,6 @@
 import re
 
 from .base_bot import BaseBot
-from managers.log_manager import logger
 from shared.config_bot import ConfigBot
 from shared.schema import news_item
 from remote.core_api import CoreApi
@@ -45,7 +44,7 @@ class AnalystBot(BaseBot):
         Raises:
             Exception: If an error occurs during execution.
         """
-        self.log_prefix = f"{self.name} {preset.name}"
+        self.preset = preset
         try:
             source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
             regexp = preset.parameter_values["REGULAR_EXPRESSION"]
@@ -64,7 +63,7 @@ class AnalystBot(BaseBot):
             limit = BaseBot.history(interval)
             news_items_data, code = CoreApi.get_news_items_data(limit)
             if code == 200 and news_items_data is not None:
-                logger.debug(f"News items found: {len(news_items_data)}, since {limit}")
+                self.preset.logger.debug(f"News items found: {len(news_items_data)}, since {limit}")
                 for item in news_items_data:
                     if item:
                         news_item_id = item["id"]
@@ -94,16 +93,16 @@ class AnalystBot(BaseBot):
                                 attributes.append(news_attribute)
 
                         if len(attributes) > 0:
-                            logger.debug(f"Found: {len(attributes)}, {title}, {item['collected']}")
+                            self.preset.logger.debug(f"Found: {len(attributes)}, {title}, {item['collected']}")
                             news_item_attributes_schema = news_item.NewsItemAttributeSchema(many=True)
                             CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
             else:
-                logger.error(
+                self.preset.logger.error(
                     f"News items not received, Code: {code}" f"{', response: ' + str(news_items_data) if news_items_data is not None else ''}"
                 )
 
         except Exception as error:
-            logger.exception(f"Failed to parse attributes: {error}")
+            self.preset.logger.exception(f"Failed to parse attributes: {error}")
 
     def execute_on_event(self, preset, event_type, data):
         """Execute the specified preset on the given event.
@@ -121,4 +120,4 @@ class AnalystBot(BaseBot):
             attr_name = preset.parameter_values["ATTRIBUTE_NAME"]  # noqa F841
 
         except Exception as error:
-            logger.exception(f"Execute on event failed: {error}")
+            self.preset.logger.exception(f"Execute on event failed: {error}")

@@ -9,7 +9,6 @@ import socket
 from slack import WebClient
 
 from .base_collector import BaseCollector
-from managers.log_manager import logger
 from shared import common
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
@@ -41,9 +40,9 @@ class SlackCollector(BaseCollector):
         Arguments:
             source: Source object.
         """
-        self.log_prefix = f"{self.name} '{source.name}'"
+        self.source = source
         news_items = []
-        proxy_server = source.parameter_values["PROXY_SERVER"]
+        proxy_server = self.sourceparameter_values["PROXY_SERVER"]
 
         if proxy_server:
 
@@ -62,25 +61,23 @@ class SlackCollector(BaseCollector):
                 s.send(str.encode(connection))
                 s.recv(4096)
             except Exception:
-                print(f"OSINTSource ID: {source.id}")
-                print(f"OSINTSource name: {source.name}")
-                print("Proxy connection failed")
+                self.source.logger.exception("Proxy connection failed")
 
-        ids = source.parameter_values["WORKSPACE_CHANNELS_ID"].replace(" ", "")
+        ids = self.source.parameter_values["WORKSPACE_CHANNELS_ID"].replace(" ", "")
         channels_list = ids.split(",")
 
-        slack_client = WebClient(source.parameter_values["SLACK_API_TOKEN"])
+        slack_client = WebClient(self.source.parameter_values["SLACK_API_TOKEN"])
 
         try:
             for channel_id in channels_list:
-                logger.info(f"Channel: {channel_id}")
+                self.source.logger.info(f"Channel: {channel_id}")
                 channel_info = slack_client.conversations_info(channel=channel_id)
                 channel_name = channel_info["channel"]["name"]
 
                 # in future we can use parameter "oldest" - Only messages after this Unix timestamp will be included in results
                 data = slack_client.conversations_history(channel=channel_id, limit=30)
                 for count, message in enumerate(data["messages"], 1):
-                    logger.debug(f"Message: {count}")
+                    self.source.logger.debug(f"Message: {count}")
                     published = time.ctime(float(message["ts"]))
                     content = message["text"]
                     review = common.smart_truncate(content)
@@ -103,10 +100,10 @@ class SlackCollector(BaseCollector):
                     url = ""
                     for_hash = user_id + channel_id + content
 
-                    logger.debug(f"... Title    : {title}")
-                    logger.debug(f"... Content  : {content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
-                    logger.debug(f"... Author   : {author}")
-                    logger.debug(f"... Published: {published}")
+                    self.source.logger.debug(f"... Title    : {title}")
+                    self.source.logger.debug(f"... Content  : {content.replace('\r', '').replace('\n', ' ').strip()[:100]}")
+                    self.source.logger.debug(f"... Author   : {author}")
+                    self.source.logger.debug(f"... Published: {published}")
 
                     news_item = NewsItemData(
                         uuid.uuid4(),
@@ -119,12 +116,12 @@ class SlackCollector(BaseCollector):
                         author,
                         datetime.datetime.now(),
                         content,
-                        source.id,
+                        self.source.id,
                         [],
                     )
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            BaseCollector.publish(news_items, self.source)
 
         except Exception as error:
-            logger.exception(f"Collection failed: {error}")
+            self.source.logger.exception(f"Collection failed: {error}")
