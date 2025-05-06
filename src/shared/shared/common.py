@@ -46,3 +46,25 @@ def clean_whitespace(string: str) -> str:
         string: The string without whitespace.
     """
     return re.sub(r"\s+", " ", string.strip())
+
+
+def read_int_parameter(name, default_value, object):
+    """Read an integer parameter from a source dictionary.
+
+    Parameters:
+        name (str): The name of the parameter to read.
+        default_value (int): The default value to return if the parameter is not found or is not a valid integer.
+        object (dict): The dictionary containing the parameter values.
+    Returns:
+        val (int): The value of the parameter, or the default value if the parameter is not found or is not a valid integer.
+    """
+    val = default_value
+    try:
+        par_val = object.parameter_values[name]
+        if par_val != "":
+            val = int(par_val)
+            if val <= 0:
+                val = default_value
+    except Exception as error:
+        object.logger.exception(f"Reading of int parameter failed: {error}")
+    return val

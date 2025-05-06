@@ -46,7 +46,8 @@ class SFTPPublisher(BasePublisher):
             Exception: If there is an error during the publishing process.
 
         """
-        self.log_prefix = f"{self.name} '{publisher_input.name}'"
+        self.logger = logger
+        self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         url = publisher_input.parameter_values_map["SFTP_URL"]
         port = publisher_input.parameter_values_map["PORT"]
         username = publisher_input.parameter_values_map["USERNAME"]
@@ -79,8 +80,7 @@ class SFTPPublisher(BasePublisher):
                 ssh_key = paramiko.DSSKey(filename=key_path, password=ssh_key_password)
                 return ssh_key
             except paramiko.ssh_exception.SSHException as error:
-                logger.critical(f"Issue with SSH key {key_path}")
-                logger.debug(f"Error: {error}")
+                self.logger.exception(f"Issue with SSH key {key_path}: {error}")
                 return None
 
         try:
@@ -114,20 +114,18 @@ class SFTPPublisher(BasePublisher):
             else:
                 ssh.connect(hostname=url, port=port, username=username, password=password)
             sftp = ssh.open_sftp()
-            logger.info(f"Successfully connected to {url} on port {port}")
+            self.logger.info(f"Successfully connected to {url} on port {port}")
             try:
                 sftp.putfo(file_object, f"{full_path}", confirm=True)
-                logger.info(f"Successfully saved data to {full_path} on remote machine")
+                self.logger.info(f"Successfully saved data to {full_path} on remote machine")
             except Exception as error:
-                logger.critical(f"Failed to save data to {full_path} on remote machine")
-                logger.debug(f"Error: {error}")
+                self.logger.exception(f"Failed to save data to {full_path} on remote machine: {error}")
             if command:
                 try:
                     ssh.exec_command(command)
-                    logger.info(f"Executed command {command} on remote machine")
+                    self.logger.info(f"Executed command {command} on remote machine")
                 except Exception as error:
-                    logger.critical(f"Failed to execute command {command} on remote machine")
-                    logger.debug(f"Error: {error}")
+                    self.logger.exception(f"Failed to execute command {command} on remote machine: {error}")
             sftp.close()
         except Exception as error:
-            logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Publishing fail: {error}")

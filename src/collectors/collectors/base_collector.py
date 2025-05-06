@@ -13,7 +13,7 @@ from sockshandler import SocksiPyHandler
 from urllib.parse import urlparse
 from dateutil.parser import parse as date_parse
 from managers import time_manager
-from managers.log_manager import logger
+from managers.log_manager import logger, create_logger
 from remote.core_api import CoreApi
 from shared import common
 from shared.schema import collector, osint_source, news_item
@@ -40,7 +40,6 @@ class BaseCollector:
         get_proxy_handler(source): Get the proxy handler for the collector.
         run_collector(source): Run the collector on the given source.
         initialize(): Initialize the collector.
-        read_int_parameter(name, default_value, source): Read an integer parameter from a source dictionary
     """
 
     type = "BASE_COLLECTOR"
@@ -70,20 +69,20 @@ class BaseCollector:
         """
         response, status_code = CoreApi.update_collector_last_attempt(source.id)
         if status_code != 200:
-            logger.error(
+            source.logger.error(
                 f"Update last attempt failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
             )
 
     @staticmethod
     def update_last_error_message(source):
-        """Update the last attempt for a collector.
+        """Update the last error message for a collector.
 
         Parameters:
             source: The source object representing the collector.
         """
-        response, status_code = CoreApi.update_collector_last_error_message(source.id, source.last_error_message)
+        response, status_code = CoreApi.update_collector_last_error_message(source.id, source.logger.stored_message)
         if status_code != 200:
-            logger.error(
+            source.logger.error(
                 f"Update last error message failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
             )
 
@@ -212,7 +211,7 @@ class BaseCollector:
             news_items (list): A list of news items to be published.
             source (object): The source object from which the news items were collected.
         """
-        logger.debug(f"Collected {len(news_items)} news items")
+        source.logger.debug(f"Collected {len(news_items)} news items")
         BaseCollector.sanitize_news_items(news_items, source)
         filtered_news_items = BaseCollector.filter_by_word_list(news_items, source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
@@ -238,27 +237,27 @@ class BaseCollector:
 
                 # start collection
                 for source in self.osint_sources:
-                    logger.set_dynamic_target(source)
                     source.last_error_message = None
-                    source.log_prefix = f"{self.name} '{source.name}':"
+                    source.logger = create_logger(log_prefix=f"{self.name} '{source.name}'")
+                    source.logger.stored_message_levels = ["error", "exception", "warning", "critical"]
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == "" or interval == "0":
-                        logger.info(f"{source.log_prefix} Disabled")
+                        source.logger.info("Disabled")
                         continue
 
                     self.run_collector(source)
 
                     # run task every day at XY
                     if interval[0].isdigit() and ":" in interval:
-                        logger.debug(f"{source.log_prefix} Scheduling for {interval} daily")
+                        source.logger.debug(f"Scheduling for {interval} daily")
                         source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
                     # run task at a specific day (XY, ZZ:ZZ:ZZ)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        logger.debug(f"Scheduling for {day} {at}")
+                        source.logger.debug(f"Scheduling for {day} {at}")
                         if day == "Monday":
                             source.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_collector, source)
                         elif day == "Tuesday":
@@ -276,7 +275,7 @@ class BaseCollector:
                     # run task every XY minutes
                     else:
                         source.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_collector, source)
-                        logger.debug(f"{source.log_prefix} Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
+                        source.logger.debug(f"Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
             else:
                 logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
                 pass
@@ -388,54 +387,16 @@ class BaseCollector:
             source: The source to collect data from.
         """
         runner = self.__class__()  # get right type of collector
-        logger.info(f"{source.log_prefix} Starting collection")
+        source.logger.info("Starting collection")
         self.update_last_attempt(source)
         runner.collect(source)
         if hasattr(source, "scheduler_job"):
             next_run_str = f"next run at {source.scheduler_job.next_run}"
         else:
             next_run_str = "next run not yet scheduled"
-        logger.info(f"{source.log_prefix} Collection finished, {next_run_str}")
+        source.logger.info(f"Collection finished, {next_run_str}")
         self.update_last_error_message(source)
 
     def initialize(self):
         """Initialize the collector."""
         self.refresh()
-
-    @staticmethod
-    def read_int_parameter(name, default_value, source):
-        """Read an integer parameter from a source dictionary.
-
-        Parameters:
-            name (str): The name of the parameter to read.
-            default_value (int): The default value to return if the parameter is not found or is not a valid integer.
-            source (dict): The dictionary containing the parameter values.
-        Returns:
-           val (int): The value of the parameter, or the default value if the parameter is not found or is not a valid integer.
-        """
-        val = default_value
-        try:
-            par_val = source.parameter_values[name]
-            if par_val != "":
-                val = int(par_val)
-                if val <= 0:
-                    val = default_value
-        except Exception as error:
-            logger.exception(f"Reading of int parameter failed: {error}")
-        return val
-
-    @staticmethod
-    def print_news_item(itm):
-        """Print news item detials.
-
-        Parameters:
-            itm (NewsItemData): News Item object.
-        """
-        if itm.title:
-            logger.debug(f"__ Title    : {itm.title[:100]}")
-        if itm.review:
-            logger.debug(f"__ Review   : {itm.review[:100]}")
-        if itm.content:
-            logger.debug(f"__ Content  : {common.clean_whitespace(itm.content)[:100]}")
-        if itm.published:
-            logger.debug(f"__ Published: {itm.published}")

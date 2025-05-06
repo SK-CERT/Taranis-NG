@@ -8,7 +8,6 @@ import string
 import uuid
 
 from .base_collector import BaseCollector
-from managers.log_manager import logger
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -39,7 +38,7 @@ class ScheduledTasksCollector(BaseCollector):
         Raises:
             Exception: If the collection fails for any reason.
         """
-        self.log_prefix = f"{self.name} '{source.name}'"
+        self.source = source
         news_items = []
         head, tail = os.path.split(source.parameter_values["TASK_COMMAND"])
         task_title = source.parameter_values["TASK_TITLE"]
@@ -81,4 +80,4 @@ class ScheduledTasksCollector(BaseCollector):
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.exception(f"Collection failed: {error}")
+            self.source.logger.exception(f"Collection failed: {error}")

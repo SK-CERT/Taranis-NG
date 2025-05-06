@@ -4,7 +4,7 @@ import logging.handlers
 import sys
 import socket
 import logging
-from typing import Optional, Dict, Tuple
+from typing import Optional
 
 
 class TaranisLogger:
@@ -41,9 +41,9 @@ class TaranisLogger:
         taranis_stream_handler = logging.StreamHandler(stream=sys.stdout)
         module_stream_handler = logging.StreamHandler(stream=sys.stdout)
 
-        self.log_level_mapping: Dict[str, Tuple[Optional[str], Optional[str]]] = {}  # Mapping of log levels to target attributes
-        self.dynamic_target = None  # Dynamic target object (e.g., source)
-        self.module_name = None  # Module name for log messages
+        self.log_prefix = ""
+        self.stored_message_levels = []
+        self.stored_message = None
 
         if colored:
             taranis_stream_handler.setFormatter(TaranisLogFormatter())
@@ -83,71 +83,18 @@ class TaranisLogger:
         # Set the primary logger to taranis
         self.logger = taranis_logger
 
-    def _get_log_prefix(self) -> str:
-        """Retrieve the value of the log_prefix attribute from the calling class.
-
-        Returns:
-            str: The value of log_prefix or a default if not set.
-        """
-        try:
-            import inspect
-
-            frame = inspect.currentframe()
-            while frame:
-                # Get the 'self' object from the calling frame
-                caller = frame.f_locals.get("self")
-                if caller and hasattr(caller, "log_prefix"):
-                    return getattr(caller, "log_prefix", "")
-                frame = frame.f_back
-        except Exception:
-            pass
-
-        # Default log prefix if none is found
-        return ""
-
     def _format_message(self, message: str) -> str:
-        """Format the log message to include the log_prefix attribute.
-
-        Parameters:
-            message (str): The original log message.
-
-        Returns:
-            str: The formatted log message.
-        """
-        log_prefix = self._get_log_prefix()
-        if log_prefix:
-            whole_message = f"{log_prefix}: {message}"
+        """Format the log message to include the log_prefix attribute."""
+        if self.log_prefix:
+            whole_message = f"{self.log_prefix}: {message}"
         else:
             whole_message = message
         return whole_message
 
-    def set_log_level_target(self, level: str, attribute: Optional[str]):
-        """Set the target attribute for a specific log level.
-
-        Parameters:
-            level (str): The log level (e.g., "debug", "error", "exception", etc.).
-            attribute (str): The attribute of the dynamic target where the message should be stored.
-        """
-        self.log_level_mapping[level.lower()] = attribute
-
-    def set_dynamic_target(self, target: Optional[object]):
-        """Set the dynamic target object (e.g., source).
-
-        Parameters:
-            target (object): The dynamic target object.
-        """
-        self.dynamic_target = target
-
     def _store_message(self, level: str, message: str):
-        """Store the message in the target attribute for the given log level.
-
-        Parameters:
-            level (str): The log level (e.g., "debug", "error", "exception", etc.).
-            message (str): The message to be stored.
-        """
-        attribute = self.log_level_mapping.get(level.lower())
-        if self.dynamic_target is not None and attribute is not None:
-            setattr(self.dynamic_target, attribute, message)
+        # Only store if this level is configured in store_messages
+        if level.lower() in self.stored_message_levels:
+            self.stored_message = message
 
     def debug(self, message):
         """Log a debug message.
@@ -186,7 +133,7 @@ class TaranisLogger:
         self.logger.info(self._format_message(message))
 
     def warning(self, message):
-        """Log an warning message.
+        """Log a warning message.
 
         Parameters:
             message (str): The message to be logged.

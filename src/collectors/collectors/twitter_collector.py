@@ -6,7 +6,6 @@ import uuid
 import tweepy
 
 from .base_collector import BaseCollector
-from managers.log_manager import logger
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -38,25 +37,26 @@ class TwitterCollector(BaseCollector):
         Parameters:
             source -- Source object.
         """
-        self.log_prefix = f"{self.name} '{source.name}'"
+        self.source = source
+
         try:
             news_items = []
             attributes = []
 
-            search_keywords = source.parameter_values["SEARCH_KEYWORDS"].replace(" ", "")
+            search_keywords = self.source.parameter_values["SEARCH_KEYWORDS"].replace(" ", "")
             keywords_list = search_keywords.split(",")
 
-            search_hashtags = source.parameter_values["SEARCH_HASHTAGS"].replace(" ", "")
+            search_hashtags = self.source.parameter_values["SEARCH_HASHTAGS"].replace(" ", "")
             hashtags_list = search_hashtags.split(",")
 
-            number_of_tweets = source.parameter_values["NUMBER_OF_TWEETS"]
+            number_of_tweets = self.source.parameter_values["NUMBER_OF_TWEETS"]
 
-            twitter_api_key = source.parameter_values["TWITTER_API_KEY"]
-            twitter_api_key_secret = source.parameter_values["TWITTER_API_KEY_SECRET"]
-            twitter_access_token = source.parameter_values["TWITTER_ACCESS_TOKEN"]
-            twitter_access_token_secret = source.parameter_values["TWITTER_ACCESS_TOKEN_SECRET"]
+            twitter_api_key = self.source.parameter_values["TWITTER_API_KEY"]
+            twitter_api_key_secret = self.source.parameter_values["TWITTER_API_KEY_SECRET"]
+            twitter_access_token = self.source.parameter_values["TWITTER_ACCESS_TOKEN"]
+            twitter_access_token_secret = self.source.parameter_values["TWITTER_ACCESS_TOKEN_SECRET"]
 
-            proxy_server = source.parameter_values["PROXY_SERVER"]
+            proxy_server = self.source.parameter_values["PROXY_SERVER"]
 
             auth = tweepy.OAuthHandler(twitter_api_key, twitter_api_key_secret)
             auth.set_access_token(twitter_access_token, twitter_access_token_secret)
@@ -108,7 +108,7 @@ class TwitterCollector(BaseCollector):
                         author,
                         datetime.datetime.now(),
                         content,
-                        source.id,
+                        self.source.id,
                         attributes,
                     )
 
@@ -117,4 +117,4 @@ class TwitterCollector(BaseCollector):
             BaseCollector.publish(news_items, source)
 
         except Exception as error:
-            logger.exception(f"Collection failed: {error}")
+            self.source.logger.exception(f"Collection failed: {error}")

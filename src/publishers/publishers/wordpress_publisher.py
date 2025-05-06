@@ -35,7 +35,8 @@ class WORDPRESSPublisher(BasePublisher):
         Raises:
             Exception: If an error occurs
         """
-        self.log_prefix = f"{self.name} '{publisher_input.name}'"
+        self.logger = logger
+        self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
             user = publisher_input.parameter_values_map["WP_USER"]
             python_app_secret = publisher_input.parameter_values_map["WP_PYTHON_APP_SECRET"]
@@ -58,4 +59,4 @@ class WORDPRESSPublisher(BasePublisher):
 
             requests.post(main_wp_url + "/index.php/wp-json/wp/v2/posts", headers=headers, json=post)
         except Exception as error:
-            logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Publishing fail: {error}")

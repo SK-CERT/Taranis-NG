@@ -16,4 +16,4 @@ class ManualCollector(BaseCollector):
     @BaseCollector.ignore_exceptions
     def collect(self, source):
         """Collect data from source."""
-        self.log_prefix = f"{self.name} '{source.name}'"
+        pass
