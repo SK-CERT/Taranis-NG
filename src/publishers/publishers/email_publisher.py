@@ -3,7 +3,7 @@
 from datetime import datetime
 from base64 import b64decode
 import os
-from managers.log_manager import logger
+from shared.log_manager import logger
 from .base_publisher import BasePublisher
 from shared.config_publisher import ConfigPublisher
 from envelope import Envelope

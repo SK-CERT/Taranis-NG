@@ -5,7 +5,7 @@ Returns:
 """
 
 from shared.schema.presenter import PresenterSchema
-from managers.log_manager import logger
+from shared.log_manager import logger
 import json
 import datetime
 import types

@@ -4,7 +4,7 @@ import os
 import requests
 import urllib
 from config import Config
-from managers.log_manager import logger
+from shared.log_manager import logger
 
 
 class CoreApi:

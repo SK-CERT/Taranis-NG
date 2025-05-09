@@ -51,7 +51,7 @@ def schedule_job_on_sunday(interval, job_func, *args, **kwargs):
 
 
 def cancel_all_jobs():
-    """Cancel all scheduled jobs."""
+    """Cancel all scheduled jobs in current thread."""
     schedule.clear()
 
 
@@ -62,13 +62,18 @@ def run_scheduler():
     class ScheduleThread(threading.Thread):
         @classmethod
         def run(cls):
+            print("Scheduler thread started.", flush=True)
             while not scheduler_event.is_set():
-                schedule.run_pending()
-                time.sleep(1)
+                try:
+                    # print(f"Registered jobs: {schedule.jobs}", flush=True)
+                    schedule.run_pending()
+                    time.sleep(1)
+                except Exception as ex:
+                    print(f"Scheduler thread encountered an error: {ex}", flush=True)
 
     scheduler_thread = ScheduleThread()
     scheduler_thread.start()
-
+    print("Scheduler thread initialized.", flush=True)
     return scheduler_event
 
 

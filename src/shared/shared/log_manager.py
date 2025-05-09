@@ -1,4 +1,4 @@
-"""This file contains the logger configuration for the collectors module."""
+"""This file contains the logger configuration for the module."""
 
 import os
 from shared.log import TaranisLogger
