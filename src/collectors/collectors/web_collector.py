@@ -12,7 +12,7 @@ import urllib.request
 import uuid
 from .base_collector import BaseCollector
 from dateutil.parser import parse
-from managers.log_manager import logger
+from shared.log_manager import logger
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains

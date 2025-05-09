@@ -9,7 +9,8 @@ from flask import request
 from flask_jwt_extended import JWTManager, get_jwt_identity, verify_jwt_in_request, get_jwt
 from flask_jwt_extended.exceptions import JWTExtendedException
 
-from managers import log_manager, time_manager
+from managers import log_manager
+from shared import time_manager
 from auth.keycloak_authenticator import KeycloakAuthenticator
 from auth.openid_authenticator import OpenIDAuthenticator
 from auth.password_authenticator import PasswordAuthenticator

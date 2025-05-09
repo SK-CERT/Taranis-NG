@@ -4,7 +4,7 @@ from base64 import b64decode
 import tweepy
 
 from .base_publisher import BasePublisher
-from managers.log_manager import logger
+from shared.log_manager import logger
 
 from shared.config_publisher import ConfigPublisher
 

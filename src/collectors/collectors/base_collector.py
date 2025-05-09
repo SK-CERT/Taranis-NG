@@ -12,10 +12,9 @@ from functools import wraps
 from sockshandler import SocksiPyHandler
 from urllib.parse import urlparse
 from dateutil.parser import parse as date_parse
-from managers import time_manager
-from managers.log_manager import logger, create_logger
+from shared.log_manager import logger, create_logger
 from remote.core_api import CoreApi
-from shared import common
+from shared import common, time_manager
 from shared.schema import collector, osint_source, news_item
 
 
@@ -278,10 +277,9 @@ class BaseCollector:
                         source.logger.debug(f"Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
             else:
                 logger.error(f"OSINT sources not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
-                pass
+
         except Exception as error:
             logger.exception(f"Refreshing of sources failed: {error}")
-            pass
 
     @staticmethod
     def get_proxy_handler(parsed_proxy) -> object:
@@ -387,14 +385,10 @@ class BaseCollector:
             source: The source to collect data from.
         """
         runner = self.__class__()  # get right type of collector
-        source.logger.info("Starting collection")
+        source.logger.info("Start")
         self.update_last_attempt(source)
         runner.collect(source)
-        if hasattr(source, "scheduler_job"):
-            next_run_str = f"next run at {source.scheduler_job.next_run}"
-        else:
-            next_run_str = "next run not yet scheduled"
-        source.logger.info(f"Collection finished, {next_run_str}")
+        source.logger.info("End")
         self.update_last_error_message(source)
 
     def initialize(self):

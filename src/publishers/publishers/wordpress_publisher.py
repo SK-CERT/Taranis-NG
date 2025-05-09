@@ -6,7 +6,7 @@ from datetime import datetime
 import requests
 
 from .base_publisher import BasePublisher
-from managers.log_manager import logger
+from shared.log_manager import logger
 from shared.config_publisher import ConfigPublisher
 
 

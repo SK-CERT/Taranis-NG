@@ -27,6 +27,7 @@ class GroupingBot(BaseBot):
     description = config.description
     parameters = config.parameters
 
+    @BaseBot.ignore_exceptions
     def execute(self, preset):
         """Execute the grouping bot with the given preset.
 

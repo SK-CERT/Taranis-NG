@@ -4,7 +4,7 @@ import os
 import threading
 import time
 
-from managers.log_manager import logger
+from shared.log_manager import logger
 from collectors.email_collector import EmailCollector
 from collectors.manual_collector import ManualCollector
 from collectors.rss_collector import RSSCollector

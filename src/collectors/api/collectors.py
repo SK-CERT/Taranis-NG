@@ -5,7 +5,7 @@ from flask import request
 
 from managers import collectors_manager
 from managers.auth_manager import api_key_required
-from managers.log_manager import logger
+from shared.log_manager import logger
 
 
 class Collectors(Resource):

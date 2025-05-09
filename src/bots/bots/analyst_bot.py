@@ -36,6 +36,7 @@ class AnalystBot(BaseBot):
     news_items = []
     news_items_data = []
 
+    @BaseBot.ignore_exceptions
     def execute(self, preset):
         """Execute the analyst bot with the given preset.
 

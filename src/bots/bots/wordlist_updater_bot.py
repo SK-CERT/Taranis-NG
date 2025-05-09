@@ -25,6 +25,7 @@ class WordlistUpdaterBot(BaseBot):
     description = config.description
     parameters = config.parameters
 
+    @BaseBot.ignore_exceptions
     def execute(self, preset):
         """Execute the word list updater bot with the given preset.
 

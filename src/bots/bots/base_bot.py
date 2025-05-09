@@ -2,8 +2,9 @@
 
 import datetime
 import time
-from managers import time_manager
-from managers.log_manager import logger
+from functools import wraps
+from shared import time_manager
+from shared.log_manager import logger, create_logger
 from shared.schema import bot, bot_preset
 from remote.core_api import CoreApi
 
@@ -23,6 +24,7 @@ class BaseBot:
         execute_on_event(preset, event_type, data): Executes the bot's task based on an event.
         process_event(event_type, data): Processes an event and executes the bot's task for each preset.
         history(interval): Returns the history limit based on the given interval.
+        run_preset(preset): Run the bot on the given preset.
         initialize(): Initializes the bot and schedules its execution based on the presets.
     """
 
@@ -55,6 +57,26 @@ class BaseBot:
             self.execute_on_event(preset, event_type, data)
 
     @staticmethod
+    def ignore_exceptions(func):
+        """Wrap scheduled action with exception handling."""
+
+        @wraps(func)
+        def wrapper(self, preset):
+            """Handle exceptions during scheduled bot runs.
+
+            Parameters:
+                preset: The preset of the bot.
+            Raises:
+                Exception: If an unhandled exception occurs during the bot run.
+            """
+            try:
+                func(self, preset)
+            except Exception as error:
+                logger.exception(f"An unhandled exception occurred during scheduled bot run: {error}")
+
+        return wrapper
+
+    @staticmethod
     def history(interval):
         """Generate a timestamp limit based on the given interval.
 
@@ -85,6 +107,7 @@ class BaseBot:
     def initialize(self):
         """Initialize the bot by retrieving bot presets and scheduling jobs based on the preset intervals."""
         time.sleep(20)  # wait for the CORE
+        time_manager.cancel_all_jobs()
         response, code = CoreApi.get_bots_presets(self.type)
         if code == 200 and response is not None:
             preset_schema = bot_preset.BotPresetSchemaBase(many=True)
@@ -92,42 +115,56 @@ class BaseBot:
             logger.debug(f"{self.name}: {len(self.bot_presets)} presets loaded")
 
             for preset in self.bot_presets:
-                preset.logger = logger
-                preset.logger.log_prefix = f"{self.name} '{preset.name}'"
+                preset.last_error_message = None
+                preset.logger = create_logger(log_prefix=f"{self.name} '{preset.name}'")
+                preset.logger.stored_message_levels = ["error", "exception", "warning", "critical"]
                 interval = preset.parameter_values["REFRESH_INTERVAL"]
                 # do not schedule if no interval is set
                 if interval == "" or interval == "0":
-                    preset.logger.debug(f"scheduling '{preset.name}' disabled")
+                    preset.logger.info("Disabled")
                     continue
 
-                self.execute(preset)
+                self.run_preset(preset)
 
                 if interval:
                     if interval[0].isdigit() and ":" in interval:
-                        preset.logger.debug(f"scheduling '{preset.name}' at: {interval}")
-                        time_manager.schedule_job_every_day(interval, self.execute, preset)
+                        preset.logger.debug(f"Scheduling for {interval} daily")
+                        preset.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_preset, preset)
                     elif interval[0].isalpha():
                         interval = interval.split(",")
                         day = interval[0].strip()
                         at = interval[1].strip()
-                        preset.logger.debug(f"scheduling '{preset.name}' at: {day} {at}")
+                        preset.logger.debug(f"Scheduling for {day} {at}")
                         if day == "Monday":
-                            time_manager.schedule_job_on_monday(at, self.execute, preset)
+                            preset.scheduler_job = time_manager.schedule_job_on_monday(at, self.run_preset, preset)
                         elif day == "Tuesday":
-                            time_manager.schedule_job_on_tuesday(at, self.execute, preset)
+                            preset.scheduler_job = time_manager.schedule_job_on_tuesday(at, self.run_preset, preset)
                         elif day == "Wednesday":
-                            time_manager.schedule_job_on_wednesday(at, self.execute, preset)
+                            preset.scheduler_job = time_manager.schedule_job_on_wednesday(at, self.run_preset, preset)
                         elif day == "Thursday":
-                            time_manager.schedule_job_on_thursday(at, self.execute, preset)
+                            preset.scheduler_job = time_manager.schedule_job_on_thursday(at, self.run_preset, preset)
                         elif day == "Friday":
-                            time_manager.schedule_job_on_friday(at, self.execute, preset)
+                            preset.scheduler_job = time_manager.schedule_job_on_friday(at, self.run_preset, preset)
                         elif day == "Saturday":
-                            time_manager.schedule_job_on_saturday(at, self.execute, preset)
-                        else:
-                            time_manager.schedule_job_on_sunday(at, self.execute, preset)
+                            preset.scheduler_job = time_manager.schedule_job_on_saturday(at, self.run_preset, preset)
+                        elif day == "Sunday":
+                            preset.scheduler_job = time_manager.schedule_job_on_sunday(at, self.run_preset, preset)
                     else:
-                        preset.logger.debug(f"scheduling '{preset.name}' for {interval}")
-                        time_manager.schedule_job_minutes(int(interval), self.execute, preset)
+                        preset.scheduler_job = time_manager.schedule_job_minutes(int(interval), self.run_preset, preset)
+                        preset.logger.debug(f"Scheduling for {preset.scheduler_job.next_run} (in {interval} minutes)")
 
         else:
             logger.error(f"Bots presets not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
+
+    def run_preset(self, preset) -> None:
+        """Run the bot on the given preset.
+
+        Parameters:
+            preset: The preset to run.
+        """
+        runner = self.__class__()  # get right type of bot
+        preset.logger.info("Start")
+        # self.update_last_attempt(preset)
+        runner.execute(preset)
+        preset.logger.info("End")
+        # self.update_last_error_message(preset)

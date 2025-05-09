@@ -8,19 +8,6 @@ The module defines the following functions:
 - register_publisher(publisher): Registers a publisher.
 - get_registered_publishers_info(): Retrieves information about the registered publishers.
 - publish(publisher_input_json): Publishes the given input using the appropriate publisher.
-
-The module also imports the following classes:
-- FTPPublisher: Represents an FTP publisher.
-- SFTPPublisher: Represents an SFTP publisher.
-- EMAILPublisher: Represents an email publisher.
-- MASTODONPublisher: Represents a Mastodon publisher.
-- TWITTERPublisher: Represents a Twitter publisher.
-- WORDPRESSPublisher: Represents a WordPress publisher.
-- MISPPublisher: Represents a MISP publisher.
-
-The module imports the following modules:
-- PublisherInputSchema: Provides a schema for validating the input JSON for publishers.
-- log_manager: Provides functionality for logging critical messages.
 """
 
 from publishers.ftp_publisher import FTPPublisher
