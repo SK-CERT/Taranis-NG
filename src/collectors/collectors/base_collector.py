@@ -218,6 +218,7 @@ class BaseCollector:
 
     def refresh(self):
         """Refresh the OSINT sources for the collector."""
+        logger.debug(f"{self.name}: Awaiting initialization of CORE (timeout: 20s)")
         time.sleep(20)  # wait for the CORE
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 

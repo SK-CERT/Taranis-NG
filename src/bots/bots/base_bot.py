@@ -106,6 +106,7 @@ class BaseBot:
 
     def initialize(self):
         """Initialize the bot by retrieving bot presets and scheduling jobs based on the preset intervals."""
+        logger.debug(f"{self.name}: Awaiting initialization of CORE (timeout: 20s)")
         time.sleep(20)  # wait for the CORE
         time_manager.cancel_all_jobs()
         response, code = CoreApi.get_bots_presets(self.type)

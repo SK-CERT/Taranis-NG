@@ -20,6 +20,8 @@ status_report_thread = None
 
 def reportStatus():
     """Continuously send status updates to the Core API."""
+    logger.debug("Report status: Awaiting initialization of CORE (timeout: 20s)")
+    time.sleep(20)  # wait for the CORE
     while True:
         logger.debug("Sending status update...")
         response, status_code = CoreApi.update_collector_status()

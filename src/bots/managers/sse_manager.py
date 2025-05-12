@@ -4,6 +4,7 @@ import os
 import requests
 import sseclient
 import threading
+import time
 from config import Config
 from managers import bots_manager
 from shared.log_manager import logger
@@ -16,6 +17,8 @@ def initialize():
 
         @classmethod
         def run(cls):
+            logger.debug("SSE: Awaiting initialization of CORE (timeout: 20s)")
+            time.sleep(20)  # wait for the CORE
             url = os.getenv("TARANIS_NG_CORE_SSE")
             while True:  # Keep the thread running
                 try:
