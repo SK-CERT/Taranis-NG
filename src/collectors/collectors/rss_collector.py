@@ -64,7 +64,7 @@ class RSSCollector(BaseCollector):
 
         # Check if the feed has been modified since the last collection
         if last_collected:
-            if BaseCollector.not_modified(feed_url, last_collected, opener, user_agent):
+            if BaseCollector.not_modified(feed_url, last_collected, self.source.log_prefix, opener, user_agent):
                 return None
 
         self.source.logger.debug(f"Fetching feed from URL: {feed_url}")

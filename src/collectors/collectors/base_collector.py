@@ -238,7 +238,8 @@ class BaseCollector:
                 # start collection
                 for source in self.osint_sources:
                     source.last_error_message = None
-                    source.logger = create_logger(log_prefix=f"{self.name} '{source.name}'")
+                    source.log_prefix = f"{self.name} '{source.name}'"
+                    source.logger = create_logger(log_prefix=source.log_prefix)
                     source.logger.stored_message_levels = ["error", "exception", "warning", "critical"]
                     interval = source.parameter_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
@@ -322,12 +323,13 @@ class BaseCollector:
             return None
 
     @staticmethod
-    def not_modified(url, last_collected, opener, user_agent=None) -> bool:
+    def not_modified(url, last_collected, log_prefix, opener, user_agent=None) -> bool:
         """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
 
         Arguments:
             url (string): The URL of the content.
             last_collected (datetime): The datetime of the last collection.
+            log_prefix (string): The log prefix.
             opener (function): The function to open the URL.
             user_agent (string): The User-Agent string to use for the request (default: None).
 
@@ -344,7 +346,7 @@ class BaseCollector:
             headers["User-Agent"] = user_agent
 
         request = urllib.request.Request(url, method="HEAD", headers=headers)
-        log_prefix = "Check-if-modified -"
+        log_prefix += ": Check-if-modified -"
 
         last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
         try:
@@ -363,7 +365,7 @@ class BaseCollector:
                         logger.debug(f"{log_prefix} YES, modified since {last_collected_str} (Last-Modified: {last_modified_str})")
                         return False
                 else:
-                    logger.debug(f"{log_prefix} IDK if modified since {last_collected_str} (Last-Modified: header not received)")
+                    logger.debug(f"{log_prefix} Unable to determine modification since {last_collected_str} (Last-Modified: not received)")
                     return False
         except urllib.error.HTTPError as error:
             if error.code == 304:
