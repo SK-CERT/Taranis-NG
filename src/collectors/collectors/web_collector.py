@@ -476,7 +476,7 @@ class WebCollector(BaseCollector):
         opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
         not_modified = False
         if self.last_collected:
-            if not_modified := BaseCollector.not_modified(self.web_url, self.last_collected, opener, self.user_agent):
+            if not_modified := BaseCollector.not_modified(self.web_url, self.last_collected, self.source.log_prefix, opener, self.user_agent):
                 self.source.logger.info("Will not collect the feed because nothing has changed.")
                 BaseCollector.publish([], self.source)
 
