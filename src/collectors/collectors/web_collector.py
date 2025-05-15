@@ -512,7 +512,7 @@ class WebCollector(BaseCollector):
         except Exception as error:
             self.source.logger.exception(f"Obtaining title page failed: {error}")
             self.__dispose_of_headless_driver(browser)
-            return False, "Error obtaining title page", 0, 0
+            return 0
 
         # if there is a popup selector, click on it!
         if self.selectors["popup_close"]:

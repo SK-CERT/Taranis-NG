@@ -26,8 +26,9 @@ class KeycloakAuthenticator(BaseAuthenticator):
             return {"error": "Missing code or session_state parameters"}, 400
 
         link = environ.get("TARANIS_NG_KEYCLOAK_INTERNAL_URL")
+        old_keycloak = version.parse(environ.get("KEYCLOAK_VERSION")) < version.parse("17.0.0")
         # there's a change in API endpoints from version 17.0.0
-        if version.parse(environ.get("KEYCLOAK_VERSION")) < version.parse("17.0.0"):
+        if old_keycloak:
             link += "/auth"
         link += "/realms/" + environ.get("KEYCLOAK_REALM_NAME") + "/protocol/openid-connect/token"
 
@@ -60,7 +61,11 @@ class KeycloakAuthenticator(BaseAuthenticator):
 
         try:
             # decode token to get user data
-            data = jwt.decode(data["access_token"], verify=False)
+            if old_keycloak:
+                data = jwt.decode(data["access_token"], verify=False)
+            else:
+                data = jwt.decode(data["access_token"], options={"verify_signature": False}, algorithms=["RS256"])
+
         except Exception as ex:
             msg = "Keycloak returned invalid access_token"
             log_manager.store_auth_error_activity(msg, ex)

@@ -1,7 +1,7 @@
 """Module for News item schema."""
 
+from shared import common
 from marshmallow import Schema, fields, post_load, EXCLUDE
-
 from shared.schema.acl_entry import ACLEntryStatusSchema
 
 
@@ -160,7 +160,7 @@ class NewsItemData:
         if self.review:
             logger.debug(f"__ Review   : {self.review[:100]}")
         if self.content:
-            logger.debug(f"__ Content  : {self.content.split()[:100]}")
+            logger.debug(f"__ Content  : {common.clean_whitespace(self.content)[:100]}")
         if self.published:
             logger.debug(f"__ Published: {self.published}")
 
