@@ -55,9 +55,13 @@ class RSSCollector(BaseCollector):
             """Fetch the feed using feedparser with optional handler."""
             if user_agent:
                 feedparser.USER_AGENT = user_agent
-            if handler:
-                return feedparser.parse(url, handlers=[handler])
-            return feedparser.parse(url)
+            try:
+                if handler:
+                    return feedparser.parse(url, handlers=[handler])
+                return feedparser.parse(url)
+            except Exception as error:
+                self.source.logger.exception(f"Fetch feed failed: {error}")
+                return None
 
         # Determine the opener function based on the proxy handler
         opener = self.__get_opener(proxy_handler)
@@ -86,7 +90,7 @@ class RSSCollector(BaseCollector):
         links_limit = common.read_int_parameter("LINKS_LIMIT", 0, self.source)
         last_collected = self.source.last_collected
         user_agent = self.source.parameter_values["USER_AGENT"]
-        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"])
+        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
         if parsed_proxy:
             proxy_handler = BaseCollector.get_proxy_handler(parsed_proxy)
         else:
@@ -201,7 +205,3 @@ class RSSCollector(BaseCollector):
 
             except Exception as error:
                 self.source.logger.exception(f"Collection failed: {error}")
-
-        else:
-            self.source.logger.info("Will not collect the feed because nothing has changed.")
-            BaseCollector.publish([], self.source)

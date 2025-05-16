@@ -329,7 +329,7 @@ class WebCollector(BaseCollector):
         self.last_collected = self.source.last_collected
 
         # Use get_proxy_handler from BaseCollector
-        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"])
+        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
         if parsed_proxy:
             self.proxy = parsed_proxy
         else:

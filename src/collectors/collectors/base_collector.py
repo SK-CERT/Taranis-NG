@@ -304,7 +304,7 @@ class BaseCollector:
             return SocksiPyHandler(socks_type, parsed_proxy.hostname, int(parsed_proxy.port))
 
     @staticmethod
-    def get_parsed_proxy(proxy_string) -> object:
+    def get_parsed_proxy(proxy_string, log_prefix) -> object:
         """Get the parsed proxy URL for the collector.
 
         Parameters:
@@ -316,10 +316,10 @@ class BaseCollector:
             return None
         parsed_proxy = urlparse(proxy_string)
         if parsed_proxy.scheme in ["http", "https", "socks4", "socks5"]:
-            logger.debug(f"Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
+            logger.debug(f"{log_prefix}: Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
             return parsed_proxy
         else:
-            logger.warning(f"Invalid proxy server: {proxy_string}. Not using proxy.")
+            logger.warning(f"{log_prefix}: Invalid proxy server: {proxy_string}. Not using proxy.")
             return None
 
     @staticmethod
