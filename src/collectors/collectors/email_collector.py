@@ -228,7 +228,7 @@ class EmailCollector(BaseCollector):
         self.email_server_port = source.parameter_values["EMAIL_SERVER_PORT"]
         self.email_username = source.parameter_values["EMAIL_USERNAME"]
         self.email_password = source.parameter_values["EMAIL_PASSWORD"]
-        self.parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"])
+        self.parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
         self.email_sender_address = source.parameter_values["EMAIL_SENDER"]
         self.emails_limit = common.read_int_parameter("EMAILS_LIMIT", "", source)
 
