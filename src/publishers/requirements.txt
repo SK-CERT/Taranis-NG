@@ -1,5 +1,5 @@
 envelope==2.1.1
-Flask==3.1.0
+Flask==3.1.1
 Flask-Cors==5.0.1
 Flask-RESTful==0.3.10
 gevent==25.5.1
