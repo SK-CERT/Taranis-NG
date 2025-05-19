@@ -3,7 +3,7 @@
 import json
 from base64 import b64decode
 import urllib3
-from pymisp import ExpandedPyMISP, MISPEvent
+from pymisp import PyMISP, MISPEvent
 
 from .base_publisher import BasePublisher
 from shared.log_manager import logger
@@ -49,7 +49,7 @@ class MISPPublisher(BasePublisher):
 
             urllib3.disable_warnings()
 
-            misp = ExpandedPyMISP(misp_url, misp_key, misp_verifycert)
+            misp = PyMISP(misp_url, misp_key, misp_verifycert)
 
             event = MISPEvent()
             event.load(event_json)
