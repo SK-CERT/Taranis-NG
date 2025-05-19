@@ -12,7 +12,7 @@ gunicorn==23.0.0
 Jinja2==3.1.6
 git+https://github.com/cannatag/ldap3.git@refs/pull/983/head
 marshmallow==3.26.1
-psycopg[binary]==3.2.8
+psycopg[binary]==3.2.9
 pycryptodomex==3.22.0
 PyJWT==2.10.1
 python-dotenv==1.1.0
