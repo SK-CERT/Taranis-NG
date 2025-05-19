@@ -1,3 +1,4 @@
+beautifulsoup4==4.13.4  # used in common
 Flask==3.1.0
 Flask-Cors==5.0.1
 Flask-RESTful==0.3.10
