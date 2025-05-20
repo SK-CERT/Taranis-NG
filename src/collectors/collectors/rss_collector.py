@@ -6,7 +6,7 @@ import hashlib
 import urllib.request
 import uuid
 from bs4 import BeautifulSoup
-from .base_collector import BaseCollector
+from .base_collector import BaseCollector, not_modified
 from shared import common
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
@@ -39,7 +39,7 @@ class RSSCollector(BaseCollector):
             return urllib.request.build_opener(proxy_handler).open
         return urllib.request.urlopen
 
-    def __get_feed(self, feed_url, last_collected=None, user_agent=None, proxy_handler=None):
+    def __get_feed(self, source, proxy_handler=None):
         """Fetch the feed data, using proxy if provided, and check modification status.
 
         Arguments:
@@ -53,8 +53,8 @@ class RSSCollector(BaseCollector):
 
         def fetch_feed(url, handler=None):
             """Fetch the feed using feedparser with optional handler."""
-            if user_agent:
-                feedparser.USER_AGENT = user_agent
+            if self.source.user_agent:
+                feedparser.USER_AGENT = self.source.user_agent
             try:
                 if handler:
                     return feedparser.parse(url, handlers=[handler])
@@ -67,40 +67,39 @@ class RSSCollector(BaseCollector):
         opener = self.__get_opener(proxy_handler)
 
         # Check if the feed has been modified since the last collection
-        if last_collected:
-            if BaseCollector.not_modified(feed_url, last_collected, self.source.log_prefix, opener, user_agent):
+        if source.last_collected:
+            if not_modified(source, opener):
                 return None
 
-        self.source.logger.debug(f"Fetching feed from URL: {feed_url}")
-        return fetch_feed(feed_url, proxy_handler)
+        self.source.logger.debug(f"Fetching feed from URL: {source.url}")
+        return fetch_feed(source.url, proxy_handler)
 
     @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    def collect(self):
         """Collect data from RSS or Atom feed.
 
         Arguments:
             source: Source object.
         """
-        self.source = source
-        feed_url = self.source.parameter_values["FEED_URL"]
-        if not feed_url:
+        self.source.url = self.source.parameter_values["FEED_URL"]
+        if not self.source.url:
             self.source.logger.error("Feed URL is not set. Skipping collection.")
-            BaseCollector.publish([], self.source)
+
             return
         links_limit = common.read_int_parameter("LINKS_LIMIT", 0, self.source)
-        last_collected = self.source.last_collected
-        user_agent = self.source.parameter_values["USER_AGENT"]
-        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
-        if parsed_proxy:
-            proxy_handler = BaseCollector.get_proxy_handler(parsed_proxy)
+        self.source.user_agent = self.source.parameter_values["USER_AGENT"]
+        self.source.proxy = self.source.parameter_values["PROXY_SERVER"]
+        self.source.parsed_proxy = self.get_parsed_proxy()
+        if self.source.parsed_proxy:
+            proxy_handler = self.get_proxy_handler(self.source.parsed_proxy)
         else:
             proxy_handler = None
         opener = self.__get_opener(proxy_handler)
-        if user_agent:
-            self.source.logger.info(f"Requesting feed URL: {feed_url} (User-Agent: {user_agent})")
+        if self.source.user_agent:
+            self.source.logger.info(f"Requesting feed URL: {self.source.url} (User-Agent: {self.source.user_agent})")
         else:
-            self.source.logger.info(f"Requesting feed URL: {feed_url}")
-        feed = self.__get_feed(feed_url, last_collected, user_agent, proxy_handler)
+            self.source.logger.info(f"Requesting feed URL: {self.source.url}")
+        feed = self.__get_feed(self.source, proxy_handler)
         if feed:
             try:
                 self.source.logger.debug(f"Feed returned {len(feed['entries'])} entries.")
@@ -133,7 +132,7 @@ class RSSCollector(BaseCollector):
                         content_html = ""
                         try:
                             request = urllib.request.Request(link_for_article)
-                            request.add_header("User-Agent", user_agent)
+                            request.add_header("User-Agent", self.source.user_agent)
 
                             with opener(request) as response:
                                 content_html = response.read()
@@ -184,7 +183,7 @@ class RSSCollector(BaseCollector):
                         hashlib.sha256(for_hash.encode()).hexdigest(),
                         title,
                         review,
-                        feed_url,
+                        self.source.url,
                         link_for_article,
                         date,
                         author,
@@ -201,7 +200,7 @@ class RSSCollector(BaseCollector):
                         self.source.logger.debug(f"Limit for article links ({links_limit}) has been reached.")
                         break
 
-                BaseCollector.publish(news_items, self.source)
+                self.publish(news_items)
 
             except Exception as error:
                 self.source.logger.exception(f"Collection failed: {error}")

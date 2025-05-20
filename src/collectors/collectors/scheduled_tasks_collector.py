@@ -30,7 +30,7 @@ class ScheduledTasksCollector(BaseCollector):
     parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    def collect(self):
         """Collect data from scheduled tasks.
 
         Args:
@@ -38,18 +38,17 @@ class ScheduledTasksCollector(BaseCollector):
         Raises:
             Exception: If the collection fails for any reason.
         """
-        self.source = source
         news_items = []
-        head, tail = os.path.split(source.parameter_values["TASK_COMMAND"])
-        task_title = source.parameter_values["TASK_TITLE"]
+        head, tail = os.path.split(self.source.parameter_values["TASK_COMMAND"])
+        task_title = self.source.parameter_values["TASK_TITLE"]
 
         try:
             if head == "":
-                task_command = source.parameter_values["TASK_COMMAND"]
+                task_command = self.source.parameter_values["TASK_COMMAND"]
             else:
-                task_command = os.popen("." + source.parameter_values["TASK_COMMAND"]).read()
+                task_command = os.popen("." + self.source.parameter_values["TASK_COMMAND"]).read()
 
-            review = source.parameter_values["TASK_DESCRIPTION"]
+            review = self.source.parameter_values["TASK_DESCRIPTION"]
             author = ""
             osint_source = "TaranisNG System"
             link = ""
@@ -71,13 +70,13 @@ class ScheduledTasksCollector(BaseCollector):
                 author,
                 collected,
                 content,
-                source.id,
+                self.source.id,
                 [],
             )
 
             news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            self.publish(news_items, self.source)
 
         except Exception as error:
             self.source.logger.exception(f"Collection failed: {error}")

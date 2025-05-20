@@ -31,14 +31,12 @@ class TwitterCollector(BaseCollector):
     parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    def collect(self):
         """Collect data from X source.
 
         Parameters:
             source -- Source object.
         """
-        self.source = source
-
         try:
             news_items = []
             attributes = []
@@ -77,9 +75,9 @@ class TwitterCollector(BaseCollector):
             else:
                 public_tweets = api.home_timeline(count=number_of_tweets)
 
-            interval = source.parameter_values["REFRESH_INTERVAL"]
+            interval = self.source.parameter_values["REFRESH_INTERVAL"]
 
-            limit = BaseCollector.history(interval)
+            limit = self.history(interval)
 
             for tweet in public_tweets:
 
@@ -114,7 +112,7 @@ class TwitterCollector(BaseCollector):
 
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            self.publish(news_items)
 
         except Exception as error:
             self.source.logger.exception(f"Collection failed: {error}")

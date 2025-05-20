@@ -34,12 +34,12 @@ class EmailCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    def __proxy_tunnel(self, parsed_proxy, email_server_hostname, email_server_port):
+    def __proxy_tunnel(self, email_server_hostname, email_server_port):
         self.source.logger.debug("Establishing proxy tunnel")
         server = f"{email_server_hostname.lower()}"
         port = email_server_port
 
-        proxy = (f"{parsed_proxy.scheme}://{parsed_proxy.hostname}", parsed_proxy.port)
+        proxy = (f"{self.source.parsed_proxy.scheme}://{self.source.parsed_proxy.hostname}", self.source.parsed_proxy.port)
         con = f"CONNECT {server}:{port} HTTP/1.0\r\nConnection: close\r\n\r\n"
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -50,8 +50,8 @@ class EmailCollector(BaseCollector):
     def __fetch_emails_imap(self):
         self.source.logger.debug("Fetching emails using IMAP")
         try:
-            if self.parsed_proxy:
-                self.__proxy_tunnel(self.parsed_proxy, self.email_server_hostname, self.email_server_port)
+            if self.source.parsed_proxy:
+                self.__proxy_tunnel(self.email_server_hostname, self.email_server_port)
 
             connection = imaplib.IMAP4_SSL(self.email_server_hostname.lower(), self.email_server_port)
             connection.login(self.email_username, self.email_password)
@@ -87,8 +87,8 @@ class EmailCollector(BaseCollector):
     def __fetch_emails_pop3(self):
         self.source.logger.debug("Fetching emails using POP3")
         try:
-            if self.parsed_proxy:
-                self.__proxy_tunnel(self.parsed_proxy, self.email_server_hostname, self.email_server_port)
+            if self.source.parsed_proxy:
+                self.__proxy_tunnel(self.email_server_hostname, self.email_server_port)
 
             connection = poplib.POP3_SSL(self.email_server_hostname.lower(), self.email_server_port)
             connection.user(self.email_username)
@@ -206,31 +206,28 @@ class EmailCollector(BaseCollector):
             self.news_items.append(news_item)
 
     @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    def collect(self):
         """Collect data from email source.
 
         Parameters:
             source -- Source object.
         """
-        self.source = source
-
         self.news_items = []
-        self.email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
+        self.email_server_type = self.source.parameter_values["EMAIL_SERVER_TYPE"]
         if not self.email_server_type:
             self.source.logger.error("Email server type is not set. Skipping collection.")
-            BaseCollector.publish([], self.source)
             return
-        self.email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]
+        self.email_server_hostname = self.source.parameter_values["EMAIL_SERVER_HOSTNAME"]
         if not self.email_server_hostname:
             self.source.logger.error("Email server hostname is not set. Skipping collection.")
-            BaseCollector.publish([], self.source)
             return
-        self.email_server_port = source.parameter_values["EMAIL_SERVER_PORT"]
-        self.email_username = source.parameter_values["EMAIL_USERNAME"]
-        self.email_password = source.parameter_values["EMAIL_PASSWORD"]
-        self.parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
-        self.email_sender_address = source.parameter_values["EMAIL_SENDER"]
-        self.emails_limit = common.read_int_parameter("EMAILS_LIMIT", "", source)
+        self.email_server_port = self.source.parameter_values["EMAIL_SERVER_PORT"]
+        self.email_username = self.source.parameter_values["EMAIL_USERNAME"]
+        self.email_password = self.source.parameter_values["EMAIL_PASSWORD"]
+        self.source.proxy = self.source.parameter_values["PROXY_SERVER"]
+        self.source.parsed_proxy = self.get_parsed_proxy()
+        self.email_sender_address = self.source.parameter_values["EMAIL_SENDER"]
+        self.emails_limit = common.read_int_parameter("EMAILS_LIMIT", "", self.source)
 
         if self.email_server_type.casefold() == "imap":
             self.__fetch_emails_imap()
@@ -239,4 +236,4 @@ class EmailCollector(BaseCollector):
         else:
             self.source.logger.error(f"Email server connection type is not supported: '{self.email_server_type}'")
 
-        BaseCollector.publish(self.news_items, source)
+        self.publish(self.news_items)

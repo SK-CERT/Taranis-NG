@@ -34,15 +34,14 @@ class SlackCollector(BaseCollector):
     parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    def collect(self):
         """Collect data from Slack source.
 
         Arguments:
             source: Source object.
         """
-        self.source = source
         news_items = []
-        proxy_server = self.sourceparameter_values["PROXY_SERVER"]
+        proxy_server = self.source.parameter_values["PROXY_SERVER"]
 
         if proxy_server:
 
@@ -121,7 +120,7 @@ class SlackCollector(BaseCollector):
                     )
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, self.source)
+            self.publish(news_items)
 
         except Exception as error:
             self.source.logger.exception(f"Collection failed: {error}")

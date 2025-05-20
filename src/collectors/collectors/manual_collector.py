@@ -14,6 +14,6 @@ class ManualCollector(BaseCollector):
     parameters = config.parameters
 
     @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    def collect(self):
         """Collect data from source."""
         pass

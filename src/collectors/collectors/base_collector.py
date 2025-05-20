@@ -26,19 +26,6 @@ class BaseCollector:
         name (str): The name of the collector.
         description (str): The description of the collector.
         parameters (list): A list of parameters for the collector.
-    Methods:
-        __init__(): Initializes the BaseCollector object.
-        get_info(): Get information about the collector.
-        update_last_attempt(source): Update the last attempt for a collector.
-        ignore_exceptions(func): Decorator to wrap scheduled action with exception handling.
-        history(interval): Calculate the limit for retrieving historical data based on the given interval.
-        filter_by_word_list(news_items, source): Filter news items based on word lists defined in the source.
-        sanitize_news_items(news_items, source): Sanitize news items by setting default values for any missing attributes.
-        publish(news_items, source): Publish the collected news items to the CoreApi.
-        refresh(): Refresh the OSINT sources for the collector.
-        get_proxy_handler(source): Get the proxy handler for the collector.
-        run_collector(source): Run the collector on the given source.
-        initialize(): Initialize the collector.
     """
 
     type = "BASE_COLLECTOR"
@@ -90,7 +77,7 @@ class BaseCollector:
         """Wrap scheduled action with exception handling."""
 
         @wraps(func)
-        def wrapper(self, source):
+        def wrapper(self):
             """Handle exceptions during scheduled collector runs.
 
             Parameters:
@@ -99,7 +86,7 @@ class BaseCollector:
                 Exception: If an unhandled exception occurs during the collector run.
             """
             try:
-                func(self, source)
+                func(self)
             except Exception as error:
                 logger.exception(f"An unhandled exception occurred during scheduled collector run: {error}")
 
@@ -202,17 +189,16 @@ class BaseCollector:
             item.content = common.strip_html(item.content)
             item.author = common.strip_html(item.author)
 
-    @staticmethod
-    def publish(news_items, source):
+    def publish(self, news_items):
         """Publish the collected news items to the CoreApi.
 
         Parameters:
             news_items (list): A list of news items to be published.
             source (object): The source object from which the news items were collected.
         """
-        source.logger.debug(f"Collected {len(news_items)} news items")
-        BaseCollector.sanitize_news_items(news_items, source)
-        filtered_news_items = BaseCollector.filter_by_word_list(news_items, source)
+        self.source.logger.debug(f"Collected {len(news_items)} news items")
+        self.sanitize_news_items(news_items, self.source)
+        filtered_news_items = self.filter_by_word_list(news_items, self.source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
 
@@ -283,8 +269,7 @@ class BaseCollector:
         except Exception as error:
             logger.exception(f"Refreshing of sources failed: {error}")
 
-    @staticmethod
-    def get_proxy_handler(parsed_proxy) -> object:
+    def get_proxy_handler(self) -> object:
         """Get the proxy handler for the collector.
 
         Parameters:
@@ -292,19 +277,21 @@ class BaseCollector:
         Returns:
             (object): The proxy handler for the collector.
         """
-        if parsed_proxy.scheme in ["http", "https"]:
+        if self.source.parsed_proxy.scheme in ["http", "https"]:
             return urllib.request.ProxyHandler(
                 {
-                    "http": f"{parsed_proxy.scheme}://{parsed_proxy.hostname}:{parsed_proxy.port}",
-                    "https": f"{parsed_proxy.scheme}://{parsed_proxy.hostname}:{parsed_proxy.port}",
+                    "http": f"{self.source.parsed_proxy.scheme}://{self.source.parsed_proxy.hostname}:{self.source.parsed_proxy.port}",
+                    "https": f"{self.source.parsed_proxy.scheme}://{self.source.parsed_proxy.hostname}:{self.source.parsed_proxy.port}",
                 }
             )
-        elif parsed_proxy.scheme in ["socks4", "socks5"]:
-            socks_type = socks.SOCKS5 if parsed_proxy.scheme == "socks5" else socks.SOCKS4
-            return SocksiPyHandler(socks_type, parsed_proxy.hostname, int(parsed_proxy.port))
+        elif self.source.parsed_proxy.scheme in ["socks4", "socks5"]:
+            socks_type = socks.SOCKS5 if self.source.parsed_proxy.scheme == "socks5" else socks.SOCKS4
+            return SocksiPyHandler(socks_type, self.source.parsed_proxy.hostname, int(self.source.parsed_proxy.port))
+        else:
+            self.source.logger.warning(f"Invalid proxy server: {self.source.proxy}. Not using proxy.")
+            return None
 
-    @staticmethod
-    def get_parsed_proxy(proxy_string, log_prefix) -> object:
+    def get_parsed_proxy(self) -> object:
         """Get the parsed proxy URL for the collector.
 
         Parameters:
@@ -312,74 +299,15 @@ class BaseCollector:
         Returns:
             (urlparse object): The parsed proxy URL for the collector.
         """
-        if proxy_string in [None, ""] or proxy_string.lower() == "none":
+        if self.source.proxy in [None, ""] or self.source.proxy.lower() == "none":
             return None
-        parsed_proxy = urlparse(proxy_string)
+        parsed_proxy = urlparse(self.source.proxy)
         if parsed_proxy.scheme in ["http", "https", "socks4", "socks5"]:
-            logger.debug(f"{log_prefix}: Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
+            self.source.logger.debug(f"Using {parsed_proxy.scheme} proxy: {parsed_proxy.hostname}:{parsed_proxy.port}")
             return parsed_proxy
         else:
-            logger.warning(f"{log_prefix}: Invalid proxy server: {proxy_string}. Not using proxy.")
+            self.source.logger.warning(f"Invalid proxy server: {self.source.proxy}. Not using proxy.")
             return None
-
-    @staticmethod
-    def not_modified(url, last_collected, log_prefix, opener, user_agent=None) -> bool:
-        """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
-
-        Arguments:
-            url (string): The URL of the content.
-            last_collected (datetime): The datetime of the last collection.
-            log_prefix (string): The log prefix.
-            opener (function): The function to open the URL.
-            user_agent (string): The User-Agent string to use for the request (default: None).
-
-        Returns:
-            bool: True if the content has not been modified since the given date, False otherwise.
-        """
-        # Ensure last_collected is offset-aware
-        if last_collected.tzinfo is None:
-            last_collected = last_collected.replace(tzinfo=pytz.UTC)
-
-        last_collected_str = last_collected.strftime("%a, %d %b %Y %H:%M:%S GMT")
-        headers = {"If-Modified-Since": last_collected_str}
-        if user_agent:
-            headers["User-Agent"] = user_agent
-
-        request = urllib.request.Request(url, method="HEAD", headers=headers)
-        log_prefix += ": Check-if-modified -"
-
-        last_collected_str = last_collected.strftime("%Y-%m-%d %H:%M")
-        try:
-            with opener(request, timeout=5) as response:
-                last_modified = response.headers.get("Last-Modified")
-                if response.status == 304:
-                    logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
-                    return True
-                elif last_modified:
-                    last_modified = date_parse(last_modified)
-                    last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
-                    if last_collected >= last_modified:
-                        logger.debug(f"{log_prefix} NOT modified since {last_collected_str} (Last-Modified: {last_modified_str})")
-                        return True
-                    else:
-                        logger.debug(f"{log_prefix} YES, modified since {last_collected_str} (Last-Modified: {last_modified_str})")
-                        return False
-                else:
-                    logger.debug(f"{log_prefix} Unable to determine modification since {last_collected_str} (Last-Modified: not received)")
-                    return False
-        except urllib.error.HTTPError as error:
-            if error.code == 304:
-                logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
-                return True
-            else:
-                logger.exception(f"{log_prefix} HTTP error occurred: {error}")
-                return False
-        except socket.timeout:
-            logger.debug(f"{log_prefix} Request timed out for {request.full_url}")
-            return False
-        except Exception as error:
-            logger.exception(f"{log_prefix} An error occurred: {error}")
-            return False
 
     def run_collector(self, source) -> None:
         """Run the collector on the given source.
@@ -390,10 +318,67 @@ class BaseCollector:
         runner = self.__class__()  # get right type of collector
         source.logger.info("Start")
         self.update_last_attempt(source)
-        runner.collect(source)
+        runner.source = source
+        runner.collect()
         source.logger.info("End")
         self.update_last_error_message(source)
 
     def initialize(self):
         """Initialize the collector."""
         self.refresh()
+
+
+def not_modified(source, opener) -> bool:
+    """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
+
+    Parameters:
+        source (object): The source object for logging.
+        opener (function): The function to open the URL.
+
+    Returns:
+        bool: True if the content has not been modified since the given date, False otherwise.
+    """
+    # Ensure last_collected is offset-aware
+    if source.last_collected.tzinfo is None:
+        source.last_collected = source.last_collected.replace(tzinfo=pytz.UTC)
+
+    last_collected_str = source.last_collected.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    headers = {"If-Modified-Since": last_collected_str}
+    if source.user_agent:
+        headers["User-Agent"] = source.user_agent
+
+    request = urllib.request.Request(source.url, method="HEAD", headers=headers)
+    log_prefix = "Check-if-modified:"
+
+    last_collected_str = source.last_collected.strftime("%Y-%m-%d %H:%M")
+    try:
+        with opener(request, timeout=5) as response:
+            last_modified = response.headers.get("Last-Modified")
+            if response.status == 304:
+                source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
+                return True
+            elif last_modified:
+                last_modified = date_parse(last_modified)
+                last_modified_str = last_modified.strftime("%Y-%m-%d %H:%M")
+                if source.last_collected >= last_modified:
+                    source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str} (Last-Modified: {last_modified_str})")
+                    return True
+                else:
+                    source.logger.debug(f"{log_prefix} YES, modified since {last_collected_str} (Last-Modified: {last_modified_str})")
+                    return False
+            else:
+                source.logger.debug(f"{log_prefix} Unable to determine modification since {last_collected_str} (Last-Modified: not received)")
+                return False
+    except urllib.error.HTTPError as error:
+        if error.code == 304:
+            source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
+            return True
+        else:
+            source.logger.exception(f"{log_prefix} HTTP error occurred: {error}")
+            return False
+    except socket.timeout:
+        source.logger.debug(f"{log_prefix} Request timed out for {request.full_url}")
+        return False
+    except Exception as error:
+        source.logger.exception(f"{log_prefix} An error occurred: {error}")
+        return False
