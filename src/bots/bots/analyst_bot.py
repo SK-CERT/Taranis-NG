@@ -5,6 +5,7 @@ import re
 from .base_bot import BaseBot
 from shared.config_bot import ConfigBot
 from shared.schema import news_item
+from shared.common import ignore_exceptions
 from remote.core_api import CoreApi
 
 
@@ -36,21 +37,18 @@ class AnalystBot(BaseBot):
     news_items = []
     news_items_data = []
 
-    @BaseBot.ignore_exceptions
-    def execute(self, preset):
+    @ignore_exceptions
+    def execute(self):
         """Execute the analyst bot with the given preset.
 
-        Parameters:
-            preset (Preset): The preset containing the parameter values.
         Raises:
             Exception: If an error occurs during execution.
         """
-        self.preset = preset
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
-            regexp = preset.parameter_values["REGULAR_EXPRESSION"]
-            attr_name = preset.parameter_values["ATTRIBUTE_NAME"]
-            interval = preset.parameter_values["REFRESH_INTERVAL"]
+            source_group = self.preset.parameter_values["SOURCE_GROUP"]  # noqa F841
+            regexp = self.preset.parameter_values["REGULAR_EXPRESSION"]
+            attr_name = self.preset.parameter_values["ATTRIBUTE_NAME"]
+            interval = self.preset.parameter_values["REFRESH_INTERVAL"]
 
             # support for multiple regexps
             regexp = regexp.split(";;;")

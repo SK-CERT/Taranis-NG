@@ -2,7 +2,6 @@
 
 import datetime
 import time
-from functools import wraps
 from shared import time_manager
 from shared.log_manager import logger, create_logger
 from shared.schema import bot, bot_preset
@@ -17,15 +16,6 @@ class BaseBot:
         name (str): The name of the bot.
         description (str): The description of the bot.
         parameters (list): The list of parameters for the bot.
-    Methods:
-        __init__(): Initializes a new instance of the BaseBot class.
-        get_info(): Gets the information of the bot.
-        execute(source): Executes the bot's task.
-        execute_on_event(preset, event_type, data): Executes the bot's task based on an event.
-        process_event(event_type, data): Processes an event and executes the bot's task for each preset.
-        history(interval): Returns the history limit based on the given interval.
-        run_preset(preset): Run the bot on the given preset.
-        initialize(): Initializes the bot and schedules its execution based on the presets.
     """
 
     type = "BASE_BOT"
@@ -55,26 +45,6 @@ class BaseBot:
         """
         for preset in self.bot_presets:
             self.execute_on_event(preset, event_type, data)
-
-    @staticmethod
-    def ignore_exceptions(func):
-        """Wrap scheduled action with exception handling."""
-
-        @wraps(func)
-        def wrapper(self, preset):
-            """Handle exceptions during scheduled bot runs.
-
-            Parameters:
-                preset: The preset of the bot.
-            Raises:
-                Exception: If an unhandled exception occurs during the bot run.
-            """
-            try:
-                func(self, preset)
-            except Exception as error:
-                logger.exception(f"An unhandled exception occurred during scheduled bot run: {error}")
-
-        return wrapper
 
     @staticmethod
     def history(interval):
@@ -165,8 +135,9 @@ class BaseBot:
             preset: The preset to run.
         """
         runner = self.__class__()  # get right type of bot
+        runner.preset = preset
         preset.logger.info("Start")
         # self.update_last_attempt(preset)
-        runner.execute(preset)
+        runner.execute()
         preset.logger.info("End")
         # self.update_last_error_message(preset)

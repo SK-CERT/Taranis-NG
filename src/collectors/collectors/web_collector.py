@@ -24,7 +24,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from shared import common
+from shared.common import ignore_exceptions, read_int_parameter, smart_truncate
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
 from urllib.parse import urlparse
@@ -304,9 +304,9 @@ class WebCollector(BaseCollector):
         # parse other arguments
         self.source.user_agent = self.source.parameter_values["USER_AGENT"]
         self.tor_service = self.source.parameter_values["TOR"]
-        self.pagination_limit = common.read_int_parameter("PAGINATION_LIMIT", 1, self.source)
-        self.links_limit = common.read_int_parameter("LINKS_LIMIT", 0, self.source)
-        self.word_limit = common.read_int_parameter("WORD_LIMIT", 0, self.source)
+        self.pagination_limit = read_int_parameter("PAGINATION_LIMIT", 1, self.source)
+        self.links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
+        self.word_limit = read_int_parameter("WORD_LIMIT", 0, self.source)
 
         self.selectors = {}
 
@@ -450,13 +450,9 @@ class WebCollector(BaseCollector):
         subprocess.Popen(["tor"])
         time.sleep(3)
 
-    @BaseCollector.ignore_exceptions
+    @ignore_exceptions
     def collect(self):
-        """Collect news items from this source (main function).
-
-        Parameters:
-            source (Source): The source to collect news items from.
-        """
+        """Collect news items from this source (main function)."""
         if not self.__parse_settings():
             return
         self.news_items = []
@@ -465,13 +461,13 @@ class WebCollector(BaseCollector):
             self.__run_tor()
 
         if self.source.parsed_proxy:
-            proxy_handler = self.get_proxy_handler(self.source.parsed_proxy)
+            proxy_handler = self.get_proxy_handler()
         else:
             proxy_handler = None
-        opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
+        self.source.opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
         url_not_modified = False
         if self.source.last_collected:
-            if url_not_modified := not_modified(self.source, opener):
+            if url_not_modified := not_modified(self.source):
                 self.source.logger.info("Will not collect the feed because nothing has changed.")
                 return
 
@@ -691,8 +687,8 @@ class WebCollector(BaseCollector):
         if not review:
             review = content
 
-        title = common.smart_truncate(title, 200)
-        review = common.smart_truncate(review)
+        title = smart_truncate(title, 200)
+        review = smart_truncate(review)
 
         extracted_date = None
         published_str = self.__find_element_text_by(browser, self.selectors["published"])

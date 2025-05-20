@@ -2,6 +2,8 @@
 
 import re
 from bs4 import BeautifulSoup
+from functools import wraps
+from shared.log_manager import logger
 
 
 def strip_html(html_string: str) -> str:
@@ -68,3 +70,21 @@ def read_int_parameter(name, default_value, object):
     except Exception as error:
         object.logger.exception(f"Reading of int parameter failed: {error}")
     return val
+
+
+def ignore_exceptions(func):
+    """Wrap scheduled action with exception handling."""
+
+    @wraps(func)
+    def wrapper(self):
+        """Handle exceptions during scheduled runs.
+
+        Raises:
+            Exception: If an unhandled exception occurs during the run.
+        """
+        try:
+            func(self)
+        except Exception as error:
+            logger.exception(f"An unhandled exception occurred during scheduled run: {error}")
+
+    return wrapper

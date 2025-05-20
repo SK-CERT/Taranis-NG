@@ -8,6 +8,7 @@ import tweepy
 from .base_collector import BaseCollector
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+from shared.common import ignore_exceptions
 
 
 class TwitterCollector(BaseCollector):
@@ -19,7 +20,7 @@ class TwitterCollector(BaseCollector):
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
     Methods:
-        collect(source): Collect data from a Twitter source.
+        collect(): Collect data from a Twitter source.
     Raises:
         Exception: If an error occurs during the collection process.
     """
@@ -30,13 +31,9 @@ class TwitterCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    @BaseCollector.ignore_exceptions
+    @ignore_exceptions
     def collect(self):
-        """Collect data from X source.
-
-        Parameters:
-            source -- Source object.
-        """
+        """Collect data from X source."""
         try:
             news_items = []
             attributes = []

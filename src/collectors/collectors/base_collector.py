@@ -8,7 +8,6 @@ import socks
 import time
 import urllib.request
 import uuid
-from functools import wraps
 from sockshandler import SocksiPyHandler
 from urllib.parse import urlparse
 from dateutil.parser import parse as date_parse
@@ -71,26 +70,6 @@ class BaseCollector:
             source.logger.error(
                 f"Update last error message failed, Code: {status_code}" f"{', response: ' + str(response) if response is not None else ''}"
             )
-
-    @staticmethod
-    def ignore_exceptions(func):
-        """Wrap scheduled action with exception handling."""
-
-        @wraps(func)
-        def wrapper(self):
-            """Handle exceptions during scheduled collector runs.
-
-            Parameters:
-                source: The source of the collector.
-            Raises:
-                Exception: If an unhandled exception occurs during the collector run.
-            """
-            try:
-                func(self)
-            except Exception as error:
-                logger.exception(f"An unhandled exception occurred during scheduled collector run: {error}")
-
-        return wrapper
 
     @staticmethod
     def history(interval):
@@ -194,7 +173,6 @@ class BaseCollector:
 
         Parameters:
             news_items (list): A list of news items to be published.
-            source (object): The source object from which the news items were collected.
         """
         self.source.logger.debug(f"Collected {len(news_items)} news items")
         self.sanitize_news_items(news_items, self.source)
@@ -272,8 +250,6 @@ class BaseCollector:
     def get_proxy_handler(self) -> object:
         """Get the proxy handler for the collector.
 
-        Parameters:
-            parsed_proxy (urlparse object): The parsed proxy URL.
         Returns:
             (object): The proxy handler for the collector.
         """
@@ -294,8 +270,6 @@ class BaseCollector:
     def get_parsed_proxy(self) -> object:
         """Get the parsed proxy URL for the collector.
 
-        Parameters:
-            proxy_string (str): The proxy URL string.
         Returns:
             (urlparse object): The parsed proxy URL for the collector.
         """
@@ -328,12 +302,11 @@ class BaseCollector:
         self.refresh()
 
 
-def not_modified(source, opener) -> bool:
+def not_modified(source) -> bool:
     """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers.
 
     Parameters:
         source (object): The source object for logging.
-        opener (function): The function to open the URL.
 
     Returns:
         bool: True if the content has not been modified since the given date, False otherwise.
@@ -352,7 +325,7 @@ def not_modified(source, opener) -> bool:
 
     last_collected_str = source.last_collected.strftime("%Y-%m-%d %H:%M")
     try:
-        with opener(request, timeout=5) as response:
+        with source.opener(request, timeout=5) as response:
             last_modified = response.headers.get("Last-Modified")
             if response.status == 304:
                 source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")

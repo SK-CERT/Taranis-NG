@@ -11,7 +11,7 @@ import email.utils
 import socket
 
 from .base_collector import BaseCollector
-from shared import common
+from shared.common import ignore_exceptions, smart_truncate, read_int_parameter
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
 
@@ -25,7 +25,7 @@ class EmailCollector(BaseCollector):
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
     Methods:
-        collect(source): Collect data from email source.
+        collect(): Collect data from email source.
     """
 
     type = "EMAIL_COLLECTOR"
@@ -145,7 +145,7 @@ class EmailCollector(BaseCollector):
                 if charset is None:
                     charset = "utf-8"
                 content = text_data.decode(charset)
-                review = common.smart_truncate(content)
+                review = smart_truncate(content)
 
                 for_hash = author + title + message_id
 
@@ -205,13 +205,9 @@ class EmailCollector(BaseCollector):
 
             self.news_items.append(news_item)
 
-    @BaseCollector.ignore_exceptions
+    @ignore_exceptions
     def collect(self):
-        """Collect data from email source.
-
-        Parameters:
-            source -- Source object.
-        """
+        """Collect data from email source."""
         self.news_items = []
         self.email_server_type = self.source.parameter_values["EMAIL_SERVER_TYPE"]
         if not self.email_server_type:
@@ -227,7 +223,7 @@ class EmailCollector(BaseCollector):
         self.source.proxy = self.source.parameter_values["PROXY_SERVER"]
         self.source.parsed_proxy = self.get_parsed_proxy()
         self.email_sender_address = self.source.parameter_values["EMAIL_SENDER"]
-        self.emails_limit = common.read_int_parameter("EMAILS_LIMIT", "", self.source)
+        self.emails_limit = read_int_parameter("EMAILS_LIMIT", "", self.source)
 
         if self.email_server_type.casefold() == "imap":
             self.__fetch_emails_imap()

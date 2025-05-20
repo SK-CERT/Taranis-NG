@@ -5,6 +5,7 @@ import re
 
 from .base_bot import BaseBot
 from shared.config_bot import ConfigBot
+from shared.common import ignore_exceptions
 from remote.core_api import CoreApi
 
 
@@ -27,20 +28,17 @@ class GroupingBot(BaseBot):
     description = config.description
     parameters = config.parameters
 
-    @BaseBot.ignore_exceptions
-    def execute(self, preset):
+    @ignore_exceptions
+    def execute(self):
         """Execute the grouping bot with the given preset.
 
-        Args:
-            preset (object): An object containing the parameters for execution.
         Raises:
             Exception: If an error occurs during execution, it is caught and logged.
         """
-        self.preset = preset
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]
-            regexp = preset.parameter_values["REGULAR_EXPRESSION"]
-            interval = preset.parameter_values["REFRESH_INTERVAL"]
+            source_group = self.preset.parameter_values["SOURCE_GROUP"]
+            regexp = self.preset.parameter_values["REGULAR_EXPRESSION"]
+            interval = self.preset.parameter_values["REFRESH_INTERVAL"]
 
             limit = BaseBot.history(interval)
 

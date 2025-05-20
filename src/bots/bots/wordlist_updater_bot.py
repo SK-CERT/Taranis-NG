@@ -5,6 +5,7 @@ import requests
 from .base_bot import BaseBot
 from shared.config_bot import ConfigBot
 from shared.schema import word_list
+from shared.common import ignore_exceptions
 from remote.core_api import CoreApi
 
 
@@ -25,42 +26,40 @@ class WordlistUpdaterBot(BaseBot):
     description = config.description
     parameters = config.parameters
 
-    @BaseBot.ignore_exceptions
-    def execute(self, preset):
-        """Execute the word list updater bot with the given preset.
+    def __load_file(self, source, word_list_format):
+        """Load a word list from a given source.
 
         Args:
-            preset (object): An object containing the parameters for the bot execution.
+            source (str): The path to the file or URL to load the word list from.
+            word_list_format (str): The format of the word list. Currently supports 'txt'.
+        Returns:
+            list: A list of words loaded from the specified source.
         """
-        self.preset = preset
+        if "http" in source and word_list_format == "txt":
+            response = requests.get(source)
+            content = response.text.strip().split("\r\n")
+            content = [word for word in content]
+        else:
+            with open(source) as file:
+                content = [line.rstrip() for line in file]
 
-        def load_file(source, word_list_format):
-            """Load a word list from a given source.
+        return content
 
-            Args:
-                source (str): The path to the file or URL to load the word list from.
-                word_list_format (str): The format of the word list. Currently supports 'txt'.
-            Returns:
-                list: A list of words loaded from the specified source.
-            """
-            if "http" in source and word_list_format == "txt":
-                response = requests.get(source)
-                content = response.text.strip().split("\r\n")
-                content = [word for word in content]
-            else:
-                with open(source) as file:
-                    content = [line.rstrip() for line in file]
+    @ignore_exceptions
+    def execute(self):
+        """Execute the word list updater bot with the given preset.
 
-            return content
-
+        Raises:
+            Exception: If an error occurs during execution, it is caught and logged.
+        """
         try:
-            data_url = preset.parameter_values["DATA_URL"]
-            data_format = preset.parameter_values["FORMAT"]
-            word_list_id = preset.parameter_values["WORD_LIST_ID"]
-            word_list_category_name = preset.parameter_values["WORD_LIST_CATEGORY"]
-            delete_word_entries = preset.parameter_values["DELETE"].lower()
+            data_url = self.preset.parameter_values["DATA_URL"]
+            data_format = self.preset.parameter_values["FORMAT"]
+            word_list_id = self.preset.parameter_values["WORD_LIST_ID"]
+            word_list_category_name = self.preset.parameter_values["WORD_LIST_CATEGORY"]
+            delete_word_entries = self.preset.parameter_values["DELETE"].lower()
 
-            source_word_list = load_file(data_url, data_format)
+            source_word_list = self.__load_file(data_url, data_format)
 
             categories = CoreApi.get_categories(word_list_id)
 
