@@ -8,9 +8,6 @@ from managers.log_manager import logger
 class SSE:
     """Server-Sent Events (SSE) class for publishing events."""
 
-    sse_logger = logger
-    sse_logger.log_prefix = "SSE"
-
     def publish(self, data, event, channel=None):
         """Publish data to the SSE channel.
 
@@ -20,13 +17,13 @@ class SSE:
             channel (str, optional): The channel name. Defaults to None.
         """
         message = self.format_sse(data, event)
-        self.sse_logger.debug(f"publish event: {event}, data: {data}")
+        logger.debug(f"SSE: publish event: {event}, data: {data}")
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect(("localhost", 5000))
                 sock.sendall(message.encode("utf-8"))
         except Exception as error:
-            self.sse_logger.exception(f"Error sending SSE publish data: {error}")
+            logger.exception(f"SSE: Error sending publish data: {error}")
 
     @staticmethod
     def format_sse(data, event=None) -> str:
