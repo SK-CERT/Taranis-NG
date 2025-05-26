@@ -1,4 +1,4 @@
-alembic==1.15.2
+alembic==1.16.1
 beautifulsoup4==4.13.4
 Flask==3.1.0
 Flask-Cors==6.0.0
