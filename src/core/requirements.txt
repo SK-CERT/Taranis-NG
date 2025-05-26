@@ -1,6 +1,6 @@
 alembic==1.15.2
 beautifulsoup4==4.13.4
-Flask==3.1.0
+Flask==3.1.1
 Flask-Cors==6.0.0
 Flask-JWT-Extended==4.7.1
 Flask-Migrate==4.1.0
