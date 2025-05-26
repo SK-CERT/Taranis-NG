@@ -405,6 +405,7 @@ def api_key_required(key_type=None):
                 return error
             api_key = get_api_key()
 
+            master_id = None
             if key_type == "collectors":
                 master_class = CollectorsNode
                 master_id = kwargs.get("collector_id")
