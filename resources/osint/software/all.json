@@ -310,6 +310,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -349,6 +355,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -387,6 +399,12 @@
                     "value": "https://security.salesforce.com/en/security-advisories/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -489,6 +507,12 @@
                     "value": "https://advisory.splunk.com/feed.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]

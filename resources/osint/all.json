@@ -37,6 +37,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -286,6 +292,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -388,6 +400,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -426,6 +444,12 @@
                     "value": "https://www.arista.com/en/support/advisories-notices/security-advisory-rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -466,6 +490,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -504,6 +534,12 @@
                     "value": "https://psirt.bosch.com/security-advisories/bosch-rexroth-feed.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -544,6 +580,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -583,6 +625,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -621,6 +669,12 @@
                     "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -724,6 +778,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -762,6 +822,12 @@
                     "value": "https://filestore.fortinet.com/fortiguard/rss/ir.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -802,6 +868,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -840,6 +912,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -880,6 +958,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -918,6 +1002,12 @@
                     "value": "https://security.gentoo.org/glsa/feed.rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -958,6 +1048,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -997,6 +1093,12 @@
                     "parameter": {
                         "key": "USER_AGENT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1035,6 +1137,12 @@
                     "value": "https://www.huawei.com/en/rss-feeds/psirt/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1222,6 +1330,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1261,6 +1375,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1299,6 +1419,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1465,6 +1591,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1503,6 +1635,12 @@
                     "value": "https://security.paloaltonetworks.com/rss.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1543,6 +1681,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1582,6 +1726,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1620,6 +1770,12 @@
                     "value": "https://security.salesforce.com/en/security-advisories/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1786,6 +1942,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1825,6 +1987,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1863,6 +2031,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]

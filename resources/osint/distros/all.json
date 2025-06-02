@@ -37,6 +37,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -75,6 +81,12 @@
                     "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -115,6 +127,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -153,6 +171,12 @@
                     "value": "https://security.gentoo.org/glsa/feed.rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -256,6 +280,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -294,6 +324,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
