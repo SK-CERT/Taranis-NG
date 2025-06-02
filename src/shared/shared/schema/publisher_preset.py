@@ -1,3 +1,5 @@
+"""Schema for Publisher Preset, used for serialization and deserialization of publisher preset data."""
+
 from marshmallow import Schema, fields, post_load, EXCLUDE
 
 from shared.schema.parameter_value import ParameterValueSchema
@@ -5,7 +7,17 @@ from shared.schema.presentation import PresentationSchema
 
 
 class PublisherPresetSchemaBase(Schema):
+    """Base schema for Publisher Preset, used for serialization and deserialization.
+
+    Attributes:
+        id (str): Unique identifier for the publisher preset.
+        name (str): Name of the publisher preset.
+        parameter_values (list): List of parameter values associated with the publisher preset.
+    """
+
     class Meta:
+        """Meta class to define schema behavior."""
+
         unknown = EXCLUDE
 
     id = fields.Str()
@@ -14,10 +26,22 @@ class PublisherPresetSchemaBase(Schema):
 
     @post_load
     def make(self, data, **kwargs):
+        """Create a PublisherPreset instance from the deserialized data."""
         return PublisherPreset(**data)
 
 
 class PublisherPresetSchema(PublisherPresetSchemaBase):
+    """Schema for Publisher Preset, used for serialization and deserialization.
+
+    Attributes:
+        id (str): Unique identifier for the publisher preset.
+        name (str): Name of the publisher preset.
+        description (str): Description of the publisher preset.
+        use_for_notifications (bool): Flag indicating if the preset is used for notifications.
+        publisher_id (str): Identifier for the associated publisher.
+        parameter_values (list): List of parameter values associated with the publisher preset.
+    """
+
     id = fields.Str()
     name = fields.Str()
     description = fields.Str()
@@ -27,11 +51,22 @@ class PublisherPresetSchema(PublisherPresetSchemaBase):
 
 
 class PublisherPresetPresentationSchema(PublisherPresetSchema, PresentationSchema):
-    pass
+    """Presentation schema for Publisher Preset, extending the base schema with presentation features."""
+
+    item_name = fields.Function(lambda obj: obj.publisher.name if obj.publisher else None)
 
 
 class PublisherPreset:
+    """Class representing a Publisher Preset with its properties and parameter values."""
+
     def __init__(self, id, name, parameter_values):
+        """Initialize a PublisherPreset instance.
+
+        Args:
+            id (str): Unique identifier for the publisher preset.
+            name (str): Name of the publisher preset.
+            parameter_values (list): List of parameter values associated with the publisher preset.
+        """
         self.id = id
         self.name = name
 
