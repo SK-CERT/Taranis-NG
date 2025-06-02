@@ -106,6 +106,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -360,6 +366,12 @@
                     "value": "60",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -738,6 +750,12 @@
                     "value": "60",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1291,6 +1309,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1489,6 +1513,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1551,6 +1581,12 @@
                     "value": "60",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1840,6 +1876,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1902,6 +1944,12 @@
                     "value": "60",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
