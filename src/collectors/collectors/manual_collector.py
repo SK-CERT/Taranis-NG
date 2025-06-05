@@ -2,6 +2,7 @@
 
 from .base_collector import BaseCollector
 from shared.config_collector import ConfigCollector
+from shared.common import ignore_exceptions
 
 
 class ManualCollector(BaseCollector):
@@ -13,7 +14,7 @@ class ManualCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    @ignore_exceptions
+    def collect(self):
         """Collect data from source."""
         pass
