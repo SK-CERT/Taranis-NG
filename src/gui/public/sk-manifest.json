@@ -1,0 +1,65 @@
+{
+  "short_name": "Taranis",
+  "name": "Taranis NG",
+  "author": "SK-CERT a komunitní vývojári",
+  "icons": [
+    {
+      "src": "/image/taranis_logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/image/taranis_logo-48.png",
+      "type": "image/png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "/image/taranis_logo-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/image/taranis_logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "id": "",
+  "start_url": "/",
+  "background_color": "#3f92dd",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "scope": "/",
+  "theme_color": "#3f92dd",
+  "dir": "ltr",
+  "lang": "sk-SK",
+  "description": "Nástroj na zhromažďovanie a analýzu OSINT pre CSIRT tímy",
+  "orientation": "any",
+  "screenshots": [
+    {
+      "src": "/image/screenshot_vertical.webp",
+      "type": "image/webp",
+      "sizes": "1080x1920",
+      "form_factor": "narrow",
+      "label": "Prihlasovacia obrazovka Taranis NG"
+    },
+    {
+      "src": "/image/screenshot_horizontal1.webp",
+      "type": "image/webp",
+      "sizes": "1920x1080",
+      "form_factor": "wide",
+      "label": "Zhromaždené novinky"
+    },
+    {
+      "src": "/image/screenshot_horizontal2.webp",
+      "type": "image/webp",
+      "sizes": "1920x1080",
+      "form_factor": "wide",
+      "label": "Úprava analýzy"
+    }
+  ]
+}
