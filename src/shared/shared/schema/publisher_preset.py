@@ -53,7 +53,7 @@ class PublisherPresetSchema(PublisherPresetSchemaBase):
 class PublisherPresetPresentationSchema(PublisherPresetSchema, PresentationSchema):
     """Presentation schema for Publisher Preset, extending the base schema with presentation features."""
 
-    pass
+    item_name = fields.Function(lambda obj: obj.publisher.name if obj.publisher else None)
 
 
 class PublisherPreset:

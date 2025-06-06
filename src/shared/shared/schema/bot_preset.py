@@ -58,7 +58,7 @@ class BotPresetSchema(BotPresetSchemaBase):
 class BotPresetPresentationSchema(BotPresetSchema, PresentationSchema):
     """Schema for Bot Preset with presentation details, extending BotPresetSchema and PresentationSchema."""
 
-    pass
+    item_name = fields.Function(lambda obj: obj.bot.name if obj.bot else None)
 
 
 class BotPreset:
