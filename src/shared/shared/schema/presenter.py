@@ -3,6 +3,7 @@
 Returns:
     _type_: _description_
 """
+
 from marshmallow import Schema, fields, post_load
 
 from shared.schema.parameter import ParameterSchema
@@ -163,9 +164,9 @@ class PresenterInput:
         """
         self.type = type
         self.parameter_values = parameter_values
-        self.parameter_values_map = dict()
-        for parameter_value in self.parameter_values:
-            self.parameter_values_map.update({parameter_value.parameter.key: parameter_value.value})
+        self.param_key_values = dict()
+        for pv in parameter_values:
+            self.param_key_values.update({pv.parameter.key: pv.value})
         self.reports = reports
         self.report_types = report_types
         self.product = product

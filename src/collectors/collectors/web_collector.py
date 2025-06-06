@@ -263,11 +263,11 @@ class WebCollector(BaseCollector):
         Returns:
             bool: True if the settings were successfully loaded, False otherwise.
         """
-        self.auth_username = self.source.parameter_values["AUTH_USERNAME"]
-        self.auth_password = self.source.parameter_values["AUTH_PASSWORD"]
+        self.auth_username = self.source.param_key_values["AUTH_USERNAME"]
+        self.auth_password = self.source.param_key_values["AUTH_PASSWORD"]
 
         # parse the URL
-        web_url = self.source.parameter_values["WEB_URL"]
+        web_url = self.source.param_key_values["WEB_URL"]
         if not web_url:
             self.source.logger.error("Web URL is not set. Skipping collection.")
             return False
@@ -302,34 +302,34 @@ class WebCollector(BaseCollector):
             self.web_url = f"{parsed_url.scheme}://{self.auth_username}:{self.auth_password}@{parsed_url.netloc}{parsed_url.path}"
 
         # parse other arguments
-        self.user_agent = self.source.parameter_values["USER_AGENT"]
-        self.tor_service = self.source.parameter_values["TOR"]
+        self.user_agent = self.source.param_key_values["USER_AGENT"]
+        self.tor_service = self.source.param_key_values["TOR"]
         self.pagination_limit = common.read_int_parameter("PAGINATION_LIMIT", 1, self.source)
         self.links_limit = common.read_int_parameter("LINKS_LIMIT", 0, self.source)
         self.word_limit = common.read_int_parameter("WORD_LIMIT", 0, self.source)
 
         self.selectors = {}
 
-        self.selectors["popup_close"] = self.source.parameter_values["POPUP_CLOSE_SELECTOR"]
-        self.selectors["next_page"] = self.source.parameter_values["NEXT_BUTTON_SELECTOR"]
-        self.selectors["load_more"] = self.source.parameter_values["LOAD_MORE_BUTTON_SELECTOR"]
-        self.selectors["single_article_link"] = self.source.parameter_values["SINGLE_ARTICLE_LINK_SELECTOR"]
+        self.selectors["popup_close"] = self.source.param_key_values["POPUP_CLOSE_SELECTOR"]
+        self.selectors["next_page"] = self.source.param_key_values["NEXT_BUTTON_SELECTOR"]
+        self.selectors["load_more"] = self.source.param_key_values["LOAD_MORE_BUTTON_SELECTOR"]
+        self.selectors["single_article_link"] = self.source.param_key_values["SINGLE_ARTICLE_LINK_SELECTOR"]
 
-        self.selectors["title"] = self.source.parameter_values["TITLE_SELECTOR"]
-        self.selectors["article_description"] = self.source.parameter_values["ARTICLE_DESCRIPTION_SELECTOR"]
-        self.selectors["article_full_text"] = self.source.parameter_values["ARTICLE_FULL_TEXT_SELECTOR"]
-        self.selectors["published"] = self.source.parameter_values["PUBLISHED_SELECTOR"]
-        self.selectors["author"] = self.source.parameter_values["AUTHOR_SELECTOR"]
-        self.selectors["attachment"] = self.source.parameter_values["ATTACHMENT_SELECTOR"]
-        self.selectors["additional_id"] = self.source.parameter_values["ADDITIONAL_ID_SELECTOR"]
+        self.selectors["title"] = self.source.param_key_values["TITLE_SELECTOR"]
+        self.selectors["article_description"] = self.source.param_key_values["ARTICLE_DESCRIPTION_SELECTOR"]
+        self.selectors["article_full_text"] = self.source.param_key_values["ARTICLE_FULL_TEXT_SELECTOR"]
+        self.selectors["published"] = self.source.param_key_values["PUBLISHED_SELECTOR"]
+        self.selectors["author"] = self.source.param_key_values["AUTHOR_SELECTOR"]
+        self.selectors["attachment"] = self.source.param_key_values["ATTACHMENT_SELECTOR"]
+        self.selectors["additional_id"] = self.source.param_key_values["ADDITIONAL_ID_SELECTOR"]
 
-        self.web_driver_type = self.source.parameter_values["WEBDRIVER"]
-        self.client_cert_directory = self.source.parameter_values["CLIENT_CERT_DIR"]
+        self.web_driver_type = self.source.param_key_values["WEBDRIVER"]
+        self.client_cert_directory = self.source.param_key_values["CLIENT_CERT_DIR"]
 
         self.last_collected = self.source.last_collected
 
         # Use get_proxy_handler from BaseCollector
-        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
+        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.param_key_values["PROXY_SERVER"], self.source.log_prefix)
         if parsed_proxy:
             self.proxy = parsed_proxy
         else:

@@ -40,7 +40,7 @@ class MISPPresenter(BasePresenter):
             dict: The presenter output containing the mime type and data.
         """
         try:
-            head, tail = os.path.split(presenter_input.parameter_values_map["MISP_TEMPLATE_PATH"])
+            head, tail = os.path.split(presenter_input.param_key_values["MISP_TEMPLATE_PATH"])
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 

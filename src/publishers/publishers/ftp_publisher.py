@@ -45,7 +45,7 @@ class FTPPublisher(BasePublisher):
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
-            ftp_url = publisher_input.parameter_values_map["FTP_URL"]
+            ftp_url = publisher_input.param_key_values["FTP_URL"]
             mime_type = publisher_input.mime_type[:]
             file_extension = mimetypes.guess_extension(mime_type)
             filename = f"file_{datetime.datetime.now().strftime('%d-%m-%Y_%H:%M')}{file_extension}"

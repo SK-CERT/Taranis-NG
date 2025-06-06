@@ -40,16 +40,16 @@ class ScheduledTasksCollector(BaseCollector):
         """
         self.source = source
         news_items = []
-        head, tail = os.path.split(source.parameter_values["TASK_COMMAND"])
-        task_title = source.parameter_values["TASK_TITLE"]
+        head, tail = os.path.split(source.param_key_values["TASK_COMMAND"])
+        task_title = source.param_key_values["TASK_TITLE"]
 
         try:
             if head == "":
-                task_command = source.parameter_values["TASK_COMMAND"]
+                task_command = source.param_key_values["TASK_COMMAND"]
             else:
-                task_command = os.popen("." + source.parameter_values["TASK_COMMAND"]).read()
+                task_command = os.popen("." + source.param_key_values["TASK_COMMAND"]).read()
 
-            review = source.parameter_values["TASK_DESCRIPTION"]
+            review = source.param_key_values["TASK_DESCRIPTION"]
             author = ""
             osint_source = "TaranisNG System"
             link = ""

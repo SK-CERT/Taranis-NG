@@ -241,7 +241,7 @@ class BaseCollector:
                     source.log_prefix = f"{self.name} '{source.name}'"
                     source.logger = create_logger(log_prefix=source.log_prefix)
                     source.logger.stored_message_levels = ["error", "exception", "warning", "critical"]
-                    interval = source.parameter_values["REFRESH_INTERVAL"]
+                    interval = source.param_key_values["REFRESH_INTERVAL"]
                     # do not schedule if no interval is set
                     if interval == "" or interval == "0":
                         source.logger.info("Disabled")
