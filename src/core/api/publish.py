@@ -170,8 +170,11 @@ class ProductsOverview(Resource):
                     if product_type.ProductType.allowed_with_acl(product_id, user, False, True, False):
                         product_data, status_code = presenters_manager.generate_product(product_id)
                         if status_code == 200:
-                            if "message_body" in product_data:
-                                return Response(base64.b64decode(product_data["message_body"]), mimetype=product_data["mime_type"])
+                            if ("message_body" in product_data) and (request.args.get("ctrl", "0") == "0"):
+                                # it's always text response, mime_type is used for data content
+                                return Response(base64.b64decode(product_data["message_body"]), mimetype="text/plain")
+                            elif product_data["data"] is None:
+                                return Response("No data available for preview!", mimetype="text/plain")
                             else:
                                 return Response(base64.b64decode(product_data["data"]), mimetype=product_data["mime_type"])
                         else:

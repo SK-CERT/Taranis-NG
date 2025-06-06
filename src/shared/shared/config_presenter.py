@@ -16,8 +16,8 @@ class ConfigPresenter(ConfigBase):
         mod.parameters = [
             param_type(
                 "HTML_TEMPLATE_PATH",
-                "HTML template with its path",
-                "Path of html template file",
+                "Path to template",
+                "Path to HTML template file",
                 ParameterType.STRING,
                 "/app/templates/template.html",
             )
@@ -32,18 +32,19 @@ class ConfigPresenter(ConfigBase):
         mod.parameters = [
             param_type(
                 "TITLE_TEMPLATE_PATH",
-                "Title template",
+                "Path to Title template",
                 "Path of message title template file",
                 ParameterType.STRING,
                 "/app/templates/email_subject_template.txt",
             ),
             param_type(
                 "BODY_TEMPLATE_PATH",
-                "Body template",
+                "Path to Body template",
                 "Path to message body template file",
                 ParameterType.STRING,
                 "/app/templates/email_body_template.txt",
             ),
+            param_type("ATTACHMENT_TEMPLATE_PATH", "Path to PDF attachment template", "Path to PDF template file", ParameterType.STRING, ""),
         ]
         self.modules.append(mod)
 
@@ -51,8 +52,8 @@ class ConfigPresenter(ConfigBase):
         mod.parameters = [
             param_type(
                 "MISP_TEMPLATE_PATH",
-                "MISP template with its path",
-                "Path of MISP template file",
+                "Path to template",
+                "Path to MISP template file",
                 ParameterType.STRING,
                 "/app/templates/misp.json",
             )
@@ -62,7 +63,7 @@ class ConfigPresenter(ConfigBase):
         mod = module_type("PDF_PRESENTER", "PDF Presenter", "Presenter for generating PDF documents")
         mod.parameters = [
             param_type(
-                "PDF_TEMPLATE_PATH", "Template path", "Path of header template file", ParameterType.STRING, "/app/templates/pdf_template.html"
+                "PDF_TEMPLATE_PATH", "Path to template", "Path to PDF template file", ParameterType.STRING, "/app/templates/pdf_template.html"
             )
         ]
         self.modules.append(mod)
@@ -71,8 +72,8 @@ class ConfigPresenter(ConfigBase):
         mod.parameters = [
             param_type(
                 "TEXT_TEMPLATE_PATH",
-                "TEXT template with its path",
-                "Path of text template file",
+                "Path to template",
+                "Path to TEXT template file",
                 ParameterType.STRING,
                 "/app/templates/template-show-all-data.txt",
             )

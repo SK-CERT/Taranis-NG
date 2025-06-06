@@ -81,7 +81,7 @@
                             <v-btn :href="preview_link" style="display: none"
                                    target="_blank" ref="previewBtn">
                             </v-btn>
-                            <v-btn depressed small @click="previewProduct">
+                            <v-btn depressed small @click="previewProduct($event)">
                                 <v-icon left>mdi-eye-outline</v-icon>
                                 <span>{{ $t('product.preview') }}</span>
                             </v-btn>
@@ -251,7 +251,7 @@
                 this.visible = false
             },
 
-            previewProduct() {
+            previewProduct(event) {
                 this.$validator.validateAll().then(() => {
 
                     if (!this.$validator.errors.any()) {
@@ -270,20 +270,30 @@
                             )
                         }
 
+                        const getPreviewUrl = (product) => {
+                            let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + product + "/overview?jwt=" + this.$store.getters.getJWT;
+                            if (event && event.ctrlKey) url += '&ctrl=1';
+                            return url;
+                        };
+
                         if (this.product.id !== -1) {
                             updateProduct(this.product).then(() => {
 
                                 this.resetValidation();
-                                this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + this.product.id + "/overview?jwt=" + this.$store.getters.getJWT
-                                this.$refs.previewBtn.$el.click()
+                                this.preview_link = getPreviewUrl(this.product.id);
+                                this.$nextTick(() => {
+                                    this.$refs.previewBtn.$el.click();
+                                });
                             })
                         } else {
                             createProduct(this.product).then((response) => {
 
                                 this.product.id = response.data
                                 this.resetValidation();
-                                this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + response.data + "/overview?jwt=" + this.$store.getters.getJWT
-                                this.$refs.previewBtn.$el.click()
+                                this.preview_link = getPreviewUrl(response.data);
+                                this.$nextTick(() => {
+                                    this.$refs.previewBtn.$el.click();
+                                });
                             })
                         }
 

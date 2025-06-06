@@ -40,7 +40,7 @@ class TEXTPresenter(BasePresenter):
             dict: The presenter output containing the mime type and the generated text data.
         """
         try:
-            head, tail = os.path.split(presenter_input.parameter_values_map["TEXT_TEMPLATE_PATH"])
+            head, tail = os.path.split(presenter_input.param_key_values["TEXT_TEMPLATE_PATH"])
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 

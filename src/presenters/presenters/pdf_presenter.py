@@ -39,7 +39,7 @@ class PDFPresenter(BasePresenter):
         try:
             output_html = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix=".html", delete_on_close=False).name
             output_pdf = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix=".pdf", delete_on_close=False).name
-            head, tail = os.path.split(presenter_input.parameter_values_map["PDF_TEMPLATE_PATH"])
+            head, tail = os.path.split(presenter_input.param_key_values["PDF_TEMPLATE_PATH"])
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 

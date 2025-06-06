@@ -37,10 +37,10 @@ class TWITTERPublisher(BasePublisher):
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
-            api_key = publisher_input.parameter_values_map["TWITTER_API_KEY"]
-            api_key_secret = publisher_input.parameter_values_map["TWITTER_API_KEY_SECRET"]
-            access_token = publisher_input.parameter_values_map["TWITTER_ACCESS_TOKEN"]
-            access_token_secret = publisher_input.parameter_values_map["TWITTER_ACCESS_TOKEN_SECRET"]
+            api_key = publisher_input.param_key_values["TWITTER_API_KEY"]
+            api_key_secret = publisher_input.param_key_values["TWITTER_API_KEY_SECRET"]
+            access_token = publisher_input.param_key_values["TWITTER_ACCESS_TOKEN"]
+            access_token_secret = publisher_input.param_key_values["TWITTER_ACCESS_TOKEN_SECRET"]
 
             auth = tweepy.OAuthHandler(api_key, api_key_secret)
             auth.set_access_token(access_token, access_token_secret)

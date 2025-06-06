@@ -36,10 +36,10 @@ class MASTODONPublisher(BasePublisher):
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
-            access_token = publisher_input.parameter_values_map["MASTODON_ACCESS_TOKEN"]
-            api_base_url = publisher_input.parameter_values_map["MASTODON_API_BASE_URL"]
-            visibility = publisher_input.parameter_values_map["VISIBILITY"]
-            sensitive = publisher_input.parameter_values_map["SENSITIVE"]
+            access_token = publisher_input.param_key_values["MASTODON_ACCESS_TOKEN"]
+            api_base_url = publisher_input.param_key_values["MASTODON_API_BASE_URL"]
+            visibility = publisher_input.param_key_values["VISIBILITY"]
+            sensitive = publisher_input.param_key_values["SENSITIVE"]
 
             status = None
 

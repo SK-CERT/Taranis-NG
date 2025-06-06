@@ -70,6 +70,7 @@ class PublisherPreset:
         self.id = id
         self.name = name
 
+        # Is it even used? Looks like it's never called due to being overridden. If it's used, shouldn't the name be param_key_values instead?
         self.parameter_values = dict()
         for parameter_value in parameter_values:
             self.parameter_values.update({parameter_value.parameter.key: parameter_value.value})

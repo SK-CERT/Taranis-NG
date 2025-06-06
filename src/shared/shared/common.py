@@ -2,6 +2,7 @@
 
 import re
 from bs4 import BeautifulSoup
+from shared.log_manager import logger
 
 
 def strip_html(html_string: str) -> str:
@@ -60,11 +61,35 @@ def read_int_parameter(name, default_value, object):
     """
     val = default_value
     try:
-        par_val = object.parameter_values[name]
+        par_val = object.param_key_values[name]
         if par_val != "":
             val = int(par_val)
             if val <= 0:
                 val = default_value
+    except KeyError:
+        logger.error(f"Integer parameter '{name}' doesn't exist. Use 'python db_migration.py regenerate' to rebuild parameters.")
     except Exception as error:
-        object.logger.exception(f"Reading of int parameter failed: {error}")
+        object.logger.exception(f"Reading of integer parameter failed: {error}")
+    return val
+
+
+def read_str_parameter(name, default_value, object):
+    """Read a string parameter from a source dictionary.
+
+    Parameters:
+        name (str): The name of the parameter to read.
+        default_value (str): The default value to return if the parameter is not found.
+        object (dict): The dictionary containing the parameter values.
+    Returns:
+        val (str): The value of the parameter, or the default value if the parameter is not found.
+    """
+    val = default_value
+    try:
+        par_val = object.param_key_values[name]
+        if par_val != "":
+            val = par_val
+    except KeyError:
+        logger.error(f"String parameter '{name}' doesn't exist. Use 'python db_migration.py regenerate' to rebuild parameters.")
+    except Exception as error:
+        logger.exception(f"Reading of string parameter failed: {error}")
     return val

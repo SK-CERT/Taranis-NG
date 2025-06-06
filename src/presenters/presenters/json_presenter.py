@@ -37,7 +37,7 @@ class JSONPresenter(BasePresenter):
             _type_: _description_
         """
         try:
-            indent = int(presenter_input.parameter_values_map["JSON_INDENT"])
+            indent = int(presenter_input.param_key_values["JSON_INDENT"])
         except ValueError:
             indent = 4
 

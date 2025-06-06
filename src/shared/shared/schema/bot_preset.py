@@ -75,6 +75,6 @@ class BotPreset:
         self.id = id
         self.name = name
 
-        self.parameter_values = dict()
-        for parameter_value in parameter_values:
-            self.parameter_values.update({parameter_value.parameter.key: parameter_value.value})
+        self.param_key_values = dict()
+        for pv in parameter_values:
+            self.param_key_values.update({pv.parameter.key: pv.value})
