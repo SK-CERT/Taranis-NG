@@ -60,7 +60,6 @@ def generate(presenter_input_json):
     presenter_input = presenter_input_schema.load(presenter_input_json)
 
     presenter_output = presenters[presenter_input.type].generate(presenter_input)
-
     if presenter_output is not None:
         presenter_output_schema = PresenterOutputSchema()
         return presenter_output_schema.dump(presenter_output)

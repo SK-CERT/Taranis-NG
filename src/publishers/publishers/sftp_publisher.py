@@ -48,15 +48,15 @@ class SFTPPublisher(BasePublisher):
         """
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
-        url = publisher_input.parameter_values_map["SFTP_URL"]
-        port = publisher_input.parameter_values_map["PORT"]
-        username = publisher_input.parameter_values_map["USERNAME"]
-        password = publisher_input.parameter_values_map["PASSWORD"]
-        path = publisher_input.parameter_values_map["PATH"]
-        filename = publisher_input.parameter_values_map["FILENAME"]
-        command = publisher_input.parameter_values_map["COMMAND"]
-        ssh_key = publisher_input.parameter_values_map["SSH_KEY"]
-        ssh_key_password = publisher_input.parameter_values_map["SSH_KEY_PASSWORD"]
+        url = publisher_input.param_key_values["SFTP_URL"]
+        port = publisher_input.param_key_values["PORT"]
+        username = publisher_input.param_key_values["USERNAME"]
+        password = publisher_input.param_key_values["PASSWORD"]
+        path = publisher_input.param_key_values["PATH"]
+        filename = publisher_input.param_key_values["FILENAME"]
+        command = publisher_input.param_key_values["COMMAND"]
+        ssh_key = publisher_input.param_key_values["SSH_KEY"]
+        ssh_key_password = publisher_input.param_key_values["SSH_KEY_PASSWORD"]
 
         now = datetime.now().strftime("%Y%m%d%H%M%S")
 

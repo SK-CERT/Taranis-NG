@@ -38,7 +38,7 @@ class HTMLPresenter(BasePresenter):
             A dictionary containing the MIME type and the base64-encoded HTML data.
         """
         try:
-            head, tail = os.path.split(presenter_input.parameter_values_map["HTML_TEMPLATE_PATH"])
+            head, tail = os.path.split(presenter_input.param_key_values["HTML_TEMPLATE_PATH"])
             input_data = BasePresenter.generate_input_data(presenter_input)
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
             BasePresenter.load_filters(env)

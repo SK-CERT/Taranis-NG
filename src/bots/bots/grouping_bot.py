@@ -38,9 +38,9 @@ class GroupingBot(BaseBot):
         """
         self.preset = preset
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]
-            regexp = preset.parameter_values["REGULAR_EXPRESSION"]
-            interval = preset.parameter_values["REFRESH_INTERVAL"]
+            source_group = preset.param_key_values["SOURCE_GROUP"]
+            regexp = preset.param_key_values["REGULAR_EXPRESSION"]
+            interval = preset.param_key_values["REFRESH_INTERVAL"]
 
             limit = BaseBot.history(interval)
 
@@ -193,8 +193,8 @@ class GroupingBot(BaseBot):
             Exception: If there is an error accessing the parameter values in the preset.
         """
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
-            regexp = preset.parameter_values["REGULAR_EXPRESSION"]  # noqa F841
+            source_group = preset.param_key_values["SOURCE_GROUP"]  # noqa F841
+            regexp = preset.param_key_values["REGULAR_EXPRESSION"]  # noqa F841
 
         except Exception as error:
             self.preset.logger.exception(f"Execute on event failed: {error}")

@@ -215,21 +215,21 @@ class EmailCollector(BaseCollector):
         self.source = source
 
         self.news_items = []
-        self.email_server_type = source.parameter_values["EMAIL_SERVER_TYPE"]
+        self.email_server_type = source.param_key_values["EMAIL_SERVER_TYPE"]
         if not self.email_server_type:
             self.source.logger.error("Email server type is not set. Skipping collection.")
             BaseCollector.publish([], self.source)
             return
-        self.email_server_hostname = source.parameter_values["EMAIL_SERVER_HOSTNAME"]
+        self.email_server_hostname = source.param_key_values["EMAIL_SERVER_HOSTNAME"]
         if not self.email_server_hostname:
             self.source.logger.error("Email server hostname is not set. Skipping collection.")
             BaseCollector.publish([], self.source)
             return
-        self.email_server_port = source.parameter_values["EMAIL_SERVER_PORT"]
-        self.email_username = source.parameter_values["EMAIL_USERNAME"]
-        self.email_password = source.parameter_values["EMAIL_PASSWORD"]
-        self.parsed_proxy = BaseCollector.get_parsed_proxy(source.parameter_values["PROXY_SERVER"], self.source.log_prefix)
-        self.email_sender_address = source.parameter_values["EMAIL_SENDER"]
+        self.email_server_port = source.param_key_values["EMAIL_SERVER_PORT"]
+        self.email_username = source.param_key_values["EMAIL_USERNAME"]
+        self.email_password = source.param_key_values["EMAIL_PASSWORD"]
+        self.parsed_proxy = BaseCollector.get_parsed_proxy(source.param_key_values["PROXY_SERVER"], self.source.log_prefix)
+        self.email_sender_address = source.param_key_values["EMAIL_SENDER"]
         self.emails_limit = common.read_int_parameter("EMAILS_LIMIT", "", source)
 
         if self.email_server_type.casefold() == "imap":

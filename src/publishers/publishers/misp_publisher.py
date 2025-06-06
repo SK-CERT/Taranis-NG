@@ -38,8 +38,8 @@ class MISPPublisher(BasePublisher):
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
-            misp_url = publisher_input.parameter_values_map["MISP_URL"]
-            misp_key = publisher_input.parameter_values_map["MISP_API_KEY"]
+            misp_url = publisher_input.param_key_values["MISP_URL"]
+            misp_key = publisher_input.param_key_values["MISP_API_KEY"]
             misp_verifycert = False
 
             data = publisher_input.data[:]
