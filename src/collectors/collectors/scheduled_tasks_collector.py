@@ -10,6 +10,7 @@ import uuid
 from .base_collector import BaseCollector
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+from shared.common import ignore_exceptions
 
 
 class ScheduledTasksCollector(BaseCollector):
@@ -29,27 +30,24 @@ class ScheduledTasksCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    @BaseCollector.ignore_exceptions
-    def collect(self, source):
+    @ignore_exceptions
+    def collect(self):
         """Collect data from scheduled tasks.
 
-        Args:
-            source (Source): The source object containing the parameters for the collection.
         Raises:
             Exception: If the collection fails for any reason.
         """
-        self.source = source
         news_items = []
-        head, tail = os.path.split(source.param_key_values["TASK_COMMAND"])
-        task_title = source.param_key_values["TASK_TITLE"]
+        head, tail = os.path.split(self.source.param_key_values["TASK_COMMAND"])
+        task_title = self.source.param_key_values["TASK_TITLE"]
 
         try:
             if head == "":
-                task_command = source.param_key_values["TASK_COMMAND"]
+                task_command = self.source.param_key_values["TASK_COMMAND"]
             else:
-                task_command = os.popen("." + source.param_key_values["TASK_COMMAND"]).read()
+                task_command = os.popen("." + self.source.param_key_values["TASK_COMMAND"]).read()
 
-            review = source.param_key_values["TASK_DESCRIPTION"]
+            review = self.source.param_key_values["TASK_DESCRIPTION"]
             author = ""
             osint_source = "TaranisNG System"
             link = ""
@@ -71,13 +69,13 @@ class ScheduledTasksCollector(BaseCollector):
                 author,
                 collected,
                 content,
-                source.id,
+                self.source.id,
                 [],
             )
 
             news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            self.publish(news_items, self.source)
 
         except Exception as error:
             self.source.logger.exception(f"Collection failed: {error}")

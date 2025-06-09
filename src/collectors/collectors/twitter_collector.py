@@ -8,6 +8,7 @@ import tweepy
 from .base_collector import BaseCollector
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+from shared.common import ignore_exceptions
 
 
 class TwitterCollector(BaseCollector):
@@ -19,7 +20,7 @@ class TwitterCollector(BaseCollector):
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
     Methods:
-        collect(source): Collect data from a Twitter source.
+        collect(): Collect data from a Twitter source.
     Raises:
         Exception: If an error occurs during the collection process.
     """
@@ -30,15 +31,9 @@ class TwitterCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    @BaseCollector.ignore_exceptions
-    def collect(self, source):
-        """Collect data from X source.
-
-        Parameters:
-            source -- Source object.
-        """
-        self.source = source
-
+    @ignore_exceptions
+    def collect(self):
+        """Collect data from X source."""
         try:
             news_items = []
             attributes = []
@@ -77,9 +72,9 @@ class TwitterCollector(BaseCollector):
             else:
                 public_tweets = api.home_timeline(count=number_of_tweets)
 
-            interval = source.param_key_values["REFRESH_INTERVAL"]
+            interval = self.source.param_key_values["REFRESH_INTERVAL"]
 
-            limit = BaseCollector.history(interval)
+            limit = self.history(interval)
 
             for tweet in public_tweets:
 
@@ -114,7 +109,7 @@ class TwitterCollector(BaseCollector):
 
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, source)
+            self.publish(news_items)
 
         except Exception as error:
             self.source.logger.exception(f"Collection failed: {error}")

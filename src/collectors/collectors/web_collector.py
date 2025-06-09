@@ -10,7 +10,7 @@ import subprocess
 import time
 import urllib.request
 import uuid
-from .base_collector import BaseCollector
+from .base_collector import BaseCollector, not_modified
 from dateutil.parser import parse
 from shared.log_manager import logger
 from selenium import webdriver
@@ -24,7 +24,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from shared import common
+from shared.common import ignore_exceptions, read_int_parameter, smart_truncate
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData, NewsItemAttribute
 from urllib.parse import urlparse
@@ -276,37 +276,37 @@ class WebCollector(BaseCollector):
             file_part = web_url[7:]
             if os.path.isfile(file_part):
                 self.interpret_as = "uri"
-                self.web_url = "file://" + file_part
+                self.source.url = "file://" + file_part
             elif os.path.isdir(file_part):
                 self.interpret_as = "directory"
-                self.web_url = file_part
+                self.source.url = file_part
             else:
                 self.source.logger.error(f"Missing file {web_url}")
                 return False
 
         elif re.search(r"^[a-z0-9]+://", web_url.lower()):
             self.interpret_as = "uri"
-            self.web_url = web_url
+            self.source.url = web_url
         elif os.path.isfile(web_url):
             self.interpret_as = "uri"
-            self.web_url = f"file://{web_url}"
+            self.source.url = f"file://{web_url}"
         elif os.path.isdir(web_url):
             self.interpret_as = "directory"
-            self.web_url = web_url
+            self.source.url = web_url
         else:
             self.interpret_as = "uri"
-            self.web_url = f"https://{web_url}"
+            self.source.url = f"https://{web_url}"
 
         if self.interpret_as == "uri" and self.auth_username and self.auth_password:
-            parsed_url = urlparse(self.web_url)
-            self.web_url = f"{parsed_url.scheme}://{self.auth_username}:{self.auth_password}@{parsed_url.netloc}{parsed_url.path}"
+            parsed_url = urlparse(self.source.url)
+            self.source.url = f"{parsed_url.scheme}://{self.auth_username}:{self.auth_password}@{parsed_url.netloc}{parsed_url.path}"
 
         # parse other arguments
-        self.user_agent = self.source.param_key_values["USER_AGENT"]
+        self.source.user_agent = self.source.param_key_values["USER_AGENT"]
         self.tor_service = self.source.param_key_values["TOR"]
-        self.pagination_limit = common.read_int_parameter("PAGINATION_LIMIT", 1, self.source)
-        self.links_limit = common.read_int_parameter("LINKS_LIMIT", 0, self.source)
-        self.word_limit = common.read_int_parameter("WORD_LIMIT", 0, self.source)
+        self.pagination_limit = read_int_parameter("PAGINATION_LIMIT", 1, self.source)
+        self.links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
+        self.word_limit = read_int_parameter("WORD_LIMIT", 0, self.source)
 
         self.selectors = {}
 
@@ -326,14 +326,11 @@ class WebCollector(BaseCollector):
         self.web_driver_type = self.source.param_key_values["WEBDRIVER"]
         self.client_cert_directory = self.source.param_key_values["CLIENT_CERT_DIR"]
 
-        self.last_collected = self.source.last_collected
+        self.source.last_collected
 
         # Use get_proxy_handler from BaseCollector
-        parsed_proxy = BaseCollector.get_parsed_proxy(self.source.param_key_values["PROXY_SERVER"], self.source.log_prefix)
-        if parsed_proxy:
-            self.proxy = parsed_proxy
-        else:
-            self.proxy = None
+        self.source.proxy = self.source.param_key_values["PROXY_SERVER"]
+        self.source.parsed_proxy = self.get_parsed_proxy()
 
         return True
 
@@ -358,13 +355,13 @@ class WebCollector(BaseCollector):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--incognito")
-        if self.user_agent:
-            chrome_options.add_argument("user-agent=" + self.user_agent)
+        if self.source.user_agent:
+            chrome_options.add_argument("user-agent=" + self.source.user_agent)
         if self.tor_service.lower() == "yes":
             socks_proxy = "socks5://127.0.0.1:9050"
             chrome_options.add_argument(f"--proxy-server={socks_proxy}")
-        elif self.proxy:
-            chrome_options.add_argument(f"--proxy-server={self.proxy.geturl()}")
+        elif self.source.parsed_proxy:
+            chrome_options.add_argument(f"--proxy-server={self.source.parsed_proxy.geturl()}")
 
         chrome_service = ChromeService(executable_path=chrome_driver_executable)
         driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
@@ -390,8 +387,8 @@ class WebCollector(BaseCollector):
         firefox_options.add_argument("--ignore-certificate-errors")
         firefox_options.add_argument("--incognito")
 
-        if self.user_agent:
-            firefox_options.add_argument(f"user-agent={self.user_agent}")
+        if self.source.user_agent:
+            firefox_options.add_argument(f"user-agent={self.source.user_agent}")
 
         if self.tor_service.lower() == "yes":
             firefox_options.set_preference("network.proxy.type", 1)  # manual proxy config
@@ -399,17 +396,17 @@ class WebCollector(BaseCollector):
             firefox_options.set_preference("network.proxy.socks_port", 9050)
             firefox_options.set_preference("network.proxy.no_proxies_on", f"localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8")
 
-        elif self.proxy:
+        elif self.source.parsed_proxy:
             firefox_options.set_preference("network.proxy.type", 1)  # manual proxy config
             firefox_options.set_preference("network.proxy.no_proxies_on", f"localhost, ::1, 127.0.0.1, {core_url_host}, 127.0.0.0/8")
-            if self.proxy.scheme in ["http", "https"]:
-                firefox_options.set_preference("network.proxy.http", self.proxy.hostname)
-                firefox_options.set_preference("network.proxy.http_port", int(self.proxy.port))
-                firefox_options.set_preference("network.proxy.ssl", self.proxy.hostname)
-                firefox_options.set_preference("network.proxy.ssl_port", int(self.proxy.port))
-            elif self.proxy.scheme in ["socks5", "socks4"]:
-                firefox_options.set_preference("network.proxy.socks", self.proxy.hostname)
-                firefox_options.set_preference("network.proxy.socks_port", int(self.proxy.port))
+            if self.source.parsed_proxy.scheme in ["http", "https"]:
+                firefox_options.set_preference("network.proxy.http", self.source.parsed_proxy.hostname)
+                firefox_options.set_preference("network.proxy.http_port", int(self.source.parsed_proxy.port))
+                firefox_options.set_preference("network.proxy.ssl", self.source.parsed_proxy.hostname)
+                firefox_options.set_preference("network.proxy.ssl_port", int(self.source.parsed_proxy.port))
+            elif self.source.parsed_proxy.scheme in ["socks5", "socks4"]:
+                firefox_options.set_preference("network.proxy.socks", self.source.parsed_proxy.hostname)
+                firefox_options.set_preference("network.proxy.socks_port", int(self.source.parsed_proxy.port))
         else:
             firefox_options.set_preference("network.proxy.type", 0)  # no proxy
 
@@ -453,47 +450,41 @@ class WebCollector(BaseCollector):
         subprocess.Popen(["tor"])
         time.sleep(3)
 
-    @BaseCollector.ignore_exceptions
-    def collect(self, source):
-        """Collect news items from this source (main function).
-
-        Parameters:
-            source (Source): The source to collect news items from.
-        """
-        self.source = source
+    @ignore_exceptions
+    def collect(self):
+        """Collect news items from this source (main function)."""
         if not self.__parse_settings():
-            BaseCollector.publish([], source)
             return
         self.news_items = []
 
         if self.tor_service.lower() == "yes":
             self.__run_tor()
 
-        if self.proxy:
-            proxy_handler = BaseCollector.get_proxy_handler(self.proxy)
+        if self.source.parsed_proxy:
+            proxy_handler = self.get_proxy_handler()
         else:
             proxy_handler = None
-        opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
-        not_modified = False
-        if self.last_collected:
-            if not_modified := BaseCollector.not_modified(self.web_url, self.last_collected, self.source.log_prefix, opener, self.user_agent):
+        self.source.opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
+        url_not_modified = False
+        if self.source.last_collected:
+            if url_not_modified := not_modified(self.source):
                 self.source.logger.info("Will not collect the feed because nothing has changed.")
-                BaseCollector.publish([], self.source)
+                return
 
-        if not not_modified:
+        if not url_not_modified:
             if self.interpret_as == "uri":
-                total_failed_articles = self.__browse_title_page(self.web_url)
+                total_failed_articles = self.__browse_title_page(self.source.url)
 
             elif self.interpret_as == "directory":
-                self.source.logger.info(f"Searching for html files in {self.web_url}")
-                for file_name in os.listdir(self.web_url):
+                self.source.logger.info(f"Searching for html files in {self.source.url}")
+                for file_name in os.listdir(self.source.url):
                     if file_name.lower().endswith(".html"):
-                        html_file = f"file://{self.web_url}/{file_name}"
+                        html_file = f"file://{self.source.url}/{file_name}"
                         total_failed_articles = self.__browse_title_page(html_file)
 
             if total_failed_articles > 0:
                 self.source.logger.debug(f"{total_failed_articles} article(s) failed")
-            BaseCollector.publish(self.news_items, self.source)
+            self.publish(self.news_items)
 
     def __browse_title_page(self, index_url):
         """Spawn a browser, download the title page for parsing, call parser.
@@ -506,7 +497,7 @@ class WebCollector(BaseCollector):
             self.source.logger.error("Error initializing the headless browser")
             return False, "Error initializing the headless browser", 0, 0
 
-        self.source.logger.info(f"Requesting title page: {self.web_url}")
+        self.source.logger.info(f"Requesting title page: {self.source.url}")
         try:
             browser.get(index_url)
         except Exception as error:
@@ -696,8 +687,8 @@ class WebCollector(BaseCollector):
         if not review:
             review = content
 
-        title = common.smart_truncate(title, 200)
-        review = common.smart_truncate(review)
+        title = smart_truncate(title, 200)
+        review = smart_truncate(review)
 
         extracted_date = None
         published_str = self.__find_element_text_by(browser, self.selectors["published"])
@@ -719,7 +710,7 @@ class WebCollector(BaseCollector):
             hashlib.sha256(for_hash.encode()).hexdigest(),
             title,
             review,
-            self.web_url,
+            self.source.url,
             link,
             published_str,
             author,

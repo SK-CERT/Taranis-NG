@@ -9,7 +9,7 @@ import socket
 from slack import WebClient
 
 from .base_collector import BaseCollector
-from shared import common
+from shared.common import ignore_exceptions, smart_truncate
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -24,7 +24,7 @@ class SlackCollector(BaseCollector):
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
     Methods:
-        collect(source): Collects data from Slack source.
+        collect(): Collects data from Slack source.
     """
 
     type = "SLACK_COLLECTOR"
@@ -33,14 +33,9 @@ class SlackCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    @BaseCollector.ignore_exceptions
-    def collect(self, source):
-        """Collect data from Slack source.
-
-        Arguments:
-            source: Source object.
-        """
-        self.source = source
+    @ignore_exceptions
+    def collect(self):
+        """Collect data from Slack source."""
         news_items = []
         proxy_server = self.source.param_key_values["PROXY_SERVER"]
 
@@ -80,7 +75,7 @@ class SlackCollector(BaseCollector):
                     self.source.logger.debug(f"Message: {count}")
                     published = time.ctime(float(message["ts"]))
                     content = message["text"]
-                    review = common.smart_truncate(content)
+                    review = smart_truncate(content)
 
                     user_id = message["user"]
                     user_name = slack_client.users_profile_get(user=user_id)
@@ -121,7 +116,7 @@ class SlackCollector(BaseCollector):
                     )
                     news_items.append(news_item)
 
-            BaseCollector.publish(news_items, self.source)
+            self.publish(news_items)
 
         except Exception as error:
             self.source.logger.exception(f"Collection failed: {error}")
