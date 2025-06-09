@@ -8,6 +8,6 @@ marshmallow==4.0.0
 oauthlib==3.2.2
 PySocks==1.7.1
 python-dotenv==1.1.0
-requests==2.32.3
+requests==2.32.4
 schedule==1.2.2
 sseclient-py==1.8.0
