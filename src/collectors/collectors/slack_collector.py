@@ -37,7 +37,7 @@ class SlackCollector(BaseCollector):
     def collect(self):
         """Collect data from Slack source."""
         news_items = []
-        proxy_server = self.source.parameter_values["PROXY_SERVER"]
+        proxy_server = self.source.param_key_values["PROXY_SERVER"]
 
         if proxy_server:
 
@@ -58,10 +58,10 @@ class SlackCollector(BaseCollector):
             except Exception:
                 self.source.logger.exception("Proxy connection failed")
 
-        ids = self.source.parameter_values["WORKSPACE_CHANNELS_ID"].replace(" ", "")
+        ids = self.source.param_key_values["WORKSPACE_CHANNELS_ID"].replace(" ", "")
         channels_list = ids.split(",")
 
-        slack_client = WebClient(self.source.parameter_values["SLACK_API_TOKEN"])
+        slack_client = WebClient(self.source.param_key_values["SLACK_API_TOKEN"])
 
         try:
             for channel_id in channels_list:

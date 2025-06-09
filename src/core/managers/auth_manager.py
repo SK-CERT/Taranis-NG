@@ -405,8 +405,10 @@ def api_key_required(key_type=None):
                 return error
             api_key = get_api_key()
 
+            master_id = None
             if key_type == "collectors":
                 master_class = CollectorsNode
+                master_id = kwargs.get("collector_id")
             elif key_type == "publishers":
                 master_class = PublishersNode
             elif key_type == "bots":
@@ -423,7 +425,12 @@ def api_key_required(key_type=None):
             #         class_name = frame.frame.f_locals['self'].__class__.__name__
             #         break
             # print(f"api_key_required: {key_type},  {class_name}.{fn.__name__}", flush=True)
-            validated_object = master_class.get_by_api_key(api_key)
+            if master_id:
+                # in case the same api_key is used for different nodes, we also need to check the node ID (if available)
+                validated_object = master_class.get_by_api_key_id(api_key, master_id)
+            else:
+                # return first node with valid api_key
+                validated_object = master_class.get_by_api_key(api_key)
             if not validated_object:
                 api_key = log_manager.sensitive_value(api_key)
                 log_manager.store_auth_error_activity(f"Incorrect api key: {api_key} for external access with type '{key_type}'")

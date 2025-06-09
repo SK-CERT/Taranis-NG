@@ -36,9 +36,9 @@ class GroupingBot(BaseBot):
             Exception: If an error occurs during execution, it is caught and logged.
         """
         try:
-            source_group = self.preset.parameter_values["SOURCE_GROUP"]
-            regexp = self.preset.parameter_values["REGULAR_EXPRESSION"]
-            interval = self.preset.parameter_values["REFRESH_INTERVAL"]
+            source_group = self.preset.param_key_values["SOURCE_GROUP"]
+            regexp = self.preset.param_key_values["REGULAR_EXPRESSION"]
+            interval = self.preset.param_key_values["REFRESH_INTERVAL"]
 
             limit = BaseBot.history(interval)
 
@@ -191,8 +191,8 @@ class GroupingBot(BaseBot):
             Exception: If there is an error accessing the parameter values in the preset.
         """
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
-            regexp = preset.parameter_values["REGULAR_EXPRESSION"]  # noqa F841
+            source_group = preset.param_key_values["SOURCE_GROUP"]  # noqa F841
+            regexp = preset.param_key_values["REGULAR_EXPRESSION"]  # noqa F841
 
         except Exception as error:
             self.preset.logger.exception(f"Execute on event failed: {error}")

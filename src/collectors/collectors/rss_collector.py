@@ -68,14 +68,14 @@ class RSSCollector(BaseCollector):
     @ignore_exceptions
     def collect(self):
         """Collect data from RSS or Atom feed."""
-        self.source.url = self.source.parameter_values["FEED_URL"]
+        self.source.url = self.source.param_key_values["FEED_URL"]
         if not self.source.url:
             self.source.logger.error("Feed URL is not set. Skipping collection.")
 
             return
         links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
-        self.source.user_agent = self.source.parameter_values["USER_AGENT"]
-        self.source.proxy = self.source.parameter_values["PROXY_SERVER"]
+        self.source.user_agent = self.source.param_key_values["USER_AGENT"]
+        self.source.proxy = self.source.param_key_values["PROXY_SERVER"]
         self.source.parsed_proxy = self.get_parsed_proxy()
         if self.source.parsed_proxy:
             self.source.proxy_handler = self.get_proxy_handler()

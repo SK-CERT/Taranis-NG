@@ -37,6 +37,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -99,6 +105,12 @@
                     "value": "60",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -286,6 +298,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -349,6 +367,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -387,6 +411,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -427,6 +457,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -465,6 +501,12 @@
                     "value": "https://psirt.bosch.com/security-advisories/bosch-building-technologies-feed.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -505,6 +547,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -543,6 +591,12 @@
                     "value": "https://psirt.bosch.com/security-advisories/bosch-smart-home-feed.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -583,6 +637,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -621,6 +681,12 @@
                     "value": "180",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -685,6 +751,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -723,6 +795,12 @@
                     "value": "https://www.f5.com/labs/rss-feeds/all.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -763,6 +841,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -801,6 +885,12 @@
                     "value": "https://feeds.fortinet.com/fortinet/blog/psirt",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -841,6 +931,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -879,6 +975,12 @@
                     "value": "https://support.ts.fujitsu.com/ProductSecurity/syndicate/Fujitsu-PSIRT-ProductSecurity-Feed-Atom.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -919,6 +1021,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -957,6 +1065,12 @@
                     "value": "https://cloud.google.com/feeds/google-cloud-security-bulletins.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -997,6 +1111,12 @@
                     "parameter": {
                         "key": "USER_AGENT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1035,6 +1155,12 @@
                     "value": "https://www.huawei.com/en/rss-feeds/psirt/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1183,6 +1309,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1221,6 +1353,12 @@
                     "value": "https://www.ivanti.com/blog/topics/security-advisory/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1261,6 +1399,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1299,6 +1443,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1363,6 +1513,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1426,6 +1582,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1464,6 +1626,12 @@
                     "value": "https://www.oracle.com/ocom/groups/public/@otn/documents/webcontent/rss-otn-sec.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1504,6 +1672,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1542,6 +1716,12 @@
                     "value": "https://www.qnap.com/en/security-advisory/feed",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1582,6 +1762,12 @@
                     "parameter": {
                         "key": "LINKS_LIMIT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1620,6 +1806,12 @@
                     "value": "https://security.salesforce.com/en/security-advisories/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1684,6 +1876,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1747,6 +1945,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1785,6 +1989,12 @@
                     "value": "https://advisory.splunk.com/feed.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -1825,6 +2035,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -1863,6 +2079,12 @@
                     "value": "10",
                     "parameter": {
                         "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]

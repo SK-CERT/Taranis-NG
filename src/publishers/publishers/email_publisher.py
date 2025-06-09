@@ -43,17 +43,17 @@ class EMAILPublisher(BasePublisher):
         """
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
-        smtp_server = publisher_input.parameter_values_map["SMTP_SERVER"]
-        smtp_server_port = publisher_input.parameter_values_map["SMTP_SERVER_PORT"]
-        user = publisher_input.parameter_values_map["EMAIL_USERNAME"]
-        password = publisher_input.parameter_values_map["EMAIL_PASSWORD"]
-        sender = publisher_input.parameter_values_map["EMAIL_SENDER"]
-        recipients = publisher_input.parameter_values_map["EMAIL_RECIPIENT"]
-        subject = publisher_input.parameter_values_map["EMAIL_SUBJECT"]
-        message = publisher_input.parameter_values_map["EMAIL_MESSAGE"]
-        sign = publisher_input.parameter_values_map["EMAIL_SIGN"]
-        sign_password = publisher_input.parameter_values_map["EMAIL_SIGN_PASSWORD"]
-        encrypt = publisher_input.parameter_values_map["EMAIL_ENCRYPT"]
+        smtp_server = publisher_input.param_key_values["SMTP_SERVER"]
+        smtp_server_port = publisher_input.param_key_values["SMTP_SERVER_PORT"]
+        user = publisher_input.param_key_values["EMAIL_USERNAME"]
+        password = publisher_input.param_key_values["EMAIL_PASSWORD"]
+        sender = publisher_input.param_key_values["EMAIL_SENDER"]
+        recipients = publisher_input.param_key_values["EMAIL_RECIPIENT"]
+        subject = publisher_input.param_key_values["EMAIL_SUBJECT"]
+        message = publisher_input.param_key_values["EMAIL_MESSAGE"]
+        sign = publisher_input.param_key_values["EMAIL_SIGN"]
+        sign_password = publisher_input.param_key_values["EMAIL_SIGN_PASSWORD"]
+        encrypt = publisher_input.param_key_values["EMAIL_ENCRYPT"]
 
         now = datetime.now().strftime("%Y%m%d%H%M%S")
 

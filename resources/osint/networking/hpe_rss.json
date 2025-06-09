@@ -37,6 +37,12 @@
                     "parameter": {
                         "key": "USER_AGENT"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         }

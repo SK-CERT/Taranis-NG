@@ -14,9 +14,6 @@ from managers.log_manager import logger
 class TaranisSSE(Resource):
     """SSE API endpoint."""
 
-    sse_logger = logger
-    sse_logger.log_prefix = "SSE"
-
     @stream_with_context
     def stream(self):
         """Stream data."""
@@ -24,14 +21,14 @@ class TaranisSSE(Resource):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(60)
         except Exception as ex:
-            self.sse_logger.exception(f"Failed to create socket: {ex}")
+            logger.exception(f"SSE: Failed to create socket: {ex}")
             return
 
         try:
             sock.connect(("localhost", 5001))
             sock.settimeout(1)
         except Exception as ex:
-            self.sse_logger.exception(f"Failed to connect to server: {ex}")
+            logger.exception(f"SSE: Failed to connect to server: {ex}")
             sock.close()
             return
 
@@ -66,7 +63,7 @@ class TaranisSSE(Resource):
                     yield f"event: {json_data['event']}\ndata: {json.dumps(json_data['data'])}\n\n"
                     buffer = ""
         except Exception as ex:
-            self.sse_logger.exception(f"Error during data reception or processing: {ex}")
+            logger.exception(f"SSE: Error during data reception or processing: {ex}")
         finally:
             sock.close()
 
@@ -80,8 +77,8 @@ class TaranisSSE(Resource):
             if jwt_token is not None:
                 auth_type = "JWT"
                 if auth_manager.decode_user_from_jwt(jwt_token) is None:
-                    msg = "decoding user from jwt failed."
-                    self.sse_logger.warning(msg)
+                    msg = "SSE: decoding user from jwt failed."
+                    logger.warning(msg)
                     return msg, 403
             elif api_key is not None:
                 auth_type = "API key"
@@ -94,20 +91,20 @@ class TaranisSSE(Resource):
                     master_class = BotsNode
                 validated_object = master_class.get_by_api_key(api_key)
                 if not validated_object:
-                    msg = f"invalid {auth_type}: '{api_key}'"
-                    self.sse_logger.warning(msg)
+                    msg = f"SSE: invalid {auth_type}: '{api_key}'"
+                    logger.warning(msg)
                     return msg, 403
 
             else:
-                msg = "missing authentication credentials."
-                self.sse_logger.warning(msg)
+                msg = "SSE: missing authentication credentials."
+                logger.warning(msg)
                 return msg, 403
 
-            self.sse_logger.info(f"streaming response {request.remote_addr} ({auth_type})")
+            logger.info(f"SSE: streaming response {request.remote_addr} ({auth_type})")
             return Response(self.stream(), mimetype="text/event-stream")
         except Exception as ex:
-            msg = "Error in streaming response"
-            self.sse_logger.exception(msg, ex)
+            msg = "SSE: Error in streaming response"
+            logger.exception(msg, ex)
             return msg, 500
 
 

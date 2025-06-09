@@ -38,20 +38,20 @@ class TwitterCollector(BaseCollector):
             news_items = []
             attributes = []
 
-            search_keywords = self.source.parameter_values["SEARCH_KEYWORDS"].replace(" ", "")
+            search_keywords = self.source.param_key_values["SEARCH_KEYWORDS"].replace(" ", "")
             keywords_list = search_keywords.split(",")
 
-            search_hashtags = self.source.parameter_values["SEARCH_HASHTAGS"].replace(" ", "")
+            search_hashtags = self.source.param_key_values["SEARCH_HASHTAGS"].replace(" ", "")
             hashtags_list = search_hashtags.split(",")
 
-            number_of_tweets = self.source.parameter_values["NUMBER_OF_TWEETS"]
+            number_of_tweets = self.source.param_key_values["NUMBER_OF_TWEETS"]
 
-            twitter_api_key = self.source.parameter_values["TWITTER_API_KEY"]
-            twitter_api_key_secret = self.source.parameter_values["TWITTER_API_KEY_SECRET"]
-            twitter_access_token = self.source.parameter_values["TWITTER_ACCESS_TOKEN"]
-            twitter_access_token_secret = self.source.parameter_values["TWITTER_ACCESS_TOKEN_SECRET"]
+            twitter_api_key = self.source.param_key_values["TWITTER_API_KEY"]
+            twitter_api_key_secret = self.source.param_key_values["TWITTER_API_KEY_SECRET"]
+            twitter_access_token = self.source.param_key_values["TWITTER_ACCESS_TOKEN"]
+            twitter_access_token_secret = self.source.param_key_values["TWITTER_ACCESS_TOKEN_SECRET"]
 
-            proxy_server = self.source.parameter_values["PROXY_SERVER"]
+            proxy_server = self.source.param_key_values["PROXY_SERVER"]
 
             auth = tweepy.OAuthHandler(twitter_api_key, twitter_api_key_secret)
             auth.set_access_token(twitter_access_token, twitter_access_token_secret)
@@ -72,7 +72,7 @@ class TwitterCollector(BaseCollector):
             else:
                 public_tweets = api.home_timeline(count=number_of_tweets)
 
-            interval = self.source.parameter_values["REFRESH_INTERVAL"]
+            interval = self.source.param_key_values["REFRESH_INTERVAL"]
 
             limit = self.history(interval)
 

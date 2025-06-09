@@ -37,6 +37,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -76,6 +82,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -114,6 +126,12 @@
                     "value": "https://www.ivanti.com/blog/topics/security-advisory/rss",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]

@@ -37,6 +37,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -76,6 +82,12 @@
                     "parameter": {
                         "key": "FEED_URL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -114,6 +126,12 @@
                     "value": "https://psirt.bosch.com/security-advisories/bosch-smart-home-feed.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -178,6 +196,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -216,6 +240,12 @@
                     "value": "https://support.ts.fujitsu.com/ProductSecurity/syndicate/Fujitsu-PSIRT-ProductSecurity-Feed-Atom.xml",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -364,6 +394,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -427,6 +463,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -465,6 +507,12 @@
                     "value": "https://www.qnap.com/en/security-advisory/feed",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]
@@ -529,6 +577,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -567,6 +621,12 @@
                     "value": "https://www.synology.com/api/rssfeed/security/en-global",
                     "parameter": {
                         "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
                     }
                 }
             ]

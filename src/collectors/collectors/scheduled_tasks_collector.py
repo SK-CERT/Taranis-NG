@@ -38,16 +38,16 @@ class ScheduledTasksCollector(BaseCollector):
             Exception: If the collection fails for any reason.
         """
         news_items = []
-        head, tail = os.path.split(self.source.parameter_values["TASK_COMMAND"])
-        task_title = self.source.parameter_values["TASK_TITLE"]
+        head, tail = os.path.split(self.source.param_key_values["TASK_COMMAND"])
+        task_title = self.source.param_key_values["TASK_TITLE"]
 
         try:
             if head == "":
-                task_command = self.source.parameter_values["TASK_COMMAND"]
+                task_command = self.source.param_key_values["TASK_COMMAND"]
             else:
-                task_command = os.popen("." + self.source.parameter_values["TASK_COMMAND"]).read()
+                task_command = os.popen("." + self.source.param_key_values["TASK_COMMAND"]).read()
 
-            review = self.source.parameter_values["TASK_DESCRIPTION"]
+            review = self.source.param_key_values["TASK_DESCRIPTION"]
             author = ""
             osint_source = "TaranisNG System"
             link = ""

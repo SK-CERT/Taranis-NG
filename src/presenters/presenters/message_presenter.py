@@ -7,9 +7,10 @@ Returns:
 import os
 from base64 import b64encode
 import jinja2
-
+from shared import common
 from .base_presenter import BasePresenter
 from shared.config_presenter import ConfigPresenter
+from presenters.pdf_presenter import PDFPresenter
 
 
 class MESSAGEPresenter(BasePresenter):
@@ -37,8 +38,9 @@ class MESSAGEPresenter(BasePresenter):
         Returns:
             presenter_output -- dict with keys mime_type and data with message parts as subkeys
         """
-        message_title_template_path = presenter_input.parameter_values_map["TITLE_TEMPLATE_PATH"]
-        message_body_template_path = presenter_input.parameter_values_map["BODY_TEMPLATE_PATH"]
+        message_title_template_path = presenter_input.param_key_values["TITLE_TEMPLATE_PATH"]
+        message_body_template_path = presenter_input.param_key_values["BODY_TEMPLATE_PATH"]
+        att_template_path = common.read_str_parameter("ATTACHMENT_TEMPLATE_PATH", None, presenter_input)
         presenter_output = {"mime_type": "text/plain", "message_title": None, "message_body": None, "data": None}
 
         def generate_part(template_path):
@@ -59,6 +61,12 @@ class MESSAGEPresenter(BasePresenter):
         try:
             presenter_output["message_title"] = generate_part(message_title_template_path)
             presenter_output["message_body"] = generate_part(message_body_template_path)
+            if att_template_path:
+                presenter_input.param_key_values.update({"PDF_TEMPLATE_PATH": att_template_path})
+                pdf_presnter = PDFPresenter()
+                pdf_output = pdf_presnter.generate(presenter_input)
+                presenter_output["mime_type"] = pdf_output["mime_type"]
+                presenter_output["data"] = pdf_output["data"]
             return presenter_output
 
         except Exception as error:

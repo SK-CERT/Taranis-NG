@@ -53,11 +53,11 @@ class WordlistUpdaterBot(BaseBot):
             Exception: If an error occurs during execution, it is caught and logged.
         """
         try:
-            data_url = self.preset.parameter_values["DATA_URL"]
-            data_format = self.preset.parameter_values["FORMAT"]
-            word_list_id = self.preset.parameter_values["WORD_LIST_ID"]
-            word_list_category_name = self.preset.parameter_values["WORD_LIST_CATEGORY"]
-            delete_word_entries = self.preset.parameter_values["DELETE"].lower()
+            data_url = self.preset.param_key_values["DATA_URL"]
+            data_format = self.preset.param_key_values["FORMAT"]
+            word_list_id = self.preset.param_key_values["WORD_LIST_ID"]
+            word_list_category_name = self.preset.param_key_values["WORD_LIST_CATEGORY"]
+            delete_word_entries = self.preset.param_key_values["DELETE"].lower()
 
             source_word_list = self.__load_file(data_url, data_format)
 
@@ -104,8 +104,8 @@ class WordlistUpdaterBot(BaseBot):
             Exception: If there is an error accessing the parameters in the preset.
         """
         try:
-            data_url = preset.parameter_values["DATA_URL"]  # noqa F841
-            format = preset.parameter_values["FORMAT"]  # noqa F841
+            data_url = preset.param_key_values["DATA_URL"]  # noqa F841
+            format = preset.param_key_values["FORMAT"]  # noqa F841
 
         except Exception as error:
             self.preset.logger.exception(f"Execute on event failed: {error}")

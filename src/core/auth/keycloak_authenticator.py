@@ -61,10 +61,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
 
         try:
             # decode token to get user data
-            if old_keycloak:
-                data = jwt.decode(data["access_token"], verify=False)
-            else:
-                data = jwt.decode(data["access_token"], options={"verify_signature": False}, algorithms=["RS256"])
+            data = jwt.decode(data["access_token"], options={"verify_signature": False}, algorithms=["RS256"])
 
         except Exception as ex:
             msg = "Keycloak returned invalid access_token"

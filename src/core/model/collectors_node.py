@@ -77,6 +77,18 @@ class CollectorsNode(db.Model):
         return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
+    def get_by_api_key_id(cls, api_key, id):
+        """Get a node by API key and node ID (more nodes can have the same key).
+
+        Args:
+            api_key (str): The API key
+            id (str): The ID of the collectors node
+        Returns:
+            (CollectorsNode): The CollectorsNode object
+        """
+        return cls.query.filter_by(api_key=api_key, id=id).first()
+
+    @classmethod
     def get_all(cls):
         """Get all nodes.
 

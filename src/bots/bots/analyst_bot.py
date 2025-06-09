@@ -45,10 +45,10 @@ class AnalystBot(BaseBot):
             Exception: If an error occurs during execution.
         """
         try:
-            source_group = self.preset.parameter_values["SOURCE_GROUP"]  # noqa F841
-            regexp = self.preset.parameter_values["REGULAR_EXPRESSION"]
-            attr_name = self.preset.parameter_values["ATTRIBUTE_NAME"]
-            interval = self.preset.parameter_values["REFRESH_INTERVAL"]
+            source_group = self.preset.param_key_values["SOURCE_GROUP"]  # noqa F841
+            regexp = self.preset.param_key_values["REGULAR_EXPRESSION"]
+            attr_name = self.preset.param_key_values["ATTRIBUTE_NAME"]
+            interval = self.preset.param_key_values["REFRESH_INTERVAL"]
 
             # support for multiple regexps
             regexp = regexp.split(";;;")
@@ -114,9 +114,9 @@ class AnalystBot(BaseBot):
             Exception: If there is an error while executing the preset.
         """
         try:
-            source_group = preset.parameter_values["SOURCE_GROUP"]  # noqa F841
-            regexp = preset.parameter_values["REGULAR_EXPRESSION"]  # noqa F841
-            attr_name = preset.parameter_values["ATTRIBUTE_NAME"]  # noqa F841
+            source_group = preset.param_key_values["SOURCE_GROUP"]  # noqa F841
+            regexp = preset.param_key_values["REGULAR_EXPRESSION"]  # noqa F841
+            attr_name = preset.param_key_values["ATTRIBUTE_NAME"]  # noqa F841
 
         except Exception as error:
             self.preset.logger.exception(f"Execute on event failed: {error}")

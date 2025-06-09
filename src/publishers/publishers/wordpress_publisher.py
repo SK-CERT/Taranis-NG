@@ -38,9 +38,9 @@ class WORDPRESSPublisher(BasePublisher):
         self.logger = logger
         self.logger.log_prefix = f"{self.name} '{publisher_input.name}'"
         try:
-            user = publisher_input.parameter_values_map["WP_USER"]
-            python_app_secret = publisher_input.parameter_values_map["WP_PYTHON_APP_SECRET"]
-            main_wp_url = publisher_input.parameter_values_map["WP_URL"]
+            user = publisher_input.param_key_values["WP_USER"]
+            python_app_secret = publisher_input.param_key_values["WP_PYTHON_APP_SECRET"]
+            main_wp_url = publisher_input.param_key_values["WP_URL"]
 
             data_string = user + ":" + python_app_secret
 

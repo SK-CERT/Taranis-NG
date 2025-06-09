@@ -61,6 +61,12 @@
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         }

@@ -90,7 +90,7 @@ class BaseBot:
                 preset.log_prefix = f"{self.name} '{preset.name}'"
                 preset.logger = create_logger(log_prefix=preset.log_prefix)
                 preset.logger.stored_message_levels = ["error", "exception", "warning", "critical"]
-                interval = preset.parameter_values["REFRESH_INTERVAL"]
+                interval = preset.param_key_values["REFRESH_INTERVAL"]
                 # do not schedule if no interval is set
                 if interval == "" or interval == "0":
                     preset.logger.info("Disabled")
