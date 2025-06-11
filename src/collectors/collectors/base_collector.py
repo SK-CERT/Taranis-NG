@@ -342,12 +342,15 @@ def not_modified(source) -> bool:
             else:
                 source.logger.debug(f"{log_prefix} Unable to determine modification since {last_collected_str} (Last-Modified: not received)")
                 return False
-    except urllib.error.HTTPError as error:
-        if error.code == 304:
+    except urllib.error.HTTPError as http_error:
+        if http_error.code == 304:
             source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str}")
             return True
+        elif http_error.code in [401, 429, 403]:
+            source.logger.info(f"{log_prefix} HTTP {http_error.code} {http_error.reason} for {source.url}. Continuing...")
+            return False
         else:
-            source.logger.exception(f"{log_prefix} HTTP error occurred: {error}")
+            source.logger.exception(f"{log_prefix} HTTP error occurred: {http_error}")
             return False
     except socket.timeout:
         source.logger.debug(f"{log_prefix} Request timed out for {request.full_url}")

@@ -133,7 +133,13 @@ class RSSCollector(BaseCollector):
                                 if len(content_sanit) > len(summary):
                                     content = content_sanit
                                     self.source.logger.debug("Using web text for content")
-
+                        except urllib.error.HTTPError as http_err:
+                            if http_err.code in [401, 429, 403]:
+                                self.source.logger.warning(
+                                    f"HTTP {http_err.code} {http_err.reason} for {link_for_article}. Skipping getting article content."
+                                )
+                            else:
+                                self.source.logger.exception(f"HTTP error occurred: {http_err}")
                         except Exception as error:
                             self.source.logger.exception(f"Fetch web content failed: {error}")
 

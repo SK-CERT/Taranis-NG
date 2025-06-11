@@ -63,6 +63,18 @@ class WebCollector(BaseCollector):
     parameters = config.parameters
     logger.debug(f"{name}: Selenium version: {selenium.__version__}")
 
+    SELECTOR_MAP = {
+        "id": By.ID,
+        "name": By.NAME,
+        "xpath": By.XPATH,
+        "tag_name": By.TAG_NAME,
+        "tag": By.TAG_NAME,
+        "class_name": By.CLASS_NAME,
+        "class": By.CLASS_NAME,
+        "css_selector": By.CSS_SELECTOR,
+        "css": By.CSS_SELECTOR,
+    }
+
     @staticmethod
     def __get_prefix_and_selector(element_selector):
         """Extract the prefix and selector from the given element_selector.
@@ -79,8 +91,8 @@ class WebCollector(BaseCollector):
         selector = selector_split[1].lstrip()
         return prefix, selector
 
-    @staticmethod
-    def __get_element_locator(element_selector):
+    @classmethod
+    def __get_element_locator(cls, element_selector):
         """Extract a single element from the headless browser by selector.
 
         Parameters:
@@ -88,26 +100,15 @@ class WebCollector(BaseCollector):
         Returns:
             locator (tuple): A tuple containing the locator type and the selector.
         """
-        prefix, selector = WebCollector.__get_prefix_and_selector(element_selector)
+        prefix, selector = cls.__get_prefix_and_selector(element_selector)
 
-        locator = None
-        if prefix == "id":
-            locator = (By.ID, selector)
-        if prefix == "name":
-            locator = (By.NAME, selector)
-        elif prefix == "xpath":
-            locator = (By.XPATH, selector)
-        elif prefix in ["tag_name", "tag"]:
-            locator = (By.TAG_NAME, selector)
-        elif prefix in ["class_name", "class"]:
-            locator = (By.CLASS_NAME, selector)
-        elif prefix in ["css_selector", "css"]:
-            locator = (By.CSS_SELECTOR, selector)
+        by = cls.SELECTOR_MAP.get(prefix)
+        if by and selector:
+            return (by, selector)
+        return None
 
-        return locator
-
-    @staticmethod
-    def __find_element_by(driver, element_selector):
+    @classmethod
+    def __find_element_by(cls, driver, element_selector):
         """Extract single element from the headless browser by selector.
 
         Parameters:
@@ -116,26 +117,18 @@ class WebCollector(BaseCollector):
         Returns:
             The extracted element.
         """
-        prefix, selector = WebCollector.__get_prefix_and_selector(element_selector)
+        prefix, selector = cls.__get_prefix_and_selector(element_selector)
 
-        element = None
-        if prefix == "id":
-            element = driver.find_element(By.ID, selector)
-        if prefix == "name":
-            element = driver.find_element(By.NAME, selector)
-        elif prefix == "xpath":
-            element = driver.find_element(By.XPATH, selector)
-        elif prefix in ["tag_name", "tag"]:
-            element = driver.find_element(By.TAG_NAME, selector)
-        elif prefix in ["class_name", "class"]:
-            element = driver.find_element(By.CLASS_NAME, selector)
-        elif prefix in ["css_selector", "css"]:
-            element = driver.find_element(By.CSS_SELECTOR, selector)
+        by = cls.SELECTOR_MAP.get(prefix)
+        if by and selector:
+            try:
+                return driver.find_element(by, selector)
+            except NoSuchElementException:
+                return None
+        return None
 
-        return element
-
-    @staticmethod
-    def __find_element_text_by(driver, element_selector, return_none=False):
+    @classmethod
+    def __find_element_text_by(cls, driver, element_selector, return_none=False):
         """Find the text of an element identified by the given selector using the provided driver.
 
         Parameters:
@@ -153,15 +146,16 @@ class WebCollector(BaseCollector):
             failure_retval = ""
 
         try:
-            ret = WebCollector.__find_element_by(driver, element_selector)
-            if not ret:
+            if element_selector:
+                ret = cls.__find_element_by(driver, element_selector)
+                return ret.text if ret else failure_retval
+            else:
                 return failure_retval
-            return ret.text
         except NoSuchElementException as e:  # noqa F841
             return failure_retval
 
-    @staticmethod
-    def __find_elements_by(driver, element_selector):
+    @classmethod
+    def __find_elements_by(cls, driver, element_selector):
         """Extract list of elements from the headless browser by selector.
 
         Parameters:
@@ -170,28 +164,18 @@ class WebCollector(BaseCollector):
         Returns:
             A list of elements found using the given selector.
         """
-        prefix, selector = WebCollector.__get_prefix_and_selector(element_selector)
-        # self.source.logger.debug(f"Prefix: {prefix}")
-        # self.source.logger.debug(f"Selector: {selector}")
-        # self.source.logger.debug(f"Page source code: {driver.page_source}")
+        prefix, selector = cls.__get_prefix_and_selector(element_selector)
 
-        elements = None
-        if prefix == "id":
-            elements = [driver.find_element(By.ID, selector)]
-        if prefix == "name":
-            elements = driver.find_elements(By.NAME, selector)
-        elif prefix == "xpath":
-            elements = driver.find_elements(By.XPATH, selector)
-        elif prefix in ["tag_name", "tag"]:
-            elements = driver.find_elements(By.TAG_NAME, selector)
-        elif prefix in ["class_name", "class"]:
-            elements = driver.find_elements(By.CLASS_NAME, selector)
-        elif prefix in ["css_selector", "css"]:
-            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-        return elements
+        by = cls.SELECTOR_MAP.get(prefix)
+        if by and selector:
+            try:
+                return driver.find_elements(by, selector)
+            except NoSuchElementException:
+                return []
+        return []
 
-    @staticmethod
-    def __safe_find_elements_by(driver, element_selector):
+    @classmethod
+    def __safe_find_elements_by(cls, driver, element_selector):
         """Safely find elements by the given element selector using the provided driver.
 
         Parameters:
@@ -201,15 +185,13 @@ class WebCollector(BaseCollector):
             A list of elements matching the given selector, or None if no elements are found.
         """
         try:
-            ret = WebCollector.__find_elements_by(driver, element_selector)
-            if not ret:
-                return None
-            return ret
-        except NoSuchElementException as e:  # noqa F841
+            elements = cls.__find_elements_by(driver, element_selector)
+            return elements if elements else None
+        except NoSuchElementException as error:  # noqa F841
             return None
 
-    @staticmethod
-    def __wait_for_new_tab(browser, timeout, current_tab):
+    @classmethod
+    def __wait_for_new_tab(cls, browser, timeout, current_tab):
         """Wait for a new tab to open in the browser.
 
         Parameters:
@@ -607,35 +589,35 @@ class WebCollector(BaseCollector):
             #     pass
             # if first item works but next items have problems - it's because this:
             # https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/#stale-element-reference-exception
-            link = None
+            link = item.get_attribute("href")
             try:
-                link = item.get_attribute("href")
-                if link is None:  # don't continue, it will crash in current situation
-                    failed_articles += 1
-                    self.source.logger.warning(f"No link for article {count}/{len(article_items)}")
-                    continue
+                if link:
+                    scope = browser
+                    self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {link}")
+                    click_method = 1  # TODO: some day, make this user-configurable with tri-state enum
+                    if click_method == 1:
+                        browser.switch_to.new_window("tab")
+                        browser.get(link)
+                    elif click_method == 2:
+                        browser.move_to_element(item)
+                        ActionChains(browser).key_down(Keys.CONTROL).click(item).key_up(Keys.CONTROL).perform()
+                        self.__wait_for_new_tab(browser, 15, title_page_handle)
+                    elif click_method == 3:
+                        browser.move_to_element(item)
+                        item.send_keys(Keys.CONTROL + Keys.RETURN)
+                        self.__wait_for_new_tab(browser, 15, title_page_handle)
+                    time.sleep(1)
+                else:
+                    self.source.logger.info(f"Visiting article {count}/{len(article_items)} on single page")
+                    scope = item
+
             except Exception as error:
                 failed_articles += 1
                 self.source.logger.exception(f"Failed to get link for article {count}/{len(article_items)}: {error}")
                 continue
 
-            self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {link}")
-            click_method = 1  # TODO: some day, make this user-configurable with tri-state enum
-            if click_method == 1:
-                browser.switch_to.new_window("tab")
-                browser.get(link)
-            elif click_method == 2:
-                browser.move_to_element(item)
-                ActionChains(browser).key_down(Keys.CONTROL).click(item).key_up(Keys.CONTROL).perform()
-                self.__wait_for_new_tab(browser, 15, title_page_handle)
-            elif click_method == 3:
-                browser.move_to_element(item)
-                item.send_keys(Keys.CONTROL + Keys.RETURN)
-                self.__wait_for_new_tab(browser, 15, title_page_handle)
-            time.sleep(1)
-
             try:
-                news_item = self.__process_article_page(browser)
+                news_item = self.__process_article_page(browser, scope)
                 if news_item:
                     news_item.print_news_item(self.source.logger)
                     self.news_items.append(news_item)
@@ -662,7 +644,7 @@ class WebCollector(BaseCollector):
 
         return failed_articles
 
-    def __process_article_page(self, browser):
+    def __process_article_page(self, browser, scope):
         """Parse a single article.
 
         Parameters:
@@ -672,14 +654,16 @@ class WebCollector(BaseCollector):
         """
         current_url = browser.current_url
 
-        title = self.__find_element_text_by(browser, self.selectors["title"])
+        # self.source.logger.warning(scope.get_attribute("outerHTML"))
 
-        content = self.__find_element_text_by(browser, self.selectors["article_full_text"])
+        title = self.__find_element_text_by(scope, self.selectors["title"])
+
+        content = self.__find_element_text_by(scope, self.selectors["article_full_text"])
         if self.word_limit > 0:
             content = " ".join(re.compile(r"\s+").split(content)[: self.word_limit])
 
         if self.selectors["article_description"]:
-            review = self.__find_element_text_by(browser, self.selectors["article_description"])
+            review = self.__find_element_text_by(scope, self.selectors["article_description"])
         else:
             review = ""
         if self.word_limit > 0:
@@ -691,7 +675,7 @@ class WebCollector(BaseCollector):
         review = smart_truncate(review)
 
         extracted_date = None
-        published_str = self.__find_element_text_by(browser, self.selectors["published"])
+        published_str = self.__find_element_text_by(scope, self.selectors["published"])
         if published_str:
             extracted_date = parse(published_str, fuzzy=True)
         now = datetime.datetime.now()
@@ -702,7 +686,7 @@ class WebCollector(BaseCollector):
 
         link = current_url
 
-        author = self.__find_element_text_by(browser, self.selectors["author"])
+        author = self.__find_element_text_by(scope, self.selectors["author"])
 
         for_hash = author + title + review
         news_item = NewsItemData(
