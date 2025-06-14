@@ -1,4 +1,4 @@
-"""JP: add cascade delete to osint_source releated tables
+"""add cascade delete to osint_source releated tables
 
 Revision ID: 890041d882b4
 Revises: ac311a84207a

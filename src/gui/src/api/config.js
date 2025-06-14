@@ -36,6 +36,22 @@ export function deleteAttributeEnum(attribute_id, attribute_enum_id) {
     return ApiService.delete('/config/attributes/' + attribute_id + '/enums/' + attribute_enum_id)
 }
 
+export function getAllAiProviders(filter) {
+    return ApiService.get('/config/aiproviders?search=' + filter.search)
+}
+
+export function createNewAiProvider(ai_provider) {
+    return ApiService.post('/config/aiproviders', ai_provider)
+}
+
+export function updateAiProvider(ai_provider) {
+    return ApiService.put('/config/aiproviders/' + ai_provider.id, ai_provider)
+}
+
+export function deleteAiProvider(ai_provider) {
+    return ApiService.delete('/config/aiproviders/' + ai_provider.id)
+}
+
 export function getAllReportItemTypes(filter) {
     return ApiService.get('/config/report-item-types?search=' + filter.search)
 }

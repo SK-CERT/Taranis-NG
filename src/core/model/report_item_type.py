@@ -7,6 +7,7 @@ from sqlalchemy.sql.expression import cast
 
 from managers.db_manager import db
 from model.acl_entry import ACLEntry
+from model.ai_provider import AiProvider
 from shared.schema.acl_entry import ItemType
 from shared.schema.report_item_type import (
     AttributeGroupItemSchema,
@@ -21,9 +22,11 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
 
     Attributes:
         attribute_id (int): Attribute id.
+        ai_provider_id (int): AI provider id.
     """
 
     attribute_id = fields.Integer()
+    ai_provider_id = fields.Integer(allow_none=True)
 
     @post_load
     def make_attribute_group_item(self, data, **kwargs):
@@ -51,6 +54,9 @@ class AttributeGroupItem(db.Model):
         attribute_group (AttributeGroup): Attribute group.
         attribute_id (int): Attribute id.
         attribute (Attribute): Attribute.
+        ai_provider_id (int): AI provider id.
+        ai_provider (AiProvider): AI provider.
+        ai_prompt (str): AI prompt.
     """
 
     id = db.Column(db.Integer, primary_key=True)
@@ -67,7 +73,11 @@ class AttributeGroupItem(db.Model):
     attribute_id = db.Column(db.Integer, db.ForeignKey("attribute.id"))
     attribute = db.relationship("Attribute", lazy="joined")
 
-    def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute_id):
+    ai_provider_id = db.Column(db.Integer, db.ForeignKey("ai_provider.id"))
+    ai_provider = db.relationship(AiProvider, viewonly=True, lazy="joined")
+    ai_prompt = db.Column(db.String())
+
+    def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute_id, ai_provider_id, ai_prompt):
         """Initialize attribute group item."""
         if id is not None and id != -1:
             self.id = id
@@ -80,6 +90,8 @@ class AttributeGroupItem(db.Model):
         self.min_occurrence = min_occurrence
         self.max_occurrence = max_occurrence
         self.attribute_id = attribute_id
+        self.ai_provider_id = ai_provider_id
+        self.ai_prompt = ai_prompt
 
     @classmethod
     def find(cls, id):
@@ -170,32 +182,34 @@ class AttributeGroup(db.Model):
         self.section_title = updated_attribute_group.section_title
         self.index = updated_attribute_group.index
 
-        for updated_attribute_group_item in updated_attribute_group.attribute_group_items:
+        for updated_item in updated_attribute_group.attribute_group_items:
             found = False
-            for attribute_group_item in self.attribute_group_items:
-                if updated_attribute_group_item.id == attribute_group_item.id:
-                    attribute_group_item.title = updated_attribute_group_item.title
-                    attribute_group_item.description = updated_attribute_group_item.description
-                    attribute_group_item.index = updated_attribute_group_item.index
-                    attribute_group_item.min_occurrence = updated_attribute_group_item.min_occurrence
-                    attribute_group_item.max_occurrence = updated_attribute_group_item.max_occurrence
-                    attribute_group_item.attribute_id = updated_attribute_group_item.attribute_id
+            for item in self.attribute_group_items:
+                if updated_item.id == item.id:
+                    item.title = updated_item.title
+                    item.description = updated_item.description
+                    item.index = updated_item.index
+                    item.min_occurrence = updated_item.min_occurrence
+                    item.max_occurrence = updated_item.max_occurrence
+                    item.attribute_id = updated_item.attribute_id
+                    item.ai_provider_id = updated_item.ai_provider_id
+                    item.ai_prompt = updated_item.ai_prompt
                     found = True
                     break
 
             if found is False:
-                updated_attribute_group_item.attribute_group = None
-                self.attribute_group_items.append(updated_attribute_group_item)
+                updated_item.attribute_group = None
+                self.attribute_group_items.append(updated_item)
 
-        for attribute_group_item in self.attribute_group_items[:]:
+        for item in self.attribute_group_items[:]:
             found = False
-            for updated_attribute_group_item in updated_attribute_group.attribute_group_items:
-                if updated_attribute_group_item.id == attribute_group_item.id:
+            for updated_item in updated_attribute_group.attribute_group_items:
+                if updated_item.id == item.id:
                     found = True
                     break
 
             if found is False:
-                self.attribute_group_items.remove(attribute_group_item)
+                self.attribute_group_items.remove(item)
 
 
 class NewReportItemTypeSchema(ReportItemTypeBaseSchema):

@@ -1,4 +1,4 @@
-"""JP: add cascade delete to report_item releated tables
+"""add cascade delete to report_item releated tables
 
 Revision ID: 4f24c634cd22
 Revises: aaf3d8b31972

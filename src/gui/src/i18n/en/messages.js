@@ -499,7 +499,9 @@ const messages_en = {
         select_date: "Select Date",
         select_time: "Select Time",
         select_datetime: "Select Datetime",
-        done: "Done"
+        done: "Done",
+        ai_provider: "AI Provider",
+        ai_prompt: "AI Prompt",
     },
 
     cvss_calculator: {

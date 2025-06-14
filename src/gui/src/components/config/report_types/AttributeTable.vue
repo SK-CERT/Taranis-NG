@@ -1,18 +1,14 @@
 <template>
-    <v-data-table
-            :headers="headers"
-            :items="attributes"
-            sort-by="value"
-            class="elevation-1"
-    >
+    <v-data-table :headers="headers"
+                  :items="attributes"
+                  sort-by="value"
+                  class="elevation-1">
         <template v-slot:top>
             <v-toolbar flat>
                 <v-toolbar-title>{{$t('attribute.attributes')}}</v-toolbar-title>
-                <v-divider
-                        class="mx-4"
-                        inset
-                        vertical
-                ></v-divider>
+                <v-divider class="mx-4"
+                           inset
+                           vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-dialog v-if="!disabled" v-model="dialog" max-width="500px">
                     <template v-slot:activator="{ on }">
@@ -28,37 +24,44 @@
 
                         <v-card-text>
 
-                            <v-combobox
-                                    v-model="selected_attribute"
-                                    :items="attribute_templates"
-                                    item-text="name"
-                                    :label="$t('attribute.attribute')"
-                            ></v-combobox>
+                            <v-combobox v-model="selected_attribute"
+                                        :items="attribute_templates"
+                                        item-text="name"
+                                        :label="$t('attribute.attribute')"></v-combobox>
 
                             <v-text-field v-model="edited_attribute.title"
                                           :label="$t('attribute.name')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
+                                          :spellcheck="$store.state.settings.spellcheck"></v-text-field>
 
                             <v-text-field v-model="edited_attribute.description"
                                           :label="$t('attribute.description')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            ></v-text-field>
+                                          :spellcheck="$store.state.settings.spellcheck"></v-text-field>
 
                             <v-row>
                                 <v-col>
                                     <v-text-field v-model="edited_attribute.min_occurrence"
                                                   :label="$t('attribute.min_occurrence')"
-                                                  :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-text-field>
+                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                                 <v-col>
                                     <v-text-field v-model="edited_attribute.max_occurrence"
                                                   :label="$t('attribute.max_occurrence')"
-                                                  :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-text-field>
+                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                             </v-row>
+
+                            <v-combobox v-if="showAI"
+                                        :label="$t('attribute.ai_provider')"
+                                        name="ai_provider"
+                                        v-model="selected_ai_provider"
+                                        :items="aiProviderData"
+                                        item-text="name"></v-combobox>
+
+                            <v-textarea v-if="showAI"
+                                        :label="$t('attribute.ai_prompt')"
+                                        name="ai_prompt"
+                                        v-model="edited_attribute.ai_prompt"
+                                        clearable></v-textarea>
 
                         </v-card-text>
 
@@ -75,28 +78,24 @@
             <v-icon v-if="!disabled"
                     small
                     class="mr-2"
-                    @click="moveItemUp(item)"
-            >
+                    @click="moveItemUp(item)">
                 mdi-arrow-up-bold
             </v-icon>
             <v-icon v-if="!disabled"
                     small
                     class="mr-2"
-                    @click="moveItemDown(item)"
-            >
+                    @click="moveItemDown(item)">
                 mdi-arrow-down-bold
             </v-icon>
             <v-icon v-if="!disabled"
                     small
                     class="mr-2"
-                    @click="editItem(item)"
-            >
+                    @click="editItem(item)">
                 edit
             </v-icon>
             <v-icon v-if="!disabled"
                     small
-                    @click="deleteItem(item)"
-            >
+                    @click="deleteItem(item)">
                 delete
             </v-icon>
         </template>
@@ -109,19 +108,21 @@
         props: {
             attributes: Array,
             attribute_templates: Array,
+            ai_providers: Array,
             disabled: Boolean
         },
         data: () => ({
             headers: [
-                {text: 'Type', value: 'attribute_name', align: 'left', sortable: false},
-                {text: 'Name', value: 'title', sortable: false},
-                {text: 'Description', value: 'description', sortable: false},
-                {text: 'Min Occurence', value: 'min_occurrence', sortable: false},
-                {text: 'Max Occurence', value: 'max_occurrence', sortable: false},
-                {text: 'Actions', value: 'action', align: 'right', sortable: false},
+                { text: 'Type', value: 'attribute_name', align: 'left', sortable: false },
+                { text: 'Name', value: 'title', sortable: false },
+                { text: 'Description', value: 'description', sortable: false },
+                { text: 'Min Occurence', value: 'min_occurrence', sortable: false },
+                { text: 'Max Occurence', value: 'max_occurrence', sortable: false },
+                { text: 'Actions', value: 'action', align: 'right', sortable: false },
             ],
             dialog: false,
             selected_attribute: null,
+            selected_ai_provider: null,
             edited_index: -1,
             edited_attribute: {
                 index: 0,
@@ -131,7 +132,9 @@
                 title: "",
                 description: "",
                 min_occurrence: 0,
-                max_occurrence: 1
+                max_occurrence: 1,
+                ai_provider_id: -1,
+                ai_prompt: "",
             },
             default_attribute: {
                 index: 0,
@@ -141,13 +144,23 @@
                 title: "",
                 description: "",
                 min_occurrence: 0,
-                max_occurrence: 1
+                max_occurrence: 1,
+                ai_provider_id: -1,
+                ai_prompt: "",
             },
         }),
         computed: {
             formTitle() {
                 return this.edited_index === -1 ? 'Add Attribute' : 'Edit Attribute'
-            }
+            },
+
+            showAI() {
+                return this.ai_providers.length > 0
+            },
+
+            aiProviderData() {
+                return [{ id: null, name: 'None' }, ...this.ai_providers];
+            },
         },
         watch: {
             dialog(val) {
@@ -166,12 +179,14 @@
             save() {
                 this.edited_attribute.attribute_id = this.selected_attribute.id;
                 this.edited_attribute.attribute_name = this.selected_attribute.name;
+                this.edited_attribute.ai_provider_id = this.selected_ai_provider.id;
                 if (this.edited_index > -1) {
                     Object.assign(this.attributes[this.edited_index], this.edited_attribute)
                 } else {
                     this.attributes.push(this.edited_attribute)
                 }
                 this.selected_attribute = null;
+                this.selected_ai_provider = null;
                 this.close()
             },
 
@@ -185,19 +200,26 @@
                         break;
                     }
                 }
+                this.selected_ai_provider = null;
+                for (const item of this.ai_providers) {
+                    if (item.id === this.edited_attribute.ai_provider_id) {
+                        this.selected_ai_provider = item;
+                        break;
+                    }
+                }
             },
 
             moveItemUp(item) {
                 const index = this.attributes.indexOf(item);
                 if (index > 0) {
-                    this.attributes.splice(index-1, 0, this.attributes.splice(index, 1)[0]);
+                    this.attributes.splice(index - 1, 0, this.attributes.splice(index, 1)[0]);
                 }
             },
 
             moveItemDown(item) {
                 const index = this.attributes.indexOf(item);
-                if (index < this.attributes.length-1) {
-                    this.attributes.splice(index+1, 0, this.attributes.splice(index, 1)[0]);
+                if (index < this.attributes.length - 1) {
+                    this.attributes.splice(index + 1, 0, this.attributes.splice(index, 1)[0]);
                 }
             },
 

@@ -35,16 +35,14 @@
                                           v-validate="'required'"
                                           data-vv-name="name"
                                           :error-messages="errors.collect('name')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                          :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
                             <v-textarea :disabled="!canUpdate"
                                         :label="$t('report_type.description')"
                                         name="description"
                                         v-model="report_type.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                            />
+                                        :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                     </v-row>
 
@@ -63,20 +61,14 @@
                                     <v-spacer></v-spacer>
                                     <v-toolbar-items v-if="canUpdate">
 
-                                        <v-icon
-                                            @click="moveAttributeGroupUp(index)"
-                                        >
+                                        <v-icon @click="moveAttributeGroupUp(index)">
                                             mdi-arrow-up-bold
                                         </v-icon>
-                                        <v-icon
-                                            @click="moveAttributeGroupDown(index)"
-                                        >
+                                        <v-icon @click="moveAttributeGroupDown(index)">
                                             mdi-arrow-down-bold
                                         </v-icon>
 
-                                        <v-icon
-                                            @click="deleteAttributeGroup(index)"
-                                        >
+                                        <v-icon @click="deleteAttributeGroup(index)">
                                             delete
                                         </v-icon>
                                     </v-toolbar-items>
@@ -88,24 +80,22 @@
                                                   name="name"
                                                   type="text"
                                                   v-model="group.title"
-                                                  :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-text-field>
+                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                     <v-textarea :disabled="!canUpdate"
                                                 :label="$t('report_type.description')"
                                                 name="description"
                                                 v-model="group.description"
-                                                :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-textarea>
+                                                :spellcheck="$store.state.settings.spellcheck"></v-textarea>
                                     <v-text-field :disabled="!canUpdate"
                                                   :label="$t('report_type.section_title')"
                                                   name="section_title"
                                                   v-model="group.section_title"
-                                                  :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-text-field>
+                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
 
                                     <AttributeTable :disabled="!canUpdate"
                                                     :attributes="report_type.attribute_groups[index].attribute_group_items"
-                                                    :attribute_templates="attribute_templates"></AttributeTable>
+                                                    :attribute_templates="attribute_templates"
+                                                    :ai_providers="ai_providers"></AttributeTable>
 
                                 </v-card-text>
                             </v-card>
@@ -129,8 +119,8 @@
 </template>
 
 <script>
-    import {createNewReportItemType} from "@/api/config";
-    import {updateReportItemType} from "@/api/config";
+    import { createNewReportItemType } from "@/api/config";
+    import { updateReportItemType } from "@/api/config";
     import AttributeTable from "@/components/config/report_types/AttributeTable";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
@@ -146,6 +136,7 @@
             show_validation_error: false,
             show_error: false,
             attribute_templates: [],
+            ai_providers: [],
             report_type: {
                 id: -1,
                 title: "",
@@ -186,9 +177,9 @@
                     attribute_group_items: []
                 });
 
-                setTimeout( () => {
+                setTimeout(() => {
                     document.scrollingElement.querySelector(".attribute-type").scrollTo(0, 5000);
-                },200);
+                }, 200);
 
             },
 
@@ -270,10 +261,12 @@
             }
         },
         mounted() {
-            this.$store.dispatch('getAllAttributes', {search: ''})
-                .then(() => {
-                    this.attribute_templates = this.$store.getters.getAttributes.items
-                });
+            this.$store.dispatch('getAllAttributes', { search: '' }).then(() => {
+                this.attribute_templates = this.$store.getters.getAttributes.items
+            });
+            this.$store.dispatch('getAllAiProviders', { search: '' }).then(() => {
+                this.ai_providers = this.$store.getters.getAiProviders.items
+            });
 
             this.$root.$on('show-edit', (data) => {
 
@@ -287,26 +280,31 @@
 
                 this.report_type.attribute_groups = []
                 for (let i = 0; i < data.attribute_groups.length; i++) {
+                    let grp = data.attribute_groups[i];
                     let group = {
-                        index: data.attribute_groups[i].index,
-                        id: data.attribute_groups[i].id,
-                        title: data.attribute_groups[i].title,
-                        description: data.attribute_groups[i].description,
-                        section: data.attribute_groups[i].section,
-                        section_title: data.attribute_groups[i].section_title,
+                        index: grp.index,
+                        id: grp.id,
+                        title: grp.title,
+                        description: grp.description,
+                        section: grp.section,
+                        section_title: grp.section_title,
                         attribute_group_items: []
                     }
 
-                    for (let j = 0; j < data.attribute_groups[i].attribute_group_items.length; j++) {
+                    for (let j = 0; j < grp.attribute_group_items.length; j++) {
+                        let itm = grp.attribute_group_items[j];
+                        let ai_provider_id = itm.ai_provider ? itm.ai_provider.id : null;
                         group.attribute_group_items.push({
-                            index: data.attribute_groups[i].attribute_group_items[j].description,
-                            id: data.attribute_groups[i].attribute_group_items[j].id,
-                            attribute_id: data.attribute_groups[i].attribute_group_items[j].attribute.id,
-                            attribute_name: data.attribute_groups[i].attribute_group_items[j].attribute.name,
-                            title: data.attribute_groups[i].attribute_group_items[j].title,
-                            description: data.attribute_groups[i].attribute_group_items[j].description,
-                            min_occurrence: data.attribute_groups[i].attribute_group_items[j].min_occurrence,
-                            max_occurrence: data.attribute_groups[i].attribute_group_items[j].max_occurrence
+                            index: itm.description,
+                            id: itm.id,
+                            attribute_id: itm.attribute.id,
+                            attribute_name: itm.attribute.name,
+                            title: itm.title,
+                            description: itm.description,
+                            min_occurrence: itm.min_occurrence,
+                            max_occurrence: itm.max_occurrence,
+                            ai_provider_id: ai_provider_id,
+                            ai_prompt: itm.ai_prompt
                         })
                     }
 
