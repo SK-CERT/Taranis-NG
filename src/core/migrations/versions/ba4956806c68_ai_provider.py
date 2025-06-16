@@ -32,6 +32,7 @@ def upgrade():
             "ai_provider",
             sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
             sa.Column("name", sa.VARCHAR(), nullable=False),
+            sa.Column("api_type", sa.VARCHAR(), nullable=False, server_default="openai"),
             sa.Column("api_url", sa.VARCHAR(), nullable=False),
             sa.Column("api_key", sa.VARCHAR()),
             sa.Column("model", sa.VARCHAR()),
@@ -58,7 +59,7 @@ def downgrade():
     # session = orm.Session(bind=bind)
 
     print("deleting table 'ai_provider'...", flush=True)
-    op.drop_table("ai_provider")
     op.drop_constraint("attribute_group_ai_provider_id_fkey", "attribute_group_item", type_="foreignkey")
     op.drop_column("attribute_group_item", "ai_provider_id")
     op.drop_column("attribute_group_item", "ai_prompt")
+    op.drop_table("ai_provider")

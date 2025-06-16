@@ -28,6 +28,7 @@ class AiProvider(db.Model):
     Attributes:
         id (int): AI Provider ID.
         name (str): AI Provider name.
+        api_type (str): AI Provider type - currently only "openai" is supported; it works with OpenAI and Ollama.
         api_url (str): AI Provider API url.
         api_key (str): AI Provider API key.
         model (str): AI Provider model.
@@ -37,16 +38,18 @@ class AiProvider(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
+    api_type = db.Column(db.String(), nullable=False, default="openai", server_default="openai")
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String())
     model = db.Column(db.String())
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
-    def __init__(self, name, api_url, api_key, model, updated_by):
+    def __init__(self, name, api_type, api_url, api_key, model, updated_by):
         """Create a new AI Provider."""
         # self.id = None
         self.name = name
+        self.api_type = api_type
         self.api_url = api_url
         self.api_key = api_key
         self.model = model
@@ -135,6 +138,7 @@ class AiProvider(db.Model):
         new = schema.load(data)
         old = db.session.get(cls, id)
         old.name = new.name
+        old.api_type = new.api_type
         old.api_url = new.api_url
         old.api_key = new.api_key
         old.model = new.model

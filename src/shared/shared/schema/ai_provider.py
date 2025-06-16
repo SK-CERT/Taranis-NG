@@ -13,6 +13,7 @@ class AiProviderSchema(Schema):
 
     id = fields.Int()
     name = fields.Str()
+    api_type = fields.Str()
     api_url = fields.Str()
     api_key = fields.Str()
     model = fields.Str()
@@ -38,6 +39,7 @@ class AiProvider:
     def __init__(
         self,
         name,
+        api_type,
         api_url,
         api_key,
         model,
@@ -47,12 +49,14 @@ class AiProvider:
 
         Args:
             name (str): Name of the AI provider.
+            api_type (str): API type (e.g. "openai").
             api_url (str): API URL of the provider.
             api_key (str): API key for authentication.
             model (str): Model name or identifier.
             updated_by (str): User who last updated the provider.
         """
         self.name = name
+        self.api_type = api_type
         self.api_url = api_url
         self.api_key = api_key
         self.model = model

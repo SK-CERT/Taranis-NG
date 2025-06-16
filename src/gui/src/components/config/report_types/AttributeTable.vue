@@ -50,14 +50,16 @@
                                 </v-col>
                             </v-row>
 
-                            <v-combobox v-if="showAI"
+                            <v-select v-if="showAI"
                                         :label="$t('attribute.ai_provider')"
                                         name="ai_provider"
-                                        v-model="selected_ai_provider"
+                                        v-model="edited_attribute.ai_provider_id"
                                         :items="aiProviderData"
-                                        item-text="name"></v-combobox>
+                                        item-text="name"
+                                        item-value="id"
+                                        :return-object="false"></v-select>
 
-                            <v-textarea v-if="showAI"
+                            <v-textarea v-if="!!edited_attribute.ai_provider_id"
                                         :label="$t('attribute.ai_prompt')"
                                         name="ai_prompt"
                                         v-model="edited_attribute.ai_prompt"
@@ -122,7 +124,6 @@
             ],
             dialog: false,
             selected_attribute: null,
-            selected_ai_provider: null,
             edited_index: -1,
             edited_attribute: {
                 index: 0,
@@ -133,7 +134,7 @@
                 description: "",
                 min_occurrence: 0,
                 max_occurrence: 1,
-                ai_provider_id: -1,
+                ai_provider_id: null,
                 ai_prompt: "",
             },
             default_attribute: {
@@ -145,7 +146,7 @@
                 description: "",
                 min_occurrence: 0,
                 max_occurrence: 1,
-                ai_provider_id: -1,
+                ai_provider_id: null,
                 ai_prompt: "",
             },
         }),
@@ -159,7 +160,7 @@
             },
 
             aiProviderData() {
-                return [{ id: null, name: 'None' }, ...this.ai_providers];
+                return [{ id: null, name: 'None' }, ...this.ai_providers.map(p => ({ id: p.id, name: p.name }))];
             },
         },
         watch: {
@@ -179,14 +180,12 @@
             save() {
                 this.edited_attribute.attribute_id = this.selected_attribute.id;
                 this.edited_attribute.attribute_name = this.selected_attribute.name;
-                this.edited_attribute.ai_provider_id = this.selected_ai_provider.id;
                 if (this.edited_index > -1) {
                     Object.assign(this.attributes[this.edited_index], this.edited_attribute)
                 } else {
                     this.attributes.push(this.edited_attribute)
                 }
                 this.selected_attribute = null;
-                this.selected_ai_provider = null;
                 this.close()
             },
 
@@ -197,13 +196,6 @@
                 for (const attribute_template of this.attribute_templates) {
                     if (attribute_template.id === this.edited_attribute.attribute_id) {
                         this.selected_attribute = attribute_template;
-                        break;
-                    }
-                }
-                this.selected_ai_provider = null;
-                for (const item of this.ai_providers) {
-                    if (item.id === this.edited_attribute.ai_provider_id) {
-                        this.selected_ai_provider = item;
                         break;
                     }
                 }
