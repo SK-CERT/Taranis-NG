@@ -191,7 +191,7 @@
                                                                     <v-btn v-if="!!attribute_item.attribute_group_item.ai_provider_id"
                                                                            text
                                                                            small
-                                                                           @click="auto_generate"
+                                                                           @click="auto_generate(attribute_item.attribute_group_item.id)"
                                                                            :title="$t('report_item.tooltip.auto_generate')">
                                                                         <v-icon>mdi-creation</v-icon>
                                                                     </v-btn>
@@ -246,14 +246,7 @@
 <script>
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
-    import { createNewReportItem } from "@/api/analyze";
-    import { updateReportItem } from "@/api/analyze";
-    import { lockReportItem } from "@/api/analyze";
-    import { unlockReportItem } from "@/api/analyze";
-    import { holdLockReportItem } from "@/api/analyze";
-    import { getReportItem } from "@/api/analyze";
-    import { getReportItemData } from "@/api/analyze";
-    import { getReportItemLocks } from "@/api/analyze";
+    import { createNewReportItem, updateReportItem, lockReportItem, unlockReportItem, holdLockReportItem, getReportItem, getReportItemData, getReportItemLocks, aiGenerate } from "@/api/analyze";
     import AttributeContainer from "@/components/common/attribute/AttributeContainer";
     import NewsItemSelector from "@/components/analyze/NewsItemSelector";
     import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
@@ -841,13 +834,8 @@
                 this.$root.$emit('reset-csv-dialog');
             },
 
-            auto_generate() {
-                this.$root.$emit('notification',
-                    {
-                        type: 'success',
-                        loc: 'here comes AI'
-                    }
-                );
+            auto_generate(attribute_group_item_id) {
+                aiGenerate(this.report_item.id, attribute_group_item_id).then(() => { })
             }
         },
         mixins: [AuthMixin],

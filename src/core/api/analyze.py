@@ -11,6 +11,15 @@ from managers.auth_manager import auth_required, ACLCheck
 from model import attribute, report_item, report_item_type
 from model.permission import Permission
 
+# from langchain_community.document_loaders.pdf import PyPDFLoader
+# from langchain_core.prompts import PromptTemplate
+from langchain_core.documents import Document
+from langchain_openai import ChatOpenAI
+
+# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+# from langchain.callbacks.manager import CallbackManager
+from langchain.chains.combine_documents import create_stuff_documents_chain
+
 
 class ReportItemTypes(Resource):
     """Report item types API endpoint."""
@@ -367,6 +376,75 @@ class ReportItemDownloadAttachment(Resource):
             log_manager.store_auth_error_activity("Missing JWT")
 
 
+class ReportItemLlmGenerate(Resource):
+    """Report item types API endpoint."""
+
+    @auth_required(["ANALYZE_CREATE", "ANALYZE_UPDATE"], ACLCheck.REPORT_ITEM_MODIFY)
+    def post(self, report_item_id, attribute_id):
+        """Generate an AI overview."""
+        try:
+            attr = report_item_type.AttributeGroupItem.find(attribute_id)
+            ai_prompt = attr.ai_prompt
+            ai_provider = attr.ai_provider
+            if not ai_provider or not ai_prompt:
+                return {"message": f"Unknown AI provider or empty AI prompt! (Attribute ID: {attribute_id})"}
+
+            news_items_to_process = []
+            for aggregate in report_item.ReportItem.news_item_aggregates:
+                for news_item in aggregate.items:
+                    page_content = f"# {news_item.news_item_data.title}\n"
+                    page_content += f"Source: {news_item.news_item_data.source}\n"
+                    page_content += f"Link: {news_item.news_item_data.link}\n\n"
+                    page_content += news_item.news_item_data.content
+                    news_items_to_process.append(
+                        Document(
+                            page_content,
+                            metadata={
+                                "title": news_item.news_item_data.title,
+                                "summary": news_item.news_item_data.review,
+                                "source": news_item.news_item_data.source,
+                                "link": news_item.news_item_data.link,
+                                "author": news_item.news_item_data.author,
+                                "language": news_item.news_item_data.language,
+                                "collected": news_item.news_item_data.collected,
+                                "published": news_item.news_item_data.published,
+                                "updated": news_item.news_item_data.update,
+                            },
+                        )
+                    )
+            if not news_items_to_process:
+                msg = "LLM generate: No news items to process"
+                logger.warning(msg)
+                return {"message": msg}, 400
+
+            if ai_provider.api_type != "openai":
+                msg = f"LLM generate: unsupported AI provider '{ai_provider.api_type}'"
+                logger.warning(msg)
+                return {"message": msg}, 400
+
+            llm = ChatOpenAI(model_name=ai_provider.model, api_key=ai_provider.api_key, base_url=ai_provider.api_url)
+            master_prompt_template = """Use the following document to answer the question.
+
+Document:
+{context}
+
+Question:
+{question}
+
+Answer: """
+
+            llm_chain = create_stuff_documents_chain(llm, master_prompt_template, document_variable_name="context")
+            result = llm_chain.invoke({"context": news_items_to_process, "question": ai_prompt})
+            print(result.__dict__)
+            return {"message": result}
+            # return report_item.ReportItem.get_detail_json(report_item_id)
+
+        except Exception as ex:
+            msg = "LLM generate failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
+
+
 def initialize(api):
     """Initialize API endpoints.
 
@@ -388,6 +466,7 @@ def initialize(api):
     api.add_resource(
         ReportItemDownloadAttachment, "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes/<int:attribute_id>/file"
     )
+    api.add_resource(ReportItemLlmGenerate, "/api/v1/analyze/report-items/<int:report_item_id>/llm-generate/<int:attribute_id>")
 
     Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
     Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")

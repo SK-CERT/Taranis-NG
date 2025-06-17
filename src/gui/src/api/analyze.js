@@ -104,3 +104,7 @@ export function getAttributeEnums(filter) {
 export function removeAttachment(data) {
     return ApiService.delete(`/analyze/report-items/` + data.report_item_id + '/file-attributes/' + data.attribute_id)
 }
+
+export function aiGenerate(report_item_id, attribute_id) {
+    return ApiService.post('/analyze/report-items/' + report_item_id + '/llm-generate/' + attribute_id)
+}
