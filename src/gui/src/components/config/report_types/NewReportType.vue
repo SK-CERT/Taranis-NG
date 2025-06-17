@@ -293,7 +293,6 @@
 
                     for (let j = 0; j < grp.attribute_group_items.length; j++) {
                         let itm = grp.attribute_group_items[j];
-                        let ai_provider_id = itm.ai_provider ? itm.ai_provider.id : null;
                         group.attribute_group_items.push({
                             index: itm.description,
                             id: itm.id,
@@ -303,7 +302,7 @@
                             description: itm.description,
                             min_occurrence: itm.min_occurrence,
                             max_occurrence: itm.max_occurrence,
-                            ai_provider_id: ai_provider_id,
+                            ai_provider_id: itm.ai_provider_id,
                             ai_prompt: itm.ai_prompt
                         })
                     }

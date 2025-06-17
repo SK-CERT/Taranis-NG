@@ -26,7 +26,6 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
     """
 
     attribute_id = fields.Integer()
-    ai_provider_id = fields.Integer(allow_none=True)
 
     @post_load
     def make_attribute_group_item(self, data, **kwargs):

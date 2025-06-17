@@ -4,7 +4,6 @@ from marshmallow import Schema, fields, post_load, EXCLUDE
 
 from shared.schema.presentation import PresentationSchema
 from shared.schema.attribute import AttributeSchema
-from shared.schema.ai_provider import AiProviderSchema
 
 
 class AttributeGroupItemSchema(Schema):
@@ -22,7 +21,7 @@ class AttributeGroupItemSchema(Schema):
     min_occurrence = fields.Int()
     max_occurrence = fields.Int()
     attribute = fields.Nested(AttributeSchema)
-    ai_provider = fields.Nested(AiProviderSchema)
+    ai_provider_id = fields.Int(allow_none=True)
     ai_prompt = fields.Str(allow_none=True)
 
     @post_load
@@ -41,7 +40,7 @@ class AttributeGroupItemSchema(Schema):
 class AttributeGroupItem:
     """Data model representing an item in an attribute group."""
 
-    def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute, ai_provider, ai_prompt):
+    def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute, ai_provider_id, ai_prompt):
         """
         Initialize an AttributeGroupItem instance.
 
@@ -53,7 +52,7 @@ class AttributeGroupItem:
             min_occurrence (int): Minimum allowed occurrences.
             max_occurrence (int): Maximum allowed occurrences.
             attribute: Associated attribute object.
-            ai_provider: Associated AI provider object.
+            ai_provider_id (int): Associated AI provider ID.
             ai_prompt (str): Optional AI prompt.
         """
         self.id = id
@@ -63,7 +62,7 @@ class AttributeGroupItem:
         self.min_occurrence = min_occurrence
         self.max_occurrence = max_occurrence
         self.attribute = attribute
-        self.ai_provider = ai_provider
+        self.ai_provider_id = ai_provider_id
         self.ai_prompt = ai_prompt
 
 
