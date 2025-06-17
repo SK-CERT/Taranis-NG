@@ -1,7 +1,7 @@
 <template>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate"
-                @click="addReportItem">
+               @click="addReportItem">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
             <span>{{ $t('analyze.add_new') }}</span>
         </v-btn>
@@ -72,14 +72,12 @@
                     </v-dialog>
                     <v-switch style="padding-top:25px"
                               v-model="verticalView"
-                              label="Side-by-side view"
-                    ></v-switch>
+                              label="Side-by-side view"></v-switch>
                     <v-switch :disabled="!canModify"
                               style="padding-top:25px"
                               v-model="report_item.completed"
                               label="Completed"
-                              @change="onEdit('completed')"
-                    ></v-switch>
+                              @change="onEdit('completed')"></v-switch>
                     <v-btn v-if="!edit" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
                         <span>{{ $t('report_item.save') }}</span>
@@ -103,8 +101,7 @@
                                                 item-text="title"
                                                 :label="$t('report_item.report_type')"
                                                 name="report_type"
-                                                v-validate="'required'"
-                                    />
+                                                v-validate="'required'" />
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
                                     <v-text-field @focus="onFocus('title_prefix')"
@@ -115,8 +112,7 @@
                                                   :label="$t('report_item.title_prefix')"
                                                   name="title_prefix"
                                                   v-model="report_item.title_prefix"
-                                                  :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-text-field>
+                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
                                     <v-text-field @focus="onFocus('title')"
@@ -131,8 +127,7 @@
                                                   v-validate="'required'"
                                                   data-vv-name="title"
                                                   :error-messages="errors.collect('title')"
-                                                  :spellcheck="$store.state.settings.spellcheck"
-                                    ></v-text-field>
+                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                             </v-row>
                             <v-row no-gutters class="pb-4">
@@ -169,8 +164,7 @@
                                                         v-for="(attribute_group, i) in attribute_groups"
                                                         :key="attribute_group.id"
                                                         v-model="expandPanelGroups"
-                                                        multiple
-                                    >
+                                                        multiple>
                                         <v-expansion-panel>
                                             <v-expansion-panel-header color="primary--text" class="body-1 text-uppercase pa-3">
                                                 {{ attribute_group.title }}
@@ -180,8 +174,7 @@
                                                 <v-expansion-panels multiple focusable class="items" v-model="expand_group_items[i].values">
                                                     <v-expansion-panel v-for="attribute_item in attribute_group.attribute_group_items"
                                                                        :key="attribute_item.id"
-                                                                       class="item-panel"
-                                                    >
+                                                                       class="item-panel">
                                                         <v-expansion-panel-header class="pa-2 font-weight-bold primary--text rounded-0">
                                                             <v-row>
                                                                 <!--<v-icon small left>mdi-account</v-icon>-->
@@ -189,10 +182,21 @@
                                                             </v-row>
                                                         </v-expansion-panel-header>
                                                         <v-expansion-panel-content class="pt-0">
-                                                            <AttributeContainer
-                                                                :attribute_item="attribute_item" :edit="edit" :modify="modify"
-                                                                :report_item_id="report_item.id" :read_only="read_only"
-                                                            />
+                                                            <v-row align="center">
+                                                                <v-col>
+                                                                    <AttributeContainer :attribute_item="attribute_item" :edit="edit" :modify="modify"
+                                                                                        :report_item_id="report_item.id" :read_only="read_only" />
+                                                                </v-col>
+                                                                <v-col class="d-flex justify-end" cols="auto">
+                                                                    <v-btn v-if="!!attribute_item.attribute_group_item.ai_provider_id"
+                                                                           text
+                                                                           small
+                                                                           @click="auto_generate"
+                                                                           :title="$t('report_item.tooltip.auto_generate')">
+                                                                        <v-icon>mdi-creation</v-icon>
+                                                                    </v-btn>
+                                                                </v-col>
+                                                            </v-row>
                                                         </v-expansion-panel-content>
                                                     </v-expansion-panel>
                                                 </v-expansion-panels>
@@ -215,7 +219,7 @@
                         </v-form>
                     </v-col>
                     <v-col v-if="verticalView" :cols="verticalView ? 6 : 0"
-                        style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
+                           style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
                         <NewsItemSelector ref="new_item_selector" analyze_selector attach=".taranis-ng-vertical-view"
                                           :values="news_item_aggregates" :modify="modify" :collections="collections"
                                           :report_item_id="this.report_item.id" :edit="edit" />
@@ -240,643 +244,658 @@
 </style>
 
 <script>
-import AuthMixin from "@/services/auth/auth_mixin";
-import Permissions from "@/services/auth/permissions";
-import {createNewReportItem} from "@/api/analyze";
-import {updateReportItem} from "@/api/analyze";
-import {lockReportItem} from "@/api/analyze";
-import {unlockReportItem} from "@/api/analyze";
-import {holdLockReportItem} from "@/api/analyze";
-import {getReportItem} from "@/api/analyze";
-import {getReportItemData} from "@/api/analyze";
-import {getReportItemLocks} from "@/api/analyze";
-import AttributeContainer from "@/components/common/attribute/AttributeContainer";
-import NewsItemSelector from "@/components/analyze/NewsItemSelector";
-import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import Permissions from "@/services/auth/permissions";
+    import { createNewReportItem } from "@/api/analyze";
+    import { updateReportItem } from "@/api/analyze";
+    import { lockReportItem } from "@/api/analyze";
+    import { unlockReportItem } from "@/api/analyze";
+    import { holdLockReportItem } from "@/api/analyze";
+    import { getReportItem } from "@/api/analyze";
+    import { getReportItemData } from "@/api/analyze";
+    import { getReportItemLocks } from "@/api/analyze";
+    import AttributeContainer from "@/components/common/attribute/AttributeContainer";
+    import NewsItemSelector from "@/components/analyze/NewsItemSelector";
+    import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
 
-import VueCsvImport from '@/components/common/ImportCSV'
+    import VueCsvImport from '@/components/common/ImportCSV'
 
-export default {
-    name: "NewReportItem",
-    props: {
-        add_button: Boolean,
-        analyze_selector: Boolean,
-        collections: Array,
-        csv_codes: Array,
-        read_only: Boolean,
-    },
-    components: {NewsItemSelector, AttributeContainer, RemoteReportItemSelector, VueCsvImport},
-    data: () => ({
-        csv: null,
-        csv_delete_exist_list: false,
-        csv_preview: true,
-        csv_data: null,
-        csv_struct: null,
-        headers: [
-            {text: 'Value', value: 'value', align: 'left', sortable: true},
-            {text: 'Actions', value: 'action', align: 'right', sortable: false},
-        ],
-        dialog_csv: false,
-        expand_panel_groups: [],
-        expand_group_items: [],
-        visible: false,
-        edit: false,
-        modify: true,
-        overlay: false,
-        local_reports: true,
-        key_timeout: null,
-        show_validation_error: false,
-        show_error: false,
-        report_types: [],
-        selected_type: null,
-        attribute_groups: [],
-        news_item_aggregates: [],
-        remote_report_items: [],
-        field_locks: {
-            title_prefix: false,
-            title: false
+    export default {
+        name: "NewReportItem",
+        props: {
+            add_button: Boolean,
+            analyze_selector: Boolean,
+            collections: Array,
+            csv_codes: Array,
+            read_only: Boolean,
         },
-        report_item: {
-            id: null,
-            uuid: null,
-            title: "",
-            title_prefix: "",
-            completed: false,
-            report_item_type_id: null,
+
+        components: { NewsItemSelector, AttributeContainer, RemoteReportItemSelector, VueCsvImport },
+
+        data: () => ({
+            csv: null,
+            csv_delete_exist_list: false,
+            csv_preview: true,
+            csv_data: null,
+            csv_struct: null,
+            headers: [
+                { text: 'Value', value: 'value', align: 'left', sortable: true },
+                { text: 'Actions', value: 'action', align: 'right', sortable: false },
+            ],
+            dialog_csv: false,
+            expand_panel_groups: [],
+            expand_group_items: [],
+            visible: false,
+            edit: false,
+            modify: true,
+            overlay: false,
+            local_reports: true,
+            key_timeout: null,
+            show_validation_error: false,
+            show_error: false,
+            report_types: [],
+            selected_type: null,
+            attribute_groups: [],
             news_item_aggregates: [],
             remote_report_items: [],
-            attributes: []
-        }
-    }),
-    watch: {
-        // Remove double scrollbars when a report item is open
-        // There is a very nasty bug: when you open this screen for a second time, two scrollbars are shown.
-        // In the past, there was an attempt to fix this, but previous code doesn't work (possibly unfinished?)
-        // The problem is that the main 'html' tag is missing the 'overflow-y-hidden' class/style on the second open
-        // 1. open: new inicialization works ok    2. open: something remove style when the same screen is visible again
-        // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
-        // It's good to find a better solution than this quick fix.
-        visible(val) {
-            if (val) {
-                document.documentElement.style.overflow = 'hidden'
-            }
-            else {
-                document.documentElement.style.overflow = 'auto'
-            }
-        },
-        $route() {
-            this.local_reports = !window.location.pathname.includes('/group/');
-        }
-    },
-    computed: {
-        verticalView: {
-            get() {
-                return this.$store.getters.getVerticalView;
+            field_locks: {
+                title_prefix: false,
+                title: false
             },
-            set(val) {
-                this.$store.commit("setVerticalView", val);
+            report_item: {
+                id: null,
+                uuid: null,
+                title: "",
+                title_prefix: "",
+                completed: false,
+                report_item_type_id: null,
+                news_item_aggregates: [],
+                remote_report_items: [],
+                attributes: []
+            }
+        }),
+
+        watch: {
+            // Remove double scrollbars when a report item is open
+            // There is a very nasty bug: when you open this screen for a second time, two scrollbars are shown.
+            // In the past, there was an attempt to fix this, but previous code doesn't work (possibly unfinished?)
+            // The problem is that the main 'html' tag is missing the 'overflow-y-hidden' class/style on the second open
+            // 1. open: new inicialization works ok    2. open: something remove style when the same screen is visible again
+            // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
+            // It's good to find a better solution than this quick fix.
+            visible(val) {
+                if (val) {
+                    document.documentElement.style.overflow = 'hidden'
+                }
+                else {
+                    document.documentElement.style.overflow = 'auto'
+                }
+            },
+            $route() {
+                this.local_reports = !window.location.pathname.includes('/group/');
             }
         },
 
-        canCreate() {
-            return this.checkPermission(Permissions.ANALYZE_CREATE) && this.local_reports === true
+        computed: {
+            verticalView: {
+                get() {
+                    return this.$store.getters.getVerticalView;
+                },
+                set(val) {
+                    this.$store.commit("setVerticalView", val);
+                }
+            },
+
+            canCreate() {
+                return this.checkPermission(Permissions.ANALYZE_CREATE) && this.local_reports === true
+            },
+
+            canModify() {
+                return this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true)
+            },
+            expandPanelGroups() {
+                return this.expand_groups();
+            }
         },
 
-        canModify() {
-            return this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true)
-        },
-        expandPanelGroups() {
-            return this.expand_groups();
-        }
-    },
-    methods: {
-        addReportItem() {
-            this.visible = true;
-            this.modify = true;
-            this.edit = false
-            this.overlay = false
-            this.show_error = false;
-            this.field_locks.title = false;
-            this.field_locks.title_prefix = false;
-            this.attachmets_attributes_count = 0;
-            this.selected_type = null;
-            this.attribute_groups = [];
-            this.news_item_aggregates = [];
-            this.remote_report_items = []
-            this.report_item.id = null;
-            this.report_item.uuid = null;
-            this.report_item.title = "";
-            this.report_item.title_prefix = "";
-            this.report_item.completed = false;
-            this.resetValidation();
-        },
+        methods: {
+            addReportItem() {
+                this.visible = true;
+                this.modify = true;
+                this.edit = false
+                this.overlay = false
+                this.show_error = false;
+                this.field_locks.title = false;
+                this.field_locks.title_prefix = false;
+                this.attachmets_attributes_count = 0;
+                this.selected_type = null;
+                this.attribute_groups = [];
+                this.news_item_aggregates = [];
+                this.remote_report_items = []
+                this.report_item.id = null;
+                this.report_item.uuid = null;
+                this.report_item.title = "";
+                this.report_item.title_prefix = "";
+                this.report_item.completed = false;
+                this.resetValidation();
+            },
 
-        reportSelected() {
+            reportSelected() {
 
-            this.attribute_groups = [];
-            this.expand_group_items = [];
+                this.attribute_groups = [];
+                this.expand_group_items = [];
 
-            for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
-                let group = {
-                    id: this.selected_type.attribute_groups[i].id,
-                    title: this.selected_type.attribute_groups[i].title,
-                    attribute_group_items: []
-                };
+                for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
+                    let group = {
+                        id: this.selected_type.attribute_groups[i].id,
+                        title: this.selected_type.attribute_groups[i].title,
+                        attribute_group_items: []
+                    };
 
-                for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
-                    group.attribute_group_items.push({
-                        attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
-                        values: []
-                    })
+                    for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
+                        group.attribute_group_items.push({
+                            attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
+                            values: []
+                        })
+                    }
+
+                    this.attribute_groups.push(group)
+                    this.expand_group_items.push({ values: Array.from(Array(group.attribute_group_items.length).keys()) });
                 }
 
-                this.attribute_groups.push(group)
-                this.expand_group_items.push({values: Array.from(Array(group.attribute_group_items.length).keys())});
-            }
+                this.csv_struct = this.findAttributeType();
+            },
 
-            this.csv_struct = this.findAttributeType();
-        },
+            cancel() {
+                setTimeout(() => {
+                    //this.$root.$emit('mouse-click-close');
+                    this.$root.$emit('change-state', 'DEFAULT');
+                    this.resetValidation();
+                    this.visible = false;
+                    this.$root.$emit('first-dialog', '');
+                }, 150);
 
-        cancel() {
-            setTimeout(() => {
-                //this.$root.$emit('mouse-click-close');
-                this.$root.$emit('change-state', 'DEFAULT');
-                this.resetValidation();
-                this.visible = false;
-                this.$root.$emit('first-dialog', '');
-            }, 150);
+            },
 
-        },
+            add() {
+                this.$validator.validateAll().then(() => {
 
-        add() {
-            this.$validator.validateAll().then(() => {
+                    if (!this.$validator.errors.any()) {
 
-                if (!this.$validator.errors.any()) {
+                        this.overlay = true
 
-                    this.overlay = true
+                        this.show_validation_error = false;
+                        this.show_error = false;
 
-                    this.show_validation_error = false;
-                    this.show_error = false;
+                        this.report_item.report_item_type_id = this.selected_type.id;
 
-                    this.report_item.report_item_type_id = this.selected_type.id;
-
-                    this.report_item.news_item_aggregates = [];
-                    for (let i = 0; i < this.news_item_aggregates.length; i++) {
-                        this.report_item.news_item_aggregates.push(
+                        this.report_item.news_item_aggregates = [];
+                        for (let i = 0; i < this.news_item_aggregates.length; i++) {
+                            this.report_item.news_item_aggregates.push(
                                 {
                                     id: this.news_item_aggregates[i].id
                                 }
-                        )
-                    }
+                            )
+                        }
 
-                    this.report_item.remote_report_items = [];
-                    for (let i = 0; i < this.remote_report_items.length; i++) {
-                        this.report_item.remote_report_items.push(
+                        this.report_item.remote_report_items = [];
+                        for (let i = 0; i < this.remote_report_items.length; i++) {
+                            this.report_item.remote_report_items.push(
                                 {
                                     id: this.remote_report_items[i].id
                                 }
-                        )
-                    }
+                            )
+                        }
 
-                    this.report_item.attributes = [];
-                    for (let i = 0; i < this.attribute_groups.length; i++) {
+                        this.report_item.attributes = [];
+                        for (let i = 0; i < this.attribute_groups.length; i++) {
 
-                        for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                            for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
 
-                            for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+                                for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
 
-                                let value = this.attribute_groups[i].attribute_group_items[j].values[k].value
-                                let value_description = this.attribute_groups[i].attribute_group_items[j].values[k].value_description
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'CPE') {
-                                    value = value.replace("*", "%")
-                                } else if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'BOOLEAN') {
-                                    if (value === true) {
-                                        value = "true"
-                                    } else {
-                                        value = "false"
+                                    let value = this.attribute_groups[i].attribute_group_items[j].values[k].value
+                                    let value_description = this.attribute_groups[i].attribute_group_items[j].values[k].value_description
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'CPE') {
+                                        value = value.replace("*", "%")
+                                    } else if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'BOOLEAN') {
+                                        if (value === true) {
+                                            value = "true"
+                                        } else {
+                                            value = "false"
+                                        }
+                                    }
+
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type !== 'ATTACHMENT') {
+                                        this.report_item.attributes.push({
+                                            id: -1,
+                                            value: value,
+                                            value_description: value_description,
+                                            attribute_group_item_id: this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id
+                                        })
                                     }
                                 }
-
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type !== 'ATTACHMENT') {
-                                    this.report_item.attributes.push({
-                                        id: -1,
-                                        value: value,
-                                        value_description: value_description,
-                                        attribute_group_item_id: this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id
-                                    })
-                                }
-                            }
-                        }
-                    }
-
-                    createNewReportItem(this.report_item).then((response) => {
-
-                        this.attachmets_attributes_count = 0
-                        for (let i = 0; i < this.attribute_groups.length; i++) {
-                            for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'ATTACHMENT') {
-                                    this.attachmets_attributes_count++
-                                }
                             }
                         }
 
-                        if (this.attachmets_attributes_count > 0) {
-                            this.$root.$emit('dropzone-new-process', {report_item_id: response.data});
-                        } else {
-                            this.$root.$emit('attachments-uploaded', {});
-                        }
+                        createNewReportItem(this.report_item).then((response) => {
 
-                    }).catch(() => {
-
-                        this.show_error = true;
-                        this.overlay = false
-                    })
-
-                } else {
-
-                    this.show_validation_error = true;
-                }
-            })
-        },
-
-        resetValidation() {
-            this.$validator.reset();
-            this.show_validation_error = false;
-        },
-
-        getLockedStyle(field_id) {
-            return this.field_locks[field_id] === true ? 'locked-style' : ''
-        },
-
-        onFocus(field_id) {
-            if (this.edit === true) {
-                lockReportItem(this.report_item.id, {'field_id': field_id}).then(() => {
-                })
-            }
-        },
-
-        onBlur(field_id) {
-            if (this.edit === true) {
-
-                this.onEdit(field_id)
-                unlockReportItem(this.report_item.id, {'field_id': field_id}).then(() => {
-                })
-            }
-        },
-
-        onKeyUp(field_id) {
-            if (this.edit === true) {
-
-                clearTimeout(this.key_timeout);
-                let self = this;
-                this.key_timeout = setTimeout(function () {
-                    holdLockReportItem(self.report_item.id, {'field_id': field_id}).then(() => {
-                    })
-                }, 1000);
-            }
-        },
-
-        onEdit(field_id) {
-            if (this.edit === true) {
-
-                let data = {}
-                data.update = true
-                if (field_id === 'title') {
-                    data.title = this.report_item.title
-                } else if (field_id === 'title_prefix') {
-                    data.title_prefix = this.report_item.title_prefix
-                } else if (field_id === 'completed') {
-                    data.completed = this.report_item.completed
-                }
-                updateReportItem(this.report_item.id, data).then(() => {})
-            }
-        },
-
-        report_item_locked(data) {
-            if (this.edit === true && this.report_item.id === data.report_item_id) {
-                if (data.user_id !== this.$store.getters.getUserId) {
-                    this.field_locks[data.field_id] = true
-                }
-            }
-        },
-
-        report_item_unlocked(data) {
-            if (this.edit === true && this.report_item.id === data.report_item_id) {
-                if (data.user_id !== this.$store.getters.getUserId) {
-                    this.field_locks[data.field_id] = false
-                }
-            }
-        },
-
-        report_item_updated(data_info) {
-            if (this.edit === true && this.report_item.id === data_info.report_item_id) {
-                if (data_info.user_id !== this.$store.getters.getUserId) {
-                    getReportItemData(this.report_item.id, data_info).then((response) => {
-                        let data = response.data
-                        if (data.title !== undefined) {
-                            this.report_item.title = data.title
-                        } else if (data.title_prefix !== undefined) {
-                            this.report_item.title_prefix = data.title_prefix
-                        } else if (data.completed !== undefined) {
-                            this.report_item.completed = data.completed
-                        }
-                        // if more users work on the same report -> update locked field with new value
-                        // there is duplicity code attributes_mixin.js: report_item_updated() but runs later (up 2 seconds) this place is much more faster
-                        if (data.update !== undefined) {
-                            endLoop: for (let i = 0; i < this.attribute_groups.length; i++) {
+                            this.attachmets_attributes_count = 0
+                            for (let i = 0; i < this.attribute_groups.length; i++) {
                                 for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                                    for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
-                                        if (this.attribute_groups[i].attribute_group_items[j].values[k].id == data.attribute_id) {
-                                            this.attribute_groups[i].attribute_group_items[j].values[k].value = data.attribute_value;
-                                            this.attribute_groups[i].attribute_group_items[j].values[k].value_description = data.attribute_value_description;
-                                            break endLoop;
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'ATTACHMENT') {
+                                        this.attachmets_attributes_count++
+                                    }
+                                }
+                            }
+
+                            if (this.attachmets_attributes_count > 0) {
+                                this.$root.$emit('dropzone-new-process', { report_item_id: response.data });
+                            } else {
+                                this.$root.$emit('attachments-uploaded', {});
+                            }
+
+                        }).catch(() => {
+
+                            this.show_error = true;
+                            this.overlay = false
+                        })
+
+                    } else {
+
+                        this.show_validation_error = true;
+                    }
+                })
+            },
+
+            resetValidation() {
+                this.$validator.reset();
+                this.show_validation_error = false;
+            },
+
+            getLockedStyle(field_id) {
+                return this.field_locks[field_id] === true ? 'locked-style' : ''
+            },
+
+            onFocus(field_id) {
+                if (this.edit === true) {
+                    lockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => {
+                    })
+                }
+            },
+
+            onBlur(field_id) {
+                if (this.edit === true) {
+
+                    this.onEdit(field_id)
+                    unlockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => {
+                    })
+                }
+            },
+
+            onKeyUp(field_id) {
+                if (this.edit === true) {
+
+                    clearTimeout(this.key_timeout);
+                    let self = this;
+                    this.key_timeout = setTimeout(function () {
+                        holdLockReportItem(self.report_item.id, { 'field_id': field_id }).then(() => {
+                        })
+                    }, 1000);
+                }
+            },
+
+            onEdit(field_id) {
+                if (this.edit === true) {
+
+                    let data = {}
+                    data.update = true
+                    if (field_id === 'title') {
+                        data.title = this.report_item.title
+                    } else if (field_id === 'title_prefix') {
+                        data.title_prefix = this.report_item.title_prefix
+                    } else if (field_id === 'completed') {
+                        data.completed = this.report_item.completed
+                    }
+                    updateReportItem(this.report_item.id, data).then(() => { })
+                }
+            },
+
+            report_item_locked(data) {
+                if (this.edit === true && this.report_item.id === data.report_item_id) {
+                    if (data.user_id !== this.$store.getters.getUserId) {
+                        this.field_locks[data.field_id] = true
+                    }
+                }
+            },
+
+            report_item_unlocked(data) {
+                if (this.edit === true && this.report_item.id === data.report_item_id) {
+                    if (data.user_id !== this.$store.getters.getUserId) {
+                        this.field_locks[data.field_id] = false
+                    }
+                }
+            },
+
+            report_item_updated(data_info) {
+                if (this.edit === true && this.report_item.id === data_info.report_item_id) {
+                    if (data_info.user_id !== this.$store.getters.getUserId) {
+                        getReportItemData(this.report_item.id, data_info).then((response) => {
+                            let data = response.data
+                            if (data.title !== undefined) {
+                                this.report_item.title = data.title
+                            } else if (data.title_prefix !== undefined) {
+                                this.report_item.title_prefix = data.title_prefix
+                            } else if (data.completed !== undefined) {
+                                this.report_item.completed = data.completed
+                            }
+                            // if more users work on the same report -> update locked field with new value
+                            // there is duplicity code attributes_mixin.js: report_item_updated() but runs later (up 2 seconds) this place is much more faster
+                            if (data.update !== undefined) {
+                                endLoop: for (let i = 0; i < this.attribute_groups.length; i++) {
+                                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                                        for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+                                            if (this.attribute_groups[i].attribute_group_items[j].values[k].id == data.attribute_id) {
+                                                this.attribute_groups[i].attribute_group_items[j].values[k].value = data.attribute_value;
+                                                this.attribute_groups[i].attribute_group_items[j].values[k].value_description = data.attribute_value_description;
+                                                break endLoop;
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                    })
-                }
-            }
-        },
-
-        showDetail(report_item) {
-            getReportItem(report_item.id).then((response) => {
-                let data = response.data;
-
-                this.edit = true;
-                this.overlay = false;
-                this.show_error = false;
-                this.modify = report_item.modify;
-
-                this.field_locks.title = false;
-                this.field_locks.title_prefix = false;
-
-                this.selected_type = null;
-                this.attribute_groups = [];
-                this.news_item_aggregates = data.news_item_aggregates;
-                this.remote_report_items = data.remote_report_items;
-
-                this.report_item.id = data.id;
-                this.report_item.uuid = data.uuid;
-                this.report_item.title = data.title;
-                this.report_item.title_prefix = data.title_prefix;
-                this.report_item.report_item_type_id = data.report_item_type_id;
-                this.report_item.completed = data.completed;
-
-                if (!this.report_types || !this.report_types.length) {
-                    return;
-                }
-
-                for (let i = 0; i < this.report_types.length; i++) {
-                    if (this.report_types[i].id === this.report_item.report_item_type_id) {
-                        this.selected_type = this.report_types[i];
-
-                        this.expand_panel_groups = Array.from(Array(this.selected_type.attribute_groups.length).keys());
-                        this.expand_group_items = [];
-
-                        for( let j=0; j<this.expand_panel_groups.length; j++) {
-                            this.expand_group_items.push({values: Array.from(Array(this.selected_type.attribute_groups[j].attribute_group_items.length).keys())});
-                        }
-                        break;
+                        })
                     }
                 }
-                this.visible = true;
+            },
 
-                getReportItemLocks(this.report_item.id).then((response) => {
-                    let locks_data = response.data
+            showDetail(report_item) {
+                getReportItem(report_item.id).then((response) => {
+                    let data = response.data;
 
-                    if (locks_data.title !== undefined && locks_data.title !== null) {
-                        this.field_locks['title'] = true
-                    } else if (locks_data.title_prefix !== undefined && locks_data.title_prefix !== null) {
-                        this.field_locks['title_prefix'] = true
+                    this.edit = true;
+                    this.overlay = false;
+                    this.show_error = false;
+                    this.modify = report_item.modify;
+
+                    this.field_locks.title = false;
+                    this.field_locks.title_prefix = false;
+
+                    this.selected_type = null;
+                    this.attribute_groups = [];
+                    this.news_item_aggregates = data.news_item_aggregates;
+                    this.remote_report_items = data.remote_report_items;
+
+                    this.report_item.id = data.id;
+                    this.report_item.uuid = data.uuid;
+                    this.report_item.title = data.title;
+                    this.report_item.title_prefix = data.title_prefix;
+                    this.report_item.report_item_type_id = data.report_item_type_id;
+                    this.report_item.completed = data.completed;
+
+                    if (!this.report_types || !this.report_types.length) {
+                        return;
                     }
 
-                    for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
-                        let group = {
-                            id: this.selected_type.attribute_groups[i].id,
-                            title: this.selected_type.attribute_groups[i].title,
-                            attribute_group_items: []
-                        };
+                    for (let i = 0; i < this.report_types.length; i++) {
+                        if (this.report_types[i].id === this.report_item.report_item_type_id) {
+                            this.selected_type = this.report_types[i];
 
-                        for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
+                            this.expand_panel_groups = Array.from(Array(this.selected_type.attribute_groups.length).keys());
+                            this.expand_group_items = [];
 
-                            let values = [];
-                            for (let k = 0; k < data.attributes.length; k++) {
-                                if (data.attributes[k].attribute_group_item_id === this.selected_type.attribute_groups[i].attribute_group_items[j].id) {
-
-                                    let value = data.attributes[k].value
-                                    let value_description = data.attributes[k].value_description
-                                    if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
-                                        value = value.replace("%", "*")
-                                    } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
-                                        value = value === "true";
-                                    }
-
-                                    let locked = false
-                                    if (locks_data["'" + data.attributes[k].id + "'"] !== undefined && locks_data["'" + data.attributes[k].id + "'"] !== null) {
-                                        locked = true
-                                    }
-
-                                    values.push({
-                                        id: data.attributes[k].id,
-                                        index: values.length,
-                                        value: value,
-                                        value_description: value_description,
-                                        binary_mime_type: data.attributes[k].binary_mime_type,
-                                        binary_size: data.attributes[k].binary_size,
-                                        binary_description: data.attributes[k].binary_description,
-                                        last_updated: data.attributes[k].last_updated,
-                                        user: data.attributes[k].user,
-                                        locked: locked,
-                                        remote: false
-                                    });
-                                }
+                            for (let j = 0; j < this.expand_panel_groups.length; j++) {
+                                this.expand_group_items.push({ values: Array.from(Array(this.selected_type.attribute_groups[j].attribute_group_items.length).keys()) });
                             }
+                            break;
+                        }
+                    }
+                    this.visible = true;
 
-                            for (let l = 0; l < data.remote_report_items.length; l++) {
-                                for (let k = 0; k < data.remote_report_items[l].attributes.length; k++) {
-                                    if (data.remote_report_items[l].attributes[k].attribute_group_item_title === this.selected_type.attribute_groups[i].attribute_group_items[j].title) {
+                    getReportItemLocks(this.report_item.id).then((response) => {
+                        let locks_data = response.data
 
-                                        let value = data.remote_report_items[l].attributes[k].value
-                                        let value_description = data.remote_report_items[l].attributes[k].value_description
+                        if (locks_data.title !== undefined && locks_data.title !== null) {
+                            this.field_locks['title'] = true
+                        } else if (locks_data.title_prefix !== undefined && locks_data.title_prefix !== null) {
+                            this.field_locks['title_prefix'] = true
+                        }
+
+                        for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
+                            let group = {
+                                id: this.selected_type.attribute_groups[i].id,
+                                title: this.selected_type.attribute_groups[i].title,
+                                attribute_group_items: []
+                            };
+
+                            for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
+
+                                let values = [];
+                                for (let k = 0; k < data.attributes.length; k++) {
+                                    if (data.attributes[k].attribute_group_item_id === this.selected_type.attribute_groups[i].attribute_group_items[j].id) {
+
+                                        let value = data.attributes[k].value
+                                        let value_description = data.attributes[k].value_description
                                         if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
                                             value = value.replace("%", "*")
                                         } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
                                             value = value === "true";
                                         }
 
+                                        let locked = false
+                                        if (locks_data["'" + data.attributes[k].id + "'"] !== undefined && locks_data["'" + data.attributes[k].id + "'"] !== null) {
+                                            locked = true
+                                        }
+
                                         values.push({
-                                            id: data.remote_report_items[l].attributes[k].id,
+                                            id: data.attributes[k].id,
                                             index: values.length,
                                             value: value,
                                             value_description: value_description,
-                                            last_updated: data.remote_report_items[l].attributes[k].last_updated,
-                                            binary_mime_type: data.remote_report_items[l].attributes[k].binary_mime_type,
-                                            binary_size: data.remote_report_items[l].attributes[k].binary_size,
-                                            binary_description: data.remote_report_items[l].attributes[k].binary_description,
-                                            user: {name: data.remote_report_items[l].remote_user},
-                                            locked: false,
-                                            remote: true
+                                            binary_mime_type: data.attributes[k].binary_mime_type,
+                                            binary_size: data.attributes[k].binary_size,
+                                            binary_description: data.attributes[k].binary_description,
+                                            last_updated: data.attributes[k].last_updated,
+                                            user: data.attributes[k].user,
+                                            locked: locked,
+                                            remote: false
                                         });
                                     }
                                 }
-                            }
 
-                            group.attribute_group_items.push({
-                                attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
-                                values: values
-                            })
-                        }
+                                for (let l = 0; l < data.remote_report_items.length; l++) {
+                                    for (let k = 0; k < data.remote_report_items[l].attributes.length; k++) {
+                                        if (data.remote_report_items[l].attributes[k].attribute_group_item_title === this.selected_type.attribute_groups[i].attribute_group_items[j].title) {
 
-                        this.attribute_groups.push(group)
-                    }
-                })
-            })
-        },
+                                            let value = data.remote_report_items[l].attributes[k].value
+                                            let value_description = data.remote_report_items[l].attributes[k].value_description
+                                            if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
+                                                value = value.replace("%", "*")
+                                            } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
+                                                value = value === "true";
+                                            }
 
-        updateRemoteAttributes() {
-            for (let i = 0; i < this.attribute_groups.length; i++) {
-                for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                    for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
-                        if (this.attribute_groups[i].attribute_group_items[j].values[k].remote === true) {
-                            this.attribute_groups[i].attribute_group_items[j].values.splice(k, 1)
-                            k--
-                        }
-                    }
-
-                    for (let l = 0; l < this.remote_report_items.length; l++) {
-                        for (let k = 0; k < this.remote_report_items[l].attributes.length; k++) {
-                            if (this.remote_report_items[l].attributes[k].attribute_group_item_title === this.attribute_groups[i].attribute_group_items[j].title) {
-
-                                let value = this.remote_report_items[l].attributes[k].value
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
-                                    value = value.replace("%", "*")
-                                } else if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
-                                    value = value === "true";
+                                            values.push({
+                                                id: data.remote_report_items[l].attributes[k].id,
+                                                index: values.length,
+                                                value: value,
+                                                value_description: value_description,
+                                                last_updated: data.remote_report_items[l].attributes[k].last_updated,
+                                                binary_mime_type: data.remote_report_items[l].attributes[k].binary_mime_type,
+                                                binary_size: data.remote_report_items[l].attributes[k].binary_size,
+                                                binary_description: data.remote_report_items[l].attributes[k].binary_description,
+                                                user: { name: data.remote_report_items[l].remote_user },
+                                                locked: false,
+                                                remote: true
+                                            });
+                                        }
+                                    }
                                 }
 
-                                this.attribute_groups[i].attribute_group_items[j].values.push({
-                                    id: this.remote_report_items[l].attributes[k].id,
-                                    index: this.attribute_groups[i].attribute_group_items[j].values.length,
-                                    value: value,
-                                    last_updated: this.remote_report_items[l].attributes[k].last_updated,
-                                    binary_mime_type: this.remote_report_items[l].attributes[k].binary_mime_type,
-                                    binary_size: this.remote_report_items[l].attributes[k].binary_size,
-                                    binary_description: this.remote_report_items[l].attributes[k].binary_description,
-                                    user: {name: this.remote_report_items[l].remote_user},
-                                    locked: false,
-                                    remote: true
-                                });
+                                group.attribute_group_items.push({
+                                    attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
+                                    values: values
+                                })
+                            }
+
+                            this.attribute_groups.push(group)
+                        }
+                    })
+                })
+            },
+
+            updateRemoteAttributes() {
+                for (let i = 0; i < this.attribute_groups.length; i++) {
+                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                        for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+                            if (this.attribute_groups[i].attribute_group_items[j].values[k].remote === true) {
+                                this.attribute_groups[i].attribute_group_items[j].values.splice(k, 1)
+                                k--
+                            }
+                        }
+
+                        for (let l = 0; l < this.remote_report_items.length; l++) {
+                            for (let k = 0; k < this.remote_report_items[l].attributes.length; k++) {
+                                if (this.remote_report_items[l].attributes[k].attribute_group_item_title === this.attribute_groups[i].attribute_group_items[j].title) {
+
+                                    let value = this.remote_report_items[l].attributes[k].value
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
+                                        value = value.replace("%", "*")
+                                    } else if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
+                                        value = value === "true";
+                                    }
+
+                                    this.attribute_groups[i].attribute_group_items[j].values.push({
+                                        id: this.remote_report_items[l].attributes[k].id,
+                                        index: this.attribute_groups[i].attribute_group_items[j].values.length,
+                                        value: value,
+                                        last_updated: this.remote_report_items[l].attributes[k].last_updated,
+                                        binary_mime_type: this.remote_report_items[l].attributes[k].binary_mime_type,
+                                        binary_size: this.remote_report_items[l].attributes[k].binary_size,
+                                        binary_description: this.remote_report_items[l].attributes[k].binary_description,
+                                        user: { name: this.remote_report_items[l].remote_user },
+                                        locked: false,
+                                        remote: true
+                                    });
+                                }
                             }
                         }
                     }
                 }
-            }
-        },
+            },
 
-        expand_groups() {
-            return this.expand_panel_groups = Array.from(Array(this.attribute_groups.length).keys());
-        },
+            expand_groups() {
+                return this.expand_panel_groups = Array.from(Array(this.attribute_groups.length).keys());
+            },
 
-        findAttributeType() {
-            let groups = this.selected_type.attribute_groups;
-            let available = [];
+            findAttributeType() {
+                let groups = this.selected_type.attribute_groups;
+                let available = [];
 
-            for( let i=0; i<groups.length; i++) {
-                let group = groups[i];
+                for (let i = 0; i < groups.length; i++) {
+                    let group = groups[i];
 
-                for( let j=0; j<group.attribute_group_items.length; j++) {
-                    available.push(group.attribute_group_items[j].title.replace(" ", "_"));
-                }
-            }
-            return available;
-        },
-
-        importCSV() {
-            let csv_lines = this.csv.length;
-            let sorted_csv = new Array();
-
-            for( let c=0; c<this.csv_struct.length; c++) {
-                sorted_csv.push([]);
-                for( let d=1; d<csv_lines; d++) {
-                    sorted_csv[c].push( this.csv[d][this.csv_struct[c]] );
-                }
-            }
-
-            let count = 0;
-            for( let i=0; i<this.attribute_groups.length; i++) {
-                for (let j=0; j<this.attribute_groups[i].attribute_group_items.length; j++) {
-
-                    this.attribute_groups[i].attribute_group_items[j].values = [];
-                    for( let k=0; k<csv_lines-1; k++) {
-                        if(sorted_csv[count][k] !== "") {
-                            this.attribute_groups[i].attribute_group_items[j].values.push({ "id": -1, "index": k, "value": sorted_csv[count][k], "user": null });
-                        }
+                    for (let j = 0; j < group.attribute_group_items.length; j++) {
+                        available.push(group.attribute_group_items[j].title.replace(" ", "_"));
                     }
-                    count++;
                 }
-            }
+                return available;
+            },
 
-            this.dialog_csv = false;
-            this.csv = null;
-            this.csv_delete_exist_list = false;
-            this.$root.$emit('reset-csv-dialog');
+            importCSV() {
+                let csv_lines = this.csv.length;
+                let sorted_csv = new Array();
 
-        },
+                for (let c = 0; c < this.csv_struct.length; c++) {
+                    sorted_csv.push([]);
+                    for (let d = 1; d < csv_lines; d++) {
+                        sorted_csv[c].push(this.csv[d][this.csv_struct[c]]);
+                    }
+                }
 
-        closeCSV() {
-            this.dialog_csv = false;
-            this.csv = null;
-            this.csv_delete_exist_list = false;
-            this.$root.$emit('reset-csv-dialog');
-        },
-    },
-    mixins: [AuthMixin],
+                let count = 0;
+                for (let i = 0; i < this.attribute_groups.length; i++) {
+                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
 
-    mounted() {
-        this.$root.$on('attachments-uploaded', () => {
-            this.attachmets_attributes_count--
-            if (this.attachmets_attributes_count <= 0) {
-                this.$validator.reset();
-                this.visible = false;
-                this.overlay = false
+                        this.attribute_groups[i].attribute_group_items[j].values = [];
+                        for (let k = 0; k < csv_lines - 1; k++) {
+                            if (sorted_csv[count][k] !== "") {
+                                this.attribute_groups[i].attribute_group_items[j].values.push({ "id": -1, "index": k, "value": sorted_csv[count][k], "user": null });
+                            }
+                        }
+                        count++;
+                    }
+                }
+
+                this.dialog_csv = false;
+                this.csv = null;
+                this.csv_delete_exist_list = false;
+                this.$root.$emit('reset-csv-dialog');
+
+            },
+
+            closeCSV() {
+                this.dialog_csv = false;
+                this.csv = null;
+                this.csv_delete_exist_list = false;
+                this.$root.$emit('reset-csv-dialog');
+            },
+
+            auto_generate() {
                 this.$root.$emit('notification',
+                    {
+                        type: 'success',
+                        loc: 'here comes AI'
+                    }
+                );
+            }
+        },
+        mixins: [AuthMixin],
+
+        mounted() {
+            this.$root.$on('attachments-uploaded', () => {
+                this.attachmets_attributes_count--
+                if (this.attachmets_attributes_count <= 0) {
+                    this.$validator.reset();
+                    this.visible = false;
+                    this.overlay = false
+                    this.$root.$emit('notification',
                         {
                             type: 'success',
                             loc: 'report_item.successful'
                         }
-                );
-            }
-        });
+                    );
+                }
+            });
 
-        this.local_reports = !window.location.pathname.includes('/group/');
+            this.local_reports = !window.location.pathname.includes('/group/');
 
-        this.$store.dispatch('getAllReportItemTypes', {search: ''}).then(() => {
-            this.report_types = this.$store.getters.getReportItemTypes.items;
-        });
+            this.$store.dispatch('getAllReportItemTypes', { search: '' }).then(() => {
+                this.report_types = this.$store.getters.getReportItemTypes.items;
+            });
 
-        this.$root.$on('new-report', (data) => {
-            this.visible = true;
-            this.selected_type = null;
-            this.attribute_groups = [];
-            this.news_item_aggregates = data;
+            this.$root.$on('new-report', (data) => {
+                this.visible = true;
+                this.selected_type = null;
+                this.attribute_groups = [];
+                this.news_item_aggregates = data;
 
-            this.$root.$emit('first-dialog', 'push');
-        });
+                this.$root.$emit('first-dialog', 'push');
+            });
 
-        this.$root.$on('report-item-locked', this.report_item_locked);
-        this.$root.$on('report-item-unlocked', this.report_item_unlocked);
-        this.$root.$on('report-item-updated', this.report_item_updated);
-    },
-    beforeDestroy() {
-        this.$root.$off('attachments-uploaded')
-        this.$root.$off('new-report')
-        this.$root.$off('show-edit')
+            this.$root.$on('report-item-locked', this.report_item_locked);
+            this.$root.$on('report-item-unlocked', this.report_item_unlocked);
+            this.$root.$on('report-item-updated', this.report_item_updated);
+        },
 
-        this.$root.$off('report-item-locked', this.report_item_locked);
-        this.$root.$off('report-item-unlocked', this.report_item_unlocked);
-        this.$root.$off('report-item-updated', this.report_item_updated);
+        beforeDestroy() {
+            this.$root.$off('attachments-uploaded')
+            this.$root.$off('new-report')
+            this.$root.$off('show-edit')
+
+            this.$root.$off('report-item-locked', this.report_item_locked);
+            this.$root.$off('report-item-unlocked', this.report_item_unlocked);
+            this.$root.$off('report-item-updated', this.report_item_updated);
+        }
     }
-}
 </script>

@@ -720,7 +720,8 @@ const messages_en = {
             cvss_detail: 'Show CVSS calculator definition',
             enum_selector: 'Show value search window',
             delete_value: 'Delete value from this attribute',
-            add_value: 'Add new value to this attribute'
+            add_value: 'Add new value to this attribute',
+            auto_generate: 'Auto generate'
         }
     },
 
