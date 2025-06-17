@@ -1,6 +1,6 @@
 beautifulsoup4==4.13.4  # used in common
 Flask==3.1.1
-Flask-Cors==6.0.0
+Flask-Cors==6.0.1
 Flask-RESTful==0.3.10
 gevent==25.5.1
 gunicorn==23.0.0
