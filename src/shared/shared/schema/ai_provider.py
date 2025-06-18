@@ -49,7 +49,7 @@ class AiProvider:
 
         Args:
             name (str): Name of the AI provider.
-            api_type (str): API type ("openai", "ollama").
+            api_type (str): API type ("openai").
             api_url (str): API URL of the provider.
             api_key (str): API key for authentication.
             model (str): Model name or identifier.

@@ -13,14 +13,9 @@ from model.report_item import ReportItem, ReportItemAttribute
 from model.report_item_type import ReportItemType, AttributeGroupItem
 from model.permission import Permission
 
-# from langchain_community.document_loaders.pdf import PyPDFLoader
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate  # SystemMessagePromptTemplate, PromptTemplate
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
-from langchain_ollama import ChatOllama
-
-# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-# from langchain.callbacks.manager import CallbackManager
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
 
@@ -386,74 +381,69 @@ class ReportItemLlmGenerate(Resource):
     def post(self, report_item_id, attribute_id):
         """Generate an AI overview."""
         try:
+            report = ReportItem.find(report_item_id)
             attr = AttributeGroupItem.find(attribute_id)
             ai_prompt = attr.ai_prompt
             ai_provider = attr.ai_provider
             if not ai_provider or not ai_prompt:
                 return {"message": f"Unknown AI provider or empty AI prompt! (Attribute ID: {attribute_id})"}
 
-            news_items_to_process = []
-            report = ReportItem.find(report_item_id)
+            documents_for_llm = []
+            document_nr = 0
+
             for aggregate in report.news_item_aggregates:
                 for news_item in aggregate.news_items:
-                    page_content = f"Title: {news_item.news_item_data.title}\n"
-                    page_content += f"Source: {news_item.news_item_data.source}\n"
-                    page_content += f"Link: {news_item.news_item_data.link}\n\n"
-                    page_content += f"Content: {news_item.news_item_data.content}"
-                    news_items_to_process.append(
-                        Document(
-                            page_content,
-                            metadata={
-                                "title": news_item.news_item_data.title,
-                                "summary": news_item.news_item_data.review,
-                                "source": news_item.news_item_data.source,
-                                "link": news_item.news_item_data.link,
-                                "author": news_item.news_item_data.author,
-                                "language": news_item.news_item_data.language,
-                                "collected": news_item.news_item_data.collected,
-                                "published": news_item.news_item_data.published,
-                                "updated": news_item.news_item_data.updated,
-                            },
-                        )
-                    )
-            if not news_items_to_process:
+                    document_nr += 1
+                    text = f"--- START PAGE {document_nr} ---\n"
+                    text += f"Title: {news_item.news_item_data.title}\n"
+                    text += f"Source: {news_item.news_item_data.source}\n"
+                    text += f"Link: {news_item.news_item_data.link}\n"
+                    text += f"Author: {news_item.news_item_data.author}\n"
+                    text += f"Language: {news_item.news_item_data.language}\n"
+                    text += f"Collected: {news_item.news_item_data.collected}\n"
+                    text += f"Body:\n{news_item.news_item_data.content}\n"
+                    text += f"--- END PAGE {document_nr} ---\n\n"
+                    documents_for_llm.append(Document(page_content=text, metadata={"page": document_nr}))
+
+            if not documents_for_llm:
                 msg = f"LLM generate: No news items to process (Report ID: {report_item_id})"
-                logger.warning(msg)
-                return {"message": msg}, 400
-            for item in news_items_to_process:
-                print("-----", item.metadata, flush=True)
-                print(item.page_content, flush=True)
-            if ai_provider.api_type not in ["openai", "ollama"]:
-                msg = f"LLM generate: unsupported AI provider '{ai_provider.api_type}'"
                 logger.warning(msg)
                 return {"message": msg}, 400
 
             if ai_provider.api_type == "openai":
                 llm = ChatOpenAI(model_name=ai_provider.model, api_key=ai_provider.api_key, base_url=ai_provider.api_url)
             else:
-                llm = ChatOllama(model=ai_provider.model, base_url=ai_provider.api_url)
+                msg = f"LLM generate: unsupported AI provider '{ai_provider.api_type}'"
+                logger.warning(msg)
+                return {"message": msg}, 400
 
-            prompt_template = """Use the following document to answer the question.
+            text = (
+                "The USER-TASK is refering to data in CONTEXT-DOCUMENT. "
+                "You must fulfill the USER-TASK using CONTEXT-DOCUMENT and nothing else. "
+                "Do not add any introduction or summary unless explicitly asked in USER-TASK.\n\n"
+                "### USER-TASK\n\n{question}\n"
+                "### CONTEXT-DOCUMENT\n\n"
+                "{context}\n"
+                "### ANSWER\n"
+            )
+            prompt_template = [HumanMessagePromptTemplate.from_template(text)]
+            print(
+                "_____ LLM prompt: _____\n",
+                text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm)),
+                flush=True,
+            )
 
-Document:
-{context}
-
-Question:
-{question}
-
-Answer: """
-
-            prompt = PromptTemplate.from_template(prompt_template)
+            # prompt = PromptTemplate.from_template(prompt_template)
+            prompt = ChatPromptTemplate.from_messages(prompt_template)
             llm_chain = create_stuff_documents_chain(llm, prompt, document_variable_name="context")
-
             try:
-                result = llm_chain.invoke({"context": news_items_to_process, "question": ai_prompt})
+                result = llm_chain.invoke({"context": documents_for_llm, "question": ai_prompt})
             except Exception as ex:
                 msg = "Connect to LLM failed"
                 logger.error(f"{msg}: {ex}")
                 return {"error": msg}, 400
 
-            print(result, flush=True)
+            print("_____ LLM output: _____\n", result, flush=True)
             return {"message": result}
             # return ReportItem.get_detail_json(report_item_id)
 

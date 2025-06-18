@@ -28,7 +28,7 @@ class AiProvider(db.Model):
     Attributes:
         id (int): AI Provider ID.
         name (str): AI Provider name.
-        api_type (str): AI Provider type - currently only "openai", "ollama" is supported
+        api_type (str): AI Provider type - currently only "openai" is supported (also valid for ollama)
         api_url (str): AI Provider API url.
         api_key (str): AI Provider API key.
         model (str): AI Provider model.
