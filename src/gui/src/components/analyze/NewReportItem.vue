@@ -835,7 +835,27 @@
             },
 
             auto_generate(attribute_group_item_id) {
-                aiGenerate(this.report_item.id, attribute_group_item_id).then(() => { })
+                aiGenerate(this.report_item.id, attribute_group_item_id).then((response) => {
+                    // Find the attribute_group_item and set its value to response.data.message
+                    for (let i = 0; i < this.attribute_groups.length; i++) {
+                        for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                            if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id === attribute_group_item_id) {
+                                // If there are no values, create one, else update the first
+                                if (this.attribute_groups[i].attribute_group_items[j].values.length === 0) {
+                                    this.attribute_groups[i].attribute_group_items[j].values.push({
+                                        id: -1,
+                                        index: 0,
+                                        value: response.data.message,
+                                        user: null
+                                    });
+                                } else {
+                                    this.attribute_groups[i].attribute_group_items[j].values[0].value = response.data.message;
+                                }
+                                return;
+                            }
+                        }
+                    }
+                })
             }
         },
         mixins: [AuthMixin],
