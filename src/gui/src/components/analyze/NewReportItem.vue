@@ -839,7 +839,8 @@
 
             auto_generate(attribute_group_item_id) {
                 this.set_auto_generate_icon("wait")
-                aiGenerate(this.report_item.id, attribute_group_item_id).then((response) => {
+                const news_item_agreggate_ids = this.news_item_aggregates.map(item => item.id);
+                aiGenerate(attribute_group_item_id, news_item_agreggate_ids).then((response) => {
                     if (response.data.error || !response.data.message) {
                         this.set_auto_generate_icon("error");
                         return;
@@ -848,19 +849,7 @@
                     for (let i = 0; i < this.attribute_groups.length; i++) {
                         for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
                             if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id === attribute_group_item_id) {
-                                // If there are no values, create one, else update the first
-                                if (this.attribute_groups[i].attribute_group_items[j].values.length === 0) {
-                                    this.attribute_groups[i].attribute_group_items[j].values.push({
-                                        id: -1,
-                                        index: 0,
-                                        value: response.data.message,
-                                        user: null
-                                    });
-                                    console.log("NE nasiel")
-                                } else {
-                                    console.log("nasiel")
-                                    this.attribute_groups[i].attribute_group_items[j].values[0].value = response.data.message;
-                                }
+                                this.attribute_groups[i].attribute_group_items[j].values[0].value = response.data.message;
                                 this.set_auto_generate_icon("")
                                 return;
                             }

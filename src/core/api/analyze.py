@@ -10,6 +10,7 @@ from managers.sse_manager import sse_manager
 from managers.auth_manager import auth_required, ACLCheck
 from model.attribute import AttributeEnum
 from model.report_item import ReportItem, ReportItemAttribute
+from model.news_item import NewsItemAggregate
 from model.report_item_type import ReportItemType, AttributeGroupItem
 from model.permission import Permission
 
@@ -377,11 +378,11 @@ class ReportItemDownloadAttachment(Resource):
 class ReportItemLlmGenerate(Resource):
     """Report item types API endpoint."""
 
-    @auth_required(["ANALYZE_CREATE", "ANALYZE_UPDATE"], ACLCheck.REPORT_ITEM_MODIFY)
-    def post(self, report_item_id, attribute_id):
+    @auth_required(["ANALYZE_CREATE", "ANALYZE_UPDATE"])
+    def post(self, attribute_id):
         """Generate an AI overview."""
         try:
-            report = ReportItem.find(report_item_id)
+            news_item_agreggate_ids = request.json.get("news_item_agreggate_ids")
             attr = AttributeGroupItem.find(attribute_id)
             ai_prompt = attr.ai_prompt
             ai_provider = attr.ai_provider
@@ -391,7 +392,8 @@ class ReportItemLlmGenerate(Resource):
             documents_for_llm = []
             document_nr = 0
 
-            for aggregate in report.news_item_aggregates:
+            for agreggate_id in news_item_agreggate_ids:
+                aggregate = NewsItemAggregate.find(agreggate_id)
                 for news_item in aggregate.news_items:
                     document_nr += 1
                     text = f"--- START PAGE {document_nr} ---\n"
@@ -406,7 +408,7 @@ class ReportItemLlmGenerate(Resource):
                     documents_for_llm.append(Document(page_content=text, metadata={"page": document_nr}))
 
             if not documents_for_llm:
-                msg = f"LLM generate: No news items to process (Report ID: {report_item_id})"
+                msg = f"LLM generate: No news items to process (Report ID: {news_item_agreggate_ids})"
                 logger.warning(msg)
                 return {"message": msg}, 400
 
@@ -430,7 +432,7 @@ class ReportItemLlmGenerate(Resource):
             print(
                 "_____ LLM prompt: _____\n",
                 text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm)),
-                "_______________________",
+                "\n_______________________",
                 flush=True,
             )
 
@@ -444,7 +446,7 @@ class ReportItemLlmGenerate(Resource):
                 logger.error(f"{msg}: {ex}")
                 return {"error": msg}, 400
 
-            print("_____ LLM output: _____\n", result, "_______________________", flush=True)
+            print("_____ LLM output: _____\n", result, "\n_______________________", flush=True)
             return {"message": result}
             # return ReportItem.get_detail_json(report_item_id)
 
@@ -475,7 +477,7 @@ def initialize(api):
     api.add_resource(
         ReportItemDownloadAttachment, "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes/<int:attribute_id>/file"
     )
-    api.add_resource(ReportItemLlmGenerate, "/api/v1/analyze/report-items/<int:report_item_id>/llm-generate/<int:attribute_id>")
+    api.add_resource(ReportItemLlmGenerate, "/api/v1/analyze/report-item-attributes/<int:attribute_id>/llm-generate")
 
     Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
     Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")

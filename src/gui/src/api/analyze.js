@@ -105,6 +105,6 @@ export function removeAttachment(data) {
     return ApiService.delete(`/analyze/report-items/` + data.report_item_id + '/file-attributes/' + data.attribute_id)
 }
 
-export function aiGenerate(report_item_id, attribute_id) {
-    return ApiService.post('/analyze/report-items/' + report_item_id + '/llm-generate/' + attribute_id)
+export function aiGenerate(attribute_id, news_item_agreggate_ids) {
+    return ApiService.post('/analyze/report-item-attributes/' + attribute_id + '/llm-generate', { news_item_agreggate_ids })
 }
