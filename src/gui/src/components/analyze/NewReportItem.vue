@@ -193,7 +193,7 @@
                                                                            small
                                                                            @click="auto_generate(attribute_item.attribute_group_item.id)"
                                                                            :title="$t('report_item.tooltip.auto_generate')">
-                                                                        <v-icon>mdi-creation</v-icon>
+                                                                        <v-icon>{{auto_generate_icon}}</v-icon>
                                                                     </v-btn>
                                                                 </v-col>
                                                             </v-row>
@@ -305,7 +305,8 @@
                 news_item_aggregates: [],
                 remote_report_items: [],
                 attributes: []
-            }
+            },
+            auto_generate_icon: 'mdi-creation'
         }),
 
         watch: {
@@ -371,6 +372,7 @@
                 this.report_item.title_prefix = "";
                 this.report_item.completed = false;
                 this.resetValidation();
+                this.set_auto_generate_icon("");
             },
 
             reportSelected() {
@@ -603,6 +605,7 @@
             },
 
             showDetail(report_item) {
+                this.set_auto_generate_icon("");
                 getReportItem(report_item.id).then((response) => {
                     let data = response.data;
 
@@ -835,7 +838,12 @@
             },
 
             auto_generate(attribute_group_item_id) {
+                this.set_auto_generate_icon("wait")
                 aiGenerate(this.report_item.id, attribute_group_item_id).then((response) => {
+                    if (response.data.error || !response.data.message) {
+                        this.set_auto_generate_icon("error");
+                        return;
+                    }
                     // Find the attribute_group_item and set its value to response.data.message
                     for (let i = 0; i < this.attribute_groups.length; i++) {
                         for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
@@ -848,14 +856,31 @@
                                         value: response.data.message,
                                         user: null
                                     });
+                                    console.log("NE nasiel")
                                 } else {
+                                    console.log("nasiel")
                                     this.attribute_groups[i].attribute_group_items[j].values[0].value = response.data.message;
                                 }
+                                this.set_auto_generate_icon("")
                                 return;
                             }
                         }
                     }
-                })
+                    this.auto_generate_icon("error")
+                }).catch(() => {
+                    this.set_auto_generate_icon("error");
+                });
+            },
+
+            set_auto_generate_icon(state) {
+                // mdi-message-processing-outline for chatting?
+                if (state === "wait") {
+                    this.auto_generate_icon = "mdi-timer-sand"
+                } else if (state === "error") {
+                    this.auto_generate_icon = "mdi-exclamation-thick"
+                } else {
+                    this.auto_generate_icon = "mdi-creation"
+                }
             }
         },
         mixins: [AuthMixin],

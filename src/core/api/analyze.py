@@ -430,6 +430,7 @@ class ReportItemLlmGenerate(Resource):
             print(
                 "_____ LLM prompt: _____\n",
                 text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm)),
+                "_______________________",
                 flush=True,
             )
 
@@ -443,7 +444,7 @@ class ReportItemLlmGenerate(Resource):
                 logger.error(f"{msg}: {ex}")
                 return {"error": msg}, 400
 
-            print("_____ LLM output: _____\n", result, flush=True)
+            print("_____ LLM output: _____\n", result, "_______________________", flush=True)
             return {"message": result}
             # return ReportItem.get_detail_json(report_item_id)
 
