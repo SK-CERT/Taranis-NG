@@ -841,24 +841,32 @@
                 this.set_auto_generate_icon("wait")
                 const news_item_agreggate_ids = this.news_item_aggregates.map(item => item.id);
                 aiGenerate(attribute_group_item_id, news_item_agreggate_ids).then((response) => {
-                    if (response.data.error || !response.data.message) {
-                        this.set_auto_generate_icon("error");
-                        return;
-                    }
-                    // Find the attribute_group_item and set its value to response.data.message
-                    for (let i = 0; i < this.attribute_groups.length; i++) {
-                        for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                            if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id === attribute_group_item_id) {
-                                this.attribute_groups[i].attribute_group_items[j].values[0].value = response.data.message;
-                                this.set_auto_generate_icon("")
-                                return;
-                            }
+                    if (response.data.message) {
+                        if (this.setAttributeGroupItemValue(attribute_group_item_id, response.data.message)) {
+                            this.set_auto_generate_icon("");
+                            return;
                         }
+                    } else {
+                        this.setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(response.data))
                     }
-                    this.auto_generate_icon("error")
-                }).catch(() => {
+                    this.set_auto_generate_icon("error");
+                }).catch((error) => {
+                    this.setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(error.response.data))
                     this.set_auto_generate_icon("error");
                 });
+            },
+
+            setAttributeGroupItemValue(attribute_group_item_id, value) {
+                for (let i = 0; i < this.attribute_groups.length; i++) {
+                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                        const item = this.attribute_groups[i].attribute_group_items[j];
+                        if (item.attribute_group_item.id === attribute_group_item_id) {
+                            item.values[0].value = value;
+                            return true;
+                        }
+                    }
+                }
+                return false;
             },
 
             set_auto_generate_icon(state) {
