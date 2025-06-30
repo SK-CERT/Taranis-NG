@@ -7,5 +7,5 @@ gevent==25.5.1
 gunicorn==23.0.0
 Jinja2==3.1.6
 marshmallow==4.0.0
-python-dotenv==1.1.0
+python-dotenv==1.1.1
 weasyprint==65.1
