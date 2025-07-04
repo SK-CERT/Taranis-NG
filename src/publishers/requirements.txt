@@ -11,5 +11,5 @@ paramiko==3.5.1
 python-dotenv==1.1.1
 requests==2.32.4
 tweepy==4.16.0
-urllib3==2.4.0
+urllib3==2.5.0
 pymisp==2.5.12
