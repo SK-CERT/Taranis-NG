@@ -26,7 +26,7 @@
   "dependencies": {
     "@vue/cli": "^4.5.19",
     "axios": "^0.28.1",
-    "core-js": "^2.6.12",
+    "core-js": "^3.44.0",
     "js-base64": "^3.7.7",
     "papaparse": "^5.4.1",
     "sass-loader": "^10.5.2",
