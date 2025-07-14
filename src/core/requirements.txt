@@ -1,4 +1,4 @@
-alembic==1.16.1
+alembic==1.16.2
 beautifulsoup4==4.13.4
 Flask==3.1.1
 Flask-Cors==6.0.1
@@ -15,8 +15,8 @@ marshmallow==4.0.0
 psycopg[binary]==3.2.9
 pycryptodomex==3.23.0
 PyJWT==2.10.1
-python-dotenv==1.1.0
-python-keycloak==5.5.1
+python-dotenv==1.1.1
+python-keycloak==5.6.0
 requests==2.32.4
 schedule==1.2.2
 sseclient-py==1.8.0
