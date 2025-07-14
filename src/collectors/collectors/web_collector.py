@@ -619,6 +619,7 @@ class WebCollector(BaseCollector):
             try:
                 news_item = self.__process_article_page(browser, scope)
                 if news_item:
+                    self.sanitize_news_item(news_item, self.source)
                     news_item.print_news_item(self.source.logger)
                     self.news_items.append(news_item)
                 else:

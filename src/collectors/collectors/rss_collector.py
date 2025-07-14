@@ -7,7 +7,7 @@ import urllib.request
 import uuid
 from bs4 import BeautifulSoup
 from .base_collector import BaseCollector, not_modified
-from shared.common import ignore_exceptions, read_int_parameter, strip_html, smart_truncate
+from shared.common import ignore_exceptions, read_int_parameter
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -107,53 +107,48 @@ class RSSCollector(BaseCollector):
                     content = ""
                     link_for_article = feed_entry.get("link", "")
                     if summary:
-                        review = strip_html(summary)
+                        review = summary
                     if content_rss:
-                        content = strip_html(content_rss[0].get("value", ""))
+                        content = content_rss[0].get("value", "")
 
                     if not link_for_article:
                         self.source.logger.debug(f"Skipping an empty link in feed entry '{title}'.")
                         continue
                     elif not content:
                         self.source.logger.info(f"Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
-                        content_html = ""
+                        content_with_newlines = ""
                         try:
                             request = urllib.request.Request(link_for_article)
                             request.add_header("User-Agent", self.source.user_agent)
 
                             with self.source.opener(request) as response:
                                 content_html = response.read()
-
                             if content_html:
                                 soup = BeautifulSoup(content_html, features="html.parser")
-                                content_html_text = [p.text.strip() for p in soup.findAll("p")]
-                                content_sanit = [w.replace("\xa0", " ") for w in content_html_text]
-                                content_sanit = " ".join(content_sanit)
-                                # use web content if it's longer than summary, if not we use summary in next step
-                                if len(content_sanit) > len(summary):
-                                    content = content_sanit
-                                    self.source.logger.debug("Using web text for content")
+                                # get all <p> tags text in body
+                                content_html_text = [p.get_text(strip=True) for p in soup.find_all("p")]
+                                content_with_newlines = "\n".join(content_html_text)
+                            if len(content_with_newlines) > len(summary):
+                                content = content_with_newlines
+                                self.source.logger.debug("Using web text for content")
                         except urllib.error.HTTPError as http_err:
                             if http_err.code in [401, 429, 403]:
                                 self.source.logger.warning(
                                     f"HTTP {http_err.code} {http_err.reason} for {link_for_article}. Skipping getting article content."
                                 )
                             else:
-                                self.source.logger.exception(f"HTTP error occurred: {http_err}")
+                                self.source.logger.exception(f"{http_err}")
                         except Exception as error:
                             self.source.logger.exception(f"Fetch web content failed: {error}")
 
                     # use summary if content is empty
                     if summary and not content:
-                        content = strip_html(summary)
+                        content = summary
                         self.source.logger.debug("Using review for content")
-                    # use first 500 characters of content if summary is empty
+                    # use content for review if summary is empty
                     elif not summary and content:
                         review = content
-                        self.source.logger.debug("Using first 500 characters of content for review")
-
-                    title = smart_truncate(title, 200)
-                    review = smart_truncate(review)
+                        self.source.logger.debug("Using content for review")
 
                     # use published date if available, otherwise use updated date
                     if published_parsed:
@@ -185,7 +180,7 @@ class RSSCollector(BaseCollector):
                         self.source.id,
                         [],
                     )
-
+                    news_item = self.sanitize_news_item(news_item, self.source)
                     news_item.print_news_item(self.source.logger)
                     news_items.append(news_item)
 
