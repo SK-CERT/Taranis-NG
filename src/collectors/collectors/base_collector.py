@@ -129,44 +129,44 @@ class BaseCollector:
         else:
             return news_items
 
-    @staticmethod
-    def sanitize_news_items(news_items, source):
+    @classmethod
+    def sanitize_news_item(cls, news_item, source):
         """Sanitize the given news_items by setting default values for any missing attributes.
 
         Parameters:
             news_items (list): A list of news items to be sanitized.
             source: The source of the news items.
         """
-        for item in news_items:
-            if item.id is None:
-                item.id = uuid.uuid4()
-            if item.title is None:
-                item.title = ""
-            if item.review is None:
-                item.review = ""
-            if item.source is None:
-                item.source = ""
-            if item.link is None:
-                item.link = ""
-            if item.author is None:
-                item.author = ""
-            if item.content is None:
-                item.content = ""
-            if item.published is None:
-                item.published = datetime.datetime.now()
-            if item.collected is None:
-                item.collected = datetime.datetime.now()
-            if item.hash is None:
-                for_hash = item.author + item.title + item.link
-                item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
-            if item.osint_source_id is None:
-                item.osint_source_id = source.id
-            if item.attributes is None:
-                item.attributes = []
-            item.title = common.strip_html(item.title)
-            item.review = common.strip_html(item.review)
-            item.content = common.strip_html(item.content)
-            item.author = common.strip_html(item.author)
+        if news_item.id is None:
+            news_item.id = uuid.uuid4()
+        if news_item.title is None:
+            news_item.title = ""
+        if news_item.review is None:
+            news_item.review = ""
+        if news_item.source is None:
+            news_item.source = ""
+        if news_item.link is None:
+            news_item.link = ""
+        if news_item.author is None:
+            news_item.author = ""
+        if news_item.content is None:
+            news_item.content = ""
+        if news_item.published is None:
+            news_item.published = datetime.datetime.now()
+        if news_item.collected is None:
+            news_item.collected = datetime.datetime.now()
+        if news_item.hash is None:
+            for_hash = news_item.author + news_item.title + news_item.link
+            news_item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
+        if news_item.osint_source_id is None:
+            news_item.osint_source_id = source.id
+        if news_item.attributes is None:
+            news_item.attributes = []
+        news_item.title = common.smart_truncate(common.strip_html(news_item.title), 200)
+        news_item.review = common.smart_truncate(common.strip_html(news_item.review))
+        news_item.content = common.strip_html(news_item.content)
+        news_item.author = common.strip_html(news_item.author)
+        return news_item
 
     def publish(self, news_items):
         """Publish the collected news items to the CoreApi.
@@ -175,7 +175,6 @@ class BaseCollector:
             news_items (list): A list of news items to be published.
         """
         self.source.logger.debug(f"Collected {len(news_items)} news items")
-        self.sanitize_news_items(news_items, self.source)
         filtered_news_items = self.filter_by_word_list(news_items, self.source)
         news_items_schema = news_item.NewsItemDataSchema(many=True)
         CoreApi.add_news_items(news_items_schema.dump(filtered_news_items))
