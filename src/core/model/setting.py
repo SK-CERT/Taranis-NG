@@ -65,7 +65,7 @@ class Setting(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_value(cls, setting_id, data, user_mame):
+    def update_value(cls, setting_id, data, user_name):
         """
         Update the value of an existing setting.
 
@@ -78,12 +78,12 @@ class Setting(db.Model):
         updated_setting = schema.load(data)
         setting = db.session.get(cls, setting_id)
         setting.value = updated_setting.value
-        setting.updated_by = user_mame
+        setting.updated_by = user_name
         setting.updated_at = datetime.now()
         db.session.commit()
 
     @classmethod
-    def update(cls, setting_id, data, user_mame):
+    def update(cls, setting_id, data, user_name):
         """
         Update an existing setting.
 
@@ -100,7 +100,7 @@ class Setting(db.Model):
         setting.value = updated_setting.value
         setting.default_val = updated_setting.default_val
         setting.description = updated_setting.description
-        setting.updated_by = user_mame
+        setting.updated_by = user_name
         setting.updated_at = datetime.now()
         db.session.commit()
 

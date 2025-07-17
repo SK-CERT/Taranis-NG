@@ -26,6 +26,7 @@ from model import (
     bots_node,
     bot_preset,
     attribute,
+    ai_provider,
     collectors_node,
     organization,
     osint_source,
@@ -197,6 +198,72 @@ class AttributeEnum(Resource):
             return attribute.AttributeEnum.delete(enum_id)
         except Exception as ex:
             msg = "Could not delete attribute enum"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
+
+
+class AiProviders(Resource):
+    """Ai Providers API endpoint."""
+
+    # @auth_required("CONFIG_ATTRIBUTE_ACCESS")
+    def get(self):
+        """Get all Ai Providers.
+
+        Returns:
+            (dict): The Ai Providers
+        """
+        search = None
+        if "search" in request.args and request.args["search"]:
+            search = request.args["search"]
+        return ai_provider.AiProvider.get_all_json(search)
+
+    # @auth_required("CONFIG_ATTRIBUTE_CREATE")
+    def post(self):
+        """Create an Ai Provider.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            ai_provider.AiProvider.add_new(request.json)
+        except Exception as ex:
+            msg = "Could not create Ai Provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
+
+
+class AiProvider(Resource):
+    """Ai Provider API endpoint."""
+
+    # @auth_required("CONFIG_ATTRIBUTE_UPDATE")
+    def put(self, ai_provider_id):
+        """Update an Ai Provider.
+
+        Args:
+            ai_provider_id (int): The Ai provider ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            ai_provider.AiProvider.update(ai_provider_id, request.json)
+        except Exception as ex:
+            msg = "Could not update Ai Provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
+
+    # @auth_required("CONFIG_ATTRIBUTE_DELETE")
+    def delete(self, ai_provider_id):
+        """Delete an Ai Provider.
+
+        Args:
+            ai_provider_id (int): The Ai provider ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            return ai_provider.AiProvider.delete(ai_provider_id)
+        except Exception as ex:
+            msg = "Could not delete Ai Provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, 400
 
@@ -1583,6 +1650,8 @@ def initialize(api):
     api.add_resource(Attribute, "/api/v1/config/attributes/<int:attribute_id>")
     api.add_resource(AttributeEnums, "/api/v1/config/attributes/<int:attribute_id>/enums")
     api.add_resource(AttributeEnum, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
+    api.add_resource(AiProviders, "/api/v1/config/aiproviders")
+    api.add_resource(AiProvider, "/api/v1/config/aiprovider/<int:ai_provider_id>")
 
     api.add_resource(ReportItemTypesConfig, "/api/v1/config/report-item-types")
     api.add_resource(ReportItemType, "/api/v1/config/report-item-types/<int:type_id>")

@@ -8,8 +8,16 @@ from managers import asset_manager, auth_manager, log_manager
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
 from managers.auth_manager import auth_required, ACLCheck
-from model import attribute, report_item, report_item_type
+from model.attribute import AttributeEnum
+from model.report_item import ReportItem, ReportItemAttribute
+from model.news_item import NewsItemAggregate
+from model.report_item_type import ReportItemType, AttributeGroupItem
 from model.permission import Permission
+
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate  # SystemMessagePromptTemplate, PromptTemplate
+from langchain_core.documents import Document
+from langchain_openai import ChatOpenAI
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
 
 class ReportItemTypes(Resource):
@@ -22,7 +30,7 @@ class ReportItemTypes(Resource):
         Returns:
             (dict): all report item types
         """
-        return report_item_type.ReportItemType.get_all_json(None, auth_manager.get_user_from_jwt(), True)
+        return ReportItemType.get_all_json(None, auth_manager.get_user_from_jwt(), True)
 
 
 class ReportItemGroups(Resource):
@@ -35,7 +43,7 @@ class ReportItemGroups(Resource):
         Returns:
             (dict): all report item groups
         """
-        return report_item.ReportItem.get_groups()
+        return ReportItem.get_groups()
 
 
 class ReportItems(Resource):
@@ -77,7 +85,7 @@ class ReportItems(Resource):
             logger.exception(f"{msg}: {ex}")
             return {"error": msg}, 400
 
-        return report_item.ReportItem.get_json(group, filter, offset, limit, auth_manager.get_user_from_jwt())
+        return ReportItem.get_json(group, filter, offset, limit, auth_manager.get_user_from_jwt())
 
     @auth_required("ANALYZE_CREATE")
     def post(self):
@@ -87,7 +95,7 @@ class ReportItems(Resource):
             new_report_item.id (int): new report item ID
             status (int): status code
         """
-        new_report_item, status = report_item.ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
+        new_report_item, status = ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
         if status == 200:
             asset_manager.report_item_changed(new_report_item)
             sse_manager.remote_access_report_items_updated(new_report_item.report_item_type_id)
@@ -96,7 +104,7 @@ class ReportItems(Resource):
         return new_report_item.id, status
 
 
-class ReportItem(Resource):
+class ReportItemResource(Resource):
     """Report item API endpoint."""
 
     @auth_required("ANALYZE_ACCESS", ACLCheck.REPORT_ITEM_ACCESS)
@@ -108,7 +116,7 @@ class ReportItem(Resource):
         Returns:
             (dict): report item details
         """
-        return report_item.ReportItem.get_detail_json(report_item_id)
+        return ReportItem.get_detail_json(report_item_id)
 
     @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
     def put(self, report_item_id):
@@ -119,9 +127,9 @@ class ReportItem(Resource):
         Returns:
             data (dict): updated report item details
         """
-        modified, data = report_item.ReportItem.update_report_item(report_item_id, request.json, auth_manager.get_user_from_jwt())
+        modified, data = ReportItem.update_report_item(report_item_id, request.json, auth_manager.get_user_from_jwt())
         if modified is True:
-            updated_report_item = report_item.ReportItem.find(report_item_id)
+            updated_report_item = ReportItem.find(report_item_id)
             asset_manager.report_item_changed(updated_report_item)
             sse_manager.report_item_updated(data)
             sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
@@ -138,7 +146,7 @@ class ReportItem(Resource):
             result (bool): True if the report item was deleted successfully
             code (int): status code
         """
-        result, code = report_item.ReportItem.delete_report_item(report_item_id)
+        result, code = ReportItem.delete_report_item(report_item_id)
         if code == 200:
             sse_manager.report_items_updated()
 
@@ -186,7 +194,7 @@ class ReportItemData(Resource):
             logger.warning(msg)
             return {"error": msg}, 401
 
-        return report_item.ReportItem.get_updated_data(report_item_id, data)
+        return ReportItem.get_updated_data(report_item_id, data)
 
 
 class ReportItemLocks(Resource):
@@ -276,7 +284,7 @@ class ReportItemAttributeEnums(Resource):
             offset = request.args["offset"]
         if "limit" in request.args and request.args["limit"]:
             limit = request.args["limit"]
-        return attribute.AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
+        return AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
 
 
 class ReportItemAddAttachment(Resource):
@@ -296,8 +304,8 @@ class ReportItemAddAttachment(Resource):
             user = auth_manager.get_user_from_jwt()
             attribute_group_item_id = request.form["attribute_group_item_id"]
             description = request.form["description"]
-            data = report_item.ReportItem.add_attachment(report_item_id, attribute_group_item_id, user, file, description)
-            updated_report_item = report_item.ReportItem.find(report_item_id)
+            data = ReportItem.add_attachment(report_item_id, attribute_group_item_id, user, file, description)
+            updated_report_item = ReportItem.find(report_item_id)
             asset_manager.report_item_changed(updated_report_item)
             sse_manager.report_item_updated(data)
             sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
@@ -319,8 +327,8 @@ class ReportItemRemoveAttachment(Resource):
             (dict): updated report item details
         """
         user = auth_manager.get_user_from_jwt()
-        data = report_item.ReportItem.remove_attachment(report_item_id, attribute_id, user)
-        updated_report_item = report_item.ReportItem.find(report_item_id)
+        data = ReportItem.remove_attachment(report_item_id, attribute_id, user)
+        updated_report_item = ReportItem.find(report_item_id)
         asset_manager.report_item_changed(updated_report_item)
         sse_manager.report_item_updated(data)
         sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
@@ -343,11 +351,11 @@ class ReportItemDownloadAttachment(Resource):
             if user is not None:
                 permissions = user.get_permissions()
                 if "ANALYZE_ACCESS" in permissions:
-                    report_item_attribute = report_item.ReportItemAttribute.find(attribute_id)
+                    report_item_attribute = ReportItemAttribute.find(attribute_id)
                     if (
                         report_item_attribute is not None
                         and report_item_attribute.report_item.id == report_item_id
-                        and report_item.ReportItem.allowed_with_acl(report_item_attribute.report_item.id, user, False, True, False)
+                        and ReportItem.allowed_with_acl(report_item_attribute.report_item.id, user, False, True, False)
                     ):
                         log_manager.store_user_activity(user, "ANALYZE_ACCESS", str({"file": report_item_attribute.value}))
 
@@ -367,6 +375,104 @@ class ReportItemDownloadAttachment(Resource):
             log_manager.store_auth_error_activity("Missing JWT")
 
 
+class ReportItemLlmGenerate(Resource):
+    """Report item types API endpoint."""
+
+    @auth_required(["ANALYZE_CREATE", "ANALYZE_UPDATE"])
+    def post(self, attribute_id):
+        """Generate an AI overview."""
+        try:
+            news_item_agreggate_ids = request.json.get("news_item_agreggate_ids")
+            attr = AttributeGroupItem.find(attribute_id)
+            ai_prompt = attr.ai_prompt
+            ai_provider = attr.ai_provider
+            if not ai_provider or not ai_prompt:
+                return {"message": f"Unknown AI provider or empty AI prompt! (Attribute ID: {attribute_id})"}
+
+            documents_for_llm = []
+            document_nr = 0
+
+            for agreggate_id in news_item_agreggate_ids:
+                aggregate = NewsItemAggregate.find(agreggate_id)
+                for news_item in aggregate.news_items:
+                    document_nr += 1
+                    text = f"--- START PAGE {document_nr} ---\n"
+                    text += f"Title: {news_item.news_item_data.title}\n"
+                    text += f"Source: {news_item.news_item_data.source}\n"
+                    text += f"Link: {news_item.news_item_data.link}\n"
+                    text += f"Author: {news_item.news_item_data.author}\n"
+                    text += f"Language: {news_item.news_item_data.language}\n"
+                    text += f"Collected: {news_item.news_item_data.collected}\n"
+                    text += f"Body:\n{news_item.news_item_data.content}\n"
+                    text += f"--- END PAGE {document_nr} ---\n\n"
+                    documents_for_llm.append(Document(page_content=text, metadata={"page": document_nr}))
+
+            if not documents_for_llm:
+                msg = f"LLM generate: No news items to process (Report ID: {news_item_agreggate_ids})"
+                logger.warning(msg)
+                return {"message": msg}, 400
+
+            if ai_provider.api_type == "openai":
+                llm = ChatOpenAI(model_name=ai_provider.model, api_key=ai_provider.api_key, base_url=ai_provider.api_url)
+            else:
+                msg = f"LLM generate: unsupported AI provider '{ai_provider.api_type}'"
+                logger.warning(msg)
+                return {"message": msg}, 400
+
+            text = (
+                "The USER-TASK is refering to data in CONTEXT-DOCUMENT. "
+                "You must fulfill the USER-TASK using CONTEXT-DOCUMENT and nothing else. "
+                "Do not add any introduction or summary unless explicitly asked in USER-TASK.\n\n"
+                "### USER-TASK\n\n{question}\n"
+                "### CONTEXT-DOCUMENT\n\n"
+                "{context}\n"
+                "### ANSWER\n"
+            )
+            # tweaking prompt doesn't matter that much as using good model (good model -> better understanding what you want from him)
+            # TODO: test and keep only the best prompt (delete old one)
+            text = (
+                "You are a data analyst AI assistant. Your task is to carefully analyze the provided User data and answer the User question "
+                "based on that data. Follow these steps strictly:\n"
+                "1. Read and understand the User question.\n"
+                "2. Carefully review the attached User data.\n"
+                "3. Identify relevant patterns, structures, anomalies, or relationships within the User data.\n"
+                "4. Provide a clear, concise, and data-supported answer to the User question.\n"
+                "5. Do not add any introduction or summary unless explicitly asked in User question.\n"
+                "6. Only rely on the given User data for your answer. Do not invent or assume anything outside the scope of the User data.\n"
+                "---\n"
+                "User question:\n"
+                "{question}\n"
+                "---\n"
+                "User data:\n"
+                "{context}\n"
+            )
+
+            prompt_template = [HumanMessagePromptTemplate.from_template(text)]
+            logger.debug(
+                "_____ LLM prompt: _____\n"
+                + text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm))
+                + "\n_______________________"
+            )
+
+            # prompt = PromptTemplate.from_template(prompt_template)
+            prompt = ChatPromptTemplate.from_messages(prompt_template)
+            llm_chain = create_stuff_documents_chain(llm, prompt, document_variable_name="context")
+            try:
+                result = llm_chain.invoke({"context": documents_for_llm, "question": ai_prompt})
+            except Exception as ex:
+                msg = "Connect to LLM failed"
+                logger.error(f"{msg}: {ex}")
+                return {"error": msg}, 400
+
+            logger.debug(f"_____ LLM output: _____\n{result}\n_______________________")
+            return {"message": result}
+
+        except Exception as ex:
+            msg = "LLM generate failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, 400
+
+
 def initialize(api):
     """Initialize API endpoints.
 
@@ -376,7 +482,7 @@ def initialize(api):
     api.add_resource(ReportItemTypes, "/api/v1/analyze/report-item-types")
     api.add_resource(ReportItemGroups, "/api/v1/analyze/report-item-groups")
     api.add_resource(ReportItems, "/api/v1/analyze/report-items")
-    api.add_resource(ReportItem, "/api/v1/analyze/report-items/<int:report_item_id>")
+    api.add_resource(ReportItemResource, "/api/v1/analyze/report-items/<int:report_item_id>")
     api.add_resource(ReportItemData, "/api/v1/analyze/report-items/<int:report_item_id>/data")
     api.add_resource(ReportItemLocks, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks")
     api.add_resource(ReportItemLock, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks/<field_id>/lock")
@@ -388,6 +494,7 @@ def initialize(api):
     api.add_resource(
         ReportItemDownloadAttachment, "/api/v1/analyze/report-items/<int:report_item_id>/file-attributes/<int:attribute_id>/file"
     )
+    api.add_resource(ReportItemLlmGenerate, "/api/v1/analyze/report-item-attributes/<int:attribute_id>/llm-generate")
 
     Permission.add("ANALYZE_ACCESS", "Analyze access", "Access to Analyze module")
     Permission.add("ANALYZE_CREATE", "Analyze create", "Create report item")
