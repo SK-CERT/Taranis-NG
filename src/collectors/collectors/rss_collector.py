@@ -116,7 +116,6 @@ class RSSCollector(BaseCollector):
                         continue
                     elif not content:
                         self.source.logger.info(f"Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
-                        content_with_newlines = ""
                         try:
                             request = urllib.request.Request(link_for_article)
                             request.add_header("User-Agent", self.source.user_agent)
@@ -128,9 +127,10 @@ class RSSCollector(BaseCollector):
                                 # get all <p> tags text in body
                                 content_html_text = [p.get_text(strip=True) for p in soup.find_all("p")]
                                 content_with_newlines = "\n".join(content_html_text)
-                            if len(content_with_newlines) > len(summary):
-                                content = content_with_newlines
-                                self.source.logger.debug("Using web text for content")
+                                if len(content_with_newlines) > len(summary):
+                                    content = content_with_newlines
+                                    self.source.logger.debug("Using web text for content")
+
                         except urllib.error.HTTPError as http_err:
                             if http_err.code in [401, 429, 403]:
                                 self.source.logger.warning(
@@ -138,6 +138,7 @@ class RSSCollector(BaseCollector):
                                 )
                             else:
                                 self.source.logger.exception(f"{http_err}")
+
                         except Exception as error:
                             self.source.logger.exception(f"Fetch web content failed: {error}")
 
