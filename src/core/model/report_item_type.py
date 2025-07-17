@@ -22,7 +22,6 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
 
     Attributes:
         attribute_id (int): Attribute id.
-        ai_provider_id (int): AI provider id.
     """
 
     attribute_id = fields.Integer()
