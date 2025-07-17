@@ -428,12 +428,30 @@ class ReportItemLlmGenerate(Resource):
                 "{context}\n"
                 "### ANSWER\n"
             )
+            # tweaking prompt doesn't matter that much as using good model (good model -> better understanding what you want from him)
+            # TODO: test and keep only the best prompt (delete old one)
+            text = (
+                "You are a data analyst AI assistant. Your task is to carefully analyze the provided User data and answer the User question "
+                "based on that data. Follow these steps strictly:\n"
+                "1. Read and understand the User question.\n"
+                "2. Carefully review the attached User data.\n"
+                "3. Identify relevant patterns, structures, anomalies, or relationships within the User data.\n"
+                "4. Provide a clear, concise, and data-supported answer to the User question.\n"
+                "5. Do not add any introduction or summary unless explicitly asked in User question.\n"
+                "6. Only rely on the given User data for your answer. Do not invent or assume anything outside the scope of the User data.\n"
+                "---\n"
+                "User question:\n"
+                "{question}\n"
+                "---\n"
+                "User data:\n"
+                "{context}\n"
+            )
+
             prompt_template = [HumanMessagePromptTemplate.from_template(text)]
-            print(
-                "_____ LLM prompt: _____\n",
-                text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm)),
-                "\n_______________________",
-                flush=True,
+            logger.debug(
+                "_____ LLM prompt: _____\n"
+                + text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm))
+                + "\n_______________________"
             )
 
             # prompt = PromptTemplate.from_template(prompt_template)
@@ -446,9 +464,8 @@ class ReportItemLlmGenerate(Resource):
                 logger.error(f"{msg}: {ex}")
                 return {"error": msg}, 400
 
-            print("_____ LLM output: _____\n", result, "\n_______________________", flush=True)
+            logger.debug(f"_____ LLM output: _____\n{result}\n_______________________")
             return {"message": result}
-            # return ReportItem.get_detail_json(report_item_id)
 
         except Exception as ex:
             msg = "LLM generate failed"

@@ -44,7 +44,7 @@ def upgrade():
 
     inspector = inspect(conn)
     columns = [column["name"] for column in inspector.get_columns("attribute_group_item")]
-    if "ai_provider" not in columns:
+    if "ai_provider_id" not in columns:
         op.add_column("attribute_group_item", sa.Column("ai_provider_id", sa.INTEGER()))
         op.create_foreign_key(
             "attribute_group_ai_provider_id_fkey", "attribute_group_item", "ai_provider", ["ai_provider_id"], ["id"], ondelete="SET NULL"
