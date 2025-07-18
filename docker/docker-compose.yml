@@ -181,7 +181,7 @@ services:
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
     ports:
-      - "${PRESENTER_PORT}:80"
+      - "127.0.0.1:${PRESENTER_PORT}:80"
     volumes:
       - "presenters_templates:/app/templates/user_templates"
     logging:
@@ -251,6 +251,7 @@ services:
 
       traefik.http.middlewares.redirect-to-443.redirectscheme.scheme: "https"
       traefik.http.middlewares.redirect-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
+      traefik.http.middlewares.redirect-to-443.redirectscheme.permanent: "true"
 
       traefik.http.routers.taranis-gui-80.entrypoints: "web"
       traefik.http.routers.taranis-gui-80.rule: "PathPrefix(`/`)"
