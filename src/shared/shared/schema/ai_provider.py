@@ -17,8 +17,8 @@ class AiProviderSchema(Schema):
     api_url = fields.Str()
     api_key = fields.Str()
     model = fields.Str()
-    updated_by = fields.Str()
-    updated_at = fields.Str()
+    updated_by = fields.Str(dump_only=True)
+    updated_at = fields.Str(dump_only=True)
 
     @post_load
     def make(self, data, **kwargs):
@@ -36,28 +36,21 @@ class AiProviderSchema(Schema):
 class AiProvider:
     """Data model for AI Providers."""
 
-    def __init__(
-        self,
-        name,
-        api_type,
-        api_url,
-        api_key,
-        model,
-        updated_by,
-    ):
+    def __init__(self, id, name, api_type, api_url, api_key, model):
         """Initialize an AiProvider instance.
 
         Args:
+            id (int): Unique identifier for the AI provider.
             name (str): Name of the AI provider.
             api_type (str): API type ("openai").
             api_url (str): API URL of the provider.
             api_key (str): API key for authentication.
             model (str): Model name or identifier.
-            updated_by (str): User who last updated the provider.
         """
+        self.id = id
         self.name = name
         self.api_type = api_type
         self.api_url = api_url
         self.api_key = api_key
         self.model = model
-        self.updated_by = updated_by
+        # updated_by and updated_at are set on the server

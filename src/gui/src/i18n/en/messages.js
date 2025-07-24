@@ -95,6 +95,7 @@ const messages_en = {
         remote_nodes: "Remote Nodes",
         local: "Local",
         settings: "Application Settings",
+        ai_providers: "AI Providers",
     },
 
     notification: {
@@ -974,6 +975,22 @@ const messages_en = {
         close: "Close"
     },
 
+    ai_provider: {
+        name: "Name",
+        api_type: "API type",
+        api_url: "API URL",
+        api_key: "API key",
+        model: "Model",
+        add_new: "Add new AI provider",
+        edit: "Edit AI provider",
+        successful: "New AI provider was successfully added",
+        successful_edit: "AI provider was successfully updated",
+        error: "Could not save this AI provider",
+        remove: "AI provider was successfully deleted",
+        removed_error: "AI provider is in use and could not be deleted",
+        total_count: "AI providers count: ",
+    },
+
     asset_group: {
         add_new: "Add new asset group",
         edit: "Edit asset group",
@@ -1109,10 +1126,15 @@ const messages_en = {
 
     error: {
         aggregate_in_use: "Some of selected aggregates or news items are already assigned to a report item",
-        server_error: "Unknown server error..."
+        server_error: "Unknown server error...",
+        validation: "Please fill in all required fields",
     },
 
     common: {
+        add: "Add",
+        save: "Save",
+        delete: "Delete",
+        cancel: "Cancel",
         messagebox: {
             yes: "Yes",
             no: "No",

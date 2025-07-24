@@ -162,7 +162,17 @@ const messages_sk = {
         decimal_error: "Hodnota musí byť platné desatinné číslo!",
     },
 
+    error: {
+        aggregate_in_use: "Niektoré vybrané novinky alebo zlúčené novinky sú už pripojené k analýze",
+        server_error: "Neznámá chyba serveru...",
+        validation: "Prosím vyplnte všetky povinné polia",
+    },
+
     common: {
+        add: "Pridať",
+        save: "Uložiť",
+        delete: "Zmazať",
+        cancel: "Zrušiť",
         messagebox: {
             yes: "Áno",
             no: "Nie",
