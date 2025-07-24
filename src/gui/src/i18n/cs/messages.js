@@ -1069,10 +1069,15 @@ const messages_cs = {
 
     error: {
         aggregate_in_use: "Některé vybrané novinky nebo sloučené novinky jsou již připojeny k analýze",
-        server_error: "Neznámá chyba serveru..."
+        server_error: "Neznámá chyba serveru...",
+        validation: "Prosím vyplňte všechna povinná pole",
     },
 
     common: {
+        add: "Přidat",
+        save: "Uložit",
+        delete: "Smazat",
+        cancel: "Zrušit",
         messagebox: {
             yes: "Ano",
             no: "Ne",

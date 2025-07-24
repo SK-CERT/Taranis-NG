@@ -40,6 +40,7 @@ from model import (
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from shared.schema.role import PermissionSchema
+from shared.schema.ai_provider import AiProviderSchema
 
 
 class DictionariesReload(Resource):
@@ -205,7 +206,7 @@ class AttributeEnum(Resource):
 class AiProviders(Resource):
     """Ai Providers API endpoint."""
 
-    # @auth_required("CONFIG_ATTRIBUTE_ACCESS")
+    @auth_required("CONFIG_AI_ACCESS")
     def get(self):
         """Get all Ai Providers.
 
@@ -217,7 +218,7 @@ class AiProviders(Resource):
             search = request.args["search"]
         return ai_provider.AiProvider.get_all_json(search)
 
-    # @auth_required("CONFIG_ATTRIBUTE_CREATE")
+    @auth_required("CONFIG_AI_CREATE")
     def post(self):
         """Create an Ai Provider.
 
@@ -225,7 +226,10 @@ class AiProviders(Resource):
             (str, int): The result of the create
         """
         try:
-            ai_provider.AiProvider.add_new(request.json)
+            user = auth_manager.get_user_from_jwt()
+            record = ai_provider.AiProvider.add_new(request.json, user.name)
+            schema = AiProviderSchema()
+            return schema.dump(record), 200
         except Exception as ex:
             msg = "Could not create Ai Provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
@@ -235,7 +239,7 @@ class AiProviders(Resource):
 class AiProvider(Resource):
     """Ai Provider API endpoint."""
 
-    # @auth_required("CONFIG_ATTRIBUTE_UPDATE")
+    @auth_required("CONFIG_AI_UPDATE")
     def put(self, ai_provider_id):
         """Update an Ai Provider.
 
@@ -245,13 +249,16 @@ class AiProvider(Resource):
             (str, int): The result of the update
         """
         try:
-            ai_provider.AiProvider.update(ai_provider_id, request.json)
+            user = auth_manager.get_user_from_jwt()
+            record = ai_provider.AiProvider.update(ai_provider_id, request.json, user.name)
+            schema = AiProviderSchema()
+            return schema.dump(record), 200
         except Exception as ex:
             msg = "Could not update Ai Provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, 400
 
-    # @auth_required("CONFIG_ATTRIBUTE_DELETE")
+    @auth_required("CONFIG_AI_DELETE")
     def delete(self, ai_provider_id):
         """Delete an Ai Provider.
 
@@ -1757,6 +1764,11 @@ def initialize(api):
     Permission.add("CONFIG_WORD_LIST_CREATE", "Config word list create", "Create word list configuration")
     Permission.add("CONFIG_WORD_LIST_UPDATE", "Config word list update", "Update word list configuration")
     Permission.add("CONFIG_WORD_LIST_DELETE", "Config word list delete", "Delete word list configuration")
+
+    Permission.add("CONFIG_AI_ACCESS", "Config AI access", "Access to AI configuration")
+    Permission.add("CONFIG_AI_CREATE", "Config AI create", "Create AI configuration")
+    Permission.add("CONFIG_AI_UPDATE", "Config AI update", "Update AI configuration")
+    Permission.add("CONFIG_AI_DELETE", "Config AI delete", "Delete AI configuration")
 
     Permission.add("CONFIG_COLLECTORS_NODE_ACCESS", "Config collectors nodes access", "Access to collectors nodes configuration")
     Permission.add("CONFIG_COLLECTORS_NODE_CREATE", "Config collectors node create", "Create collectors node configuration")

@@ -1,23 +1,24 @@
 """AI Provider Model."""
 
 from datetime import datetime
+from marshmallow import post_load
 from managers.db_manager import db
 from shared.schema.ai_provider import AiProviderSchema
 
 
-# class NewAiProviderSchema(AiProviderSchema):
-#     """New AI Provider Schema."""
+class NewAiProviderSchema(AiProviderSchema):
+    """New AI Provider Schema."""
 
-#     @post_load
-#     def make(self, data, **kwargs):
-#         """Create a new AI Provider.
+    @post_load
+    def make(self, data, **kwargs):
+        """Create a new AI Provider.
 
-#         Args:
-#             data (dict): Data to create the new AI Provider.
-#         Returns:
-#             AiProvider: New AI Provider object.
-#         """
-#         return AiProvider(**data)
+        Args:
+            data (dict): Data to create the new AI Provider.
+        Returns:
+            AiProvider: New AI Provider object.
+        """
+        return AiProvider(**data)
 
 
 class AiProvider(db.Model):
@@ -45,7 +46,7 @@ class AiProvider(db.Model):
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
-    def __init__(self, name, api_type, api_url, api_key, model, updated_by):
+    def __init__(self, name, api_type, api_url, api_key, model):
         """Create a new AI Provider."""
         # self.id = None
         self.name = name
@@ -53,7 +54,6 @@ class AiProvider(db.Model):
         self.api_url = api_url
         self.api_key = api_key
         self.model = model
-        self.updated_by = updated_by
 
     @classmethod
     def find(cls, id):
@@ -108,7 +108,7 @@ class AiProvider(db.Model):
         return {"total_count": count, "items": schema.dump(ai_providers)}
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data, user_name):
         """Add a new AI Provider.
 
         Args:
@@ -116,9 +116,9 @@ class AiProvider(db.Model):
         Returns:
             AiProvider: New AI Provider object.
         """
-        # schema = NewAiProviderSchema()
-        schema = AiProviderSchema()
+        schema = NewAiProviderSchema()
         new = schema.load(data)
+        new.updated_by = user_name
         new.updated_at = datetime.now()
         db.session.add(new)
         db.session.commit()
@@ -145,6 +145,7 @@ class AiProvider(db.Model):
         old.updated_by = user_name
         old.updated_at = datetime.now()
         db.session.commit()
+        return old
 
     @classmethod
     def delete(cls, id):
@@ -153,6 +154,6 @@ class AiProvider(db.Model):
         Args:
             id (int): AI Provider ID.
         """
-        AiProvider = db.session.get(cls, id)
-        db.session.delete(AiProvider)
+        record = db.session.get(cls, id)
+        db.session.delete(record)
         db.session.commit()

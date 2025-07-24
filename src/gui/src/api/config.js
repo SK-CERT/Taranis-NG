@@ -45,11 +45,11 @@ export function createNewAiProvider(ai_provider) {
 }
 
 export function updateAiProvider(ai_provider) {
-    return ApiService.put('/config/aiproviders/' + ai_provider.id, ai_provider)
+    return ApiService.put('/config/aiprovider/' + ai_provider.id, ai_provider)
 }
 
 export function deleteAiProvider(ai_provider) {
-    return ApiService.delete('/config/aiproviders/' + ai_provider.id)
+    return ApiService.delete('/config/aiprovider/' + ai_provider.id)
 }
 
 export function getAllReportItemTypes(filter) {

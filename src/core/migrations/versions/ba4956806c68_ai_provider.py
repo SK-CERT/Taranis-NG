@@ -35,7 +35,7 @@ def upgrade():
             sa.Column("api_type", sa.VARCHAR(), nullable=False, server_default="openai"),
             sa.Column("api_url", sa.VARCHAR(), nullable=False),
             sa.Column("api_key", sa.VARCHAR()),
-            sa.Column("model", sa.VARCHAR()),
+            sa.Column("model", sa.VARCHAR(), nullable=False),
             sa.Column("updated_by", sa.VARCHAR()),
             sa.Column("updated_at", postgresql.TIMESTAMP(), server_default=sa.text("CURRENT_TIMESTAMP")),
             sa.PrimaryKeyConstraint("id", name="ai_provider_pkey"),

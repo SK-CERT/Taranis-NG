@@ -93,10 +93,10 @@
                 headers: [
                     // { text: 'Key', value: 'key' },
                     { text: this.$t('settings.description'), value: 'description' },
-                    { text: 'Value', value: 'value' },
+                    { text: this.$t('settings.value'), value: 'value' },
                     // { text: 'Type', value: 'type' },
-                    { text: 'Updated by', value: 'updated_by' },
-                    { text: 'Updated at', value: 'updated_at', filterable: false },
+                    { text: this.$t('settings.updated_by'), value: 'updated_by' },
+                    { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
                 ],
                 records: [],
                 dialog: false,
