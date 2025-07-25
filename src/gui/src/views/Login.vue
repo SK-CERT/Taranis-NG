@@ -98,6 +98,10 @@
             },
         },
         mounted() {
+            if (this.isAuthenticated()) {
+                this.$router.push('/dashboard');
+                return;
+            }
             if (this.$store.getters.hasExternalLoginUrl) {
                 if (this.$route.query.code !== undefined && this.$route.query.session_state !== undefined) {
                     this.authenticate();
