@@ -11,7 +11,7 @@
                         <v-spacer></v-spacer>
                         <v-btn text @click="save()">
                             <v-icon left>mdi-content-save</v-icon>
-                            <span>{{$t('settings.save')}}</span>
+                            <span>{{$t('common.save')}}</span>
                         </v-btn>
                     </v-toolbar>
 

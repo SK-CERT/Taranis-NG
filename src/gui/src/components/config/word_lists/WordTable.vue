@@ -40,8 +40,8 @@
 
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn color="primary" dark @click="save">{{$t('word_list.save')}}</v-btn>
-                            <v-btn color="primary" text @click="close">{{$t('word_list.cancel')}}</v-btn>
+                            <v-btn color="primary" dark @click="save">{{$t('common.save')}}</v-btn>
+                            <v-btn color="primary" text @click="close">{{$t('common.cancel')}}</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -107,7 +107,7 @@
                                 {{$t('word_list.import')}}
                             </v-btn>
                             <v-btn color="primary" text @click="closeCSV">
-                                {{$t('word_list.cancel')}}
+                                {{$t('common.cancel')}}
                             </v-btn>
                         </v-card-actions>
                     </v-card>
@@ -160,7 +160,7 @@
                                 {{$t('word_list.import')}}
                             </v-btn>
                             <v-btn color="primary" text @click="closeDownload">
-                                {{$t('word_list.cancel')}}
+                                {{$t('common.cancel')}}
                             </v-btn>
                         </v-card-actions>
                     </v-card>

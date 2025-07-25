@@ -12,7 +12,7 @@
             </v-card-text>
             <v-card-actions class="justify-center">
                 <v-btn @click.prevent="selectButton('Yes')" class="red accent-1" color="red darken-4" text>{{ $t('common.messagebox.yes') }}</v-btn>
-                <v-btn @click.prevent="selectButton('Cancel')" class="mx-4 justify-center">{{ $t('common.messagebox.cancel') }}</v-btn>
+                <v-btn @click.prevent="selectButton('Cancel')" class="mx-4 justify-center">{{ $t('common.cancel') }}</v-btn>
             </v-card-actions>
         </v-card>
     </v-overlay>

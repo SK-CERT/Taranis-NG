@@ -26,8 +26,8 @@
                     <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
                         <v-btn v-bind="UI.BUTTON.ADD_NEW" @click="addItem">
                             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                            <span>{{$t('common.add')}}</span>
-                        </v-btn>
+                            <span>{{$t('common.add_btn')}}</span>
+                                 </v-btn>
                     </v-col>
                 </v-row>
 
@@ -246,7 +246,7 @@
             },
 
             deleteRecord() {
-                deleteAiProvider(this.editedItem).then((response) => {
+                deleteAiProvider(this.editedItem).then(() => {
                     this.records.splice(this.editedIndex, 1);
                     this.showMsg("success", "ai_provider.remove");
                     this.closeDelete();

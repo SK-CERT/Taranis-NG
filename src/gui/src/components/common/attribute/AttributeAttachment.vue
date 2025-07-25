@@ -28,8 +28,8 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" dark @click="save">{{ $t('drop_zone.save') }}</v-btn>
-                    <v-btn color="primary" text @click="close">{{ $t('drop_zone.cancel') }}</v-btn>
+                    <v-btn color="primary" dark @click="save">{{ $t('common.save') }}</v-btn>
+                    <v-btn color="primary" text @click="close">{{ $t('common.cancel') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -72,16 +72,16 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn v-if="!read_only && report_item_id === null" color="primary" dark @click="saveDetail">
-                        {{ $t('drop_zone.save') }}
+                        {{ $t('common.save') }}
                     </v-btn>
                     <v-btn v-if="report_item_id !== null" color="primary" dark :href="download_link">
                         {{ $t('drop_zone.download') }}
                         <v-icon right dark>mdi-cloud-download</v-icon>
                     </v-btn>
-                    <v-btn v-if="!read_only" color="primary" dark @click="removeDetail">{{ $t('drop_zone.delete') }}
+                    <v-btn v-if="!read_only" color="primary" dark @click="removeDetail">{{ $t('common.delete') }}
                         <v-icon right dark>mdi-delete</v-icon>
                     </v-btn>
-                    <v-btn color="primary" text @click="closeDetail">{{ $t('drop_zone.cancel') }}</v-btn>
+                    <v-btn color="primary" text @click="closeDetail">{{ $t('common.cancel') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

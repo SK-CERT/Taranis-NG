@@ -13,7 +13,7 @@
             >
 
                 <template slot="actions" slot-scope="{  }">
-                    &lt;!&ndash;<v-btn color="lighten-1" @click.native="parent.clearHandler">{{$t('attribute.cancel')}}</v-btn>
+                    &lt;!&ndash;<v-btn color="lighten-1" @click.native="parent.clearHandler">{{$t('common.cancel')}}</v-btn>
                     <v-btn color="success darken-1" @click="parent.okHandler">Done</v-btn>&ndash;&gt;
                     <v-btn color="info lighten-1" @click="getDateTime(index)">{{$t('attribute.done')}}</v-btn>
                 </template>
@@ -21,39 +21,32 @@
             </v-datetime-picker>
         </v-row>
     </div>-->
-    <AttributeItemLayout
-            :add_button="addButtonVisible"
-            @add-value="add()"
-            :values="values"
-    >
+    <AttributeItemLayout :add_button="addButtonVisible"
+                         @add-value="add()"
+                         :values="values">
         <template v-slot:content>
             <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
-            >
+                   class="valueHolder">
                 <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
-                >
+                <AttributeValueLayout v-if="!read_only && canModify && !values[index].remote"
+                                      :del_button="delButtonVisible"
+                                      @del-value="del(index)"
+                                      :occurrence="attribute_group.min_occurrence"
+                                      :values="values"
+                                      :val_index="index">
                     <template v-slot:col_left>
                         <!--<v-icon right>mdi-calendar-clock</v-icon>-->
                     </template>
                     <template v-slot:col_middle>
-                        <date-picker
-                                v-if="!read_only && !values[index].remote"
-                                v-model="values[index].value"
-                                type="datetime"
-                                format="YYYY.MM.DD-HH:mm"
-                                value-type="format"
-                                :show-time-panel="showTimePanel"
-                                @change="onEdit(index)"
-                                @close="handleOpenChange"
-                                :disabled="values[index].locked || !canModify"
-                        >
+                        <date-picker v-if="!read_only && !values[index].remote"
+                                     v-model="values[index].value"
+                                     type="datetime"
+                                     format="YYYY.MM.DD-HH:mm"
+                                     value-type="format"
+                                     :show-time-panel="showTimePanel"
+                                     @change="onEdit(index)"
+                                     @close="handleOpenChange"
+                                     :disabled="values[index].locked || !canModify">
                             <template v-slot:footer>
                                 <button class="mx-btn mx-btn-text" @click="toggleTimePanel">
                                     {{ showTimePanel ? 'select date' : 'select time' }}
@@ -67,16 +60,14 @@
                                 <v-icon small class="pb-5 pr-1">mdi-close</v-icon>
                             </template>
                             <template v-slot:input>
-                                <v-text-field
-                                        v-if="!read_only && !values[index].remote"
-                                        :placeholder="$t('attribute.select_datetime')"
-                                        dense
-                                        v-model="values[index].value"
-                                        @focus="onFocus(index)"
-                                        @blur="onBlur(index)"
-                                        :class="getLockedStyle(index)"
-                                        :disabled="values[index].locked || !canModify"
-                                ></v-text-field>
+                                <v-text-field v-if="!read_only && !values[index].remote"
+                                              :placeholder="$t('attribute.select_datetime')"
+                                              dense
+                                              v-model="values[index].value"
+                                              @focus="onFocus(index)"
+                                              @blur="onBlur(index)"
+                                              :class="getLockedStyle(index)"
+                                              :disabled="values[index].locked || !canModify"></v-text-field>
                             </template>
                         </date-picker>
                     </template>

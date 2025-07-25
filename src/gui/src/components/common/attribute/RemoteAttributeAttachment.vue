@@ -48,7 +48,7 @@
                         {{ $t('drop_zone.download') }}
                         <v-icon right dark>mdi-cloud-download</v-icon>
                     </v-btn>
-                    <v-btn color="primary" text @click="closeDetail">{{ $t('drop_zone.cancel') }}</v-btn>
+                    <v-btn color="primary" text @click="closeDetail">{{ $t('common.cancel') }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
