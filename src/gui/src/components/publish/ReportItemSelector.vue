@@ -10,7 +10,7 @@
                     <v-spacer></v-spacer>
                     <v-btn text dark @click="add">
                         <v-icon left>mdi-plus-box</v-icon>
-                        <span>{{$t('report_item.add')}}</span>
+                        <span>{{$t('common.add')}}</span>
                     </v-btn>
                 </v-toolbar>
                 <v-container fluid class="pa-0 ma-0">

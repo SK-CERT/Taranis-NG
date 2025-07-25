@@ -14,7 +14,7 @@
                     <!-- BUTTON ADD -->
                     <v-btn text>
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{$t('osint_source.add')}}</span>
+                        <span>{{$t('common.add')}}</span>
                     </v-btn>
                 </v-toolbar>
                 <v-container fluid class="content">

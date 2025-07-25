@@ -2,7 +2,7 @@
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="canCreate" @click="addOrganization">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{$t('organization.add_btn')}}</span>
+            <span>{{$t('common.add_btn')}}</span>
         </v-btn>
         <v-dialog v-model="visible" persistent max-width="600" >
             <v-card v-bind="UI.DIALOG.BASEMENT">
@@ -15,7 +15,7 @@
                     <v-spacer></v-spacer>
                     <v-btn v-if="canUpdate" text type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{$t('organization.save')}}</span>
+                        <span>{{$t('common.save')}}</span>
                     </v-btn>
                 </v-toolbar>
 
@@ -64,7 +64,7 @@
 
                     </v-form>
                     <v-alert v-if="show_validation_error" dense type="error" text>
-                        {{$t('organization.validation_error')}}
+                        {{$t('error.validation')}}
                     </v-alert>
                     <v-alert v-if="show_error" dense type="error" text>
                         {{$t('organization.error')}}

@@ -3,7 +3,7 @@
         <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate"
                @click="addProduct">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{ $t('product.add_btn') }}</span>
+            <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
 
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" new-product>
@@ -21,7 +21,7 @@
                     <v-spacer></v-spacer>
                     <v-btn v-if="canModify" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{ $t('product.save') }}</span>
+                        <span>{{ $t('common.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
@@ -103,7 +103,7 @@
                     <v-row no-gutters class="pt-2">
                         <v-col cols="12">
                             <v-alert v-if="show_validation_error" dense type="error" text>
-                                {{ $t('report_item.validation_error') }}
+                                {{ $t('error.validation') }}
                             </v-alert>
                             <v-alert v-if="show_error" dense type="error" text>
                                 {{ $t('report_item.error') }}

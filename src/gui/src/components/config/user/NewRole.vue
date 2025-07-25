@@ -2,7 +2,7 @@
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="canCreate" @click="addRole">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{$t('role.add_btn')}}</span>
+            <span>{{$t('common.add_btn')}}</span>
         </v-btn>
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible">
             <v-card v-bind="UI.DIALOG.BASEMENT">
@@ -19,7 +19,7 @@
                     <v-spacer></v-spacer>
                     <v-btn v-if="canUpdate" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{$t('role.save')}}</span>
+                        <span>{{$t('common.save')}}</span>
                     </v-btn>
                 </v-toolbar>
 
@@ -71,7 +71,7 @@
                     <v-row no-gutters>
                         <v-col cols="12">
                             <v-alert v-if="show_validation_error" dense type="error" text>
-                                {{$t('role.validation_error')}}
+                                {{$t('error.validation')}}
                             </v-alert>
                             <v-alert v-if="show_error" dense type="error" text>
                                 {{$t('role.error')}}

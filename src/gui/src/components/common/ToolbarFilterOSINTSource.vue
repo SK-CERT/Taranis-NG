@@ -69,7 +69,7 @@
                                     File is required
                                 </v-alert>
                                 <v-alert v-if="show_validation_error" dense type="error" text>
-                                    {{$t('collectors_node.validation_error')}}
+                                    {{$t('error.validation')}}
                                 </v-alert>
                                 <v-alert v-if="show_error" dense type="error" text>{{$t('collectors_node.error')}}
                                 </v-alert>

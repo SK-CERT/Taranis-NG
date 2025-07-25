@@ -43,8 +43,8 @@
 
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn color="primary" dark @click="save">{{$t('asset.save')}}</v-btn>
-                            <v-btn color="primary" text @click="close">{{$t('asset.cancel')}}</v-btn>
+                            <v-btn color="primary" dark @click="save">{{$t('common.save')}}</v-btn>
+                            <v-btn color="primary" text @click="close">{{$t('common.cancel')}}</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -86,7 +86,7 @@
                                 {{$t('asset.import')}}
                             </v-btn>
                             <v-btn color="primary" text @click="closeCSV">
-                                {{$t('asset.cancel')}}
+                                {{$t('common.cancel')}}
                             </v-btn>
                         </v-card-actions>
                     </v-card>

@@ -52,7 +52,7 @@
             </v-form>
 
             <v-alert v-if="show_validation_error" dense type="error" text>
-                {{$t('enter.validation_error')}}
+                {{$t('error.validation')}}
             </v-alert>
             <v-alert v-if="show_error" dense type="error" text>{{$t('enter.error')}}
             </v-alert>

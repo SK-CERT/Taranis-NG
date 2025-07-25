@@ -11,7 +11,7 @@
                         <v-spacer></v-spacer>
                         <v-btn text dark @click="add">
                             <v-icon left>mdi-plus-box</v-icon>
-                            <span>{{$t('assess.add')}}</span>
+                            <span>{{$t('common.add')}}</span>
                         </v-btn>
                     </v-toolbar>
                     <v-container class="pa-0 pt-12 grey darken-4" style="max-width: 96px !important; position: fixed; left: 0; top: 0; height: 100%;">

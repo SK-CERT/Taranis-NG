@@ -93,7 +93,6 @@ const messages_sk = {
 
     enter: {
         create: "Vytvoriť",
-        validation_error: "Prosím vyplňte všetky povinné polia",
         error: "Novinku sa nepodarilo vytvoriť",
         title: "Názov",
         review: "Súhrn",
@@ -105,9 +104,6 @@ const messages_sk = {
 
     collectors_node: {
         add_new: "Pridať nový server zberača údajov",
-        add: "Pridať",
-        cancel: "Zrušiť",
-        validation_error: "Prosím vyplňte všetky povinné polia",
         error: "Nepodarilo sa pripojiť na zadaný server.",
         name: "Meno",
         description: "Popis",
@@ -120,9 +116,6 @@ const messages_sk = {
         add_new: "Pridať nový OSINT zdroj",
         node: "Server zberača údajov",
         collector: "Zberač údajov",
-        add: "Pridať",
-        cancel: "Zrušiť",
-        validation_error: "Prosím vyplňte všetky povinné polia",
         error: "Nepodarilo sa vytvoriť zadaný zdroj",
         name: "Meno",
         description: "Popis",
@@ -134,11 +127,7 @@ const messages_sk = {
 
     product: {
         add_new: "Pridať nový produkt",
-        add_btn: "Pridať",
         edit: "Editovať produkt",
-        save: "Uložiť",
-        cancel: "Zrušiť",
-        validation_error: "Prosím vyplnte všetky povinné polia",
         error: "Nemôžem vytvoriť tento produkt",
         title: "Meno",
         name: "Názov",
@@ -170,13 +159,13 @@ const messages_sk = {
 
     common: {
         add: "Pridať",
+        add_btn: "Pridať",
         save: "Uložiť",
         delete: "Zmazať",
         cancel: "Zrušiť",
         messagebox: {
             yes: "Áno",
             no: "Nie",
-            cancel: "Zrušiť",
             delete: "Ste si istý, že chcete zmazať túto položku?",
             remove: "Ste si istý, že chcete odstrániť túto položku?",
         },
