@@ -1,7 +1,7 @@
 """Role model."""
 
 from marshmallow import fields, post_load
-from sqlalchemy import func, or_, orm
+from sqlalchemy import or_, orm
 
 from managers.db_manager import db
 from model.permission import Permission
@@ -110,8 +110,8 @@ class Role(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(Role.name).like(search_string), func.lower(Role.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(Role.name.ilike(search_string), Role.description.ilike(search_string)))
 
         return query.order_by(db.asc(Role.name)).all(), query.count()
 

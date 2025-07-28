@@ -3,7 +3,7 @@
 import uuid as uuid_generator
 from datetime import datetime
 from marshmallow import post_load, fields
-from sqlalchemy import orm, func, or_, and_
+from sqlalchemy import orm, or_, and_
 
 from managers.db_manager import db
 from managers.log_manager import logger
@@ -129,10 +129,8 @@ class RemoteAccess(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(
-                or_(func.lower(RemoteAccess.name).like(search_string), func.lower(RemoteAccess.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(RemoteAccess.name.ilike(search_string), RemoteAccess.description.ilike(search_string)))
 
         return query.order_by(db.asc(RemoteAccess.name)).all(), query.count()
 
@@ -439,8 +437,8 @@ class RemoteNode(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(RemoteNode.name).like(search_string), func.lower(RemoteNode.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(RemoteNode.name.ilike(search_string), RemoteNode.description.ilike(search_string)))
 
         return query.order_by(db.asc(RemoteNode.name)).all(), query.count()
 

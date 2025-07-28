@@ -168,7 +168,7 @@ class Setting(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search + "%"
+            search_string = f"%{search}%"
             query = query.filter(or_(Setting.value.ilike(search_string), Setting.description.ilike(search_string)))
 
         return query.order_by(db.asc(Setting.description)).all(), query.count()

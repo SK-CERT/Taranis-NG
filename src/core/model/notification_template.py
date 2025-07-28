@@ -1,6 +1,6 @@
 """Module for NotificationTemplate model."""
 
-from sqlalchemy import orm, func, or_
+from sqlalchemy import orm, or_
 from marshmallow import post_load, fields
 
 from managers.db_manager import db
@@ -149,11 +149,11 @@ class NotificationTemplate(db.Model):
             )
 
         if search is not None:
-            search_string = f"%{search.lower()}%"
+            search_string = f"%{search}%"
             query = query.filter(
                 or_(
-                    func.lower(NotificationTemplate.name).like(search_string),
-                    func.lower(NotificationTemplate.description).like(search_string),
+                    NotificationTemplate.name.ilike(search_string),
+                    NotificationTemplate.description.ilike(search_string),
                 )
             )
 

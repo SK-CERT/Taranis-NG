@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 from marshmallow import post_load
-from sqlalchemy import orm, or_, func
+from sqlalchemy import orm, or_
 
 from managers.db_manager import db
 from managers.log_manager import logger
@@ -110,10 +110,8 @@ class CollectorsNode(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = f"%{search.lower()}%"
-            query = query.filter(
-                or_(func.lower(CollectorsNode.name).like(search_string), func.lower(CollectorsNode.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(CollectorsNode.name.ilike(search_string), CollectorsNode.description.ilike(search_string)))
 
         return query.order_by(db.asc(CollectorsNode.name)).all(), query.count()
 

@@ -77,7 +77,7 @@ class AiProvider(db.Model):
         return cls.query.order_by(db.asc(AiProvider.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search_string):
         """Get AI Providers.
 
         Args:
@@ -87,8 +87,8 @@ class AiProvider(db.Model):
         """
         query = cls.query
 
-        if search is not None:
-            query = query.filter(AiProvider.name.ilike(f"%{search}%"))
+        if search_string is not None:
+            query = query.filter(AiProvider.name.ilike(f"%{search_string}%"))
 
         return query.order_by(db.asc(AiProvider.name)).all(), query.count()
 

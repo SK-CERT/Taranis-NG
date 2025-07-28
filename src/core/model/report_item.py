@@ -425,14 +425,14 @@ class ReportItem(db.Model):
             )
             query = ACLEntry.apply_query(query, user, True, False, False)
 
-        search_string = filter.get("search", "").lower()
+        search_string = filter.get("search", "")
         if search_string:
             search_string = f"%{search_string}%"
             query = query.join(ReportItemAttribute, ReportItem.id == ReportItemAttribute.report_item_id).filter(
                 or_(
-                    func.lower(ReportItemAttribute.value).like(search_string),
-                    func.lower(ReportItem.title).like(search_string),
-                    func.lower(ReportItem.title_prefix).like(search_string),
+                    ReportItemAttribute.value.ilike(search_string),
+                    ReportItem.title.ilike(search_string),
+                    ReportItem.title_prefix.ilike(search_string),
                 )
             )
 

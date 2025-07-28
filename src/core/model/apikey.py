@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from marshmallow import post_load
-from sqlalchemy import func
 
 from managers.db_manager import db
 from shared.schema.apikey import ApiKeySchema
@@ -110,8 +109,8 @@ class ApiKey(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(func.lower(ApiKey.name).like(search_string))
+            search_string = f"%{search}%"
+            query = query.filter(ApiKey.name.ilike(search_string))
 
         return query.order_by(db.asc(ApiKey.name)).all(), query.count()
 

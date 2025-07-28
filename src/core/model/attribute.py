@@ -113,7 +113,7 @@ class AttributeEnum(db.Model):
         """
         query = cls.query.filter_by(attribute_id=attribute_id)
         if search:
-            search_string = "%" + search + "%"
+            search_string = f"%{search}%"
             query = query.filter(or_(AttributeEnum.value.ilike(search_string), AttributeEnum.description.ilike(search_string)))
 
         query = query.order_by(db.asc(AttributeEnum.index))
@@ -391,8 +391,8 @@ class Attribute(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = f"%{search.lower()}%"
-            query = query.filter(or_(func.lower(Attribute.name).like(search_string), func.lower(Attribute.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(Attribute.name.ilike(search_string), Attribute.description.ilike(search_string)))
 
         return query.order_by(db.asc(Attribute.name)).all(), query.count()
 

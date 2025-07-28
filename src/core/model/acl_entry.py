@@ -1,6 +1,6 @@
 """ACL Entry Model."""
 
-from sqlalchemy import func, or_, orm, and_
+from sqlalchemy import or_, orm, and_
 from marshmallow import fields, post_load
 
 from managers.db_manager import db
@@ -133,8 +133,8 @@ class ACLEntry(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(ACLEntry.name).like(search_string), func.lower(ACLEntry.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(ACLEntry.name.ilike(search_string), ACLEntry.description.ilike(search_string)))
 
         return query.order_by(db.asc(ACLEntry.name)).all(), query.count()
 

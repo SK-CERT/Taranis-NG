@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 from marshmallow import post_load
-from sqlalchemy import func, or_, orm
+from sqlalchemy import or_, orm
 
 from managers.db_manager import db
 from shared.schema.bots_node import BotsNodeSchema, BotsNodePresentationSchema
@@ -98,8 +98,8 @@ class BotsNode(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(BotsNode.name).like(search_string), func.lower(BotsNode.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(BotsNode.name.ilike(search_string), BotsNode.description.ilike(search_string)))
 
         return query.order_by(db.asc(BotsNode.name)).all(), query.count()
 

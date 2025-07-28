@@ -2,7 +2,7 @@
 
 import datetime
 from marshmallow import post_load, fields
-from sqlalchemy import func, or_, orm, and_
+from sqlalchemy import or_, orm, and_
 import sqlalchemy
 from sqlalchemy.sql.expression import cast
 
@@ -132,10 +132,8 @@ class ProductType(db.Model):
             query = ACLEntry.apply_query(query, user, True, False, False)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(
-                or_(func.lower(ProductType.title).like(search_string), func.lower(ProductType.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(ProductType.title.ilike(search_string), ProductType.description.ilike(search_string)))
 
         return query.order_by(db.asc(ProductType.title)).all(), query.count()
 

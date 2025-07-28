@@ -2,7 +2,7 @@
 
 from marshmallow import post_load, fields
 import uuid
-from sqlalchemy import func, or_, orm
+from sqlalchemy import or_, orm
 
 from managers.db_manager import db
 from model.parameter_value import NewParameterValueSchema
@@ -102,8 +102,8 @@ class BotPreset(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(BotPreset.name).like(search_string), func.lower(BotPreset.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(BotPreset.name.ilike(search_string), BotPreset.description.ilike(search_string)))
 
         return query.order_by(db.asc(BotPreset.name)).all(), query.count()
 

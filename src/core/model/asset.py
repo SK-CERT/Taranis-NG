@@ -2,7 +2,7 @@
 
 import uuid
 from marshmallow import fields, post_load
-from sqlalchemy import orm, func, or_, text
+from sqlalchemy import orm, or_, text
 
 from managers.db_manager import db
 from model.report_item import ReportItem
@@ -248,13 +248,13 @@ class Asset(db.Model):
                 query = query.filter(Asset.vulnerabilities_count > 0)
 
         if search is not None:
-            search_string = f"%{search.lower()}%"
+            search_string = f"%{search}%"
             query = query.join(AssetCpe, Asset.id == AssetCpe.asset_id).filter(
                 or_(
-                    func.lower(Asset.name).like(search_string),
-                    func.lower(Asset.description).like(search_string),
-                    func.lower(Asset.serial).like(search_string),
-                    func.lower(AssetCpe.value).like(search_string),
+                    Asset.name.ilike(search_string),
+                    Asset.description.ilike(search_string),
+                    Asset.serial.ilike(search_string),
+                    AssetCpe.value.ilike(search_string),
                 )
             )
 
@@ -497,8 +497,8 @@ class AssetGroup(db.Model):
             query = query.join(AssetGroupOrganization, AssetGroup.id == AssetGroupOrganization.asset_group_id)
 
         if search is not None:
-            search_string = f"%{search.lower()}%"
-            query = query.filter(or_(func.lower(AssetGroup.name).like(search_string), func.lower(AssetGroup.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(AssetGroup.name.ilike(search_string), AssetGroup.description.ilike(search_string)))
 
         return query.order_by(db.asc(AssetGroup.name)).all(), query.count()
 

@@ -152,8 +152,8 @@ class Product(db.Model):
         query = ACLEntry.apply_query(query, user, True, False, False)
 
         if "search" in filter and filter["search"] != "":
-            search_string = "%" + filter["search"].lower() + "%"
-            query = query.filter(or_(func.lower(Product.title).like(search_string), func.lower(Product.description).like(search_string)))
+            search_string = "%" + filter["search"] + "%"
+            query = query.filter(or_(Product.title.ilike(search_string), Product.description.ilike(search_string)))
 
         if "range" in filter and filter["range"] != "ALL":
             date_limit = datetime.now()

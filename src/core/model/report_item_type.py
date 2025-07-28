@@ -1,7 +1,7 @@
 """Report item type model."""
 
 from marshmallow import fields, post_load
-from sqlalchemy import orm, func, or_, and_
+from sqlalchemy import orm, or_, and_
 import sqlalchemy
 from sqlalchemy.sql.expression import cast
 
@@ -330,10 +330,8 @@ class ReportItemType(db.Model):
             query = ACLEntry.apply_query(query, user, True, False, False)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(
-                or_(func.lower(ReportItemType.title).like(search_string), func.lower(ReportItemType.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(ReportItemType.title.ilike(search_string), ReportItemType.description.ilike(search_string)))
 
         return query.order_by(ReportItemType.title).all(), query.count()
 

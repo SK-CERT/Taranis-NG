@@ -1,7 +1,7 @@
 """Organization model."""
 
 from marshmallow import post_load, fields
-from sqlalchemy import func, or_, orm
+from sqlalchemy import or_, orm
 
 from managers.db_manager import db
 from model.address import NewAddressSchema
@@ -97,10 +97,8 @@ class Organization(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(
-                or_(func.lower(Organization.name).like(search_string), func.lower(Organization.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(Organization.name.ilike(search_string), Organization.description.ilike(search_string)))
 
         return query.order_by(db.asc(Organization.name)).all(), query.count()
 
