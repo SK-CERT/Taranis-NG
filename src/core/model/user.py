@@ -1,7 +1,7 @@
 """User module for the model representing a user in the system."""
 
 from marshmallow import fields, post_load
-from sqlalchemy import func, or_, orm
+from sqlalchemy import or_, orm
 
 from managers.db_manager import db
 from model.role import Role
@@ -250,8 +250,8 @@ class User(db.Model):
             query = query.join(UserOrganization, User.id == UserOrganization.user_id)
 
         if search is not None:
-            search_string = f"%{search.lower()}%"
-            query = query.filter(or_(func.lower(User.name).like(search_string), func.lower(User.username).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(User.name.ilike(search_string), User.username.ilike(search_string)))
 
         return query.order_by(db.asc(User.name)).all(), query.count()
 

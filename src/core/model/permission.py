@@ -1,6 +1,6 @@
 """Permission model module."""
 
-from sqlalchemy import func, or_
+from sqlalchemy import or_
 
 from managers.db_manager import db
 from shared.schema.role import PermissionSchema
@@ -73,8 +73,8 @@ class Permission(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(Permission.name).like(search_string), func.lower(Permission.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(Permission.name.ilike(search_string), Permission.description.ilike(search_string)))
 
         return query.order_by(db.asc(Permission.id)).all(), query.count()
 

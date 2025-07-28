@@ -1,7 +1,7 @@
 """PublishersNode model."""
 
 from marshmallow import post_load
-from sqlalchemy import func, or_, orm
+from sqlalchemy import or_, orm
 import uuid
 
 from managers.db_manager import db
@@ -94,10 +94,8 @@ class PublishersNode(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(
-                or_(func.lower(PublishersNode.name).like(search_string), func.lower(PublishersNode.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(PublishersNode.name.ilike(search_string), PublishersNode.description.ilike(search_string)))
 
         return query.order_by(db.asc(PublishersNode.name)).all(), query.count()
 

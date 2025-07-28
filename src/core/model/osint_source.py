@@ -179,12 +179,12 @@ class OSINTSource(db.Model):
         query = cls.query
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
+            search_string = f"%{search}%"
             query = query.join(Collector, OSINTSource.collector_id == Collector.id).filter(
                 or_(
-                    func.lower(OSINTSource.name).like(search_string),
-                    func.lower(OSINTSource.description).like(search_string),
-                    func.lower(Collector.type).like(search_string),
+                    OSINTSource.name.ilike(search_string),
+                    OSINTSource.description.ilike(search_string),
+                    Collector.type.ilike(search_string),
                 )
             )
 
@@ -567,10 +567,8 @@ class OSINTSourceGroup(db.Model):
             query = ACLEntry.apply_query(query, user, True, False, False)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(
-                or_(func.lower(OSINTSourceGroup.name).like(search_string), func.lower(OSINTSourceGroup.description).like(search_string))
-            )
+            search_string = f"%{search}%"
+            query = query.filter(or_(OSINTSourceGroup.name.ilike(search_string), OSINTSourceGroup.description.ilike(search_string)))
 
         return query.order_by(db.asc(OSINTSourceGroup.default), db.asc(OSINTSourceGroup.name)).all(), query.count()
 

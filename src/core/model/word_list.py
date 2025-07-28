@@ -172,8 +172,8 @@ class WordList(db.Model):
             query = ACLEntry.apply_query(query, user, True, False, False)
 
         if search is not None:
-            search_string = "%" + search.lower() + "%"
-            query = query.filter(or_(func.lower(WordList.name).like(search_string), func.lower(WordList.description).like(search_string)))
+            search_string = f"%{search}%"
+            query = query.filter(or_(WordList.name.ilike(search_string), WordList.description.ilike(search_string)))
 
         return query.order_by(db.asc(WordList.name)).all(), query.count()
 
