@@ -236,40 +236,42 @@ ApiKey 'My ApiKey' with id 3 created.
 
 This section outlines the integration of AI-enhanced functionality for generating report summaries.
 
+Taranis NG can connect to an online large model from OpenAI, or your own local LLM API such as Ollama.
+If you don’t have any, you can start a small AI model locally.
+
 ### Installation
 
 This example demonstrates how to use **Ollama** with **Taranis NG**. Ollama is an open-source tool that enables running large language models (LLMs) locally. The scenario described targets Windows with Taranis NG running inside Docker Desktop. The procedure is similar for other operating systems.
 
 1. Install Ollama by following the instructions at [ollama.com](https://ollama.com).
 2. After installation, you can begin using LLMs by executing commands in the terminal.
-3. Choose and download a model that fits your use case. (e.g. `llama2`) using the command:
+3. Choose and download a model that fits your use case. (e.g. `llama3.2:3b`) using the command:
     ```bash
-    ollama pull llama2
+    ollama pull <MODELNAME>
     ```
-    Choose a model that fits your use case.
 4. To verify the setup, run:
     ```bash
-    ollama run llama2
+    ollama run <MODELNAME>
     ```
     and review the output.
 
 ### Configuration
 
-1. In Taranis NG, navigate to **Configuration → AI Providers**, then click **Add New**:
+1. In Taranis NG, navigate to **Configuration → Local AI models**, then click **Add New**:
 
-   * **Name**: `Ollama - llama2`
+   * **Name**: `Ollama - <MODELNAME>`
    * **API Type**: `openai`
    * **API URL**:
      * Use `http://localhost:11434/v1` if Ollama runs directly on the host.
      * If Taranis NG is in Docker Desktop, use `http://host.docker.internal:11434/v1` instead of `localhost`.
    * **API Key**: Not required.
-   * **Model**: `llama2`
+   * **Model**: `<MODELNAME>`
 
    Click **Save**. You may also configure ChatGPT or other models, provided they support the `openai` API type.
 
 2. Navigate to **Configuration → Report Types**, then open the **Vulnerability Report** type.
    Locate the `Description` attribute and click **Edit**.
-   From the **AI Provider** dropdown, select `Ollama - llama2`. In the **AI Prompt** field, enter the following:
+   From the `AI model` dropdown, select `Ollama - <MODELNAME>`. In the `AI Prompt` field, enter the following:
 
    ```
    List only software vulnerabilities based on established templates (see example 1, example 2, example 3). Do not add an introduction or conclusion, do not use bullets or numbering, or any markdown. Do not add recommendations or other unrelated text, only vulnerabilities.

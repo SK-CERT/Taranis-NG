@@ -306,7 +306,9 @@
                 remote_report_items: [],
                 attributes: []
             },
-            auto_generate_icon: 'mdi-creation'
+            // TODO: we need to have multiple instances of these (form can have more buttons)
+            auto_generate_icon: 'mdi-creation',
+            auto_generate_icon_timer: null
         }),
 
         watch: {
@@ -838,6 +840,10 @@
             },
 
             auto_generate(attribute_group_item_id) {
+                // Prevent multiple runs if icon indicates a timer is active
+                if (this.auto_generate_icon.startsWith("mdi-timer-sand")) {
+                    return;
+                }
                 this.set_auto_generate_icon("wait")
                 const news_item_agreggate_ids = this.news_item_aggregates.map(item => item.id);
                 aiGenerate(attribute_group_item_id, news_item_agreggate_ids).then((response) => {
@@ -869,14 +875,25 @@
                 return false;
             },
 
+            // TODO: we need to set state for each button extra (form can have more AI buttons)
             set_auto_generate_icon(state) {
-                // mdi-message-processing-outline for chatting?
+                if (this.auto_generate_icon_timer) {
+                    clearTimeout(this.auto_generate_icon_timer);
+                    this.auto_generate_icon_timer = null;
+                }
                 if (state === "wait") {
-                    this.auto_generate_icon = "mdi-timer-sand"
+                    if (this.auto_generate_icon == "mdi-timer-sand") {
+                        this.auto_generate_icon = "mdi-timer-sand-complete";
+                    } else if (this.auto_generate_icon == "mdi-timer-sand-complete") {
+                        this.auto_generate_icon = "mdi-timer-sand-paused";
+                    } else {
+                        this.auto_generate_icon = "mdi-timer-sand";
+                    }
+                    this.auto_generate_icon_timer = setTimeout(() => { this.set_auto_generate_icon(state) }, 500);
                 } else if (state === "error") {
-                    this.auto_generate_icon = "mdi-exclamation-thick"
+                    this.auto_generate_icon = "mdi-exclamation-thick";
                 } else {
-                    this.auto_generate_icon = "mdi-creation"
+                    this.auto_generate_icon = "mdi-creation";
                 }
             }
         },
