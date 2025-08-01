@@ -204,14 +204,14 @@ class AttributeEnum(Resource):
 
 
 class AiProviders(Resource):
-    """Ai Providers API endpoint."""
+    """Local AI models API endpoint."""
 
     @auth_required("CONFIG_AI_ACCESS")
     def get(self):
-        """Get all Ai Providers.
+        """Get all local AI models.
 
         Returns:
-            (dict): The Ai Providers
+            (dict): The local AI models
         """
         search = None
         if "search" in request.args and request.args["search"]:
@@ -220,7 +220,7 @@ class AiProviders(Resource):
 
     @auth_required("CONFIG_AI_CREATE")
     def post(self):
-        """Create an Ai Provider.
+        """Create an local AI model.
 
         Returns:
             (str, int): The result of the create
@@ -231,20 +231,20 @@ class AiProviders(Resource):
             schema = AiProviderSchema()
             return schema.dump(record), 200
         except Exception as ex:
-            msg = "Could not create Ai Provider"
+            msg = "Could not create local AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, 400
 
 
 class AiProvider(Resource):
-    """Ai Provider API endpoint."""
+    """Local AI model API endpoint."""
 
     @auth_required("CONFIG_AI_UPDATE")
     def put(self, ai_provider_id):
-        """Update an Ai Provider.
+        """Update an local AI model.
 
         Args:
-            ai_provider_id (int): The Ai provider ID
+            ai_provider_id (int): The local AI model ID
         Returns:
             (str, int): The result of the update
         """
@@ -254,23 +254,23 @@ class AiProvider(Resource):
             schema = AiProviderSchema()
             return schema.dump(record), 200
         except Exception as ex:
-            msg = "Could not update Ai Provider"
+            msg = "Could not update local AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, 400
 
     @auth_required("CONFIG_AI_DELETE")
     def delete(self, ai_provider_id):
-        """Delete an Ai Provider.
+        """Delete an local AI model.
 
         Args:
-            ai_provider_id (int): The Ai provider ID
+            ai_provider_id (int): The local AI model ID
         Returns:
             (str, int): The result of the delete
         """
         try:
             return ai_provider.AiProvider.delete(ai_provider_id)
         except Exception as ex:
-            msg = "Could not delete Ai Provider"
+            msg = "Could not delete local AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, 400
 

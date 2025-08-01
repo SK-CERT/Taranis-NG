@@ -387,7 +387,7 @@ class ReportItemLlmGenerate(Resource):
             ai_prompt = attr.ai_prompt
             ai_provider = attr.ai_provider
             if not ai_provider or not ai_prompt:
-                return {"message": f"Unknown AI provider or empty AI prompt! (Attribute ID: {attribute_id})"}
+                return {"message": f"Unknown AI model or empty AI prompt! (Attribute ID: {attribute_id})"}
 
             documents_for_llm = []
             document_nr = 0
@@ -409,13 +409,13 @@ class ReportItemLlmGenerate(Resource):
 
             if not documents_for_llm:
                 msg = f"LLM generate: No news items to process (Report ID: {news_item_agreggate_ids})"
-                logger.warning(msg)
-                return {"message": msg}, 400
+                logger.debug(msg)
+                # return {"message": msg}, 400
 
             if ai_provider.api_type == "openai":
                 llm = ChatOpenAI(model_name=ai_provider.model, api_key=ai_provider.api_key, base_url=ai_provider.api_url)
             else:
-                msg = f"LLM generate: unsupported AI provider '{ai_provider.api_type}'"
+                msg = f"LLM generate: unsupported local model type '{ai_provider.api_type}'"
                 logger.warning(msg)
                 return {"message": msg}, 400
 
@@ -449,9 +449,9 @@ class ReportItemLlmGenerate(Resource):
 
             prompt_template = [HumanMessagePromptTemplate.from_template(text)]
             logger.debug(
-                "_____ LLM prompt: _____\n"
+                f"_____ LLM prompt ({ai_provider.model}): _____\n"
                 + text.replace("{question}", ai_prompt).replace("{context}", "".join(doc.page_content for doc in documents_for_llm))
-                + "\n_______________________"
+                + "_______________________"
             )
 
             # prompt = PromptTemplate.from_template(prompt_template)
@@ -460,15 +460,15 @@ class ReportItemLlmGenerate(Resource):
             try:
                 result = llm_chain.invoke({"context": documents_for_llm, "question": ai_prompt})
             except Exception as ex:
-                msg = "Connect to LLM failed"
-                logger.error(f"{msg}: {ex}")
+                msg = f"Connect to LLM failed: {ex}"
+                logger.error(msg)
                 return {"error": msg}, 400
 
             logger.debug(f"_____ LLM output: _____\n{result}\n_______________________")
             return {"message": result}
 
         except Exception as ex:
-            msg = "LLM generate failed"
+            msg = "LLM prompt construction failed (see logs)"
             logger.exception(f"{msg}: {ex}")
             return {"error": msg}, 400
 

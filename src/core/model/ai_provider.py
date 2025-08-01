@@ -1,4 +1,4 @@
-"""AI Provider Model."""
+"""Local AI model Model."""
 
 from datetime import datetime
 from marshmallow import post_load
@@ -7,32 +7,32 @@ from shared.schema.ai_provider import AiProviderSchema
 
 
 class NewAiProviderSchema(AiProviderSchema):
-    """New AI Provider Schema."""
+    """New local AI model Schema."""
 
     @post_load
     def make(self, data, **kwargs):
-        """Create a new AI Provider.
+        """Create a new local AI model.
 
         Args:
-            data (dict): Data to create the new AI Provider.
+            data (dict): Data to create the new local AI model.
         Returns:
-            AiProvider: New AI Provider object.
+            AiProvider: New local AI model object.
         """
         return AiProvider(**data)
 
 
 class AiProvider(db.Model):
-    """AI Provider Model.
+    """Local AI model.
 
-    This model represents an AI Provider in the database.
+    This model represents an local AI model in the database.
 
     Attributes:
-        id (int): AI Provider ID.
-        name (str): AI Provider name.
-        api_type (str): AI Provider type - currently only "openai" is supported (also valid for ollama)
-        api_url (str): AI Provider API url.
-        api_key (str): AI Provider API key.
-        model (str): AI Provider model.
+        id (int): Local AI model ID.
+        name (str): Local AI model name.
+        api_type (str): Local AI model type - currently only "openai" is supported (also valid for ollama)
+        api_url (str): Local AI model API url.
+        api_key (str): Local AI model API key.
+        model (str): Local AI model.
         updated_by (str): User who last updated the record.
         updated_at (datetime): Timestamp of the last update.
     """
@@ -47,7 +47,7 @@ class AiProvider(db.Model):
     updated_at = db.Column(db.DateTime)
 
     def __init__(self, name, api_type, api_url, api_key, model):
-        """Create a new AI Provider."""
+        """Create a new local AI model."""
         # self.id = None
         self.name = name
         self.api_type = api_type
@@ -57,33 +57,33 @@ class AiProvider(db.Model):
 
     @classmethod
     def find(cls, id):
-        """Find an AI Provider by ID.
+        """Find an local AI model by ID.
 
         Args:
-            id (int): AI Provider ID.
+            id (int): Local AI model ID.
         Returns:
-            AiProvider: AI Provider object.
+            AiProvider: Local AI model object.
         """
         AiProvider = db.session.get(cls, id)
         return AiProvider
 
     @classmethod
     def get_all(cls):
-        """Get all AI Providers.
+        """Get all local AI models.
 
         Returns:
-            list: List of AI Providers.
+            list: List of local AI models.
         """
         return cls.query.order_by(db.asc(AiProvider.name)).all()
 
     @classmethod
     def get(cls, search_string):
-        """Get AI Providers.
+        """Get local AI models.
 
         Args:
             search (str): Search string.
         Returns:
-            list: List of AI Providers.
+            list: List of local AI models.
         """
         query = cls.query
 
@@ -95,13 +95,13 @@ class AiProvider(db.Model):
     @classmethod
     def get_all_json(cls, search):
         """
-        Get all AI Providers in JSON format based on a search query.
+        Get all local AI models in JSON format based on a search query.
 
         Args:
             search (str): Search query.
 
         Returns:
-            dict: Dictionary containing total count and list of AI Providers in JSON format.
+            dict: Dictionary containing total count and list of local AI models in JSON format.
         """
         ai_providers, count = cls.get(search)
         schema = AiProviderSchema(many=True)
@@ -109,12 +109,12 @@ class AiProvider(db.Model):
 
     @classmethod
     def add_new(cls, data, user_name):
-        """Add a new AI Provider.
+        """Add a new local AI model.
 
         Args:
-            data (dict): Data to create the new AI Provider.
+            data (dict): Data to create the new local AI model.
         Returns:
-            AiProvider: New AI Provider object.
+            AiProvider: New local AI model object.
         """
         schema = NewAiProviderSchema()
         new = schema.load(data)
@@ -127,12 +127,12 @@ class AiProvider(db.Model):
     @classmethod
     def update(cls, id, data, user_name):
         """
-        Update an existing AI Provider.
+        Update an existing local AI model.
 
         Args:
-            id (int): ID of the AI Provider to update.
-            data (dict): Data to update the AI Provider with.
-            user_mame (str): User who is updating the AI Provider.
+            id (int): ID of the local AI model to update.
+            data (dict): Data to update the local AI model with.
+            user_name (str): User who is updating the local AI model.
         """
         schema = AiProviderSchema()
         new = schema.load(data)
@@ -149,10 +149,10 @@ class AiProvider(db.Model):
 
     @classmethod
     def delete(cls, id):
-        """Delete an AI Provider.
+        """Delete an local AI model.
 
         Args:
-            id (int): AI Provider ID.
+            id (int): Local AI model ID.
         """
         record = db.session.get(cls, id)
         db.session.delete(record)

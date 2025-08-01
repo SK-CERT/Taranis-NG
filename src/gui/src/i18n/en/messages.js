@@ -95,7 +95,7 @@ const messages_en = {
         remote_nodes: "Remote Nodes",
         local: "Local",
         settings: "Application Settings",
-        ai_providers: "AI Providers",
+        ai_providers: "Local AI models",
     },
 
     notification: {
@@ -433,7 +433,7 @@ const messages_en = {
         select_time: "Select Time",
         select_datetime: "Select Datetime",
         done: "Done",
-        ai_provider: "AI Provider",
+        ai_provider: "AI model",
         ai_prompt: "AI Prompt",
     },
 
@@ -892,14 +892,14 @@ const messages_en = {
         api_url: "API URL",
         api_key: "API key",
         model: "Model",
-        add_new: "Add new AI provider",
-        edit: "Edit AI provider",
-        successful: "New AI provider was successfully added",
-        successful_edit: "AI provider was successfully updated",
-        error: "Could not save this AI provider",
-        remove: "AI provider was successfully deleted",
-        removed_error: "AI provider is in use and could not be deleted",
-        total_count: "AI providers count: ",
+        add_new: "Add new local AI model",
+        edit: "Edit local AI model",
+        successful: "New local AI model was successfully added",
+        successful_edit: "Local AI model was successfully updated",
+        error: "Could not save this local AI model",
+        remove: "Local AI model was successfully deleted",
+        removed_error: "Local AI model is in use and could not be deleted",
+        total_count: "Local AI models count: ",
     },
 
     asset_group: {

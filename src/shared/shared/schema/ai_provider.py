@@ -1,4 +1,4 @@
-"""This module defines the schema and data model for AI Providers using Marshmallow for serialization and deserialization."""
+"""This module defines the schema and data model for local AI models using Marshmallow for serialization and deserialization."""
 
 from marshmallow import Schema, fields, post_load, EXCLUDE
 
@@ -25,7 +25,7 @@ class AiProviderSchema(Schema):
         """Create a AiProvider instance from the deserialized data.
 
         Args:
-            data (dict): The deserialized data containing Ai provider attributes.
+            data (dict): The deserialized data containing local AI modelr attributes.
             **kwargs: Additional keyword arguments.
         Returns:
             AiProvider: An instance of AiProvider initialized with the provided data.
@@ -34,16 +34,16 @@ class AiProviderSchema(Schema):
 
 
 class AiProvider:
-    """Data model for AI Providers."""
+    """Data model for Local AI models."""
 
     def __init__(self, id, name, api_type, api_url, api_key, model):
         """Initialize an AiProvider instance.
 
         Args:
-            id (int): Unique identifier for the AI provider.
-            name (str): Name of the AI provider.
+            id (int): Unique identifier for the local AI model.
+            name (str): Name of the local AI model.
             api_type (str): API type ("openai").
-            api_url (str): API URL of the provider.
+            api_url (str): The endpoint URL.
             api_key (str): API key for authentication.
             model (str): Model name or identifier.
         """

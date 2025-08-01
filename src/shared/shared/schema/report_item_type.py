@@ -52,7 +52,7 @@ class AttributeGroupItem:
             min_occurrence (int): Minimum allowed occurrences.
             max_occurrence (int): Maximum allowed occurrences.
             attribute: Associated attribute object.
-            ai_provider_id (int): Associated AI provider ID.
+            ai_provider_id (int): Associated local AI model ID.
             ai_prompt (str): Optional AI prompt.
         """
         self.id = id

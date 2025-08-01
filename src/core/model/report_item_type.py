@@ -52,8 +52,8 @@ class AttributeGroupItem(db.Model):
         attribute_group (AttributeGroup): Attribute group.
         attribute_id (int): Attribute id.
         attribute (Attribute): Attribute.
-        ai_provider_id (int): AI provider id.
-        ai_provider (AiProvider): AI provider.
+        ai_provider_id (int): Local AI model id.
+        ai_provider (AiProvider): Local AI model.
         ai_prompt (str): AI prompt.
     """
 
