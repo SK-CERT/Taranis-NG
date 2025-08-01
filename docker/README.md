@@ -1,4 +1,6 @@
-# Quick project reference
+<!-- use whole link on github files becasue this .md is also on https://hub.docker.com -->
+
+# Quick reference
 
 - Source code: [github.com/SK-CERT/Taranis-NG](https://github.com/SK-CERT/Taranis-NG)
 - Docker images: [hub.docker.com/u/skcert](https://hub.docker.com/u/skcert)
@@ -7,7 +9,7 @@
 - Where to file issues (no vulnerability reports please): [GitHub issues page](https://github.com/SK-CERT/Taranis-NG/issues)
 - Where to send security issues and vulnerability reports: [incident@nbu.gov.sk](mailto:incident@nbu.gov.sk)
 
-## About Taranis NG
+## What is Taranis NG?
 
 Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and
 organisations. It allows osint gathering, analysis and reporting; team-to-team
@@ -36,16 +38,13 @@ entrypoint, and the [gunicorn](https://gunicorn.org/) configuration file.
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/engine/install/)
-- [docker-compose](https://docs.docker.com/compose/install/) >= 1.27.0 (In July 2023, Compose V1 has been deprecated)
-
-or
-
-- [Compose V2](https://docs.docker.com/compose/migrate/), which is part of standard Docker Engine installation
+- [Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/)
+- [Docker Desktop](https://docs.docker.com/desktop/) for Windows and macOS users
 - (Optional) [Vim](https://www.vim.org/) or other text editor - for configuration and development
+- (Optional) [Notepad++](https://notepad-plus-plus.org/) text editor for Windows users
 
-Please note it is important to use the abovementioned version of
-`docker-compose` or newer, otherwise the build and deploy will fail.
+Please note it is important to use the latest version of
+`docker-compose`, otherwise the build and deploy can fail.
 
 ## Quickly build and run Taranis NG using `docker-compose` or `docker compose`
 
@@ -92,11 +91,10 @@ TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml up
 **Voila, Taranis NG is up and running. Visit your instance by navigating to
 [https://localhost:4443/](https://localhost:4443/) using your web browser**.
 
-Your Taranis NG instance now needs to be configured.  Continue
-[here](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
-
 **The default credentials are `user` / `user` and `admin` / `admin`.**
 
+Your Taranis NG instance now needs to be configured.  Continue
+[here](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
 
 ## Advanced build methods
 
@@ -119,15 +117,6 @@ docker build -t taranis-ng-gui . -f ./docker/Dockerfile.gui
 docker build -t taranis-ng-presenters . -f ./docker/Dockerfile.presenters
 docker build -t taranis-ng-publishers . -f ./docker/Dockerfile.publishers
 ```
-
-There are several Dockerfiles and each of them builds a different component of the system. These Dockerfiles exist:
-
-- [Dockerfile.bots](Dockerfile.bots)
-- [Dockerfile.collectors](Dockerfile.collectors)
-- [Dockerfile.core](Dockerfile.core)
-- [Dockerfile.gui](Dockerfile.gui)
-- [Dockerfile.presenters](Dockerfile.presenters)
-- [Dockerfile.publishers](Dockerfile.publishers)
 
 # Configuration
 
@@ -170,7 +159,7 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 
 | Secrets file                | Description | Example |
 |-----------------------------|-------------|----------|
-| `api_key`            | Shared API key. | `cuBG/4H9lGTeo47F9X6DUg` |
+| `api_key`            | Shared API key. | `supersecret` |
 
 
 ### `gui`
@@ -194,153 +183,6 @@ Run following in your host OS:
 sysctl -w vm.overcommit_memory=1
 ```
 
-## Management script how-to
+For initial settings continue to main [README](https://github.com/SK-CERT/Taranis-NG/blob/main/README.md).
 
-Taranis NG core container comes with a simple management script that may be used to set up and configure the instance without manual interaction with the database.
-
-To run the management script, launch a shell inside of the docker container for the core component with this command:
-
-```bash
-docker exec -it [CONTAINER] python manage.py [COMMAND] [PARAMETERS]
-```
-
-Currently, you may manage the following:
-
-| Command     | Description | Parameters |
-|-------------|-------------|------------|
-| `account`     | (WIP) List, create, edit and delete user accounts. | `--list`, `-l` : list all user accounts<br /> `--create`, `-c` : create a new user account<br /> `--edit`, `-e` : edit an existing user account<br /> `--delete`, `-d` : delete a user account<br /> `--username` : specify the username<br /> `--name` : specify the user's name<br /> `--password` : specify the user's password<br /> `--roles` : specify a list of roles, divided by a comma (`,`), that the user belongs to |
-| `role`     | (WIP) List, create, edit and delete user roles. | `--list`, `-l` : list all roles<br /> `--filter`, `-f` : filter roles by their name or description<br /> `--create`, `-c` : create a new role<br /> `--edit`, `-e` : edit an existing role<br /> `--delete`, `-d` : delete a role<br /> `--id` : specify the role id (in combination with `--edit` or `--delete`)<br /> `--name` : specify the role name<br /> `--description` : specify the role description (default is `""`)<br /> `--permissions` : specify a list of permissions, divided with a comma (`,`), that the role would allow |
-| `collector, bot`     | (WIP) List, create, edit, delete and update nodes. | `--list`, `-l` : list all nodes<br /> `--create`, `-c` : create a new node<br /> `--edit`, `-e` : edit an existing node<br /> `--delete`, `-d` : delete a node<br /> `--update`, `-u` : re-initialize node<br /> `--all`, `-a` : update all nodes (in combination with `--update`)<br /> `--show-api-key` : show API key in plaintext (in combination with `--list`)<br /> `--id` : specify the node id (in combination with `--edit`, `--delete` or `--update`)<br /> `--name` : specify the node name<br /> `--description` : specify the collector description (default is `""`)<br /> `--api-url` : specify the collector node API url<br /> `--api-key` : specify the collector node API key |
-| `dictionary`     | Update CPE, CWE and CVE dictionaries. | `--upload-cpe` : upload the CPE dictionary (expected on STDIN in XML format) to the path indicated by `CPE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cve` : upload the CVE dictionary (expected on STDIN in XML format) to the path indicated by `CVE_UPDATE_FILE` environment variable, and update the database from that file.<br /> `--upload-cwe` : upload the CWE dictionary (expected on STDIN in XML format) to the path indicated by `CWE_UPDATE_FILE` environment variable, and update the database from that file. |
-| `apikey`     | List, create and delete apikeys. | `--list`, `-l` : list all apikeys<br /> `--create`, `-c` : create a new apikey<br /> `--delete`, `-d` : delete a apikey<br /> `--name` : specify the apikey name<br /> `--user` : specify the user's name<br /> `--expires` : specify the apikey expiration datetime |
-
-
-#### Example usage
-
-##### Create a new role with a set of permissions
-
-```bash
-manage.py role \
-    --create \
-    --name "Custom role 1" \
-    --description "Custom role with analysis and assessment access" \
-    --permissions "ANALYZE_ACCESS, ANALYZE_CREATE, ANALYZE_UPDATE, \
-    ANALYZE_DELETE, ASSESS_ACCESS, ASSESS_CREATE, ASSESS_UPDATE, \
-    ASSESS_DELETE, MY_ASSETS_ACCESS, MY_ASSETS_CREATE"
-```
-
-Command output:
-
-```
-Role 'Custom role 1' with id 3 created.
-```
-
-##### Role filter
-
-```bash
-manage.py role \
-    --list \
-    --filter "Custom role 1"
-```
-
-Command output:
-
-```
-Id: 3
-	Name: Custom role 1
-	Description: Custom role with analysis and assessment access
-	Permissions: ['ANALYZE_ACCESS', 'ANALYZE_CREATE', 'ANALYZE_UPDATE', 'ANALYZE_DELETE', 'ASSESS_ACCESS', 'ASSESS_CREATE', 'ASSESS_UPDATE', 'ASSESS_DELETE', 'MY_ASSETS_ACCESS', 'MY_ASSETS_CREATE']
-```
-
-##### Create a new [collector, bot] node
-
-```bash
-manage.py [collector, bot] \
-    --create \
-    --name "Docker [collector, bot]" \
-    --description "A simple [collector, bot] hosted in a Docker container" \
-    --api-url "http://[collectors, bots]" \
-    --api-key "supersecret"
-```
-
-Command output:
-
-```
-[Collector, Bot] node 'Docker [collector, bot]' with id 1 created.
-```
-
-##### Re-initialize a [collector, bot] node
-
-```bash
-manage.py [collector, bot] \
-    --update \
-    --name "Docker"
-```
-
-Command output:
-
-```
-[Collector, Bot] node 1 updated.
-[Collector, Bot] node 2 updated.
-Unable to update [collector, bot] node 3.
-    Response: [401] ""
-```
-
-##### Create a new user account
-
-```bash
-manage.py account \
-    --create \
-    --name "John Doe" \
-    --username "test_user" \
-    --password "supersecret" \
-    --roles 3
-```
-
-Command output:
-
-```
-User 'test_user' created.
-```
-
-##### Upload a CPE dictionary
-
-```bash
-zcat official-cpe-dictionary_v2.3.xml.gz | manage.py dictionary --upload-cpe
-```
-
-Command output:
-
-```
-Processed CPE items: 1000
-Processed CPE items: 2000
-...
-...
-Processed CPE items: 789000
-Processed CPE items: 789704
-Dictionary was uploaded.
-```
-
-##### Create new ApiKey
-
-```bash
-manage.py apikey \
-    --create \
-    --name "My ApiKey"
-```
-
-##### Create a new API key for a user with an expiration date
-
-```bash
-manage.py apikey \
-    --create \
-    --name "My ApiKey" \
-    --user "test_user" \
-    --expire "2022-12-31 16:55"
-```
-
-Command output:
-
-```
-ApiKey 'My ApiKey' with id 3 created.
-```
+How to configure other components see [How to](https://github.com/SK-CERT/Taranis-NG/blob/main/docs/howto.md).
