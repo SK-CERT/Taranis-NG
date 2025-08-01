@@ -93,8 +93,8 @@ TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml up
 
 **The default credentials are `user` / `user` and `admin` / `admin`.**
 
-Your Taranis NG instance now needs to be configured.  Continue
-[here](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
+For initial configuration instructions, please continue to the main
+[README](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
 
 ## Advanced build methods
 
@@ -118,15 +118,7 @@ docker build -t taranis-ng-presenters . -f ./docker/Dockerfile.presenters
 docker build -t taranis-ng-publishers . -f ./docker/Dockerfile.publishers
 ```
 
-# Configuration
-
-## Container variables
-
-### `redis`
-Any configuration options are available at [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis).
-
-### `database`
-Any configuration options are available at [https://hub.docker.com/_/postgres](https://hub.docker.com/_/postgres).
+# Container variables configuration
 
 ### `core`
 
@@ -173,7 +165,9 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 | `NGINX_WORKERS`               | Number of NginX worker threads to spawn. | `4` |
 | `NGINX_CONNECTIONS`           | Maximum number of allowed connections per one worker thread. | `16` |
 
-## Note
+### `redis`
+Any configuration options are available at [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis).
+
 If you see in logs this message:
 ```
 redis-1       | 1:C 07 Jan 2025 08:35:21.560 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
@@ -183,6 +177,11 @@ Run following in your host OS:
 sysctl -w vm.overcommit_memory=1
 ```
 
-For initial settings continue to main [README](https://github.com/SK-CERT/Taranis-NG/blob/main/README.md).
+### `database`
+Any configuration options are available at [https://hub.docker.com/_/postgres](https://hub.docker.com/_/postgres).
 
-How to configure other components see [How to](https://github.com/SK-CERT/Taranis-NG/blob/main/docs/howto.md).
+## Learn more...
+
+Main documentation can be found in the [README](https://github.com/SK-CERT/Taranis-NG/blob/main/README.md), which includes basic information and initial setup instructions.
+
+For instructions on configuring other components, refer to the [How to guide](https://github.com/SK-CERT/Taranis-NG/blob/main/docs/howto.md).
