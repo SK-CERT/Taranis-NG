@@ -1,11 +1,11 @@
-# Keyboard shortcuts
+# Default keyboard shortcuts
 
 ## Assess
-- ↓/↑/j/k: Navigate up/down through list items
-- Home: Jump to first list item
-- End: Jump to last loaded list item
-- →/Enter/l: Open detailed item view
-- ←/Esc/h:
+- `↓/↑/j/k`: Navigate up/down through list items
+- `Home`: Jump to first list item
+- `End`: Jump to last loaded list item
+- `→/Enter/l`: Open detailed item view
+- `←/Esc/h`:
    - In Show-Item mode: Close detailed item view
    - With search bar in focus: Unfocus search bar
 - `r`: Mark item as **r**ead
@@ -34,9 +34,11 @@
 ### View mode
 - `Esc`: Exit view mode
 - `d`: Switch to view "Dashboard"
-- `C`: Switch to view "Configuration" (global)
 - `a`: Switch to view "Assess"
 - `z`: Switch to view "Analyze"
-- `p`: Switch to view "Publish" (local)
+- `p`: Switch to view "Publish"
 - `m`: Switch to view "My Assets"
-- `c`: Switch to view "Configuration" (user)
+- `c`: Switch to view "Configuration"
+
+You can change the keyboard shortcuts in the user profile settings.
+The changes will take effect after restarting the application.

@@ -1,19 +1,18 @@
-﻿
-# Contents
-[OSINT Report](#_toc1)
+﻿### Contents
 
-[Weekly Summary](#_toc2)
+- [OSINT Report](#_toc1)
 
-[Offensive content report](#_toc3)
+- [Weekly Summary](#_toc2)
 
-[Disinformation from Public Source Report](#_toc4)
+- [Offensive content report](#_toc3)
 
+- [Disinformation from Public Source Report](#_toc4)
 
-# <a name="_toc1"></a>OSINT Report
+# <a id="_toc1"></a>OSINT Report
 
-![](img/reports_001.png)
+![](images/report_01.png)
 
-![](img/reports_002.png)
+![](images/report_02.png)
 
 - It’s summary report about various cyber events
 - The report contains various items of information sorted by sections:
@@ -50,12 +49,12 @@ This report is inbuilt in Taranis (version after 2023/09)
 
 If you need to edit the report design, use this HTML template: **/app/templates/template\_osint.html**
 
-# <a name="_toc2"></a>Weekly Summary
+# <a id="_toc2"></a>Weekly Summary
 
-![](img/reports_003.png)
+![](images/report_03.png)
 
 - It is summary report what happened for last week (vulnerabilities, news...)
-- The report contains various items of information: 
+- The report contains various items of information:
   - Vulnerability Report
     - Confidentiality, TLP
     - CVSS vector, Description
@@ -72,7 +71,7 @@ If you need to edit the report design, use this HTML template: **/app/templates/
 ###
 **Usage:**
 
-Create some new **Report items** with type **Vulnerability** **report** or **News by Sector**. Then create new **Product** with type **Weekly Bulletin** and add your previous created Report items. 
+Create some new **Report items** with type **Vulnerability** **report** or **News by Sector**. Then create new **Product** with type **Weekly Bulletin** and add your previous created Report items.
 
 To use all the reporting possibilities, you should add all types of these report items to final product:
 
@@ -83,12 +82,12 @@ This report is inbuilt in Taranis (version after 2023/09)
 
 If you need to edit the report design, use this HTML template: **/app/templates/weekly.html**
 
-# <a name="_toc3"></a>Offensive content report
+# <a id="_toc3"></a>Offensive content report
 
-![](img/reports_004.png)
+![](images/report_04.png)
 
 - It’s summary report for offensive content blocking
-- The report contains various items of information: 
+- The report contains various items of information:
   - Who proposes blocking
   - Summary
   - Opinion
@@ -104,12 +103,12 @@ This report is inbuilt in Taranis (version after 2023/09)
 
 If you need to edit the report design, use this HTML template: **/app/templates/template\_content.html**
 
-# <a name="_toc4"></a>Disinformation from Public Source Report
+# <a id="_toc4"></a>Disinformation from Public Source Report
 
-![](img/reports_005.png)
+![](images/report_05.png)
 
 - It’s summary report about disinformation from public sources
-- The report contains various items of information: 
+- The report contains various items of information:
   - Source (link)
   - Title, Quote
   - Reach, Reach To Date
@@ -124,5 +123,3 @@ Create some new **Report items** with type **Disinformation from public source**
 This report is inbuilt in Taranis (version after 2023/09)
 
 If you need to edit the report design, use this HTML template: **/app/templates/template\_disinfo.html**
-
-
