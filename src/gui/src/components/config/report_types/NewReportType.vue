@@ -2,7 +2,7 @@
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
         <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="canCreate" @click="addReportType">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{$t('common.add_btn')}}</span>
+            <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
         <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" content-class="attribute-type">
             <v-card v-bind="UI.DIALOG.BASEMENT">
@@ -19,30 +19,22 @@
                     <v-spacer></v-spacer>
                     <v-btn v-if="canUpdate" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
-                        <span>{{$t('common.save')}}</span>
+                        <span>{{ $t('common.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
                 <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
                     <v-row no-gutters>
-                        <v-col cols="12" class="cation grey--text" v-if="edit">ID: {{report_type.id}}</v-col>
+                        <v-col cols="12" class="cation grey--text" v-if="edit">ID: {{ report_type.id }}</v-col>
                         <v-col cols="12">
-                            <v-text-field :disabled="!canUpdate"
-                                          :label="$t('report_type.name')"
-                                          name="name"
-                                          type="text"
-                                          v-model="report_type.title"
-                                          v-validate="'required'"
-                                          data-vv-name="name"
-                                          :error-messages="errors.collect('name')"
-                                          :spellcheck="$store.state.settings.spellcheck" />
+                            <v-text-field :disabled="!canUpdate" :label="$t('report_type.name')" name="name" type="text"
+                                v-model="report_type.title" v-validate="'required'" data-vv-name="name"
+                                :error-messages="errors.collect('name')"
+                                :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
-                            <v-textarea :disabled="!canUpdate"
-                                        :label="$t('report_type.description')"
-                                        name="description"
-                                        v-model="report_type.description"
-                                        :spellcheck="$store.state.settings.spellcheck" />
+                            <v-textarea :disabled="!canUpdate" :label="$t('report_type.description')" name="description"
+                                v-model="report_type.description" :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                     </v-row>
 
@@ -50,52 +42,58 @@
                         <v-col cols="12">
                             <v-btn v-if="canUpdate" color="primary" @click="addAttributeGroup">
                                 <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                                <span>{{$t('report_type.new_group')}}</span>
+                                <span>{{ $t('report_type.new_group') }}</span>
                             </v-btn>
                         </v-col>
                         <v-col cols="12">
                             <v-card style="margin-top: 8px" v-for="(group, index) in report_type.attribute_groups"
-                                    :key="group.id">
+                                :key="group.id">
 
                                 <v-toolbar dark height="32px">
                                     <v-spacer></v-spacer>
                                     <v-toolbar-items v-if="canUpdate">
-
-                                        <v-icon @click="moveAttributeGroupUp(index)">
-                                            mdi-arrow-up-bold
-                                        </v-icon>
-                                        <v-icon @click="moveAttributeGroupDown(index)">
-                                            mdi-arrow-down-bold
-                                        </v-icon>
-
-                                        <v-icon @click="deleteAttributeGroup(index)">
-                                            delete
-                                        </v-icon>
+                                        <v-tooltip top>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-icon v-bind="attrs" v-on="on" @click="moveAttributeGroupUp(index)">
+                                                    mdi-arrow-up-bold
+                                                </v-icon>
+                                            </template>
+                                            <span>{{ $t('common.up') }}</span>
+                                        </v-tooltip>
+                                        <v-tooltip top>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-icon v-bind="attrs" v-on="on" @click="moveAttributeGroupDown(index)">
+                                                    mdi-arrow-down-bold
+                                                </v-icon>
+                                            </template>
+                                            <span>{{ $t('common.down') }}</span>
+                                        </v-tooltip>
+                                        <v-tooltip top>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-icon v-bind="attrs" v-on="on" @click="deleteAttributeGroup(index)">
+                                                    mdi-delete
+                                                </v-icon>
+                                            </template>
+                                            <span>{{ $t('common.delete') }}</span>
+                                        </v-tooltip>
                                     </v-toolbar-items>
                                 </v-toolbar>
 
                                 <v-card-text>
-                                    <v-text-field :disabled="!canUpdate"
-                                                  :label="$t('report_type.name')"
-                                                  name="name"
-                                                  type="text"
-                                                  v-model="group.title"
-                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
-                                    <v-textarea :disabled="!canUpdate"
-                                                :label="$t('report_type.description')"
-                                                name="description"
-                                                v-model="group.description"
-                                                :spellcheck="$store.state.settings.spellcheck"></v-textarea>
-                                    <v-text-field :disabled="!canUpdate"
-                                                  :label="$t('report_type.section_title')"
-                                                  name="section_title"
-                                                  v-model="group.section_title"
-                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                                    <v-text-field :disabled="!canUpdate" :label="$t('report_type.name')" name="name"
+                                        type="text" v-model="group.title"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                                    <v-textarea :disabled="!canUpdate" :label="$t('report_type.description')"
+                                        name="description" v-model="group.description"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-textarea>
+                                    <v-text-field :disabled="!canUpdate" :label="$t('report_type.section_title')"
+                                        name="section_title" v-model="group.section_title"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-text-field>
 
                                     <AttributeTable :disabled="!canUpdate"
-                                                    :attributes="report_type.attribute_groups[index].attribute_group_items"
-                                                    :attribute_templates="attribute_templates"
-                                                    :ai_providers="ai_providers"></AttributeTable>
+                                        :attributes="report_type.attribute_groups[index].attribute_group_items"
+                                        :attribute_templates="attribute_templates" :ai_providers="ai_providers">
+                                    </AttributeTable>
 
                                 </v-card-text>
                             </v-card>
@@ -105,10 +103,10 @@
                     <v-row no-gutters class="pt-2">
                         <v-col cols="12">
                             <v-alert v-if="show_validation_error" dense type="error" text>
-                                {{$t('error.validation')}}
+                                {{ $t('error.validation') }}
                             </v-alert>
                             <v-alert v-if="show_error" dense type="error" text>
-                                {{$t('report_type.error')}}
+                                {{ $t('report_type.error') }}
                             </v-alert>
                         </v-col>
                     </v-row>
@@ -119,200 +117,200 @@
 </template>
 
 <script>
-    import { createNewReportItemType } from "@/api/config";
-    import { updateReportItemType } from "@/api/config";
-    import AttributeTable from "@/components/config/report_types/AttributeTable";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
+import { createNewReportItemType } from "@/api/config";
+import { updateReportItemType } from "@/api/config";
+import AttributeTable from "@/components/config/report_types/AttributeTable";
+import AuthMixin from "@/services/auth/auth_mixin";
+import Permissions from "@/services/auth/permissions";
 
-    export default {
-        name: "NewReportType",
-        components: {
-            AttributeTable
+export default {
+    name: "NewReportType",
+    components: {
+        AttributeTable
+    },
+    data: () => ({
+        visible: false,
+        edit: false,
+        show_validation_error: false,
+        show_error: false,
+        attribute_templates: [],
+        ai_providers: [],
+        report_type: {
+            id: -1,
+            title: "",
+            description: "",
+            attribute_groups: []
+        }
+    }),
+    mixins: [AuthMixin],
+    computed: {
+        canCreate() {
+            return this.checkPermission(Permissions.CONFIG_REPORT_TYPE_CREATE)
         },
-        data: () => ({
-            visible: false,
-            edit: false,
-            show_validation_error: false,
-            show_error: false,
-            attribute_templates: [],
-            ai_providers: [],
-            report_type: {
+        canUpdate() {
+            return this.checkPermission(Permissions.CONFIG_REPORT_TYPE_UPDATE) || !this.edit
+        },
+    },
+    methods: {
+        addReportType() {
+            this.visible = true;
+            this.edit = false
+            this.show_error = false;
+            this.report_type.id = -1;
+            this.report_type.title = "";
+            this.report_type.description = "";
+            this.report_type.categories = []
+            this.report_type.attribute_groups = []
+            this.$validator.reset();
+        },
+
+        addAttributeGroup() {
+            this.report_type.attribute_groups.push({
+                index: this.report_type.attribute_groups.length,
                 id: -1,
                 title: "",
                 description: "",
-                attribute_groups: []
-            }
-        }),
-        mixins: [AuthMixin],
-        computed: {
-            canCreate() {
-                return this.checkPermission(Permissions.CONFIG_REPORT_TYPE_CREATE)
-            },
-            canUpdate() {
-                return this.checkPermission(Permissions.CONFIG_REPORT_TYPE_UPDATE) || !this.edit
-            },
+                section: -1,
+                section_title: "",
+                attribute_group_items: []
+            });
+
+            setTimeout(() => {
+                document.scrollingElement.querySelector(".attribute-type").scrollTo(0, 5000);
+            }, 200);
+
         },
-        methods: {
-            addReportType() {
-                this.visible = true;
-                this.edit = false
-                this.show_error = false;
-                this.report_type.id = -1;
-                this.report_type.title = "";
-                this.report_type.description = "";
-                this.report_type.categories = []
-                this.report_type.attribute_groups = []
-                this.$validator.reset();
-            },
 
-            addAttributeGroup() {
-                this.report_type.attribute_groups.push({
-                    index: this.report_type.attribute_groups.length,
-                    id: -1,
-                    title: "",
-                    description: "",
-                    section: -1,
-                    section_title: "",
-                    attribute_group_items: []
-                });
+        moveAttributeGroupUp(index) {
+            if (index > 0) {
+                this.report_type.attribute_groups.splice(index - 1, 0, this.report_type.attribute_groups.splice(index, 1)[0]);
+            }
+        },
 
-                setTimeout(() => {
-                    document.scrollingElement.querySelector(".attribute-type").scrollTo(0, 5000);
-                }, 200);
+        moveAttributeGroupDown(index) {
+            if (index < this.report_type.attribute_groups.length - 1) {
+                this.report_type.attribute_groups.splice(index + 1, 0, this.report_type.attribute_groups.splice(index, 1)[0]);
+            }
+        },
 
-            },
+        deleteAttributeGroup(index) {
+            this.report_type.attribute_groups.splice(index, 1)
+        },
 
-            moveAttributeGroupUp(index) {
-                if (index > 0) {
-                    this.report_type.attribute_groups.splice(index - 1, 0, this.report_type.attribute_groups.splice(index, 1)[0]);
-                }
-            },
+        cancel() {
+            this.$validator.reset();
+            this.visible = false
+        },
 
-            moveAttributeGroupDown(index) {
-                if (index < this.report_type.attribute_groups.length - 1) {
-                    this.report_type.attribute_groups.splice(index + 1, 0, this.report_type.attribute_groups.splice(index, 1)[0]);
-                }
-            },
+        add() {
+            this.$validator.validateAll().then(() => {
 
-            deleteAttributeGroup(index) {
-                this.report_type.attribute_groups.splice(index, 1)
-            },
+                if (!this.$validator.errors.any()) {
 
-            cancel() {
-                this.$validator.reset();
-                this.visible = false
-            },
+                    this.show_validation_error = false;
+                    this.show_error = false;
 
-            add() {
-                this.$validator.validateAll().then(() => {
+                    for (let x = 0; x < this.report_type.attribute_groups.length; x++) {
 
-                    if (!this.$validator.errors.any()) {
+                        this.report_type.attribute_groups[x].index = x;
 
-                        this.show_validation_error = false;
-                        this.show_error = false;
-
-                        for (let x = 0; x < this.report_type.attribute_groups.length; x++) {
-
-                            this.report_type.attribute_groups[x].index = x;
-
-                            for (let y = 0; y < this.report_type.attribute_groups[x].attribute_group_items.length; y++) {
-                                this.report_type.attribute_groups[x].attribute_group_items[y].index = y;
-                            }
+                        for (let y = 0; y < this.report_type.attribute_groups[x].attribute_group_items.length; y++) {
+                            this.report_type.attribute_groups[x].attribute_group_items[y].index = y;
                         }
+                    }
 
-                        if (this.edit) {
-                            updateReportItemType(this.report_type).then(() => {
+                    if (this.edit) {
+                        updateReportItemType(this.report_type).then(() => {
 
-                                this.$validator.reset();
-                                this.visible = false;
-                                this.$root.$emit('notification',
-                                    {
-                                        type: 'success',
-                                        loc: 'report_type.successful_edit'
-                                    }
-                                )
-                            }).catch(() => {
+                            this.$validator.reset();
+                            this.visible = false;
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'success',
+                                    loc: 'report_type.successful_edit'
+                                }
+                            )
+                        }).catch(() => {
 
-                                this.show_error = true;
-                            })
-                        } else {
-                            createNewReportItemType(this.report_type).then(() => {
-
-                                this.$validator.reset();
-                                this.visible = false;
-                                this.$root.$emit('notification',
-                                    {
-                                        type: 'success',
-                                        loc: 'report_type.successful'
-                                    }
-                                )
-                            }).catch(() => {
-
-                                this.show_error = true;
-                            })
-                        }
-
+                            this.show_error = true;
+                        })
                     } else {
+                        createNewReportItemType(this.report_type).then(() => {
 
-                        this.show_validation_error = true;
-                    }
-                })
-            }
-        },
-        mounted() {
-            this.$store.dispatch('getAllAttributes', { search: '' }).then(() => {
-                this.attribute_templates = this.$store.getters.getAttributes.items
-            });
-            this.$store.dispatch('getAllAiProviders', { search: '' }).then(() => {
-                this.ai_providers = this.$store.getters.getAiProviders.items
-            });
+                            this.$validator.reset();
+                            this.visible = false;
+                            this.$root.$emit('notification',
+                                {
+                                    type: 'success',
+                                    loc: 'report_type.successful'
+                                }
+                            )
+                        }).catch(() => {
 
-            this.$root.$on('show-edit', (data) => {
-
-                this.visible = true;
-                this.edit = true
-                this.show_error = false;
-
-                this.report_type.id = data.id;
-                this.report_type.title = data.title;
-                this.report_type.description = data.description;
-
-                this.report_type.attribute_groups = []
-                for (let i = 0; i < data.attribute_groups.length; i++) {
-                    let grp = data.attribute_groups[i];
-                    let group = {
-                        index: grp.index,
-                        id: grp.id,
-                        title: grp.title,
-                        description: grp.description,
-                        section: grp.section,
-                        section_title: grp.section_title,
-                        attribute_group_items: []
-                    }
-
-                    for (let j = 0; j < grp.attribute_group_items.length; j++) {
-                        let itm = grp.attribute_group_items[j];
-                        group.attribute_group_items.push({
-                            index: itm.description,
-                            id: itm.id,
-                            attribute_id: itm.attribute.id,
-                            attribute_name: itm.attribute.name,
-                            title: itm.title,
-                            description: itm.description,
-                            min_occurrence: itm.min_occurrence,
-                            max_occurrence: itm.max_occurrence,
-                            ai_provider_id: itm.ai_provider_id,
-                            ai_prompt: itm.ai_prompt
+                            this.show_error = true;
                         })
                     }
 
-                    this.report_type.attribute_groups.push(group)
+                } else {
+
+                    this.show_validation_error = true;
                 }
-            });
-        },
-        beforeDestroy() {
-            this.$root.$off('show-edit')
+            })
         }
+    },
+    mounted() {
+        this.$store.dispatch('getAllAttributes', { search: '' }).then(() => {
+            this.attribute_templates = this.$store.getters.getAttributes.items
+        });
+        this.$store.dispatch('getAllAiProviders', { search: '' }).then(() => {
+            this.ai_providers = this.$store.getters.getAiProviders.items
+        });
+
+        this.$root.$on('show-edit', (data) => {
+
+            this.visible = true;
+            this.edit = true
+            this.show_error = false;
+
+            this.report_type.id = data.id;
+            this.report_type.title = data.title;
+            this.report_type.description = data.description;
+
+            this.report_type.attribute_groups = []
+            for (let i = 0; i < data.attribute_groups.length; i++) {
+                let grp = data.attribute_groups[i];
+                let group = {
+                    index: grp.index,
+                    id: grp.id,
+                    title: grp.title,
+                    description: grp.description,
+                    section: grp.section,
+                    section_title: grp.section_title,
+                    attribute_group_items: []
+                }
+
+                for (let j = 0; j < grp.attribute_group_items.length; j++) {
+                    let itm = grp.attribute_group_items[j];
+                    group.attribute_group_items.push({
+                        index: itm.description,
+                        id: itm.id,
+                        attribute_id: itm.attribute.id,
+                        attribute_name: itm.attribute.name,
+                        title: itm.title,
+                        description: itm.description,
+                        min_occurrence: itm.min_occurrence,
+                        max_occurrence: itm.max_occurrence,
+                        ai_provider_id: itm.ai_provider_id,
+                        ai_prompt: itm.ai_prompt
+                    })
+                }
+
+                this.report_type.attribute_groups.push(group)
+            }
+        });
+    },
+    beforeDestroy() {
+        this.$root.$off('show-edit')
     }
+}
 </script>

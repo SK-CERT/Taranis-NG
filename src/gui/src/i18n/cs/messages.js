@@ -95,6 +95,7 @@ const messages_cs = {
         remote_nodes: "Vzdálené instance",
         local: "Lokální",
         settings: "Nastavení aplikace",
+        ai_providers: "AI modely",
     },
 
     notification: {
@@ -384,6 +385,8 @@ const messages_cs = {
 
     attribute: {
         add_new: "Přidat nový atribut",
+        add_constant: "Přidat konstantu",
+        edit_constant: "Upravit konstantu",
         edit: "Upravit atribut",
         add_attachment: "Přidat přílohu",
         add_value: "Přidat hodnotu",
@@ -411,7 +414,7 @@ const messages_cs = {
         attribute_constants: "Konstanty atributu",
         import_from_csv: "Importovat z CSV",
         new_constant: "Nová konstanta",
-        attribute: "atribut",
+        attribute: "Atribut",
         attributes: "Atributy",
         new_attribute: "Nový atribut",
         min_occurrence: "Minimální výskyt",
@@ -430,7 +433,9 @@ const messages_cs = {
         select_date: "Vybrat datum",
         select_time: "Vybrat čas",
         select_datetime: "Vybrat datum a čas",
-        done: "Hotovo"
+        done: "Hotovo",
+        ai_provider: "AI model",
+        ai_prompt: "AI Prompt",
     },
 
     cvss_calculator: {
@@ -608,7 +613,7 @@ const messages_cs = {
         error: "Nepodařilo se uložit tento typ analýzy",
         name: "Název",
         description: "Popis",
-        section_title: "Section",
+        section_title: "Název sekce",
         new_group: "Nová skupina atributů",
         successful: "Nový typ analýzy byl přidán",
         successful_edit: "Typ analýzy byl upraven",
@@ -818,10 +823,19 @@ const messages_cs = {
         boolean_error: "Hodnota musí být buď 'True' nebo 'False'!",
         integer_error: "Hodnota musí být platné celé číslo!",
         decimal_error: "Hodnota musí být platné desetinné číslo!",
+        default_value: "Původní hodnota",
+        update_value: "Upravit hodnotu",
+        description: "Popis",
+        value: "Hodnota",
+        updated_by: "Upravil",
+        updated_at: "Upraveno",
+        actions: "Možnosti",
     },
 
     word_list: {
         add_new: "Přidat nový seznam slov",
+        add_word: "Přidat slovo",
+        edit_word: "Upravit slovo",
         edit: "Upravit seznam slov",
         error: "Nepodařilo se uložit tento seznam slov",
         name: "Název",
@@ -829,9 +843,9 @@ const messages_cs = {
         link: "URL",
         use_for_stop_words: "Použít jako seznam stopslov",
         successful: "Nový seznam slov byl přidán",
-        successful_edit: "Seznam slov byl přidán byl upraven",
+        successful_edit: "Seznam slov byl upraven",
         remove: "Seznam slov byl smazán",
-        removed_error: "Seznam slov se používá a nelze jej smazat",
+        removed_error: "Seznam slov je používán a nelze jej smazat",
         value: "Hodnota",
         new_word: "Nové slovo",
         words: "Slova",
@@ -843,6 +857,24 @@ const messages_cs = {
         download_from_link: "Stáhnout z URL",
         import: "Importovat",
         close: "Zavřít",
+        delete_existing_words: "Smazat všechna existující slova",
+        delete_category: "Smazat kategorii",
+    },
+
+    ai_provider: {
+        name: "Název",
+        api_type: "API typ",
+        api_url: "API URL",
+        api_key: "API klíč",
+        model: "Model",
+        add_new: "Přidat nový lokální AI model",
+        edit: "Upravit lokální AI model",
+        successful: "Nový lokální AI model byl přidán",
+        successful_edit: "Lokální AI model byl upraven",
+        error: "Nepodařilo se uložit tento lokální AI model",
+        remove: "Lokální AI model byl smazán",
+        removed_error: "Lokální AI model je používán a nelze ji smazat",
+        total_count: "Počet lokálních AI modelů: ",
     },
 
     asset_group: {
@@ -862,6 +894,8 @@ const messages_cs = {
 
     notification_template: {
         add_new: "Přidat novou šablonu upozornění",
+        add_recipient: "Přidat příjemce",
+        edit_recipient: "Upravit příjemce",
         edit: "Upravit šablonu upozornění",
         error: "Nepodařilo se uložit šablonu upozornění",
         name: "Název",
@@ -869,6 +903,7 @@ const messages_cs = {
         message_title: "Nadpis zprávy",
         message_body: "Tělo zprávy",
         new_recipient: "Nový příjemce",
+        recipient_name: "Jméno příjemce",
         email: "E-mailová adresa",
         recipients: "Příjemci",
         successful: "Nová šablona upozornění byla přidána",
@@ -966,6 +1001,9 @@ const messages_cs = {
         add_btn: "Přidat",
         save: "Uložit",
         delete: "Smazat",
+        edit: "Upravit",
+        up: "Přesunout výše",
+        down: "Přesunout níže",
         cancel: "Zrušit",
         messagebox: {
             yes: "Ano",
