@@ -158,6 +158,24 @@ class BasePresenter:
                 max_tlp = "CLEAR"
             return max_tlp
 
+        def get_max_cvss(self, reports):
+            """Get the highest CVSS value from a list of reports.
+
+            Parameters:
+                reports (list): list of reports
+
+            Returns:
+                max_cvss: Highest CVSS value from the list of reports
+            """
+            max_cvss = None
+            for report in reports:
+                if hasattr(report.attrs, "cvss"):
+                    report_cvss = report.attrs.cvss.get("baseScore")
+                    if report_cvss is not None:
+                        if max_cvss is None or report_cvss > max_cvss:
+                            max_cvss = report_cvss
+            return max_cvss
+
         def calculate_cvss(self, cvss_vector):
             """Calculate the CVSS score from the CVSS vector.
 
@@ -273,6 +291,7 @@ class BasePresenter:
             # If there are vulnerability reports, set the max TLP and product links
             if vul_report_count > 0:
                 self.product.max_tlp = self.get_max_tlp(self.report_items)
+                self.product.max_cvss = self.get_max_cvss(self.report_items)
                 self.product.links = product_links
 
     def get_info(self):
