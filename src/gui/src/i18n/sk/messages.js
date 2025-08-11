@@ -85,6 +85,7 @@ const messages_sk = {
         remote_nodes: "Vzdialené inštancie",
         local: "Lokálne",
         settings: "Nastavenia aplikácie",
+        ai_providers: "AI modely",
     },
 
     notification: {

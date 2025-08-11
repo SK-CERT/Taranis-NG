@@ -1,20 +1,15 @@
 <template>
-    <v-data-table :headers="headers"
-                  :items="attributes"
-                  sort-by="value"
-                  class="elevation-1">
+    <v-data-table :headers="headers" :items="attributes" sort-by="value" class="elevation-1">
         <template v-slot:top>
             <v-toolbar flat>
-                <v-toolbar-title>{{$t('attribute.attributes')}}</v-toolbar-title>
-                <v-divider class="mx-4"
-                           inset
-                           vertical></v-divider>
+                <v-toolbar-title>{{ $t('attribute.attributes') }}</v-toolbar-title>
+                <v-divider class="mx-4" inset vertical></v-divider>
                 <v-spacer></v-spacer>
                 <v-dialog v-if="!disabled" v-model="dialog" max-width="500px">
                     <template v-slot:activator="{ on }">
                         <v-btn color="primary" dark class="mb-2" v-on="on">
                             <v-icon left>mdi-plus</v-icon>
-                            <span>{{$t('attribute.new_attribute')}}</span>
+                            <span>{{ $t('attribute.new_attribute') }}</span>
                         </v-btn>
                     </template>
                     <v-card>
@@ -24,201 +19,200 @@
 
                         <v-card-text>
 
-                            <v-combobox v-model="selected_attribute"
-                                        :items="attribute_templates"
-                                        item-text="name"
-                                        :label="$t('attribute.attribute')"></v-combobox>
+                            <v-combobox v-model="selected_attribute" :items="attribute_templates" item-text="name"
+                                :label="$t('attribute.attribute')"></v-combobox>
 
-                            <v-text-field v-model="edited_attribute.title"
-                                          :label="$t('attribute.name')"
-                                          :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                            <v-text-field v-model="edited_attribute.title" :label="$t('attribute.name')"
+                                :spellcheck="$store.state.settings.spellcheck"></v-text-field>
 
-                            <v-text-field v-model="edited_attribute.description"
-                                          :label="$t('attribute.description')"
-                                          :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                            <v-text-field v-model="edited_attribute.description" :label="$t('attribute.description')"
+                                :spellcheck="$store.state.settings.spellcheck"></v-text-field>
 
                             <v-row>
                                 <v-col>
                                     <v-text-field v-model="edited_attribute.min_occurrence"
-                                                  :label="$t('attribute.min_occurrence')"
-                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                                        :label="$t('attribute.min_occurrence')"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                                 <v-col>
                                     <v-text-field v-model="edited_attribute.max_occurrence"
-                                                  :label="$t('attribute.max_occurrence')"
-                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                                        :label="$t('attribute.max_occurrence')"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                             </v-row>
 
-                            <v-select v-if="showAI"
-                                        :label="$t('attribute.ai_provider')"
-                                        name="ai_provider"
-                                        v-model="edited_attribute.ai_provider_id"
-                                        :items="aiProviderData"
-                                        item-text="name"
-                                        item-value="id"
-                                        :return-object="false"></v-select>
+                            <v-select v-if="showAI" :label="$t('attribute.ai_provider')" name="ai_provider"
+                                v-model="edited_attribute.ai_provider_id" :items="aiProviderData" item-text="name"
+                                item-value="id" :return-object="false"></v-select>
 
-                            <v-textarea v-if="!!edited_attribute.ai_provider_id"
-                                        :label="$t('attribute.ai_prompt')"
-                                        name="ai_prompt"
-                                        v-model="edited_attribute.ai_prompt"
-                                        clearable></v-textarea>
+                            <v-textarea v-if="!!edited_attribute.ai_provider_id" :label="$t('attribute.ai_prompt')"
+                                name="ai_prompt" v-model="edited_attribute.ai_prompt" clearable></v-textarea>
 
                         </v-card-text>
 
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn color="primary" dark @click="save">{{$t('common.save')}}</v-btn>
-                            <v-btn color="primary" text @click="close">{{$t('common.cancel')}}</v-btn>
+                            <v-btn color="primary" dark @click="save">{{ $t('common.save') }}</v-btn>
+                            <v-btn color="primary" text @click="close">{{ $t('common.cancel') }}</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
             </v-toolbar>
         </template>
         <template v-slot:item.action="{ item }">
-            <v-icon v-if="!disabled"
-                    small
-                    class="mr-2"
-                    @click="moveItemUp(item)">
-                mdi-arrow-up-bold
-            </v-icon>
-            <v-icon v-if="!disabled"
-                    small
-                    class="mr-2"
-                    @click="moveItemDown(item)">
-                mdi-arrow-down-bold
-            </v-icon>
-            <v-icon v-if="!disabled"
-                    small
-                    class="mr-2"
-                    @click="editItem(item)">
-                edit
-            </v-icon>
-            <v-icon v-if="!disabled"
-                    small
-                    @click="deleteItem(item)">
-                delete
-            </v-icon>
+            <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon v-if="!disabled" small class="mr-2" v-bind="attrs" v-on="on" @click="moveItemUp(item)">
+                        mdi-arrow-up-bold
+                    </v-icon>
+                </template>
+                <span>{{ $t('common.up') }}</span>
+            </v-tooltip>
+            <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon v-if="!disabled" small class="mr-2" v-bind="attrs" v-on="on" @click="moveItemDown(item)">
+                        mdi-arrow-down-bold
+                    </v-icon>
+                </template>
+                <span>{{ $t('common.down') }}</span>
+            </v-tooltip>
+            <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon v-if="!disabled" small class="mr-2" v-bind="attrs" v-on="on" @click="editItem(item)">
+                        mdi-pencil
+                    </v-icon>
+                </template>
+                <span>{{ $t('common.edit') }}</span>
+            </v-tooltip>
+            <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-icon v-if="!disabled" small v-bind="attrs" v-on="on" @click="deleteItem(item)">
+                        mdi-delete
+                    </v-icon>
+                </template>
+                <span>{{ $t('common.delete') }}</span>
+            </v-tooltip>
         </template>
     </v-data-table>
 </template>
 
 <script>
-    export default {
-        name: "AttributeTable",
-        props: {
-            attributes: Array,
-            attribute_templates: Array,
-            ai_providers: Array,
-            disabled: Boolean
+export default {
+    name: "AttributeTable",
+    props: {
+        attributes: Array,
+        attribute_templates: Array,
+        ai_providers: Array,
+        disabled: Boolean
+    },
+    data: () => ({
+        dialog: false,
+        selected_attribute: null,
+        edited_index: -1,
+        edited_attribute: {
+            index: 0,
+            id: -1,
+            attribute_id: -1,
+            attribute_name: "",
+            title: "",
+            description: "",
+            min_occurrence: 0,
+            max_occurrence: 1,
+            ai_provider_id: null,
+            ai_prompt: "",
         },
-        data: () => ({
-            headers: [
-                { text: 'Type', value: 'attribute_name', align: 'left', sortable: false },
-                { text: 'Name', value: 'title', sortable: false },
-                { text: 'Description', value: 'description', sortable: false },
-                { text: 'Min Occurence', value: 'min_occurrence', sortable: false },
-                { text: 'Max Occurence', value: 'max_occurrence', sortable: false },
-                { text: 'Actions', value: 'action', align: 'right', sortable: false },
-            ],
-            dialog: false,
-            selected_attribute: null,
-            edited_index: -1,
-            edited_attribute: {
-                index: 0,
-                id: -1,
-                attribute_id: -1,
-                attribute_name: "",
-                title: "",
-                description: "",
-                min_occurrence: 0,
-                max_occurrence: 1,
-                ai_provider_id: null,
-                ai_prompt: "",
-            },
-            default_attribute: {
-                index: 0,
-                id: -1,
-                attribute_id: -1,
-                attribute_name: "",
-                title: "",
-                description: "",
-                min_occurrence: 0,
-                max_occurrence: 1,
-                ai_provider_id: null,
-                ai_prompt: "",
-            },
-        }),
-        computed: {
-            formTitle() {
-                return this.edited_index === -1 ? 'Add Attribute' : 'Edit Attribute'
-            },
-
-            showAI() {
-                return this.ai_providers.length > 0
-            },
-
-            aiProviderData() {
-                return [{ id: null, name: 'None' }, ...this.ai_providers.map(p => ({ id: p.id, name: p.name }))];
-            },
+        default_attribute: {
+            index: 0,
+            id: -1,
+            attribute_id: -1,
+            attribute_name: "",
+            title: "",
+            description: "",
+            min_occurrence: 0,
+            max_occurrence: 1,
+            ai_provider_id: null,
+            ai_prompt: "",
         },
-        watch: {
-            dialog(val) {
-                val || this.close()
-            },
+    }),
+    computed: {
+        headers() {
+            return [
+                { text: this.$t('attribute.type'), value: 'attribute_name', align: 'left', sortable: false },
+                { text: this.$t('attribute.name'), value: 'title', sortable: false },
+                { text: this.$t('attribute.description'), value: 'description', sortable: false },
+                { text: this.$t('attribute.min_occurrence'), value: 'min_occurrence', sortable: false },
+                { text: this.$t('attribute.max_occurrence'), value: 'max_occurrence', sortable: false },
+                { text: this.$t('settings.actions'), value: 'action', align: 'right', sortable: false },
+            ];
         },
-        methods: {
-            close() {
-                this.dialog = false;
-                setTimeout(() => {
-                    this.edited_attribute = Object.assign({}, this.default_attribute);
-                    this.edited_index = -1
-                }, 300)
-            },
+        formTitle() {
+            return this.edited_index === -1 ? this.$t('attribute.add_new') : this.$t('attribute.edit')
+        },
 
-            save() {
-                this.edited_attribute.attribute_id = this.selected_attribute.id;
-                this.edited_attribute.attribute_name = this.selected_attribute.name;
-                if (this.edited_index > -1) {
-                    Object.assign(this.attributes[this.edited_index], this.edited_attribute)
-                } else {
-                    this.attributes.push(this.edited_attribute)
+        showAI() {
+            return this.ai_providers.length > 0
+        },
+
+        aiProviderData() {
+            return [{ id: null, name: 'None' }, ...this.ai_providers.map(p => ({ id: p.id, name: p.name }))];
+        },
+    },
+    watch: {
+        dialog(val) {
+            val || this.close()
+        },
+    },
+    methods: {
+        close() {
+            this.dialog = false;
+            setTimeout(() => {
+                this.edited_attribute = Object.assign({}, this.default_attribute);
+                this.edited_index = -1
+            }, 300)
+        },
+
+        save() {
+            this.edited_attribute.attribute_id = this.selected_attribute.id;
+            this.edited_attribute.attribute_name = this.selected_attribute.name;
+            if (this.edited_index > -1) {
+                Object.assign(this.attributes[this.edited_index], this.edited_attribute)
+            } else {
+                this.attributes.push(this.edited_attribute)
+            }
+            this.selected_attribute = null;
+            this.close()
+        },
+
+        editItem(item) {
+            this.edited_index = this.attributes.indexOf(item);
+            this.edited_attribute = Object.assign({}, item);
+            this.dialog = true;
+            for (const attribute_template of this.attribute_templates) {
+                if (attribute_template.id === this.edited_attribute.attribute_id) {
+                    this.selected_attribute = attribute_template;
+                    break;
                 }
-                this.selected_attribute = null;
-                this.close()
-            },
+            }
+        },
 
-            editItem(item) {
-                this.edited_index = this.attributes.indexOf(item);
-                this.edited_attribute = Object.assign({}, item);
-                this.dialog = true;
-                for (const attribute_template of this.attribute_templates) {
-                    if (attribute_template.id === this.edited_attribute.attribute_id) {
-                        this.selected_attribute = attribute_template;
-                        break;
-                    }
-                }
-            },
+        moveItemUp(item) {
+            const index = this.attributes.indexOf(item);
+            if (index > 0) {
+                this.attributes.splice(index - 1, 0, this.attributes.splice(index, 1)[0]);
+            }
+        },
 
-            moveItemUp(item) {
-                const index = this.attributes.indexOf(item);
-                if (index > 0) {
-                    this.attributes.splice(index - 1, 0, this.attributes.splice(index, 1)[0]);
-                }
-            },
+        moveItemDown(item) {
+            const index = this.attributes.indexOf(item);
+            if (index < this.attributes.length - 1) {
+                this.attributes.splice(index + 1, 0, this.attributes.splice(index, 1)[0]);
+            }
+        },
 
-            moveItemDown(item) {
-                const index = this.attributes.indexOf(item);
-                if (index < this.attributes.length - 1) {
-                    this.attributes.splice(index + 1, 0, this.attributes.splice(index, 1)[0]);
-                }
-            },
-
-            deleteItem(item) {
-                const index = this.attributes.indexOf(item);
-                this.attributes.splice(index, 1)
-            },
-        }
+        deleteItem(item) {
+            const index = this.attributes.indexOf(item);
+            this.attributes.splice(index, 1)
+        },
     }
+}
 </script>
