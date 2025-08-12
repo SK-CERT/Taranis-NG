@@ -27,7 +27,7 @@ def upgrade():
     session = orm.Session(bind=conn)
 
     inspector = inspect(conn)
-    if not "ai_provider" in inspector.get_table_names():
+    if "ai_provider" not in inspector.get_table_names():
         op.create_table(
             "ai_provider",
             sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),

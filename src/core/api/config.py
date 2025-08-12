@@ -27,6 +27,7 @@ from model import (
     bot_preset,
     attribute,
     ai_provider,
+    data_provider,
     collectors_node,
     organization,
     osint_source,
@@ -41,6 +42,7 @@ from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from shared.schema.role import PermissionSchema
 from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.data_provider import DataProviderSchema
 
 
 class DictionariesReload(Resource):
@@ -271,6 +273,78 @@ class AiProvider(Resource):
             return ai_provider.AiProvider.delete(ai_provider_id)
         except Exception as ex:
             msg = "Could not delete local AI model"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
+
+
+class DataProviders(Resource):
+    """Data provider API endpoint."""
+
+    @auth_required("CONFIG_DATA_PROVIDER_ACCESS")
+    def get(self):
+        """Get all data providers.
+
+        Returns:
+            (dict): The data providers
+        """
+        search = None
+        if "search" in request.args and request.args["search"]:
+            search = request.args["search"]
+        return data_provider.DataProvider.get_all_json(search)
+
+    @auth_required("CONFIG_DATA_PROVIDER_CREATE")
+    def post(self):
+        """Create a data provider.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            user = auth_manager.get_user_from_jwt()
+            record = data_provider.DataProvider.add_new(request.json, user.name)
+            schema = DataProviderSchema()
+            return schema.dump(record), 200
+        except Exception as ex:
+            msg = "Could not create data provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
+
+
+class DataProvider(Resource):
+    """Data provider API endpoint."""
+
+    @auth_required("CONFIG_DATA_PROVIDER_UPDATE")
+    def put(self, data_provider_id):
+        """Update a data provider.
+
+        Args:
+            data_provider_id (int): The data provider ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            user = auth_manager.get_user_from_jwt()
+            record = data_provider.DataProvider.update(data_provider_id, request.json, user.name)
+            schema = DataProviderSchema()
+            return schema.dump(record), 200
+        except Exception as ex:
+            msg = "Could not update data provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, 400
+
+    @auth_required("CONFIG_DATA_PROVIDER_DELETE")
+    def delete(self, data_provider_id):
+        """Delete a data provider.
+
+        Args:
+            data_provider_id (int): The data provider ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            return data_provider.DataProvider.delete(data_provider_id)
+        except Exception as ex:
+            msg = "Could not delete data provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, 400
 
@@ -1659,6 +1733,8 @@ def initialize(api):
     api.add_resource(AttributeEnum, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
     api.add_resource(AiProviders, "/api/v1/config/aiproviders")
     api.add_resource(AiProvider, "/api/v1/config/aiprovider/<int:ai_provider_id>")
+    api.add_resource(DataProviders, "/api/v1/config/data-providers")
+    api.add_resource(DataProvider, "/api/v1/config/data-provider/<int:data_provider_id>")
 
     api.add_resource(ReportItemTypesConfig, "/api/v1/config/report-item-types")
     api.add_resource(ReportItemType, "/api/v1/config/report-item-types/<int:type_id>")
@@ -1769,6 +1845,11 @@ def initialize(api):
     Permission.add("CONFIG_AI_CREATE", "Config AI create", "Create AI configuration")
     Permission.add("CONFIG_AI_UPDATE", "Config AI update", "Update AI configuration")
     Permission.add("CONFIG_AI_DELETE", "Config AI delete", "Delete AI configuration")
+
+    Permission.add("CONFIG_DATA_PROVIDER_ACCESS", "Config data provider access", "Access to data provider configuration")
+    Permission.add("CONFIG_DATA_PROVIDER_CREATE", "Config data provider create", "Create data provider configuration")
+    Permission.add("CONFIG_DATA_PROVIDER_UPDATE", "Config data provider update", "Update data provider configuration")
+    Permission.add("CONFIG_DATA_PROVIDER_DELETE", "Config data provider delete", "Delete data provider configuration")
 
     Permission.add("CONFIG_COLLECTORS_NODE_ACCESS", "Config collectors nodes access", "Access to collectors nodes configuration")
     Permission.add("CONFIG_COLLECTORS_NODE_CREATE", "Config collectors node create", "Create collectors node configuration")

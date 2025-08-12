@@ -96,6 +96,7 @@ const messages_en = {
         local: "Local",
         settings: "Application Settings",
         ai_providers: "Local AI models",
+        data_providers: "Data providers",
     },
 
     notification: {
@@ -900,6 +901,22 @@ const messages_en = {
         remove: "Local AI model was successfully deleted",
         removed_error: "Local AI model is in use and could not be deleted",
         total_count: "Local AI models count: ",
+    },
+
+    data_provider: {
+        name: "Name",
+        api_type: "API type",
+        api_url: "API URL",
+        api_key: "API key",
+        user_agent: "User Agent",
+        add_new: "Add new data provider",
+        edit: "Edit data provider",
+        successful: "New data provider was successfully added",
+        successful_edit: "Data provider was successfully updated",
+        error: "Could not save this data provider",
+        remove: "Data provider was successfully deleted",
+        removed_error: "Data provider is in use and could not be deleted",
+        total_count: "Data providers count: ",
     },
 
     asset_group: {
