@@ -19,7 +19,7 @@
                     </v-col>
                 </v-row>
 
-                <v-dialog v-model="dialogEdit" max-width="500px">
+                <v-dialog v-model="dialogEdit" max-width="900px">
                     <v-card>
                         <v-card-title>
                             <span class="text-h5">{{ dialogEditTitle }}</span>
@@ -42,9 +42,12 @@
                                                 :label="$t('data_provider.api_url')"
                                                 :rules="[v => !!v || $t('error.validation')]" required></v-text-field>
                                         </v-col>
-                                        <v-col cols="6">
+                                         <v-col cols="6">
                                             <v-text-field v-model="editedItem.api_key"
-                                                :label="$t('data_provider.api_key')"></v-text-field>
+                                                :label="$t('data_provider.api_key')"
+                                                :type="showApiKey ? 'text' : 'password'"
+                                                :append-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
+                                                @click:append="showApiKey = !showApiKey"></v-text-field>
                                         </v-col>
                                         <v-col cols="6">
                                             <v-text-field v-model="editedItem.user_agent"
@@ -81,14 +84,29 @@
                 <span>{{ formatDate(item.updated_at) }}</span>
             </template>
 
-            <template v-slot:item.actions="{ item }">
-                <v-icon small class="mr-2" @click="editItem(item)">
-                    mdi-pencil
-                </v-icon>
-                <v-icon small @click="deleteItem(item)">
-                    mdi-delete
-                </v-icon>
+            <template v-slot:item.api_key="{ item }">
+                <span>{{ item.api_key ? '••••••••' : '' }}</span>
             </template>
+
+            <template v-slot:item.actions="{ item }">
+                <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editItem(item)">
+                            mdi-pencil
+                        </v-icon>
+                    </template>
+                    <span>{{ $t('common.edit') }}</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon small v-bind="attrs" v-on="on" @click="deleteItem(item)">
+                            mdi-delete
+                        </v-icon>
+                    </template>
+                    <span> {{ $t('common.delete') }} </span>
+                </v-tooltip>
+            </template>
+
 
         </v-data-table>
     </v-container>

@@ -53,19 +53,19 @@ export function deleteAiProvider(ai_provider) {
 }
 
 export function getAllDataProviders(filter) {
-    return ApiService.get('/config/dataproviders?search=' + filter.search)
+    return ApiService.get('/config/data-providers?search=' + filter.search)
 }
 
 export function createNewDataProvider(data_provider) {
-    return ApiService.post('/config/dataproviders', data_provider)
+    return ApiService.post('/config/data-providers', data_provider)
 }
 
 export function updateDataProvider(data_provider) {
-    return ApiService.put('/config/dataprovider/' + data_provider.id, data_provider)
+    return ApiService.put('/config/data-providers/' + data_provider.id, data_provider)
 }
 
 export function deleteDataProvider(data_provider) {
-    return ApiService.delete('/config/dataprovider/' + data_provider.id)
+    return ApiService.delete('/config/data-providers/' + data_provider.id)
 }
 
 export function getAllReportItemTypes(filter) {

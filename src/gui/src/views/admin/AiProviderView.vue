@@ -19,7 +19,7 @@
                     </v-col>
                 </v-row>
 
-                <v-dialog v-model="dialogEdit" max-width="500px">
+                <v-dialog v-model="dialogEdit" max-width="900px">
                     <v-card>
                         <v-card-title>
                             <span class="text-h5">{{ dialogEditTitle }}</span>

@@ -319,7 +319,7 @@ export const router = new Router({
             meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_AI_ACCESS] }
         },
         {
-            path: '/config/data_providers',
+            path: '/config/data-providers',
             name: 'data_providers',
             components: {
                 default: () => import('./views/admin/DataProviderView.vue'),
