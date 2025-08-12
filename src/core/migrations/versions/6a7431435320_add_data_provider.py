@@ -34,6 +34,7 @@ class DataProvider(Base):
     api_url = sa.Column(sa.String(), nullable=False)
     api_key = sa.Column(sa.String())
     user_agent = sa.Column(sa.String())
+    web_url = sa.Column(sa.String())
     updated_by = sa.Column(sa.String())
     updated_at = sa.Column(sa.DateTime())
 
@@ -90,6 +91,7 @@ def upgrade():
             sa.Column("api_url", sa.String(), nullable=False),
             sa.Column("api_key", sa.String()),
             sa.Column("user_agent", sa.String(), server_default=default_user_agent),
+            sa.Column("web_url", sa.String()),
             sa.Column("updated_by", sa.String()),
             sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP")),
             sa.PrimaryKeyConstraint("id", name="data_provider_pkey"),
@@ -104,6 +106,7 @@ def upgrade():
                 api_type="EUVD",
                 api_url="https://euvdservices.enisa.europa.eu/api/",
                 user_agent=default_user_agent,
+                web_url="https://euvd.enisa.europa.eu/vulnerability/",
                 updated_at=datetime.now(),
                 updated_by=default_updated_by,
             )
@@ -114,6 +117,7 @@ def upgrade():
                 api_type="CVE",
                 api_url="https://services.nvd.nist.gov/rest/json/cves/2.0",
                 user_agent=default_user_agent,
+                web_url="https://nvd.nist.gov/vuln/detail/",
                 updated_at=datetime.now(),
                 updated_by=default_updated_by,
             )
@@ -144,6 +148,7 @@ def upgrade():
                 api_type="OSV",
                 api_url="https://api.osv.dev/v1/vulns/",
                 user_agent=default_user_agent,
+                web_url="https://osv.dev/vulnerability/",
                 updated_at=datetime.now(),
                 updated_by=default_updated_by,
             )
@@ -164,6 +169,7 @@ def upgrade():
                 api_type="VULDB",
                 api_url="https://vuldb.com/?api",
                 user_agent=default_user_agent,
+                web_url="https://vuldb.com/?id=",
                 updated_at=datetime.now(),
                 updated_by=default_updated_by,
             )
@@ -185,22 +191,6 @@ def upgrade():
         session.add(role)
         session.commit()
 
-    for table_name, pk_name in [
-        ("attr_euvd", "euvd_pkey"),
-        ("attr_cve", "cve_pkey"),
-        ("attr_cpe", "cpe_pkey"),
-        ("attr_cwe", "cwe_pkey"),
-        ("attr_osv", "osv_pkey"),
-        ("attr_epss", "epss_pkey"),
-    ]:
-        if table_name not in inspector.get_table_names():
-            op.create_table(
-                table_name,
-                sa.Column("id", sa.String(), nullable=False, primary_key=True),
-                sa.Column("data", JSONB()),
-                sa.PrimaryKeyConstraint("id", name=pk_name),
-            )
-
 
 def downgrade():
     """Drop all created tables and permissions."""
@@ -217,7 +207,3 @@ def downgrade():
     Permission_DataProvider.delete(session, "CONFIG_DATA_PROVIDER_UPDATE")
     Permission_DataProvider.delete(session, "CONFIG_DATA_PROVIDER_DELETE")
     session.commit()
-
-    for table_name in ["attr_euvd", "attr_cve", "attr_cpe"]:
-        print(f"deleting table '{table_name}'...", flush=True)
-        op.drop_table(table_name)

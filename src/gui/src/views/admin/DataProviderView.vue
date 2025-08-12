@@ -44,7 +44,7 @@
                                         </v-col>
                                          <v-col cols="6">
                                             <v-text-field v-model="editedItem.api_key"
-                                                :label="$t('data_provider.api_key')"
+                                                :label="$t('settings.api_key')"
                                                 :type="showApiKey ? 'text' : 'password'"
                                                 :append-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                                                 @click:append="showApiKey = !showApiKey"></v-text-field>
@@ -53,6 +53,11 @@
                                             <v-text-field v-model="editedItem.user_agent"
                                                 :label="$t('data_provider.user_agent')"
                                                 :rules="[v => !!v || $t('error.validation')]" required></v-text-field>
+                                        </v-col>
+                                        <v-col cols="6">
+                                            <v-text-field v-model="editedItem.web_url"
+                                                :label="$t('data_provider.web_url')"
+                                                :rules="[v => !!v || $t('error.validation')]"></v-text-field>
                                         </v-col>
                                     </v-row>
                                 </v-container>
@@ -130,8 +135,9 @@ export default {
                 { text: this.$t('data_provider.name'), value: 'name' },
                 { text: this.$t('data_provider.api_type'), value: 'api_type' },
                 { text: this.$t('data_provider.api_url'), value: 'api_url' },
-                { text: this.$t('data_provider.api_key'), value: 'api_key' },
+                { text: this.$t('settings.api_key'), value: 'api_key' },
                 { text: this.$t('data_provider.user_agent'), value: 'user_agent' },
+                { text: this.$t('data_provider.web_url'), value: 'web_url' },
                 { text: this.$t('settings.updated_by'), value: 'updated_by' },
                 { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
                 { text: this.$t('settings.actions'), value: 'actions', sortable: false },

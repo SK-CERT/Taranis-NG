@@ -43,7 +43,7 @@
                                         </v-col>
                                         <v-col cols="6">
                                             <v-text-field v-model="editedItem.api_key"
-                                                :label="$t('ai_provider.api_key')"
+                                                :label="$t('settings.api_key')"
                                                 :type="showApiKey ? 'text' : 'password'"
                                                 :append-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                                                 @click:append="showApiKey = !showApiKey"></v-text-field>
@@ -128,7 +128,7 @@ export default {
                 { text: this.$t('ai_provider.name'), value: 'name' },
                 { text: this.$t('ai_provider.api_type'), value: 'api_type' },
                 { text: this.$t('ai_provider.api_url'), value: 'api_url' },
-                { text: this.$t('ai_provider.api_key'), value: 'api_key', sortable: false, filterable: false },
+                { text: this.$t('settings.api_key'), value: 'api_key', sortable: false, filterable: false },
                 { text: this.$t('ai_provider.model'), value: 'model' },
                 { text: this.$t('settings.updated_by'), value: 'updated_by' },
                 { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },

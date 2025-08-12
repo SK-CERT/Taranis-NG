@@ -41,17 +41,18 @@ class DataProvider(db.Model):
     api_url = db.Column(db.String(), nullable=False)
     api_key = db.Column(db.String())
     user_agent = db.Column(db.String(), server_default="Mozilla/5.0 (compatible; TaranisNG/1.0; +https://github.com/SK-CERT/Taranis-NG)")
+    web_url = db.Column(db.String())
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
-    def __init__(self, name, api_type, api_url, api_key, user_agent):
+    def __init__(self, name, api_type, api_url, api_key, user_agent, web_url):
         """Create a new Data Provider."""
-        # self.id = None
         self.name = name
         self.api_type = api_type
         self.api_url = api_url
         self.api_key = api_key
         self.user_agent = user_agent
+        self.web_url = web_url
 
     @classmethod
     def find(cls, id):
@@ -138,6 +139,7 @@ class DataProvider(db.Model):
         old.api_url = new.api_url
         old.api_key = new.api_key
         old.user_agent = new.user_agent
+        old.web_url = new.web_url
         old.updated_by = user_name
         old.updated_at = datetime.now()
         db.session.commit()

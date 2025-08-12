@@ -17,6 +17,7 @@ class DataProviderSchema(Schema):
     api_url = fields.Str()
     api_key = fields.Str()
     user_agent = fields.Str()
+    web_url = fields.Str()
     updated_by = fields.Str()
     updated_at = fields.Str()
 
@@ -43,6 +44,7 @@ class DataProvider:
         api_url,
         api_key,
         user_agent,
+        web_url,
         updated_by,
     ):
         """Initialize a DataProvider instance.
@@ -60,4 +62,5 @@ class DataProvider:
         self.api_url = api_url
         self.api_key = api_key
         self.user_agent = user_agent
+        self.web_url = web_url
         self.updated_by = updated_by
