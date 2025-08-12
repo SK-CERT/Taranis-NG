@@ -2,6 +2,7 @@ import {
     getAllACLEntries,
     getAllAttributes,
     getAllAiProviders,
+    getAllDataProviders,
     getAllBotPresets,
     getAllBotsNodes,
     getAllCollectorsNodes,
@@ -30,6 +31,7 @@ import {getAllOSINTSourceGroupsAssess} from "@/api/assess";
 const state = {
     attributes: { total_count: 0, items: [] },
     ai_providers: { total_count: 0, items: [] },
+    data_providers: { total_count: 0, items: [] },
     report_item_types_config: {total_count: 0, items: []},
     product_types: {total_count: 0, items: []},
     all_permissions: {total_count: 0, items: []},
@@ -66,6 +68,14 @@ const actions = {
         return getAllAiProviders(data)
             .then(response => {
                 context.commit('setAiProviders', response.data);
+            })
+    },
+
+    getAllDataProviders(context, data) {
+
+        return getAllDataProviders(data)
+            .then(response => {
+                context.commit('setDataProviders', response.data);
             })
     },
 
@@ -272,6 +282,10 @@ const mutations = {
         state.ai_providers = new_ai_providers
     },
 
+    setDataProviders(state, new_data_providers) {
+        state.data_providers = new_data_providers
+    },
+
     setReportItemTypesConfig(state, new_report_item_types_config) {
         state.report_item_types_config = new_report_item_types_config
     },
@@ -357,6 +371,10 @@ const getters = {
 
     getAiProviders(state) {
         return state.ai_providers
+    },
+
+    getDataProviders(state) {
+        return state.data_providers
     },
 
     getReportItemTypesConfig(state) {
