@@ -22,9 +22,9 @@ class Dashboard(Resource):
             (dict): The dashboard data.
         """
         try:
-            tag_cloud_day = 0
+            number_of_days = 0
             if "tag_cloud_day" in request.args and request.args["tag_cloud_day"]:
-                tag_cloud_day = min(int(request.args["tag_cloud_days"]), 7)
+                number_of_days = min(int(request.args["tag_cloud_days"]), 7)
         except Exception as ex:
             msg = "Get Dashboard failed"
             logger.exception(f"{msg}: {ex}")
@@ -36,7 +36,7 @@ class Dashboard(Resource):
         report_items_in_progress = ReportItem.count_all(False)
         total_database_items = total_news_items + total_products + report_items_completed + report_items_in_progress
         latest_collected = NewsItemData.latest_collected()
-        grouped_words = TagCloud.get_grouped_words(tag_cloud_day)
+        grouped_words = TagCloud.get_grouped_words(number_of_days)
         return {
             "total_news_items": total_news_items,
             "total_products": total_products,
