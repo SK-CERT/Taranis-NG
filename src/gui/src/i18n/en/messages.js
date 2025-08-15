@@ -2,7 +2,7 @@ const messages_en = {
 
     validations: {
         messages: {
-            _default: 'Please fill in required field'
+            _default: 'Please fill in the required field'
         },
 
         custom: {
@@ -26,13 +26,13 @@ const messages_en = {
             },
             password_check: {
                 required: "Password is required",
-                confirmed: "Passwords are not identical"
+                confirmed: "Passwords do not match"
             },
             collector_node: {
-                required: "Select Collector Node"
+                required: "Select a Collector Node"
             },
             file: {
-                required: "File required"
+                required: "File is required"
             }
         },
     },
@@ -70,10 +70,10 @@ const messages_en = {
         popular: "Popular",
         favourites: "Favourites",
         configuration: "Configuration",
-        collectors_nodes: "Collectors Nodes",
-        presenters_nodes: "Presenters Nodes",
-        publishers_nodes: "Publishers Nodes",
-        bots_nodes: "Bots Nodes",
+        collectors_nodes: "Collector Nodes",
+        presenters_nodes: "Presenter Nodes",
+        publishers_nodes: "Publisher Nodes",
+        bots_nodes: "Bot Nodes",
         osint_sources: "OSINT Sources",
         osint_source_groups: "OSINT Source Groups",
         publisher_presets: "Publisher Presets",
@@ -143,7 +143,7 @@ const messages_en = {
         successful_edit: "Organization was successfully updated",
         removed: "Organization was successfully deleted",
         removed_error: "Organization is in use and could not be deleted",
-        total_count: "Organizations count: "
+        total_count: "Organization count: "
     },
 
     user: {
@@ -159,7 +159,7 @@ const messages_en = {
         organizations: "Organizations",
         roles: "Roles",
         permissions: "Permissions",
-        total_count: "Users count: ",
+        total_count: "User count: ",
         password: "Password",
         password_check: "Retype Password"
     },
@@ -176,7 +176,7 @@ const messages_en = {
         successful_edit: "Collectors node was successfully updated",
         removed: "Collectors node was successfully deleted",
         removed_error: "Collectors node is in use and could not be deleted",
-        total_count: "Collectors nodes count: "
+        total_count: "Collectors node count: "
     },
 
     osint_source: {
@@ -230,7 +230,7 @@ const messages_en = {
         removed_error: "OSINT source group is in use and could not be deleted",
         title: "Title",
         osint_sources: "OSINT Sources",
-        total_count: "OSINT source groups count: ",
+        total_count: "OSINT Source Sroup count: ",
         default_group: "Uncategorized",
         default_group_description: "Default group for uncategorized OSINT sources"
     },
@@ -247,7 +247,7 @@ const messages_en = {
         removed_error: "Role is in use and could not be deleted",
         title: "Title",
         permissions: "Permissions",
-        total_count: "Roles count: "
+        total_count: "Role count: "
     },
 
     acl: {
@@ -269,7 +269,7 @@ const messages_en = {
         removed_error: "ACL is in use and could not be deleted",
         roles: "Roles",
         users: "Users",
-        total_count: "ACL count: "
+        total_count: "ACLs count: "
     },
 
     publisher_preset: {
@@ -285,7 +285,7 @@ const messages_en = {
         successful_edit: "Publisher preset was successfully updated",
         removed: "Publisher preset was successfully deleted",
         removed_error: "Publisher preset is in use and could not be deleted",
-        total_count: "Publisher presets count: "
+        total_count: "Publisher preset count: "
     },
 
     product_type: {
@@ -335,7 +335,7 @@ const messages_en = {
         successful_edit: "Presenters node was successfully updated",
         removed: "Presenters node was successfully deleted",
         removed_error: "Presenters node is in use and could not be deleted",
-        total_count: "Presenters nodes count: "
+        total_count: "Presenters node count: "
     },
 
     publishers_node: {
@@ -350,11 +350,11 @@ const messages_en = {
         successful_edit: "Publishers node was successfully updated",
         removed: "Publishers node was successfully deleted",
         removed_error: "Publishers node is in use and could not be deleted",
-        total_count: "Publishers nodes count: "
+        total_count: "Publishers node count: "
     },
 
     bots_node: {
-        add_new: "Add new bots node",
+        add_new: "Add new bot node",
         edit: "Edit bots node",
         error: "Could not connect to bots node.",
         name: "Name",
@@ -362,10 +362,10 @@ const messages_en = {
         url: "URL",
         key: "Key",
         successful: "New bots node was successfully added",
-        successful_edit: "Bots node was successfully updated",
+        successful_edit: "Bot node was successfully updated",
         removed: "Bots node was successfully deleted",
-        removed_error: "Bots node is in use and could not be deleted",
-        total_count: "Bots nodes count: "
+        removed_error: "Bot node is in use and could not be deleted",
+        total_count: "Bots node count: "
     },
 
     bot_preset: {
@@ -380,7 +380,7 @@ const messages_en = {
         successful_edit: "Bot preset was successfully updated",
         removed: "Bot preset was successfully deleted",
         removed_error: "Bot preset is in use and could not be deleted",
-        total_count: "Bot presets count: "
+        total_count: "Bot preset count: "
     },
 
     attribute: {
@@ -622,7 +622,7 @@ const messages_en = {
         successful_edit: "Report item type was successfully updated",
         removed_error: "Report item type is in use and could not be deleted",
         removed: "Report item type was successfully deleted",
-        total_count: "Report types count: "
+        total_count: "Report type count: "
     },
 
     report_item: {
@@ -676,7 +676,7 @@ const messages_en = {
         sort: "Sort by",
         from: "From",
         to: "To",
-        total_count: "Report items count: ",
+        total_count: "Report item count: ",
         tooltip: {
             filter_completed: "Show/hide completed report items",
             filter_incomplete: "Show/hide incomplete report items",
@@ -717,8 +717,8 @@ const messages_en = {
         title: "Title",
         description: "Description",
         download: "Download",
-        total_count: "News items count: ",
-        selected_count: "Selected news items count: ",
+        total_count: "News item count: ",
+        selected_count: "Selected news item count: ",
         tooltip: {
             filter_read: "Show/hide unread news items",
             filter_important: "Show/hide important news items",
@@ -918,12 +918,12 @@ const messages_en = {
         name: "Name",
         description: "Description",
         notification_templates: "Notification Templates",
-        allowed_users: "Allowed users (If none is selected than all users are allowed)",
+        allowed_users: "Allowed users (If none is selected, all users are allowed)",
         successful: "New asset group was successfully added",
         successful_edit: "Asset group was successfully updated",
         removed: "Asset group was successfully deleted",
         removed_error: "Asset group is in use and could not be deleted",
-        total_count: "Asset groups count: "
+        total_count: "Asset group count: "
     },
 
     notification_template: {
@@ -944,7 +944,7 @@ const messages_en = {
         successful_edit: "Notification template was successfully updated",
         removed: "Notification template was successfully deleted",
         removed_error: "Notification template is in use and could not be deleted",
-        total_count: "Notification templates count: "
+        total_count: "Notification template count: "
     },
 
     asset: {
@@ -963,7 +963,7 @@ const messages_en = {
         successful_edit: "Asset was successfully updated",
         removed: "Asset was successfully deleted",
         removed_error: "Asset is in use and could not be deleted",
-        total_count: "Assets count: ",
+        total_count: "Asset count: ",
         vulnerabilities: "Vulnerabilities",
         vulnerabilities_count: "Vulnerabilities: ",
         no_vulnerabilities: "No vulnerabilities",
@@ -989,7 +989,7 @@ const messages_en = {
         removed_error: "Remote access is in use and could not be deleted",
         osint_sources: "OSINT Sources to share",
         report_item_types: "Report Item Types to share",
-        total_count: "Remote access count: "
+        total_count: "Remote accesses count: "
     },
 
     remote_node: {
@@ -1012,7 +1012,7 @@ const messages_en = {
         successful_edit: "Remote node was successfully updated",
         removed: "Remote node was successfully deleted",
         removed_error: "Remote node is in use and could not be deleted",
-        total_count: "Remote nodes count: "
+        total_count: "Remote node count: "
     },
 
     drop_zone: {
