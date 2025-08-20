@@ -4,10 +4,11 @@ Returns:
     _description_
 """
 
-import os
-from base64 import b64encode
 import jinja2
+
+from base64 import b64encode
 from shared import common
+
 from .base_presenter import BasePresenter
 from shared.config_presenter import ConfigPresenter
 from presenters.pdf_presenter import PDFPresenter
@@ -44,7 +45,7 @@ class MESSAGEPresenter(BasePresenter):
         presenter_output = {"mime_type": "text/plain", "message_title": None, "message_body": None, "data": None}
 
         def generate_part(template_path):
-            head, tail = os.path.split(template_path)
+            head, tail = BasePresenter.resolve_template_path(template_path)
             input_data = BasePresenter.generate_input_data(presenter_input)
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
             BasePresenter.load_filters(env)
