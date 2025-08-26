@@ -47,7 +47,7 @@
   "devDependencies": {
     "@babel/helper-compilation-targets": "^7.25.9",
     "@mdi/font": "^6.9.96",
-    "@vue/cli-plugin-babel": "^3.12.1",
+    "@vue/cli-plugin-babel": "^5.0.9",
     "@vue/cli-plugin-eslint": "^3.12.1",
     "@vue/cli-service": "^3.12.1",
     "babel-eslint": "^10.1.0",
