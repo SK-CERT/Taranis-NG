@@ -4,9 +4,9 @@ Returns:
     A dictionary containing the MIME type and the base64-encoded HTML data.
 """
 
-import os
-from base64 import b64encode
 import jinja2
+
+from base64 import b64encode
 
 from .base_presenter import BasePresenter
 from shared.config_presenter import ConfigPresenter
@@ -38,7 +38,8 @@ class HTMLPresenter(BasePresenter):
             A dictionary containing the MIME type and the base64-encoded HTML data.
         """
         try:
-            head, tail = os.path.split(presenter_input.param_key_values["HTML_TEMPLATE_PATH"])
+            template_path = presenter_input.param_key_values["HTML_TEMPLATE_PATH"]
+            head, tail = BasePresenter.resolve_template_path(template_path)
             input_data = BasePresenter.generate_input_data(presenter_input)
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
             BasePresenter.load_filters(env)

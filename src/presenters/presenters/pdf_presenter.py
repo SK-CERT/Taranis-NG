@@ -4,10 +4,10 @@ Returns:
     dict: mime type and base64 encoded data of the generated PDF document
 """
 
-import os
-import tempfile
-from base64 import b64encode
+import io
 import jinja2
+
+from base64 import b64encode
 from weasyprint import HTML
 
 from .base_presenter import BasePresenter
@@ -37,9 +37,8 @@ class PDFPresenter(BasePresenter):
             dict: mime type and base64 encoded data of the generated PDF document
         """
         try:
-            output_html = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix=".html", delete_on_close=False).name
-            output_pdf = tempfile.NamedTemporaryFile(prefix="pdf_report_", suffix=".pdf", delete_on_close=False).name
-            head, tail = os.path.split(presenter_input.param_key_values["PDF_TEMPLATE_PATH"])
+            template_path = presenter_input.param_key_values["PDF_TEMPLATE_PATH"]
+            head, tail = BasePresenter.resolve_template_path(template_path)
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 
@@ -47,27 +46,19 @@ class PDFPresenter(BasePresenter):
             BasePresenter.load_filters(env)
             pdf = env.get_template(tail)
             output_text = pdf.render(data=input_data)
-            with open(output_html, "w") as output_file:
-                output_file.write(output_text)
-
-            HTML(output_html).write_pdf(output_pdf)
+            pdf_buffer = io.BytesIO()
+            HTML(string=output_text).write_pdf(target=pdf_buffer)
+            pdf_buffer.seek(0)
 
             encoding = "UTF-8"
-            file = output_pdf
-
-            with open(file, "rb") as open_file:
-                byte_content = open_file.read()
-
+            byte_content = pdf_buffer.read()
             base64_bytes = b64encode(byte_content)
-
             data = base64_bytes.decode(encoding)
 
             presenter_output = {"mime_type": "application/pdf", "data": data}
 
-            os.remove(output_html)
-            os.remove(file)
-
             return presenter_output
+
         except Exception as error:
             BasePresenter.print_exception(self, error)
             presenter_output = {"mime_type": "text/plain", "data": b64encode(("TEMPLATING ERROR\n" + str(error)).encode()).decode("UTF-8")}

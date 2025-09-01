@@ -4,13 +4,15 @@ Returns:
     _description_
 """
 
+import datetime
+import json
+import os
+import re
+import types
+
+from cvss import CVSS2, CVSS3, CVSS4
 from shared.schema.presenter import PresenterSchema
 from shared.log_manager import logger
-import json
-import datetime
-import types
-import re
-from cvss import CVSS2, CVSS3, CVSS4
 
 from . import jinja_filters
 
@@ -337,3 +339,28 @@ class BasePresenter:
         env.filters["strfdate"] = jinja_filters.filter_strfdate
         env.filters["regex_replace"] = jinja_filters.filter_regex_replace
         env.filters["truncate_on_symbol"] = jinja_filters.filter_truncate_on_symbol
+
+    @staticmethod
+    def resolve_template_path(template_path, templates_root="templates"):
+        """Safely resolve the template path, ensuring it's within the allowed templates directory.
+
+        Args:
+            template_path (str): The user-supplied template path.
+            templates_root (str): The root directory for templates (relative or absolute).
+
+        Returns:
+            (head, tail): Tuple of directory and filename for Jinja2 loading.
+
+        Raises:
+            ValueError: If the template path is outside the allowed directory.
+        """
+        # Get absolute paths
+        templates_root_abs = os.path.abspath(templates_root)
+        template_abs = os.path.abspath(template_path)
+
+        # Check if template_abs is within templates_root_abs
+        if not template_abs.startswith(templates_root_abs + os.sep):
+            raise ValueError(f"Template path '{template_path}' is outside the allowed templates directory '{templates_root}'")
+
+        head, tail = os.path.split(template_abs)
+        return head, tail
