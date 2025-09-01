@@ -1,10 +1,12 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 142
-target-version = ["py38","py310"]
+[project]
+name = "taranis-ng_shared"
+version = "v24.11.1"
+description = "Taranis-NG Shared Classes"
+requires-python = ">=3.10"
+dependencies = [
+    "marshmallow==4.0.0"
+]
