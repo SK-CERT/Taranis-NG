@@ -3,6 +3,7 @@ entryPoints:
         address: ":80"
     websecure:
         address: ":443"
+        http3: {}
     traefik:
         address: ":9090"
 
