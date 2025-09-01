@@ -91,8 +91,7 @@ class WebCollector(BaseCollector):
         selector = selector_split[1].lstrip()
         return prefix, selector
 
-    @classmethod
-    def __get_element_locator(cls, element_selector):
+    def __get_element_locator(self, element_selector):
         """Extract a single element from the headless browser by selector.
 
         Parameters:
@@ -100,15 +99,14 @@ class WebCollector(BaseCollector):
         Returns:
             locator (tuple): A tuple containing the locator type and the selector.
         """
-        prefix, selector = cls.__get_prefix_and_selector(element_selector)
+        prefix, selector = self.__get_prefix_and_selector(element_selector)
 
-        by = cls.SELECTOR_MAP.get(prefix)
+        by = self.SELECTOR_MAP.get(prefix)
         if by and selector:
             return (by, selector)
         return None
 
-    @classmethod
-    def __find_element_by(cls, driver, element_selector):
+    def __find_element_by(self, driver, element_selector):
         """Extract single element from the headless browser by selector.
 
         Parameters:
@@ -117,9 +115,9 @@ class WebCollector(BaseCollector):
         Returns:
             The extracted element.
         """
-        prefix, selector = cls.__get_prefix_and_selector(element_selector)
+        prefix, selector = self.__get_prefix_and_selector(element_selector)
 
-        by = cls.SELECTOR_MAP.get(prefix)
+        by = self.SELECTOR_MAP.get(prefix)
         if by and selector:
             try:
                 return driver.find_element(by, selector)
@@ -127,8 +125,7 @@ class WebCollector(BaseCollector):
                 return None
         return None
 
-    @classmethod
-    def __find_element_text_by(cls, driver, element_selector, return_none=False):
+    def __find_element_text_by(self, driver, element_selector, return_none=False):
         """Find the text of an element identified by the given selector using the provided driver.
 
         Parameters:
@@ -147,15 +144,20 @@ class WebCollector(BaseCollector):
 
         try:
             if element_selector:
-                ret = cls.__find_element_by(driver, element_selector)
-                return ret.text if ret else failure_retval
+                ret = self.__find_element_by(driver, element_selector)
+                if ret:
+                    if ret.text == "":
+                        self.source.logger.warning(f"Element found, but text content is empty: {element_selector}")
+                    return ret.text
+                else:
+                    self.source.logger.warning(f"Element not found: {element_selector}")
+                    return failure_retval
             else:
                 return failure_retval
         except NoSuchElementException as e:  # noqa F841
             return failure_retval
 
-    @classmethod
-    def __find_elements_by(cls, driver, element_selector):
+    def __find_elements_by(self, driver, element_selector):
         """Extract list of elements from the headless browser by selector.
 
         Parameters:
@@ -164,9 +166,9 @@ class WebCollector(BaseCollector):
         Returns:
             A list of elements found using the given selector.
         """
-        prefix, selector = cls.__get_prefix_and_selector(element_selector)
+        prefix, selector = self.__get_prefix_and_selector(element_selector)
 
-        by = cls.SELECTOR_MAP.get(prefix)
+        by = self.SELECTOR_MAP.get(prefix)
         if by and selector:
             try:
                 return driver.find_elements(by, selector)
@@ -174,8 +176,7 @@ class WebCollector(BaseCollector):
                 return []
         return []
 
-    @classmethod
-    def __safe_find_elements_by(cls, driver, element_selector):
+    def __safe_find_elements_by(self, driver, element_selector):
         """Safely find elements by the given element selector using the provided driver.
 
         Parameters:
@@ -185,13 +186,12 @@ class WebCollector(BaseCollector):
             A list of elements matching the given selector, or None if no elements are found.
         """
         try:
-            elements = cls.__find_elements_by(driver, element_selector)
+            elements = self.__find_elements_by(driver, element_selector)
             return elements if elements else None
         except NoSuchElementException as error:  # noqa F841
             return None
 
-    @classmethod
-    def __wait_for_new_tab(cls, browser, timeout, current_tab):
+    def __wait_for_new_tab(self, browser, timeout, current_tab):
         """Wait for a new tab to open in the browser.
 
         Parameters:
@@ -655,7 +655,7 @@ class WebCollector(BaseCollector):
         """
         current_url = browser.current_url
 
-        # self.source.logger.warning(scope.get_attribute("outerHTML"))
+        # print(browser.page_source, flush=True)
 
         title = self.__find_element_text_by(scope, self.selectors["title"])
 

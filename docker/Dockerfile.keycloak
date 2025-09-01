@@ -1,4 +1,4 @@
-FROM quay.io/keycloak/keycloak:26.3.2
+FROM quay.io/keycloak/keycloak:26.3.3
 
 COPY ./src/keycloak/realm-export.json /opt/keycloak/data/import/realm-export.json
 

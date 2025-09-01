@@ -4,7 +4,6 @@ Returns:
     dict: The presenter output containing the mime type and data of the generated text document.
 """
 
-import os
 from base64 import b64encode
 import jinja2
 
@@ -40,7 +39,8 @@ class TEXTPresenter(BasePresenter):
             dict: The presenter output containing the mime type and the generated text data.
         """
         try:
-            head, tail = os.path.split(presenter_input.param_key_values["TEXT_TEMPLATE_PATH"])
+            template_path = presenter_input.param_key_values["TEXT_TEMPLATE_PATH"]
+            head, tail = BasePresenter.resolve_template_path(template_path)
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 

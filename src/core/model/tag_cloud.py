@@ -57,14 +57,14 @@ class TagCloud(db.Model):
         db.session.commit()
 
     @classmethod
-    def get_grouped_words(cls, tag_cloud_day):
+    def get_grouped_words(cls, number_of_days):
         """
         Retrieve grouped words from the tag cloud for a specific day.
 
-        :param tag_cloud_day: The number of days ago to filter the tag cloud.
+        :param number_of_days: The number of days ago to filter the tag cloud.
         :return: List of grouped words with their quantities.
         """
-        day_filter = (datetime.datetime.now() - datetime.timedelta(days=tag_cloud_day)).date()
+        day_filter = (datetime.datetime.now() - datetime.timedelta(days=number_of_days)).date()
         stopwords = WordListEntry.stopwords_subquery()
         grouped_words = (
             db.session.query(TagCloud.word, label("word_quantity", func.sum(TagCloud.word_quantity)))

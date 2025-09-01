@@ -4,9 +4,9 @@ Returns:
     dict: The presenter output containing the MIME type and data.
 """
 
-import os
-from base64 import b64encode
 import jinja2
+
+from base64 import b64encode
 
 from .base_presenter import BasePresenter
 from shared.config_presenter import ConfigPresenter
@@ -40,7 +40,8 @@ class MISPPresenter(BasePresenter):
             dict: The presenter output containing the mime type and data.
         """
         try:
-            head, tail = os.path.split(presenter_input.param_key_values["MISP_TEMPLATE_PATH"])
+            template_path = presenter_input.param_key_values["MISP_TEMPLATE_PATH"]
+            head, tail = BasePresenter.resolve_template_path(template_path)
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 

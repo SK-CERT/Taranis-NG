@@ -68,7 +68,6 @@ class Config(object):
     DB_PASSWORD = read_secret("postgres_password")
     SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_URL}/{DB_DATABASE}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = os.getenv("DEBUG_SQL", "false").lower() == "true"  # DEBUG SQL Queries
 
     if "DB_POOL_SIZE" in os.environ:
         DB_POOL_SIZE = os.getenv("DB_POOL_SIZE")

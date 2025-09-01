@@ -28,6 +28,10 @@ gunicorn_logger.setLevel(logging_level)
 # setup syslog logger
 sys_logger = logging.getLogger("SysLogger")
 sys_logger.setLevel(logging_level)
+# DEBUG SQL Queries
+if os.getenv("DEBUG_SQL", "false").lower() == "true":
+    sql_logger = logging.getLogger("sqlalchemy.engine")
+    sql_logger.setLevel(logging.INFO)
 
 
 # LOG_SENSITIVE_DATA=no (or undefined) - remove sensitive data
