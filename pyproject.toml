@@ -1,0 +1,56 @@
+[project]
+name = "TARANIS-NG"
+version = "v24.11.1"
+description = "OSINT gathering and analysis tool for CSIRT teams and organisations."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "EUPL-1.2" }
+authors = [
+    { name = "Ján Polonský", email = "jan.polonsky@nbu.gov.sk" },
+    { name = "Jaroslav Svoboda", email = "jaroslav.svoboda@cesnet.cz" },
+    { name = "Milan Pikula", email = "milan.pikula@nbu.gov.sk" },
+    { name = "Dominik Dancs", email = "dominik.dancs@nbu.gov.sk" },
+]
+keywords = [
+    "osint",
+    "security",
+    "csirt",
+    "cert",
+    "threat-intelligence",
+    "vulnerability-management",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: EUPL-1.2",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/SK-CERT/Taranis-NG"
+"Repository" = "https://github.com/SK-CERT/Taranis-NG"
+"Issue Tracker" = "https://github.com/SK-CERT/Taranis-NG/issues"
+"Changelog" = "https://github.com/SK-CERT/Taranis-NG/blob/main/CHANGELOG.md"
+
+[tool.ruff]
+line-length = 142
+target-version = "py313"
+fix = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff.format]
+line-ending = "lf"
+docstring-code-format = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
