@@ -12,17 +12,17 @@ FROM python:3.13-alpine3.22 AS production
 
 WORKDIR /app/
 
-# upgrade pip
-RUN python -m pip install --upgrade pip
+# Install uv (fast Python installer)
+RUN pip install uv
 
 # install "shared" package from build_shared stage
 # TODO: somehow squash the following two layers into one to conserve space
 
 COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl custom_packages/
-RUN pip install --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
+RUN uv pip install --system --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
 
 # install dependencies
-COPY ./src/bots/requirements.txt /app/requirements.txt
+COPY ./src/bots/pyproject.toml /app/pyproject.toml
 RUN \
     apk add --no-cache --virtual .build-deps \
     gcc \
@@ -31,7 +31,7 @@ RUN \
     musl-dev \
     python3-dev \
     libffi-dev && \
-    pip install --no-cache-dir -r /app/requirements.txt && \
+    uv pip install --system --no-cache-dir . && \
     apk --purge del .build-deps
 
 COPY ./docker/start.sh /start.sh
