@@ -40,10 +40,15 @@ classifiers = [
 "Issue Tracker" = "https://github.com/SK-CERT/Taranis-NG/issues"
 "Changelog" = "https://github.com/SK-CERT/Taranis-NG/blob/main/CHANGELOG.md"
 
+[tool.uv]
+required-version = "0.8.14"
+
 [tool.ruff]
+required-version = "0.12.11"
 line-length = 142
 target-version = "py313"
 fix = true
+include = ["src/**/*.py"]
 
 [tool.ruff.lint]
 select = ["ALL"]
