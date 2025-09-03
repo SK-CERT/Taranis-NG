@@ -1,4 +1,4 @@
-﻿"""This module contains the configuration settings for Gunicorn.
+"""This module contains the configuration settings for Gunicorn.
 
 The following environment variables are used:
 - WORKERS_PER_CORE: Number of workers per CPU core. Default is 2.
@@ -19,33 +19,24 @@ For debugging and testing purposes, the module also defines the following variab
 - log_data: A dictionary containing the log level, number of workers, bind address and port, workers per core, host, and port.
 """
 
-from __future__ import print_function
-from gunicorn.glogging import Logger
-
 import logging
 import multiprocessing
 import os
 import re
+import typing
 
-workers_per_core_str = os.getenv("WORKERS_PER_CORE", "2")
-web_concurrency_str = os.getenv("WEB_CONCURRENCY", "1")
+from gunicorn.glogging import Logger
+
+workers_per_core = int(os.getenv("WORKERS_PER_CORE", "2"))
+web_concurrency = int(os.getenv("WEB_CONCURRENCY", "0"))
 host = os.getenv("HOST", "0.0.0.0")
 port = os.getenv("PORT", "80")
 bind_env = os.getenv("BIND", None)
 use_loglevel = os.getenv("MODULES_LOG_LEVEL", "WARNING")
-if bind_env:
-    use_bind = bind_env
-else:
-    use_bind = f"{host}:{port}"
+use_bind = bind_env or f"{host}:{port}"
 
-cores = multiprocessing.cpu_count()
-workers_per_core = float(workers_per_core_str)
-default_web_concurrency = workers_per_core * cores
-if web_concurrency_str:
-    web_concurrency = int(web_concurrency_str)
-    assert web_concurrency > 0
-else:
-    web_concurrency = int(default_web_concurrency)
+if not web_concurrency or web_concurrency <= 0:
+    web_concurrency = workers_per_core * multiprocessing.cpu_count()
 
 # Gunicorn config variables
 loglevel = use_loglevel.lower()
@@ -54,47 +45,30 @@ bind = use_bind
 keepalive = 120
 errorlog = "-"
 
-# For debugging and testing
-log_data = {
-    "loglevel": loglevel,
-    "workers": workers,
-    "bind": bind,
-    # Additional, non-gunicorn variables
-    "workers_per_core": workers_per_core,
-    "host": host,
-    "port": port,
-}
-if loglevel.lower() == "debug":
-    print(log_data)
-
 
 class CustomGunicornLogger(Logger):
     """Override Gunicorn logger to customize log output."""
 
-    def setup(self, cfg):
+    def setup(self, cfg) -> None:
         """Set up a custom logger."""
         super().setup(cfg)
         filter_strings = ["Closing connection.", "/isalive", "OPTIONS /api"]
-        # print(cfg, flush=True)
 
         class RemoveStrings(logging.Filter):
-            def filter(self, record):
-                # print(">", record.getMessage(), flush=True)
-                if any(x in record.getMessage() for x in filter_strings):
-                    return False
-                return True
+            def filter(self, record: logging.LogRecord) -> bool:
+                return not any(x in record.getMessage() for x in filter_strings)
 
         class ColorizedFormatter(logging.Formatter):
-            COLORS = {
+            COLORS: typing.ClassVar[dict[str, str]] = {
                 "DEBUG": "\x1b[1;38;5;246m",
                 "INFO": "\x1b[1;36m",
                 "WARNING": "\x1b[1;38;5;214m",
                 "ERROR": "\x1b[1;31m",
                 "CRITICAL": "\x1b[1;37m\x1b[41m",
             }
-            RESET = "\x1b[0m"
+            RESET: typing.ClassVar[str] = "\x1b[0m"
 
-            def format(self, record):
+            def format(self, record: logging.LogRecord) -> str:
                 level_color = self.COLORS.get(record.levelname, self.RESET)
                 record.levelname = f"{level_color}{record.levelname}{self.RESET}"  # Colorize level name
                 return super().format(record)
@@ -112,7 +86,7 @@ class CustomGunicornLogger(Logger):
 logger_class = CustomGunicornLogger
 
 
-def pre_request(worker, req):
+def pre_request(worker, req) -> None:
     """Log formatted request details just before a worker processes the request."""
     censored = {"jwt=", "api_key="}
     query = req.query
@@ -121,4 +95,4 @@ def pre_request(worker, req):
         found = re.search(search, query)
         if found:
             query = query.replace(found.group(1), r"•••••")
-    worker.log.debug("%s %s  %s" % (req.method, req.path, query))  # add to output also query data
+    worker.log.debug("%s %s  %s", req.method, req.path, query)  # add to output also query data
