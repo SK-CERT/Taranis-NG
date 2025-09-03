@@ -1,1 +1,3 @@
-__all__ = ["isalive", "collectors"]
+"""API Collectors Module."""
+
+__all__ = ["collectors", "isalive"]

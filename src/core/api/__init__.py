@@ -1,2 +1,17 @@
-__all__ = ['collectors', 'assess', 'auth', 'config', 'analyze', 'publish',
-           'user', 'assets', 'bots', 'isalive', 'remote', 'dashboard', 'sse']
+"""Core API Module."""
+
+__all__ = [
+    "analyze",
+    "assess",
+    "assets",
+    "auth",
+    "bots",
+    "collectors",
+    "config",
+    "dashboard",
+    "isalive",
+    "publish",
+    "remote",
+    "sse",
+    "user",
+]

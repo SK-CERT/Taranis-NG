@@ -2,13 +2,13 @@
 
 __all__ = [
     "api_manager",
+    "asset_manager",
     "auth_manager",
+    "bots_manager",
     "collectors_manager",
     "db_manager",
-    "asset_manager",
-    "bots_manager",
     "log_manager",
-    "sse_manager",
     "remote_manager",
+    "sse_manager",
     "tagcloud_manager",
 ]

@@ -1,1 +1,3 @@
-__all__ = ['base_bot', 'grouping_bot', 'wordlist_updater_bot', 'analyst_bot']
+"""Bots Module."""
+
+__all__ = ["analyst_bot", "base_bot", "grouping_bot", "wordlist_updater_bot"]

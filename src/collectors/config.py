@@ -1,13 +1,31 @@
-class Config(object):
+"""Configuration settings for collectors."""
 
-    def read_secret(secret_name):
-        file_path = f"/run/secrets/{secret_name}"
+from pathlib import Path
+
+
+class Config:
+    """Configuration class for collector settings."""
+
+    @staticmethod
+    def read_secret(secret_name: str) -> str:
+        """Read a secret from a file in the /run/secrets/ directory.
+
+        Args:
+            secret_name (str): The name of the secret file to read.
+
+        Returns:
+            str: The content of the secret file.
+
+        Raises:
+            RuntimeError: If the secret file is not found.
+        """
+        file_path = Path(f"/run/secrets/{secret_name}")
         try:
-            with open(file_path, "r") as secret_file:
+            with file_path.open() as secret_file:
                 return secret_file.read().strip()
-        except FileNotFoundError:
-            raise RuntimeError(f"Secret '{secret_name}' not found.")
-
+        except FileNotFoundError as err:
+            msg = f"Secret file not found: {file_path}"
+            raise RuntimeError(msg) from err
 
     API_KEY = read_secret("api_key")
     DEBUG = True
