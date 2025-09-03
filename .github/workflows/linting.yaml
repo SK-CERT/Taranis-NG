@@ -1,4 +1,4 @@
-name: linting
+name: Linting
 
 on:
   workflow_dispatch:
@@ -6,15 +6,14 @@ on:
 
 jobs:
   lint:
-    name: lint & check formatting
+    name: Code linting and formatting
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.13']
     steps:
-      - uses: actions/checkout@v4
-      - name: lint with black
-        uses: rickstaa/action-black@v1
+      - uses: actions/checkout@v5
+      - name: ruff-action
+        uses: astral-sh/ruff-action@v3.5.1
         with:
-          black_args: "src --check"
-          fail_on_error: false
+          args: "format --check --diff"
