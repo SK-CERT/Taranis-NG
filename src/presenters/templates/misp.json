@@ -7,7 +7,7 @@
     "threat_level_id": {% if report_item.attrs.event_threat_level == 'High' %}"1"{% elif report_item.attrs.event_threat_level == 'Medium' %}"2"{% elif report_item.attrs.event_threat_level == 'Low' %}"3"{% elif report_item.attrs.event_threat_level == 'Undefined' %}"4"{% else %}null{% endif %},
     "uuid": "{{ report_item.uuid }}",
     "Attribute": [
-      {    
+      {
         "category": {% if report_item.attrs.attribute_category %}"{{ report_item.attrs.attribute_category }}"{% else %}null{% endif %},
         "comment": {% if report_item.attrs.attribute_contextual_comment %}"{{ report_item.attrs.attribute_contextual_comment }}"{% else %}null{% endif %},
         "disable_correlation": {% if report_item.attrs.attribute_additional_information == 'Disable Correlation' %}true{% else %}false{% endif %},

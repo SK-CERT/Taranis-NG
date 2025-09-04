@@ -455,4 +455,3 @@ void main(int argc, char *argv[]) {
         hangup_peers();
     }
 }
-
