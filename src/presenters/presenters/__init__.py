@@ -1,1 +1,3 @@
-__all__ = ['base_presenter']
+"""Presenters Module."""
+
+__all__ = ["base_presenter"]

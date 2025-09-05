@@ -1,11 +1,13 @@
+"""Shared Schema Module."""
+
 __all__ = [
     "acl_entry",
     "address",
     "asset",
     "attribute",
+    "bot",
     "bot_preset",
     "bots_node",
-    "bot",
     "collector",
     "collectors_node",
     "news_item",
@@ -19,8 +21,8 @@ __all__ = [
     "presenters_node",
     "product",
     "product_type",
-    "publisher_preset",
     "publisher",
+    "publisher_preset",
     "publishers_node",
     "remote",
     "report_item",

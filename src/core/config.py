@@ -1,12 +1,15 @@
 """This module contains the configuration class for Taranis-NG."""
 
 import os
+from pathlib import Path
+from typing import ClassVar
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
-class Config(object):
+class Config:
     """Configuration class for Taranis-NG.
 
     This class holds the configuration settings for the Taranis-NG application.
@@ -40,13 +43,15 @@ class Config(object):
         OIDC_RESOURCE_CHECK_AUD (bool): Whether to check the audience of OIDC resource.
         OIDC_CLOCK_SKEW (int): The clock skew in seconds for OIDC.
         OPENID_LOGOUT_URL (str): The URL for OIDC logout.
+
     """
 
-    def read_secret(secret_name):
-        """Read a secret from a Docker secret file.
+    @staticmethod
+    def read_secret(secret_name: str) -> str:
+        """Read a secret from a file in the /run/secrets/ directory.
 
         Args:
-            secret_name (str): The name of the secret to read.
+            secret_name (str): The name of the secret file to read.
 
         Returns:
             str: The content of the secret file.
@@ -54,12 +59,13 @@ class Config(object):
         Raises:
             RuntimeError: If the secret file is not found.
         """
-        file_path = f"/run/secrets/{secret_name}"
+        file_path = Path(f"/run/secrets/{secret_name}")
         try:
-            with open(file_path, "r") as secret_file:
+            with file_path.open() as secret_file:
                 return secret_file.read().strip()
-        except FileNotFoundError:
-            raise RuntimeError(f"Secret '{secret_name}' not found.")
+        except FileNotFoundError as err:
+            msg = f"Secret file not found: {file_path}"
+            raise RuntimeError(msg) from err
 
     REDIS_URL = os.getenv("REDIS_URL")
     DB_URL = os.getenv("DB_URL")
@@ -86,15 +92,14 @@ class Config(object):
     JWT_ACCESS_TOKEN_EXPIRES = 14400
     DEBUG = True
 
-    SECRET_KEY = "OKdbmczZKFiteHVgKXiwFXZxKsLyRNvt"
+    SECRET_KEY = ""
     OIDC_CLIENT_SECRETS = "client_secrets.json"
     OIDC_ID_TOKEN_COOKIE_SECURE = False
     OIDC_REQUIRE_VERIFIED_EMAIL = False
     OIDC_USER_INFO_ENABLED = True
-    OIDC_OPENID_REALM = "taranis-ng"
-    OIDC_SCOPES = ["openid"]
+    OIDC_SCOPES: ClassVar[list] = ["openid"]
     OIDC_INTROSPECTION_AUTH_METHOD = "client_secret_post"
-    OIDC_TOKEN_TYPE_HINT = "access_token"
+    OIDC_TOKEN_TYPE_HINT = ""
     OIDC_RESOURCE_CHECK_AUD = True
     OIDC_CLOCK_SKEW = 560
 

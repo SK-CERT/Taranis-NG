@@ -44,11 +44,11 @@ classifiers = [
 required-version = "0.8.14"
 
 [tool.ruff]
-required-version = "0.12.11"
+required-version = ">=0.12.10"
 line-length = 142
 target-version = "py313"
 fix = true
-include = ["src/**/*.py"]
+include = ["src/**/*.py", "src/**/*.wsgi"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -59,3 +59,9 @@ docstring-code-format = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.per-file-ignores]
+"docker/gunicorn_conf.py" = ["INP001", "S104"]
+"src/collectors/run.py" = ["E402"]
+"src/presenters/run.py" = ["E402"]
+"src/publishers/run.py" = ["E402"]

@@ -1,6 +1,5 @@
-#! /usr/bin/env python
-"""
-This script initializes and runs the application.
+#!/usr/bin/env python
+"""This script initializes and runs the application.
 
 It performs the following steps:
 1. Patches standard library modules to make them cooperative using `gevent.monkey.patch_all()`.

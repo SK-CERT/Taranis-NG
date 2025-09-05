@@ -1,6 +1,5 @@
-#! /usr/bin/python3
-"""
-WSGI entry point for the Taranis-NG application.
+#!/usr/bin/python3
+"""WSGI entry point for the Taranis-NG application.
 
 This script sets up the environment and initializes the WSGI application.
 
@@ -25,11 +24,12 @@ Usage:
 """
 
 import sys
-import os
-from dotenv import load_dotenv, find_dotenv
-from app import create_app
+from pathlib import Path
 
-sys.path.insert(0, os.getcwd())
+from app import create_app
+from dotenv import find_dotenv, load_dotenv
+
+sys.path.insert(0, str(Path.cwd()))
 
 load_dotenv(find_dotenv())
 
