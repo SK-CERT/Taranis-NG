@@ -639,43 +639,23 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
             {% for item in data.report_items | selectattr("type", "equalto", "OSINT Report - Summary") %}
             <table class="table table-borderless">
                 <td class="text-center">
-                    {% if item.attrs.tlp == 'CLEAR' or item.attrs.tlp == 'WHITE' %}
-                    <span style="padding: 4px; background-color: black !important; color:white; font-weight: 700">
-                        {% endif %}
-                        {% if item.attrs.tlp == 'GREEN' %}
-                        <span style="padding: 4px; background-color: black !important; color:#33ff00; font-weight: 700">
-                            {% endif %}
-                            {% if item.attrs.tlp == 'AMBER' %}
-                            <span
-                                style="padding: 4px; background-color: black !important; color:#ffc000; font-weight: 700">
-                                {% endif %}
-                                {% if item.attrs.tlp == 'AMBER+STRICT' %}
-                                <span
-                                    style="padding: 4px; background-color: black !important; color:#ffc000; font-weight: 700">
-                                    {% endif %}
-                                    {% if item.attrs.tlp == 'RED' %}
-                                    <span
-                                        style="padding: 4px; background-color: black !important; color:#ff2b2b; font-weight: 700">
-                                        {% endif %}
-                                        TLP:{{ item.attrs.tlp | e }}</span> - {{ item.attrs.date_published | strfdate }}
+                    <span
+                        style="padding: 4px; background-color: black !important; color:{{ item.attrs.tlp|tlp_color }}; font-weight: 700">
+                        TLP:{{ item.attrs.tlp | e }}
+                    </span> - {{ item.attrs.date_published | strfdate }}
                 </td>
                 <td class="text-justify">
-                    {% if item.attrs.threat_level == 'SEVERE' %}
-                    <span class="thread_severe" style="padding: 4px; !important; font-weight: 700">
-                        {% endif %}
-                        {% if item.attrs.threat_level == 'HIGH' %}
-                        <span class="thread_high" style="padding: 4px; !important; font-weight: 700">
-                            {% endif %}
-                            {% if item.attrs.threat_level == 'ELEVATED' %}
-                            <span class="thread_elevated" style="padding: 4px; !important; font-weight: 700">
-                                {% endif %}
-                                {% if item.attrs.threat_level == 'GUARDED' %}
-                                <span class="thread_guarded" style="padding: 4px; !important; font-weight: 700">
-                                    {% endif %}
-                                    {% if item.attrs.threat_level == 'LOW' %}
-                                    <span class="thread_low" style="padding: 4px; !important; font-weight: 700">
-                                        {% endif %}
-                                        {{ item.attrs.threat_level | e }} </span>
+                    {% set threat_class = {
+                    'SEVERE': 'thread_severe',
+                    'HIGH': 'thread_high',
+                    'ELEVATED': 'thread_elevated',
+                    'GUARDED': 'thread_guarded',
+                    'LOW': 'thread_low'
+                    }[item.attrs.threat_level] if item.attrs.threat_level in
+                    ['SEVERE','HIGH','ELEVATED','GUARDED','LOW'] else '' %}
+                    <span class="{{ threat_class }}" style="padding: 4px; font-weight: 700">
+                        {{ item.attrs.threat_level | e }}
+                    </span>
                 </td>
             </table>
             <table class="table table-borderless">

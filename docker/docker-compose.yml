@@ -180,6 +180,7 @@ services:
       TZ: "${TZ}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
+      JINJA_TEMPLATES_ROOT: "${JINJA_TEMPLATES_ROOT}"
     ports:
       - "127.0.0.1:${PRESENTER_PORT}:80"
     volumes:

@@ -4,15 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
-    <link rel="stylesheet" type="text/css" href="/app/templates/css/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="/app/templates/css/custom.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
 </head>
 
 <body>
     <div>
         <table class="table table-borderless">
             <tr>
-                <td class="w20"><img src="/app/templates/images/taranis.svg"></td>
+                <td class="w20"><img src="images/taranis.svg"></td>
                 <td class="text-center align-middle sw_title">VULNERABILITY REPORT</td>
             </tr>
         </table>
@@ -85,26 +85,10 @@
                     <div class="mt-2 text_bold">TLP</div>
                 </td>
                 <td class="mt-2" colspan="5">
-                    {% if report_item.attrs.tlp == 'CLEAR' or report_item.attrs.tlp == 'WHITE' %}
                     <span
-                        style="padding: 4px; background-color: black !important; color:white; font-weight: 700">TLP:CLEAR</span>
-                    {% endif %}
-                    {% if report_item.attrs.tlp == 'GREEN' %}
-                    <span
-                        style="padding: 4px; background-color: black !important; color:#33ff00; font-weight: 700">TLP:GREEN</span>
-                    {% endif %}
-                    {% if report_item.attrs.tlp == 'AMBER' %}
-                    <span
-                        style="padding: 4px; background-color: black !important; color:#ffc000; font-weight: 700">TLP:AMBER</span>
-                    {% endif %}
-                    {% if report_item.attrs.tlp == 'AMBER+STRICT' %}
-                    <span
-                        style="padding: 4px; background-color: black !important; color:#ffc000; font-weight: 700">TLP:AMBER+STRICT</span>
-                    {% endif %}
-                    {% if report_item.attrs.tlp == 'RED' %}
-                    <span
-                        style="padding: 4px; background-color: black !important; color:#ff2b2b; font-weight: 700">TLP:RED</span>
-                    {% endif %}
+                        style="padding: 4px; background-color: black !important; color: {{ report_item.attrs.tlp|tlp_color }}; font-weight: 700;">
+                        TLP:{{ report_item.attrs.tlp }}
+                    </span>
                 </td>
             </tr>
             <tr>
