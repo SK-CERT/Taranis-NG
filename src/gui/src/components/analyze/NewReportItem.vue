@@ -126,7 +126,8 @@
                                 <v-col cols="12">
                                     <NewsItemSelector v-if="!verticalView" ref="new_item_selector" analyze_selector
                                         :attach="false" :values="news_item_aggregates" :modify="modify"
-                                        :collections="collections" :report_item_id="this.report_item.id" :edit="edit" />
+                                        :collections="collections" :report_item_id="this.report_item.id" :edit="edit"
+                                        :verticalView="false"/>
                                 </v-col>
                             </v-row>
                             <v-row no-gutters>
@@ -203,7 +204,7 @@
                         style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
                         <NewsItemSelector ref="new_item_selector" analyze_selector attach=".taranis-ng-vertical-view"
                             :values="news_item_aggregates" :modify="modify" :collections="collections"
-                            :report_item_id="this.report_item.id" :edit="edit" />
+                            :report_item_id="this.report_item.id" :edit="edit" :verticalView="true" />
                     </v-col>
                 </v-row>
 

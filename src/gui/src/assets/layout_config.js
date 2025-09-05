@@ -9,6 +9,12 @@ const dialogs = {
         hideOverlay: true,
         transition: "dialog-bottom-transition"
     },
+    WINDOW: {
+        persistent: true,
+        noClickAnimation: true,
+        hideOverlay: true,
+        transition: "dialog-bottom-transition"
+    },
     MODAL: {
         persistent: true,
         noClickAnimation: true,

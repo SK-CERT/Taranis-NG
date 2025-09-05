@@ -61,9 +61,9 @@
                 </v-col>
             </v-row>
 
-            <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" />
+            <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" :verticalView="verticalView" />
             <NewsItemDetail ref="newsItemDetail" :attach="attach" />
-            <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" />
+            <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" :verticalView="verticalView" />
         </v-row>
         <v-row>
             <MessageBox class="justify-center" v-if="msgbox_visible"
@@ -105,7 +105,8 @@
             report_item_id: Number,
             edit: Boolean,
             modify: Boolean,
-            attach: undefined
+            attach: undefined,
+            verticalView: Boolean,
         },
         data: () => ({
             dialog: false,
