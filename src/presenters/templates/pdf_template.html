@@ -32,8 +32,8 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                         <label class="checkbox-button">
-                            <input type="checkbox" class="checkbox-button__input" id="low" name="low" {% if
-                                report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
+                            <input type="checkbox" class="checkbox-button__input" id="low" name="low"
+                                {% if report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
                             <span class="checkbox-button__control"></span>
                             <span class="checkbox-button__label">Unrestricted</span>
                         </label>
@@ -42,8 +42,8 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                         <label class="checkbox-button">
-                            <input type="checkbox" class="checkbox-button__input" id="middle" name="middle" {% if
-                                report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
+                            <input type="checkbox" class="checkbox-button__input" id="middle" name="middle"
+                                {% if report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
                             <span class="checkbox-button__control"></span>
                             <span class="checkbox-button__label">Classified</span>
                         </label>
@@ -52,8 +52,8 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                         <label class="checkbox-button">
-                            <input type="checkbox" class="checkbox-button__input" id="high" name="high" {% if
-                                report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
+                            <input type="checkbox" class="checkbox-button__input" id="high" name="high"
+                                {% if report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
                             <span class="checkbox-button__control"></span>
                             <span class="checkbox-button__label">Confidential</span>
                         </label>
@@ -62,8 +62,8 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                         <label class="checkbox-button">
-                            <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {% if
-                                report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
+                            <input type="checkbox" class="checkbox-button__input" id="critical" name="critical"
+                                {% if report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
                             <span class="checkbox-button__control"></span>
                             <span class="checkbox-button__label">Secret</span>
                         </label>
@@ -72,8 +72,8 @@
                 <td class="w15 py-0">
                     <div class="mt-2">
                         <label class="checkbox-button">
-                            <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {% if
-                                report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
+                            <input type="checkbox" class="checkbox-button__input" id="critical" name="critical"
+                                {% if report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
                             <span class="checkbox-button__control"></span>
                             <span class="checkbox-button__label">Top Secret</span>
                         </label>
@@ -96,7 +96,9 @@
                     <div class="mt-2 text_bold">CVSS vector</div>
                 </td>
                 <td class="py-0" colspan="5">
-                    <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss.vectorString|e }} </span></div>
+                    <div class="mt-2">
+                        <span class="cvss">{% if report_item.attrs.cvss %}{{ report_item.attrs.cvss.vectorString|e }}{% endif %}</span>
+                    </div>
                 </td>
             </tr>
         </table>
@@ -141,9 +143,9 @@
             <tr>
                 <td class="text-justify text_in_tab">
                     {% if report_item.attrs.cve %}
-                    {% for i in report_item.attrs.cve %}
-                    <div>{{ i|e }}</div>
-                    {% endfor %}
+                        {% for i in report_item.attrs.cve %}
+                        <div>{{ i|e }}</div>
+                        {% endfor %}
                     {% endif %}
                 </td>
             </tr>
@@ -156,9 +158,13 @@
             <tr>
                 <td class="text-justify text_in_tab">
                     {% if report_item.attrs.impact %}
-                    {% for i in report_item.attrs.impact %}
-                    <div>{{ i|e }}</div>
-                    {% endfor %}
+                        {% if report_item.attrs.impact is iterable and report_item.attrs.impact is not string %}
+                            {% for imp in report_item.attrs.impact %}
+                                {{ imp | e }} <br>
+                            {% endfor %}
+                        {% else %}
+                            {{ report_item.attrs.impact | e }}
+                        {% endif %}
                     {% endif %}
                 </td>
             </tr>
@@ -171,9 +177,9 @@
             <tr>
                 <td class="text-justify text_in_tab">
                     {% if report_item.attrs.ioc %}
-                    {% for i in report_item.attrs.ioc %}
-                    <div>{{ i|e }}</div>
-                    {% endfor %}
+                        {% for i in report_item.attrs.ioc %}
+                        <div>{{ i|e }}</div>
+                        {% endfor %}
                     {% endif %}
                 </td>
             </tr>
@@ -205,9 +211,9 @@
                 <td class="text-justify text_in_tab">
                     <ul class="list-unstyled">
                         {% if report_item.attrs.links %}
-                        {% for i in report_item.attrs.links %}
-                        <div>{{ i|e }}</div>
-                        {% endfor %}
+                            {% for i in report_item.attrs.links %}
+                            <div>{{ i|e }}</div>
+                            {% endfor %}
                         {% endif %}
                     </ul>
                 </td>

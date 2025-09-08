@@ -701,18 +701,19 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
 
         <p>{{ data.product.description }}</p>
 
-        <p>In this week, we reported {{ data.report_items | selectattr("type", "equalto", "Vulnerability Report") | list
-            | length }} vulnerabilities:</p>
+        <p>In this week, we reported
+            {{ data.report_items | selectattr("type", "equalto", "Vulnerability Report") | list | length }}
+            vulnerabilities:</p>
         <ul>
             {% for report_item in data.report_items %}
-            {% if report_item.type == "Vulnerability Report" %}
-            <li><a href="#vuln-{{ loop.index }}">{{ report_item.name | e }}</a></li>
-            {% endif %}
+                {% if report_item.type == "Vulnerability Report" %}
+                    <li><a href="#vuln-{{ loop.index }}">{{ report_item.name | e }}</a></li>
+                {% endif %}
             {% endfor %}
         </ul>
 
         {% set available_sectors = (data.report_items | selectattr("type", "equalto", "News by Sector") |
-        map(attribute='attrs.nis_sector') | map('string') | unique | list ) %}
+            map(attribute='attrs.nis_sector') | map('string') | unique | list ) %}
 
         <p>We also published {{ data.report_items | selectattr("type", "equalto", "News by Sector") | list | length }}
             news item(s) for {{ available_sectors | length }} sector(s):</p>
@@ -727,34 +728,34 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
         <h1>News by sectors</h1>
 
         {% if (available_sectors | length) == 0 %}
-        This week, there were no sector-relevant news items.
+            This week, there were no sector-relevant news items.
         {% endif %}
 
         {% for sector in available_sectors %}
-        <a id="sect-{{ loop.index }}"></a>
-        <h2>Sector: {{ sector | e }}</h2>
+            <a id="sect-{{ loop.index }}"></a>
+            <h2>Sector: {{ sector | e }}</h2>
 
-        {% for report_item in data.report_items | selectattr("type", "equalto", "News by Sector") %}
-        {% if report_item.attrs.nis_sector == sector %}
-        <h3>{{ report_item.attrs.headline | e }}</h3>
-        <table class="table table-bordered">
-            <tr class="table-row">
-                <td>Date</td>
-                <td>{{ report_item.attrs.date | e }}</td>
-            </tr>
-            {% if report_item.attrs.date_updated is defined %}
-            <tr class="table-row">
-                <td>Updated</td>
-                <td>{{ report_item.attrs.date_updated | e }}</td>
-            </tr>
-            {% endif %}
-            <tr class="table-row">
-                <td>Report</td>
-                <td>{{ report_item.attrs.article | e }}</td>
-            </tr>
-        </table>
-        {% endif %}
-        {% endfor %}
+            {% for report_item in data.report_items | selectattr("type", "equalto", "News by Sector") %}
+                {% if report_item.attrs.nis_sector == sector %}
+                    <h3>{{ report_item.attrs.headline | e }}</h3>
+                    <table class="table table-bordered">
+                        <tr class="table-row">
+                            <td>Date</td>
+                            <td>{{ report_item.attrs.date | e }}</td>
+                        </tr>
+                        {% if report_item.attrs.date_updated is defined %}
+                            <tr class="table-row">
+                                <td>Updated</td>
+                                <td>{{ report_item.attrs.date_updated | e }}</td>
+                            </tr>
+                        {% endif %}
+                        <tr class="table-row">
+                            <td>Report</td>
+                            <td>{{ report_item.attrs.article | e }}</td>
+                        </tr>
+                    </table>
+                {% endif %}
+            {% endfor %}
 
         {% endfor %}
 
@@ -762,208 +763,207 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
         <div>
 
             {% for report_item in data.report_items %}
-            {% if report_item.type == "Vulnerability Report" %}
-            <a id="vuln-{{ loop.index }}"></a>
-            <h2>{{ report_item.name | e }}</h2>
+                {% if report_item.type == "Vulnerability Report" %}
+                    <a id="vuln-{{ loop.index }}"></a>
+                    <h2>{{ report_item.name | e }}</h2>
 
-            <table class="table table-bordered header_info" style="width: 100%">
-                <tr class="table-row">
-                    <td class="w25 py-0">
-                        <div class="mt-2 text-bold">Confidentiality</div>
-                    </td>
-                    <td class="w15 py-0">
-                        <div class="mt-2">
-                            <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="low" name="low" {% if
-                                    report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
-                                <span class="checkbox-button__control"></span>
-                                <span class="checkbox-button__label">Unrestricted</span>
-                            </label>
-                        </div>
-                    </td>
-                    <td class="w15 py-0">
-                        <div class="mt-2">
-                            <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="middle" name="middle" {% if
-                                    report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
-                                <span class="checkbox-button__control"></span>
-                                <span class="checkbox-button__label">Classified</span>
-                            </label>
-                        </div>
-                    </td>
-                    <td class="w15 py-0">
-                        <div class="mt-2">
-                            <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="high" name="high" {% if
-                                    report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
-                                <span class="checkbox-button__control"></span>
-                                <span class="checkbox-button__label">Confidential</span>
-                            </label>
-                        </div>
-                    </td>
-                    <td class="w15 py-0">
-                        <div class="mt-2">
-                            <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {%
-                                    if report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
-                                <span class="checkbox-button__control"></span>
-                                <span class="checkbox-button__label">Secret</span>
-                            </label>
-                        </div>
-                    </td>
-                    <td class="w15 py-0">
-                        <div class="mt-2">
-                            <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {%
-                                    if report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
-                                <span class="checkbox-button__control"></span>
-                                <span class="checkbox-button__label">Top Secret</span>
-                            </label>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="w25 py-0">
-                        <div class="mt-2 text-bold">TLP</div>
-                    </td>
-                    <td class="mt-2" colspan="5">
-                        <span
-                            style="padding: 4px; background-color: black !important; color:{{ report_item.attrs.tlp|tlp_color }}; font-weight: 700">
-                            TLP:{{ report_item.attrs.tlp }}
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="w25 py-0">
-                        <div class="mt-2 text-bold">CVSS vector</div>
-                    </td>
-                    <td class="py-0" colspan="5">
-                        <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss.vectorString|e }} </span></div>
-                    </td>
-                </tr>
+                    <table class="table table-bordered header_info" style="width: 100%">
+                        <tr class="table-row">
+                            <td class="w25 py-0">
+                                <div class="mt-2 text-bold">Confidentiality</div>
+                            </td>
+                            <td class="w15 py-0">
+                                <div class="mt-2">
+                                    <label class="checkbox-button">
+                                        <input type="checkbox" class="checkbox-button__input" id="low" name="low"
+                                            {% if report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
+                                        <span class="checkbox-button__control"></span>
+                                        <span class="checkbox-button__label">Unrestricted</span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="w15 py-0">
+                                <div class="mt-2">
+                                    <label class="checkbox-button">
+                                        <input type="checkbox" class="checkbox-button__input" id="middle" name="middle"
+                                            {% if report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
+                                        <span class="checkbox-button__control"></span>
+                                        <span class="checkbox-button__label">Classified</span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="w15 py-0">
+                                <div class="mt-2">
+                                    <label class="checkbox-button">
+                                        <input type="checkbox" class="checkbox-button__input" id="high" name="high"
+                                            {% if report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
+                                        <span class="checkbox-button__control"></span>
+                                        <span class="checkbox-button__label">Confidential</span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="w15 py-0">
+                                <div class="mt-2">
+                                    <label class="checkbox-button">
+                                        <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {%
+                                            if report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
+                                        <span class="checkbox-button__control"></span>
+                                        <span class="checkbox-button__label">Secret</span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="w15 py-0">
+                                <div class="mt-2">
+                                    <label class="checkbox-button">
+                                        <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {%
+                                            if report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
+                                        <span class="checkbox-button__control"></span>
+                                        <span class="checkbox-button__label">Top Secret</span>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w25 py-0">
+                                <div class="mt-2 text-bold">TLP</div>
+                            </td>
+                            <td class="mt-2" colspan="5">
+                                <span
+                                    style="padding: 4px; background-color: black !important; color:{{ report_item.attrs.tlp|tlp_color }}; font-weight: 700">
+                                    TLP:{{ report_item.attrs.tlp }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w25 py-0">
+                                <div class="mt-2 text-bold">CVSS vector</div>
+                            </td>
+                            <td class="py-0" colspan="5">
+                                <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss.vectorString|e }} </span></div>
+                            </td>
+                        </tr>
 
-            </table>
+                    </table>
 
-            <br>
+                    <br>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">DESCRIPTION</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {{ report_item.attrs.description|e }}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">DESCRIPTION</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {{ report_item.attrs.description|e }}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">EXPOSURE DATE</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {{ report_item.attrs.exposure_date }}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">EXPOSURE DATE</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {{ report_item.attrs.exposure_date }}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">UPDATE DATE</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {{ report_item.attrs.update_date }}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">UPDATE DATE</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {{ report_item.attrs.update_date }}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">CVE</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.cve %}{{ report_item.attrs.cve[0]|e }}{% endif %}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">CVE</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {% if report_item.attrs.cve %}{{ report_item.attrs.cve[0]|e }}{% endif %}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">IMPACT</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.impact %}{{ report_item.attrs.impact[0]|e }}{% endif %}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">IMPACT</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {% if report_item.attrs.impact %}{{ report_item.attrs.impact[0]|e }}{% endif %}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">IOC</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.ioc %}{{ report_item.attrs.ioc[0]|e }}{% endif %}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">IOC</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {% if report_item.attrs.ioc %}{{ report_item.attrs.ioc[0]|e }}{% endif %}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">AFFECTED SYSTEMS</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.affected_systems_cpe_codes %}
-                        <!-- cpe can be stored also in two layer arrays -->
-                        {% if report_item.attrs.affected_systems_cpe_codes[0] is iterable and
-                        report_item.attrs.affected_systems_cpe_codes[0] is not string %}
-                        {% for c in report_item.attrs.affected_systems_cpe_codes[0] %}
-                        {{ c | e }} <br>
-                        {% endfor %}
-                        {% else %}
-                        {{ report_item.attrs.affected_systems_cpe_codes[0] | e }} <br>
-                        {% endif %}
-                        {% endif %}
-                        {% if report_item.attrs.affected_systems %}{{ report_item.attrs.affected_systems | e }}{% endif
-                        %}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">AFFECTED SYSTEMS</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {% if report_item.attrs.affected_systems_cpe_codes %}
+                                    <!-- cpe can be stored also in two layer arrays -->
+                                    {% if report_item.attrs.affected_systems_cpe_codes[0] is iterable and
+                                        report_item.attrs.affected_systems_cpe_codes[0] is not string %}
+                                        {% for c in report_item.attrs.affected_systems_cpe_codes[0] %}
+                                            {{ c | e }} <br>
+                                        {% endfor %}
+                                    {% else %}
+                                        {{ report_item.attrs.affected_systems_cpe_codes[0] | e }} <br>
+                                    {% endif %}
+                                {% endif %}
+                                {% if report_item.attrs.affected_systems %}{{ report_item.attrs.affected_systems | e }}{% endif %}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">RECOMMENDATIONS</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.recommendations %}{{ report_item.attrs.recommendations|e }}{% endif %}
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">RECOMMENDATIONS</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                {% if report_item.attrs.recommendations %}{{ report_item.attrs.recommendations|e }}{% endif %}
+                            </td>
+                        </tr>
+                    </table>
 
-            <table class="table table-bordered">
-                <tr>
-                    <th class="th_data">LINKS</th>
-                </tr>
-                <tr>
-                    <td class="text-justify text_in_tab">
-                        <ul class="list-unstyled">
-                            {% if report_item.attrs.links %}
-                            {% for link in report_item.attrs.links %}
-                            <li><a href="{{ link }}">{{ link | e }}</a></li>
-                            {% endfor %}
-                            {% endif %}
-                        </ul>
-                    </td>
-                </tr>
-            </table>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="th_data">LINKS</th>
+                        </tr>
+                        <tr>
+                            <td class="text-justify text_in_tab">
+                                <ul class="list-unstyled">
+                                    {% if report_item.attrs.links %}
+                                        {% for link in report_item.attrs.links %}
+                                        <li><a href="{{ link }}">{{ link | e }}</a></li>
+                                        {% endfor %}
+                                    {% endif %}
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
 
-            {% endif %}
+                {% endif %}
             {% endfor %}
 
         </div>

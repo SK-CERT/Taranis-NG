@@ -262,6 +262,10 @@
         td.text_in_footer_table {
             padding: 5px 15px 5px 15px
         }
+
+        .crlf {
+           white-space: pre-line;
+        }
     </style>
 </head>
 
@@ -711,8 +715,8 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <td class="w15 py-0">
                         <div class="mt-2">
                             <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="low" name="low" {% if
-                                    report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
+                                <input type="checkbox" class="checkbox-button__input" id="low" name="low"
+                                    {% if report_item.attrs.confidentiality=='UNRESTRICTED' %}checked{% endif %}>
                                 <span class="checkbox-button__control"></span>
                                 <span class="checkbox-button__label">Unrestricted</span>
                             </label>
@@ -721,8 +725,8 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <td class="w15 py-0">
                         <div class="mt-2">
                             <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="middle" name="middle" {% if
-                                    report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
+                                <input type="checkbox" class="checkbox-button__input" id="middle" name="middle"
+                                    {% if report_item.attrs.confidentiality=='CLASSIFIED' %}checked{% endif %}>
                                 <span class="checkbox-button__control"></span>
                                 <span class="checkbox-button__label">Classified</span>
                             </label>
@@ -731,8 +735,8 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <td class="w15 py-0">
                         <div class="mt-2">
                             <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="high" name="high" {% if
-                                    report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
+                                <input type="checkbox" class="checkbox-button__input" id="high" name="high"
+                                    {% if report_item.attrs.confidentiality=='CONFIDENTIAL' %}checked{% endif %}>
                                 <span class="checkbox-button__control"></span>
                                 <span class="checkbox-button__label">Confidential</span>
                             </label>
@@ -741,8 +745,8 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <td class="w15 py-0">
                         <div class="mt-2">
                             <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {%
-                                    if report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
+                                <input type="checkbox" class="checkbox-button__input" id="critical" name="critical"
+                                    {% if report_item.attrs.confidentiality=='SECRET' %}checked{% endif %}>
                                 <span class="checkbox-button__control"></span>
                                 <span class="checkbox-button__label">Secret</span>
                             </label>
@@ -751,8 +755,8 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <td class="w15 py-0">
                         <div class="mt-2">
                             <label class="checkbox-button">
-                                <input type="checkbox" class="checkbox-button__input" id="critical" name="critical" {%
-                                    if report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
+                                <input type="checkbox" class="checkbox-button__input" id="critical" name="critical"
+                                    {% if report_item.attrs.confidentiality=='TOP SECRET' %}checked{% endif %}>
                                 <span class="checkbox-button__control"></span>
                                 <span class="checkbox-button__label">Top Secret</span>
                             </label>
@@ -775,7 +779,9 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                         <div class="mt-2 text_bold">CVSS vector</div>
                     </td>
                     <td class="py-0" colspan="5">
-                        <div class="mt-2"><span class="cvss">{{ report_item.attrs.cvss.vectorString|e }} </span></div>
+                        <div class="mt-2">
+                            <span class="cvss">{% if report_item.attrs.cvss %}{{ report_item.attrs.cvss.vectorString|e }}{% endif %}</span>
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -821,7 +827,15 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                 </tr>
                 <tr>
                     <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.cve %}{{ report_item.attrs.cve[0]|e }}{% endif %}
+                        {% if report_item.attrs.cve %}
+                            {% if report_item.attrs.cve is iterable and report_item.attrs.cve is not string %}
+                                {% for cv in report_item.attrs.cve %}
+                                    {{ cv | e }} <br>
+                                {% endfor %}
+                            {% else %}
+                                {{ report_item.attrs.cve | e }}
+                            {% endif %}
+                        {% endif %}
                     </td>
                 </tr>
             </table>
@@ -832,7 +846,15 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                 </tr>
                 <tr>
                     <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.impact %}{{ report_item.attrs.impact[0]|e }}{% endif %}
+                        {% if report_item.attrs.impact %}
+                            {% if report_item.attrs.impact is iterable and report_item.attrs.impact is not string %}
+                                {% for imp in report_item.attrs.impact %}
+                                    {{ imp | e }} <br>
+                                {% endfor %}
+                            {% else %}
+                                {{ report_item.attrs.impact | e }}
+                            {% endif %}
+                        {% endif %}
                     </td>
                 </tr>
             </table>
@@ -843,7 +865,11 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                 </tr>
                 <tr>
                     <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.ioc %}{{ report_item.attrs.ioc[0]|e }}{% endif %}
+                        {% if report_item.attrs.ioc %}
+                            {% for io in report_item.attrs.ioc %}
+                                {{ io | e }} <br>
+                            {% endfor %}
+                        {% endif %}
                     </td>
                 </tr>
             </table>
@@ -853,9 +879,8 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <th class="th_data">AFFECTED SYSTEMS</th>
                 </tr>
                 <tr>
-                    <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.affected_systems %}{{ report_item.attrs.affected_systems[0]|e }}{% endif
-                        %}
+                    <td class="text-justify text_in_tab crlf">
+                        {{- report_item.attrs.affected_systems | e -}}
                     </td>
                 </tr>
             </table>
@@ -866,7 +891,7 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                 </tr>
                 <tr>
                     <td class="text-justify text_in_tab">
-                        {% if report_item.attrs.recommendations %}{{ report_item.attrs.recommendations|e }}{% endif %}
+                        {% if report_item.attrs.recommendations %}{{ report_item.attrs.recommendations | e }}{% endif %}
                     </td>
                 </tr>
             </table>
@@ -879,9 +904,9 @@ DSoCioAioAgoAopAIASUoARCSPcrAoqAIqAIKAKKQMwR+H8tw5b8TFqqNAAAAABJRU5ErkJggg==">
                     <td class="text-justify text_in_tab">
                         <ul class="list-unstyled">
                             {% if report_item.attrs.links %}
-                            {% for link in report_item.attrs.links %}
-                            <li><a href="{{ link }}">{{ link | e }}</a></li>
-                            {% endfor %}
+                                {% for link in report_item.attrs.links %}
+                                <li><a href="{{ link }}">{{ link | e }}</a></li>
+                                {% endfor %}
                             {% endif %}
                         </ul>
                     </td>
