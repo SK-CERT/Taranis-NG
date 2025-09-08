@@ -10,6 +10,7 @@ build/
 .installed.cfg
 *.egg
 .pytest_cache/
+.ruff_cache/
 
 # temporary files of editors
 .DS_Store
