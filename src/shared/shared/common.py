@@ -2,6 +2,7 @@
 
 import os
 import re
+from collections.abc import Callable
 from functools import wraps
 from zoneinfo import ZoneInfo
 
@@ -109,7 +110,7 @@ def read_str_parameter(name: str, default_value: str, object_dict: dict) -> str:
     return val
 
 
-def ignore_exceptions(func: callable) -> callable:
+def ignore_exceptions(func: Callable) -> Callable:
     """Wrap scheduled action with exception handling."""
 
     @wraps(func)
