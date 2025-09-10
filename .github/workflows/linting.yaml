@@ -17,3 +17,11 @@ jobs:
         uses: astral-sh/ruff-action@v3.5.1
         with:
           args: "format --check --diff"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install djlint
+        run: pip install djlint
+      - name: Run djlint lint
+        run: djlint . --lint
