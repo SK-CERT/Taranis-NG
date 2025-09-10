@@ -13,10 +13,6 @@ jobs:
         python-version: ['3.13']
     steps:
       - uses: actions/checkout@v5
-      - name: ruff-action
-        uses: astral-sh/ruff-action@v3.5.1
-        with:
-          args: "format --check --diff"
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -25,3 +21,7 @@ jobs:
         run: pip install djlint
       - name: Run djlint lint
         run: djlint . --lint
+      - name: ruff-action
+        uses: astral-sh/ruff-action@v3.5.1
+        with:
+          args: "format --check --diff"
