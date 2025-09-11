@@ -1,16 +1,16 @@
 """Definition for presenter modules."""
 
-from .config_base import ConfigBase, module_type, param_type
-from typing import List
 from shared.schema.parameter import ParameterType
+
+from .config_base import ConfigBase, module_type, param_type
 
 
 class ConfigPresenter(ConfigBase):
     """Configuration for presenter modules."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize presenter modules."""
-        self.modules: List[module_type] = []
+        self.modules: list[module_type] = []
 
         mod = module_type("HTML_PRESENTER", "HTML Presenter", "Presenter for generating html documents")
         mod.parameters = [
@@ -20,7 +20,7 @@ class ConfigPresenter(ConfigBase):
                 "Path to HTML template file",
                 ParameterType.STRING,
                 "/app/templates/template.html",
-            )
+            ),
         ]
         self.modules.append(mod)
 
@@ -45,6 +45,14 @@ class ConfigPresenter(ConfigBase):
                 "/app/templates/email_body_template.txt",
             ),
             param_type("ATTACHMENT_TEMPLATE_PATH", "Path to PDF attachment template", "Path to PDF template file", ParameterType.STRING, ""),
+            param_type(
+                "ATTACHMENT_FILE_NAME",
+                "Attachment file name",
+                "Leave empty for default file name 'file_YYYYmmddHHMMSS'. Alternatively, you may specify a custom file name or "
+                "provide a template string (e.g., file_{{ data.product.title }}).",
+                ParameterType.STRING,
+                "",
+            ),
         ]
         self.modules.append(mod)
 
@@ -56,15 +64,19 @@ class ConfigPresenter(ConfigBase):
                 "Path to MISP template file",
                 ParameterType.STRING,
                 "/app/templates/misp.json",
-            )
+            ),
         ]
         self.modules.append(mod)
 
         mod = module_type("PDF_PRESENTER", "PDF Presenter", "Presenter for generating PDF documents")
         mod.parameters = [
             param_type(
-                "PDF_TEMPLATE_PATH", "Path to template", "Path to PDF template file", ParameterType.STRING, "/app/templates/pdf_template.html"
-            )
+                "PDF_TEMPLATE_PATH",
+                "Path to template",
+                "Path to PDF template file",
+                ParameterType.STRING,
+                "/app/templates/pdf_template.html",
+            ),
         ]
         self.modules.append(mod)
 
@@ -76,6 +88,6 @@ class ConfigPresenter(ConfigBase):
                 "Path to TEXT template file",
                 ParameterType.STRING,
                 "/app/templates/template-show-all-data.txt",
-            )
+            ),
         ]
         self.modules.append(mod)

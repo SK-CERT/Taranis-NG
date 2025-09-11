@@ -4,85 +4,98 @@ Returns:
     _type_: _description_
 """
 
-from model.publishers_node import PublishersNode
+from http import HTTPStatus
+
 from model.publisher import Publisher
 from model.publisher_preset import PublisherPreset
+from model.publishers_node import PublishersNode
 from remote.publishers_api import PublishersApi
-from shared.schema.publishers_node import PublishersNode as PublishersNodeSchema
+
 from shared.schema.publisher import PublisherInput, PublisherInputSchema
+from shared.schema.publishers_node import PublishersNode as PublishersNodeSchema
 
 
-def add_publishers_node(data):
-    """_summary_.
+def add_publishers_node(data: dict) -> int:
+    """Add publishers node.
 
     Args:
-        data (_type_): _description_
+        data (dict): json
 
     Returns:
-        _type_: _description_
+        int: HTTP status code
     """
     node = PublishersNodeSchema.create(data)
     publishers_info, status_code = PublishersApi(node.api_url, node.api_key).get_publishers_info()
-    if status_code == 200:
+    if status_code == HTTPStatus.OK:
         publishers = Publisher.create_all(publishers_info)
         PublishersNode.add_new(data, publishers)
 
     return status_code
 
 
-def update_publishers_node(node_id, data):
-    """_summary_.
+def update_publishers_node(node_id: int, data: dict) -> int:
+    """Update publishers node.
 
     Args:
-        node_id (_type_): _description_
-        data (_type_): _description_
+        node_id (int): The ID of the node to update.
+        data (dict): json
 
     Returns:
-        _type_: _description_
+        int: HTTP status code
     """
     node = PublishersNodeSchema.create(data)
     publishers_info, status_code = PublishersApi(node.api_url, node.api_key).get_publishers_info()
-    if status_code == 200:
+    if status_code == HTTPStatus.OK:
         publishers = Publisher.create_all(publishers_info)
         PublishersNode.update(node_id, data, publishers)
 
     return status_code
 
 
-def add_publisher_preset(data):
-    """_summary_.
+def add_publisher_preset(data: dict) -> None:
+    """Add publisher preset.
 
     Args:
-        data (_type_): _description_
+        data (dict): json
     """
     PublisherPreset.add_new(data)
 
 
-def publish(preset, data, message_title, message_body, recipients):
-    """_summary_.
+def publish(preset: PublisherPreset, data: dict, message_title: str, message_body: str, recipients: list) -> tuple[dict, int]:
+    """Publish.
 
     Args:
-        preset (_type_): _description_
-        data (_type_): _description_
-        message_title (_type_): _description_
-        message_body (_type_): _description_
-        recipients (_type_): _description_
+        preset (PublisherPreset): The publisher preset to use.
+        data (dict): The data to publish.
+        message_title (str): The title of the message.
+        message_body (str): The body of the message.
+        recipients (list): The list of recipients.
 
     Returns:
-        _type_: _description_
+        Response: The response from the publishing API.
     """
     publisher = preset.publisher
     node = publisher.node
     data_data = None
     data_mime = None
+    att_file_name = None
     if data is not None:
         data_data = data["data"]
         data_mime = data["mime_type"]
-        message_title = data.get("message_title", None)
-        message_body = data.get("message_body", None)
+        message_title = data.get("message_title")
+        message_body = data.get("message_body")
+        att_file_name = data.get("att_file_name")
 
     input_data = PublisherInput(
-        preset.name, publisher.type, preset.parameter_values, data_mime, data_data, message_title, message_body, recipients
+        preset.name,
+        publisher.type,
+        preset.parameter_values,
+        data_mime,
+        data_data,
+        message_title,
+        message_body,
+        recipients,
+        att_file_name,
     )
     input_schema = PublisherInputSchema()
 
