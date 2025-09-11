@@ -81,3 +81,13 @@ max-statements = 80
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15
+
+[tool.djlint]
+blank_line_after_tag="load,extends,include"
+format_js=false
+format_css=false
+max_line_length=142
+use_gitignore=true
+files=["src/presenters/templates/**/*.{html,jinja,j2}"]
+extend_exclude="src/gui/"
+ignore="H021"
