@@ -12,13 +12,14 @@ The module also includes an initialization function to add the resources to the 
 """
 
 import base64
-from flask import Response
-from flask import request
-from flask_restful import Resource
+from http import HTTPStatus
+from typing import Any
 
-from managers import auth_manager, presenters_manager, publishers_manager, log_manager
+from flask import Response, request
+from flask_restful import Api, Resource
+from managers import auth_manager, log_manager, presenters_manager, publishers_manager
+from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
-from managers.auth_manager import auth_required, ACLCheck
 from model import product, product_type, publisher_preset
 from model.permission import Permission
 
@@ -33,37 +34,37 @@ class Products(Resource):
     """
 
     @auth_required("PUBLISH_ACCESS")
-    def get(self):
+    def get(self) -> dict[str, Any]:
         """Retrieve a list of products based on the provided filters.
 
         Returns:
             A JSON response containing the list of products.
         """
         try:
-            filter = {}
-            if "search" in request.args and request.args["search"]:
-                filter["search"] = request.args["search"]
-            if "range" in request.args and request.args["range"]:
-                filter["range"] = request.args["range"]
-            if "sort" in request.args and request.args["sort"]:
-                filter["sort"] = request.args["sort"]
+            filters = {}
+            if request.args.get("search"):
+                filters["search"] = request.args["search"]
+            if request.args.get("range"):
+                filters["range"] = request.args["range"]
+            if request.args.get("sort"):
+                filters["sort"] = request.args["sort"]
 
             offset = None
-            if "offset" in request.args and request.args["offset"]:
+            if request.args.get("offset"):
                 offset = int(request.args["offset"])
 
             limit = 50
-            if "limit" in request.args and request.args["limit"]:
+            if request.args.get("limit"):
                 limit = min(int(request.args["limit"]), 200)
         except Exception as ex:
             msg = "Get Products failed"
             logger.exception(f"{msg}: {ex}")
             return {"error": msg}, 400
 
-        return product.Product.get_json(filter, offset, limit, auth_manager.get_user_from_jwt())
+        return product.Product.get_json(filters, offset, limit, auth_manager.get_user_from_jwt())
 
     @auth_required("PUBLISH_CREATE")
-    def post(self):
+    def post(self) -> product.Product:
         """Create a new product.
 
         Returns:
@@ -82,7 +83,7 @@ class Product(Resource):
     """
 
     @auth_required("PUBLISH_ACCESS", ACLCheck.PRODUCT_TYPE_ACCESS)
-    def get(self, product_id):
+    def get(self, product_id: int) -> dict:
         """Get the details of a product.
 
         Args:
@@ -94,7 +95,7 @@ class Product(Resource):
         return product.Product.get_detail_json(product_id)
 
     @auth_required("PUBLISH_UPDATE", ACLCheck.PRODUCT_TYPE_MODIFY)
-    def put(self, product_id):
+    def put(self, product_id: int) -> None:
         """Update a product.
 
         Args:
@@ -103,7 +104,7 @@ class Product(Resource):
         product.Product.update_product(product_id, request.json)
 
     @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_TYPE_MODIFY)
-    def delete(self, product_id):
+    def delete(self, product_id: int) -> None:
         """Delete a product.
 
         Args:
@@ -118,29 +119,28 @@ class PublishProduct(Resource):
     This class provides methods for publishing a product and handling the publish operation.
 
     Args:
-        Resource -- The base class for API resources.
+        Resource: The base class for API resources.
 
     Returns:
         The result of the publish operation or an error message and status code if the operation fails.
     """
 
     @auth_required("PUBLISH_PRODUCT")
-    def post(self, product_id, publisher_id):
+    def post(self, product_id: int, publisher_id: str) -> tuple[Any, int]:
         """Publish a product.
 
         Args:
-            product_id -- The ID of the product to be published.
-            publisher_id -- The ID of the publisher.
+            product_id (int): The ID of the product to be published.
+            publisher_id (str): The ID of the publisher.
 
         Returns:
             If the product is successfully generated, returns the result of the publish operation.
             Otherwise, returns a tuple containing the error message and the status code.
         """
         product_data, status_code = presenters_manager.generate_product(product_id)
-        if status_code == 200:
+        if status_code == HTTPStatus.OK:
             return publishers_manager.publish(publisher_preset.PublisherPreset.find(publisher_id), product_data, None, None, None)
-        else:
-            return "Failed to generate product", status_code
+        return "Failed to generate product", status_code
 
 
 class ProductsOverview(Resource):
@@ -153,47 +153,61 @@ class ProductsOverview(Resource):
         Resource (class): The base class for creating API resources.
     """
 
-    def get(self, product_id):
+    def get(self, product_id: int) -> Response:
         """Get the product data for the given product ID.
 
         Args:
-            product_id (str): The ID of the product.
+            product_id (int): The ID of the product.
 
         Returns:
             Response: The product data as a response object.
         """
-        if "jwt" in request.args:
-            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
-            if user is not None:
-                permissions = user.get_permissions()
-                if "PUBLISH_ACCESS" in permissions:
-                    if product_type.ProductType.allowed_with_acl(product_id, user, False, True, False):
-                        product_data, status_code = presenters_manager.generate_product(product_id)
-                        if status_code == 200:
-                            if ("message_body" in product_data) and (request.args.get("ctrl", "0") == "0"):
-                                # it's always text response, mime_type is used for data content
-                                return Response(base64.b64decode(product_data["message_body"]), mimetype="text/plain")
-                            elif product_data["data"] is None:
-                                return Response("No data available for preview!", mimetype="text/plain")
-                            else:
-                                return Response(base64.b64decode(product_data["data"]), mimetype=product_data["mime_type"])
-                        else:
-                            return "Failed to generate product", status_code
-                    else:
-                        log_manager.store_auth_error_activity("Unauthorized access attempt to Product Type")
-                else:
-                    log_manager.store_auth_error_activity("Insufficient permissions")
-            else:
-                log_manager.store_auth_error_activity("Invalid JWT")
-        else:
-            log_manager.store_auth_error_activity("Missing JWT")
+        if "jwt" not in request.args:
+            err_msg = "Missing JWT"
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+
+        user = auth_manager.decode_user_from_jwt(request.args["jwt"])
+        if user is None:
+            err_msg = "Invalid JWT"
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+
+        permissions = user.get_permissions()
+        if "PUBLISH_ACCESS" not in permissions:
+            err_msg = "Insufficient permissions"
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+
+        if not product_type.ProductType.allowed_with_acl(product_id, user, see=False, access=True, modify=False):
+            err_msg = "Unauthorized access attempt to Product Type"
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+
+        product_data, status_code = presenters_manager.generate_product(product_id)
+        # logger.debug(f"=== GENERATED PRODUCT ({status_code}) ===\n{product_data}")
+        if status_code != HTTPStatus.OK:
+            err_msg = "Failed to generate product"
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="text/plain")
+
+        if ("message_body" in product_data) and (request.args.get("ctrl", "0") == "0"):
+            # it's always text response, mime_type is used for data content
+            return Response(base64.b64decode(product_data["message_body"]), mimetype="text/plain")
+
+        if product_data["data"] is None:
+            err_msg = "No data available for preview!"
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="text/plain")
+
+        return Response(base64.b64decode(product_data["data"]), mimetype=product_data["mime_type"])
 
 
-def initialize(api):
+def initialize(api: Api) -> None:
     """Initialize the publish module.
 
     Args:
-        api -- The API instance to add resources to.
+        api (Api): The API instance to add resources to.
     """
     api.add_resource(Products, "/api/v1/publish/products")
     api.add_resource(Product, "/api/v1/publish/products/<int:product_id>")

@@ -52,7 +52,13 @@ include = ["src/**/*.py", "src/**/*.wsgi"]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["BLE001"] # Ignore except Exception
+ignore = [
+    "BLE001",  # Ignore except Exception
+    "ERA001",  # Found commented-out code
+    "TRY300",  # Consider moving this statement to an `else` block of the `try` statement
+    "G004",    # Logging statement uses f-string
+    "TRY401",  # Redundant exception object included in `logging.exception` call (we have own exception logic)
+]
 
 [tool.ruff.lint.per-file-ignores]
 "docker/gunicorn_conf.py" = ["INP001", "S104"]
@@ -66,6 +72,15 @@ docstring-code-format = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 10
+max-branches = 20
+max-returns = 10
+max-statements = 80
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
 
 [tool.djlint]
 blank_line_after_tag="load,extends,include"
