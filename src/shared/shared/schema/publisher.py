@@ -16,45 +16,21 @@ class PublisherSchema(Schema):
     parameters = fields.List(fields.Nested(ParameterSchema))
 
 
-class PublisherInputSchema(Schema):
-    """Schema for Publisher Input."""
-
-    name = fields.Str()
-    type = fields.Str()
-    parameter_values = fields.List(fields.Nested(ParameterValueSchema))
-    mime_type = fields.Str(allow_none=True)
-    data = fields.Str(allow_none=True)
-    message_title = fields.Str(allow_none=True)
-    message_body = fields.Str(allow_none=True)
-    recipients = fields.List(fields.String, allow_none=True)
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a PublisherInput object from the deserialized data.
-
-        Args:
-            data (dict): The deserialized data.
-            **kwargs: Additional keyword arguments.
-        Returns:
-            PublisherInput: The PublisherInput object.
-        """
-        return PublisherInput(**data)
-
-
 class PublisherInput:
     """Publisher Input class."""
 
     def __init__(
         self,
-        name,
-        type,
-        parameter_values,
-        mime_type,
-        data,
-        message_title,
-        message_body,
-        recipients,
-    ):
+        name: str,
+        type: str,  # noqa: A002
+        parameter_values: list,
+        mime_type: str,
+        data: str,
+        message_title: str,
+        message_body: str,
+        recipients: list,
+        att_file_name: str,
+    ) -> None:
         """Initialize the PublisherInput object.
 
         Args:
@@ -66,6 +42,7 @@ class PublisherInput:
             message_title (str): The title of the message.
             message_body (str): The body of the message.
             recipients (list): The list of recipients.
+            att_file_name (str): The attachment file name.
         """
         self.name = name
         self.type = type
@@ -75,7 +52,35 @@ class PublisherInput:
         self.message_title = message_title
         self.message_body = message_body
         self.recipients = recipients
+        self.att_file_name = att_file_name
 
-        self.param_key_values = dict()
+        self.param_key_values = {}
         for pv in parameter_values:
             self.param_key_values.update({pv.parameter.key: pv.value})
+
+
+class PublisherInputSchema(Schema):
+    """Schema for Publisher Input."""
+
+    name = fields.Str()
+    type = fields.Str()
+    parameter_values = fields.List(fields.Nested(ParameterValueSchema))
+    mime_type = fields.Str(allow_none=True)
+    data = fields.Str(allow_none=True)
+    message_title = fields.Str(allow_none=True)
+    message_body = fields.Str(allow_none=True)
+    recipients = fields.List(fields.String, allow_none=True)
+    att_file_name = fields.Str(allow_none=True)
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> PublisherInput:  # noqa: ANN003, ARG002
+        """Create a PublisherInput object from the deserialized data.
+
+        Args:
+            data (dict): The deserialized data.
+            **kwargs: Additional arguments.
+
+        Returns:
+            PublisherInput: The PublisherInput object.
+        """
+        return PublisherInput(**data)

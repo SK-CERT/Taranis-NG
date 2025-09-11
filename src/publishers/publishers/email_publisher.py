@@ -1,13 +1,17 @@
 """Publisher for publishing by email."""
 
-from datetime import datetime
-from base64 import b64decode
-import os
-from shared.log_manager import logger
-from .base_publisher import BasePublisher
-from shared.config_publisher import ConfigPublisher
-from envelope import Envelope
 import mimetypes
+from base64 import b64decode
+from datetime import datetime
+from pathlib import Path
+
+from envelope import Envelope
+
+from shared.common import TZ
+from shared.config_publisher import ConfigPublisher
+from shared.log_manager import logger
+
+from .base_publisher import BasePublisher
 
 
 class EMAILPublisher(BasePublisher):
@@ -29,14 +33,11 @@ class EMAILPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input):
+    def publish(self, publisher_input: dict) -> None:
         """Publish an email using the provided publisher input.
 
         Parameters:
             publisher_input (PublisherInput): The input containing the parameters for the email publisher.
-
-        Returns:
-            bool: True if the email was sent successfully, False otherwise.
 
         Raises:
             Exception: If an error occurs while sending the email.
@@ -55,8 +56,6 @@ class EMAILPublisher(BasePublisher):
         sign_password = publisher_input.param_key_values["EMAIL_SIGN_PASSWORD"]
         encrypt = publisher_input.param_key_values["EMAIL_ENCRYPT"]
 
-        now = datetime.now().strftime("%Y%m%d%H%M%S")
-
         smtp = {"host": smtp_server, "port": smtp_server_port, "user": user, "password": password}
 
         envelope = Envelope()
@@ -66,13 +65,20 @@ class EMAILPublisher(BasePublisher):
             attachment_mimetype = publisher_input.mime_type
             attachment_extension = mimetypes.guess_extension(attachment_mimetype)
             attachment_data = publisher_input.data[:]
+            file_name = ""
+            if publisher_input.att_file_name:
+                file_name = b64decode(publisher_input.att_file_name).decode("UTF-8").strip()
+            if file_name == "":
+                now = datetime.now(TZ).strftime("%Y%m%d%H%M%S")
+                file_name = f"file_{now}"
+            file_name = f"{file_name}{attachment_extension}"
             attachment_list = [
                 (
                     b64decode(attachment_data),
                     attachment_mimetype,
-                    f"file_{now}{attachment_extension}",
+                    file_name,
                     False,
-                )
+                ),
             ]
             # it is possible to attach multiple files
             envelope.attach(attachment_list)
@@ -97,19 +103,21 @@ class EMAILPublisher(BasePublisher):
 
         if sign == "auto":
             envelope.signature(key=sign)
-        elif os.path.isfile(sign):
+        elif Path(sign).is_file():
             self.logger.info(f"Signing email with file {sign}")
-            envelope.signature(key=open(sign), passphrase=sign_password)
-
+            with Path(sign).open("r") as sign_file:
+                envelope.signature(key=sign_file.read(), passphrase=sign_password)
         if encrypt == "auto":
             envelope.encryption(key=encrypt)
-        elif os.path.isfile(encrypt):
+        elif Path(encrypt).is_file():
             self.logger.info(f"Encrypting email with file {encrypt}")
-            envelope.encryption(key=open(encrypt))
+            with Path(encrypt).open("r") as encrypt_file:
+                envelope.encryption(key=encrypt_file.read())
 
         email_string = str(envelope)
-        if len(email_string) > 3000:
-            email_string = f"{email_string[:3000]}\n..."
+        max_length = 3000
+        if len(email_string) > max_length:
+            email_string = f"{email_string[:max_length]}\n..."
         self.logger.debug(f"=== COMPOSED FOLLOWING EMAIL ===\n{email_string}")
 
         envelope.smtp(smtp)
