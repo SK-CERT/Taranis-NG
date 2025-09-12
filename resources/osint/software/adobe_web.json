@@ -145,6 +145,12 @@
                     "parameter": {
                         "key": "ADDITIONAL_ID_SELECTOR"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         }
