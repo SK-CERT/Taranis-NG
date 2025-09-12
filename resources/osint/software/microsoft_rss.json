@@ -43,6 +43,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         }
