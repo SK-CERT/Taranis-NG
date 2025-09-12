@@ -13,6 +13,52 @@ from shared.log_manager import logger
 TZ = ZoneInfo(os.getenv("TZ", "UTC"))
 
 
+def simplify_html_text(html_string: str) -> str:
+    """Return text with only allowed tags preserved, stripping others and their content.
+
+    Args:
+        html_string (string): The HTML string.
+
+    Returns:
+        string: The simplified string with only allowed tags.
+    """
+    allowed_tags = {
+        "p",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "ul",
+        "ol",
+        "li",
+        "b",
+        "strong",
+        "i",
+        "em",
+        "a",
+        "pre",
+        "code",
+        "br",
+        "div",
+        "span",
+        "blockquote",
+        "mark",
+        "small",
+        "del",
+        "ins",
+        "sup",
+        "sub",
+    }
+    allowed_attrs = {"a": ["href"]}
+    soup = BeautifulSoup(html_string, "html.parser")
+    for tag in soup.find_all(name=True):
+        if tag.name not in allowed_tags:
+            tag.decompose()
+        else:
+            tag.attrs = {k: v for k, v in tag.attrs.items() if k in allowed_attrs.get(tag.name, [])}
+    return str(soup)
+
+
 def strip_html(html_string: str) -> str:
     """Strip HTML tags from the given string.
 

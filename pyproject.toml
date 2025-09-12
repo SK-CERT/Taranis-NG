@@ -52,7 +52,7 @@ include = ["src/**/*.py", "src/**/*.wsgi"]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["BLE001"] # Ignore except Exception
+ignore = ["BLE001", "G004"] # Ignore except Exception, f-strings in logging
 
 [tool.ruff.lint.per-file-ignores]
 "docker/gunicorn_conf.py" = ["INP001", "S104"]
