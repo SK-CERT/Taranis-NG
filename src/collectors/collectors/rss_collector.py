@@ -1,15 +1,19 @@
 """RSS collector module."""
 
 import datetime
-import feedparser
 import hashlib
 import urllib.request
 import uuid
+from typing import ClassVar
+
+import feedparser
 from bs4 import BeautifulSoup
-from .base_collector import BaseCollector, not_modified
-from shared.common import ignore_exceptions, read_int_parameter
+
+from shared.common import TZ, ignore_exceptions, read_int_parameter
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+
+from .base_collector import BaseCollector, not_modified
 
 
 class RSSCollector(BaseCollector):
@@ -25,13 +29,65 @@ class RSSCollector(BaseCollector):
     description = config.description
     parameters = config.parameters
 
-    news_items = []
+    news_items: ClassVar[list[NewsItemData]] = []
 
-    def __get_opener(self):
+    def _scrape_content(self, url: str, title: str, count: int, feed: dict | None) -> str:
+        """Scrape content from the given URL.
+
+        Arguments:
+            url (str): The URL to scrape content from.
+            title (str): The title of the feed entry (for logging purposes).
+            count (int): The current count of the feed entry (for logging purposes).
+            feed (dict | None): The feed dictionary (for logging purposes).
+
+        Returns:
+            str: The scraped content as a string.
+        """
+        if not url:
+            self.source.logger.debug(f"Skipping an empty link in feed entry '{title}'.")
+        elif not url.startswith(("http://", "https://")):
+            self.source.logger.debug(f"Skipping unsupported URL scheme in link: {url}")
+        else:
+            message = f"Visiting an article {count}/{len(feed['entries'])}: {url}"
+            self.source.logger.info(message)
+            try:
+                request = urllib.request.Request(url)  # noqa: S310
+                request.add_header("User-Agent", self.source.user_agent)
+
+                with self.source.opener(request) as response:
+                    html = response.read()
+                if html:
+                    soup = BeautifulSoup(html, features="html.parser")
+                    # get all <p> tags text in body
+                    content_html = [str(p) for p in soup.find_all("p")]
+                    if not content_html:
+                        # try to get all <pre> tags text in body
+                        content_html = [str(pre) for pre in soup.find_all("pre")]
+                    if not content_html:
+                        # No tags found, treat as plaintext
+                        # decode bytes to string if needed
+                        if isinstance(html, bytes):
+                            return html.decode(errors="replace")
+                        return str(html)
+                    return "".join(content_html)
+
+            except urllib.error.HTTPError as http_err:
+                if http_err.code in [401, 429, 403]:
+                    message = f"HTTP {http_err.code} {http_err.reason} for {url}. Skipping getting article content."
+                    self.source.logger.warning(message)
+                else:
+                    self.source.logger.exception()
+
+            except Exception:
+                self.source.logger.exception("Fetch web content failed")
+        return ""
+
+    def __get_opener(self) -> urllib.request.OpenerDirector:
         """Get the opener function for URL requests.
 
         Arguments:
             proxy_handler (SocksiPyHandler): The proxy handler to use for the request (default: None).
+
         Returns:
             function: The opener function to use for URL requests.
         """
@@ -39,7 +95,7 @@ class RSSCollector(BaseCollector):
             return urllib.request.build_opener(self.source.proxy_handler).open
         return urllib.request.urlopen
 
-    def __fetch_feed(self):
+    def __fetch_feed(self) -> dict | None:
         """Fetch the feed using feedparser with optional handler."""
         if self.source.user_agent:
             feedparser.USER_AGENT = self.source.user_agent
@@ -47,149 +103,132 @@ class RSSCollector(BaseCollector):
             if self.source.proxy_handler:
                 return feedparser.parse(self.source.url, handlers=[self.source.proxy_handler])
             return feedparser.parse(self.source.url)
-        except Exception as error:
-            self.source.logger.exception(f"Fetch feed failed: {error}")
+        except Exception:
+            self.source.logger.exception("Fetch feed failed")
             return None
 
-    def __get_feed(self):
+    def __get_feed(self) -> dict | None:
         """Fetch the feed data, using proxy if provided, and check modification status.
 
         Returns:
             dict: The parsed feed data or an empty dictionary if not modified.
         """
         # Check if the feed has been modified since the last collection
-        if self.source.last_collected:
-            if not_modified(self.source):
-                return None
+        if self.source.last_collected and not_modified(self.source):
+            return None
 
         self.source.logger.debug(f"Fetching feed from URL: {self.source.url}")
         return self.__fetch_feed()
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect data from RSS or Atom feed."""
-        self.source.url = self.source.param_key_values["FEED_URL"]
-        if not self.source.url:
-            self.source.logger.error("Feed URL is not set. Skipping collection.")
-
-            return
-        links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
-        self.source.user_agent = self.source.param_key_values["USER_AGENT"]
-        self.source.proxy = self.source.param_key_values["PROXY_SERVER"]
-        self.source.parsed_proxy = self.get_parsed_proxy()
-        if self.source.parsed_proxy:
-            self.source.proxy_handler = self.get_proxy_handler()
-        else:
-            self.source.proxy_handler = None
-        self.source.opener = self.__get_opener()
-        if self.source.user_agent:
-            self.source.logger.info(f"Requesting feed URL: {self.source.url} (User-Agent: {self.source.user_agent})")
-        else:
-            self.source.logger.info(f"Requesting feed URL: {self.source.url}")
+        self._initialize_source(self.source)
         feed = self.__get_feed()
-        if feed:
-            try:
-                self.source.logger.debug(f"Feed returned {len(feed['entries'])} entries.")
+        if not feed:
+            return
+        try:
+            self.source.logger.debug(f"Feed returned {len(feed['entries'])} entries.")
+            links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
+            news_items = self._process_feed_entries(feed, links_limit)
+            self.publish(news_items)
+        except Exception:
+            self.source.logger.exception("Collection failed")
 
-                news_items = []
+    def _initialize_source(self, source: object) -> None:
+        self.source = source
+        super()._initialize_source(source)
+        source.url = source.param_key_values["FEED_URL"]
+        if not source.url:
+            source.logger.error("Feed URL is not set. Skipping collection.")
+            return
+        source.user_agent = source.param_key_values["USER_AGENT"]
+        source.proxy = source.param_key_values["PROXY_SERVER"]
+        source.parsed_proxy = self.get_parsed_proxy()
+        source.proxy_handler = self.get_proxy_handler() if source.parsed_proxy else None
+        source.opener = self.__get_opener()
+        if source.user_agent:
+            source.logger.info(f"Requesting feed URL: {source.url} (User-Agent: {source.user_agent})")
+        else:
+            source.logger.info(f"Requesting feed URL: {source.url}")
 
-                for count, feed_entry in enumerate(feed["entries"], 1):
-                    author = feed_entry.get("author", "")
-                    title = feed_entry.get("title", "")
-                    published = feed_entry.get("published", "")
-                    published_parsed = feed_entry.get("published_parsed", "")
-                    updated = feed_entry.get("updated", "")
-                    updated_parsed = feed_entry.get("updated_parsed", "")
-                    summary = feed_entry.get("summary", "")
-                    content_rss = feed_entry.get("content", "")
-                    date = ""
-                    review = ""
-                    content = ""
-                    link_for_article = feed_entry.get("link", "")
-                    if summary:
-                        review = summary
-                    if content_rss:
-                        content = content_rss[0].get("value", "")
+    def _process_feed_entries(self, feed: dict, links_limit: int) -> list[NewsItemData]:
+        news_items = []
+        for count, feed_entry in enumerate(feed["entries"], 1):
+            news_item = self._create_news_item(feed_entry, count, feed)
+            news_item = self.sanitize_news_item(news_item, self.source)
+            news_item.print_news_item(self.source.logger)
+            news_items.append(news_item)
+            if links_limit > 0 and count >= links_limit:
+                self.source.logger.debug(f"Limit for article links ({links_limit}) has been reached.")
+                break
+        return news_items
 
-                    if not link_for_article:
-                        self.source.logger.debug(f"Skipping an empty link in feed entry '{title}'.")
-                        continue
-                    elif not content:
-                        self.source.logger.info(f"Visiting an article {count}/{len(feed['entries'])}: {link_for_article}")
-                        try:
-                            request = urllib.request.Request(link_for_article)
-                            request.add_header("User-Agent", self.source.user_agent)
+    def _create_news_item(self, feed_entry: dict, count: int, feed: dict) -> NewsItemData:
+        author = feed_entry.get("author", "")
+        title = feed_entry.get("title", "")
+        published = feed_entry.get("published", "")
+        published_parsed = feed_entry.get("published_parsed", "")
+        updated = feed_entry.get("updated", "")
+        updated_parsed = feed_entry.get("updated_parsed", "")
+        summary = feed_entry.get("summary", "")
+        content_rss = feed_entry.get("content", "")
+        link_for_article = feed_entry.get("link", "")
+        review, content = self._get_review_and_content(summary, content_rss)
+        self.source.logger.info(f"SUMMARY: {summary}")
+        self.source.logger.info(f"CONTENT: {content}")
+        if self.source.param_key_values.get("PREFER_SCRAPING", "False").lower() == "true" or (
+            content in ["", None] and summary in ["", None]
+        ):
+            html_content = self._scrape_content(link_for_article, title, count, feed)
+            if len(html_content) > len(summary):
+                self.source.logger.debug("Using web text for content")
+                content = html_content
+        review, content = self._resolve_review_content(summary, content)
+        date = self._resolve_date(published_parsed, updated_parsed, published, updated)
+        for_hash = author + title + link_for_article
+        return NewsItemData(
+            uuid.uuid4(),
+            hashlib.sha256(for_hash.encode()).hexdigest(),
+            title,
+            review,
+            self.source.url,
+            link_for_article,
+            date,
+            author,
+            datetime.datetime.now(tz=TZ),
+            content,
+            self.source.id,
+            [],
+        )
 
-                            with self.source.opener(request) as response:
-                                content_html = response.read()
-                            if content_html:
-                                soup = BeautifulSoup(content_html, features="html.parser")
-                                # get all <p> tags text in body
-                                content_html_text = [p.get_text(strip=True) for p in soup.find_all("p")]
-                                content_with_newlines = "\n".join(content_html_text)
-                                if len(content_with_newlines) > len(summary):
-                                    content = content_with_newlines
-                                    self.source.logger.debug("Using web text for content")
+    def _get_review_and_content(self, summary: str, content_rss: list[dict]) -> tuple[str, str]:
+        review = summary if summary else ""
+        content = ""
+        if content_rss:
+            content = content_rss[0].get("value", "")
+        return review, content
 
-                        except urllib.error.HTTPError as http_err:
-                            if http_err.code in [401, 429, 403]:
-                                self.source.logger.warning(
-                                    f"HTTP {http_err.code} {http_err.reason} for {link_for_article}. Skipping getting article content."
-                                )
-                            else:
-                                self.source.logger.exception(f"{http_err}")
+    def _resolve_review_content(self, summary: str, content: str) -> tuple[str, str]:
+        if summary and not content:
+            self.source.logger.debug("Using review for content")
+            return summary, summary
+        if not summary and content:
+            self.source.logger.debug("Using content for review")
+            return content, content
+        return summary, content
 
-                        except Exception as error:
-                            self.source.logger.exception(f"Fetch web content failed: {error}")
-
-                    # use summary if content is empty
-                    if summary and not content:
-                        content = summary
-                        self.source.logger.debug("Using review for content")
-                    # use content for review if summary is empty
-                    elif not summary and content:
-                        review = content
-                        self.source.logger.debug("Using content for review")
-
-                    # use published date if available, otherwise use updated date
-                    if published_parsed:
-                        date = datetime.datetime(*published_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                        self.source.logger.debug("Using parsed 'published' date")
-                    elif updated_parsed:
-                        date = datetime.datetime(*updated_parsed[:6]).strftime("%d.%m.%Y - %H:%M")
-                        self.source.logger.debug("Using parsed 'updated' date")
-                    elif published:
-                        date = published
-                        self.source.logger.debug("Using 'published' date")
-                    elif updated:
-                        date = updated
-                        self.source.logger.debug("Using 'updated' date")
-
-                    for_hash = author + title + link_for_article
-
-                    news_item = NewsItemData(
-                        uuid.uuid4(),
-                        hashlib.sha256(for_hash.encode()).hexdigest(),
-                        title,
-                        review,
-                        self.source.url,
-                        link_for_article,
-                        date,
-                        author,
-                        datetime.datetime.now(),
-                        content,
-                        self.source.id,
-                        [],
-                    )
-                    news_item = self.sanitize_news_item(news_item, self.source)
-                    news_item.print_news_item(self.source.logger)
-                    news_items.append(news_item)
-
-                    if links_limit > 0 and count >= links_limit:
-                        self.source.logger.debug(f"Limit for article links ({links_limit}) has been reached.")
-                        break
-
-                self.publish(news_items)
-
-            except Exception as error:
-                self.source.logger.exception(f"Collection failed: {error}")
+    def _resolve_date(self, published_parsed: tuple, updated_parsed: tuple, published: str, updated: str) -> str:
+        if published_parsed:
+            self.source.logger.debug("Using parsed 'published' date")
+            return datetime.datetime(*published_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
+        if updated_parsed:
+            self.source.logger.debug("Using parsed 'updated' date")
+            return datetime.datetime(*updated_parsed[:6], tzinfo=TZ).strftime("%d.%m.%Y - %H:%M")
+        if published:
+            self.source.logger.debug("Using 'published' date")
+            return published
+        if updated:
+            self.source.logger.debug("Using 'updated' date")
+            return updated
+        return ""

@@ -1,18 +1,21 @@
 """Definition for collector modules."""
 
-from .config_base import ConfigBase, module_type, param_type
-from typing import List
 from shared.schema.parameter import ParameterType
+
+from .config_base import ConfigBase, module_type, param_type
 
 
 class ConfigCollector(ConfigBase):
     """Configuration for collector modules."""
 
-    def add_default(self) -> List[param_type]:
+    def add_default(self) -> list[param_type]:
         """Add default parameters."""
         return [
             param_type(
-                "PROXY_SERVER", "Proxy server", "Type SOCKS5 proxy server as username:password@ip:port or ip:port", ParameterType.STRING
+                "PROXY_SERVER",
+                "Proxy server",
+                "Type SOCKS5 proxy server as username:password@ip:port or ip:port",
+                ParameterType.STRING,
             ),
             param_type(
                 "REFRESH_INTERVAL",
@@ -30,9 +33,9 @@ class ConfigCollector(ConfigBase):
             ),
         ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize collector modules."""
-        self.modules: List[module_type] = []
+        self.modules: list[module_type] = []
 
         mod = module_type("EMAIL_COLLECTOR", "EMAIL Collector", "Collector for gathering data from emails")
         mod.parameters = self.add_default()
@@ -45,9 +48,13 @@ class ConfigCollector(ConfigBase):
                 param_type("EMAIL_PASSWORD", "Password", "Password of email account", ParameterType.STRING),
                 param_type("EMAIL_SENDER", "Sender (optional)", "Address of the sender (used for sorting)", ParameterType.STRING),
                 param_type(
-                    "EMAILS_LIMIT", "Limit for emails (optional)", "Limit number of emails to process. Default: all", ParameterType.NUMBER, ""
+                    "EMAILS_LIMIT",
+                    "Limit for emails (optional)",
+                    "Limit number of emails to process. Default: all",
+                    ParameterType.NUMBER,
+                    "",
                 ),
-            ]
+            ],
         )
         self.modules.append(mod)
 
@@ -73,7 +80,18 @@ class ConfigCollector(ConfigBase):
                     ParameterType.NUMBER,
                     "",
                 ),
-            ]
+                param_type(
+                    "PREFER_SCRAPING",
+                    "Prefer web scraping over feed content",
+                    (
+                        "OPTIONAL: Whether to try scraping content from the link in the feed. "
+                        "Otherwise uses web scraping only if there is no feed content. "
+                        "Default: Prefer RSS content."
+                    ),
+                    ParameterType.BOOLEAN,
+                    "False",
+                ),
+            ],
         )
         self.modules.append(mod)
 
@@ -84,7 +102,7 @@ class ConfigCollector(ConfigBase):
                 param_type("TASK_TITLE", "Task title", "Title of scheduled task", ParameterType.STRING),
                 param_type("TASK_COMMAND", "Task command", "Command which will be executed", ParameterType.STRING),
                 param_type("TASK_DESCRIPTION", "Task description", "Description of scheduled task", ParameterType.STRING),
-            ]
+            ],
         )
         self.modules.append(mod)
 
@@ -94,9 +112,12 @@ class ConfigCollector(ConfigBase):
             [
                 param_type("SLACK_API_TOKEN", "Slack API token", "API token for Slack authentication.", ParameterType.STRING),
                 param_type(
-                    "WORKSPACE_CHANNELS_ID", "Collected workspace's channels ID", "Channels which will be collected.", ParameterType.STRING
+                    "WORKSPACE_CHANNELS_ID",
+                    "Collected workspace's channels ID",
+                    "Channels which will be collected.",
+                    ParameterType.STRING,
                 ),
-            ]
+            ],
         )
         self.modules.append(mod)
 
@@ -116,7 +137,7 @@ class ConfigCollector(ConfigBase):
                 param_type("SEARCH_KEYWORDS", "Search by keywords", "Search tweets by keywords", ParameterType.STRING),
                 param_type("SEARCH_HASHTAGS", "Search by hashtags", "Search tweets by hashtags", ParameterType.STRING),
                 param_type("NUMBER_OF_TWEETS", "Number of tweets", "How many tweets will be provided", ParameterType.NUMBER),
-            ]
+            ],
         )
         self.modules.append(mod)
 
@@ -125,9 +146,9 @@ class ConfigCollector(ConfigBase):
         mod.parameters.extend(
             [
                 param_type("WEB_URL", "Web URL", "Full url for web page or folder of html file", ParameterType.STRING),
-                # TODO: implement ENUM
+                # TO DO: implement ENUM
                 param_type("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome|firefox)", ParameterType.STRING),
-                # TODO: change to BOOLEAN, implement defaults, default False
+                # TO DO: change to BOOLEAN, implement defaults, default False
                 param_type("TOR", "Do you want to use Tor service? Enter Yes or No", "Using Tor service (yes|no)", ParameterType.STRING),
                 param_type(
                     "USER_AGENT",
@@ -148,7 +169,7 @@ class ConfigCollector(ConfigBase):
                     "Password for authentication with basic auth header",
                     ParameterType.STRING,
                 ),
-                # TODO reimplement for new web collector
+                # TO DO reimplement for new web collector
                 param_type(
                     "CLIENT_CERT_DIR",
                     "PATH to directory with client's certificates",
@@ -224,7 +245,7 @@ class ConfigCollector(ConfigBase):
                     "OPTIONAL: Selector of the 'published' date",
                     ParameterType.STRING,
                 ),
-                # TODO reimplement for new web collector
+                # TO DO reimplement for new web collector
                 param_type(
                     "ATTACHMENT_SELECTOR",
                     "SELECTOR at ARTICLE: Attachment selector",
@@ -244,6 +265,6 @@ class ConfigCollector(ConfigBase):
                     "OPTIONAL: Selector of an additional article ID",
                     ParameterType.STRING,
                 ),
-            ]
+            ],
         )
         self.modules.append(mod)
