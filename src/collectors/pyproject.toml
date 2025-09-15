@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "beautifulsoup4==4.13.5",
     "dateparser==1.2.2",
-    "feedparser==6.0.11",
+    "feedparser==6.0.12",
     "Flask==3.1.2",
     "Flask-Cors==6.0.1",
     "Flask-RESTful==0.3.10",
