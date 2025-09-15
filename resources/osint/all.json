@@ -43,6 +43,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -259,6 +265,12 @@
                     "parameter": {
                         "key": "ADDITIONAL_ID_SELECTOR"
                     }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
                 }
             ]
         },
@@ -303,6 +315,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -418,6 +436,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -462,6 +486,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -508,6 +538,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -552,6 +588,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -598,6 +640,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -643,6 +691,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "True",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -687,6 +741,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "True",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -802,6 +862,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -846,6 +912,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -892,6 +964,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -936,6 +1014,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "True",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -982,6 +1066,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1026,6 +1116,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -1072,6 +1168,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1117,6 +1219,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1161,6 +1269,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -1360,6 +1474,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1405,6 +1525,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1449,6 +1575,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -1633,6 +1765,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1677,6 +1815,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "True",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -1723,6 +1867,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1768,6 +1918,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -1812,6 +1968,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
@@ -1996,6 +2158,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -2041,6 +2209,12 @@
                     "parameter": {
                         "key": "WARNING_INTERVAL"
                     }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
                 }
             ]
         },
@@ -2085,6 +2259,12 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
