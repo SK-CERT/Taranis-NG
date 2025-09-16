@@ -5,6 +5,7 @@ import hashlib
 import time
 import urllib.request
 import uuid
+from http import HTTPStatus
 from typing import ClassVar
 from urllib.parse import urlparse
 
@@ -18,8 +19,6 @@ from shared import common, time_manager
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
 
-OK_CODE = 200
-NOT_MODIFIED = 304
 TZ = common.TZ
 
 
@@ -59,7 +58,7 @@ class BaseCollector:
             source: The source object representing the collector.
         """
         response, status_code = CoreApi.update_collector_last_attempt(source.id)
-        if status_code != OK_CODE:
+        if status_code != HTTPStatus.OK:
             source.logger.error(
                 f"Update last attempt failed, Code: {status_code}{', response: ' + str(response) if response is not None else ''}",
             )
@@ -72,7 +71,7 @@ class BaseCollector:
             source: The source object representing the collector.
         """
         response, status_code = CoreApi.update_collector_last_error_message(source.id, source.logger.stored_message)
-        if status_code != OK_CODE:
+        if status_code != HTTPStatus.OK:
             source.logger.error(
                 f"Update last error message failed, Code: {status_code}{', response: ' + str(response) if response is not None else ''}",
             )
@@ -170,7 +169,7 @@ class BaseCollector:
 
         news_item.title = common.smart_truncate(common.strip_html(news_item.title), 200)
         news_item.review = common.smart_truncate(common.strip_html(news_item.review))
-        news_item.content = common.simplify_html_text(news_item.content)
+        news_item.content = common.remove_empty_html_tags(common.simplify_html_text(news_item.content))
         news_item.author = common.strip_html(news_item.author)
         return news_item
 
@@ -196,7 +195,7 @@ class BaseCollector:
 
         response, code = CoreApi.get_osint_sources(self.type)
         try:
-            if code != OK_CODE or response is None:
+            if code != HTTPStatus.OK or response is None:
                 logger.error(f"OSINT sources not received, Code: {code}{', response: ' + str(response) if response is not None else ''}")
                 return
 
@@ -339,7 +338,7 @@ def not_modified(source: object) -> bool:
 
 def _not_modified_response(source: object, response: object, log_prefix: str, last_collected_str_fmt: str) -> bool:
     last_modified = response.headers.get("Last-Modified")
-    if response.status == NOT_MODIFIED:
+    if response.status == HTTPStatus.NOT_MODIFIED:
         source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str_fmt}")
         return True
     if last_modified:
@@ -355,7 +354,7 @@ def _not_modified_response(source: object, response: object, log_prefix: str, la
 
 
 def _not_modified_http_error(source: object, http_error: object, log_prefix: str, last_collected_str_fmt: str) -> bool:
-    if http_error.code == NOT_MODIFIED:
+    if http_error.code == HTTPStatus.NOT_MODIFIED:
         source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str_fmt}")
         return True
     if http_error.code in [401, 429, 403]:

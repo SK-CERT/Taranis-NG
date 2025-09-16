@@ -1,6 +1,7 @@
 """Analyze API endpoints."""
 
 import io
+from http import HTTPStatus
 
 from flask import jsonify, request, send_file
 from flask_restful import Api, Resource
@@ -17,8 +18,6 @@ from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.report_item import ReportItem, ReportItemAttribute
 from model.report_item_type import AttributeGroupItem, ReportItemType
-
-OK_CODE = 200
 
 
 class ReportItemTypes(Resource):
@@ -84,7 +83,7 @@ class ReportItems(Resource):
         except Exception as ex:
             msg = "Get ReportItems failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
         return ReportItem.get_json(group, report_filter, offset, limit, auth_manager.get_user_from_jwt())
 
@@ -97,7 +96,7 @@ class ReportItems(Resource):
             status (int): status code
         """
         new_report_item, status = ReportItem.add_report_item(request.json, auth_manager.get_user_from_jwt())
-        if status == OK_CODE:
+        if status == HTTPStatus.OK:
             asset_manager.report_item_changed(new_report_item)
             sse_manager.remote_access_report_items_updated(new_report_item.report_item_type_id)
             sse_manager.report_items_updated()
@@ -148,7 +147,7 @@ class ReportItemResource(Resource):
             code (int): status code
         """
         result, code = ReportItem.delete_report_item(report_item_id)
-        if code == OK_CODE:
+        if code == HTTPStatus.OK:
             sse_manager.report_items_updated()
 
         return result, code
@@ -187,13 +186,13 @@ class ReportItemData(Resource):
         except Exception as ex:
             msg = "Get ReportItemData failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
         user = auth_manager.get_user_from_jwt()
         if not auth_manager.check_acl(report_item_id, ACLCheck.REPORT_ITEM_ACCESS, user):
             msg = "ACL check failed"
             logger.warning(msg)
-            return {"error": msg}, 401
+            return {"error": msg}, HTTPStatus.UNAUTHORIZED
 
         return ReportItem.get_updated_data(report_item_id, data)
 
@@ -305,7 +304,7 @@ class ReportItemAddAttachment(Resource):
             sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
 
             return data
-        return {"error": "No file provided"}, 400
+        return {"error": "No file provided"}, HTTPStatus.BAD_REQUEST
 
 
 class ReportItemRemoveAttachment(Resource):
@@ -429,7 +428,7 @@ class ReportItemLlmGenerate(Resource):
                 "### ANSWER\n"
             )
             # tweaking prompt doesn't matter that much as using good model (good model -> better understanding what you want from him)
-            # TO DO: test and keep only the best prompt (delete old one)
+            # TODO (Ján): test and keep only the best prompt (delete old one)
             text = (
                 "You are a data analyst AI assistant. Your task is to carefully analyze the provided User data and answer the User question "
                 "based on that data. Follow these steps strictly:\n"
@@ -461,7 +460,7 @@ class ReportItemLlmGenerate(Resource):
             except Exception as ex:
                 msg = f"Connect to LLM failed: {ex}"
                 logger.error(msg)
-                return {"error": msg}, 400
+                return {"error": msg}, HTTPStatus.BAD_REQUEST
             else:
                 logger.debug(f"_____ LLM output: _____\n{result}\n_______________________")
                 return {"message": result}
@@ -469,7 +468,7 @@ class ReportItemLlmGenerate(Resource):
         except Exception as ex:
             msg = "LLM prompt construction failed (see logs)"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 def initialize(api: Api) -> None:

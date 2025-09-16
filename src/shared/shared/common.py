@@ -59,6 +59,30 @@ def simplify_html_text(html_string: str) -> str:
     return str(soup)
 
 
+def remove_empty_html_tags(html_string: str) -> str:
+    """Remove empty HTML tags from the given string.
+
+    Args:
+        html_string (string): The HTML string.
+
+    Returns:
+        string: The string without empty HTML tags.
+    """
+    soup = BeautifulSoup(html_string, "html.parser")
+    changed = True
+    while changed:
+        changed = False
+        for tag in soup.find_all():
+            # Skip certain tags that are allowed to be empty
+            if tag.name in ["br", "img"]:
+                continue
+            # Remove if no text content and no meaningful attributes
+            if not tag.get_text(strip=True) and not tag.find_all():
+                tag.decompose()
+                changed = True
+    return str(soup)
+
+
 def strip_html(html_string: str) -> str:
     """Strip HTML tags from the given string.
 
@@ -153,6 +177,31 @@ def read_str_parameter(name: str, default_value: str, object_dict: dict) -> str:
         logger.error(f"String parameter '{name}' doesn't exist. Use 'python db_migration.py regenerate' to rebuild parameters.")
     except Exception:
         logger.exception("Reading of string parameter failed")
+    return val
+
+
+def read_bool_parameter(name: str, *, default_value: bool, object_dict: dict) -> bool:
+    """Read a boolean parameter from a source dictionary.
+
+    Args:
+        name (str): The name of the parameter to read.
+        default_value (bool): The default value to return if the parameter is not found or is not a valid boolean.
+        object_dict (dict): The dictionary containing the parameter values.
+
+    Returns:
+        val (bool): The value of the parameter, or the default value if the parameter is not found or is not a valid boolean.
+    """
+    val = default_value
+    try:
+        par_val = object_dict.param_key_values[name]
+        if par_val.lower() in ["true", "yes", "1"]:
+            val = True
+        elif par_val.lower() in ["false", "no", "0"]:
+            val = False
+    except KeyError:
+        logger.error(f"Boolean parameter '{name}' doesn't exist. Use 'python db_migration.py regenerate' to rebuild parameters.")
+    except Exception:
+        object_dict.logger.exception("Reading of boolean parameter failed")
     return val
 
 

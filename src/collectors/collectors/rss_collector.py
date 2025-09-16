@@ -9,7 +9,7 @@ from typing import ClassVar
 import feedparser
 from bs4 import BeautifulSoup
 
-from shared.common import TZ, ignore_exceptions, read_int_parameter
+from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -175,9 +175,7 @@ class RSSCollector(BaseCollector):
         content_rss = feed_entry.get("content", "")
         link_for_article = feed_entry.get("link", "")
         review, content = self._get_review_and_content(summary, content_rss)
-        self.source.logger.info(f"SUMMARY: {summary}")
-        self.source.logger.info(f"CONTENT: {content}")
-        if self.source.param_key_values.get("PREFER_SCRAPING", "False").lower() == "true" or (
+        if read_bool_parameter("PREFER_SCRAPING", default_value=False, object_dict=self.source) or (
             content in ["", None] and summary in ["", None]
         ):
             html_content = self._scrape_content(link_for_article, title, count, feed)
