@@ -146,9 +146,9 @@ class ConfigCollector(ConfigBase):
         mod.parameters.extend(
             [
                 param_type("WEB_URL", "Web URL", "Full url for web page or folder of html file", ParameterType.STRING),
-                # TO DO: implement ENUM
+                # TODO (Ján): implement ENUM
                 param_type("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome|firefox)", ParameterType.STRING),
-                # TO DO: change to BOOLEAN, implement defaults, default False
+                # TODO (Ján): change to BOOLEAN, implement defaults, default False
                 param_type("TOR", "Do you want to use Tor service? Enter Yes or No", "Using Tor service (yes|no)", ParameterType.STRING),
                 param_type(
                     "USER_AGENT",
@@ -169,7 +169,7 @@ class ConfigCollector(ConfigBase):
                     "Password for authentication with basic auth header",
                     ParameterType.STRING,
                 ),
-                # TO DO reimplement for new web collector
+                # TODO (Ján): reimplement for new web collector
                 param_type(
                     "CLIENT_CERT_DIR",
                     "PATH to directory with client's certificates",
@@ -245,7 +245,7 @@ class ConfigCollector(ConfigBase):
                     "OPTIONAL: Selector of the 'published' date",
                     ParameterType.STRING,
                 ),
-                # TO DO reimplement for new web collector
+                # TODO (Ján): reimplement for new web collector
                 param_type(
                     "ATTACHMENT_SELECTOR",
                     "SELECTOR at ARTICLE: Attachment selector",
