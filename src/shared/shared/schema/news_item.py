@@ -74,10 +74,10 @@ class NewsItemDataBaseSchema(Schema):
 class NewsItemData:
     """Class representing news item data."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
-        news_item_id: str,
-        news_hash: str,
+        id: str,  # noqa: A002
+        hash: str,  # noqa: A002
         title: str,
         review: str,
         source: str,
@@ -92,8 +92,8 @@ class NewsItemData:
         """Initialize a NewsItemData instance.
 
         Parameters:
-            news_item_id (str): The ID of the news item.
-            news_hash (str): The hash of the news item.
+            id (str): The ID of the news item.
+            hash (str): The hash of the news item.
             title (str): The title of the news item.
             review (str): The review of the news item.
             source (str): The source of the news item.
@@ -105,8 +105,8 @@ class NewsItemData:
             osint_source_id (str): The OSINT source ID of the news item.
             attributes (list): The attributes of the news item.
         """
-        self.id = news_item_id
-        self.news_hash = news_hash
+        self.id = id
+        self.hash = hash
         self.title = title
         self.review = review
         self.source = source
@@ -239,13 +239,13 @@ class NewsItemAggregateSchema(Schema):
 class NewsItemAggregateId:
     """Class representing a news item aggregate ID."""
 
-    def __init__(self, aggregate_id: int) -> None:
+    def __init__(self, id: int) -> None:  # noqa: A002
         """Initialize a NewsItemAggregateId instance.
 
         Parameters:
-            aggregate_id (int): The ID of the news item aggregate.
+            id (int): The ID of the news item aggregate.
         """
-        self.id = aggregate_id
+        self.id = id
 
 
 class NewsItemAggregateIdSchema(Schema):
@@ -261,7 +261,4 @@ class NewsItemAggregateIdSchema(Schema):
     @post_load
     def make(self, data: dict, **kwargs) -> NewsItemAggregateId:  # noqa: ANN003, ARG002
         """Create a NewsItemAggregateId instance after loading."""
-        # Rename 'id' key to 'aggregate_id' for constructor
-        if "id" in data:
-            data["aggregate_id"] = data.pop("id")
         return NewsItemAggregateId(**data)
