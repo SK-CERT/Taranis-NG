@@ -1,16 +1,16 @@
 """Definition for publisher modules."""
 
-from .config_base import ConfigBase, module_type, param_type
-from typing import List
 from shared.schema.parameter import ParameterType
+
+from .config_base import ConfigBase, module_type, param_type
 
 
 class ConfigPublisher(ConfigBase):
     """Configuration for publisher modules."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize publisher modules."""
-        self.modules: List[module_type] = []
+        self.modules: list[module_type] = []
 
         mod = module_type("EMAIL_PUBLISHER", "Email Publisher", "Publisher for publishing by email")
         mod.parameters = [
@@ -87,8 +87,14 @@ class ConfigPublisher(ConfigBase):
                 ParameterType.STRING,
                 "https://mastodon.social",
             ),
-            param_type("VISIBILITY", "Visibility", "direct, private, unlisted or public", ParameterType.STRING, "public"),
-            param_type("SENSITIVE", "Sensitive", "True or False", ParameterType.STRING, "False"),
+            param_type(
+                "VISIBILITY",
+                "Visibility",
+                "Sets the visibility of the posted status (direct | private | unlisted | public)",
+                ParameterType.STRING,
+                "public",
+            ),
+            param_type("SENSITIVE", "Sensitive", "Mark status as sensitive (true | false)", ParameterType.BOOLEAN, "false"),
         ]
         self.modules.append(mod)
 

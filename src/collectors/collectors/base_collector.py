@@ -15,11 +15,10 @@ from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
 from sockshandler import SocksiPyHandler
 
-from shared import common, time_manager
+from shared import time_manager
+from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
-
-TZ = common.TZ
 
 
 class BaseCollector:
@@ -167,10 +166,10 @@ class BaseCollector:
             for_hash = news_item.author + news_item.title + news_item.link
             news_item.hash = hashlib.sha256(for_hash.encode()).hexdigest()
 
-        news_item.title = common.smart_truncate(common.strip_html(news_item.title), 200)
-        news_item.review = common.smart_truncate(common.strip_html(news_item.review))
-        news_item.content = common.remove_empty_html_tags(common.simplify_html_text(news_item.content))
-        news_item.author = common.strip_html(news_item.author)
+        news_item.title = smart_truncate(strip_html(news_item.title), 200)
+        news_item.review = smart_truncate(strip_html(news_item.review))
+        news_item.content = remove_empty_html_tags(simplify_html_text(news_item.content))
+        news_item.author = strip_html(news_item.author)
         return news_item
 
     def publish(self, news_items: list) -> None:

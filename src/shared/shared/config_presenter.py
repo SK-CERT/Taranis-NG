@@ -44,14 +44,13 @@ class ConfigPresenter(ConfigBase):
                 ParameterType.STRING,
                 "/app/templates/email_body_template.txt",
             ),
-            param_type("ATTACHMENT_TEMPLATE_PATH", "Path to PDF attachment template", "Path to PDF template file", ParameterType.STRING, ""),
+            param_type("ATTACHMENT_TEMPLATE_PATH", "Path to PDF attachment template", "Path to PDF template file", ParameterType.STRING),
             param_type(
                 "ATTACHMENT_FILE_NAME",
                 "Attachment file name",
                 "Leave empty for default file name 'file_YYYYmmddHHMMSS'. Alternatively, you may specify a custom file name or "
                 "provide a template string (e.g., file_{{ data.product.title }}).",
                 ParameterType.STRING,
-                "",
             ),
         ]
         self.modules.append(mod)

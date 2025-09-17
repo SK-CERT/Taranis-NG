@@ -5,29 +5,36 @@ import datetime
 import hashlib
 import os
 import re
-import selenium
 import subprocess
 import time
 import urllib.request
 import uuid
-from .base_collector import BaseCollector, not_modified
+from pathlib import Path
+from typing import ClassVar
+from urllib.parse import urlparse
+
+import selenium
 from dateutil.parser import parse
-from shared.log_manager import logger
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
-from shared.common import ignore_exceptions, read_int_parameter, smart_truncate
+
+from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, smart_truncate
 from shared.config_collector import ConfigCollector
-from shared.schema.news_item import NewsItemData, NewsItemAttribute
-from urllib.parse import urlparse
+from shared.log_manager import logger
+from shared.schema.news_item import NewsItemAttribute, NewsItemData
+
+from .base_collector import BaseCollector, not_modified
 
 
 class WebCollector(BaseCollector):
@@ -43,7 +50,7 @@ class WebCollector(BaseCollector):
         web_url (str): The URL of the web page.
         interpret_as (str): The type of the URL (uri or directory).
         user_agent (str): The user agent for the web page.
-        tor_service (str): The Tor service status.
+        tor_service (bool): The Tor service status.
         pagination_limit (int): The maximum number of pages to visit.
         links_limit (int): The maximum number of article links to process.
         word_limit (int): The limit for the article body.
@@ -63,7 +70,7 @@ class WebCollector(BaseCollector):
     parameters = config.parameters
     logger.debug(f"{name}: Selenium version: {selenium.__version__}")
 
-    SELECTOR_MAP = {
+    SELECTOR_MAP: ClassVar[dict[str, str]] = {
         "id": By.ID,
         "name": By.NAME,
         "xpath": By.XPATH,
@@ -76,26 +83,29 @@ class WebCollector(BaseCollector):
     }
 
     @staticmethod
-    def __get_prefix_and_selector(element_selector):
+    def __get_prefix_and_selector(element_selector: str) -> tuple[str, str]:
         """Extract the prefix and selector from the given element_selector.
 
         Parameters:
             element_selector (str): The element selector in the format "prefix: selector".
+
         Returns:
             tuple: A tuple containing the prefix and selector as separate strings.
         """
         selector_split = element_selector.split(":", 1)
-        if len(selector_split) != 2:
+        correct_size = 2
+        if len(selector_split) != correct_size:
             return "", ""
         prefix = selector_split[0].strip().lower()
         selector = selector_split[1].lstrip()
         return prefix, selector
 
-    def __get_element_locator(self, element_selector):
+    def __get_element_locator(self, element_selector: str) -> tuple[By, str] | None:
         """Extract a single element from the headless browser by selector.
 
         Parameters:
             element_selector (str): The selector used to locate the element.
+
         Returns:
             locator (tuple): A tuple containing the locator type and the selector.
         """
@@ -106,12 +116,13 @@ class WebCollector(BaseCollector):
             return (by, selector)
         return None
 
-    def __find_element_by(self, driver, element_selector):
+    def __find_element_by(self, driver: WebDriver, element_selector: str) -> WebElement | None:
         """Extract single element from the headless browser by selector.
 
         Parameters:
             driver: The headless browser driver.
             element_selector: The selector used to locate the element.
+
         Returns:
             The extracted element.
         """
@@ -125,7 +136,7 @@ class WebCollector(BaseCollector):
                 return None
         return None
 
-    def __find_element_text_by(self, driver, element_selector, return_none=False):
+    def __find_element_text_by(self, driver: WebDriver, element_selector: str) -> str:
         """Find the text of an element identified by the given selector using the provided driver.
 
         Parameters:
@@ -134,14 +145,10 @@ class WebCollector(BaseCollector):
             return_none (bool): A boolean indicating whether to return None if the element is not found.
                          If set to False, an empty string will be returned instead.
                          Defaults to False.
+
         Returns:
             The text of the element if found, otherwise None or an empty string based on the value of return_none.
         """
-        if return_none:
-            failure_retval = None
-        else:
-            failure_retval = ""
-
         try:
             if element_selector:
                 ret = self.__find_element_by(driver, element_selector)
@@ -149,20 +156,18 @@ class WebCollector(BaseCollector):
                     if ret.text == "":
                         self.source.logger.warning(f"Element found, but text content is empty: {element_selector}")
                     return ret.text
-                else:
-                    self.source.logger.warning(f"Element not found: {element_selector}")
-                    return failure_retval
-            else:
-                return failure_retval
-        except NoSuchElementException as e:  # noqa F841
-            return failure_retval
+                self.source.logger.warning(f"Element not found: {element_selector}")
+            return ""
+        except NoSuchElementException:
+            return ""
 
-    def __find_elements_by(self, driver, element_selector):
+    def __find_elements_by(self, driver: WebDriver, element_selector: str) -> list[WebElement]:
         """Extract list of elements from the headless browser by selector.
 
         Parameters:
             driver: The headless browser driver.
             element_selector: The selector used to locate the elements.
+
         Returns:
             A list of elements found using the given selector.
         """
@@ -176,28 +181,30 @@ class WebCollector(BaseCollector):
                 return []
         return []
 
-    def __safe_find_elements_by(self, driver, element_selector):
+    def __safe_find_elements_by(self, driver: WebDriver, element_selector: str) -> list[WebElement] | None:
         """Safely find elements by the given element selector using the provided driver.
 
         Parameters:
-            driver: The driver object used to interact with the web page.
-            element_selector: The selector used to locate the elements.
+            driver (WebDriver): The driver object used to interact with the web page.
+            element_selector (str): The selector used to locate the elements.
+
         Returns:
             A list of elements matching the given selector, or None if no elements are found.
         """
         try:
             elements = self.__find_elements_by(driver, element_selector)
             return elements if elements else None
-        except NoSuchElementException as error:  # noqa F841
+        except NoSuchElementException:
             return None
 
-    def __wait_for_new_tab(self, browser, timeout, current_tab):
+    def __wait_for_new_tab(self, browser: WebDriver, timeout: int, current_tab: str) -> None:
         """Wait for a new tab to open in the browser.
 
         Parameters:
             browser (WebDriver): The browser instance.
             timeout (int): The maximum time to wait for a new tab to open, in seconds.
             current_tab (str): The current tab handle.
+
         Raises:
             TimeoutException: If a new tab does not open within the specified timeout.
         """
@@ -208,13 +215,14 @@ class WebCollector(BaseCollector):
                 browser.switch_to.window(tab)
                 return
 
-    def __close_other_tabs(self, browser, handle_to_keep, fallback_url):
+    def __close_other_tabs(self, browser: WebDriver, handle_to_keep: str, fallback_url: str) -> bool:
         """Close all browser tabs except for the specified handle.
 
         Parameters:
             browser (WebDriver): The browser instance.
             handle_to_keep (str): The handle of the tab to keep open.
             fallback_url (str): The URL to load if tab restoration fails.
+
         Returns:
             (bool): True if the tab restoration is successful and the current window handle matches the handle_to_keep, False otherwise.
         """
@@ -239,7 +247,7 @@ class WebCollector(BaseCollector):
                 return False
         return browser.current_window_handle == handle_to_keep
 
-    def __parse_settings(self):
+    def __parse_settings(self) -> bool:
         """Load the collector settings to instance variables.
 
         Returns:
@@ -256,10 +264,10 @@ class WebCollector(BaseCollector):
 
         if web_url.lower().startswith("file://"):
             file_part = web_url[7:]
-            if os.path.isfile(file_part):
+            if Path(file_part).is_file():
                 self.interpret_as = "uri"
                 self.source.url = "file://" + file_part
-            elif os.path.isdir(file_part):
+            elif Path(file_part).is_dir():
                 self.interpret_as = "directory"
                 self.source.url = file_part
             else:
@@ -269,10 +277,10 @@ class WebCollector(BaseCollector):
         elif re.search(r"^[a-z0-9]+://", web_url.lower()):
             self.interpret_as = "uri"
             self.source.url = web_url
-        elif os.path.isfile(web_url):
+        elif Path(web_url).is_file():
             self.interpret_as = "uri"
             self.source.url = f"file://{web_url}"
-        elif os.path.isdir(web_url):
+        elif Path(web_url).is_dir():
             self.interpret_as = "directory"
             self.source.url = web_url
         else:
@@ -285,7 +293,7 @@ class WebCollector(BaseCollector):
 
         # parse other arguments
         self.source.user_agent = self.source.param_key_values["USER_AGENT"]
-        self.tor_service = self.source.param_key_values["TOR"]
+        self.tor_service = read_bool_parameter("TOR", default_value=False, object_dict=self.source)
         self.pagination_limit = read_int_parameter("PAGINATION_LIMIT", 1, self.source)
         self.links_limit = read_int_parameter("LINKS_LIMIT", 0, self.source)
         self.word_limit = read_int_parameter("WORD_LIMIT", 0, self.source)
@@ -308,15 +316,13 @@ class WebCollector(BaseCollector):
         self.web_driver_type = self.source.param_key_values["WEBDRIVER"]
         self.client_cert_directory = self.source.param_key_values["CLIENT_CERT_DIR"]
 
-        self.source.last_collected
-
         # Use get_proxy_handler from BaseCollector
         self.source.proxy = self.source.param_key_values["PROXY_SERVER"]
         self.source.parsed_proxy = self.get_parsed_proxy()
 
         return True
 
-    def __get_headless_driver_chrome(self):
+    def __get_headless_driver_chrome(self) -> WebDriver:
         """Initialize and return Chrome driver.
 
         Returns:
@@ -339,7 +345,7 @@ class WebCollector(BaseCollector):
         chrome_options.add_argument("--incognito")
         if self.source.user_agent:
             chrome_options.add_argument("user-agent=" + self.source.user_agent)
-        if self.tor_service.lower() == "yes":
+        if self.tor_service:
             socks_proxy = "socks5://127.0.0.1:9050"
             chrome_options.add_argument(f"--proxy-server={socks_proxy}")
         elif self.source.parsed_proxy:
@@ -350,7 +356,7 @@ class WebCollector(BaseCollector):
         self.source.logger.debug("Chrome driver initialized.")
         return driver
 
-    def __get_headless_driver_firefox(self):
+    def __get_headless_driver_firefox(self) -> WebDriver:
         """Initialize and return Firefox driver.
 
         Returns:
@@ -372,7 +378,7 @@ class WebCollector(BaseCollector):
         if self.source.user_agent:
             firefox_options.add_argument(f"user-agent={self.source.user_agent}")
 
-        if self.tor_service.lower() == "yes":
+        if self.tor_service:
             firefox_options.set_preference("network.proxy.type", 1)  # manual proxy config
             firefox_options.set_preference("network.proxy.socks", "127.0.0.1")
             firefox_options.set_preference("network.proxy.socks_port", 9050)
@@ -398,7 +404,7 @@ class WebCollector(BaseCollector):
         self.source.logger.debug("Firefox driver initialized.")
         return driver
 
-    def __get_headless_driver(self):
+    def __get_headless_driver(self) -> WebDriver | None:
         """Initialize and return a headless browser driver.
 
         Returns:
@@ -415,7 +421,7 @@ class WebCollector(BaseCollector):
             self.source.logger.exception(f"Get headless driver failed: {error}")
             return None
 
-    def __dispose_of_headless_driver(self, driver):
+    def __dispose_of_headless_driver(self, driver: WebDriver) -> None:
         """Destroy the headless browser driver, and its browser.
 
         Parameters:
@@ -424,32 +430,30 @@ class WebCollector(BaseCollector):
         try:
             driver.quit()
         except Exception as error:
-            self.source.self.source.logger.exception(f"Could not quit the headless browser driver: {error}")
+            self.source.logger.exception(f"Could not quit the headless browser driver: {error}")
 
-    def __run_tor(self):
+    def __run_tor(self) -> None:
         """Run The Onion Router service in a subprocess."""
         self.source.logger.info("Initializing TOR")
-        subprocess.Popen(["tor"])
+        subprocess.Popen(["tor"])  # noqa: S607
         time.sleep(3)
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect news items from this source (main function)."""
         if not self.__parse_settings():
             return
         self.news_items = []
 
-        if self.tor_service.lower() == "yes":
+        if self.tor_service:
             self.__run_tor()
 
-        if self.source.parsed_proxy:
-            proxy_handler = self.get_proxy_handler()
-        else:
-            proxy_handler = None
+        proxy_handler = self.get_proxy_handler() if self.source.parsed_proxy else None
         self.source.opener = urllib.request.build_opener(proxy_handler).open if proxy_handler else urllib.request.urlopen
         url_not_modified = False
         if self.source.last_collected:
-            if url_not_modified := not_modified(self.source):
+            url_not_modified = not_modified(self.source)
+            if url_not_modified:
                 self.source.logger.info("Will not collect the feed because nothing has changed.")
                 return
 
@@ -459,7 +463,8 @@ class WebCollector(BaseCollector):
 
             elif self.interpret_as == "directory":
                 self.source.logger.info(f"Searching for html files in {self.source.url}")
-                for file_name in os.listdir(self.source.url):
+                p = Path(self.source.url)
+                for file_name in p.iterdir():
                     if file_name.lower().endswith(".html"):
                         html_file = f"file://{self.source.url}/{file_name}"
                         total_failed_articles = self.__browse_title_page(html_file)
@@ -468,7 +473,7 @@ class WebCollector(BaseCollector):
                 self.source.logger.debug(f"{total_failed_articles} article(s) failed")
             self.publish(self.news_items)
 
-    def __browse_title_page(self, index_url):
+    def __browse_title_page(self, index_url: str) -> int:
         """Spawn a browser, download the title page for parsing, call parser.
 
         Parameters:
@@ -477,7 +482,7 @@ class WebCollector(BaseCollector):
         browser = self.__get_headless_driver()
         if browser is None:
             self.source.logger.error("Error initializing the headless browser")
-            return False, "Error initializing the headless browser", 0, 0
+            return 0
 
         self.source.logger.info(f"Requesting title page: {self.source.url}")
         try:
@@ -492,7 +497,7 @@ class WebCollector(BaseCollector):
             popup = None
             try:
                 popup = WebDriverWait(browser, 10).until(
-                    EC.presence_of_element_located(self.__get_element_locator(self.selectors["popup_close"]))
+                    ec.presence_of_element_located(self.__get_element_locator(self.selectors["popup_close"])),
                 )
             except Exception as error:
                 self.source.logger.exception(f"Popup find failed: {error}")
@@ -507,9 +512,9 @@ class WebCollector(BaseCollector):
         while self.selectors["load_more"] and page < self.pagination_limit:
             try:
                 load_more = WebDriverWait(browser, 5).until(
-                    EC.element_to_be_clickable(self.__get_element_locator(self.selectors["load_more"]))
+                    ec.element_to_be_clickable(self.__get_element_locator(self.selectors["load_more"])),
                 )
-                # TODO: check for None
+                # TODO (*): check for None
 
                 try:
                     action = ActionChains(browser)
@@ -520,9 +525,9 @@ class WebCollector(BaseCollector):
                     load_more.click()
 
                 try:
-                    WebDriverWait(browser, 5).until(EC.staleness_of(load_more))
-                except Exception:
-                    pass
+                    WebDriverWait(browser, 5).until(ec.staleness_of(load_more))
+                except Exception as error:
+                    self.source.logger.exception(f"WebDriverWait failed: {error}")
 
             except Exception:
                 break
@@ -553,7 +558,7 @@ class WebCollector(BaseCollector):
             self.source.logger.info("Clicking 'next page'")
             try:
                 next_page = self.__find_element_by(browser, self.selectors["next_page"])
-                # TODO: check for None
+                # TODO (*): check for None
                 ActionChains(browser).move_to_element(next_page).click(next_page).perform()
             except Exception:
                 self.source.logger.info("This was the last page")
@@ -563,13 +568,14 @@ class WebCollector(BaseCollector):
 
         return total_failed_articles
 
-    def __process_title_page_articles(self, browser, title_page_handle, index_url):
+    def __process_title_page_articles(self, browser: WebDriver, title_page_handle: str, index_url: str) -> int:
         """Parse the title page for articles.
 
         Parameters:
             browser (WebDriver): The browser instance.
             title_page_handle (str): The handle of the title page tab.
             index_url (str): The URL of the title page.
+
         Returns:
             failed_articles (int): A number of failed articles.
         """
@@ -594,15 +600,18 @@ class WebCollector(BaseCollector):
                 if link:
                     scope = browser
                     self.source.logger.info(f"Visiting article {count}/{len(article_items)}: {link}")
-                    click_method = 1  # TODO: some day, make this user-configurable with tri-state enum
-                    if click_method == 1:
+                    method_type_1 = 1
+                    method_type_2 = 2
+                    method_type_3 = 3
+                    click_method = method_type_1  # TODO (*): some day, make this user-configurable with tri-state enum
+                    if click_method == method_type_1:
                         browser.switch_to.new_window("tab")
                         browser.get(link)
-                    elif click_method == 2:
+                    elif click_method == method_type_2:
                         browser.move_to_element(item)
                         ActionChains(browser).key_down(Keys.CONTROL).click(item).key_up(Keys.CONTROL).perform()
                         self.__wait_for_new_tab(browser, 15, title_page_handle)
-                    elif click_method == 3:
+                    elif click_method == method_type_3:
                         browser.move_to_element(item)
                         item.send_keys(Keys.CONTROL + Keys.RETURN)
                         self.__wait_for_new_tab(browser, 15, title_page_handle)
@@ -631,10 +640,11 @@ class WebCollector(BaseCollector):
 
             if len(browser.window_handles) == 1:
                 back_clicks = 1
+                max_back_clicks = 3
                 while browser.current_url != index_url_just_before_click:
                     browser.back()
                     back_clicks += 1
-                    if back_clicks > 3:
+                    if back_clicks > max_back_clicks:
                         self.source.logger.warning("Error during page crawl (cannot restore window after crawl)")
             elif not self.__close_other_tabs(browser, title_page_handle, fallback_url=index_url):
                 self.source.logger.warning("Error during page crawl (after-crawl clean up)")
@@ -645,11 +655,12 @@ class WebCollector(BaseCollector):
 
         return failed_articles
 
-    def __process_article_page(self, browser, scope):
+    def __process_article_page(self, browser: WebDriver, scope: WebElement) -> NewsItemData | None:
         """Parse a single article.
 
         Parameters:
             browser (WebDriver): The browser instance.
+
         Returns:
             news_item (NewsItemData): The parsed news item.
         """
@@ -663,10 +674,7 @@ class WebCollector(BaseCollector):
         if self.word_limit > 0:
             content = " ".join(re.compile(r"\s+").split(content)[: self.word_limit])
 
-        if self.selectors["article_description"]:
-            review = self.__find_element_text_by(scope, self.selectors["article_description"])
-        else:
-            review = ""
+        review = self.__find_element_text_by(scope, self.selectors["article_description"]) if self.selectors["article_description"] else ""
         if self.word_limit > 0:
             review = " ".join(re.compile(r"\s+").split(review)[: self.word_limit])
         if not review:
@@ -679,11 +687,8 @@ class WebCollector(BaseCollector):
         published_str = self.__find_element_text_by(scope, self.selectors["published"])
         if published_str:
             extracted_date = parse(published_str, fuzzy=True)
-        now = datetime.datetime.now()
-        if extracted_date:
-            published_str = extracted_date.strftime("%d.%m.%Y - %H:%M")
-        else:
-            published_str = now.strftime("%d.%m.%Y - %H:%M")
+        now = datetime.datetime.now(TZ)
+        published_str = extracted_date.strftime("%d.%m.%Y - %H:%M") if extracted_date else now.strftime("%d.%m.%Y - %H:%M")
 
         link = current_url
 

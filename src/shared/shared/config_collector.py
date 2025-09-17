@@ -52,7 +52,6 @@ class ConfigCollector(ConfigBase):
                     "Limit for emails (optional)",
                     "Limit number of emails to process. Default: all",
                     ParameterType.NUMBER,
-                    "",
                 ),
             ],
         )
@@ -78,7 +77,6 @@ class ConfigCollector(ConfigBase):
                     "Limit for article links",
                     "OPTIONAL: Maximum number of article links to process. Default: all",
                     ParameterType.NUMBER,
-                    "",
                 ),
                 param_type(
                     "PREFER_SCRAPING",
@@ -89,7 +87,7 @@ class ConfigCollector(ConfigBase):
                         "Default: Prefer RSS content."
                     ),
                     ParameterType.BOOLEAN,
-                    "False",
+                    "false",
                 ),
             ],
         )
@@ -147,9 +145,8 @@ class ConfigCollector(ConfigBase):
             [
                 param_type("WEB_URL", "Web URL", "Full url for web page or folder of html file", ParameterType.STRING),
                 # TODO (Ján): implement ENUM
-                param_type("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome|firefox)", ParameterType.STRING),
-                # TODO (Ján): change to BOOLEAN, implement defaults, default False
-                param_type("TOR", "Do you want to use Tor service? Enter Yes or No", "Using Tor service (yes|no)", ParameterType.STRING),
+                param_type("WEBDRIVER", "Name of Webdriver", "Name of webdriver for Selenium (chrome | firefox)", ParameterType.STRING),
+                param_type("TOR", "Route traffic through Tor", "Using Tor service (true | false)", ParameterType.BOOLEAN, "false"),
                 param_type(
                     "USER_AGENT",
                     "User agent",

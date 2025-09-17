@@ -1,11 +1,14 @@
 """Publisher for Mastodon."""
 
 from base64 import b64decode
+
 from mastodon import Mastodon
 
-from .base_publisher import BasePublisher
-from shared.log_manager import logger
+from shared.common import read_bool_parameter
 from shared.config_publisher import ConfigPublisher
+from shared.log_manager import logger
+
+from .base_publisher import BasePublisher
 
 
 class MASTODONPublisher(BasePublisher):
@@ -25,11 +28,12 @@ class MASTODONPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input) -> None:
+    def publish(self, publisher_input: dict) -> None:
         """Publish data.
 
         Args:
             publisher_input (PublisherInput): Publisher input.
+
         Raises:
             Exception: If an error occurs.
         """
@@ -39,7 +43,7 @@ class MASTODONPublisher(BasePublisher):
             access_token = publisher_input.param_key_values["MASTODON_ACCESS_TOKEN"]
             api_base_url = publisher_input.param_key_values["MASTODON_API_BASE_URL"]
             visibility = publisher_input.param_key_values["VISIBILITY"]
-            sensitive = publisher_input.param_key_values["SENSITIVE"]
+            sensitive = read_bool_parameter("SENSITIVE", default_value=False, object_dict=publisher_input)
 
             status = None
 
@@ -53,11 +57,6 @@ class MASTODONPublisher(BasePublisher):
 
             if not api_base_url:
                 api_base_url = "https://mastodon.social"
-
-            if sensitive.casefold() in ["true", "1"]:
-                sensitive = True
-            else:
-                sensitive = False
 
             if visibility.casefold() not in ["public", "direct", "unlisted", "private"]:
                 visibility = None
