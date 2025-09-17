@@ -58,6 +58,8 @@ ignore = [
     "TRY300",  # Consider moving this statement to an `else` block of the `try` statement
     "G004",    # Logging statement uses f-string
     "TRY401",  # Redundant exception object included in `logging.exception` call (we have own exception logic)
+    "TD003",   # Missing issue link for this TODO
+    "FIX002",  # Line contains TODO, consider resolving the issue
     "FBT001",  # Boolean-typed positional argument in function definition (enable True/False parameters)
 ]
 
