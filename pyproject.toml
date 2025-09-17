@@ -58,6 +58,7 @@ ignore = [
     "TRY300",  # Consider moving this statement to an `else` block of the `try` statement
     "G004",    # Logging statement uses f-string
     "TRY401",  # Redundant exception object included in `logging.exception` call (we have own exception logic)
+    "FBT001",  # Boolean-typed positional argument in function definition (enable True/False parameters)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -74,13 +75,13 @@ docstring-code-format = true
 convention = "google"
 
 [tool.ruff.lint.pylint]
-max-args = 10
+max-args = 12
 max-branches = 20
 max-returns = 10
 max-statements = 80
 
 [tool.ruff.lint.mccabe]
-max-complexity = 15
+max-complexity = 20
 
 [tool.djlint]
 blank_line_after_tag="load,extends,include"
