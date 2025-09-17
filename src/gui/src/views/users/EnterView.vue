@@ -20,31 +20,27 @@
                                       v-model="news_item.title"
                                       v-validate="'required'"
                                       data-vv-name="title"
-                                      :error-messages="errors.collect('title')"
-                        ></v-text-field>
+                                      :error-messages="errors.collect('title')"></v-text-field>
 
                         <v-textarea :label="$t('enter.review')"
                                     name="review"
-                                    v-model="news_item.review"
-                        ></v-textarea>
+                                    v-model="news_item.review"></v-textarea>
 
                         <v-text-field :label="$t('enter.source')"
                                       name="source"
                                       type="text"
-                                      v-model="news_item.source"
-                        ></v-text-field>
+                                      v-model="news_item.source"></v-text-field>
 
                         <v-text-field :label="$t('enter.link')"
                                       name="link"
                                       type="text"
-                                      v-model="news_item.link"
-                        ></v-text-field>
+                                      v-model="news_item.link"></v-text-field>
 
-                        <v-textarea :label="$t('enter.content')"
-                                    name="content"
-                                    v-model="news_item.content"
-                        ></v-textarea>
+                        <label class="v-label" :for="'vue-editor-content'">{{$t('enter.content')}}</label>
 
+                        <vue-editor ref="newsEnter"
+                                    v-model="editorData"
+                                    :editorOptions="editorOptionVue2"></vue-editor>
                     </v-card-text>
                 </v-card>
                 <v-spacer class="pt-2"></v-spacer>
@@ -62,17 +58,35 @@
 
 <script>
     import ViewLayout from "../../components/layouts/ViewLayout";
-    import {addNewsItem} from "@/api/assess";
+    import { VueEditor } from 'vue2-editor';
+    import { addNewsItem } from "@/api/assess";
+
+    const toolbarOptions = [
+        [ { 'header': [1, 2, 3, 4, 5, 6, false] } ],
+        ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' }],
+        ['blockquote', 'code-block'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['link'],
+        ['clean']
+    ];
 
     export default {
         name: "Enter",
         components: {
             ViewLayout,
+            VueEditor,
         },
         data: () => ({
 
             show_error: false,
             show_validation_error: false,
+            editorOptionVue2: {
+                theme: 'snow',
+                modules: {
+                    toolbar: toolbarOptions
+                }
+            },
+            editorData: "",
             news_item: {
                 id: "",
                 title: "",
@@ -96,12 +110,14 @@
 
                     if (!this.$validator.errors.any()) {
 
+                        this.news_item.content = this.editorData;
+
                         let i = window.location.pathname.indexOf("/source/");
                         let len = window.location.pathname.length;
                         this.news_item.osint_source_id = window.location.pathname.substring(i + 8, len);
 
                         this.news_item.author = this.$store.getters.getUserName;
-                        this.news_item.language = ((typeof(process.env.VUE_APP_TARANIS_NG_LOCALE) == "undefined") ? "$VUE_APP_TARANIS_NG_LOCALE" : process.env.VUE_APP_TARANIS_NG_LOCALE);
+                        this.news_item.language = ((typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) == "undefined") ? "$VUE_APP_TARANIS_NG_LOCALE" : process.env.VUE_APP_TARANIS_NG_LOCALE);
 
                         let d = new Date();
                         this.news_item.collected = this.appendLeadingZeroes(d.getDate()) + "." + this.appendLeadingZeroes(d.getMonth() + 1) + "." + d.getFullYear() +
@@ -125,6 +141,8 @@
                             this.news_item.attributes = []
 
                             this.$validator.reset();
+
+                            this.editorData = "";
 
                             this.$root.$emit('notification',
                                 {

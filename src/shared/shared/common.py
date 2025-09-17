@@ -48,6 +48,8 @@ def simplify_html_text(html_string: str) -> str:
         "ins",
         "sup",
         "sub",
+        "u",
+        "s",
     }
     allowed_attrs = {"a": ["href"]}
     soup = BeautifulSoup(html_string, "html.parser")
