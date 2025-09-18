@@ -22,7 +22,7 @@ from model.tag_cloud import TagCloud
 from sqlalchemy import and_, func, or_, orm
 
 from shared import common
-from shared.common import TZ
+from shared.common import TZ, strip_html
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemDataSchema, NewsItemRemoteSchema, NewsItemSchema
 
@@ -1479,7 +1479,7 @@ class NewsItemAggregateSearchIndex(db.Model):
         for news_item in aggregate.news_items:
             data += " " + news_item.news_item_data.title
             data += " " + news_item.news_item_data.review
-            data += " " + news_item.news_item_data.content
+            data += " " + strip_html(news_item.news_item_data.content)
             data += " " + news_item.news_item_data.author
             data += " " + news_item.news_item_data.link
 

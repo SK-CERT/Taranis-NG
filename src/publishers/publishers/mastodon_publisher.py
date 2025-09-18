@@ -45,12 +45,17 @@ class MASTODONPublisher(BasePublisher):
             visibility = publisher_input.param_key_values["VISIBILITY"]
             sensitive = read_bool_parameter("SENSITIVE", default_value=False, object_dict=publisher_input)
 
+            spoiler_text = None
             status = None
 
             if publisher_input.message_title:
                 spoiler_text = b64decode(publisher_input.message_title, validate=True).decode("UTF-8")
             if publisher_input.message_body:
                 status = b64decode(publisher_input.message_body, validate=True).decode("UTF-8")
+
+            if not status:
+                self.logger.warning("Status is empty, publication skipped.")
+                return
 
             if spoiler_text in ["", "None"]:
                 spoiler_text = None
