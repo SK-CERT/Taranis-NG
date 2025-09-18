@@ -211,7 +211,7 @@ class ReportItemLocks(Resource):
         """
         if report_item_id in sse_manager.report_item_locks:
             return jsonify(sse_manager.report_item_locks[report_item_id])
-        return jsonify()
+        return "{}"
 
 
 class ReportItemLock(Resource):
