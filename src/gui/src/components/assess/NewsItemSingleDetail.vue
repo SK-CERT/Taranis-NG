@@ -108,7 +108,7 @@
                                         </span>
                                     </v-row>
                                     <v-row class="py-4">
-                                        <span class="body-2 grey--text text--darken-1" v-html="formattedContent"></span>
+                                        <span class="body-2 grey--text text--darken-1" v-html="news_item.news_items[0].news_item_data.content"></span>
                                     </v-row>
                                 </v-col>
 
@@ -200,11 +200,6 @@ export default {
 
         multiSelectActive() {
             return this.$store.getters.getMultiSelect
-        },
-        formattedContent() {
-            const content = this.news_item.news_items[0].news_item_data.content || '';
-            // Replace newlines with <br> for cases the text does not contain HTML formatting
-            return content.replace(/\n/g, "<br>");
         },
     },
     data: () => ({
