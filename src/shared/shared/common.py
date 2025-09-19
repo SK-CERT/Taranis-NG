@@ -82,7 +82,7 @@ def remove_empty_html_tags(html_string: str) -> str:
             if not tag.get_text(strip=True) and not tag.find_all():
                 tag.decompose()
                 changed = True
-    return str(soup)
+    return str(soup).strip()
 
 
 def strip_html(html_string: str) -> str:
@@ -97,6 +97,27 @@ def strip_html(html_string: str) -> str:
     """
     soup = BeautifulSoup(html_string, "html.parser")
     return soup.get_text(separator=" ", strip=True)
+
+
+def text_to_simple_html(text: str) -> str:
+    """Convert a plain text string into a simple, safe HTML fragment.
+
+    - Escapes HTML special characters.
+    - Converts CRLF / CR / LF to <br>.
+
+    Args:
+        text: input string (None treated as empty).
+
+    Returns:
+        A safe HTML fragment (surrounded by <p></p>).
+    """
+    if not text:
+        return ""
+
+    escaped = strip_html(text)
+    normalized = escaped.replace("\r\n", "\n").replace("\r", "\n")
+    with_br = normalized.replace("\n", "<br>")
+    return f"<p>{with_br}</p>"
 
 
 def smart_truncate(content: str, length: int = 500, suffix: str = " [...]") -> str:

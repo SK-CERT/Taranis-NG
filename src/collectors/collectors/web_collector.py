@@ -29,7 +29,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
-from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, smart_truncate
+from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, smart_truncate, strip_html
 from shared.config_collector import ConfigCollector
 from shared.log_manager import logger
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
@@ -153,9 +153,36 @@ class WebCollector(BaseCollector):
             if element_selector:
                 ret = self.__find_element_by(driver, element_selector)
                 if ret:
-                    if ret.text == "":
+                    text = ret.text
+                    if text == "":
                         self.source.logger.warning(f"Element found, but text content is empty: {element_selector}")
-                    return ret.text
+                    return text
+                self.source.logger.warning(f"Element not found: {element_selector}")
+            return ""
+        except NoSuchElementException:
+            return ""
+
+    def __find_element_html_by(self, driver: WebDriver, element_selector: str) -> str:
+        """Find the html source of an element identified by the given selector using the provided driver.
+
+        Parameters:
+            driver: The driver object used to interact with the web page.
+            element_selector: The selector used to locate the element.
+            return_none (bool): A boolean indicating whether to return None if the element is not found.
+                         If set to False, an empty string will be returned instead.
+                         Defaults to False.
+
+        Returns:
+            The html source of the element if found, otherwise None or an empty string based on the value of return_none.
+        """
+        try:
+            if element_selector:
+                ret = self.__find_element_by(driver, element_selector)
+                if ret:
+                    outer_html = ret.get_attribute("innerHTML")
+                    if outer_html == "":
+                        self.source.logger.warning(f"Element found, but html content is empty: {element_selector}")
+                    return outer_html
                 self.source.logger.warning(f"Element not found: {element_selector}")
             return ""
         except NoSuchElementException:
@@ -670,15 +697,14 @@ class WebCollector(BaseCollector):
 
         title = self.__find_element_text_by(scope, self.selectors["title"])
 
-        content = self.__find_element_text_by(scope, self.selectors["article_full_text"])
-        if self.word_limit > 0:
-            content = " ".join(re.compile(r"\s+").split(content)[: self.word_limit])
+        content = self.__find_element_html_by(scope, self.selectors["article_full_text"])
+        # we use html content, so word_limit is not possible here
 
         review = self.__find_element_text_by(scope, self.selectors["article_description"]) if self.selectors["article_description"] else ""
+        if not review:
+            review = strip_html(content)  # fix html content otherwise we damage tags by next smart_truncate and final sanitization will fail
         if self.word_limit > 0:
             review = " ".join(re.compile(r"\s+").split(review)[: self.word_limit])
-        if not review:
-            review = content
 
         title = smart_truncate(title, 200)
         review = smart_truncate(review)
