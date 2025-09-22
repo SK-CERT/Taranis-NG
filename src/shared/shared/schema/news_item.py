@@ -4,7 +4,7 @@ import datetime
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
-from shared.common import clean_whitespace, strip_html
+from shared.common import clean_whitespace
 from shared.schema.acl_entry import ACLEntryStatusSchema
 
 
@@ -117,11 +117,6 @@ class NewsItemData:
         self.content = content
         self.osint_source_id = osint_source_id
         self.attributes = attributes
-
-    @property
-    def content_plaintext(self) -> str:
-        """Return plain text version of content."""
-        return strip_html(self.content) if self.content else ""
 
     def print_news_item(self, logger: object) -> None:
         """Print news item details using the provided logger."""

@@ -159,6 +159,11 @@ class NewsItemData(db.Model):
         self.osint_source_id = osint_source_id
         self.updated = datetime.now(TZ)
 
+    @property
+    def content_plaintext(self) -> str:
+        """Return plain text version of content."""
+        return strip_html(self.content) if self.content else ""
+
     @classmethod
     def allowed_with_acl(cls, news_item_data_id: str, user: User, see: bool, access: bool, modify: bool) -> bool:
         """Check if user is allowed to access news item data.
@@ -1478,7 +1483,7 @@ class NewsItemAggregateSearchIndex(db.Model):
         for news_item in aggregate.news_items:
             data += " " + news_item.news_item_data.title
             data += " " + news_item.news_item_data.review
-            data += " " + strip_html(news_item.news_item_data.content)
+            data += " " + news_item.news_item_data.content_plaintext
             data += " " + news_item.news_item_data.author
             data += " " + news_item.news_item_data.link
 

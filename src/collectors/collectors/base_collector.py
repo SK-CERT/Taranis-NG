@@ -9,7 +9,6 @@ from http import HTTPStatus
 from typing import ClassVar
 from urllib.parse import urlparse
 
-import pytz
 import socks
 from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
@@ -314,7 +313,7 @@ class BaseCollector:
 def not_modified(source: object) -> bool:
     """Check if the content has been modified since the given date using the If-Modified-Since and Last-Modified headers."""
     if source.last_collected.tzinfo is None:
-        source.last_collected = source.last_collected.replace(tzinfo=pytz.UTC)
+        source.last_collected = source.last_collected.replace(tzinfo=TZ)
     last_collected_str = source.last_collected.strftime("%a, %d %b %Y %H:%M:%S GMT")
     headers = {"If-Modified-Since": last_collected_str}
     if source.user_agent:
@@ -356,7 +355,7 @@ def _not_modified_http_error(source: object, http_error: object, log_prefix: str
     if http_error.code == HTTPStatus.NOT_MODIFIED:
         source.logger.debug(f"{log_prefix} NOT modified since {last_collected_str_fmt}")
         return True
-    if http_error.code in [401, 429, 403]:
+    if http_error.code in [HTTPStatus.UNAUTHORIZED, HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.FORBIDDEN]:
         source.logger.info(f"{log_prefix} HTTP {http_error.code} {http_error.reason} for {source.url}. Continuing...")
         return False
     source.logger.exception(f"{log_prefix} HTTP error occurred")
