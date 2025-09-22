@@ -442,7 +442,7 @@ class WebCollector(BaseCollector):
                 browser = self.__get_headless_driver_firefox()
             else:
                 browser = self.__get_headless_driver_chrome()
-            browser.implicitly_wait(15)  # how long to wait for elements when selector doesn't match
+            browser.implicitly_wait(7)  # how long to wait for elements when selector doesn't match
             return browser
         except Exception as error:
             self.source.logger.exception(f"Get headless driver failed: {error}")
@@ -706,7 +706,10 @@ class WebCollector(BaseCollector):
         if self.word_limit > 0:
             review = " ".join(re.compile(r"\s+").split(review)[: self.word_limit])
 
-        title = smart_truncate(title, 200)
+        if not title:
+            self.source.logger.debug("Using review for title")
+            title = review
+        title = smart_truncate(title, 100)
         review = smart_truncate(review)
 
         extracted_date = None
