@@ -13,7 +13,7 @@ dependencies = [
     "flask-oidc==2.4.0",
     "Flask-RESTful==0.3.10",
     "Flask-SQLAlchemy==3.1.1",
-    "gevent==25.5.1",
+    "gevent==25.9.1",
     "gunicorn==23.0.0",
     "Jinja2==3.1.6",
     "ldap3 @ git+https://github.com/cannatag/ldap3.git@refs/pull/983/head",
