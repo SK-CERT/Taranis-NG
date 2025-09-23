@@ -9,7 +9,7 @@ from typing import ClassVar
 import feedparser
 from bs4 import BeautifulSoup
 
-from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter
+from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, text_to_simple_html
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -64,11 +64,10 @@ class RSSCollector(BaseCollector):
                         # try to get all <pre> tags text in body
                         content_html = [str(pre) for pre in soup.find_all("pre")]
                     if not content_html:
-                        # No tags found, treat as plaintext
+                        # No tags found, treat as plaintext and wrap in <pre> tags
                         # decode bytes to string if needed
-                        if isinstance(html, bytes):
-                            return html.decode(errors="replace")
-                        return str(html)
+                        plaintext = html.decode(errors="replace") if isinstance(html, bytes) else str(html)
+                        return text_to_simple_html(plaintext, preformatted_text=True)
                     return "".join(content_html)
 
             except urllib.error.HTTPError as http_err:

@@ -99,21 +99,23 @@ def strip_html(html_string: str) -> str:
     return soup.get_text(separator=" ", strip=True)
 
 
-def text_to_simple_html(text: str) -> str:
+def text_to_simple_html(text: str, preformatted_text: bool) -> str:
     """Convert a plain text string into a simple, safe HTML fragment.
 
     - Escapes HTML special characters.
-    - Converts CRLF / CR / LF to <br>.
+    - Converts CRLF / CR / LF to <br> or to <pre>.
 
     Args:
         text: input string (None treated as empty).
+        preformatted_text: if True, wrap the text in <pre> tags instead of <p> and <br>.
 
     Returns:
-        A safe HTML fragment (surrounded by <p></p>).
+        A safe HTML fragment.
     """
     if not text:
         return ""
-
+    if preformatted_text:
+        return f"<pre>{text}</pre>"
     escaped = strip_html(text)
     normalized = escaped.replace("\r\n", "\n").replace("\r", "\n")
     with_br = normalized.replace("\n", "<br>")
