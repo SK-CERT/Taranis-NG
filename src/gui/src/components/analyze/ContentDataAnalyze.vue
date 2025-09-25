@@ -40,7 +40,7 @@
         }),
 
         methods: {
-            showReportItemDetail(report_item){
+            showReportItemDetail(report_item) {
                 this.$emit('show-report-item-detail', report_item)
             },
 
@@ -95,8 +95,11 @@
 
                 let group = ''
                 if (this.publish_selector) {
+                    // TODO (*): maybe there should be some screen switch to display ALL or just REMOTE reports? (needs change ReportItem.get filter logic)
+                    // Bug: next line filter only remote reports if you use 'Select Report Items from Remote Nodes' functionality in Analyze screen
+                    //      you can't see local reports anymore until you hard reload the page. For now commented out.
 
-                    group = this.$store.getters.getCurrentReportItemGroup
+                    // group = this.$store.getters.getCurrentReportItemGroup
 
                 } else if (window.location.pathname.includes("/group/")) {
 
@@ -105,7 +108,7 @@
                     group = window.location.pathname.substring(i + 7, len).replaceAll("-", " ");
                 }
 
-                this.$store.dispatch("getAllReportItems", {group: group, filter: this.filter, offset: offset, limit: limit})
+                this.$store.dispatch("getAllReportItems", { group: group, filter: this.filter, offset: offset, limit: limit })
                     .then(() => {
                         const report_types = Object.values(this.$store.getters.getReportItemTypes.items);
                         this.collections = this.collections.concat(this.$store.getters.getReportItems.items);
