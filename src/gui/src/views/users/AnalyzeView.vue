@@ -1,22 +1,23 @@
 <template>
     <ViewLayout>
         <template v-slot:panel>
-            <ToolbarFilterAnalyze title='nav_menu.report_items' total_count_title="analyze.total_count"
+            <ToolbarFilterAnalyze :multi_select="true" title='nav_menu.report_items' total_count_title="analyze.total_count"
                                   @update-report-items-filter="updateFilter"
                                   ref="toolbarFilter">
                 <template v-slot:addbutton>
-                    <NewReportItem add_button ref="reportItemDialog"/>
+                    <NewReportItem add_button ref="reportItemDialog" />
                 </template>
 
             </ToolbarFilterAnalyze>
         </template>
         <template v-slot:content>
-            <ContentDataAnalyze card-item="CardAnalyze" ref="contentData"
+            <ContentDataAnalyze :show_remove_action="false" :remote_reports="false"
+                                card-item="CardAnalyze" ref="contentData"
                                 @show-report-item-detail="showReportItemDetail"
                                 @show-remote-report-item-detail="showRemoteReportItemDetail"
-                                @new-data-loaded="newDataLoaded"/>
-            <NewProduct class="np" add_button/>
-            <RemoteReportItem ref="remoteReportItemDialog"/>
+                                @new-data-loaded="newDataLoaded" />
+            <NewProduct class="np" add_button />
+            <RemoteReportItem ref="remoteReportItemDialog" />
         </template>
     </ViewLayout>
 
@@ -28,7 +29,7 @@
     import NewReportItem from "@/components/analyze/NewReportItem";
     import NewProduct from "@/components/publish/NewProduct";
     import ContentDataAnalyze from "../../components/analyze/ContentDataAnalyze";
-    import {deleteReportItem} from "@/api/analyze";
+    import { deleteReportItem } from "@/api/analyze";
     import RemoteReportItem from "@/components/analyze/RemoteReportItem";
 
     export default {

@@ -30,7 +30,7 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <!--HOVER TOOLBAR-->
                                     <div v-if="hover">
-                                        <v-row v-if="!multiSelectActive && !publish_selector"
+                                        <v-row v-if="!multiSelectActive && !show_remove_action"
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canDelete" icon class="red"
@@ -45,7 +45,7 @@
                                                 </v-btn>
                                             </v-col>
                                         </v-row>
-                                        <v-row v-if="!multiSelectActive && publish_selector"
+                                        <v-row v-if="!multiSelectActive && show_remove_action"
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canModify" icon
@@ -82,7 +82,7 @@
         components: { MessageBox },
         props: {
             card: Object,
-            publish_selector: Boolean,
+            show_remove_action: Boolean,
             preselected: Boolean,
         },
         mixins: [AuthMixin],

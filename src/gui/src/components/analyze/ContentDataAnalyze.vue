@@ -2,7 +2,7 @@
 
     <v-container id="selector_analyze">
         <component v-bind:is="cardLayout()" v-for="collection in collections" :card="collection" :key="collection.id"
-                   :publish_selector="publish_selector" :preselected="preselected(collection.id)"
+                   :show_remove_action="show_remove_action" :preselected="preselected(collection.id)"
                    @show-report-item-detail="showReportItemDetail"
                    @show-remote-report-item-detail="showRemoteReportItemDetail"
                    @remove-report-item-from-selector="removeReportItemFromSelector"></component>
@@ -22,7 +22,8 @@
         },
 
         props: {
-            publish_selector: Boolean,
+            show_remove_action: Boolean,
+            remote_reports: Boolean,
             selection: Array,
             cardItem: String
         },
@@ -94,12 +95,8 @@
                 }
 
                 let group = ''
-                if (this.publish_selector) {
-                    // TODO (*): maybe there should be some screen switch to display ALL or just REMOTE reports? (needs change ReportItem.get filter logic)
-                    // Bug: next line filter only remote reports if you use 'Select Report Items from Remote Nodes' functionality in Analyze screen
-                    //      you can't see local reports anymore until you hard reload the page. For now commented out.
-
-                    // group = this.$store.getters.getCurrentReportItemGroup
+                if (this.remote_reports) {
+                    group = this.$store.getters.getCurrentReportItemGroup
 
                 } else if (window.location.pathname.includes("/group/")) {
 
