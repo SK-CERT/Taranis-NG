@@ -15,27 +15,27 @@
                 </v-toolbar>
                 <v-container fluid class="pa-0 ma-0">
                     <div :style="UI.STYLE.sticky_filter_toolbar">
-                        <ToolbarFilterAnalyze publish_selector
+                        <ToolbarFilterAnalyze :multi_select="false"
                                               total_count_title="analyze.total_count"
                                               @update-report-items-filter="updateFilter"
                                               ref="toolbarFilter" />
                     </div>
 
-                    <ContentDataAnalyze publish_selector :selection="values"
+                    <ContentDataAnalyze :show_remove_action="false" :remote_reports="false" :selection="values"
                                         class="item-selector" card-item="CardAnalyze"
                                         ref="contentData"
                                         @show-report-item-detail="showReportItemDetail"
-                                        @new-data-loaded="newDataLoaded"/>
+                                        @new-data-loaded="newDataLoaded" />
                 </v-container>
             </v-card>
         </v-dialog>
 
         <v-spacer style="height:8px"></v-spacer>
 
-        <NewReportItem ref="reportItemDialog" :read_only="readOnlySelector"/>
+        <NewReportItem ref="reportItemDialog" :read_only="readOnlySelector" />
 
-        <component publish_selector class="item-selector" v-bind:is="cardLayout()" v-for="value in values" :card="value"
-                   :key="value.id"
+        <component class="item-selector" v-bind:is="cardLayout()" v-for="value in values" :card="value"
+                   :show_remove_action="true" :key="value.id"
                    @show-report-item-detail="showReportItemDetail"
                    @remove-report-item-from-selector="removeReportItemFromSelector" />
     </v-row>
@@ -49,7 +49,7 @@
     import NewReportItem from "@/components/analyze/NewReportItem";
     import Permissions from "@/services/auth/permissions";
     import AuthMixin from "@/services/auth/auth_mixin";
-    import Settings, { getSettingBoolean }  from "@/services/settings";
+    import Settings, { getSettingBoolean } from "@/services/settings";
 
     export default {
         name: "ReportItemSelector",
@@ -116,7 +116,7 @@
 
                     if (found === false)
                         selection[i].item.tag = 'mdi-file-table-outline'
-                        this.values.push(selection[i].item)
+                    this.values.push(selection[i].item)
                 }
 
                 this.close()

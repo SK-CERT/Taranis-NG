@@ -27,7 +27,8 @@
                                      :class="link.id === selected_group_id ? 'active' : ''">
                             <v-list-item-content v-if="!link.separator">
                                 <v-icon regular color="cx-drawer-text">{{ link.icon }}</v-icon>
-                                <v-list-item-title class="cx-drawer-text--text">{{ $t(link.title) }}
+                                <v-list-item-title class="cx-drawer-text--text">
+                                    {{ $t(link.title) }}
                                 </v-list-item-title>
                             </v-list-item-content>
                             <v-list-item-content class="separator" v-else>
@@ -36,15 +37,15 @@
                         </v-list-item>
                     </v-col>
                     <v-col class="cs-content">
-                        <ToolbarFilterAnalyze publish_selector
+                        <ToolbarFilterAnalyze :multi_select="false"
                                               total_count_title="analyze.total_count"
                                               @update-report-items-filter="updateFilter"
                                               ref="toolbarFilter"></ToolbarFilterAnalyze>
-                        <ContentDataAnalyze publish_selector :selection="values"
+                        <ContentDataAnalyze :show_remove_action="false" :remote_reports="true" :selection="values"
                                             class="item-selector" card-item="CardAnalyze"
                                             ref="contentData"
                                             @show-remote-report-item-detail="showReportItemDetail"
-                                            @new-data-loaded="newDataLoaded"/>
+                                            @new-data-loaded="newDataLoaded" />
                     </v-col>
                 </v-row>
 
@@ -53,11 +54,10 @@
 
         <v-spacer style="height:8px"></v-spacer>
 
-        <RemoteReportItem ref="remoteReportItemDialog"/>
+        <RemoteReportItem ref="remoteReportItemDialog" />
 
-        <component publish_selector class="item-selector ml-4" v-bind:is="cardLayout()" v-for="value in values"
-                   :card="value"
-                   :key="value.id"
+        <component class="item-selector ml-4" v-bind:is="cardLayout()" v-for="value in values" :card="value"
+                   :show_remove_action="true" :key="value.id"
                    @show-remote-report-item-detail="showReportItemDetail"
                    @remove-report-item-from-selector="removeReportItemFromSelector" />
     </v-row>
@@ -70,7 +70,7 @@
     import ToolbarFilterAnalyze from "@/components/analyze/ToolbarFilterAnalyze";
     import RemoteReportItem from "@/components/analyze/RemoteReportItem";
     import Permissions from "@/services/auth/permissions";
-    import {getReportItemData, updateReportItem} from "@/api/analyze";
+    import { getReportItemData, updateReportItem } from "@/api/analyze";
 
     export default {
         name: "RemoteReportItemSelector",
@@ -217,7 +217,7 @@
             }
         },
         mounted() {
-            this.$store.dispatch('getAllReportItemGroups', {search: ''})
+            this.$store.dispatch('getAllReportItemGroups', { search: '' })
                 .then(() => {
                     this.groups = this.$store.getters.getReportItemGroups;
 
