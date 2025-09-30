@@ -46,7 +46,7 @@
                                 :spellcheck="$store.state.settings.spellcheck" />
                         </v-col>
                         <v-col cols="12">
-                            <v-text-field :disabled="!canUpdate" :label="$t('remote_node.api_key')" name="api_key"
+                            <v-text-field :disabled="!canUpdate" :label="$t('settings.api_key')" name="api_key"
                                 :type="showApiKey ? 'text' : 'password'" v-model="remote_node.api_key"
                                 :spellcheck="false" :append-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                                 @click:append="showApiKey = !showApiKey" />
