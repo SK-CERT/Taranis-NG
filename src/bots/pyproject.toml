@@ -4,7 +4,7 @@ version = "v24.11.1"
 description = "Taranis-NG Bots service."
 requires-python = ">=3.10"
 dependencies = [
-    "beautifulsoup4==4.13.5",
+    "beautifulsoup4==4.14.2",
     "Flask==3.1.2",
     "Flask-Cors==6.0.1",
     "Flask-RESTful==0.3.10",
