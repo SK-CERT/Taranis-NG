@@ -1,25 +1,33 @@
 """Word list model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.user import User
+
 import sqlalchemy
-from marshmallow import post_load, fields
-from sqlalchemy import orm, func, or_, and_
+from managers.db_manager import db
+from marshmallow import fields, post_load
+from sqlalchemy import and_, func, or_, orm
 from sqlalchemy.sql.expression import cast
 
-from managers.db_manager import db
-from model.acl_entry import ACLEntry
 from shared.schema.acl_entry import ItemType
-from shared.schema.word_list import WordListCategorySchema, WordListEntrySchema, WordListSchema, WordListPresentationSchema
+from shared.schema.word_list import WordListCategorySchema, WordListEntrySchema, WordListPresentationSchema, WordListSchema
 
 
 class NewWordListEntrySchema(WordListEntrySchema):
     """New Word List Entry schema."""
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> WordListEntry:  # noqa: ANN003, ARG002
         """Return a new WordListEntry object.
 
         Args:
             data (dict): Data to create a new WordListEntry object.
+            **kwargs: Additional arguments.
+
         Returns:
             WordListEntry: New WordListEntry object.
         """
@@ -36,11 +44,13 @@ class NewWordListCategorySchema(WordListCategorySchema):
     entries = fields.Nested(NewWordListEntrySchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> WordListCategory:  # noqa: ANN003, ARG002
         """Return a new WordListCategory object.
 
         Args:
             data (dict): Data to create a new WordListCategory object.
+            **kwargs: Additional arguments.
+
         Returns:
             WordListCategory: New WordListCategory object.
         """
@@ -57,11 +67,13 @@ class NewWordListSchema(WordListSchema):
     categories = fields.Nested(NewWordListCategorySchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> WordList:  # noqa: ANN003, ARG002
         """Return a new WordList object.
 
         Args:
             data (dict): Data to create a new WordList object.
+            **kwargs: Additional arguments.
+
         Returns:
             WordList: New WordList object.
         """
@@ -86,8 +98,23 @@ class WordList(db.Model):
 
     categories = db.relationship("WordListCategory", cascade="all, delete-orphan", lazy="joined")
 
-    def __init__(self, id, name, description, categories, use_for_stop_words):
-        """Initialize a new WordList object."""
+    def __init__(
+        self,
+        id: int,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        categories: list[WordListCategory],
+        use_for_stop_words: bool,
+    ) -> None:
+        """Initialize a new WordList object.
+
+        Args:
+            id (int): Word list ID.
+            name (str): Word list name.
+            description (str): Word list description.
+            categories (list): List of categories.
+            use_for_stop_words (bool): Use for stop words.
+        """
         self.id = None
         self.name = name
         if description is None:
@@ -101,7 +128,7 @@ class WordList(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the object."""
         self.title = self.name
         self.subtitle = self.description
@@ -110,18 +137,19 @@ class WordList(db.Model):
         self.categories.sort(key=WordListCategory.sort)
 
     @classmethod
-    def find(cls, id):
+    def find(cls, word_list_id: int) -> WordList | None:
         """Find a word list by ID.
 
         Args:
-            id (int): Word list ID.
+            word_list_id (int): Word list ID.
+
         Returns:
             WordList: Word list object.
         """
-        return db.session.get(cls, id)
+        return db.session.get(cls, word_list_id)
 
     @classmethod
-    def allowed_with_acl(cls, word_list_id, user, see, access, modify):
+    def allowed_with_acl(cls, word_list_id: int, user: User, see: bool, access: bool, modify: bool) -> bool:
         """Check if the user is allowed to access the word list.
 
         Args:
@@ -130,13 +158,17 @@ class WordList(db.Model):
             see (bool): See permission.
             access (bool): Access permission.
             modify (bool): Modify permission.
+
         Returns:
             bool: True if the user is allowed to access the word list, False otherwise.
         """
+        from model.acl_entry import ACLEntry  # noqa: PLC0415 Must be here, because circular import error
+
         query = db.session.query(WordList.id).distinct().group_by(WordList.id).filter(WordList.id == word_list_id)
 
         query = query.outerjoin(
-            ACLEntry, and_(cast(WordList.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.WORD_LIST)
+            ACLEntry,
+            and_(cast(WordList.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.WORD_LIST),
         )
 
         query = ACLEntry.apply_query(query, user, see, access, modify)
@@ -144,7 +176,7 @@ class WordList(db.Model):
         return query.scalar() is not None
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[WordList]:
         """Get all word lists.
 
         Returns:
@@ -153,23 +185,27 @@ class WordList(db.Model):
         return cls.query.order_by(db.asc(WordList.name)).all()
 
     @classmethod
-    def get(cls, search, user, acl_check):
+    def get(cls, search: str | None, user: User, acl_check: bool) -> tuple[list[WordList], int]:
         """Get word lists.
 
         Args:
             search (str): Search string.
             user (User): User object.
             acl_check (bool): ACL check.
+
         Returns:
             tuple: Tuple containing a list of word lists and the count.
         """
+        from model.acl_entry import ACLEntry  # noqa: PLC0415 Must be here, because circular import error
+
         query = cls.query.distinct().group_by(WordList.id)
 
         if acl_check is True:
             query = query.outerjoin(
-                ACLEntry, and_(cast(WordList.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.WORD_LIST)
+                ACLEntry,
+                and_(cast(WordList.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.WORD_LIST),
             )
-            query = ACLEntry.apply_query(query, user, True, False, False)
+            query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
         if search is not None:
             search_string = f"%{search}%"
@@ -178,13 +214,14 @@ class WordList(db.Model):
         return query.order_by(db.asc(WordList.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search, user, acl_check):
+    def get_all_json(cls, search: str | None, user: User, acl_check: bool) -> dict:
         """Get all word lists in JSON format.
 
         Args:
             search (str): Search string.
             user (User): User object.
             acl_check (bool): ACL check.
+
         Returns:
             dict: Dictionary containing the total count and a list of word lists.
         """
@@ -193,7 +230,7 @@ class WordList(db.Model):
         return {"total_count": count, "items": schema.dump(word_lists)}
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new word list.
 
         Args:
@@ -205,7 +242,7 @@ class WordList(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, word_list_id, data):
+    def update(cls, word_list_id: int, data: dict) -> None:
         """Update a word list.
 
         Args:
@@ -222,25 +259,25 @@ class WordList(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, id):
+    def delete(cls, word_list_id: int) -> None:
         """Delete a word list.
 
         Args:
-            id (int): Word list ID.
+            word_list_id (int): Word list ID.
         """
-        word_list = db.session.get(cls, id)
+        word_list = db.session.get(cls, word_list_id)
         db.session.delete(word_list)
         db.session.commit()
 
     @classmethod
-    def add_word_list_category(cls, id, category):
+    def add_word_list_category(cls, word_list_id: int, category: dict) -> None:
         """Add a new word list category.
 
         Args:
-            id (int): Word list ID.
+            word_list_id (int): Word list ID.
             category (dict): Category data.
         """
-        word_list = cls.find(id)
+        word_list = cls.find(word_list_id)
 
         category_schema = NewWordListCategorySchema()
         category = category_schema.load(category)
@@ -269,11 +306,12 @@ class WordListCategory(db.Model):
 
     entries = db.relationship("WordListEntry", cascade="all, delete-orphan", lazy="joined")
 
-    def __init__(self, name=None, description=None, link=None, entries=None):
+    def __init__(self, name: str | None = None, description: str | None = None, link: str | None = None, entries: list | None = None) -> None:
         """Initialize a new WordListCategory object."""
         self.id = None
         if name in (None, ""):
-            raise Exception("Empty category name!")
+            msg = "Empty category name!"
+            raise Exception(msg)  # noqa: TRY002
         self.name = name
         if description is None:
             self.description = ""
@@ -283,38 +321,41 @@ class WordListCategory(db.Model):
         self.entries = entries
 
     @staticmethod
-    def sort(category):
+    def sort(category: WordListCategory) -> str:
         """Sort categories.
 
         Args:
             category (WordListCategory): Word list category object.
+
         Returns:
             str: Category name.
         """
         return category.name
 
     @classmethod
-    def find(cls, id, name):
+    def find(cls, word_list_id: int, name: str) -> WordListCategory | None:
         """Find a word list category.
 
         Args:
-            id (int): Word list ID.
+            word_list_id (int): Word list ID.
             name (str): Category name.
+
         Returns:
             WordListCategory: Word list category object.
         """
-        return cls.query.filter_by(word_list_id=id).filter_by(name=name).scalar()
+        return cls.query.filter_by(word_list_id=word_list_id).filter_by(name=name).scalar()
 
     @classmethod
-    def get_categories(cls, id):
+    def get_categories(cls, word_list_id: int) -> list[WordListCategory]:
         """Get categories.
 
         Args:
-            id (int): Word list ID.
+            word_list_id (int): Word list ID.
+
         Returns:
             list: List of categories.
         """
-        categories = cls.query.filter_by(word_list_id=id).all()
+        categories = cls.query.filter_by(word_list_id=word_list_id).all()
         word_list_categories_schema = NewWordListCategorySchema(many=True)
         return word_list_categories_schema.dump(categories)
 
@@ -335,7 +376,7 @@ class WordListEntry(db.Model):
 
     word_list_category_id = db.Column(db.Integer, db.ForeignKey("word_list_category.id"))
 
-    def __init__(self, value, description):
+    def __init__(self, value: str, description: str) -> None:
         """Initialize a new WordListEntry object."""
         self.id = None
         self.value = value
@@ -345,41 +386,42 @@ class WordListEntry(db.Model):
             self.description = description
 
     @classmethod
-    def identical(cls, value, word_list_category_id):
+    def identical(cls, value: str, word_list_category_id: int) -> bool:
         """Check if the entry is identical.
 
         Args:
             value (str): Entry value.
             word_list_category_id (int): Word list category ID.
+
         Returns:
             bool: True if the entry is identical, False otherwise.
         """
         return db.session.query(
-            db.exists().where(WordListEntry.value == value).where(WordListEntry.word_list_category_id == word_list_category_id)
+            db.exists().where(WordListEntry.value == value).where(WordListEntry.word_list_category_id == word_list_category_id),
         ).scalar()
 
     @classmethod
-    def delete_entries(cls, id, name):
+    def delete_entries(cls, word_list_entry_id: int, name: str) -> None:
         """Delete entries.
 
         Args:
-            id (int): Word list ID.
+            word_list_entry_id (int): Word list ID.
             name (str): Category name.
         """
-        word_list_category = WordListCategory.find(id, name)
+        word_list_category = WordListCategory.find(word_list_entry_id, name)
         cls.query.filter_by(word_list_category_id=word_list_category.id).delete()
         db.session.commit()
 
     @classmethod
-    def update_word_list_entries(cls, id, name, entries):
+    def update_word_list_entries(cls, word_list_entry_id: int, name: str, entries: list) -> None:
         """Update word list entries.
 
         Args:
-            id (int): Word list ID.
+            word_list_entry_id (int): Word list ID.
             name (str): Category name.
             entries (list): List of entries.
         """
-        word_list_category = WordListCategory.find(id, name)
+        word_list_category = WordListCategory.find(word_list_entry_id, name)
 
         entries_schema = NewWordListEntrySchema(many=True)
         entries = entries_schema.load(entries)
@@ -390,7 +432,7 @@ class WordListEntry(db.Model):
                 db.session.commit()
 
     @classmethod
-    def stopwords_subquery(cls):
+    def stopwords_subquery(cls) -> sqlalchemy.sql.selectable.ScalarSelect:
         """Get stop words subquery.
 
         Returns:

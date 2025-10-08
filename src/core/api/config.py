@@ -1,53 +1,62 @@
 """Configuration module API."""
 
-import io
-from flask import request, send_file
-from flask_restful import Resource
-from flask_jwt_extended import jwt_required
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flask_restful import Api
+
+import io
+from http import HTTPStatus
+
+from flask import request, send_file
+from flask_jwt_extended import jwt_required
+from flask_restful import Resource
 from managers import (
     auth_manager,
-    remote_manager,
-    presenters_manager,
-    publishers_manager,
     bots_manager,
+    collectors_manager,
     external_auth_manager,
     log_manager,
-    collectors_manager,
+    presenters_manager,
+    publishers_manager,
+    remote_manager,
 )
-from managers.sse_manager import sse_manager
 from managers.auth_manager import auth_required, get_user_from_jwt
+from managers.sse_manager import sse_manager
 from model import (
     acl_entry,
-    remote,
-    presenters_node,
-    publisher_preset,
-    publishers_node,
-    bots_node,
-    bot_preset,
-    attribute,
     ai_provider,
+    attribute,
+    bot_preset,
+    bots_node,
     collectors_node,
     organization,
     osint_source,
+    presenters_node,
     product_type,
+    publisher_preset,
+    publishers_node,
+    remote,
     report_item_type,
     role,
-    user,
     setting,
+    user,
     word_list,
 )
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
-from shared.schema.role import PermissionSchema
+
 from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.role import PermissionSchema
 
 
 class DictionariesReload(Resource):
     """Dictionaries reload API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
-    def get(self, dictionary_type):
+    def get(self, dictionary_type: str) -> tuple[str, HTTPStatus]:
         """Reload dictionaries.
 
         Args:
@@ -56,26 +65,26 @@ class DictionariesReload(Resource):
             (str, int): The result of the reload
         """
         attribute.Attribute.load_dictionaries(dictionary_type)
-        return "success", 200
+        return "success", HTTPStatus.OK
 
 
 class Attributes(Resource):
     """Attributes API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all attributes.
 
         Returns:
             (dict): The attributes
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return attribute.Attribute.get_all_json(search)
 
     @auth_required("CONFIG_ATTRIBUTE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, int] | None:
         """Create an attribute.
 
         Returns:
@@ -86,14 +95,14 @@ class Attributes(Resource):
         except Exception as ex:
             msg = "Could not create attribute"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Attribute(Resource):
     """Attribute API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
-    def put(self, attribute_id):
+    def put(self, attribute_id: int) -> tuple[dict, int]:
         """Update an attribute.
 
         Args:
@@ -106,10 +115,10 @@ class Attribute(Resource):
         except Exception as ex:
             msg = "Could not update attribute"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_ATTRIBUTE_DELETE")
-    def delete(self, attribute_id):
+    def delete(self, attribute_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an attribute.
 
         Args:
@@ -122,14 +131,14 @@ class Attribute(Resource):
         except Exception as ex:
             msg = "Could not delete attribute"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class AttributeEnums(Resource):
     """Attribute enums API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_ACCESS")
-    def get(self, attribute_id):
+    def get(self, attribute_id: int) -> tuple[str, dict]:
         """Get all attribute enums.
 
         Args:
@@ -140,16 +149,16 @@ class AttributeEnums(Resource):
         search = None
         offset = 0
         limit = 10
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        if "offset" in request.args and request.args["offset"]:
+        if request.args.get("offset"):
             offset = request.args["offset"]
-        if "limit" in request.args and request.args["limit"]:
+        if request.args.get("limit"):
             limit = request.args["limit"]
         return attribute.AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
 
     @auth_required("CONFIG_ATTRIBUTE_CREATE")
-    def post(self, attribute_id):
+    def post(self, attribute_id: int) -> tuple[dict, HTTPStatus] | None:
         """Create an attribute enum.
 
         Args:
@@ -162,14 +171,14 @@ class AttributeEnums(Resource):
         except Exception as ex:
             msg = "Could not create attribute enum"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class AttributeEnum(Resource):
     """Attribute enum API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
-    def put(self, attribute_id, enum_id):
+    def put(self, attribute_id: int, enum_id: int) -> tuple[dict, HTTPStatus] | None:  # noqa: ARG002
         """Update an attribute enum.
 
         Args:
@@ -183,10 +192,10 @@ class AttributeEnum(Resource):
         except Exception as ex:
             msg = "Could not update attribute enum"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_ATTRIBUTE_DELETE")
-    def delete(self, attribute_id, enum_id):
+    def delete(self, attribute_id: int, enum_id: int) -> tuple[dict, HTTPStatus] | None:  # noqa: ARG002
         """Delete an attribute enum.
 
         Args:
@@ -200,26 +209,26 @@ class AttributeEnum(Resource):
         except Exception as ex:
             msg = "Could not delete attribute enum"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class AiProviders(Resource):
     """Local AI models API endpoint."""
 
     @auth_required("CONFIG_AI_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all local AI models.
 
         Returns:
             (dict): The local AI models
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return ai_provider.AiProvider.get_all_json(search)
 
     @auth_required("CONFIG_AI_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus]:
         """Create an local AI model.
 
         Returns:
@@ -229,18 +238,18 @@ class AiProviders(Resource):
             user = auth_manager.get_user_from_jwt()
             record = ai_provider.AiProvider.add_new(request.json, user.name)
             schema = AiProviderSchema()
-            return schema.dump(record), 200
+            return schema.dump(record), HTTPStatus.OK
         except Exception as ex:
             msg = "Could not create local AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class AiProvider(Resource):
     """Local AI model API endpoint."""
 
     @auth_required("CONFIG_AI_UPDATE")
-    def put(self, ai_provider_id):
+    def put(self, ai_provider_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an local AI model.
 
         Args:
@@ -252,14 +261,14 @@ class AiProvider(Resource):
             user = auth_manager.get_user_from_jwt()
             record = ai_provider.AiProvider.update(ai_provider_id, request.json, user.name)
             schema = AiProviderSchema()
-            return schema.dump(record), 200
+            return schema.dump(record), HTTPStatus.OK
         except Exception as ex:
             msg = "Could not update local AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_AI_DELETE")
-    def delete(self, ai_provider_id):
+    def delete(self, ai_provider_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an local AI model.
 
         Args:
@@ -272,26 +281,26 @@ class AiProvider(Resource):
         except Exception as ex:
             msg = "Could not delete local AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ReportItemTypesConfig(Resource):
     """Report item types API endpoint."""
 
     @auth_required("CONFIG_REPORT_TYPE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all report item types.
 
         Returns:
             (dict): The report item types
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        return report_item_type.ReportItemType.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        return report_item_type.ReportItemType.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_REPORT_TYPE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a report item type.
 
         Returns:
@@ -302,14 +311,14 @@ class ReportItemTypesConfig(Resource):
         except Exception as ex:
             msg = "Could not create report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ReportItemType(Resource):
     """Report item type API endpoint."""
 
     @auth_required("CONFIG_REPORT_TYPE_UPDATE")
-    def put(self, type_id):
+    def put(self, type_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a report item type.
 
         Args:
@@ -322,10 +331,10 @@ class ReportItemType(Resource):
         except Exception as ex:
             msg = "Could not update report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_REPORT_TYPE_DELETE")
-    def delete(self, type_id):
+    def delete(self, type_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a report item type.
 
         Args:
@@ -338,26 +347,26 @@ class ReportItemType(Resource):
         except Exception as ex:
             msg = "Could not delete report type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ProductTypes(Resource):
     """Product types API endpoint."""
 
     @auth_required("CONFIG_PRODUCT_TYPE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all product types.
 
         Returns:
             (dict): The product types
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        return product_type.ProductType.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        return product_type.ProductType.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_PRODUCT_TYPE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a product type.
 
         Returns:
@@ -368,14 +377,14 @@ class ProductTypes(Resource):
         except Exception as ex:
             msg = "Could not create product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ProductType(Resource):
     """Product type API endpoint."""
 
     @auth_required("CONFIG_PRODUCT_TYPE_UPDATE")
-    def put(self, type_id):
+    def put(self, type_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a product type.
 
         Args:
@@ -388,10 +397,10 @@ class ProductType(Resource):
         except Exception as ex:
             msg = "Could not update product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_PRODUCT_TYPE_DELETE")
-    def delete(self, type_id):
+    def delete(self, type_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a product type.
 
         Args:
@@ -404,21 +413,21 @@ class ProductType(Resource):
         except Exception as ex:
             msg = "Could not delete product type"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Permissions(Resource):
     """Permissions API endpoint."""
 
     @auth_required("CONFIG_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all permissions.
 
         Returns:
             (dict): The permissions
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return Permission.get_all_json(search)
 
@@ -427,7 +436,7 @@ class ExternalPermissions(Resource):
     """External permissions API endpoint."""
 
     @auth_required("MY_ASSETS_CONFIG")
-    def get(self):
+    def get(self) -> tuple[dict, dict]:
         """Get all external permissions.
 
         Returns:
@@ -442,19 +451,19 @@ class Roles(Resource):
     """Roles API endpoint."""
 
     @auth_required("CONFIG_ROLE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all roles.
 
         Returns:
             (dict): The roles
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return role.Role.get_all_json(search)
 
     @auth_required("CONFIG_ROLE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a role.
 
         Returns:
@@ -465,14 +474,14 @@ class Roles(Resource):
         except Exception as ex:
             msg = "Could not create role"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Role(Resource):
     """Role API endpoint."""
 
     @auth_required("CONFIG_ROLE_UPDATE")
-    def put(self, role_id):
+    def put(self, role_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a role.
 
         Args:
@@ -485,10 +494,10 @@ class Role(Resource):
         except Exception as ex:
             msg = "Could not update role"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_ROLE_DELETE")
-    def delete(self, role_id):
+    def delete(self, role_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a role.
 
         Args:
@@ -501,26 +510,26 @@ class Role(Resource):
         except Exception as ex:
             msg = "Could not delete role"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ACLEntries(Resource):
     """ACL entries API endpoint."""
 
     @auth_required("CONFIG_ACL_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all ACL entries.
 
         Returns:
             (dict): The ACL entries
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return acl_entry.ACLEntry.get_all_json(search)
 
     @auth_required("CONFIG_ACL_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create an ACL entry.
 
         Returns:
@@ -531,14 +540,14 @@ class ACLEntries(Resource):
         except Exception as ex:
             msg = "Could not create acl entry"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ACLEntry(Resource):
     """ACL entry API endpoint."""
 
     @auth_required("CONFIG_ACL_UPDATE")
-    def put(self, acl_id):
+    def put(self, acl_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an ACL entry.
 
         Args:
@@ -551,10 +560,10 @@ class ACLEntry(Resource):
         except Exception as ex:
             msg = "Could not update acl entry"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_ACL_DELETE")
-    def delete(self, acl_id):
+    def delete(self, acl_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an ACL entry.
 
         Args:
@@ -567,26 +576,26 @@ class ACLEntry(Resource):
         except Exception as ex:
             msg = "Could not delete acl entry"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Organizations(Resource):
     """Organizations API endpoint."""
 
     @auth_required("CONFIG_ORGANIZATION_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all organizations.
 
         Returns:
             (dict): The organizations
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return organization.Organization.get_all_json(search)
 
     @auth_required("CONFIG_ORGANIZATION_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create an organization.
 
         Returns:
@@ -597,14 +606,14 @@ class Organizations(Resource):
         except Exception as ex:
             msg = "Could not create organization"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Organization(Resource):
     """Organization API endpoint."""
 
     @auth_required("CONFIG_ORGANIZATION_UPDATE")
-    def put(self, organization_id):
+    def put(self, organization_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an organization.
 
         Args:
@@ -617,10 +626,10 @@ class Organization(Resource):
         except Exception as ex:
             msg = "Could not update organization"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_ORGANIZATION_DELETE")
-    def delete(self, organization_id):
+    def delete(self, organization_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an organization.
 
         Args:
@@ -633,26 +642,26 @@ class Organization(Resource):
         except Exception as ex:
             msg = "Could not delete organization"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Users(Resource):
     """Users API endpoint."""
 
     @auth_required("CONFIG_USER_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all users.
 
         Returns:
             (dict): The users
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return user.User.get_all_json(search)
 
     @auth_required("CONFIG_USER_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a user.
 
         Returns:
@@ -663,16 +672,17 @@ class Users(Resource):
         except Exception as ex:
             msg = "Could not create user in external auth system"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
         user.User.add_new(request.json)
+        return None
 
 
 class User(Resource):
     """User API endpoint."""
 
     @auth_required("CONFIG_USER_UPDATE")
-    def put(self, user_id):
+    def put(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a user.
 
         Args:
@@ -688,12 +698,13 @@ class User(Resource):
         except Exception as ex:
             msg = "Could not update user in external auth system"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
         user.User.update(user_id, request.json)
+        return None
 
     @auth_required("CONFIG_USER_DELETE")
-    def delete(self, user_id):
+    def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a user.
 
         Args:
@@ -711,26 +722,26 @@ class User(Resource):
         except Exception as ex:
             msg = "Could not delete user in external auth system"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ExternalUsers(Resource):
     """External users API endpoint."""
 
     @auth_required("MY_ASSETS_CONFIG")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all external users.
 
         Returns:
             (dict): The external users
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return user.User.get_all_external_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create an external user.
 
         Returns:
@@ -742,14 +753,14 @@ class ExternalUsers(Resource):
         except Exception as ex:
             msg = "Could not create external user"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class ExternalUser(Resource):
     """External user API endpoint."""
 
     @auth_required("MY_ASSETS_CONFIG")
-    def put(self, user_id):
+    def put(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an external user.
 
         Args:
@@ -763,10 +774,10 @@ class ExternalUser(Resource):
         except Exception as ex:
             msg = "Could not update external user"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("MY_ASSETS_CONFIG")
-    def delete(self, user_id):
+    def delete(self, user_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an external user.
 
         Args:
@@ -779,59 +790,32 @@ class ExternalUser(Resource):
         except Exception as ex:
             msg = "Could not delete external user"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class Settings(Resource):
     """Settings API endpoint."""
 
     @jwt_required()
-    def get(self):
-        """Get all settings.
+    def get(self) -> tuple[str, dict]:
+        """Get all global settings.
 
         Returns:
             (dict): The Settings
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        return setting.Setting.get_all_json(search)
-
-    # @auth_required("CONFIG_SETTINGS_CREATE")
-    # def post(self):
-    #     """Create a setting.
-
-    #     Returns:
-    #         (str, int): The result of the create
-    #     """
-    #     try:
-    #         setting.Setting.add_new(request.json)
-    #     except Exception as ex:
-    #         log_manager.store_data_error_activity(get_user_from_jwt(), "Could not create setting", ex)
-    #         return "", 400
+        user = auth_manager.get_user_from_jwt()
+        return setting.Setting.get_all_json(user, search)
 
 
 class Setting(Resource):
     """Settings API endpoint."""
 
-    # @auth_required("CONFIG_SETTINGS_DELETE")
-    # def delete(self, setting_id):
-    #     """Delete a setting.
-
-    #     Parameters:
-    #         settings_id (int): The setting ID
-    #     Returns:
-    #         (str, int): The result of the delete
-    #     """
-    #     try:
-    #         return setting.Setting.delete(setting_id)
-    #     except Exception as ex:
-    #         log_manager.store_data_error_activity(get_user_from_jwt(), "Could not delete setting", ex)
-    #         return "", 400
-
     @auth_required("CONFIG_SETTINGS_UPDATE")
-    def put(self, setting_id):
-        """Update a setting.
+    def put(self, setting_id: int) -> tuple[dict, HTTPStatus]:
+        """Update a global setting.
 
         Parameters:
             setting_id (int): The setting ID
@@ -840,32 +824,55 @@ class Setting(Resource):
         """
         try:
             user = auth_manager.get_user_from_jwt()
-            setting.Setting.update_value(setting_id, request.json, user.name)
-            json = setting.Setting.get_json(setting_id)
-            return json, 200
+            setting.Setting.update_value(setting_id, user.name, request.json)
+            json = setting.Setting.get_json(user, setting_id)
+            return json, HTTPStatus.OK
         except Exception as ex:
-            msg = "Could not update setting"
+            msg = "Could not update global setting"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class UserSetting(Resource):
+    """Settings API endpoint."""
+
+    @jwt_required()
+    def put(self, setting_id: int) -> tuple[dict, HTTPStatus]:
+        """Update a user setting.
+
+        Parameters:
+            user_setting_id (int): The user setting ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            user = auth_manager.get_user_from_jwt()
+            setting.SettingUser.update_value(setting_id, user.id, request.json)
+            json = setting.Setting.get_json(user, setting_id)
+            return json, HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not update user setting"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class WordLists(Resource):
     """Word lists API endpoint."""
 
     @auth_required("CONFIG_WORD_LIST_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all word lists.
 
         Returns:
             (dict): The word lists
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        return word_list.WordList.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        return word_list.WordList.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_WORD_LIST_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a word list.
 
         Returns:
@@ -876,14 +883,14 @@ class WordLists(Resource):
         except Exception as ex:
             msg = "Could not create word list"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class WordList(Resource):
     """Word list API endpoint."""
 
     @auth_required("CONFIG_WORD_LIST_DELETE")
-    def delete(self, word_list_id):
+    def delete(self, word_list_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a word list.
 
         Args:
@@ -896,10 +903,10 @@ class WordList(Resource):
         except Exception as ex:
             msg = "Could not delete word list"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_WORD_LIST_UPDATE")
-    def put(self, word_list_id):
+    def put(self, word_list_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a word list.
 
         Args:
@@ -912,26 +919,26 @@ class WordList(Resource):
         except Exception as ex:
             msg = "Could not update word list"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class CollectorsNodes(Resource):
     """Collectors nodes API endpoint."""
 
     @auth_required("CONFIG_COLLECTORS_NODE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all collectors nodes.
 
         Returns:
             (dict): The collectors nodes
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return collectors_node.CollectorsNode.get_all_json(search)
 
     @auth_required("CONFIG_COLLECTORS_NODE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a collectors node.
 
         Returns:
@@ -942,14 +949,14 @@ class CollectorsNodes(Resource):
         except Exception as ex:
             msg = "Could not create collectors node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class CollectorsNode(Resource):
     """Collectors node API endpoint."""
 
     @auth_required("CONFIG_COLLECTORS_NODE_UPDATE")
-    def put(self, node_id):
+    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a collectors node.
 
         Args:
@@ -962,10 +969,10 @@ class CollectorsNode(Resource):
         except Exception as ex:
             msg = "Could not update collectors node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_COLLECTORS_NODE_DELETE")
-    def delete(self, node_id):
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a collectors node.
 
         Args:
@@ -978,26 +985,26 @@ class CollectorsNode(Resource):
         except Exception as ex:
             msg = "Could not delete collectors node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSources(Resource):
     """OSINT sources API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all OSINT sources.
 
         Returns:
             (dict): The OSINT sources
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return osint_source.OSINTSource.get_all_json(search)
 
     @auth_required("CONFIG_OSINT_SOURCE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create an OSINT source.
 
         Returns:
@@ -1008,14 +1015,14 @@ class OSINTSources(Resource):
         except Exception as ex:
             msg = "Could not create OSINT source"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSource(Resource):
     """OSINT source API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
-    def put(self, source_id):
+    def put(self, source_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an OSINT source.
 
         Args:
@@ -1030,10 +1037,10 @@ class OSINTSource(Resource):
         except Exception as ex:
             msg = "Could not update OSINT source"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_OSINT_SOURCE_DELETE")
-    def delete(self, source_id):
+    def delete(self, source_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an OSINT source.
 
         Args:
@@ -1046,14 +1053,14 @@ class OSINTSource(Resource):
         except Exception as ex:
             msg = "Could not delete OSINT source"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSourcesExport(Resource):
     """OSINT sources export API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_ACCESS")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus]:
         """Export OSINT sources.
 
         Returns:
@@ -1065,14 +1072,14 @@ class OSINTSourcesExport(Resource):
         except Exception as ex:
             msg = "Could not export OSINT source"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSourcesImport(Resource):
     """OSINT sources import API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Import OSINT sources.
 
         Returns:
@@ -1086,26 +1093,26 @@ class OSINTSourcesImport(Resource):
         except Exception as ex:
             msg = "Could not import OSINT source"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSourceGroups(Resource):
     """OSINT source groups API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all OSINT source groups.
 
         Returns:
             (dict): The OSINT source groups
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), False)
+        return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create an OSINT source group.
 
         Returns:
@@ -1116,14 +1123,14 @@ class OSINTSourceGroups(Resource):
         except Exception as ex:
             msg = "Could not create OSINT source group"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSourceGroup(Resource):
     """OSINT source group API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_UPDATE")
-    def put(self, group_id):
+    def put(self, group_id: int) -> tuple[dict, HTTPStatus]:
         """Update an OSINT source group.
 
         Args:
@@ -1141,10 +1148,10 @@ class OSINTSourceGroup(Resource):
         except Exception as ex:
             msg = "Could not update OSINT source group"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_DELETE")
-    def delete(self, group_id):
+    def delete(self, group_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete an OSINT source group.
 
         Args:
@@ -1157,26 +1164,26 @@ class OSINTSourceGroup(Resource):
         except Exception as ex:
             msg = "Could not delete OSINT source group"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class RemoteAccesses(Resource):
     """Remote accesses API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all remote accesses.
 
         Returns:
             (dict): The remote accesses
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return remote.RemoteAccess.get_all_json(search)
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a remote access.
 
         Returns:
@@ -1187,14 +1194,14 @@ class RemoteAccesses(Resource):
         except Exception as ex:
             msg = "Could not create remote access"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class RemoteAccess(Resource):
     """Remote access API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
-    def put(self, remote_access_id):
+    def put(self, remote_access_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a remote access.
 
         Args:
@@ -1209,10 +1216,10 @@ class RemoteAccess(Resource):
         except Exception as ex:
             msg = "Could not update remote access"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
-    def delete(self, remote_access_id):
+    def delete(self, remote_access_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a remote access.
 
         Args:
@@ -1225,26 +1232,26 @@ class RemoteAccess(Resource):
         except Exception as ex:
             msg = "Could not delete remote access"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class RemoteNodes(Resource):
     """Remote nodes API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all remote nodes.
 
         Returns:
             (dict): The remote nodes
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return remote.RemoteNode.get_all_json(search)
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a remote node.
 
         Returns:
@@ -1255,14 +1262,14 @@ class RemoteNodes(Resource):
         except Exception as ex:
             msg = "Could not create remote node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class RemoteNode(Resource):
     """Remote node API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
-    def put(self, remote_node_id):
+    def put(self, remote_node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a remote node.
 
         Args:
@@ -1276,10 +1283,10 @@ class RemoteNode(Resource):
         except Exception as ex:
             msg = "Could not update remote node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
-    def delete(self, remote_node_id):
+    def delete(self, remote_node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a remote node.
 
         Args:
@@ -1293,14 +1300,14 @@ class RemoteNode(Resource):
         except Exception as ex:
             msg = "Could not delete remote node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class RemoteNodeConnect(Resource):
     """Remote node connect API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
-    def get(self, remote_node_id):
+    def get(self, remote_node_id: int) -> tuple[dict, HTTPStatus]:
         """Connect to a remote node.
 
         Args:
@@ -1313,26 +1320,26 @@ class RemoteNodeConnect(Resource):
         except Exception as ex:
             msg = "Could not connect to node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class PresentersNodes(Resource):
     """Presenters nodes API endpoint."""
 
     @auth_required("CONFIG_PRESENTERS_NODE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all presenters nodes.
 
         Returns:
             (dict): The presenters nodes
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return presenters_node.PresentersNode.get_all_json(search)
 
     @auth_required("CONFIG_PRESENTERS_NODE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a presenters node.
 
         Returns:
@@ -1343,14 +1350,14 @@ class PresentersNodes(Resource):
         except Exception as ex:
             msg = "Could not create presenters node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class PresentersNode(Resource):
     """Presenters node API endpoint."""
 
     @auth_required("CONFIG_PRESENTERS_NODE_UPDATE")
-    def put(self, node_id):
+    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a presenters node.
 
         Args:
@@ -1363,10 +1370,10 @@ class PresentersNode(Resource):
         except Exception as ex:
             msg = "Could not update presenters node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_PRESENTERS_NODE_DELETE")
-    def delete(self, node_id):
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a presenters node.
 
         Args:
@@ -1379,26 +1386,26 @@ class PresentersNode(Resource):
         except Exception as ex:
             msg = "Could not delete presenters node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class PublisherNodes(Resource):
     """Publisher nodes API endpoint."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all publisher nodes.
 
         Returns:
             (dict): The publisher nodes
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return publishers_node.PublishersNode.get_all_json(search)
 
     @auth_required("CONFIG_PUBLISHERS_NODE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus]:
         """Create a publisher node.
 
         Returns:
@@ -1409,14 +1416,14 @@ class PublisherNodes(Resource):
         except Exception as ex:
             msg = "Could not create publishers node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class PublishersNode(Resource):
     """Publisher node API endpoint."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_UPDATE")
-    def put(self, node_id):
+    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a publisher node.
 
         Args:
@@ -1429,10 +1436,10 @@ class PublishersNode(Resource):
         except Exception as ex:
             msg = "Could not update publishers node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_PUBLISHERS_NODE_DELETE")
-    def delete(self, node_id):
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a publisher node.
 
         Args:
@@ -1445,26 +1452,26 @@ class PublishersNode(Resource):
         except Exception as ex:
             msg = "Could not delete publishers node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class PublisherPresets(Resource):
     """Publisher presets API endpoint."""
 
     @auth_required("CONFIG_PUBLISHER_PRESET_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all publisher presets.
 
         Returns:
             (dict): The publisher presets
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return publisher_preset.PublisherPreset.get_all_json(search)
 
     @auth_required("CONFIG_PUBLISHER_PRESET_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a publisher preset.
 
         Returns:
@@ -1475,14 +1482,14 @@ class PublisherPresets(Resource):
         except Exception as ex:
             msg = "Could not create publishers preset"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class PublisherPreset(Resource):
     """Publisher preset API endpoint."""
 
     @auth_required("CONFIG_PUBLISHER_PRESET_UPDATE")
-    def put(self, preset_id):
+    def put(self, preset_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a publisher preset.
 
         Args:
@@ -1495,10 +1502,10 @@ class PublisherPreset(Resource):
         except Exception as ex:
             msg = "Could not update publishers preset"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_PUBLISHER_PRESET_DELETE")
-    def delete(self, preset_id):
+    def delete(self, preset_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a publisher preset.
 
         Args:
@@ -1511,26 +1518,26 @@ class PublisherPreset(Resource):
         except Exception as ex:
             msg = "Could not delete publishers preset"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class BotNodes(Resource):
     """Bot nodes API endpoint."""
 
     @auth_required("CONFIG_BOTS_NODE_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all bot nodes.
 
         Returns:
             (dict): The bot nodes
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return bots_node.BotsNode.get_all_json(search)
 
     @auth_required("CONFIG_BOTS_NODE_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus]:
         """Create a bot node.
 
         Returns:
@@ -1541,14 +1548,14 @@ class BotNodes(Resource):
         except Exception as ex:
             msg = "Could not create bots node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class BotsNode(Resource):
     """Bot node API endpoint."""
 
     @auth_required("CONFIG_BOTS_NODE_UPDATE")
-    def put(self, node_id):
+    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a bot node.
 
         Args:
@@ -1561,10 +1568,10 @@ class BotsNode(Resource):
         except Exception as ex:
             msg = "Could not update bots node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_BOTS_NODE_DELETE")
-    def delete(self, node_id):
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a bot node.
 
         Args:
@@ -1577,26 +1584,26 @@ class BotsNode(Resource):
         except Exception as ex:
             msg = "Could not delete bots node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class BotPresets(Resource):
     """Bot presets API endpoint."""
 
     @auth_required("CONFIG_BOT_PRESET_ACCESS")
-    def get(self):
+    def get(self) -> tuple[str, dict]:
         """Get all bot presets.
 
         Returns:
             (dict): The bot presets
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return bot_preset.BotPreset.get_all_json(search)
 
     @auth_required("CONFIG_BOT_PRESET_CREATE")
-    def post(self):
+    def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a bot preset.
 
         Returns:
@@ -1607,14 +1614,14 @@ class BotPresets(Resource):
         except Exception as ex:
             msg = "Could not create bots preset"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class BotPreset(Resource):
     """Bot preset API endpoint."""
 
     @auth_required("CONFIG_BOT_PRESET_UPDATE")
-    def put(self, preset_id):
+    def put(self, preset_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a bot preset.
 
         Args:
@@ -1627,10 +1634,10 @@ class BotPreset(Resource):
         except Exception as ex:
             msg = "Could not update bots preset"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_BOT_PRESET_DELETE")
-    def delete(self, preset_id):
+    def delete(self, preset_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a bot preset.
 
         Args:
@@ -1643,10 +1650,10 @@ class BotPreset(Resource):
         except Exception as ex:
             msg = "Could not delete bots preset"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
-            return {"error": msg}, 400
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-def initialize(api):
+def initialize(api: Api) -> None:  # noqa: PLR0915
     """Initialize the API.
 
     Args:
@@ -1684,6 +1691,7 @@ def initialize(api):
 
     api.add_resource(Settings, "/api/v1/config/settings")
     api.add_resource(Setting, "/api/v1/config/settings/<int:setting_id>")
+    api.add_resource(UserSetting, "/api/v1/config/user-settings/<int:setting_id>")
     api.add_resource(WordLists, "/api/v1/config/word-lists")
     api.add_resource(WordList, "/api/v1/config/word-lists/<int:word_list_id>")
 

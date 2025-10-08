@@ -176,8 +176,11 @@ export function getAllSettings(filter) {
     return ApiService.get('/config/settings?search=' + filter.search)
 }
 
-export function updateSetting(setting) {
-    return ApiService.put('/config/settings/' + setting.id, setting)
+export function updateSetting(setting, is_global_setting) {
+    if (is_global_setting)
+        return ApiService.put('/config/settings/' + setting.id, setting)
+    else
+        return ApiService.put('/config/user-settings/' + setting.id, setting)
 }
 
 export function getAllWordLists(filter) {

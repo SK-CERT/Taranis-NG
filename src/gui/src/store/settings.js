@@ -1,26 +1,25 @@
-import { getProfile, updateProfile, getHotkeys, updateHotkeys } from "@/api/user";
+import { getUserWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from "@/api/user";
+import Settings, { getSetting } from "@/services/settings";
 
 const state = {
-    hotkeys: [],
     spellcheck: true,
-    dark_theme: false,
-    language: "",
+    hotkeys: [],
     word_lists: []
 };
 
 const actions = {
 
-    getUserProfile(context) {
-        return getProfile()
+    getUserWordLists(context) {
+        return getUserWordLists()
             .then(response => {
-                context.commit('setUserProfile', response.data);
+                context.commit('setUserWordLists', response.data);
             })
     },
 
-    saveUserProfile(context, data) {
-        return updateProfile(data)
+    saveUserWordLists(context, data) {
+        return updateUserWordLists(data)
             .then(response => {
-                context.commit('setUserProfile', response.data);
+                context.commit('setUserWordLists', response.data);
             })
     },
 
@@ -46,11 +45,8 @@ const actions = {
 
 const mutations = {
 
-    setUserProfile(state, profile) {
-        state.spellcheck = profile.spellcheck
-        state.dark_theme = profile.dark_theme
-        state.language = profile.language
-        state.word_lists = profile.word_lists
+    setUserWordLists(state, word_lists) {
+        state.word_lists = word_lists
     },
 
     setUserHotkeys(state, hotkeys) {
@@ -114,14 +110,6 @@ const mutations = {
 
 const getters = {
 
-    getProfileSpellcheck(state) {
-        return state.spellcheck;
-    },
-
-    getProfileDarkTheme(state) {
-        return state.dark_theme;
-    },
-
     getProfileHotkeys(state) {
         return state.hotkeys;
     },
@@ -130,8 +118,8 @@ const getters = {
         return state.word_lists;
     },
 
-    getProfileLanguage(state) {
-        let lng = state.language;
+    getProfileLanguage() {
+        let lng = getSetting(Settings.LANGUAGE);
         if (!lng) {
             lng = navigator.language.split('-')[0];
         }

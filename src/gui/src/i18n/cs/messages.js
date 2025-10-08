@@ -48,7 +48,6 @@ const messages_cs = {
     user_menu: {
         settings: "Nastavení uživatele",
         logout: "Odhlásit",
-        dark_theme: "Tmavý motiv",
     },
 
     main_menu: {
@@ -810,8 +809,6 @@ const messages_cs = {
         like_item: "Označit jako To se mi líbí",
         unlike_item: "Označit jako To se mi nelíbí",
         delete_item: "Smazat",
-        spellcheck: "Kontrolovat pravopis",
-        dark_theme: "Tmavý motiv",
         press_key: "Stiskněte klávesu pro ",
         selection: "Výběr",
         group: "Seskupit",
@@ -830,6 +827,16 @@ const messages_cs = {
         updated_by: "Upravil",
         updated_at: "Upraveno",
         actions: "Možnosti",
+    },
+
+    settings_enum: {
+        DARK_THEME: "Tmavý motiv",
+        DATE_FORMAT: 'Formát data',
+        LANGUAGE: "Jazyk",
+        NEWS_SHOW_LINK: 'Zobrazit odkaz na zdroj v novinkách',
+        REPORT_SELECTOR_READ_ONLY: 'Otevřít výběr reportů v režimu pouze pro čtení',
+        SPELLCHECK: "Kontrolovat pravopis",
+        TIME_FORMAT: 'Formát času',
     },
 
     word_list: {

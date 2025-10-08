@@ -23,7 +23,7 @@ import {
     getAllSettings,
     getAllWordLists
 } from "@/api/config";
-import {getAllUserProductTypes, getAllUserWordLists} from "@/api/user";
+import {getAllUserProductTypes} from "@/api/user";
 import {getAllOSINTSourceGroupsAssess} from "@/api/assess";
 
 
@@ -160,14 +160,6 @@ const actions = {
     getAllWordLists(context, data) {
 
         return getAllWordLists(data)
-            .then(response => {
-                context.commit('setWordLists', response.data);
-            })
-    },
-
-    getAllUserWordLists(context, data) {
-
-        return getAllUserWordLists(data)
             .then(response => {
                 context.commit('setWordLists', response.data);
             })
