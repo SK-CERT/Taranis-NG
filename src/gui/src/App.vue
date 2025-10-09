@@ -75,7 +75,7 @@
                 this.$store.dispatch('getAllSettings', { search: '' }).then(() => {
                     this.$vuetify.theme.dark = getSettingBoolean(Settings.DARK_THEME);
                     this.$store.state.settings.spellcheck = getSettingBoolean(Settings.SPELLCHECK);
-                    this.$i18n.locale = this.$store.getters.getProfileLanguage
+                    this.$i18n.locale = this.$store.getters.getProfileLanguage;
                 });
                 this.$store.dispatch('getUserWordLists');
                 this.$store.dispatch('getUserHotkeys');

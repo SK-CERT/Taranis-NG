@@ -825,7 +825,7 @@ class Setting(Resource):
         try:
             user = auth_manager.get_user_from_jwt()
             setting.Setting.update_value(setting_id, user.name, request.json)
-            json = setting.Setting.get_json(user, setting_id)
+            json = setting.Setting.get_all_json(user, "")
             return json, HTTPStatus.OK
         except Exception as ex:
             msg = "Could not update global setting"
@@ -845,13 +845,14 @@ class UserSetting(Resource):
         Returns:
             (str, int): The result of the update
         """
+        msg = "Could not update user setting"
         try:
             user = auth_manager.get_user_from_jwt()
-            setting.SettingUser.update_value(setting_id, user.id, request.json)
-            json = setting.Setting.get_json(user, setting_id)
+            if not setting.SettingUser.update_value(setting_id, user.id, request.json):
+                return {"error": msg}, HTTPStatus.BAD_REQUEST
+            json = setting.Setting.get_all_json(user, "")
             return json, HTTPStatus.OK
         except Exception as ex:
-            msg = "Could not update user setting"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 

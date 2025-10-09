@@ -38,7 +38,7 @@ div.v-dialog__content header {
 }
 
 #app.theme--dark .wordlist {
-    color: black;
+    background-color: #995c00;
     font-weight: bold;
 }
 

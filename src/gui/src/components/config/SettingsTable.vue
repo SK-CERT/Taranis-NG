@@ -95,7 +95,6 @@
 </template>
 
 <script>
-    import { updateSetting } from "@/api/config";
     import AuthMixin from "@/services/auth/auth_mixin";
     import { format } from "date-fns";
     import Settings, { getSetting, getSettingBoolean } from "@/services/settings";
@@ -148,16 +147,14 @@
                 return dateString ? format(new Date(dateString), this.date_format) : "";
             },
 
-            fetchRecords() {
+            initRecords() {
                 var dateFmt = getSetting(Settings.DATE_FORMAT, "yyyy-MM-dd");
                 var timeFmt = getSetting(Settings.TIME_FORMAT, "HH:mm:ss");
                 if (dateFmt != "" && timeFmt != "") {
                     this.date_format = dateFmt + " " + timeFmt;
                 }
-                this.$store.dispatch('getAllSettings', { search: '' }).then(() => {
-                    const allItems = this.$store.getters.getSettings.items;
-                    this.records = allItems.filter(item => item.is_global === this.glob_setting);
-                });
+                const allItems = this.$store.getters.getSettings;
+                this.records = allItems.filter(item => item.is_global === this.glob_setting);
             },
 
             save(item) {
@@ -184,8 +181,8 @@
                 }
                 this.setting.value = String(val)
                 // console.log('saving corrected value:', this.setting.value, 'Object:', this.setting)
-                updateSetting(this.setting, this.glob_setting).then((response) => {
-                    Object.assign(item, response.data);
+                this.$store.dispatch('saveSettings', { data: this.setting, is_global: this.glob_setting }).then(() => {
+                    this.initRecords()
                     // Some special settings require immediate application
                     if (this.setting.key === Settings.DARK_THEME) {
                         this.$vuetify.theme.dark = getSettingBoolean(Settings.DARK_THEME);
@@ -220,7 +217,9 @@
         },
 
         mounted() {
-            this.fetchRecords();
-        }
+            this.$store.dispatch('getAllSettings', { search: '' }).then(() => {
+                this.initRecords()
+            });
+        },
     };
 </script>

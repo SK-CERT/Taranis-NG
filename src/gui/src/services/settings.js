@@ -13,11 +13,11 @@ const Settings = {
 };
 
 export function getSetting(key, def_value = "") {
-    if (!store.getters.getSettings.items || store.getters.getSettings.items.length === 0) {
+    if (!store.getters.getSettings || store.getters.getSettings.length === 0) {
         console.error("Settings not inicialized!")
         return "";
     }
-    var setting = store.getters.getSettings.items.find(item => item.key === key);
+    var setting = store.getters.getSettings.find(item => item.key === key);
     if (!setting) {
         console.error("Missing settings key:", key, "Using default value:", def_value)
         return def_value;

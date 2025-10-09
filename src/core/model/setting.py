@@ -64,7 +64,7 @@ class SettingUser(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_value(cls, setting_id: int, user_id: int, data: dict) -> None:
+    def update_value(cls, setting_id: int, user_id: int, data: dict) -> bool:
         """Update the value of an existing user setting.
 
         Args:
@@ -75,16 +75,17 @@ class SettingUser(db.Model):
         schema = SettingValueSchema()
         updated_record = schema.load(data)
         if updated_record.is_global:
-            return
+            return False
 
         record = db.session.get(cls, updated_record.user_setting_id)
         if record:
             record.value = updated_record.value
             record.updated_at = datetime.now(TZ)
             db.session.commit()
-            return
+            return True
         # If the setting is global or record does not exist, add a new user setting
         cls.add_new(setting_id, user_id, updated_record.value)
+        return True
 
     @classmethod
     def find(cls, user_setting_id: int) -> SettingUser:
@@ -276,14 +277,14 @@ class Setting(db.Model):
         return query.first()
 
     @classmethod
-    def get_all(cls, user: User, search: str) -> tuple[list[Setting], int]:
+    def get_all(cls, user: User, search: str) -> list[Setting]:
         """Get all settings ordered by description.
 
         Returns:
             list: List of all settings.
         """
         query = cls._get_main_query(user, search, None, None, None)
-        return query.all(), query.count()
+        return query.all()
 
     @classmethod
     def get_json(cls, user: User, setting_id: int) -> dict:
@@ -309,11 +310,11 @@ class Setting(db.Model):
             search (str): Search query.
 
         Returns:
-            dict: Dictionary containing total count and list of settings in JSON format.
+            dict: Dictionary containing list of settings in JSON format.
         """
-        records, count = cls.get_all(user, search)
+        records = cls.get_all(user, search)
         schema = SettingSchema(many=True)
-        return {"total_count": count, "items": schema.dump(records)}
+        return schema.dump(records)
 
     @classmethod
     def get_setting(cls, user: User, key: str, default_value: str = "") -> str:

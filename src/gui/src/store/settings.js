@@ -1,13 +1,29 @@
 import { getUserWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from "@/api/user";
+import { getAllSettings, updateSetting } from "@/api/config";
 import Settings, { getSetting } from "@/services/settings";
 
 const state = {
+    settings: [],
     spellcheck: true,
     hotkeys: [],
     word_lists: []
 };
 
 const actions = {
+
+    getAllSettings(context, data) {
+        return getAllSettings(data)
+            .then(response => {
+                context.commit('setSettings', response.data);
+            })
+    },
+
+    saveSettings(context, {data, is_global} ) {
+        return updateSetting(data, is_global)
+            .then(response => {
+                context.commit('setSettings', response.data);
+            })
+    },
 
     getUserWordLists(context) {
         return getUserWordLists()
@@ -44,6 +60,10 @@ const actions = {
 };
 
 const mutations = {
+
+    setSettings(state, new_settings) {
+        state.settings = new_settings
+    },
 
     setUserWordLists(state, word_lists) {
         state.word_lists = word_lists
@@ -109,6 +129,10 @@ const mutations = {
 };
 
 const getters = {
+
+    getSettings(state) {
+        return state.settings
+    },
 
     getProfileHotkeys(state) {
         return state.hotkeys;
