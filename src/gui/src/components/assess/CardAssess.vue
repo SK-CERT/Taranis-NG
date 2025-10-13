@@ -60,7 +60,7 @@
                                                 <div class="subtitle-2"> {{ $t('card_item.aggregated_items') }}: {{ card.news_items.length }}</div>
                                             </v-btn>
                                         </template>
-                                        <template v-else>
+                                        <template v-else-if="show_link">
                                             <div class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
                                                 {{ itemLink }}
                                             </div>
@@ -173,6 +173,7 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
     import MessageBox from "@/components/common/MessageBox"
+    import Settings, { getSettingBoolean } from "@/services/settings";
 
     export default {
         name: "CardAssess",
@@ -193,6 +194,7 @@
             opened: false,
             selected: false,
             msgbox_visible: false,
+            show_link: true,
         }),
         computed: {
             canAccess() {
@@ -447,6 +449,7 @@
             this.$root.$on('check-focus', (id) => {
                 this.setFocus(id);
             });
+            this.show_link = getSettingBoolean(Settings.NEWS_SHOW_LINK);
         },
         beforeDestroy() {
             this.$root.$off('multi-select-off', this.multiSelectOff);

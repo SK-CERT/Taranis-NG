@@ -50,7 +50,7 @@
             <template v-else>
                 <v-edit-dialog v-model="item.value"
                                large
-                               @save="save(item)"
+                               @save="save()"
                                @cancel="cancel"
                                @open="open(item)"
                                @close="close">
@@ -157,7 +157,7 @@
                 this.records = allItems.filter(item => item.is_global === this.glob_setting);
             },
 
-            save(item) {
+            save() {
                 // console.log('saving value:', this.setting.value)
                 var val = this.setting.value.trim();
                 if (this.setting.type == 'B') {
