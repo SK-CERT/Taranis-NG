@@ -76,7 +76,7 @@
                                     <span class="display-1 font-weight-light py-4">{{news_item.news_item_data.title}}</span>
                                 </v-row>
                                 <v-row class="py-4">
-                                    <span class="body-2 grey--text text--darken-1">{{news_item.news_item_data.content}}</span>
+                                    <span class="body-2 grey--text text--darken-1" v-html="news_item.news_item_data.content"></span>
                                 </v-row>
 
                                 <!-- LINKS -->
