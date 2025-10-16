@@ -91,7 +91,7 @@ def upgrade() -> None:
         {"id": "sk", "txt": "Slovak"},
     ]
     SettingS2.add(session, "LANGUAGE", "S", "en", "Language", is_global=False, options=json.dumps(options))
-    SettingS2.add(session, "NEWS_SHOW_SOURCE_LINK", "B", "true", "Show source links on news items", is_global=False, options="")
+    SettingS2.add(session, "NEWS_SHOW_SOURCE_LINK", "B", "true", "Show source link on news items", is_global=False, options="")
 
     session.commit()
 

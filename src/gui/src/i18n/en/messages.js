@@ -867,7 +867,7 @@ const messages_en = {
         DARK_THEME: "Dark Theme",
         DATE_FORMAT: 'Date format',
         LANGUAGE: "Language",
-        NEWS_SHOW_SOURCE_LINK: 'Show source link in news items',
+        NEWS_SHOW_SOURCE_LINK: 'Show source link on news items',
         REPORT_SELECTOR_READ_ONLY: 'Open the Report Item selector in Read-Only mode',
         SPELLCHECK: "Spellcheck",
         TIME_FORMAT: 'Time format',
