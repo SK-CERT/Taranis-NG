@@ -1,26 +1,41 @@
-import { getProfile, updateProfile, getHotkeys, updateHotkeys } from "@/api/user";
+import { getUserWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from "@/api/user";
+import { getAllSettings, updateSetting } from "@/api/config";
+import Settings, { getSetting } from "@/services/settings";
 
 const state = {
-    hotkeys: [],
+    settings: [],
     spellcheck: true,
-    dark_theme: false,
-    language: "",
+    hotkeys: [],
     word_lists: []
 };
 
 const actions = {
 
-    getUserProfile(context) {
-        return getProfile()
+    getAllSettings(context, data) {
+        return getAllSettings(data)
             .then(response => {
-                context.commit('setUserProfile', response.data);
+                context.commit('setSettings', response.data);
             })
     },
 
-    saveUserProfile(context, data) {
-        return updateProfile(data)
+    saveSettings(context, {data, is_global} ) {
+        return updateSetting(data, is_global)
             .then(response => {
-                context.commit('setUserProfile', response.data);
+                context.commit('setSettings', response.data);
+            })
+    },
+
+    getUserWordLists(context) {
+        return getUserWordLists()
+            .then(response => {
+                context.commit('setUserWordLists', response.data);
+            })
+    },
+
+    saveUserWordLists(context, data) {
+        return updateUserWordLists(data)
+            .then(response => {
+                context.commit('setUserWordLists', response.data);
             })
     },
 
@@ -46,11 +61,12 @@ const actions = {
 
 const mutations = {
 
-    setUserProfile(state, profile) {
-        state.spellcheck = profile.spellcheck
-        state.dark_theme = profile.dark_theme
-        state.language = profile.language
-        state.word_lists = profile.word_lists
+    setSettings(state, new_settings) {
+        state.settings = new_settings
+    },
+
+    setUserWordLists(state, word_lists) {
+        state.word_lists = word_lists
     },
 
     setUserHotkeys(state, hotkeys) {
@@ -114,12 +130,8 @@ const mutations = {
 
 const getters = {
 
-    getProfileSpellcheck(state) {
-        return state.spellcheck;
-    },
-
-    getProfileDarkTheme(state) {
-        return state.dark_theme;
+    getSettings(state) {
+        return state.settings
     },
 
     getProfileHotkeys(state) {
@@ -130,8 +142,8 @@ const getters = {
         return state.word_lists;
     },
 
-    getProfileLanguage(state) {
-        let lng = state.language;
+    getProfileLanguage() {
+        let lng = getSetting(Settings.LANGUAGE);
         if (!lng) {
             lng = navigator.language.split('-')[0];
         }

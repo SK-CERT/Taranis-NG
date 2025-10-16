@@ -30,28 +30,9 @@
                         <!-- #tab-1 -->
                         <v-tab-item value="tab-1" class="pa-0">
                             <v-container fluid>
-                                <v-row justify="center" align="center">
-                                    <v-col>
-                                        <v-switch
-                                            v-model="spellcheck"
-                                            :label="$t('settings.spellcheck')"
-                                        ></v-switch>
-                                    </v-col>
-                                    <v-col>
-                                        <v-switch
-                                            v-model="dark_theme" @change="darkToggle"
-                                            :label="$t('settings.dark_theme')"
-                                        ></v-switch>
-                                    </v-col>
-                                    <v-col>
-                                        <v-select v-model="language" @change="languageChage"
-                                                  :value="language"
-                                                  :items="languages"
-                                                  item-text="value"
-                                                  item-value="id"
-                                                  label="Language"></v-select>
-                                    </v-col>
-                                </v-row>
+                                <template>
+                                    <SettingsTable :glob_setting="false"></SettingsTable>
+                                </template>
                             </v-container>
                         </v-tab-item>
 
@@ -140,17 +121,16 @@
 <script>
     import Permissions from "@/services/auth/permissions";
     import AuthMixin from "@/services/auth/auth_mixin";
+    import SettingsTable from "@/components/config/SettingsTable.vue";
 
     export default {
         name: "UserSettings",
         components: {
+            SettingsTable
         },
         mixins: [AuthMixin],
         data: () => ({
             visible: false,
-            dark_theme: false,
-            language: 'en',
-            spellcheck: null,
             pressKeyVisible: false,
             shortcuts: [],
             hotkeyAlias: '',
@@ -160,46 +140,25 @@
                     align: 'start',
                     value: 'name',
                 },
-                {text: 'Description', value: 'description'},
+                { text: 'Description', value: 'description' },
             ],
             word_lists: [],
             selected_word_lists: [],
-            languages: [
-                { id: 'en', value: 'English' },
-                { id: 'cs', value: 'Czech' },
-                { id: 'sk', value: 'Slovak' },
-            ],
         }),
         methods: {
             close() {
                 this.visible = false;
-                // set original settings values if no SAVE is selected
-                this.$vuetify.theme.dark = this.$store.getters.getProfileDarkTheme
-                this.$i18n.locale = this.$store.getters.getProfileLanguage
             },
 
             save() {
                 Promise.all([
-                    this.$store.dispatch('saveUserProfile', {
-                        spellcheck: this.spellcheck,
-                        dark_theme: this.dark_theme,
-                        language: this.language,
-                        word_lists: this.selected_word_lists,
-                    }),
-                    this.$store.dispatch('saveUserHotkeys', this.shortcuts )
+                    this.$store.dispatch('saveUserWordLists', this.selected_word_lists),
+                    this.$store.dispatch('saveUserHotkeys', this.shortcuts)
                 ]).then(() => {
                     this.visible = false;
                 }).catch(error => {
                     console.error('Save user profile error:', error);
                 });
-            },
-
-            darkToggle() {
-                this.$vuetify.theme.dark = this.dark_theme
-            },
-
-            languageChage() {
-                this.$i18n.locale = this.language
             },
 
             pressKeyDialog(event) {
@@ -212,12 +171,12 @@
             pressKey(event) {
                 // Beware! pressed keys are active also on background window when you try setting a new hotkey
                 // wait for a "real" key, don't cancel dialog on modifier key, otherwise you can't choose uppercase letters and other keys
-                if (event.key == "Alt" || event.key == "Shift" || event.key == "Control" ) {
+                if (event.key == "Alt" || event.key == "Shift" || event.key == "Control") {
                     return;
                 }
 
                 let key = event;
-                let hotkeyIndex = this.shortcuts.map(function(e){ return e.alias; }).indexOf(this.hotkeyAlias);
+                let hotkeyIndex = this.shortcuts.map(function (e) { return e.alias; }).indexOf(this.hotkeyAlias);
 
                 window.removeEventListener("keydown", this.pressKey);
 
@@ -245,15 +204,12 @@
         mounted() {
             this.$root.$on('show-user-settings', () => {
                 this.visible = true;
-                this.spellcheck = this.$store.getters.getProfileSpellcheck
-                this.dark_theme = this.$store.getters.getProfileDarkTheme
-                this.language = this.$store.getters.getProfileLanguage
                 this.selected_word_lists = this.$store.getters.getProfileWordLists
                 this.shortcuts = JSON.parse(JSON.stringify(this.$store.getters.getProfileHotkeys)) // Deep copy, don't change the original object until save
             });
 
             if (this.checkPermission(Permissions.ASSESS_ACCESS)) {
-                this.$store.dispatch('getAllUserWordLists', {search: ''})
+                this.$store.dispatch('getAllWordLists', { search: '' })
                     .then(() => {
                         this.word_lists = this.$store.getters.getWordLists.items
                     });

@@ -215,6 +215,7 @@ class BasePresenter:
             cvss_high_threshold = 7
             cvss_medium_threshold = 4
             cvss_low_threshold = 0.1
+            cvss_dict = {"baseScore": 0, "baseSeverity": "NONE"}
             try:
                 if cvss_vector.startswith("CVSS:3."):
                     c = CVSS3(cvss_vector)
@@ -227,9 +228,7 @@ class BasePresenter:
                     cvss_dict = c.as_json()
             except Exception:
                 try:
-                    if cvss_vector == "":
-                        cvss_dict = {}
-                    else:
+                    if cvss_vector:
                         num = float(cvss_vector)
                         # based on CVSS 3.1
                         if num >= cvss_critical_threshold:
@@ -245,7 +244,6 @@ class BasePresenter:
                         cvss_dict = {"baseScore": num, "baseSeverity": desc}
                 except ValueError:
                     logger.error(f"CVSS parsing failed: '{cvss_vector}' is not a valid vector or number.")
-                    cvss_dict = {}
 
             return cvss_dict
 

@@ -1,13 +1,5 @@
 import ApiService from "@/services/api_service";
 
-export function getProfile() {
-    return ApiService.get(`/users/my-profile`)
-}
-
-export function updateProfile(data) {
-    return ApiService.put(`/users/my-profile`, data)
-}
-
 export function getHotkeys() {
     return ApiService.get(`/users/my-hotkeys`)
 }
@@ -16,8 +8,12 @@ export function updateHotkeys(data) {
     return ApiService.put(`/users/my-hotkeys`, data)
 }
 
-export function getAllUserWordLists() {
+export function getUserWordLists() {
     return ApiService.get('/users/my-word-lists')
+}
+
+export function updateUserWordLists(data) {
+    return ApiService.put(`/users/my-word-lists`, data)
 }
 
 export function getAllUserProductTypes() {

@@ -1,33 +1,25 @@
 """User module for the model representing a user in the system."""
 
-from marshmallow import fields, post_load
-from sqlalchemy import or_, orm
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.user import User
 
 from managers.db_manager import db
-from model.role import Role
-from model.permission import Permission
+from marshmallow import EXCLUDE, Schema, fields, post_load
 from model.organization import Organization
-from shared.schema.user import UserSchemaBase, UserProfileSchema, HotkeySchema, UserPresentationSchema
-from shared.schema.role import RoleIdSchema, PermissionIdSchema
-from shared.schema.organization import OrganizationIdSchema
-from shared.schema.word_list import WordListIdSchema
+from model.permission import Permission
+from model.role import Role
+from model.word_list import WordList
+from sqlalchemy import or_, orm
 from werkzeug.security import generate_password_hash
 
-
-class NewHotkeySchema(HotkeySchema):
-    """Represents a schema for creating a new hotkey."""
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a new Hotkey instance based on the given data.
-
-        Args:
-            data (dict): A dictionary containing the data for the Hotkey.
-            **kwargs: Additional keyword arguments.
-        Returns:
-            Hotkey: A new Hotkey instance.
-        """
-        return Hotkey(**data)
+from shared.schema.organization import OrganizationIdSchema
+from shared.schema.role import PermissionIdSchema, RoleIdSchema
+from shared.schema.user import HotkeySchema, UserPresentationSchema, UserSchemaBase
+from shared.schema.word_list import WordListSchema
 
 
 class Hotkey(db.Model):
@@ -38,6 +30,7 @@ class Hotkey(db.Model):
         key (str): The key associated with the hotkey.
         alias (str): The alias for the hotkey.
         user_id (int): The foreign key referencing the user.
+
     Args:
         db.Model: The base class for all models in the application.
     """
@@ -47,34 +40,35 @@ class Hotkey(db.Model):
     alias = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-    def __init__(self, key, alias):
+    def __init__(self, key: str, alias: str) -> None:
         """Initialize a User object."""
         self.id = None
         self.key = key
         self.alias = alias
 
     @classmethod
-    def get_json(cls, user):
+    def get_json(cls, user: User) -> dict:
         """Return the JSON representation of a user's hotkeys.
 
         Args:
             cls (class): The class object.
             user (User): The user object.
+
         Returns:
             dict: The JSON representation of the user's hotkeys.
         """
         schema = HotkeySchema(many=True)
-        data = schema.dump(user.hotkeys)
-        return data
+        return schema.dump(user.hotkeys)
 
     @classmethod
-    def update(cls, user, data):
+    def update(cls, user: User, data: dict) -> dict:
         """Update the user's hotkeys with the provided data.
 
         Args:
             cls (class): The class object.
             user (User): The user object to update the hotkeys for.
             data (dict): The data containing the updated hotkeys information.
+
         Returns:
             dict: The updated hotkeys information in JSON format.
         """
@@ -86,48 +80,21 @@ class Hotkey(db.Model):
         return cls.get_json(user)
 
 
-class NewUserSchema(UserSchemaBase):
-    """NewUserSchema class for defining the schema of a new user.
-
-    Attributes:
-        roles (Nested): A nested field representing the roles of the user.
-        permissions (Nested): A nested field representing the permissions of the user.
-        organizations (Nested): A nested field representing the organizations the user belongs to.
-    Returns:
-        User: A User object created from the given data.
-    """
-
-    roles = fields.Nested(RoleIdSchema, many=True)
-    permissions = fields.Nested(PermissionIdSchema, many=True)
-    organizations = fields.Nested(OrganizationIdSchema, many=True)
+class NewHotkeySchema(HotkeySchema):
+    """Represents a schema for creating a new hotkey."""
 
     @post_load
-    def make(self, data, **kwargs):
-        """Create a new User object based on the provided data.
+    def make(self, data: dict, **kwargs) -> Hotkey:  # noqa: ANN003, ARG002
+        """Create a new Hotkey instance based on the given data.
 
         Args:
-            data (dict): A dictionary containing the user data.
+            data (dict): A dictionary containing the data for the Hotkey.
             **kwargs: Additional keyword arguments.
+
         Returns:
-            User: A new User object initialized with the provided data.
+            Hotkey: A new Hotkey instance.
         """
-        return User(**data)
-
-
-class UpdateUserSchema(UserSchemaBase):
-    """Schema for updating user information.
-
-    Attributes:
-        password (str): The user's password. If not provided, the password will not be updated.
-        roles (list): A list of role IDs assigned to the user.
-        permissions (list): A list of permission IDs assigned to the user.
-        organizations (list): A list of organization IDs associated with the user.
-    """
-
-    password = fields.Str(load_default=None, allow_none=True)
-    roles = fields.Nested(RoleIdSchema, many=True)
-    permissions = fields.Nested(PermissionIdSchema, many=True)
-    organizations = fields.Nested(OrganizationIdSchema, many=True)
+        return Hotkey(**data)
 
 
 class User(db.Model):
@@ -141,8 +108,6 @@ class User(db.Model):
         organizations (list): The organizations the user belongs to.
         roles (list): The roles assigned to the user.
         permissions (list): The permissions granted to the user.
-        profile_id (int): The ID of the user's profile.
-        profile (UserProfile): The profile of the user.
         title (str): The title of the user.
         subtitle (str): The subtitle of the user.
         tag (str): The tag associated with the user.
@@ -156,13 +121,33 @@ class User(db.Model):
     organizations = db.relationship("Organization", secondary="user_organization")
     roles = db.relationship(Role, secondary="user_role")
     permissions = db.relationship(Permission, secondary="user_permission", lazy="joined")
-
-    profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"))
-    profile = db.relationship("UserProfile", cascade="all", lazy="joined")
     hotkeys = db.relationship(Hotkey, cascade="all, delete-orphan", lazy="joined")
+    word_lists = db.relationship(WordList, secondary="user_word_list", lazy="joined")
 
-    def __init__(self, id, username, name, password, organizations, roles, permissions):
-        """Initialize a User object with the given parameters."""
+    def __init__(
+        self,
+        id: int,  # noqa: A002, ARG002
+        username: str,
+        name: str,
+        password: str,
+        organizations: list,
+        roles: list,
+        permissions: list,
+    ) -> None:
+        """Initialize a User object with the given parameters.
+
+        Args:
+            id (int): The unique identifier of the user.
+            username (str): The username of the user.
+            name (str): The name of the user.
+            password (str): The password of the user.
+            organizations (list): The organizations the user belongs to.
+            roles (list): The roles assigned to the user.
+            permissions (list): The permissions granted to the user.
+
+        Returns:
+            None
+        """
         self.id = None
         self.username = username
         self.name = name
@@ -183,47 +168,47 @@ class User(db.Model):
                 self.permissions.append(Permission.find(permission.id))
 
         self.hotkeys = []
+        self.word_lists = []
 
-        self.profile = UserProfile(True, False, None, [])
         self.title = ""
         self.subtitle = ""
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the user object."""
         self.title = self.name
         self.subtitle = self.username
         self.tag = "mdi-account"
 
     @classmethod
-    def find(cls, username):
+    def find(cls, username: str) -> User | None:
         """Find a user by their username.
 
         Args:
             cls: The class object.
             username: The username of the user to find.
+
         Returns:
             The user object if found, None otherwise.
         """
-        user = cls.query.filter_by(username=username).first()
-        return user
+        return cls.query.filter_by(username=username).first()
 
     @classmethod
-    def find_by_id(cls, user_id):
+    def find_by_id(cls, user_id: int) -> User | None:
         """Find a user by their ID.
 
         Args:
             cls: The class object.
             user_id: The ID of the user to find.
+
         Returns:
             The user object if found, None otherwise.
         """
-        user = db.session.get(cls, user_id)
-        return user
+        return db.session.get(cls, user_id)
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[User]:
         """Retrieve all instances of the User class from the database.
 
         Returns:
@@ -232,13 +217,14 @@ class User(db.Model):
         return cls.query.order_by(db.asc(User.name)).all()
 
     @classmethod
-    def get(cls, search, organization):
+    def get(cls, search: str, organization: Organization | None) -> tuple[list[User], int]:
         """Retrieve users based on search criteria and organization.
 
         Args:
             cls: The class object.
             search (str): The search string to filter users by name or username.
             organization: The organization to filter users by.
+
         Returns:
             tuple: A tuple containing two elements:
                     A list of users matching the search criteria and organization, ordered by name.
@@ -256,12 +242,13 @@ class User(db.Model):
         return query.order_by(db.asc(User.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Retrieve all users matching the given search criteria and returns them as a JSON object.
 
         Args:
             cls: The class object.
             search: The search criteria.
+
         Returns:
             A JSON object containing the total count of users and a list of user items matching the search criteria.
         """
@@ -270,13 +257,14 @@ class User(db.Model):
         return {"total_count": count, "items": user_schema.dump(users)}
 
     @classmethod
-    def get_all_external_json(cls, user, search):
+    def get_all_external_json(cls, user: User, search: str) -> dict:
         """Retrieve all external JSON data for a given user.
 
         Args:
             cls (class): The class object.
             user (User): The user object.
             search (str): The search query.
+
         Returns:
             dict: A dictionary containing the total count and items of the retrieved data.
         """
@@ -288,7 +276,7 @@ class User(db.Model):
         return {"total_count": count, "items": user_schema.dump(users)}
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new user to the database.
 
         Args:
@@ -300,7 +288,7 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def add_new_external(cls, user, permissions, data):
+    def add_new_external(cls, user: User, permissions: list, data: dict) -> None:
         """Add a new external user to the system.
 
         Args:
@@ -322,7 +310,7 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, user_id, data):
+    def update(cls, user_id: int, data: dict) -> None:
         """Update a user with the given user_id using the provided data.
 
         Args:
@@ -355,7 +343,7 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_external(cls, current_user, assets_permissions, user_id, data):
+    def update_external(cls, current_user: User, assets_permissions: list, user_id: int, data: dict) -> None:
         """Update an external user with the provided data.
 
         Args:
@@ -377,38 +365,37 @@ class User(db.Model):
             user.permissions = []
             for p in user_data["permissions"]:
                 perm = Permission.find(p.id)
-                if perm:
-                    if perm.id in assets_permissions:
-                        user.permissions.append(perm)
+                if perm and perm.id in assets_permissions:
+                    user.permissions.append(perm)
             db.session.commit()
 
     @classmethod
-    def delete(cls, id):
+    def delete(cls, user_id: int) -> None:
         """Delete a user from the database.
 
         Args:
             cls (class): The class representing the user model.
-            id (int): The ID of the user to be deleted.
+            user_id (int): The ID of the user to be deleted.
         """
-        user = db.session.get(cls, id)
+        user = db.session.get(cls, user_id)
         db.session.delete(user)
         db.session.commit()
 
     @classmethod
-    def delete_external(cls, user, id):
+    def delete_external(cls, user: User, user_id: int) -> None:
         """Delete an external user from the database.
 
         Args:
             cls (class): The class object.
             user (User): The user performing the deletion.
-            id (int): The ID of the user to be deleted.
+            user_id (int): The ID of the user to be deleted.
         """
-        existing_user = db.session.get(cls, id)
+        existing_user = db.session.get(cls, user_id)
         if any(org in user.organizations for org in existing_user.organizations):
             db.session.delete(existing_user)
             db.session.commit()
 
-    def get_permissions(self):
+    def get_permissions(self) -> list[int]:
         """Return a list of all permissions associated with the user.
 
         Returns:
@@ -424,7 +411,7 @@ class User(db.Model):
 
         return list(all_permissions)
 
-    def get_current_organization_name(self):
+    def get_current_organization_name(self) -> str:
         """Return the name of the current organization.
 
         Returns:
@@ -432,49 +419,53 @@ class User(db.Model):
         """
         if len(self.organizations) > 0:
             return self.organizations[0].name
-        else:
-            return ""
+        return ""
 
-    @classmethod
-    def get_profile_json(cls, user):
-        """Return the JSON representation of a user's profile.
+
+class NewUserSchema(UserSchemaBase):
+    """NewUserSchema class for defining the schema of a new user.
+
+    Attributes:
+        roles (Nested): A nested field representing the roles of the user.
+        permissions (Nested): A nested field representing the permissions of the user.
+        organizations (Nested): A nested field representing the organizations the user belongs to.
+
+    Returns:
+        User: A User object created from the given data.
+    """
+
+    roles = fields.Nested(RoleIdSchema, many=True)
+    permissions = fields.Nested(PermissionIdSchema, many=True)
+    organizations = fields.Nested(OrganizationIdSchema, many=True)
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> User:  # noqa: ANN003, ARG002
+        """Create a new User object based on the provided data.
 
         Args:
-            cls (class): The class object.
-            user (User): The user object.
+            data (dict): A dictionary containing the user data.
+            **kwargs: Additional keyword arguments.
+
         Returns:
-            dict: The JSON representation of the user's profile.
+            User: A new User object initialized with the provided data.
         """
-        profile_schema = UserProfileSchema()
-        return profile_schema.dump(user.profile)
+        return User(**data)
 
-    @classmethod
-    def update_profile(cls, user, data):
-        """Update the user's profile with the provided data.
 
-        Args:
-            cls (class): The class object.
-            user (User): The user object to update the profile for.
-            data (dict): The data containing the updated profile information.
-        Returns:
-            dict: The updated profile information in JSON format.
-        """
-        new_profile_schema = NewUserProfileSchema()
-        updated_profile = new_profile_schema.load(data)
+class UpdateUserSchema(UserSchemaBase):
+    """Schema for updating user information.
 
-        user.profile.spellcheck = updated_profile.spellcheck
-        user.profile.dark_theme = updated_profile.dark_theme
-        user.profile.language = updated_profile.language
-        user.profile.word_lists = []
-        from model.word_list import WordList
+    Attributes:
+        password (str): The user's password. If not provided, the password will not be updated.
+        roles (list): A list of role IDs assigned to the user.
+        permissions (list): A list of permission IDs assigned to the user.
+        organizations (list): A list of organization IDs associated with the user.
+    """
 
-        for word_list in updated_profile.word_lists:
-            if WordList.allowed_with_acl(word_list.id, user, True, False, False):
-                user.profile.word_lists.append(word_list)
-
-        db.session.commit()
-
-        return cls.get_profile_json(user)
+    password = fields.Str(load_default=None, allow_none=True)
+    roles = fields.Nested(RoleIdSchema, many=True)
+    permissions = fields.Nested(PermissionIdSchema, many=True)
+    organizations = fields.Nested(OrganizationIdSchema, many=True)
 
 
 class UserOrganization(db.Model):
@@ -513,67 +504,75 @@ class UserPermission(db.Model):
     permission_id = db.Column(db.String, db.ForeignKey("permission.id"), primary_key=True)
 
 
-class NewUserProfileSchema(UserProfileSchema):
-    """Schema for creating a new user profile.
+class UserWordList(db.Model):
+    """Model class representing the association table between User and WordList.
 
     Attributes:
-        word_lists (List[Nested[WordListIdSchema]]): A list of nested schemas for word lists.
-        hotkeys (List[Nested[NewHotkeySchema]]): A list of nested schemas for hotkeys.
-    """
-
-    word_lists = fields.List(fields.Nested(WordListIdSchema))
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a new UserProfile instance based on the given data.
-
-        Args:
-            data (dict): A dictionary containing the data for the UserProfile.
-            **kwargs: Additional keyword arguments.
-        Returns:
-            UserProfile: A new UserProfile instance.
-        """
-        return UserProfile(**data)
-
-
-class UserProfile(db.Model):
-    """Represent a user profile.
-
-    Attributes:
-        id (int): The unique identifier for the user profile.
-        spellcheck (bool): Indicates whether spellcheck is enabled for the user.
-        dark_theme (bool): Indicates whether dark theme is enabled for the user.
-        language (str): The language code for the user's preferred language.
-        word_lists (list): A list of word lists associated with the user profile.
-    """
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    spellcheck = db.Column(db.Boolean, default=True)
-    dark_theme = db.Column(db.Boolean, default=False)
-    language = db.Column(db.String(2))
-    word_lists = db.relationship("WordList", secondary="user_profile_word_list", lazy="joined")
-
-    def __init__(self, spellcheck, dark_theme, language, word_lists):
-        """Initialize a User object with the given parameters."""
-        self.id = None
-        self.spellcheck = spellcheck
-        self.dark_theme = dark_theme
-        self.language = language
-        self.word_lists = []
-        from model.word_list import WordList
-
-        for word_list in word_lists:
-            self.word_lists.append(WordList.find(word_list.id))
-
-
-class UserProfileWordList(db.Model):
-    """Model class representing the association table between UserProfile and WordList.
-
-    Attributes:
-        user_profile_id (int): The ID of the user profile.
+        user_id (int): The ID of the user.
         word_list_id (int): The ID of the word list.
     """
 
-    user_profile_id = db.Column(db.Integer, db.ForeignKey("user_profile.id"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
     word_list_id = db.Column(db.Integer, db.ForeignKey("word_list.id"), primary_key=True)
+
+    def __init__(self, user_id: int, word_list_id: int) -> None:
+        """Initialize a UserWordList object."""
+        self.user_id = user_id
+        self.word_list_id = word_list_id
+
+    @classmethod
+    def get_json(cls, user: User) -> dict:
+        """Return the JSON representation of a user's word lists.
+
+        Args:
+            cls (class): The class object.
+            user (User): The user object.
+
+        Returns:
+            dict: The JSON representation of the user's word lists.
+        """
+        schema = WordListSchema(many=True)
+        return schema.dump(user.word_lists)
+
+    @classmethod
+    def update(cls, user: User, data: dict) -> dict:
+        """Update the user's word list with the provided data.
+
+        Args:
+            cls (class): The class object.
+            user (User): The user object to update the word list for.
+            data (dict): The data containing the updated word list information.
+
+        Returns:
+            dict: The updated word list information in JSON format.
+        """
+        ids = [item["id"] for item in data]
+        user.word_lists = [db.session.get(WordList, i) for i in ids if i is not None]
+
+        db.session.commit()
+        return cls.get_json(user)
+
+
+class NewUserWordListSchema(Schema):
+    """Represents a schema for creating a new UserWordList."""
+
+    class Meta:
+        """Meta class to define schema behavior."""
+
+        unknown = EXCLUDE
+
+    user_id = fields.Int()
+    word_list_id = fields.Int()
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> UserWordList:  # noqa: ANN003, ARG002
+        """Create a new UserWordList instance based on the given data.
+
+        Args:
+            data (dict): A dictionary containing the data for the UserWordList.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            UserWordList: A new UserWordList instance.
+        """
+        return UserWordList(**data)

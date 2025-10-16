@@ -38,7 +38,6 @@ const messages_sk = {
     user_menu: {
         settings: "Nastavenia profilu",
         logout: "Odhlásiť sa",
-        dark_theme: "Tmavý motiv",
     },
 
     main_menu: {
@@ -150,6 +149,16 @@ const messages_sk = {
         boolean_error: "Hodnota musí byť buď 'True' alebo 'False'!",
         integer_error: "Hodnota musí byť platné celé číslo!",
         decimal_error: "Hodnota musí byť platné desatinné číslo!",
+    },
+
+    settings_enum: {
+        DARK_THEME: "Tmavý motiv",
+        DATE_FORMAT: 'Formát dátumu',
+        LANGUAGE: "Jazyk",
+        NEWS_SHOW_SOURCE_LINK: 'Zobraziť odkaz na zdroj v novinkách',
+        REPORT_SELECTOR_READ_ONLY: 'Otvoriť výber reportov v režime iba na čítanie',
+        SPELLCHECK: "Kontrolovať pravopis",
+        TIME_FORMAT: 'Formát času',
     },
 
     error: {

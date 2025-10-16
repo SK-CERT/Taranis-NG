@@ -48,7 +48,6 @@ const messages_en = {
     user_menu: {
         settings: "Settings",
         logout: "Logout",
-        dark_theme: "Dark Theme"
     },
 
     main_menu: {
@@ -829,8 +828,6 @@ const messages_en = {
         like_item: "Like Item",
         unlike_item: "Unlike Item",
         delete_item: "Delete Item",
-        spellcheck: "Spellcheck",
-        dark_theme: "Dark Theme",
         press_key: "Press new key for ",
         selection: "Selection",
         group: "Group",
@@ -864,6 +861,16 @@ const messages_en = {
         updated_by: "Updated by",
         updated_at: "Updated at",
         actions: "Actions",
+    },
+
+    settings_enum: {
+        DARK_THEME: "Dark Theme",
+        DATE_FORMAT: 'Date format',
+        LANGUAGE: "Language",
+        NEWS_SHOW_SOURCE_LINK: 'Show source link on news items',
+        REPORT_SELECTOR_READ_ONLY: 'Open the Report Item selector in Read-Only mode',
+        SPELLCHECK: "Spellcheck",
+        TIME_FORMAT: 'Time format',
     },
 
     word_list: {

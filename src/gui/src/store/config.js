@@ -20,10 +20,9 @@ import {
     getAllReportItemTypes,
     getAllRoles,
     getAllUsers,
-    getAllSettings,
     getAllWordLists
 } from "@/api/config";
-import {getAllUserProductTypes, getAllUserWordLists} from "@/api/user";
+import {getAllUserProductTypes} from "@/api/user";
 import {getAllOSINTSourceGroupsAssess} from "@/api/assess";
 
 
@@ -37,7 +36,6 @@ const state = {
     acls: {total_count: 0, items: []},
     organizations: {total_count: 0, items: []},
     users: {total_count: 0, items: []},
-    settings: { total_count: 0, items: [] },
     word_lists: {total_count: 0, items: []},
     remote_access: {total_count: 0, items: []},
     remote_nodes: {total_count: 0, items: []},
@@ -149,25 +147,9 @@ const actions = {
             })
     },
 
-    getAllSettings(context, data) {
-
-        return getAllSettings(data)
-            .then(response => {
-                context.commit('setSettings', response.data);
-            })
-    },
-
     getAllWordLists(context, data) {
 
         return getAllWordLists(data)
-            .then(response => {
-                context.commit('setWordLists', response.data);
-            })
-    },
-
-    getAllUserWordLists(context, data) {
-
-        return getAllUserWordLists(data)
             .then(response => {
                 context.commit('setWordLists', response.data);
             })
@@ -300,10 +282,6 @@ const mutations = {
         state.users = new_users
     },
 
-    setSettings(state, new_settings) {
-        state.settings = new_settings
-    },
-
     setWordLists(state, new_word_lists) {
         state.word_lists = new_word_lists
     },
@@ -385,10 +363,6 @@ const getters = {
 
     getUsers(state) {
         return state.users
-    },
-
-    getSettings(state) {
-        return state.settings
     },
 
     getWordLists(state) {
