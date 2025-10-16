@@ -449,7 +449,7 @@
             this.$root.$on('check-focus', (id) => {
                 this.setFocus(id);
             });
-            this.show_link = getSettingBoolean(Settings.NEWS_SHOW_LINK);
+            this.show_link = getSettingBoolean(Settings.NEWS_SHOW_SOURCE_LINK);
         },
         beforeDestroy() {
             this.$root.$off('multi-select-off', this.multiSelectOff);

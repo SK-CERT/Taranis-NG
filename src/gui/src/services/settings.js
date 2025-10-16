@@ -8,7 +8,7 @@ const Settings = {
     // user settings
     DARK_THEME: 'DARK_THEME',
     LANGUAGE: 'LANGUAGE',
-    NEWS_SHOW_LINK: 'NEWS_SHOW_LINK',
+    NEWS_SHOW_SOURCE_LINK: 'NEWS_SHOW_SOURCE_LINK',
     SPELLCHECK: 'SPELLCHECK',
 };
 

@@ -155,7 +155,7 @@ const messages_sk = {
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: 'Formát dátumu',
         LANGUAGE: "Jazyk",
-        NEWS_SHOW_LINK: 'Zobraziť odkaz na zdroj v novinkách',
+        NEWS_SHOW_SOURCE_LINK: 'Zobraziť odkaz na zdroj v novinkách',
         REPORT_SELECTOR_READ_ONLY: 'Otvoriť výber reportov v režime iba na čítanie',
         SPELLCHECK: "Kontrolovať pravopis",
         TIME_FORMAT: 'Formát času',

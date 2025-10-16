@@ -833,7 +833,7 @@ const messages_cs = {
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: 'Formát data',
         LANGUAGE: "Jazyk",
-        NEWS_SHOW_LINK: 'Zobrazit odkaz na zdroj v novinkách',
+        NEWS_SHOW_SOURCE_LINK: 'Zobrazit odkaz na zdroj v novinkách',
         REPORT_SELECTOR_READ_ONLY: 'Otevřít výběr reportů v režimu pouze pro čtení',
         SPELLCHECK: "Kontrolovat pravopis",
         TIME_FORMAT: 'Formát času',
