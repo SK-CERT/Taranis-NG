@@ -109,6 +109,9 @@ def upgrade() -> None:
     )
     if "user_profile_word_list" in inspector.get_table_names():
         conn.execute(
+            sa.text("DELETE FROM user_word_list"),
+        )
+        conn.execute(
             sa.text(
                 """
                 INSERT INTO user_word_list (user_id, word_list_id)
@@ -119,6 +122,9 @@ def upgrade() -> None:
             ),
         )
         op.drop_table("user_profile_word_list")
+
+    if "user_profile" in inspector.get_table_names():
+        op.drop_constraint("user_profile_id_fkey", "user", type_="foreignkey")
         op.drop_table("user_profile")
 
     columns = [column["name"] for column in inspector.get_columns("user")]
