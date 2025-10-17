@@ -836,6 +836,7 @@ const messages_cs = {
         NEWS_SHOW_SOURCE_LINK: 'Zobrazit odkaz na zdroj v novinkách',
         REPORT_SELECTOR_READ_ONLY: 'Otevřít výběr reportů v režimu pouze pro čtení',
         SPELLCHECK: "Kontrolovat pravopis",
+        TAG_COLOR: "Barevný mrak štítků",
         TIME_FORMAT: 'Formát času',
     },
 

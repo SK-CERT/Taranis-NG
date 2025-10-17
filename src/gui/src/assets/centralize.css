@@ -138,13 +138,8 @@ div.v-data-table > header {
 }
 
 /* --- DashboardView.vue --- */
-.v-sheet--offset {
-    top: -8px;
-    position: relative;
-}
-
 .wordCloud {
-    height: 200px;
+    height: 430px !important;
 }
 
 .v-card .v-btn.next {

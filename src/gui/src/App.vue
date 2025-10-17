@@ -76,6 +76,7 @@
                     this.$vuetify.theme.dark = getSettingBoolean(Settings.DARK_THEME);
                     this.$store.state.settings.spellcheck = getSettingBoolean(Settings.SPELLCHECK);
                     this.$i18n.locale = this.$store.getters.getProfileLanguage;
+                    this.$root.$emit('settings-loaded');
                 });
                 this.$store.dispatch('getUserWordLists');
                 this.$store.dispatch('getUserHotkeys');
