@@ -10,11 +10,12 @@ const Settings = {
     LANGUAGE: 'LANGUAGE',
     NEWS_SHOW_SOURCE_LINK: 'NEWS_SHOW_SOURCE_LINK',
     SPELLCHECK: 'SPELLCHECK',
+    TAG_COLOR: 'TAG_COLOR',
 };
 
 export function getSetting(key, def_value = "") {
-    if (!store.getters.getSettings || store.getters.getSettings.length === 0) {
-        console.error("Settings not inicialized!")
+    if (!isInitializedSetting) {
+        console.error("Settings not inicialized!", key)
         return "";
     }
     var setting = store.getters.getSettings.find(item => item.key === key);
@@ -27,8 +28,12 @@ export function getSetting(key, def_value = "") {
 }
 
 export function getSettingBoolean(key, def_value = false) {
-    var val = getSetting(key, def_value)
+    var val = getSetting(key, def_value ? "true" : "false")
     return val != null && val.toLowerCase().trim() === "true";
+}
+
+export function isInitializedSetting() {
+    return (store.getters.getSettings && store.getters.getSettings.length > 0)
 }
 
 export default Settings

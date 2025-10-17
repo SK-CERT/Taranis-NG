@@ -870,6 +870,7 @@ const messages_en = {
         NEWS_SHOW_SOURCE_LINK: 'Show source link on news items',
         REPORT_SELECTOR_READ_ONLY: 'Open the Report Item selector in Read-Only mode',
         SPELLCHECK: "Spellcheck",
+        TAG_COLOR: "Colorful tag cloud",
         TIME_FORMAT: 'Time format',
     },
 
