@@ -827,7 +827,6 @@
                 }
                 // Prevent multiple runs if icon indicates a timer is active
                 if (this.auto_generate_icon[attribute_group_item_id].startsWith("mdi-timer-sand")) {
-                    // this.set_auto_generate_icon(attribute_group_item_id, "wait");
                     return;
                 }
                 this.set_auto_generate_icon(attribute_group_item_id, "wait");
