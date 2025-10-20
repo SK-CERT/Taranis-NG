@@ -47,6 +47,11 @@ div.v-dialog__content header {
     background: none;
 }
 
+/* Review hiding styles - target the review content in card components */
+#app.hide-review .review-content {
+    display: none !important;
+}
+
 thead tr th.text-left {
     min-width: 300px;
 }
