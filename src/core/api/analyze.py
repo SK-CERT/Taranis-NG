@@ -5,9 +5,8 @@ from http import HTTPStatus
 
 from flask import jsonify, request, send_file
 from flask_restful import Api, Resource
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate  # SystemMessagePromptTemplate, PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
 from managers import asset_manager, auth_manager, log_manager
 from managers.auth_manager import ACLCheck, auth_required
@@ -411,6 +410,8 @@ class ReportItemLlmGenerate(Resource):
                 msg = f"LLM generate: No news items to process (Report ID: {news_item_agreggate_ids})"
                 logger.debug(msg)
 
+            context_text = "\n\n".join(doc.page_content for doc in documents_for_llm)
+
             if ai_provider.api_type == "openai":
                 llm = ChatOpenAI(model_name=ai_provider.model, api_key=ai_provider.api_key, base_url=ai_provider.api_url)
             else:
@@ -418,17 +419,7 @@ class ReportItemLlmGenerate(Resource):
                 logger.warning(msg)
                 return {"message": msg}, 400
 
-            text = (
-                "The USER-TASK is refering to data in CONTEXT-DOCUMENT. "
-                "You must fulfill the USER-TASK using CONTEXT-DOCUMENT and nothing else. "
-                "Do not add any introduction or summary unless explicitly asked in USER-TASK.\n\n"
-                "### USER-TASK\n\n{question}\n"
-                "### CONTEXT-DOCUMENT\n\n"
-                "{context}\n"
-                "### ANSWER\n"
-            )
             # tweaking prompt doesn't matter that much as using good model (good model -> better understanding what you want from him)
-            # TODO (Ján): test and keep only the best prompt (delete old one)
             text = (
                 "You are a data analyst AI assistant. Your task is to carefully analyze the provided User data and answer the User question "
                 "based on that data. Follow these steps strictly:\n"
@@ -454,16 +445,20 @@ class ReportItemLlmGenerate(Resource):
             )
 
             prompt = ChatPromptTemplate.from_messages(prompt_template)
-            llm_chain = create_stuff_documents_chain(llm, prompt, document_variable_name="context")
+            messages = prompt.format_messages(
+                question=ai_prompt,
+                context=context_text,
+            )
+
             try:
-                result = llm_chain.invoke({"context": documents_for_llm, "question": ai_prompt})
+                result = llm.invoke(messages)
             except Exception as ex:
                 msg = f"Connect to LLM failed: {ex}"
                 logger.error(msg)
                 return {"error": msg}, HTTPStatus.BAD_REQUEST
             else:
-                logger.debug(f"_____ LLM output: _____\n{result}\n_______________________")
-                return {"message": result}
+                logger.debug(f"_____ LLM output: _____\n{result.content}\n_______________________")
+                return {"message": result.content}
 
         except Exception as ex:
             msg = "LLM prompt construction failed (see logs)"
