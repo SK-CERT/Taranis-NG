@@ -78,11 +78,18 @@
                 <span class="total-count-text mx-5" v-if="multiSelectActive">{{$t(selected_count_title)}}<strong>{{selectedCount}}</strong></span>
             </v-col>
             <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                <!-- Wordlist -->
-                <v-btn x-small text @click="hideWordlist" class="ma-0 pa-0 d-block" :title="$t('assess.tooltip.highlight_wordlist')">
-                    <v-icon v-if="word_list_toggle" center color="black">mdi-alphabetical-variant-off</v-icon>
-                    <v-icon v-else center color="orange">mdi-alphabetical-variant</v-icon>
-                </v-btn>
+                <div class="d-flex align-center justify-end">
+                    <!-- Review Toggle -->
+                    <v-btn x-small text @click="hideReview" class="ma-0 pa-0 mr-1" :title="$t('assess.tooltip.hide_review')">
+                        <v-icon v-if="review_toggle" center color="black">mdi-text-box-remove-outline</v-icon>
+                        <v-icon v-else center color="orange">mdi-text-box-outline</v-icon>
+                    </v-btn>
+                    <!-- Wordlist -->
+                    <v-btn x-small text @click="hideWordlist" class="ma-0 pa-0" :title="$t('assess.tooltip.highlight_wordlist')">
+                        <v-icon v-if="word_list_toggle" center color="black">mdi-alphabetical-variant-off</v-icon>
+                        <v-icon v-else center color="orange">mdi-alphabetical-variant</v-icon>
+                    </v-btn>
+                </div>
             </v-col>
         </v-row>
     </v-container>
@@ -136,7 +143,8 @@
                 sort: "DATE_DESC"
             },
             timeout: null,
-            word_list_toggle: false
+            word_list_toggle: false,
+            review_toggle: false
         }),
         mixins: [AuthMixin],
         methods: {
@@ -230,10 +238,22 @@
                 }
                 localStorage.setItem('word-list-hide', this.word_list_toggle);
 
+            },
+
+            hideReview() {
+                this.review_toggle = !this.review_toggle;
+
+                if(this.review_toggle) {
+                    document.getElementById("app").classList.add("hide-review");
+                } else {
+                    document.getElementById("app").classList.remove("hide-review");
+                }
+                localStorage.setItem('review-hide', this.review_toggle);
             }
 
         },
         mounted(){
+            // Initialize wordlist toggle
             if( !localStorage.getItem('word-list-hide')) {
                 localStorage.setItem('word-list-hide', false);
             } else {
@@ -243,6 +263,19 @@
                 } else {
                     this.word_list_toggle = false;
                     document.getElementById("app").classList.remove("hide-wordlist");
+                }
+            }
+
+            // Initialize review toggle
+            if( !localStorage.getItem('review-hide')) {
+                localStorage.setItem('review-hide', false);
+            } else {
+                if( localStorage.getItem('review-hide') === "true") {
+                    this.review_toggle = true;
+                    document.getElementById("app").classList.add("hide-review");
+                } else {
+                    this.review_toggle = false;
+                    document.getElementById("app").classList.remove("hide-review");
                 }
             }
         }

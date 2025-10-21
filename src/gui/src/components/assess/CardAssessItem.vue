@@ -43,7 +43,7 @@
                                 </v-col>
 
                                 <!--REVIEW-->
-                                <v-col v-bind="UI.CARD.COL.REVIEW">
+                                <v-col v-bind="UI.CARD.COL.REVIEW" class="review-content">
                                     <div v-if="!compact_mode">
                                         <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.review)"></div>
                                         <div v-else>{{ news_item.news_item_data.review }}</div>
