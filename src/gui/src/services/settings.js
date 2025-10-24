@@ -36,10 +36,10 @@ export function isInitializedSetting() {
 }
 
 export function getLocalStorageBoolean(key, def_value = false) {
-    if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, def_value);
-    }
-    return localStorage.getItem(key) === "true";
+    const value = localStorage.getItem(key)
+    if (value !== null) return value === "true";
+    localStorage.setItem(key, def_value);
+    return def_value;
 }
 
 export default Settings
