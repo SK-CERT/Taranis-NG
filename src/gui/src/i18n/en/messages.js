@@ -95,6 +95,7 @@ const messages_en = {
         local: "Local",
         settings: "Application Settings",
         ai_providers: "AI models",
+        data_providers: "Data providers",
     },
 
     notification: {
@@ -739,6 +740,7 @@ const messages_en = {
                     descending: 'Sort news items by relevance descending'
                 }
             },
+            hide_review: 'Hide reviews in news items',
             highlight_wordlist: 'Highlight words by word lists',
             toggle_selection: 'Toggle news items selection mode',
             group_items: 'Group news items into aggregate',
@@ -861,6 +863,7 @@ const messages_en = {
         updated_by: "Updated by",
         updated_at: "Updated at",
         actions: "Actions",
+        api_key: "API key",
     },
 
     settings_enum: {
@@ -907,7 +910,6 @@ const messages_en = {
         name: "Name",
         api_type: "API type",
         api_url: "API URL",
-        api_key: "API key",
         model: "Model",
         add_new: "Add new AI model",
         edit: "Edit AI model",
@@ -917,6 +919,22 @@ const messages_en = {
         remove: "AI model was successfully deleted",
         removed_error: "AI model is in use and could not be deleted",
         total_count: "AI models count: ",
+    },
+
+    data_provider: {
+        name: "Name",
+        api_type: "API type",
+        api_url: "API URL",
+        user_agent: "User Agent",
+        web_url: "Web URL",
+        add_new: "Add new data provider",
+        edit: "Edit data provider",
+        successful: "New data provider was successfully added",
+        successful_edit: "Data provider was successfully updated",
+        error: "Could not save this data provider",
+        remove: "Data provider was successfully deleted",
+        removed_error: "Data provider is in use and could not be deleted",
+        total_count: "Data providers count: ",
     },
 
     asset_group: {
@@ -989,7 +1007,6 @@ const messages_en = {
         error: "Could not save this remote access",
         name: "Name",
         description: "Description",
-        api_key: "Access Key",
         enabled: "Enabled",
         successful: "New remote access was successfully added",
         successful_edit: "Remote access was successfully updated",
@@ -1008,7 +1025,6 @@ const messages_en = {
         description: "Description",
         remote_url: "Remote node URL",
         event_url: "Remote event source URL",
-        api_key: "Access Key",
         enabled: "Enabled",
         connect: "Connect to remote node",
         connect_error: "Connection to remote node failed. Incorrect access key provided or node is not running.",

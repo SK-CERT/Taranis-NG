@@ -32,6 +32,7 @@ from model import (
     bot_preset,
     bots_node,
     collectors_node,
+    data_provider,
     organization,
     osint_source,
     presenters_node,
@@ -49,6 +50,7 @@ from model.news_item import NewsItemAggregate
 from model.permission import Permission
 
 from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.data_provider import DataProviderSchema
 from shared.schema.role import PermissionSchema
 
 
@@ -213,14 +215,14 @@ class AttributeEnum(Resource):
 
 
 class AiProviders(Resource):
-    """Local AI models API endpoint."""
+    """AI models API endpoint."""
 
     @auth_required("CONFIG_AI_ACCESS")
     def get(self) -> tuple[str, dict]:
         """Get all local AI models.
 
         Returns:
-            (dict): The local AI models
+            (dict): The AI models
         """
         search = None
         if request.args.get("search"):
@@ -240,20 +242,20 @@ class AiProviders(Resource):
             schema = AiProviderSchema()
             return schema.dump(record), HTTPStatus.OK
         except Exception as ex:
-            msg = "Could not create local AI model"
+            msg = "Could not create AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class AiProvider(Resource):
-    """Local AI model API endpoint."""
+    """AI model API endpoint."""
 
     @auth_required("CONFIG_AI_UPDATE")
     def put(self, ai_provider_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update an local AI model.
 
         Args:
-            ai_provider_id (int): The local AI model ID
+            ai_provider_id (int): The AI model ID
         Returns:
             (str, int): The result of the update
         """
@@ -263,7 +265,7 @@ class AiProvider(Resource):
             schema = AiProviderSchema()
             return schema.dump(record), HTTPStatus.OK
         except Exception as ex:
-            msg = "Could not update local AI model"
+            msg = "Could not update AI model"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -272,14 +274,86 @@ class AiProvider(Resource):
         """Delete an local AI model.
 
         Args:
-            ai_provider_id (int): The local AI model ID
+            ai_provider_id (int): The AI model ID
         Returns:
             (str, int): The result of the delete
         """
         try:
             return ai_provider.AiProvider.delete(ai_provider_id)
         except Exception as ex:
-            msg = "Could not delete local AI model"
+            msg = "Could not delete AI model"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class DataProvider(Resource):
+    """Data provider API endpoint."""
+
+    @auth_required("CONFIG_DATA_PROVIDER_UPDATE")
+    def put(self, data_provider_id: int) -> tuple[dict, int]:
+        """Update a data provider.
+
+        Args:
+            data_provider_id (int): The data provider ID
+        Returns:
+            (dict, int): The result of the update
+        """
+        try:
+            user = auth_manager.get_user_from_jwt()
+            record = data_provider.DataProvider.update(data_provider_id, request.json, user.name)
+            schema = DataProviderSchema()
+            return schema.dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not update data provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_DATA_PROVIDER_DELETE")
+    def delete(self, data_provider_id: int) -> tuple[dict, int] | None:
+        """Delete a data provider.
+
+        Args:
+            data_provider_id (int): The data provider ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            return data_provider.DataProvider.delete(data_provider_id)
+        except Exception as ex:
+            msg = "Could not delete data provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class DataProviders(Resource):
+    """Data provider API endpoint."""
+
+    @auth_required("CONFIG_DATA_PROVIDER_ACCESS")
+    def get(self) -> tuple[str, dict]:
+        """Get all data providers.
+
+        Returns:
+            (dict): The data providers
+        """
+        search = None
+        if request.args.get("search"):
+            search = request.args["search"]
+        return data_provider.DataProvider.get_all_json(search)
+
+    @auth_required("CONFIG_DATA_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, int] | None:
+        """Create a data provider.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            user = auth_manager.get_user_from_jwt()
+            record = data_provider.DataProvider.add_new(request.json, user.name)
+            schema = DataProviderSchema()
+            return schema.dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not create data provider"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -1667,6 +1741,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(AttributeEnum, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
     api.add_resource(AiProviders, "/api/v1/config/aiproviders")
     api.add_resource(AiProvider, "/api/v1/config/aiprovider/<int:ai_provider_id>")
+    api.add_resource(DataProviders, "/api/v1/config/data-providers")
+    api.add_resource(DataProvider, "/api/v1/config/data-provider/<int:data_provider_id>")
 
     api.add_resource(ReportItemTypesConfig, "/api/v1/config/report-item-types")
     api.add_resource(ReportItemType, "/api/v1/config/report-item-types/<int:type_id>")
@@ -1778,6 +1854,11 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_AI_CREATE", "Config AI create", "Create AI configuration")
     Permission.add("CONFIG_AI_UPDATE", "Config AI update", "Update AI configuration")
     Permission.add("CONFIG_AI_DELETE", "Config AI delete", "Delete AI configuration")
+
+    Permission.add("CONFIG_DATA_PROVIDER_ACCESS", "Config data provider access", "Access to data provider configuration")
+    Permission.add("CONFIG_DATA_PROVIDER_CREATE", "Config data provider create", "Create data provider configuration")
+    Permission.add("CONFIG_DATA_PROVIDER_UPDATE", "Config data provider update", "Update data provider configuration")
+    Permission.add("CONFIG_DATA_PROVIDER_DELETE", "Config data provider delete", "Delete data provider configuration")
 
     Permission.add("CONFIG_COLLECTORS_NODE_ACCESS", "Config collectors nodes access", "Access to collectors nodes configuration")
     Permission.add("CONFIG_COLLECTORS_NODE_CREATE", "Config collectors node create", "Create collectors node configuration")

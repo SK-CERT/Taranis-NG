@@ -5,7 +5,7 @@
             <template v-slot:top>
                 <v-row v-bind="UI.TOOLBAR.ROW">
                     <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                        <div :class="UI.CLASS.toolbar_filter_title">{{ $t('nav_menu.ai_providers') }}</div>
+                        <div :class="UI.CLASS.toolbar_filter_title">{{ $t('nav_menu.data_providers') }}</div>
                     </v-col>
                     <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
                         <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="search" :label="$t('toolbar_filter.search')"
@@ -29,28 +29,31 @@
                                 <v-container>
                                     <v-row>
                                         <v-col cols="8">
-                                            <v-text-field v-model="editedItem.name" :label="$t('ai_provider.name')"
+                                            <v-text-field v-model="editedItem.name" :label="$t('data_provider.name')"
                                                 :rules="[v => !!v || $t('error.validation')]" required></v-text-field>
                                         </v-col>
                                         <v-col cols="4">
-                                            <v-select v-model="editedItem.api_type" :items="['openai']"
-                                                :label="$t('ai_provider.api_type')"></v-select>
+                                            <v-select v-model="editedItem.api_type"
+                                                :items="['CVE', 'CWE', 'CPE', 'EUVD', 'EPSS']"
+                                                :label="$t('data_provider.api_type')"></v-select>
                                         </v-col>
                                         <v-col cols="12">
                                             <v-text-field v-model="editedItem.api_url"
-                                                :label="$t('ai_provider.api_url')"
+                                                :label="$t('data_provider.api_url')"
                                                 :rules="[v => !!v || $t('error.validation')]" required></v-text-field>
                                         </v-col>
-                                        <v-col cols="6">
+                                         <v-col cols="6">
                                             <v-text-field v-model="editedItem.api_key"
                                                 :label="$t('settings.api_key')"
-                                                :type="showApiKey ? 'text' : 'password'"
-                                                :append-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
-                                                @click:append="showApiKey = !showApiKey"></v-text-field>
+                                                :type="showApiKey ? 'text' : 'password'"></v-text-field>
                                         </v-col>
                                         <v-col cols="6">
-                                            <v-text-field v-model="editedItem.model" :label="$t('ai_provider.model')"
-                                                :rules="[v => !!v || $t('error.validation')]" required></v-text-field>
+                                            <v-text-field v-model="editedItem.user_agent"
+                                                :label="$t('data_provider.user_agent')"></v-text-field>
+                                        </v-col>
+                                        <v-col cols="6">
+                                            <v-text-field v-model="editedItem.web_url"
+                                                :label="$t('data_provider.web_url')"></v-text-field>
                                         </v-col>
                                     </v-row>
                                 </v-container>
@@ -105,12 +108,13 @@
                 </v-tooltip>
             </template>
 
+
         </v-data-table>
     </v-container>
 </template>
 
 <script>
-import { createNewAiProvider, updateAiProvider, deleteAiProvider } from "@/api/config";
+import { createNewDataProvider, updateDataProvider, deleteDataProvider } from "@/api/config";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
 import { format } from 'date-fns';
@@ -118,18 +122,18 @@ import Settings, { getSetting } from "@/services/settings";
 
 export default {
 
-    name: "AiProviderTable",
+    name: "DataProviderTable",
     props: {},
     data() {
         return {
             search: "",
-            showApiKey: false,
             headers: [
-                { text: this.$t('ai_provider.name'), value: 'name' },
-                { text: this.$t('ai_provider.api_type'), value: 'api_type' },
-                { text: this.$t('ai_provider.api_url'), value: 'api_url' },
-                { text: this.$t('settings.api_key'), value: 'api_key', sortable: false, filterable: false },
-                { text: this.$t('ai_provider.model'), value: 'model' },
+                { text: this.$t('data_provider.name'), value: 'name' },
+                { text: this.$t('data_provider.api_type'), value: 'api_type' },
+                { text: this.$t('data_provider.api_url'), value: 'api_url' },
+                { text: this.$t('settings.api_key'), value: 'api_key' },
+                { text: this.$t('data_provider.user_agent'), value: 'user_agent' },
+                { text: this.$t('data_provider.web_url'), value: 'web_url' },
                 { text: this.$t('settings.updated_by'), value: 'updated_by' },
                 { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
                 { text: this.$t('settings.actions'), value: 'actions', sortable: false },
@@ -143,14 +147,17 @@ export default {
                 api_type: "",
                 api_url: "",
                 api_key: "",
+                user_agent: "",
+                web_url: "",
                 model: "",
             },
             defaultItem: {
-                name: "Ollama - llama3:8b",
-                api_type: "openai",
-                api_url: "http://localhost:11434/v1",
-                api_key: "secret",
-                model: "llama3:8b"
+                name: "ENISA EUVD",
+                api_type: "EUVD",
+                api_url: "https://euvdservices.enisa.europa.eu/api/",
+                api_key: "",
+                user_agent: "",
+                web_url: "https://euvd.enisa.europa.eu/vulnerability/"
             },
             date_format: ""
         };
@@ -158,7 +165,7 @@ export default {
     mixins: [AuthMixin],
     computed: {
         dialogEditTitle() {
-            return this.editedIndex === -1 ? this.$t("ai_provider.add_new") : this.$t("ai_provider.edit")
+            return this.editedIndex === -1 ? this.$t("data_provider.add_new") : this.$t("data_provider.edit")
         },
     },
     watch: {
@@ -178,8 +185,8 @@ export default {
         },
 
         fetchRecords() {
-            if (this.checkPermission(Permissions.CONFIG_AI_ACCESS)) {
-                this.$store.dispatch('getAllAiProviders', { search: '' }).then(() => {
+            if (this.checkPermission(Permissions.CONFIG_DATA_PROVIDER_ACCESS)) {
+                this.$store.dispatch('getAllDataProviders', { search: '' }).then(() => {
                     var dateFmt = getSetting(Settings.DATE_FORMAT);
                     var timeFmt = getSetting(Settings.TIME_FORMAT);
                     if (dateFmt != "" && timeFmt != "") {
@@ -188,7 +195,7 @@ export default {
                         this.date_format = "yyyy-MM-dd HH:mm:ss"; // Default format
                     }
 
-                    this.records = this.$store.getters.getAiProviders.items;
+                    this.records = this.$store.getters.getDataProviders.items;
                 });
             }
         },
@@ -222,33 +229,33 @@ export default {
         saveRecord() {
             if (!this.$refs.form.validate()) return;
             if (this.editedIndex > -1) {
-                updateAiProvider(this.editedItem).then((response) => {
+                updateDataProvider(this.editedItem).then((response) => {
                     this.editedItem = Object.assign({}, response.data)
                     Object.assign(this.records[this.editedIndex], this.editedItem);
-                    this.showMsg("success", "ai_provider.successful_edit");
+                    this.showMsg("success", "data_provider.successful_edit");
                     this.closeEdit();
                 }).catch(() => {
-                    this.showMsg("error", "ai_provider.error");
+                    this.showMsg("error", "data_provider.error");
                 })
             } else {
-                createNewAiProvider(this.editedItem).then((response) => {
+                createNewDataProvider(this.editedItem).then((response) => {
                     this.editedItem = Object.assign({}, response.data)
                     this.records.push(this.editedItem);
-                    this.showMsg("success", "ai_provider.successful");
+                    this.showMsg("success", "data_provider.successful");
                     this.closeEdit();
                 }).catch(() => {
-                    this.showMsg("error", "ai_provider.error");
+                    this.showMsg("error", "data_provider.error");
                 })
             }
         },
 
         deleteRecord() {
-            deleteAiProvider(this.editedItem).then(() => {
+            deleteDataProvider(this.editedItem).then(() => {
                 this.records.splice(this.editedIndex, 1);
-                this.showMsg("success", "ai_provider.remove");
+                this.showMsg("success", "data_provider.remove");
                 this.closeDelete();
             }).catch(() => {
-                this.showMsg("error", "ai_provider.removed_error");
+                this.showMsg("error", "data_provider.removed_error");
             })
         },
 

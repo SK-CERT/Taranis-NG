@@ -95,6 +95,7 @@ const messages_cs = {
         local: "Lokální",
         settings: "Nastavení aplikace",
         ai_providers: "AI modely",
+        data_providers: "Zdroje dat",
     },
 
     notification: {
@@ -734,6 +735,7 @@ const messages_cs = {
                     descending: "Seřadit novinky podle relevance sestupně"
                 }
             },
+            hide_review: 'Skrýt náhledy novinek',
             highlight_wordlist: "Zvýraznit slova ze seznamů slov",
             toggle_selection: "Mód výběru novinek",
             group_items: "Sloučit novinky",
@@ -827,6 +829,7 @@ const messages_cs = {
         updated_by: "Upravil",
         updated_at: "Upraveno",
         actions: "Možnosti",
+        api_key: "API klíč",
     },
 
     settings_enum: {
@@ -873,7 +876,6 @@ const messages_cs = {
         name: "Název",
         api_type: "API typ",
         api_url: "API URL",
-        api_key: "API klíč",
         model: "Model",
         add_new: "Přidat nový AI model",
         edit: "Upravit AI model",
@@ -883,6 +885,22 @@ const messages_cs = {
         remove: "AI model byl smazán",
         removed_error: "AI model je používán a nelze jej smazat",
         total_count: "Počet AI modelů: ",
+    },
+
+     data_provider: {
+        name: "Název",
+        api_type: "API typ",
+        api_url: "API URL",
+        user_agent: "User Agent",
+        web_url: "Web URL",
+        add_new: "Add new data provider",
+        edit: "Edit data provider",
+        successful: "New data provider was successfully added",
+        successful_edit: "Data provider was successfully updated",
+        error: "Could not save this data provider",
+        remove: "Data provider was successfully deleted",
+        removed_error: "Data provider is in use and could not be deleted",
+        total_count: "Data providers count: ",
     },
 
     asset_group: {
@@ -955,7 +973,6 @@ const messages_cs = {
         error: "Nepodařilo se uložit vzdálený přístup",
         name: "Název",
         description: "Popis",
-        api_key: "API klíč",
         enabled: "Enabled",
         successful: "Nový vzdálený přístup byl přidán",
         successful_edit: "Vzdálený přístup byl upraven",
@@ -974,7 +991,6 @@ const messages_cs = {
         description: "Popis",
         remote_url: "URL vzdálené instance",
         event_url: "URL vzdáleného zdroje událostí",
-        api_key: "API klíč",
         enabled: "Zapnuto",
         connect: "Připojit ke vzdálené instanci",
         connect_error: "Připojení ke vzdálené instanci selhalo. Použit nesprávný přístupový klíč nebo instance není v dostupná.",
