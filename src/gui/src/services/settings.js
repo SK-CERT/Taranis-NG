@@ -8,7 +8,6 @@ const Settings = {
     // user settings
     DARK_THEME: 'DARK_THEME',
     LANGUAGE: 'LANGUAGE',
-    NEWS_SHOW_SOURCE_LINK: 'NEWS_SHOW_SOURCE_LINK',
     SPELLCHECK: 'SPELLCHECK',
     TAG_COLOR: 'TAG_COLOR',
 };
@@ -34,6 +33,13 @@ export function getSettingBoolean(key, def_value = false) {
 
 export function isInitializedSetting() {
     return (store.getters.getSettings && store.getters.getSettings.length > 0)
+}
+
+export function getLocalStorageBoolean(key, def_value = false) {
+    if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, def_value);
+    }
+    return localStorage.getItem(key) === "true";
 }
 
 export default Settings

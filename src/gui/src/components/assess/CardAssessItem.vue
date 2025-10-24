@@ -53,7 +53,7 @@
                                 <!--FOOTER-->
                                 <v-row v-bind="UI.CARD.FOOTER">
                                     <v-col cols="11">
-                                        <span v-if="canAccess" class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text">
+                                        <span v-if="canAccess" class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
                                             {{ news_item.news_item_data.link }}
                                         </span>
 
