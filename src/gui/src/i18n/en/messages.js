@@ -740,7 +740,8 @@ const messages_en = {
                     descending: 'Sort news items by relevance descending'
                 }
             },
-            hide_review: 'Hide reviews in news items',
+            hide_review: 'Hide reviews on news items',
+            hide_source_link: 'Hide source links on news items',
             highlight_wordlist: 'Highlight words by word lists',
             toggle_selection: 'Toggle news items selection mode',
             group_items: 'Group news items into aggregate',
@@ -870,7 +871,6 @@ const messages_en = {
         DARK_THEME: "Dark Theme",
         DATE_FORMAT: 'Date format',
         LANGUAGE: "Language",
-        NEWS_SHOW_SOURCE_LINK: 'Show source link on news items',
         REPORT_SELECTOR_READ_ONLY: 'Open the Report Item selector in Read-Only mode',
         SPELLCHECK: "Spellcheck",
         TAG_COLOR: "Colorful tag cloud",

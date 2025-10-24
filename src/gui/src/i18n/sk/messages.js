@@ -143,6 +143,14 @@ const messages_sk = {
         total_count: "Počet produktov: "
     },
 
+    assess: {
+        tooltip: {
+            hide_review: 'Skryť náhľady noviniek',
+            hide_source_link: 'Skryť odkazy na zdroje v novinkách',
+            highlight_wordlist: "Zvýrazniť slová zo zoznamov slov",
+        },
+    },
+
     settings: {
         successful_edit: "Nastavenie bolo úspešne uložené",
         error: "Nepodarilo sa uložiť toto nastavenie!",
@@ -155,7 +163,6 @@ const messages_sk = {
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: 'Formát dátumu',
         LANGUAGE: "Jazyk",
-        NEWS_SHOW_SOURCE_LINK: 'Zobraziť odkaz na zdroj v novinkách',
         REPORT_SELECTOR_READ_ONLY: 'Otvoriť výber reportov v režime iba na čítanie',
         SPELLCHECK: "Kontrolovať pravopis",
         TAG_COLOR: "Farebný oblak značiek",

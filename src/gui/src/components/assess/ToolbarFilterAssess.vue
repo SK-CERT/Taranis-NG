@@ -84,7 +84,12 @@
                         <v-icon v-if="review_toggle" center color="black">mdi-text-box-remove-outline</v-icon>
                         <v-icon v-else center color="orange">mdi-text-box-outline</v-icon>
                     </v-btn>
-                    <!-- Wordlist -->
+                    <!-- Source link Toggle -->
+                    <v-btn x-small text @click="hideSourceLink" class="ma-0 pa-0 mr-1" :title="$t('assess.tooltip.hide_source_link')">
+                        <v-icon v-if="source_link_toggle" center color="black">mdi-web-remove</v-icon>
+                        <v-icon v-else center color="orange">mdi-web</v-icon>
+                    </v-btn>
+                    <!-- Wordlist Togle -->
                     <v-btn x-small text @click="hideWordlist" class="ma-0 pa-0" :title="$t('assess.tooltip.highlight_wordlist')">
                         <v-icon v-if="word_list_toggle" center color="black">mdi-alphabetical-variant-off</v-icon>
                         <v-icon v-else center color="orange">mdi-alphabetical-variant</v-icon>
@@ -98,6 +103,7 @@
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
     import ToolbarGroupAssess from "@/components/assess/ToolbarGroupAssess";
+    import { getLocalStorageBoolean } from "@/services/settings";
 
     export default {
         name: "ToolbarFilterAssess",
@@ -127,10 +133,10 @@
         data: () => ({
             status: [],
             days: [
-                {title: 'toolbar_filter.all', icon: 'mdi-information-outline', type: 'info', filter: 'ALL'},
-                {title: 'toolbar_filter.today', icon: 'mdi-calendar-today', type: 'info', filter: 'TODAY'},
-                {title: 'toolbar_filter.this_week', icon: 'mdi-calendar-range', type: 'info', filter: 'WEEK'},
-                {title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH'}
+                { title: 'toolbar_filter.all', icon: 'mdi-information-outline', type: 'info', filter: 'ALL' },
+                { title: 'toolbar_filter.today', icon: 'mdi-calendar-today', type: 'info', filter: 'TODAY' },
+                { title: 'toolbar_filter.this_week', icon: 'mdi-calendar-range', type: 'info', filter: 'WEEK' },
+                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' }
             ],
             data_count: 0,
             filter: {
@@ -144,7 +150,8 @@
             },
             timeout: null,
             word_list_toggle: false,
-            review_toggle: false
+            review_toggle: false,
+            source_link_toggle: false,
         }),
         mixins: [AuthMixin],
         methods: {
@@ -228,56 +235,42 @@
             add() {
             },
 
-            hideWordlist() {
-                this.word_list_toggle = !this.word_list_toggle;
-
-                if(this.word_list_toggle) {
-                    document.getElementById("app").classList.add("hide-wordlist");
+            setHideStyle(settingsName, styleName, value, saveSetting) {
+                if (value) {
+                    document.getElementById("app").classList.add(styleName);
                 } else {
-                    document.getElementById("app").classList.remove("hide-wordlist");
+                    document.getElementById("app").classList.remove(styleName);
                 }
-                localStorage.setItem('word-list-hide', this.word_list_toggle);
-
+                if (saveSetting) {
+                    localStorage.setItem(settingsName, value);
+                }
             },
 
             hideReview() {
                 this.review_toggle = !this.review_toggle;
+                this.setHideStyle("review-hide", "hide-review", this.review_toggle, true);
+            },
 
-                if(this.review_toggle) {
-                    document.getElementById("app").classList.add("hide-review");
-                } else {
-                    document.getElementById("app").classList.remove("hide-review");
-                }
-                localStorage.setItem('review-hide', this.review_toggle);
-            }
+            hideSourceLink() {
+                this.source_link_toggle = !this.source_link_toggle;
+                this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, true);
+            },
+
+            hideWordlist() {
+                this.word_list_toggle = !this.word_list_toggle;
+                this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, true);
+            },
 
         },
-        mounted(){
-            // Initialize wordlist toggle
-            if( !localStorage.getItem('word-list-hide')) {
-                localStorage.setItem('word-list-hide', false);
-            } else {
-                if( localStorage.getItem('word-list-hide') === "true") {
-                    this.word_list_toggle = true;
-                    document.getElementById("app").classList.add("hide-wordlist");
-                } else {
-                    this.word_list_toggle = false;
-                    document.getElementById("app").classList.remove("hide-wordlist");
-                }
-            }
+        mounted() {
+            this.review_toggle = getLocalStorageBoolean('review-hide', false);
+            this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
 
-            // Initialize review toggle
-            if( !localStorage.getItem('review-hide')) {
-                localStorage.setItem('review-hide', false);
-            } else {
-                if( localStorage.getItem('review-hide') === "true") {
-                    this.review_toggle = true;
-                    document.getElementById("app").classList.add("hide-review");
-                } else {
-                    this.review_toggle = false;
-                    document.getElementById("app").classList.remove("hide-review");
-                }
-            }
+            this.source_link_toggle = getLocalStorageBoolean('source-link-hide', false);
+            this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
+
+            this.word_list_toggle = getLocalStorageBoolean('word-list-hide', false);
+            this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
         }
     }
 </script>

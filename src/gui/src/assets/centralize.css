@@ -52,6 +52,10 @@ div.v-dialog__content header {
     display: none !important;
 }
 
+#app.hide-source-link .source-link {
+    display: none !important;
+}
+
 thead tr th.text-left {
     min-width: 300px;
 }

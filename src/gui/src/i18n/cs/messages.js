@@ -736,6 +736,7 @@ const messages_cs = {
                 }
             },
             hide_review: 'Skrýt náhledy novinek',
+            hide_source_link: 'Skrýt odkazy na zdroje v novinkách',
             highlight_wordlist: "Zvýraznit slova ze seznamů slov",
             toggle_selection: "Mód výběru novinek",
             group_items: "Sloučit novinky",
@@ -836,7 +837,6 @@ const messages_cs = {
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: 'Formát data',
         LANGUAGE: "Jazyk",
-        NEWS_SHOW_SOURCE_LINK: 'Zobrazit odkaz na zdroj v novinkách',
         REPORT_SELECTOR_READ_ONLY: 'Otevřít výběr reportů v režimu pouze pro čtení',
         SPELLCHECK: "Kontrolovat pravopis",
         TAG_COLOR: "Barevný mrak štítků",
