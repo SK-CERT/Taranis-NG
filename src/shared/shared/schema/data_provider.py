@@ -8,17 +8,18 @@ class DataProvider:
 
     def __init__(
         self,
+        id: int,  # noqa: A002
         name: str,
         api_type: str,
         api_url: str,
         api_key: str,
         user_agent: str,
         web_url: str,
-        updated_by: str,
     ) -> None:
         """Initialize a DataProvider instance.
 
         Args:
+            id (int): Unique identifier for the Data Provider.
             name (str): Name of the Data Provider.
             api_type (str): API type ("CVE, CWE, CPE, EUVD").
             api_url (str): API URL of the provider.
@@ -27,13 +28,13 @@ class DataProvider:
             web_url (str): Web URL of the provider.
             updated_by (str): User who last updated the record.
         """
+        self.id = id
         self.name = name
         self.api_type = api_type
         self.api_url = api_url
         self.api_key = api_key
         self.user_agent = user_agent
         self.web_url = web_url
-        self.updated_by = updated_by
 
 
 class DataProviderSchema(Schema):
@@ -51,8 +52,8 @@ class DataProviderSchema(Schema):
     api_key = fields.Str()
     user_agent = fields.Str()
     web_url = fields.Str()
-    updated_by = fields.Str()
-    updated_at = fields.Str()
+    updated_by = fields.Str(dump_only=True)
+    updated_at = fields.Str(dump_only=True)
 
     @post_load
     def make(self, data: dict, **kwargs: object) -> DataProvider:  # noqa: ARG002
@@ -65,12 +66,4 @@ class DataProviderSchema(Schema):
         Returns:
             DataProvider: An instance of DataProvider initialized with the provided data.
         """
-        # Remove id, updated_at, and updated_by from data as they are managed by the database
-        data_copy = data.copy()
-        data_copy.pop("id", None)
-        data_copy.pop("updated_at", None)
-        data_copy.pop("updated_by", None)
-        # Ensure web_url is included with a default value if not provided
-        if "web_url" not in data_copy:
-            data_copy["web_url"] = ""
-        return DataProvider(**data_copy)
+        return DataProvider(**data)
