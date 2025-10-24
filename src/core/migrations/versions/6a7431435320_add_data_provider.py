@@ -50,23 +50,28 @@ class PermissionDataProvider(Base):
     name = sa.Column(sa.String(), unique=True, nullable=False)
     description = sa.Column(sa.String())
 
-    def __init__(self, id: str, name: str, description: str) -> None:
+    def __init__(
+        self,
+        id: str,  # noqa: A002
+        name: str,
+        description: str,
+    ) -> None:
         """Initialize permission."""
         self.id = id
         self.name = name
         self.description = description
 
     @staticmethod
-    def add(session: orm.Session, id: str, name: str, description: str) -> None:
+    def add(session: orm.Session, permission_id: str, name: str, description: str) -> None:
         """Add permission if does not exists."""
-        perm = session.query(PermissionDataProvider).filter_by(id=id).first()
+        perm = session.query(PermissionDataProvider).filter_by(id=permission_id).first()
         if not perm:
-            session.add(PermissionDataProvider(id, name, description))
+            session.add(PermissionDataProvider(permission_id, name, description))
 
     @staticmethod
-    def delete(session: orm.Session, id: str) -> None:
+    def delete(session: orm.Session, permission_id: str) -> None:
         """Delete permission by id."""
-        perm = session.query(PermissionDataProvider).filter_by(id=id).first()
+        perm = session.query(PermissionDataProvider).filter_by(id=permission_id).first()
         if perm:
             session.delete(perm)
             logger.info(f"Permission {perm.id} deleted...")
@@ -117,6 +122,7 @@ def upgrade() -> None:
                 name="ENISA EUVD",
                 api_type="EUVD",
                 api_url="https://euvdservices.enisa.europa.eu/api/",
+                api_key="",
                 user_agent=default_user_agent,
                 updated_at=datetime.now(tz=UTC),
                 updated_by=default_updated_by,
@@ -128,6 +134,7 @@ def upgrade() -> None:
                 name="NVD CVE",
                 api_type="CVE",
                 api_url="https://services.nvd.nist.gov/rest/json/cves/2.0",
+                api_key="",
                 user_agent=default_user_agent,
                 updated_at=datetime.now(tz=UTC),
                 updated_by=default_updated_by,
@@ -139,6 +146,7 @@ def upgrade() -> None:
                 name="NVD CPE",
                 api_type="CPE",
                 api_url="https://services.nvd.nist.gov/rest/json/cpes/2.0",
+                api_key="",
                 user_agent=default_user_agent,
                 updated_at=datetime.now(tz=UTC),
                 updated_by=default_updated_by,
@@ -150,6 +158,7 @@ def upgrade() -> None:
                 name="MITRE CWE",
                 api_type="CWE",
                 api_url="https://cwe-api.mitre.org/api/v1/",
+                api_key="",
                 user_agent=default_user_agent,
                 updated_at=datetime.now(tz=UTC),
                 updated_by=default_updated_by,
@@ -161,6 +170,7 @@ def upgrade() -> None:
                 name="FIRST EPSS",
                 api_type="EPSS",
                 api_url="https://api.first.org/data/v1/epss",
+                api_key="",
                 user_agent=default_user_agent,
                 updated_at=datetime.now(tz=UTC),
                 updated_by=default_updated_by,
