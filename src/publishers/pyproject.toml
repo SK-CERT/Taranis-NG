@@ -14,7 +14,7 @@ dependencies = [
     "marshmallow==4.0.1",
     "Mastodon.py==2.1.4",
     "paramiko==4.0.0",
-    "python-dotenv==1.1.1",
+    "python-dotenv==1.2.1",
     "requests==2.32.5",
     "tweepy==4.16.0",
     "urllib3==2.5.0",
