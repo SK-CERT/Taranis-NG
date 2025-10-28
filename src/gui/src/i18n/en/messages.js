@@ -640,9 +640,6 @@ const messages_en = {
         select: "Select Report Items",
         select_remote: "Select Report Items from Remote Nodes",
         attributes: "Attributes",
-        import_csv: "Import CSV",
-        import_from_csv: "Import CVE/CPE from CSV",
-        delete_existing_codes: "Delete existing CVE/CPE codes",
         tooltip: {
             sort_time: 'Sort values from newest',
             sort_user: 'Show my values first then others',

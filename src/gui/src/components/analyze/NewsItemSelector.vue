@@ -29,13 +29,13 @@
 
                     <v-container fluid class="pa-0 pt-12 pl-8 ma-0 ml-16" style="width: calc(100% - 64px); position: sticky;">
                         <div :style="UI.STYLE.sticky_filter_toolbar">
-                            <ToolbarFilterAssess analyze_selector
+                            <ToolbarFilterAssess :analyze_selector="true"
                                                  total_count_title="assess.total_count"
                                                  @update-news-items-filter="updateFilter"
                                                  ref="toolbarFilter" />
                         </div>
 
-                        <ContentDataAssess analyze_selector :selection="values"
+                        <ContentDataAssess :analyze_selector="true" :selection="values"
                                            class="item-selector"
                                            card-item="CardAssess"
                                            selfID="selector_assess_analyze"
@@ -49,7 +49,7 @@
 
             <v-row>
                 <v-col cols="12" :class="UI.CLASS.card_offset" v-for="value in values" :key="value.id">
-                    <component analyze_selector compact_mode class="item-selector" v-bind:is="cardLayout()"
+                    <component :analyze_selector="true" compact_mode class="item-selector" v-bind:is="cardLayout()"
                                :analyze_can_modify="canModify"
                                :card="value"
                                :showToolbar="true"
@@ -57,7 +57,7 @@
                                @remove-item-from-selector="showMsgBox(value)"
                                @show-single-aggregate-detail="showSingleAggregateDetail(value)"
                                @show-aggregate-detail="showAggregateDetail(value)"
-                               @show-item-detail="showItemDetail(value)" />
+                               @show-item-detail="showItemDetail" />
                 </v-col>
             </v-row>
 
@@ -101,7 +101,6 @@
         },
         props: {
             values: Array,
-            analyze_selector: Boolean,
             report_item_id: Number,
             edit: Boolean,
             modify: Boolean,
