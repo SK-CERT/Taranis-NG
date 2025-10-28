@@ -637,9 +637,6 @@ const messages_cs = {
         select: "Vybrat analýzy",
         select_remote: "Vybrat novinky ze vzdálených instancí",
         attributes: "Atributy",
-        import_csv: "Importovat z CSV",
-        import_from_csv: "Importovat CVE/CPE z CSV",
-        delete_existing_codes: "Smazat stávající CVE/CPE kódy",
         tooltip: {
             sort_time: "Seřadit hodnoty od nejnovější",
             sort_user: "Zobrazit vlastní hodnoty před ostatními",
