@@ -228,13 +228,6 @@ header.app-header.border.dark {
     float: left;
 }
 
-/* --- AnalyzeFilter.vue --- */
-.toolbar-buttons-right {
-    padding-top:4px;
-    position:absolute;
-    right:0;
-}
-
 /* --- ContentDataAnalyze.vue --- */
 /* --- ContentDataPublish.vue --- */
 html {
@@ -508,28 +501,6 @@ nav .v-list-item__title {
 
 .navigation .navigation-list div.v-list-item:not(.section-icon) {
     min-height: 10px;
-}
-
-/* --- QuickChat.vue --- scoped */
-.taranis-chat {
-    position: fixed;
-    top: 72px;
-    right: 32px;
-    width: 350px;
-}
-
-.chatEnv {
-    position: relative;
-    z-index: 20;
-}
-
-.chatButton {
-}
-
-.taranis-chat .quick-chat-container {
-    height: 512px;
-    border: 1px solid #faa;
-    box-shadow: 0 0 20px 6px rgba(0, 0, 0, 0.2);
 }
 
 /* --- AttributeAttachment.vue --- */
