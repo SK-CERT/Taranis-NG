@@ -16,7 +16,7 @@
 
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
-    import {groupAction} from "@/api/assess";
+    import { groupAction } from "@/api/assess";
     import Permissions from "@/services/auth/permissions";
 
     export default {
@@ -101,9 +101,9 @@
                         })
                     }
                     if (items.length > 0) {
-                        groupAction({'group':this.getGroupId(), 'action': type, 'items': items}).then(() => {
+                        groupAction({ 'group': this.getGroupId(), 'action': type, 'items': items }).then(() => {
                             this.multiSelect()
-                            this.$root.$emit('update-news-items-list');
+                            this.$root.$emit('news-items-updated');
                         }).catch((error) => {
                             this.$root.$emit('notification',
                                 {
