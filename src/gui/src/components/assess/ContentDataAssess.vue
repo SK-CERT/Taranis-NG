@@ -11,13 +11,12 @@
                    @aggregate-open="setAggregateOpen"
                    ref="card"
                    :aggregate_opened="aggregateOpen(news_item)"
-                   @check-focus="checkFocus"
-        >
+                   @check-focus="checkFocus">
         </component>
         <v-card v-intersect.quiet="infiniteScrolling"></v-card>
-        <NewsItemSingleDetail ref="newsItemSingleDetail"/>
-        <NewsItemDetail ref="newsItemDetail"/>
-        <NewsItemAggregateDetail ref="newsItemAggregateDetail"/>
+        <NewsItemSingleDetail ref="newsItemSingleDetail" />
+        <NewsItemDetail ref="newsItemDetail" />
+        <NewsItemAggregateDetail ref="newsItemAggregateDetail" />
     </v-container>
 
 </template>
@@ -82,17 +81,17 @@
             },
 
             showSingleAggregateDetail(news_item) {
-                this.$root.$emit('change-state','SHOW_ITEM');
+                this.$root.$emit('change-state', 'SHOW_ITEM');
                 this.$refs.newsItemSingleDetail.open(news_item)
             },
 
             showAggregateDetail(news_item) {
-                this.$root.$emit('change-state','SHOW_ITEM');
+                this.$root.$emit('change-state', 'SHOW_ITEM');
                 this.$refs.newsItemAggregateDetail.open(news_item)
             },
 
             showItemDetail(news_item) {
-                this.$root.$emit('change-state','SHOW_ITEM');
+                this.$root.$emit('change-state', 'SHOW_ITEM');
                 this.$refs.newsItemDetail.open(news_item)
             },
 
@@ -136,17 +135,17 @@
                     if ((append === false) || reload_all) {
                         this.news_items_data = []
                     }
-                    // window.console.log('#', "Add:", append, "Reload:", reload_all, "O:", offset, "L:", limit, "->", this.$store.getters.getNewsItems.items.length);
+                    // console.log('#', "Add:", append, "Reload:", reload_all, "O:", offset, "L:", limit, "->", this.$store.getters.getNewsItems.items.length);
                     if (append) {
                         this.news_items_data = this.news_items_data.concat(this.$store.getters.getNewsItems.items);
                     } else {
                         this.news_items_data = this.$store.getters.getNewsItems.items;
                     }
-                    // window.console.log('#', "C:", this.news_items_data.length);
+                    // console.log('#', "C:", this.news_items_data.length);
                     this.$emit('new-data-loaded', this.$store.getters.getNewsItems.total_count);
-                    setTimeout( () => {
+                    setTimeout(() => {
                         this.$emit('card-items-reindex');
-                    },200);
+                    }, 200);
                     setTimeout(() => {
                         this.news_items_data_loaded = true;
                     }, 1000);
@@ -160,9 +159,9 @@
 
             setAggregateOpen(folder) {
 
-                if( !this.aggregate_open.length ) {
+                if (!this.aggregate_open.length) {
                     this.aggregate_open.push(folder.id);
-                } else if( folder.opened === false ) {
+                } else if (folder.opened === false) {
                     let close = this.aggregate_open.indexOf(folder.id);
                     this.aggregate_open.splice(close, 1);
                 } else {
@@ -176,15 +175,15 @@
 
             news_items_updated() {
                 // only update items when not in selection mode
-                if (! this.multiSelectActive) {
+                if (!this.multiSelectActive) {
                     this.updateData(false, true);
                 }
             },
 
             aggregateOpen(folder) {
 
-                for( let i=0; i<this.aggregate_open.length; i++) {
-                    if( this.aggregate_open[i] == folder.id && folder.news_items.length !== 1) {
+                for (let i = 0; i < this.aggregate_open.length; i++) {
+                    if (this.aggregate_open[i] == folder.id && folder.news_items.length !== 1) {
                         return true;
                     }
                 }
@@ -207,7 +206,7 @@
                 let wordListRegex = [];
                 let chop;
 
-                if ( wordsData.length ) {
+                if (wordsData.length) {
                     for (let i = 0; i < wordsData.length; i++) {
                         for (let j = 0; j < wordsData[i].categories.length; j++) {
                             wordsData[i].categories[j].entries.forEach(t => {
