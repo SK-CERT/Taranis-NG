@@ -11,7 +11,7 @@ dependencies = [
     "Flask-RESTful==0.3.10",
     "gevent==25.9.1",
     "gunicorn==23.0.0",
-    "marshmallow==4.0.1",
+    "marshmallow==4.1.0",
     "Mastodon.py==2.1.4",
     "paramiko==4.0.0",
     "python-dotenv==1.2.1",
