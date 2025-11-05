@@ -113,7 +113,7 @@
 
             selectedColor() {
                 if (this.selected === true || this.preselected) {
-                    return "orange lighten-4"
+                    return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
                 } else {
                     return ""
                 }

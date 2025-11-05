@@ -9,7 +9,8 @@
             <v-col :class="UI.CLASS.card_offset">
                 <v-hover v-slot="{hover}">
                     <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2"
-                            @click.stop="cardItemToolbar" :color="selected && multiSelect ? 'green lighten-4' : ''">
+                            @click.stop="cardItemToolbar"
+                            :color="selectedColor">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
@@ -84,9 +85,18 @@
                     return "status-" + this.card.status
                 }
             },
+
             multiSelect() {
                 return this.$store.getters.getOSINTSourcesMultiSelect;
-            }
+            },
+
+            selectedColor() {
+                if (this.selected === true && this.multiSelect) {
+                    return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4";
+                } else {
+                    return ""
+                }
+            },
         },
         methods: {
             selectionChanged() {
