@@ -228,6 +228,7 @@ class NewsItemAggregateSchema(Schema):
     me_dislike = fields.Bool()
     in_reports_count = fields.Int()
     tags = fields.List(fields.String(), required=False)
+    statuses = fields.Raw(required=False)  # State information from multi-state system
     news_items = fields.Nested(NewsItemPresentationSchema, many=True)
 
 

@@ -19,11 +19,11 @@ The module also imports schemas from other modules:
 - UserSchemaBase: Schema for representing user data.
 """
 
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
-from shared.schema.presentation import PresentationSchema
-from shared.schema.news_item import NewsItemAggregateSchema
 from shared.schema.acl_entry import ACLEntryStatusSchema
+from shared.schema.news_item import NewsItemAggregateSchema
+from shared.schema.presentation import PresentationSchema
 from shared.schema.user import UserSchemaBase
 
 
@@ -56,40 +56,6 @@ class ReportItemAttributeBaseSchema(Schema):
     attribute_group_item_id = fields.Integer(load_default=None, allow_none=True)
 
 
-class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
-    """Schema for representing a report item attribute.
-
-    This schema defines the structure and validation rules for a report item attribute.
-
-    Arguments:
-        ReportItemAttributeBaseSchema -- The base schema for a report item attribute.
-
-    Returns:
-        An instance of the ReportItemAttributeSchema class.
-    """
-
-    created = fields.DateTime("%d.%m.%Y - %H:%M")
-    last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
-    version = fields.Int()
-    current = fields.Bool()
-    user = fields.Nested(UserSchemaBase, exclude=("password",))
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a new ReportItemAttribute object.
-
-        This method takes in data and creates a new ReportItemAttribute object using the provided data.
-
-        Arguments:
-            data (dict): A dictionary containing the data for creating the ReportItemAttribute object.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            ReportItemAttribute: The newly created ReportItemAttribute object.
-        """
-        return ReportItemAttribute(**data)
-
-
 class ReportItemAttribute:
     """Represents an attribute of a report item.
 
@@ -109,22 +75,22 @@ class ReportItemAttribute:
         user (str): The user who created or last updated the attribute.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
-        id,
-        value,
-        value_description,
-        binary_mime_type,
-        binary_size,
-        binary_description,
-        attribute_group_item_id,
-        attribute_group_item_title,
-        created,
-        last_updated,
-        version,
-        current,
-        user,
-    ):
+        id: int,  # noqa: A002
+        value: str,
+        value_description: str,
+        binary_mime_type: str,
+        binary_size: int,
+        binary_description: str,
+        attribute_group_item_id: int,
+        attribute_group_item_title: str,
+        created: str,
+        last_updated: str,
+        version: int,
+        current: bool,
+        user: str,
+    ) -> None:
         """Initialize a new instance of the ReportItem class."""
         self.id = id
         self.value = value
@@ -141,6 +107,40 @@ class ReportItemAttribute:
         self.user = user
 
 
+class ReportItemAttributeSchema(ReportItemAttributeBaseSchema):
+    """Schema for representing a report item attribute.
+
+    This schema defines the structure and validation rules for a report item attribute.
+
+    Arguments:
+        ReportItemAttributeBaseSchema -- The base schema for a report item attribute.
+
+    Returns:
+        An instance of the ReportItemAttributeSchema class.
+    """
+
+    created = fields.DateTime("%d.%m.%Y - %H:%M")
+    last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
+    version = fields.Int()
+    current = fields.Bool()
+    user = fields.Nested(UserSchemaBase, exclude=("password",))
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> ReportItemAttribute:  # noqa: ARG002, ANN003
+        """Create a new ReportItemAttribute object.
+
+        This method takes in data and creates a new ReportItemAttribute object using the provided data.
+
+        Arguments:
+            data (dict): A dictionary containing the data for creating the ReportItemAttribute object.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            ReportItemAttribute: The newly created ReportItemAttribute object.
+        """
+        return ReportItemAttribute(**data)
+
+
 class ReportItemBaseSchema(Schema):
     """Schema for the base report item.
 
@@ -151,7 +151,6 @@ class ReportItemBaseSchema(Schema):
         title_prefix (str): The prefix of the report item title.
         created (DateTime): The date and time when the report item was created.
         last_updated (DateTime): The date and time when the report item was last updated.
-        completed (bool): Indicates whether the report item is completed or not.
         report_item_type_id (int): The ID of the report item type.
     """
 
@@ -166,7 +165,6 @@ class ReportItemBaseSchema(Schema):
     title_prefix = fields.Str()
     created = fields.DateTime("%d.%m.%Y - %H:%M")
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
-    completed = fields.Bool()
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
 
 
@@ -186,44 +184,6 @@ class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):
 
     remote_user = fields.Str(allow_none=True)
     attributes = fields.Nested(ReportItemAttributeSchema, many=True)
-
-
-class ReportItemSchema(ReportItemBaseSchema):
-    """Schema for serializing and deserializing ReportItem objects.
-
-    Inherits from ReportItemBaseSchema.
-
-    Attributes:
-        news_item_aggregates (List[NewsItemAggregateSchema]): List of nested NewsItemAggregateSchema objects.
-        remote_report_items (List[RemoteReportItemSchema]): List of nested RemoteReportItemSchema objects.
-        attributes (List[ReportItemAttributeSchema]): List of nested ReportItemAttributeSchema objects.
-        remote_user (str): Remote user associated with the report item.
-
-    Methods:
-        make(data, **kwargs): Post-load method to create a ReportItem object from deserialized data.
-
-    Returns:
-        ReportItemSchema: An instance of the ReportItemSchema class.
-    """
-
-    news_item_aggregates = fields.Nested(NewsItemAggregateSchema, many=True)
-    remote_report_items = fields.Nested(RemoteReportItemSchema, many=True)
-    attributes = fields.Nested(ReportItemAttributeSchema, many=True)
-    remote_user = fields.Str(allow_none=True)
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a new ReportItem object.
-
-        This method takes in data and creates a new ReportItem object using the provided data.
-
-        Arguments:
-            data (dict): A dictionary containing the data for the ReportItem.
-
-        Returns:
-            ReportItem: A new ReportItem object.
-        """
-        return ReportItem(**data)
 
 
 class ReportItemAttributeRemoteSchema(Schema):
@@ -264,14 +224,15 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
 
     Attributes:
         remote_user -- String field representing the remote user. Allows None as a value.
+        states -- List of states associated with the report item.
     """
 
     remote_user = fields.Str(allow_none=True)
+    states = fields.Raw(allow_none=True)
 
 
 class ReportItem:
-    """
-    Represents a report item.
+    """Represents a report item.
 
     Attributes:
         id (int): The ID of the report item.
@@ -290,19 +251,19 @@ class ReportItem:
 
     def __init__(
         self,
-        id,
-        uuid,
-        title,
-        title_prefix,
-        created,
-        last_updated,
-        completed,
-        report_item_type_id,
-        news_item_aggregates,
-        remote_report_items,
-        attributes,
-        remote_user,
-    ):
+        id: int,  # noqa: A002
+        uuid: str,
+        title: str,
+        title_prefix: str,
+        created: str,
+        last_updated: str,
+        completed: bool,
+        report_item_type_id: int,
+        news_item_aggregates: list,
+        remote_report_items: list,
+        attributes: dict,
+        remote_user: str,
+    ) -> None:
         """Initialize a ReportItem object."""
         self.id = id
         self.uuid = uuid
@@ -316,6 +277,64 @@ class ReportItem:
         self.attributes = attributes
         self.remote_report_items = remote_report_items
         self.remote_user = remote_user
+
+
+class ReportItemSchema(ReportItemBaseSchema):
+    """Schema for serializing and deserializing ReportItem objects.
+
+    Inherits from ReportItemBaseSchema.
+
+    Attributes:
+        news_item_aggregates (List[NewsItemAggregateSchema]): List of nested NewsItemAggregateSchema objects.
+        remote_report_items (List[RemoteReportItemSchema]): List of nested RemoteReportItemSchema objects.
+        attributes (List[ReportItemAttributeSchema]): List of nested ReportItemAttributeSchema objects.
+        remote_user (str): Remote user associated with the report item.
+
+    Methods:
+        make(data, **kwargs): Post-load method to create a ReportItem object from deserialized data.
+
+    Returns:
+        ReportItemSchema: An instance of the ReportItemSchema class.
+    """
+
+    news_item_aggregates = fields.Nested(NewsItemAggregateSchema, many=True)
+    remote_report_items = fields.Nested(RemoteReportItemSchema, many=True)
+    attributes = fields.Nested(ReportItemAttributeSchema, many=True)
+    remote_user = fields.Str(allow_none=True)
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> ReportItem:  # noqa: ARG002, ANN003
+        """Create a new ReportItem object.
+
+        This method takes in data and creates a new ReportItem object using the provided data.
+
+        Arguments:
+            data (dict): A dictionary containing the data for the ReportItem.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            ReportItem: A new ReportItem object.
+        """
+        return ReportItem(**data)
+
+
+class ReportItemId:
+    """A class representing the ID of a report item.
+
+    Args:
+        id (int): The ID of the report item.
+
+    Attributes:
+        id (int): The ID of the report item.
+    """
+
+    def __init__(self, id: int) -> None:  # noqa: A002
+        """Initialize a ReportItem object.
+
+        Args:
+            id (int): The ID of the report item.
+        """
+        self.id = id
 
 
 class ReportItemIdSchema(Schema):
@@ -338,34 +357,16 @@ class ReportItemIdSchema(Schema):
     id = fields.Int()
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> ReportItemId:  # noqa: ARG002, ANN003
         """Create a new ReportItemId object.
 
         This method takes in data and returns a new ReportItemId object.
 
         Arguments:
             data (dict): The data used to create the ReportItemId object.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             ReportItemId: A new ReportItemId object.
         """
         return ReportItemId(**data)
-
-
-class ReportItemId:
-    """A class representing the ID of a report item.
-
-    Args:
-        id (int): The ID of the report item.
-
-    Attributes:
-        id (int): The ID of the report item.
-    """
-
-    def __init__(self, id):
-        """Initialize a ReportItem object.
-
-        Args:
-            id (int): The ID of the report item.
-        """
-        self.id = id
