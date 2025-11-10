@@ -230,7 +230,11 @@ export default {
         },
         openImportDialog() {
             this.dialog_import = true;
-            this.$refs.form.reset();
+            this.$nextTick(() => {
+                if (this.$refs.form) {
+                    this.$refs.form.reset();
+                }
+            });
             //this.$refs.form.resetValidation();
             this.$validator.reset();
         }
