@@ -1,0 +1,16 @@
+tls:
+  options:
+    default:
+      minVersion: VersionTLS13
+      curvePreferences:
+        - X25519MLKEM768
+        - X25519
+        - CurveP521
+        - CurveP384
+        - CurveP256
+  # Uncomment and configure the following lines to use custom certificates
+  # stores:
+  #   default:
+  #     defaultCertificate:
+  #       certFile: /opt/certs/{URL}.crt
+  #       keyFile: /opt/certs/{URL}.key
