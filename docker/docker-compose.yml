@@ -78,17 +78,21 @@ services:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
 
-      traefik.http.routers.taranis-api-443.entrypoints: "websecure"
+      traefik.http.routers.traranis-api-443.entrypoints: "websecure"
       traefik.http.routers.taranis-api-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/api/`)"
       traefik.http.routers.taranis-api-443.tls: "true"
       traefik.http.routers.taranis-api-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-api-443.service: "taranis-api"
+      # Uncomment the following line to enable ACME/Let's Encrypt (after enabling in traefik.yml)
+      # traefik.http.routers.taranis-api-443.tls.certresolver: "myresolver"
 
       traefik.http.routers.taranis-sse-443.entrypoints: "websecure"
       traefik.http.routers.taranis-sse-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/sse`)"
       traefik.http.routers.taranis-sse-443.tls: "true"
       traefik.http.routers.taranis-sse-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-sse-443.service: "taranis-api"
+      # Uncomment the following line to enable ACME/Let's Encrypt (after enabling in traefik.yml)
+      # traefik.http.routers.taranis-sse-443.tls.certresolver: "myresolver"
     volumes:
       - "core_data:/data"
     logging:
@@ -263,6 +267,8 @@ services:
       traefik.http.routers.taranis-gui-443.tls: "true"
       traefik.http.routers.taranis-gui-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-gui-443.service: "taranis-gui"
+      # Uncomment the following line to enable ACME/Let's Encrypt (after enabling in traefik.yml)
+      # traefik.http.routers.taranis-gui-443.tls.certresolver: "myresolver"
 
     logging:
       driver: "json-file"
@@ -287,6 +293,8 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./traefik:/etc/traefik:ro"
       - "./tls:/opt/certs"
+      # Uncomment the following line to enable ACME/Let's Encrypt (after enabling in traefik.yml)
+      # - "acme_storage:/letsencrypt"
     logging:
       driver: "json-file"
       options:
@@ -307,3 +315,4 @@ volumes:
   core_data:
   presenters_templates:
   collector_storage:
+  acme_storage:
