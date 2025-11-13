@@ -1,10 +1,11 @@
 """Data Provider Model."""
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 from managers.db_manager import db
 from marshmallow import post_load
 
+from shared.common import TZ
 from shared.schema.data_provider import DataProviderSchema
 
 
@@ -42,16 +43,16 @@ class DataProvider(db.Model):
         self.web_url = web_url
 
     @classmethod
-    def find(cls, id: int) -> object:
+    def find(cls, data_provider_id: int) -> object:
         """Find a Data Provider by ID.
 
         Args:
-            id (int): Data Provider ID.
+            data_provider_id (int): Data Provider ID.
 
         Returns:
             Data Provider object.
         """
-        return db.session.get(cls, id)
+        return db.session.get(cls, data_provider_id)
 
     @classmethod
     def get_all(cls) -> list:
@@ -107,23 +108,23 @@ class DataProvider(db.Model):
         schema = NewDataProviderSchema()
         new = schema.load(data)
         new.updated_by = user_name
-        new.updated_at = datetime.now(tz=UTC)
+        new.updated_at = datetime.now(TZ)
         db.session.add(new)
         db.session.commit()
         return new
 
     @classmethod
-    def update(cls, id: int, data: dict, user_name: str) -> object:
+    def update(cls, data_provider_id: int, data: dict, user_name: str) -> object:
         """Update an existing Data Provider.
 
         Args:
-            id (int): ID of the Data Provider to update.
+            data_provider_id (int): ID of the Data Provider to update.
             data (dict): Data to update the Data Provider with.
             user_name (str): User who is updating the Data Provider.
         """
         schema = DataProviderSchema()
         new = schema.load(data)
-        old = db.session.get(cls, id)
+        old = db.session.get(cls, data_provider_id)
         old.name = new.name
         old.api_type = new.api_type
         old.api_url = new.api_url
@@ -131,18 +132,18 @@ class DataProvider(db.Model):
         old.user_agent = new.user_agent
         old.web_url = new.web_url
         old.updated_by = user_name
-        old.updated_at = datetime.now(tz=UTC)
+        old.updated_at = datetime.now(TZ)
         db.session.commit()
         return old
 
     @classmethod
-    def delete(cls, id: int) -> None:
+    def delete(cls, data_provider_id: int) -> None:
         """Delete a Data Provider.
 
         Args:
-            id (int): Data Provider ID.
+            data_provider_id (int): Data Provider ID.
         """
-        record = db.session.get(cls, id)
+        record = db.session.get(cls, data_provider_id)
         db.session.delete(record)
         db.session.commit()
 
