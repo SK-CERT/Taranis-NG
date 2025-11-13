@@ -1,7 +1,7 @@
 <template>
      <Navigation
         :links = "links"
-        :icon   = "'mdi-google-circles-communities'"
+        :icon   = "'mdi-file-table'"
     />
 </template>
 

@@ -1,7 +1,7 @@
 <template>
     <Navigation
             :links="links"
-            :icon="'mdi-google-circles-extended'"
+            :icon="'mdi-newspaper-variant'"
     />
 </template>
 

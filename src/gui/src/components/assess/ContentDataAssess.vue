@@ -45,13 +45,12 @@
         data: () => ({
             news_items_data: [],
             news_items_data_loaded: false,
-            news_items_filter: {
+            filter: {
                 search: "",
                 range: "ALL",
                 read: false,
                 important: false,
                 relevant: false,
-                in_analyze: false,
                 sort: "DATE_DESC"
             },
             aggregate_open: []
@@ -126,7 +125,7 @@
                 this.$store.dispatch("getNewsItemsByGroup", {
                     group_id: group,
                     data: {
-                        filter: this.news_items_filter,
+                        filter: this.filter,
                         offset: offset,
                         limit: limit
                     }
@@ -153,7 +152,7 @@
             },
 
             updateFilter(filter) {
-                this.news_items_filter = filter;
+                this.filter = filter;
                 this.updateData(false, false);
             },
 

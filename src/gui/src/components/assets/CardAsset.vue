@@ -69,7 +69,6 @@
         data: () => ({
             toolbar: false,
             selected: false,
-            status: "in_progress",
             msgbox_visible: false,
         }),
         mixins: [AuthMixin],

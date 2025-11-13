@@ -386,3 +386,39 @@ export function updateBotPreset(node) {
 export function deleteBotPreset(node) {
     return ApiService.delete('/config/bots-presets/' + node.id)
 }
+
+export function getAllStateDefinitions(filter) {
+    return ApiService.get('/config/state-definitions?search=' + filter.search)
+}
+
+export function createNewStateDefinition(state_definition) {
+    return ApiService.post('/config/state-definitions', state_definition)
+}
+
+export function updateStateDefinition(state_definition) {
+    return ApiService.put('/config/state-definitions/' + state_definition.id, state_definition)
+}
+
+export function deleteStateDefinition(state_definition) {
+    return ApiService.delete('/config/state-definitions/' + state_definition.id)
+}
+
+export function getAllStateEntityTypes(filter) {
+    let params = '';
+    if (filter && filter.entity_type) {
+        params = '?entity_type=' + filter.entity_type;
+    }
+    return ApiService.get('/config/state-entity-types' + params)
+}
+
+export function createNewStateEntityType(association) {
+    return ApiService.post('/config/state-entity-types', association)
+}
+
+export function updateStateEntityType(association) {
+    return ApiService.put('/config/state-entity-types/' + association.id, association)
+}
+
+export function deleteStateEntityType(association) {
+    return ApiService.delete('/config/state-entity-types/' + association.id)
+}

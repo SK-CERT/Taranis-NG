@@ -1,15 +1,18 @@
 """Product model."""
 
 from datetime import datetime
-import sqlalchemy
-from marshmallow import fields
-from marshmallow import post_load
-from sqlalchemy import orm, func, or_, and_
-from sqlalchemy.sql.expression import cast
 
+import sqlalchemy
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.report_item import ReportItem
+from model.state_system import StateDefinition
+from sqlalchemy import and_, func, or_, orm
+from sqlalchemy.sql.expression import cast
+
+from shared.common import TZ
+from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.product import ProductPresentationSchema, ProductSchemaBase
 from shared.schema.report_item import ReportItemIdSchema
@@ -25,11 +28,13 @@ class NewProductSchema(ProductSchemaBase):
     report_items = fields.Nested(ReportItemIdSchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs: object) -> object:  # noqa: ARG002
         """Create a new product.
 
         Args:
             data: Product data
+            **kwargs: Additional keyword arguments from marshmallow
+
         Returns:
             Product: New product
         """
@@ -63,9 +68,12 @@ class Product(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     user = db.relationship("User")
 
+    state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
+    state = db.relationship(lambda: StateDefinition, lazy="select")
+
     report_items = db.relationship("ReportItem", secondary="product_report_item")
 
-    def __init__(self, id, title, description, product_type_id, report_items):
+    def __init__(self, id: int, title: str, description: str, product_type_id: int, report_items: list[ReportItem]) -> None:  # noqa: A002
         """Initialize a product."""
         if id != -1:
             self.id = id
@@ -83,13 +91,13 @@ class Product(db.Model):
             self.report_items.append(ReportItem.find(report_item.id))
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct a product."""
         self.subtitle = self.description
         self.tag = "mdi-file-pdf-outline"
 
     @classmethod
-    def count_all(cls):
+    def count_all(cls) -> int:
         """Count all products.
 
         Returns:
@@ -98,7 +106,45 @@ class Product(db.Model):
         return cls.query.count()
 
     @classmethod
-    def find(cls, product_id):
+    def count_by_states(cls) -> dict:
+        """Count products by their states.
+
+        Returns:
+            dict: Dictionary with state names as keys and counts as values
+        """
+        try:
+            # Initialize counts
+            state_counts = {}
+
+            # Count items by actual state_id values in database (not just active states)
+            result = db.session.query(cls.state_id, db.func.count(cls.id)).filter(cls.state_id.isnot(None)).group_by(cls.state_id).all()
+
+            # Get state definitions for the found state_ids
+            for state_id, count in result:
+                state_def = StateDefinition.query.filter_by(id=state_id).first()
+                if state_def:
+                    state_counts[state_def.display_name] = {
+                        "count": count,
+                        "display_name": state_def.display_name,
+                        "color": state_def.color,
+                        "icon": state_def.icon,
+                    }
+
+            # Count items with no state
+            items_with_no_state = db.session.query(cls).filter(cls.state_id.is_(None)).count()
+
+            if items_with_no_state > 0:
+                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "No State", "color": "#9E9E9E", "icon": "mdi-help"}
+
+            return state_counts
+
+        except Exception as error:
+            # Fallback if state system not available
+            logger.exception(f"Error counting products by states: {error}")
+            return {}
+
+    @classmethod
+    def find(cls, product_id: int) -> object:
         """Find a product.
 
         Args:
@@ -106,11 +152,10 @@ class Product(db.Model):
         Returns:
             Product: Product
         """
-        product = db.session.get(cls, product_id)
-        return product
+        return db.session.get(cls, product_id)
 
     @classmethod
-    def get_detail_json(cls, product_id):
+    def get_detail_json(cls, product_id: int) -> dict:
         """Get product detail.
 
         Args:
@@ -123,7 +168,7 @@ class Product(db.Model):
         return products_schema.dump(product)
 
     @classmethod
-    def get(cls, filter, offset, limit, user):
+    def get(cls, filter: dict, offset: int, limit: int, user: object) -> tuple[list, int]:  # noqa: A002
         """Get products.
 
         Args:
@@ -147,16 +192,17 @@ class Product(db.Model):
         )
 
         query = query.outerjoin(
-            ACLEntry, and_(cast(Product.product_type_id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE)
+            ACLEntry,
+            and_(cast(Product.product_type_id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE),
         )
-        query = ACLEntry.apply_query(query, user, True, False, False)
+        query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
         if "search" in filter and filter["search"] != "":
             search_string = "%" + filter["search"] + "%"
             query = query.filter(or_(Product.title.ilike(search_string), Product.description.ilike(search_string)))
 
         if "range" in filter and filter["range"] != "ALL":
-            date_limit = datetime.now()
+            date_limit = datetime.now(tz=TZ)
             if filter["range"] == "TODAY":
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -178,7 +224,7 @@ class Product(db.Model):
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
-    def get_json(cls, filter, offset, limit, user):
+    def get_json(cls, filter: dict, offset: int, limit: int, user: object) -> dict:  # noqa: A002
         """Get products.
 
         Args:
@@ -196,6 +242,21 @@ class Product(db.Model):
             product.see = True
             product.access = result.access > 0 or result.acls == 0
             product.modify = result.modify > 0 or result.acls == 0
+
+            # Add state information to the product (single state only)
+            if product.state_id and product.state:
+                product.states = [
+                    {
+                        "id": product.state.id,
+                        "display_name": product.state.display_name,
+                        "description": product.state.description,
+                        "color": product.state.color,
+                        "icon": product.state.icon,
+                    },
+                ]
+            else:
+                product.states = []
+
             products.append(product)
 
             for report_item in product.report_items:
@@ -207,7 +268,7 @@ class Product(db.Model):
         return {"total_count": count, "items": products_schema.dump(products)}
 
     @classmethod
-    def add_product(cls, product_data, user_id):
+    def add_product(cls, product_data: dict, user_id: int) -> object:
         """Add a product.
 
         Args:
@@ -226,7 +287,7 @@ class Product(db.Model):
         return product
 
     @classmethod
-    def update_product(cls, product_id, product_data):
+    def update_product(cls, product_id: int, product_data: dict) -> None:
         """Update a product.
 
         Args:
@@ -246,14 +307,15 @@ class Product(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, id):
-        """Delete a product.
+    def delete(cls, id: int) -> None:  # noqa: A002
+        """Delete product by id.
 
         Args:
             id: Product id
         """
         product = db.session.get(cls, id)
         if product is not None:
+            # With direct state_id foreign key, no additional cleanup needed
             db.session.delete(product)
             db.session.commit()
 

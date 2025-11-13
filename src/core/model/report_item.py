@@ -6,57 +6,33 @@ created timestamp, and more. The class also includes methods for finding report 
 The module also defines several schemas for creating and validating report items and their attributes.
 """
 
-from datetime import datetime
 import uuid as uuid_generator
-from sqlalchemy import orm, or_, func, text, and_
-from sqlalchemy.sql.expression import cast
-import sqlalchemy
-from marshmallow import fields, post_load
+from datetime import datetime
 
+import sqlalchemy
 from managers.db_manager import db
-from model.news_item import NewsItemAggregate
-from model.report_item_type import AttributeGroupItem
-from model.report_item_type import ReportItemType
+from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.news_item import NewsItemAggregate
+from model.report_item_type import AttributeGroupItem, ReportItemType
+from model.state_system import StateDefinition
+from sqlalchemy import and_, func, or_, orm, text
+from sqlalchemy.sql.expression import cast
+
+from shared.common import TZ
+from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
 from shared.schema.attribute import AttributeType
 from shared.schema.news_item import NewsItemAggregateIdSchema, NewsItemAggregateSchema
 from shared.schema.report_item import (
+    RemoteReportItemSchema,
     ReportItemAttributeBaseSchema,
     ReportItemBaseSchema,
     ReportItemIdSchema,
-    RemoteReportItemSchema,
+    ReportItemPresentationSchema,
     ReportItemRemoteSchema,
     ReportItemSchema,
-    ReportItemPresentationSchema,
 )
-
-
-class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
-    """Schema for creating a new report item attribute.
-
-    This schema is used to validate and deserialize data for creating a new report item attribute.
-
-    Args:
-        ReportItemAttributeBaseSchema -- The base schema for report item attributes.
-
-    Returns:
-        An instance of the ReportItemAttribute class.
-    """
-
-    @post_load
-    def make_report_item_attribute(self, data, **kwargs):
-        """Create a report item attribute.
-
-        This method takes in data and creates a ReportItemAttribute object.
-
-        Args:
-            data (dict): A dictionary containing the data for the report item attribute.
-
-        Returns:
-            ReportItemAttribute: The created report item attribute object.
-        """
-        return ReportItemAttribute(**data)
 
 
 class ReportItemAttribute(db.Model):
@@ -111,15 +87,15 @@ class ReportItemAttribute(db.Model):
 
     def __init__(
         self,
-        id,
-        value,
-        value_description,
-        binary_mime_type,
-        binary_size,
-        binary_description,
-        attribute_group_item_id,
-        attribute_group_item_title,
-    ):
+        id: int,  #  noqa: A002, ARG002
+        value: str,
+        value_description: str,
+        binary_mime_type: str,
+        binary_size: int,
+        binary_description: str,
+        attribute_group_item_id: int,
+        attribute_group_item_title: str,
+    ) -> None:
         """Initialize a ReportItem object.
 
         Args:
@@ -142,18 +118,45 @@ class ReportItemAttribute(db.Model):
         self.attribute_group_item_title = attribute_group_item_title
 
     @classmethod
-    def find(cls, attribute_id):
+    def find(cls, attribute_id: int) -> object:
         """Find a report item attribute by its ID.
 
         Args:
             attribute_id (int): The ID of the attribute to find.
 
         Returns:
-            ReportItemAttribute: The report item attribute with the specified ID, or None if not found.
+            The report item attribute with the specified ID, or None if not found.
 
         """
-        report_item_attribute = db.session.get(cls, attribute_id)
-        return report_item_attribute
+        return db.session.get(cls, attribute_id)
+
+
+class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
+    """Schema for creating a new report item attribute.
+
+    This schema is used to validate and deserialize data for creating a new report item attribute.
+
+    Args:
+        ReportItemAttributeBaseSchema -- The base schema for report item attributes.
+
+    Returns:
+        An instance of the ReportItemAttribute class.
+    """
+
+    @post_load
+    def make_report_item_attribute(self, data: dict, **kwargs: object) -> ReportItemAttribute:  # noqa: ARG002
+        """Create a report item attribute.
+
+        This method takes in data and creates a ReportItemAttribute object.
+
+        Args:
+            data (dict): A dictionary containing the data for the report item attribute.
+            **kwargs: Additional keyword arguments from marshmallow.
+
+        Returns:
+            ReportItemAttribute: The created report item attribute object.
+        """
+        return ReportItemAttribute(**data)
 
 
 class NewReportItemSchema(ReportItemBaseSchema):
@@ -173,11 +176,12 @@ class NewReportItemSchema(ReportItemBaseSchema):
     attributes = fields.Nested(NewReportItemAttributeSchema, many=True)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs: object) -> object:  # noqa: ARG002
         """Create a new ReportItem object.
 
         Args:
             data (dict): A dictionary containing the data for the ReportItem.
+            **kwargs: Additional keyword arguments from marshmallow.
 
         Returns:
             ReportItem: A new ReportItem object.
@@ -206,7 +210,6 @@ class ReportItem(db.Model):
         title_prefix (str): The prefix of the report item title.
         created (datetime): The datetime when the report item was created.
         last_updated (datetime): The datetime when the report item was last updated.
-        completed (bool): Indicates whether the report item is completed or not.
         user_id (int): The ID of the user associated with the report item.
         user (User): The user associated with the report item.
         remote_user (str): The remote user associated with the report item.
@@ -228,7 +231,6 @@ class ReportItem(db.Model):
 
     created = db.Column(db.DateTime, default=datetime.now)
     last_updated = db.Column(db.DateTime, default=datetime.now)
-    completed = db.Column(db.Boolean, default=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     user = db.relationship("User", viewonly=True)
@@ -236,6 +238,9 @@ class ReportItem(db.Model):
 
     report_item_type_id = db.Column(db.Integer, db.ForeignKey("report_item_type.id"), nullable=True)
     report_item_type = db.relationship("ReportItemType", viewonly=True)
+
+    state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
+    state = db.relationship(lambda: StateDefinition, lazy="select")
 
     news_item_aggregates = db.relationship("NewsItemAggregate", secondary="report_item_news_item_aggregate")
 
@@ -250,7 +255,17 @@ class ReportItem(db.Model):
 
     report_item_cpes = db.relationship("ReportItemCpe", cascade="all, delete-orphan")
 
-    def __init__(self, id, uuid, title, title_prefix, report_item_type_id, news_item_aggregates, remote_report_items, attributes, completed):
+    def __init__(
+        self,
+        id: int,  # noqa: A002
+        uuid: str,
+        title: str,
+        title_prefix: str,
+        report_item_type_id: int,
+        news_item_aggregates: list,
+        remote_report_items: list,
+        attributes: list,
+    ) -> None:
         """Initialize a new instance of the ReportItem class."""
         self.id = id
 
@@ -263,7 +278,6 @@ class ReportItem(db.Model):
         self.title_prefix = title_prefix
         self.report_item_type_id = report_item_type_id
         self.attributes = attributes
-        self.completed = completed
         self.report_item_cpes = []
         self.subtitle = ""
         self.tag = ""
@@ -277,48 +291,37 @@ class ReportItem(db.Model):
             self.remote_report_items.append(ReportItem.find(remote_report_item.id))
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstructs the report item."""
         self.subtitle = ""
         self.tag = "mdi-file-table-outline"
 
     @classmethod
-    def count_all(cls, is_completed):
-        """Count the number of report items based on completion status.
-
-        Args:
-            is_completed (bool): A flag indicating whether to count completed or incomplete report items.
-        Returns:
-            int: The count of report items matching the completion status.
-        """
-        return cls.query.filter_by(completed=is_completed).count()
-
-    @classmethod
-    def find(cls, report_item_id):
+    def find(cls, report_item_id: int) -> object:
         """Find a report item by its ID.
 
         Args:
             report_item_id (int): The ID of the report item.
+
         Returns:
-            ReportItem: The report item with the specified ID.
+            The report item with the specified ID.
         """
-        report_item = db.session.get(cls, report_item_id)
-        return report_item
+        return db.session.get(cls, report_item_id)
 
     @classmethod
-    def find_by_uuid(cls, report_item_uuid):
+    def find_by_uuid(cls, report_item_uuid: str) -> object:
         """Find a report item by its UUID.
 
         Args:
             report_item_uuid (str): The UUID of the report item.
+
         Returns:
-            ReportItem: The report item with the specified UUID.
+            The report item with the specified UUID.
         """
-        report_item = cls.query.filter_by(uuid=report_item_uuid).first()
-        return report_item
+        return cls.query.filter_by(uuid=report_item_uuid).first()
 
     @classmethod
-    def allowed_with_acl(cls, report_item_id, user, see, access, modify):
+    def allowed_with_acl(cls, report_item_id: int, user: object, see: bool, access: bool, modify: bool) -> bool:
         """Check if the user is allowed to perform actions on a report item based on ACL.
 
         Args:
@@ -327,6 +330,7 @@ class ReportItem(db.Model):
             see (bool): Whether the user can see the report item.
             access (bool): Whether the user can access the report item.
             modify (bool): Whether the user can modify the report item.
+
         Returns:
             bool: True if the user is allowed, False otherwise.
         """
@@ -348,14 +352,16 @@ class ReportItem(db.Model):
         return query.scalar() is not None
 
     @classmethod
-    def get_for_sync(cls, last_synced, report_item_types):
+    def get_for_sync(cls, last_synced: datetime, report_item_types: list) -> tuple[list, datetime]:
         """Retrieve report items for synchronization.
 
         This method retrieves report items that have been updated since the last synchronization time,
         and belong to the specified report item types.
+
         Args:
             last_synced (datetime): The last synchronization time.
             report_item_types (list): A list of report item types.
+
         Returns:
             tuple: A tuple containing two elements:
                 - items (list): A list of report items that need to be synchronized.
@@ -365,7 +371,7 @@ class ReportItem(db.Model):
         for report_item_type in report_item_types:
             report_item_type_ids.add(report_item_type.id)
 
-        last_sync_time = datetime.now()
+        last_sync_time = datetime.now(tz=TZ)
 
         query = cls.query.filter(
             ReportItem.last_updated >= last_synced,
@@ -385,7 +391,7 @@ class ReportItem(db.Model):
         return items, last_sync_time
 
     @classmethod
-    def get(cls, group, filter, offset, limit, user):
+    def get(cls, group: str, filter: dict, offset: int, limit: int, user: str) -> tuple[list, int]:  # noqa: A002
         """Retrieve report items based on specified criteria.
 
         Args:
@@ -394,6 +400,7 @@ class ReportItem(db.Model):
             offset (int): The offset for pagination.
             limit (int): The limit for pagination.
             user (str): The user performing the query.
+
         Returns:
             tuple: A tuple containing the list of report items and the total count.
         """
@@ -423,7 +430,7 @@ class ReportItem(db.Model):
                     ),
                 ),
             )
-            query = ACLEntry.apply_query(query, user, True, False, False)
+            query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
         search_string = filter.get("search", "")
         if search_string:
@@ -433,17 +440,23 @@ class ReportItem(db.Model):
                     ReportItemAttribute.value.ilike(search_string),
                     ReportItem.title.ilike(search_string),
                     ReportItem.title_prefix.ilike(search_string),
-                )
+                ),
             )
 
         if filter.get("completed", "").lower() == "true":
-            query = query.filter(ReportItem.completed)
+            # Find completed state ID
+            completed_state = StateDefinition.get_by_name("Completed")
+            if completed_state:
+                query = query.filter(ReportItem.state_id == completed_state.id)
 
         if filter.get("incompleted", "").lower() == "true":
-            query = query.filter(ReportItem.completed.is_(False))
+            # Find completed state ID and filter out items with that state
+            completed_state = StateDefinition.get_by_name("Completed")
+            if completed_state:
+                query = query.filter(or_(ReportItem.state_id != completed_state.id, ReportItem.state_id.is_(None)))
 
         if filter.get("range", "ALL") != "ALL":
-            date_limit = datetime.now()
+            date_limit = datetime.now(tz=TZ)
             if filter["range"] == "TODAY":
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -465,23 +478,26 @@ class ReportItem(db.Model):
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
-    def identical(cls, uuid):
+    def identical(cls, uuid: str) -> bool:
         """Check if a report item with the given UUID exists.
 
         Args:
-            uuid -- The UUID of the report item to check.
+            uuid (str): The UUID of the report item to check.
+
         Returns:
             True if a report item with the given UUID exists, False otherwise.
         """
         return db.session.query(db.exists().where(ReportItem.uuid == uuid)).scalar()
 
     @classmethod
-    def get_by_cpe(cls, cpes):
+    def get_by_cpe(cls, cpes: list[str]) -> list[str]:
         """Retrieve report items by Common Platform Enumeration (CPE).
 
         This method queries the database to retrieve report items that match the provided CPEs.
+
         Args:
             cpes (list): A list of CPEs to search for.
+
         Returns:
             list: A list of report item IDs that match the provided CPEs.
         """
@@ -497,23 +513,23 @@ class ReportItem(db.Model):
                 params[param] = cpes[i]
 
             result = db.session.execute(text(query_string.format(inner_query)), params)
-            report_item_ids = [row[0] for row in result]
+            return [row[0] for row in result]
 
-            return report_item_ids
-        else:
-            return []
+        return []
 
     @classmethod
-    def get_json(cls, group, filter, offset, limit, user):
+    def get_json(cls, group: str, filter: dict, offset: int, limit: int, user: str) -> dict:  # noqa: A002
         """Get the JSON representation of report items.
 
         This method retrieves report items based on the provided parameters and returns them in JSON format.
+
         Args:
             group (str): The group parameter.
             filter (str): The filter parameter.
             offset (int): The offset parameter.
             limit (int): The limit parameter.
             user (str): The user parameter.
+
         Returns:
             dict: A dictionary containing the total count of report items and a list of report items in JSON format.
         """
@@ -525,6 +541,20 @@ class ReportItem(db.Model):
                 report_item.see = True
                 report_item.access = True
                 report_item.modify = False
+                # Add state information to the report item (single state only)
+                if report_item.state_id and report_item.state:
+                    report_item.states = [
+                        {
+                            "id": report_item.state.id,
+                            "name": report_item.state.display_name,
+                            "display_name": report_item.state.display_name,
+                            "description": report_item.state.description,
+                            "color": report_item.state.color,
+                            "icon": report_item.state.icon,
+                        },
+                    ]
+                else:
+                    report_item.states = []
                 report_items.append(report_item)
         else:
             for result in results:
@@ -532,18 +562,32 @@ class ReportItem(db.Model):
                 report_item.see = True
                 report_item.access = result.access > 0 or result.acls == 0
                 report_item.modify = result.modify > 0 or result.acls == 0
+                # Add state information to the report item (single state only)
+                if report_item.state_id and report_item.state:
+                    report_item.states = [
+                        {
+                            "id": report_item.state.id,
+                            "name": report_item.state.display_name,
+                            "display_name": report_item.state.display_name,
+                            "description": report_item.state.description,
+                            "color": report_item.state.color,
+                            "icon": report_item.state.icon,
+                        },
+                    ]
+                else:
+                    report_item.states = []
                 report_items.append(report_item)
 
         report_items_schema = ReportItemPresentationSchema(many=True)
         return {"total_count": count, "items": report_items_schema.dump(report_items)}
 
     @classmethod
-    def get_detail_json(cls, id):
+    def get_detail_json(cls, id: str) -> dict:  # noqa: A002
         """Get the detailed JSON representation of a report item.
 
         Args:
-            cls -- The class object.
-            id -- The ID of the report item.
+            id (str): The ID of the report item.
+
         Returns:
             The detailed JSON representation of the report item.
         """
@@ -552,7 +596,7 @@ class ReportItem(db.Model):
         return report_item_schema.dump(report_item)
 
     @classmethod
-    def get_groups(cls):
+    def get_groups(cls) -> list:
         """Get the distinct groups associated with the report items.
 
         Returns:
@@ -572,21 +616,23 @@ class ReportItem(db.Model):
         return list(groups)
 
     @classmethod
-    def add_report_item(cls, report_item_data, user):
+    def add_report_item(cls, report_item_data: dict, user: object) -> tuple[object, int]:
         """Add a report item to the database.
 
         This method takes in report_item_data and user as arguments and adds a new report item to the database.
         It performs authorization checks to ensure that the user has the necessary permissions to add the report item.
+
         Args:
             report_item_data (dict): The data for the report item.
             user (User): The user adding the report item.
+
         Returns:
             tuple: A tuple containing the added report item and the HTTP status code.
         """
         report_item_schema = NewReportItemSchema()
         report_item = report_item_schema.load(report_item_data)
 
-        if not ReportItemType.allowed_with_acl(report_item.report_item_type_id, user, False, False, True):
+        if not ReportItemType.allowed_with_acl(report_item.report_item_type_id, user, see=False, access=False, modify=True):
             return "Unauthorized access to report item type", 401
 
         report_item.user_id = user.id
@@ -601,13 +647,14 @@ class ReportItem(db.Model):
         return report_item, 200
 
     @classmethod
-    def add_remote_report_items(cls, report_item_data, remote_node_name):
+    def add_remote_report_items(cls, report_item_data: list, remote_node_name: str) -> None:
         """Add remote report items to the database.
 
         This method takes a list of report item data and a remote node name,
         and adds the report items to the database. If a report item with the
         same UUID already exists, it updates the existing report item with the
         new data.
+
         Args:
             report_item_data (list): A list of report item data.
             remote_node_name (str): The name of the remote node.
@@ -616,7 +663,7 @@ class ReportItem(db.Model):
         # but not "attribute_group_item" records, so on GUI you can't see report content.
         # It's because there is no enough information in source data to correctly build groups and items.
         # You miss this info: Group name, Group order, Group items, Group items order
-        # TODO: this needs to be finished if we have enough source data
+        # TODO(Jan): this needs to be finished if we have enough source data
         # or create way to correctly display data with our internal definition based on name matching (performance)
         schema = NewReportItemSchema()
         for item_data in report_item_data:
@@ -631,7 +678,7 @@ class ReportItem(db.Model):
                 # Beware! input data doesnt't contain ID (it's from remote system) so schema.load() ALWAYS create new record!
                 # This is workaround to avoid of creating duplicity data
                 new_report_item.id = existing_report_item.id
-                new_report_item.last_updated = datetime.now()
+                new_report_item.last_updated = datetime.now(tz=TZ)
                 db.session.merge(new_report_item)
                 # this code we can use for future attribute parsing:
                 # for key, value in item_data.items():
@@ -646,38 +693,35 @@ class ReportItem(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_report_item(cls, id, data, user):
+    def update_report_item(cls, id: int, data: dict, user: object) -> tuple[bool, dict]:  # noqa: A002, C901, PLR0912
         """Update a report item with the given data.
 
         Args:
             id (int): The ID of the report item.
             data (dict): The data to update the report item with.
             user (User): The user performing the update.
+
         Returns:
             tuple: A tuple containing a boolean indicating whether the report item was modified and the updated data.
         """
         modified = False
         new_attribute = None
+        added_aggregates = []  # Track added aggregates
         report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data:
-                if "title" in data:
-                    if report_item.title != data["title"]:
-                        modified = True
-                        report_item.title = data["title"]
-                        data["title"] = ""
+                if "title" in data and report_item.title != data["title"]:
+                    modified = True
+                    report_item.title = data["title"]
+                    data["title"] = ""
 
-                if "title_prefix" in data:
-                    if report_item.title_prefix != data["title_prefix"]:
-                        modified = True
-                        report_item.title_prefix = data["title_prefix"]
-                        data["title_prefix"] = ""
+                if "title_prefix" in data and report_item.title_prefix != data["title_prefix"]:
+                    modified = True
+                    report_item.title_prefix = data["title_prefix"]
+                    data["title_prefix"] = ""
 
-                if "completed" in data:
-                    if report_item.completed != data["completed"]:
-                        modified = True
-                        report_item.completed = data["completed"]
-                        data["completed"] = ""
+                # Note: 'completed' is now handled through the state system API
+                # The frontend should use the state endpoints instead
 
                 if "attribute_id" in data:
                     for attribute in report_item.attributes:
@@ -687,13 +731,12 @@ class ReportItem(db.Model):
                                 modified = True
                                 attribute.value = data["attribute_value"]
                                 attribute.user = user
-                                attribute.last_updated = datetime.now()
-                            if data.get("value_description", False):
-                                if attribute.value_description != data["value_description"]:
-                                    modified = True
-                                    attribute.value_description = data["value_description"]
-                                    attribute.user = user
-                                    attribute.last_updated = datetime.now()
+                                attribute.last_updated = datetime.now(tz=TZ)
+                            if data.get("value_description", False) and attribute.value_description != data["value_description"]:
+                                modified = True
+                                attribute.value_description = data["value_description"]
+                                attribute.user = user
+                                attribute.last_updated = datetime.now(tz=TZ)
                             break
 
             if "add" in data:
@@ -705,9 +748,11 @@ class ReportItem(db.Model):
 
                 if "aggregate_ids" in data:
                     modified = True
+                    added_aggregates = []
                     for aggregate_id in data["aggregate_ids"]:
                         aggregate = NewsItemAggregate.find(aggregate_id)
                         report_item.news_item_aggregates.append(aggregate)
+                        added_aggregates.append(aggregate_id)
 
                 if "remote_report_item_ids" in data:
                     modified = True
@@ -737,6 +782,7 @@ class ReportItem(db.Model):
 
                     if aggregate_to_delete is not None:
                         modified = True
+                        aggregate_id = aggregate_to_delete.id
                         report_item.news_item_aggregates.remove(aggregate_to_delete)
 
                 if "remote_report_item_id" in data:
@@ -751,7 +797,7 @@ class ReportItem(db.Model):
                         report_item.remote_report_items.remove(remote_report_item_to_delete)
 
             if modified:
-                report_item.last_updated = datetime.now()
+                report_item.last_updated = datetime.now(tz=TZ)
                 data["user_id"] = user.id
                 data["report_item_id"] = int(id)
                 report_item.update_cpes()
@@ -764,14 +810,16 @@ class ReportItem(db.Model):
         return modified, data
 
     @classmethod
-    def get_updated_data(cls, id, data):
+    def get_updated_data(cls, id: int, data: dict) -> dict:  # noqa: A002
         """Get the updated data for a report item.
 
         This method retrieves the updated data for a report item based on the provided ID and data.
+
         Args:
             cls (class): The class object.
             id (int): The ID of the report item.
             data (dict): The data containing the updates.
+
         Returns:
             dict: The updated data for the report item.
         """
@@ -785,7 +833,11 @@ class ReportItem(db.Model):
                     data["title_prefix"] = report_item.title_prefix
 
                 if "completed" in data:
-                    data["completed"] = report_item.completed
+                    # Import here to avoid circular import
+                    from model.state_system import StateManager  # noqa: PLC0415
+
+                    # Check if report item has 'completed' state
+                    data["completed"] = StateManager.has_state("report_item", report_item.id, "completed")
 
                 if "attribute_id" in data:
                     for attribute in report_item.attributes:
@@ -826,7 +878,7 @@ class ReportItem(db.Model):
         return data
 
     @classmethod
-    def add_attachment(cls, id, attribute_group_item_id, user, file, description):
+    def add_attachment(cls, id: int, attribute_group_item_id: int, user: object, file: object, description: str) -> dict:  # noqa: A002
         """Add an attachment to a report item.
 
         Args:
@@ -835,6 +887,7 @@ class ReportItem(db.Model):
             user (User): The user who is adding the attachment.
             file (FileStorage): The file to be attached.
             description (str): The description of the attachment.
+
         Returns:
             dict: A dictionary containing information about the attachment.
                 - "add" (bool): True if the attachment was added successfully.
@@ -845,15 +898,22 @@ class ReportItem(db.Model):
         report_item = db.session.get(cls, id)
         file_data = file.read()
         new_attribute = ReportItemAttribute(
-            None, file.filename, "", file.mimetype, len(file_data), description, attribute_group_item_id, None
+            None,
+            file.filename,
+            "",
+            file.mimetype,
+            len(file_data),
+            description,
+            attribute_group_item_id,
+            None,
         )
         new_attribute.user = user
         new_attribute.binary_data = file_data
         report_item.attributes.append(new_attribute)
 
-        report_item.last_updated = datetime.now()
+        report_item.last_updated = datetime.now(tz=TZ)
 
-        data = dict()
+        data = {}
         data["add"] = True
         data["user_id"] = user.id
         data["report_item_id"] = int(id)
@@ -864,7 +924,7 @@ class ReportItem(db.Model):
         return data
 
     @classmethod
-    def remove_attachment(cls, id, attribute_id, user):
+    def remove_attachment(cls, id: int, attribute_id: int, user: object) -> dict:  # noqa: A002
         """Remove an attachment from a report item.
 
         Args:
@@ -872,6 +932,7 @@ class ReportItem(db.Model):
             id (int): The ID of the report item.
             attribute_id (int): The ID of the attribute to be removed.
             user (User): The user performing the action.
+
         Returns:
             dict: A dictionary containing information about the deletion.
                 - delete (bool): Indicates whether the attribute was successfully deleted.
@@ -889,9 +950,9 @@ class ReportItem(db.Model):
         if attribute_to_delete is not None:
             report_item.attributes.remove(attribute_to_delete)
 
-        report_item.last_updated = datetime.now()
+        report_item.last_updated = datetime.now(tz=TZ)
 
-        data = dict()
+        data = {}
         data["delete"] = True
         data["user_id"] = user.id
         data["report_item_id"] = int(id)
@@ -902,11 +963,12 @@ class ReportItem(db.Model):
         return data
 
     @classmethod
-    def delete_report_item(cls, id):
+    def delete_report_item(cls, id: int) -> tuple[str, int] | None:  # noqa: A002
         """Delete a report item by its ID.
 
         Args:
             id (int): The ID of the report item to be deleted.
+
         Returns:
             tuple: A tuple containing the status message and the HTTP status code.
                 The status message is "success" if the report item was deleted successfully.
@@ -914,22 +976,66 @@ class ReportItem(db.Model):
         """
         report_item = db.session.get(cls, id)
         if report_item is not None:
+            # With direct state_id foreign key, no additional cleanup needed
             db.session.delete(report_item)
             db.session.commit()
             return "success", 200
+        return None
 
-    def update_cpes(self):
+    def update_cpes(self) -> None:
         """Update the list of CPES for the report item.
 
         This method clears the existing list of CPES and populates it with new CPES
         based on the attributes of the report item. Only attributes of type CPE are considered.
         """
         self.report_item_cpes = []
-        if self.completed is True:
+        # Import here to avoid circular import
+        from model.state_system import StateManager  # noqa: PLC0415
+
+        if StateManager.has_state("report_item", self.id, "completed"):
             for attribute in self.attributes:
                 item = AttributeGroupItem.find(attribute.attribute_group_item_id)
                 if item.attribute.type == AttributeType.CPE:
                     self.report_item_cpes.append(ReportItemCpe(attribute.value))
+
+    @classmethod
+    def count_by_states(cls) -> dict[str, dict]:
+        """Count report items by their states.
+
+        Returns:
+            dict: Dictionary with state names as keys and counts as values
+        """
+        try:
+            from model.state_system import StateDefinition  # noqa: PLC0415
+
+            # Initialize counts
+            state_counts = {}
+
+            # Count items by actual state_id values in database (not just active states)
+            result = db.session.query(cls.state_id, db.func.count(cls.id)).filter(cls.state_id.isnot(None)).group_by(cls.state_id).all()
+
+            # Get state definitions for the found state_ids
+            for state_id, count in result:
+                state_def = StateDefinition.query.filter_by(id=state_id).first()
+                if state_def:
+                    state_counts[state_def.display_name] = {
+                        "count": count,
+                        "display_name": state_def.display_name,
+                        "color": state_def.color,
+                        "icon": state_def.icon,
+                    }
+
+            # Count items with no state (state_id is NULL)
+            items_with_no_state = db.session.query(cls).filter(cls.state_id.is_(None)).count()
+
+            if items_with_no_state > 0:
+                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "No State", "color": "#9E9E9E", "icon": "mdi-help"}
+
+            return state_counts
+
+        except Exception as error:
+            logger.exception(f"Error counting report items by states: {error}")
+            return {}
 
 
 class ReportItemCpe(db.Model):
@@ -939,6 +1045,7 @@ class ReportItemCpe(db.Model):
         id (int): The unique identifier of the report item.
         value (str): The value of the report item.
         report_item_id (int): The foreign key referencing the parent report item.
+
     Args:
         db (object): The database object.
     """
@@ -947,7 +1054,7 @@ class ReportItemCpe(db.Model):
     value = db.Column(db.String())
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"))
 
-    def __init__(self, value):
+    def __init__(self, value: str) -> None:
         """Initialize a ReportItemCpe object."""
         self.id = None
         self.value = value

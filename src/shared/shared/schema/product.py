@@ -1,12 +1,18 @@
-from marshmallow import Schema, fields, EXCLUDE
+"""Product schema module."""
 
+from marshmallow import EXCLUDE, Schema, fields
+
+from shared.schema.acl_entry import ACLEntryStatusSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.report_item import ReportItemPresentationSchema
-from shared.schema.acl_entry import ACLEntryStatusSchema
 
 
 class ProductSchemaBase(Schema):
+    """Base product schema."""
+
     class Meta:
+        """Meta class."""
+
         unknown = EXCLUDE
 
     id = fields.Int()
@@ -16,8 +22,12 @@ class ProductSchemaBase(Schema):
 
 
 class ProductSchema(ProductSchemaBase):
+    """Product schema."""
+
     report_items = fields.Nested(ReportItemPresentationSchema, many=True)
 
 
 class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, PresentationSchema):
-    pass
+    """Product presentation schema."""
+
+    states = fields.List(fields.Dict(), dump_only=True)

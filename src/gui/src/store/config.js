@@ -20,8 +20,13 @@ import {
     getAllRemoteNodes,
     getAllReportItemTypes,
     getAllRoles,
+    getAllStateDefinitions,
     getAllUsers,
-    getAllWordLists
+    getAllWordLists,
+    createNewStateDefinition,
+    updateStateDefinition,
+    deleteStateDefinition,
+    getAllStateEntityTypes
 } from "@/api/config";
 import {getAllUserProductTypes} from "@/api/user";
 import {getAllOSINTSourceGroupsAssess} from "@/api/assess";
@@ -49,6 +54,8 @@ const state = {
     publisher_presets: {total_count: 0, items: []},
     bots_nodes: {total_count: 0, items: []},
     bot_presets: { total_count: 0, items: [] },
+    state_definitions: { total_count: 0, items: [] },
+    state_entity_types: { total_count: 0, items: [] },
 };
 
 const actions = {
@@ -251,6 +258,34 @@ const actions = {
             .then(response => {
                 context.commit('setBotPresets', response.data);
             })
+    },
+
+    getAllStateDefinitions(context, data) {
+
+        return getAllStateDefinitions(data)
+            .then(response => {
+                context.commit('setStateDefinitions', response.data);
+            })
+    },
+
+    getAllStateEntityTypes(context, data) {
+
+        return getAllStateEntityTypes(data)
+            .then(response => {
+                context.commit('setStateEntityTypes', response.data);
+            })
+    },
+
+    createNewStateDefinition(context, data) {
+        return createNewStateDefinition(data)
+    },
+
+    updateStateDefinition(context, data) {
+        return updateStateDefinition(data)
+    },
+
+    deleteStateDefinition(context, data) {
+        return deleteStateDefinition(data)
     }
 };
 
@@ -339,6 +374,14 @@ const mutations = {
     setBotPresets(state, new_bot_presets) {
         state.bot_presets = new_bot_presets
     },
+
+    setStateDefinitions(state, new_state_definitions) {
+        state.state_definitions = new_state_definitions
+    },
+
+    setStateEntityTypes(state, new_state_entity_types) {
+        state.state_entity_types = new_state_entity_types
+    }
 };
 
 const getters = {
@@ -426,6 +469,14 @@ const getters = {
     getBotPresets(state) {
         return state.bot_presets
     },
+
+    getStateDefinitions(state) {
+        return state.state_definitions
+    },
+
+    getStateEntityTypes(state) {
+        return state.state_entity_types
+    }
 };
 
 export const config = {

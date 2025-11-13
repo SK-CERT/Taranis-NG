@@ -24,6 +24,7 @@ from managers import (
     remote_manager,
 )
 from managers.auth_manager import auth_required, get_user_from_jwt
+from managers.db_manager import db
 from managers.sse_manager import sse_manager
 from model import (
     acl_entry,
@@ -48,6 +49,7 @@ from model import (
 )
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
+from model.state_system import StateDefinition, StateTypeDefinition
 
 from shared.schema.ai_provider import AiProviderSchema
 from shared.schema.data_provider import DataProviderSchema
@@ -1728,6 +1730,283 @@ class BotPreset(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+class StateDefinitions(Resource):
+    """State definitions API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_ACCESS")
+    def get(self) -> tuple[str, dict]:
+        """Get all state definitions.
+
+        Returns:
+            (dict): The state definitions
+        """
+        search = None
+        if request.args.get("search"):
+            search = request.args["search"]
+        return StateDefinition.get_all_json(search)
+
+    @auth_required("CONFIG_WORKFLOW_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus] | None:
+        """Create a state definition.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            state_def = StateDefinition.add_new(request.json)
+            return {
+                "id": state_def.id,
+                "display_name": state_def.display_name,
+                "description": state_def.description,
+                "color": state_def.color,
+                "icon": state_def.icon,
+                "is_active": state_def.is_active,
+                "editable": state_def.editable,
+                "created": state_def.created.isoformat() if state_def.created else None,
+            }, HTTPStatus.CREATED
+
+        except Exception as ex:
+            msg = "Could not create state definition"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class StateDefinitionAPI(Resource):
+    """State definition API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_UPDATE")
+    def put(self, state_definition_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a state definition.
+
+        Args:
+            state_definition_id (int): The state definition ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            state_def = db.session.get(StateDefinition, state_definition_id)
+            if not state_def:
+                return {"error": "State definition not found"}, HTTPStatus.NOT_FOUND
+
+            state_def = state_def.update(request.json)
+
+            return {
+                "id": state_def.id,
+                "display_name": state_def.display_name,
+                "description": state_def.description,
+                "color": state_def.color,
+                "icon": state_def.icon,
+                "is_active": state_def.is_active,
+                "editable": state_def.editable,
+                "created": state_def.created.isoformat() if state_def.created else None,
+            }, HTTPStatus.OK
+        except ValueError as valerr:
+            return {"error": str(valerr)}, HTTPStatus.BAD_REQUEST
+        except Exception as exception:
+            msg = "Could not update state definition"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, exception)
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    @auth_required("CONFIG_WORKFLOW_DELETE")
+    def delete(self, state_definition_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a state definition.
+
+        Args:
+            state_definition_id (int): The state definition ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            state_def = db.session.get(StateDefinition, state_definition_id)
+            if not state_def:
+                return {"error": "State definition not found"}, HTTPStatus.NOT_FOUND
+
+            result, status_code = state_def.delete()
+            return result, HTTPStatus(status_code)
+
+        except Exception as ex:
+            msg = "Could not delete state definition"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class StateEntityTypes(Resource):
+    """State entity type associations API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get all state-entity type associations.
+
+        Returns:
+            (dict, int): The state-entity type associations
+        """
+        try:
+            entity_type = request.args.get("entity_type")
+
+            query = db.session.query(StateTypeDefinition, StateDefinition).join(
+                StateDefinition,
+                StateTypeDefinition.state_id == StateDefinition.id,
+            )
+
+            if entity_type:
+                query = query.filter(StateTypeDefinition.entity_type == entity_type)
+
+            results = query.order_by(StateTypeDefinition.entity_type, StateTypeDefinition.sort_order).all()
+
+            items = []
+            for state_type, state_def in results:
+                items.append(
+                    {
+                        "id": state_type.id,
+                        "entity_type": state_type.entity_type,
+                        "state_id": state_type.state_id,
+                        "state_name": state_def.display_name,
+                        "state_type": state_type.state_type,
+                        "is_active": state_type.is_active,
+                        "editable": state_type.editable,
+                        "sort_order": state_type.sort_order,
+                        "created": state_type.created.isoformat() if state_type.created else None,
+                        "state": {
+                            "id": state_def.id,
+                            "display_name": state_def.display_name,
+                            "description": state_def.description,
+                            "color": state_def.color,
+                            "icon": state_def.icon,
+                        },
+                    },
+                )
+
+            return {"total_count": len(items), "items": items}, HTTPStatus.OK
+
+        except Exception as ex:
+            msg = "Could not get state-entity type associations"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_WORKFLOW_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create a state-entity type association.
+
+        Returns:
+            (dict, int): The created association
+        """
+        try:
+            data = request.json
+
+            # Check if association already exists
+            existing = db.session.query(StateTypeDefinition).filter_by(entity_type=data["entity_type"], state_id=data["state_id"]).first()
+
+            if existing:
+                return {"error": "Association already exists"}, HTTPStatus.CONFLICT
+
+            state_type = StateTypeDefinition(
+                entity_type=data["entity_type"],
+                state_id=data["state_id"],
+                state_type=data.get("state_type", "normal"),
+                is_active=data.get("is_active", True),
+                editable=data.get("editable", True),
+                sort_order=data.get("sort_order", 0),
+            )
+
+            db.session.add(state_type)
+            db.session.commit()
+
+            # Get state definition for response
+            state_def = db.session.get(StateDefinition, state_type.state_id)
+
+            return {
+                "id": state_type.id,
+                "entity_type": state_type.entity_type,
+                "state_id": state_type.state_id,
+                "state_name": state_def.display_name if state_def else None,
+                "state_type": state_type.state_type,
+                "is_active": state_type.is_active,
+                "editable": state_type.editable,
+                "sort_order": state_type.sort_order,
+                "created": state_type.created.isoformat() if state_type.created else None,
+            }, HTTPStatus.CREATED
+
+        except Exception as ex:
+            db.session.rollback()
+            msg = "Could not create state-entity type association"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class StateEntityTypeAPI(Resource):
+    """State entity type association API endpoint."""
+
+    @auth_required("CONFIG_WORKFLOW_UPDATE")
+    def put(self, association_id: int) -> tuple[dict, HTTPStatus]:
+        """Update a state-entity type association.
+
+        Args:
+            association_id (int): The association ID
+        Returns:
+            (dict, int): The updated association
+        """
+        try:
+            state_type = db.session.get(StateTypeDefinition, association_id)
+            if not state_type:
+                return {"error": "Association not found"}, HTTPStatus.NOT_FOUND
+
+            # Check if it's editable (based on the state_entity_type definition)
+            if not state_type.editable:
+                return {"error": "Cannot modify system state association"}, HTTPStatus.FORBIDDEN
+
+            data = request.json
+            data = request.json
+            state_type.update(data)
+
+            # Get state definition for response
+            state_def = db.session.get(StateDefinition, state_type.state_id)
+
+            return {
+                "id": state_type.id,
+                "entity_type": state_type.entity_type,
+                "state_id": state_type.state_id,
+                "state_name": state_def.display_name if state_def else None,
+                "state_type": state_type.state_type,
+                "is_active": state_type.is_active,
+                "editable": state_type.editable,
+                "sort_order": state_type.sort_order,
+            }, HTTPStatus.OK
+        except Exception as ex:
+            db.session.rollback()
+            msg = "Could not update state-entity type association"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_WORKFLOW_DELETE")
+    def delete(self, association_id: int) -> tuple[dict, HTTPStatus]:
+        """Delete a state-entity type association.
+
+        Args:
+            association_id (int): The association ID
+        Returns:
+            (dict, int): The result
+        """
+        try:
+            state_type = db.session.get(StateTypeDefinition, association_id)
+            if not state_type:
+                return {"error": "Association not found"}, HTTPStatus.NOT_FOUND
+
+            # Check if it's editable
+            if not state_type.editable:
+                return {"error": "Cannot delete system state association"}, HTTPStatus.FORBIDDEN
+
+            db.session.delete(state_type)
+            db.session.commit()
+
+            return {"message": "Association deleted successfully"}, HTTPStatus.OK
+
+        except Exception as ex:
+            db.session.rollback()
+            msg = "Could not delete state-entity type association"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
 def initialize(api: Api) -> None:  # noqa: PLR0915
     """Initialize the API.
 
@@ -1802,6 +2081,11 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
 
     api.add_resource(BotPresets, "/api/v1/config/bots-presets")
     api.add_resource(BotPreset, "/api/v1/config/bots-presets/<string:preset_id>")
+
+    api.add_resource(StateDefinitions, "/api/v1/config/state-definitions")
+    api.add_resource(StateDefinitionAPI, "/api/v1/config/state-definitions/<int:state_definition_id>")
+    api.add_resource(StateEntityTypes, "/api/v1/config/state-entity-types")
+    api.add_resource(StateEntityTypeAPI, "/api/v1/config/state-entity-types/<int:association_id>")
 
     Permission.add("CONFIG_ACCESS", "Configuration access", "Access to Configuration module")
 

@@ -309,6 +309,16 @@ export const router = new Router({
             meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_WORD_LIST_ACCESS] }
         },
         {
+            path: '/config/workflow',
+            name: 'workflow',
+            components: {
+                default: () => import('./views/admin/WorkflowView.vue'),
+                nav: () => import('./views/nav/ConfigNav.vue')
+
+            },
+            meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_WORKFLOW_ACCESS] }
+        },
+        {
             path: '/config/ai',
             name: 'ai_provider',
             components: {
