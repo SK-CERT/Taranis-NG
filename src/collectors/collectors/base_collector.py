@@ -50,12 +50,12 @@ class BaseCollector:
 
     @staticmethod
     def update_last_attempt(source: object) -> None:
-        """Update the last attempt for a collector.
+        """Update the last attempt for a source.
 
         Args:
-            source: The source object representing the collector.
+            source: The source object.
         """
-        response, status_code = CoreApi.update_collector_last_attempt(source.id)
+        response, status_code = CoreApi.update_source_last_attempt(source.id)
         if status_code != HTTPStatus.OK:
             source.logger.error(
                 f"Update last attempt failed, Code: {status_code}{', response: ' + str(response) if response is not None else ''}",
@@ -63,12 +63,12 @@ class BaseCollector:
 
     @staticmethod
     def update_last_error_message(source: object) -> None:
-        """Update the last error message for a collector.
+        """Update the last error message for a source.
 
         Args:
-            source: The source object representing the collector.
+            source: The source object.
         """
-        response, status_code = CoreApi.update_collector_last_error_message(source.id, source.logger.stored_message)
+        response, status_code = CoreApi.update_source_last_error_message(source.id, source.logger.stored_message)
         if status_code != HTTPStatus.OK:
             source.logger.error(
                 f"Update last error message failed, Code: {status_code}{', response: ' + str(response) if response is not None else ''}",
@@ -87,15 +87,15 @@ class BaseCollector:
         """
         minute = 60
         if interval[0].isdigit() and ":" in interval:
-            limit = datetime.datetime.now(tz=TZ) - datetime.timedelta(days=1)
+            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=1)
         elif interval[0].isalpha():
-            limit = datetime.datetime.now(tz=TZ) - datetime.timedelta(weeks=1)
+            limit = datetime.datetime.now(TZ) - datetime.timedelta(weeks=1)
         elif int(interval) > minute:
             hours = int(interval) // minute
             minutes = int(interval) - hours * minute
-            limit = datetime.datetime.now(tz=TZ) - datetime.timedelta(days=0, hours=hours, minutes=minutes)
+            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=hours, minutes=minutes)
         else:
-            limit = datetime.datetime.now(tz=TZ) - datetime.timedelta(days=0, hours=0, minutes=int(interval))
+            limit = datetime.datetime.now(TZ) - datetime.timedelta(days=0, hours=0, minutes=int(interval))
 
         return limit
 
@@ -152,8 +152,8 @@ class BaseCollector:
             "link": "",
             "author": "",
             "content": "",
-            "published": datetime.datetime.now(tz=TZ),
-            "collected": datetime.datetime.now(tz=TZ),
+            "published": datetime.datetime.now(TZ),
+            "collected": datetime.datetime.now(TZ),
             "osint_source_id": source.id,
             "attributes": [],
         }

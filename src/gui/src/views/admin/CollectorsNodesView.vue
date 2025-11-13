@@ -4,19 +4,17 @@
             <ToolbarFilter title='nav_menu.collectors_nodes' total_count_title="collectors_node.total_count"
                            total_count_getter="getCollectorsNodes">
                 <template v-slot:addbutton>
-                    <NewCollectorsNode/>
+                    <NewCollectorsNode />
                 </template>
             </ToolbarFilter>
 
         </template>
         <template v-slot:content>
-            <ContentData
-                    name="CollectorsNodes"
-                    cardItem="CardNode"
-                    action="getAllCollectorsNodes"
-                    getter="getCollectorsNodes"
-                    deletePermission="CONFIG_COLLECTORS_NODE_DELETE"
-            />
+            <ContentData name="CollectorsNodes"
+                         cardItem="CardNode"
+                         action="getAllCollectorsNodes"
+                         getter="getCollectorsNodes"
+                         deletePermission="CONFIG_COLLECTORS_NODE_DELETE" />
         </template>
     </ViewLayout>
 </template>
@@ -26,7 +24,7 @@
     import NewCollectorsNode from "../../components/config/collectors_nodes/NewCollectorsNode"
     import ToolbarFilter from "../../components/common/ToolbarFilter"
     import ContentData from "../../components/common/content/ContentData"
-    import {deleteCollectorsNode} from "@/api/config";
+    import { deleteCollectorsNode } from "@/api/config";
 
     export default {
         name: "CollectorsNodes",
@@ -47,12 +45,14 @@
                             loc: 'collectors_node.removed'
                         }
                     )
-                }).catch(() => {
-
+                }).catch((error) => {
+                    const error_msg = (error && error.response && error.response.data)
+                        ? (error.response.data.error ? error.response.data.error : error.response.data)
+                        : 'collectors_node.removed_error';
                     this.$root.$emit('notification',
                         {
                             type: 'error',
-                            loc: 'collectors_node.removed_error'
+                            loc: error_msg
                         }
                     )
                 })

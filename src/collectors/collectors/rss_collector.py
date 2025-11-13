@@ -193,7 +193,7 @@ class RSSCollector(BaseCollector):
             link_for_article,
             date,
             author,
-            datetime.datetime.now(tz=TZ),
+            datetime.datetime.now(TZ),
             content,
             self.source.id,
             [],
