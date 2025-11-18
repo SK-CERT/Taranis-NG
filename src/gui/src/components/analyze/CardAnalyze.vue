@@ -132,14 +132,6 @@ export default {
             }
         },
 
-        //currentState() {
-        //    // Get the first state from the states array
-        //    if (this.card.states && this.card.states.length > 0) {
-        //        return this.card.states[0].display_name || this.card.states[0].name;
-        //    }
-        //    return 'No state';
-        //},
-
         currentStateObject() {
             // Get the first state object from the states array
             if (this.card.states && this.card.states.length > 0) {

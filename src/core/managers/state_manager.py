@@ -13,31 +13,6 @@ logger = logging.getLogger(__name__)
 class StateManagementUtilities:
     """Utilities for managing the state system."""
 
-    # @staticmethod
-    # def sync_all_states() -> dict:
-    #     """Synchronize all states in the system.
-
-    #     Note: With the new state_id column approach,
-    #     synchronization is not needed as states are directly stored.
-
-    #     Returns:
-    #         dict: Summary of synchronization results
-    #     """
-    #     try:
-    #         # Get summary statistics
-    #         total_states = StateDefinition.get_active_states()
-
-    #         return {
-    #             "success": True,
-    #             "message": "State system using direct state_id columns - no sync needed",
-    #             "statistics": {
-    #                 "available_states": len(total_states),
-    #                 "state_names": [s.display_name for s in total_states],
-    #             },
-    #         }
-    #     except Exception as error:
-    #         return {"success": False, "message": f"State synchronization failed: {error}"}
-
     @staticmethod
     def get_state_statistics() -> dict:
         """Get statistics about the current state system.

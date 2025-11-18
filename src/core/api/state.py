@@ -16,18 +16,6 @@ from model.state import StateDefinition, StateManager, StateTypeDefinition
 
 from shared.log_manager import logger
 
-# class StateSync(Resource):
-#     """State synchronization endpoint."""
-
-#     @auth_required("ASSESS_CREATE")  # Require admin permissions for state sync
-#     def post(self) -> dict:
-#         """Synchronize all states in the system.
-
-#         Returns:
-#             dict: Synchronization results
-#         """
-#         return StateManagementUtilities.sync_all_states()
-
 
 class StateStatistics(Resource):
     """State statistics endpoint."""
@@ -331,56 +319,12 @@ class EntityStates(Resource):
             return {"message": f"Error setting states for entity {entity_type}:{entity_id}: {error}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-# class StateCleanup(Resource):
-#     """State cleanup endpoint."""
-
-#     @auth_required("ASSESS_CREATE")  # Require admin permissions for state cleanup
-#     def post(self) -> dict:
-#         """Clean up orphaned state records.
-
-#         Returns:
-#             dict: Cleanup results
-#         """
-#         cleanup_count = 0
-
-#         try:
-#             # Find report items with invalid state_id references
-#             invalid_report_items = ReportItem.query.filter(
-#                 ReportItem.state_id.isnot(None),
-#                 ~ReportItem.state_id.in_(db.session.query(StateDefinition.id)),
-#             ).all()
-
-#             for item in invalid_report_items:
-#                 item.state_id = None
-#                 cleanup_count += 1
-
-#             # Find products with invalid state_id references
-#             invalid_products = Product.query.filter(
-#                 Product.state_id.isnot(None),
-#                 ~Product.state_id.in_(db.session.query(StateDefinition.id)),
-#             ).all()
-
-#             for product in invalid_products:
-#                 product.state_id = None
-#                 cleanup_count += 1
-
-#             db.session.commit()
-
-#             return {"message": f"Cleaned up {cleanup_count} orphaned state references", "cleanup_count": cleanup_count}
-
-#         except Exception as error:
-#             db.session.rollback()
-#             return {"message": f"Cleanup failed: {error}"}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-
 def initialize(api: object) -> None:
     """Initialize state management API.
 
     Args:
         api: Flask-RESTful API instance
     """
-    # api.add_resource(StateSync, "/api/v1/state/sync")
     api.add_resource(StateStatistics, "/api/v1/state/statistics")
-    # api.add_resource(StateCleanup, "/api/v1/state/cleanup")
     api.add_resource(EntityTypeStates, "/api/v1/state/entity-types/<string:entity_type>/states")
     api.add_resource(EntityStates, "/api/v1/state/entities/<string:entity_type>/<string:entity_id>/states")

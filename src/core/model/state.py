@@ -53,11 +53,6 @@ class StateDefinition(db.Model):
     updated_by = db.Column(db.String())
     updated_at = db.Column(db.DateTime)
 
-    # @classmethod
-    # def get_active_states(cls) -> list[StateDefinition]:
-    #     """Get all active state definitions."""
-    #     return cls.query.filter_by(is_active=True).order_by(cls.display_name).all()
-
     @classmethod
     def get_by_id(cls, state_id: int) -> StateDefinition | None:
         """Get state definition by ID."""
@@ -92,25 +87,6 @@ class StateDefinition(db.Model):
 
     def update(self, data: dict, user_name: str) -> StateDefinition:
         """Update state definition."""
-        # # For non-editable states, only allow is_active changes
-        # if not self.editable:
-        #     # Allow id and is_active fields for non-editable states
-        #     allowed_fields = {"id", "is_active"}
-        #     if set(data.keys()).issubset(allowed_fields) and "is_active" in data:
-        #         old_is_active = self.is_active
-        #         self.is_active = data["is_active"]
-
-        #         # If deactivating, cascade to related state type definitions
-        #         if old_is_active and not data["is_active"]:
-        #             self.cascade_deactivate_state_types()
-
-        #         db.session.commit()
-        #         return self
-        #     msg = "This state definition is not editable"
-        #     raise ValueError(msg)
-
-        # old_is_active = self.is_active
-
         schema = StateDefinitionSchema()
         new = schema.load(data)
         self.display_name = new.display_name
@@ -121,20 +97,8 @@ class StateDefinition(db.Model):
         self.updated_by = user_name
         self.updated_at = datetime.now(TZ)
 
-        # # If deactivating, cascade to related state type definitions
-        # if old_is_active and "is_active" in data and not data["is_active"]:
-        #     self.cascade_deactivate_state_types()
-
         db.session.commit()
         return self
-
-    # def cascade_deactivate_state_types(self) -> None:
-    #     """Deactivate all state type definitions that use this state definition."""
-    #     # Deactivate state type definitions that use this state
-    #     state_types = StateTypeDefinition.query.filter_by(state_id=self.id, is_active=True).all()
-
-    #     for state_type in state_types:
-    #         state_type.is_active = False
 
     def delete(self) -> tuple[dict, HTTPStatus]:
         """Delete state definition."""
@@ -166,69 +130,6 @@ class StateDefinition(db.Model):
         db.session.delete(self)
         db.session.commit()
         return {"message": "State definition deleted successfully"}, HTTPStatus.OK
-
-    # @classmethod
-    # def get_states_for_entity_type(cls, entity_type: str) -> list[StateDefinition]:
-    #     """Get all active states available for a specific entity type.
-
-    #     Args:
-    #         entity_type: The entity type to get states for
-
-    #     Returns:
-    #         List of StateDefinition objects
-    #     """
-    #     return (
-    #         db.session.query(cls)
-    #         .join(StateTypeDefinition, cls.id == StateTypeDefinition.state_id)
-    #         .filter(
-    #             StateTypeDefinition.entity_type == entity_type,
-    #             StateTypeDefinition.is_active.is_(True),
-    #             cls.is_active.is_(True),
-    #         )
-    #         .all()
-    #     )
-
-    # @classmethod
-    # def get_states_with_defaults_for_entity_type(cls, entity_type: str) -> list[tuple[StateDefinition, bool]]:
-    #     """Get all states available for an entity type with default indicators.
-
-    #     Args:
-    #         entity_type: The entity type to get states for
-
-    #     Returns:
-    #         List of tuples containing (StateDefinition, is_default)
-    #     """
-    #     try:
-    #         query = (
-    #             db.session.query(cls, StateTypeDefinition.state_type)
-    #             .join(StateTypeDefinition, cls.id == StateTypeDefinition.state_id)
-    #             .filter(
-    #                 StateTypeDefinition.entity_type == entity_type,
-    #                 StateTypeDefinition.is_active.is_(True),
-    #                 cls.is_active.is_(True),
-    #             )
-    #         )
-
-    #         return [(state_def, state_type == "default") for state_def, state_type in query.all()]
-    #     except Exception as error:
-    #         # If there's an error (e.g., tables don't exist), return empty list
-    #         logger.exception(f"Error getting states for entity type {entity_type}: {error}")
-    #         return []
-
-    # def is_applicable_to(self, entity_type: str) -> bool:
-    #     """Check if this state can be applied to the given entity type."""
-    #     # Use a single combined predicate for the EXISTS() where-clause to avoid
-    #     # passing multiple positional arguments to where(), which may raise at
-    #     # runtime with some SQLAlchemy versions. This mirrors usage elsewhere
-    #     # in the codebase (see model/news_item.py).
-    #     return db.session.query(
-    #         exists().where(
-    #             and_(
-    #                 StateTypeDefinition.entity_type == entity_type,
-    #                 StateTypeDefinition.state_id == self.id,
-    #             ),
-    #         ),
-    #     ).scalar()
 
 
 class NewStateTypeDefinitionSchema(StateTypeDefinitionSchema):
@@ -323,18 +224,6 @@ class StateTypeDefinition(db.Model):
             .order_by(cls.sort_order)
             .all()
         )
-
-    # @classmethod
-    # def get_default_statesget_default_states(cls, entity_type: str) -> list[StateDefinition]:
-    #     """Get default states for a specific entity type."""
-    #     return (
-    #         db.session.query(StateDefinition)
-    #         .join(cls)
-    #         .filter(cls.entity_type == entity_type, cls.state_type == "default", cls.is_active.is_(True))
-    #         .filter(StateDefinition.is_active.is_(True))
-    #         .order_by(cls.sort_order)
-    #         .all()
-    #     )
 
     @classmethod
     def is_state_allowed(cls, entity_type: str, state_name: str) -> bool:
@@ -576,74 +465,3 @@ class StateManager:
             db.session.commit()
 
         return success
-
-    # @staticmethod
-    # def transition_state(
-    #     entity_type: str,
-    #     entity_id: int,
-    #     from_state: str,
-    #     to_state: str,
-    #     commit: bool = True,
-    # ) -> bool:
-    #     """Transition from one state to another (replaces current state).
-
-    #     Args:
-    #         entity_type: Type of entity
-    #         entity_id: ID of the entity
-    #         from_state: Current state to check (optional validation)
-    #         to_state: New state to set
-    #         commit: Whether to commit the transaction
-
-    #     Returns:
-    #         bool: True if transition was successful, False otherwise
-    #     """
-    #     # Optionally validate current state matches from_state
-    #     if from_state and not StateManager.has_state(entity_type, entity_id, from_state):
-    #         logger.debug(f"Entity {entity_type}:{entity_id} does not have expected from_state '{from_state}'")
-    #         # Continue anyway since we're replacing the state
-
-    #     # Set new state (this replaces any existing state)
-    #     to_state_def = StateDefinition.get_by_name(to_state)
-    #     if not to_state_def:
-    #         logger.debug(f"State definition not found: {to_state}")
-    #         return False
-
-    #     success = StateManager.set_state(entity_type, entity_id, to_state_def.id)
-
-    #     if commit:
-    #         db.session.commit()
-
-    #     return success
-
-    # @staticmethod
-    # def replace_state(
-    #     entity_type: str,
-    #     entity_id: int,
-    #     new_state: str | None = None,
-    #     commit: bool = True,
-    # ) -> bool:
-    #     """Replace current state with a new state.
-
-    #     Args:
-    #         entity_type: Type of entity
-    #         entity_id: ID of the entity
-    #         new_state: New state to set (None to remove current state)
-    #         commit: Whether to commit the transaction
-
-    #     Returns:
-    #         bool: True if replacement was successful, False otherwise
-    #     """
-    #     success = True
-
-    #     # Set new state (this automatically replaces any existing state)
-    #     if new_state:
-    #         state_def = StateDefinition.get_by_name(new_state)
-    #         success = StateManager.set_state(entity_type, entity_id, state_def.id) if state_def else False
-    #     else:
-    #         # No new state - remove current state
-    #         success = StateManager.remove_state(entity_type, entity_id, None)
-
-    #     if commit:
-    #         db.session.commit()
-
-    #     return success
