@@ -12,22 +12,21 @@ from managers.sse_manager import sse_manager
 from managers.state_manager import StateManagementUtilities
 from model.product import Product
 from model.report_item import ReportItem
-from model.state_system import StateDefinition, StateManager, StateTypeDefinition
+from model.state import StateDefinition, StateManager, StateTypeDefinition
 
 from shared.log_manager import logger
 
+# class StateSync(Resource):
+#     """State synchronization endpoint."""
 
-class StateSync(Resource):
-    """State synchronization endpoint."""
+#     @auth_required("ASSESS_CREATE")  # Require admin permissions for state sync
+#     def post(self) -> dict:
+#         """Synchronize all states in the system.
 
-    @auth_required("ASSESS_CREATE")  # Require admin permissions for state sync
-    def post(self) -> dict:
-        """Synchronize all states in the system.
-
-        Returns:
-            dict: Synchronization results
-        """
-        return StateManagementUtilities.sync_all_states()
+#         Returns:
+#             dict: Synchronization results
+#         """
+#         return StateManagementUtilities.sync_all_states()
 
 
 class StateStatistics(Resource):
@@ -126,7 +125,7 @@ class EntityStates(Resource):
             result = []
             try:
                 if entity_type == "report_item":
-                    entity = ReportItem.query.get(entity_id_int)
+                    entity = ReportItem.find(entity_id_int)
                     if entity and entity.state_id:
                         state_def = StateDefinition.get_by_id(entity.state_id)
                         if state_def:
@@ -142,7 +141,7 @@ class EntityStates(Resource):
                                 },
                             )
                 elif entity_type == "product":
-                    entity = Product.query.get(entity_id_int)
+                    entity = Product.find(entity_id_int)
                     if entity and entity.state_id:
                         state_def = StateDefinition.get_by_id(entity.state_id)
                         if state_def:
@@ -266,7 +265,7 @@ class EntityStates(Resource):
                 updated_state = None
                 try:
                     if entity_type == "report_item":
-                        entity = ReportItem.query.get(entity_id_int)
+                        entity = ReportItem.find(entity_id_int)
                         if entity and entity.state_id:
                             state_def = StateDefinition.get_by_id(entity.state_id)
                             if state_def:
@@ -278,7 +277,7 @@ class EntityStates(Resource):
                                     "icon": state_def.icon,
                                 }
                     elif entity_type == "product":
-                        entity = Product.query.get(entity_id_int)
+                        entity = Product.find(entity_id_int)
                         if entity and entity.state_id:
                             state_def = StateDefinition.get_by_id(entity.state_id)
                             if state_def:
@@ -332,46 +331,46 @@ class EntityStates(Resource):
             return {"message": f"Error setting states for entity {entity_type}:{entity_id}: {error}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-class StateCleanup(Resource):
-    """State cleanup endpoint."""
+# class StateCleanup(Resource):
+#     """State cleanup endpoint."""
 
-    @auth_required("ASSESS_CREATE")  # Require admin permissions for state cleanup
-    def post(self) -> dict:
-        """Clean up orphaned state records.
+#     @auth_required("ASSESS_CREATE")  # Require admin permissions for state cleanup
+#     def post(self) -> dict:
+#         """Clean up orphaned state records.
 
-        Returns:
-            dict: Cleanup results
-        """
-        cleanup_count = 0
+#         Returns:
+#             dict: Cleanup results
+#         """
+#         cleanup_count = 0
 
-        try:
-            # Find report items with invalid state_id references
-            invalid_report_items = ReportItem.query.filter(
-                ReportItem.state_id.isnot(None),
-                ~ReportItem.state_id.in_(db.session.query(StateDefinition.id)),
-            ).all()
+#         try:
+#             # Find report items with invalid state_id references
+#             invalid_report_items = ReportItem.query.filter(
+#                 ReportItem.state_id.isnot(None),
+#                 ~ReportItem.state_id.in_(db.session.query(StateDefinition.id)),
+#             ).all()
 
-            for item in invalid_report_items:
-                item.state_id = None
-                cleanup_count += 1
+#             for item in invalid_report_items:
+#                 item.state_id = None
+#                 cleanup_count += 1
 
-            # Find products with invalid state_id references
-            invalid_products = Product.query.filter(
-                Product.state_id.isnot(None),
-                ~Product.state_id.in_(db.session.query(StateDefinition.id)),
-            ).all()
+#             # Find products with invalid state_id references
+#             invalid_products = Product.query.filter(
+#                 Product.state_id.isnot(None),
+#                 ~Product.state_id.in_(db.session.query(StateDefinition.id)),
+#             ).all()
 
-            for product in invalid_products:
-                product.state_id = None
-                cleanup_count += 1
+#             for product in invalid_products:
+#                 product.state_id = None
+#                 cleanup_count += 1
 
-            db.session.commit()
+#             db.session.commit()
 
-            return {"message": f"Cleaned up {cleanup_count} orphaned state references", "cleanup_count": cleanup_count}
+#             return {"message": f"Cleaned up {cleanup_count} orphaned state references", "cleanup_count": cleanup_count}
 
-        except Exception as error:
-            db.session.rollback()
-            return {"message": f"Cleanup failed: {error}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+#         except Exception as error:
+#             db.session.rollback()
+#             return {"message": f"Cleanup failed: {error}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 def initialize(api: object) -> None:
@@ -380,8 +379,8 @@ def initialize(api: object) -> None:
     Args:
         api: Flask-RESTful API instance
     """
-    api.add_resource(StateSync, "/api/v1/state/sync")
+    # api.add_resource(StateSync, "/api/v1/state/sync")
     api.add_resource(StateStatistics, "/api/v1/state/statistics")
-    api.add_resource(StateCleanup, "/api/v1/state/cleanup")
+    # api.add_resource(StateCleanup, "/api/v1/state/cleanup")
     api.add_resource(EntityTypeStates, "/api/v1/state/entity-types/<string:entity_type>/states")
     api.add_resource(EntityStates, "/api/v1/state/entities/<string:entity_type>/<string:entity_id>/states")

@@ -9,10 +9,10 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close"> {{ $t('common.cancel') }} </v-btn>
                 <v-btn color="blue darken-1" text @click="deleteRecord" :disabled="!editedItem.editable">
                     {{ $t('common.delete') }}
                 </v-btn>
+                <v-btn color="blue darken-1" text @click="close"> {{ $t('common.cancel') }} </v-btn>
                 <v-spacer></v-spacer>
             </v-card-actions>
         </v-card>

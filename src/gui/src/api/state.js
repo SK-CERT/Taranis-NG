@@ -45,16 +45,16 @@ export function setEntityState(entityType, entityId, state) {
  * @param {boolean} replaceAll - Ignored (for backward compatibility)
  * @returns {Promise} API response
  */
-export function setEntityStates(
-  entityType,
-  entityId,
-  states,
-  removeStates = [],
-  replaceAll = false
-) {
-  const state = states && states.length > 0 ? states[0] : null;
-  return setEntityState(entityType, entityId, state);
-}
+//export function setEntityStates(
+//  entityType,
+//  entityId,
+//  states,
+//  removeStates = [],
+//  replaceAll = false
+//) {
+//  const state = states && states.length > 0 ? states[0] : null;
+//  return setEntityState(entityType, entityId, state);
+//}
 
 /**
  * Remove current state from an entity
@@ -79,10 +79,10 @@ export function removeEntityState(entityType, entityId) {
  * @param {string} state - New state name to set (replaces existing)
  * @returns {Promise} API response
  */
-export function replaceEntityStates(entityType, entityId, states) {
-  const state = states && states.length > 0 ? states[0] : null;
-  return setEntityState(entityType, entityId, state);
-}
+//export function replaceEntityStates(entityType, entityId, states) {
+//  const state = states && states.length > 0 ? states[0] : null;
+//  return setEntityState(entityType, entityId, state);
+//}
 
 /**
  * Add a single state to an entity (replaces any existing state)
@@ -91,6 +91,6 @@ export function replaceEntityStates(entityType, entityId, states) {
  * @param {string} stateName - The state name to set
  * @returns {Promise} API response
  */
-export function addEntityState(entityType, entityId, stateName) {
-  return setEntityState(entityType, entityId, stateName);
-}
+//export function addEntityState(entityType, entityId, stateName) {
+//  return setEntityState(entityType, entityId, stateName);
+//}

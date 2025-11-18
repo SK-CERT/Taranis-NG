@@ -29,7 +29,7 @@
                             </v-col>
                             <v-col cols="12" v-if="!isEditable">
                                 <v-alert type="warning" dense outlined>
-                                    {{ $t('workflow.states.system_state_warning') }}
+                                    {{ $t('workflow.states.cannot_edit_system_state') }}
                                 </v-alert>
                             </v-col>
                         </v-row>
@@ -39,8 +39,8 @@
 
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close"> {{ $t('common.cancel') }} </v-btn>
                 <v-btn color="blue darken-1" text @click="save"> {{ $t('common.save') }} </v-btn>
+                <v-btn color="blue darken-1" text @click="close"> {{ $t('common.cancel') }} </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

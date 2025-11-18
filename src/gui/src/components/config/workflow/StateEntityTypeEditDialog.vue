@@ -89,7 +89,7 @@
                     <v-row v-if="!isEditable">
                         <v-col cols="12">
                             <v-alert type="warning" outlined dense>
-                                {{ $t('workflow.state_workflow.system_association_warning') }}
+                                {{ $t('workflow.state_workflow.cannot_edit_system_association') }}
                             </v-alert>
                         </v-col>
                     </v-row>
@@ -98,12 +98,8 @@
 
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="grey darken-1" text @click="$emit('close')">
-                    {{ $t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" text @click="save" :disabled="!canSave">
-                    {{ $t('common.save') }}
-                </v-btn>
+                <v-btn color="primary" text @click="save" :disabled="!canSave"> {{ $t('common.save') }} </v-btn>
+                <v-btn color="grey darken-1" text @click="$emit('close')"> {{ $t('common.cancel') }} </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

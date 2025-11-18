@@ -22,7 +22,6 @@
                                             $t('workflow.states.' +
                                                 currentStateObject.display_name) : currentStateObject.display_name }}</span>
                                     </div>
-                                    <span v-else>{{ $t('workflow.states.no_state') }}</span>
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ $t('card_item.description') }}</div>

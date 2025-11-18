@@ -24,6 +24,7 @@ from marshmallow import EXCLUDE, Schema, fields, post_load
 from shared.schema.acl_entry import ACLEntryStatusSchema
 from shared.schema.news_item import NewsItemAggregateSchema
 from shared.schema.presentation import PresentationSchema
+from shared.schema.state import StateDefinitionSchema
 from shared.schema.user import UserSchemaBase
 
 
@@ -228,6 +229,7 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     """
 
     remote_user = fields.Str(allow_none=True)
+    state = fields.Nested(StateDefinitionSchema, allow_none=True)
     states = fields.Raw(allow_none=True)
 
 

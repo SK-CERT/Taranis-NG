@@ -63,19 +63,23 @@
                                 <v-divider class="my-2"></v-divider>
 
                                 <!-- Dynamic state display from database -->
-                                <template v-for="(stateData, stateName) in getData.report_item_states" :key="stateName">
-                                    <div v-if="stateData.count > 0" class="d-flex align-center mb-2">
-                                        <v-icon class="mr-2" :color="stateData.color" size="small">
-                                            {{ stateData.icon }}
-                                        </v-icon>
-                                        <span class="caption grey--text">
-                                            <b>{{ stateData.count }}</b> {{ ($te('workflow.states.' +
-                                                stateData.display_name) ? $t('workflow.states.' + stateData.display_name) :
-                                            stateData.display_name).toLowerCase() }} {{
-                                            $t('dashboard.analyze.report_items') }}.
-                                        </span>
+                                <template v-for="(stateData, stateName) in getData.report_item_states">
+                                    <div :key="stateName" v-if="stateData.count > 0">
+                                        <div class="d-flex align-center mb-2">
+                                            <v-icon class="mr-2" :color="stateData.color" size="small">
+                                                {{ stateData.icon }}
+                                            </v-icon>
+                                            <span class="caption grey--text">
+                                                <b>{{ stateData.count }}</b>
+                                                {{($te('workflow.states.' + stateData.display_name)
+                                                    ? $t('workflow.states.' + stateData.display_name)
+                                                    : stateData.display_name
+                                                  ).toLowerCase()}}
+                                                {{ $t('dashboard.analyze.report_items') }}.
+                                            </span>
+                                        </div>
+                                        <v-divider inset class="mb-2"></v-divider>
                                     </div>
-                                    <v-divider v-if="stateData.count > 0" inset class="mb-2"></v-divider>
                                 </template>
 
                                 <!-- Total summary -->
@@ -84,8 +88,7 @@
                                         mdi-chart-bar
                                     </v-icon>
                                     <span class="caption grey--text">
-                                        <b>{{ getData.total_report_items || 0 }}</b> {{ $t('dashboard.analyze.total')
-                                        }}.
+                                        <b>{{ getData.total_report_items || 0 }}</b> {{ $t('dashboard.analyze.total') }}.
                                     </span>
                                 </div>
                             </v-card-text>
@@ -100,19 +103,23 @@
                                 <v-divider class="my-2"></v-divider>
 
                                 <!-- Dynamic state display from database -->
-                                <template v-for="(stateData, stateName) in getData.product_states" :key="stateName">
-                                    <div v-if="stateData.count > 0" class="d-flex align-center mb-2">
-                                        <v-icon class="mr-2" :color="stateData.color" size="small">
-                                            {{ stateData.icon }}
-                                        </v-icon>
-                                        <span class="caption grey--text">
-                                            <b>{{ stateData.count }}</b> {{ ($te('workflow.states.' +
-                                                stateData.display_name) ? $t('workflow.states.' + stateData.display_name) :
-                                            stateData.display_name).toLowerCase() }} {{ $t('dashboard.publish.products')
-                                            }}.
-                                        </span>
+                                <template v-for="(stateData, stateName) in getData.product_states">
+                                    <div v-if="stateData.count > 0" :key="stateName">
+                                        <div class="d-flex align-center mb-2">
+                                            <v-icon class="mr-2" :color="stateData.color" size="small">
+                                                {{ stateData.icon }}
+                                            </v-icon>
+                                            <span class="caption grey--text">
+                                                <b>{{ stateData.count }}</b>
+                                                {{($te('workflow.states.' + stateData.display_name)
+                                                    ? $t('workflow.states.' + stateData.display_name)
+                                                    : stateData.display_name
+                                                  ).toLowerCase()}}
+                                                {{ $t('dashboard.publish.products') }}.
+                                            </span>
+                                        </div>
+                                        <v-divider inset class="mb-2"></v-divider>
                                     </div>
-                                    <v-divider v-if="stateData.count > 0" inset class="mb-2"></v-divider>
                                 </template>
 
                                 <!-- Total summary -->

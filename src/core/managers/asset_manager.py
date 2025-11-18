@@ -6,7 +6,7 @@ from managers import publishers_manager
 from managers.db_manager import db
 from model.asset import Asset
 from model.publisher_preset import PublisherPreset
-from model.state_system import StateManager
+from model.state import StateManager
 
 
 def remove_vulnerability(report_item_id: int) -> None:

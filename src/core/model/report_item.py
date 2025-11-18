@@ -15,7 +15,7 @@ from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.news_item import NewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
-from model.state_system import StateDefinition
+from model.state import StateDefinition
 from sqlalchemy import and_, func, or_, orm, text
 from sqlalchemy.sql.expression import cast
 
@@ -240,7 +240,7 @@ class ReportItem(db.Model):
     report_item_type = db.relationship("ReportItemType", viewonly=True)
 
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
-    state = db.relationship(lambda: StateDefinition, lazy="select")
+    state = db.relationship(StateDefinition, lazy="joined")
 
     news_item_aggregates = db.relationship("NewsItemAggregate", secondary="report_item_news_item_aggregate")
 
@@ -833,8 +833,7 @@ class ReportItem(db.Model):
                     data["title_prefix"] = report_item.title_prefix
 
                 if "completed" in data:
-                    # Import here to avoid circular import
-                    from model.state_system import StateManager  # noqa: PLC0415
+                    from model.state import StateManager  # noqa: PLC0415 Must be here, because circular import error
 
                     # Check if report item has 'completed' state
                     data["completed"] = StateManager.has_state("report_item", report_item.id, "completed")
@@ -989,8 +988,7 @@ class ReportItem(db.Model):
         based on the attributes of the report item. Only attributes of type CPE are considered.
         """
         self.report_item_cpes = []
-        # Import here to avoid circular import
-        from model.state_system import StateManager  # noqa: PLC0415
+        from model.state import StateManager  # noqa: PLC0415 Must be here, because circular import error
 
         if StateManager.has_state("report_item", self.id, "completed"):
             for attribute in self.attributes:
@@ -1006,7 +1004,7 @@ class ReportItem(db.Model):
             dict: Dictionary with state names as keys and counts as values
         """
         try:
-            from model.state_system import StateDefinition  # noqa: PLC0415
+            from model.state import StateDefinition  # noqa: PLC0415 Must be here, because circular import error
 
             # Initialize counts
             state_counts = {}
@@ -1029,7 +1027,7 @@ class ReportItem(db.Model):
             items_with_no_state = db.session.query(cls).filter(cls.state_id.is_(None)).count()
 
             if items_with_no_state > 0:
-                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "No State", "color": "#9E9E9E", "icon": "mdi-help"}
+                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "no_state", "color": "#9E9E9E", "icon": "mdi-help"}
 
             return state_counts
 

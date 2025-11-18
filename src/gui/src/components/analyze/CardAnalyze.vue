@@ -30,7 +30,6 @@
                                             $t('workflow.states.' +
                                                 currentStateObject.display_name) : currentStateObject.display_name }}</span>
                                     </div>
-                                    <span v-else>{{ $t('workflow.states.no_state') }}</span>
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ $t('card_item.created') }}</div>
@@ -116,13 +115,13 @@ export default {
             return this.$store.getters.getMultiSelectReport
         },
 
-            selectedColor() {
-                if (this.selected === true || this.preselected) {
-                    return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
-                } else {
-                    return ""
-                }
-            },
+        selectedColor() {
+            if (this.selected === true || this.preselected) {
+                return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
+            } else {
+                return ""
+            }
+        },
 
         itemStatus() {
             // Use actual state name for CSS class, or fallback to 'no_state'
@@ -133,13 +132,13 @@ export default {
             }
         },
 
-        currentState() {
-            // Get the first state from the states array
-            if (this.card.states && this.card.states.length > 0) {
-                return this.card.states[0].display_name || this.card.states[0].name;
-            }
-            return 'No state';
-        },
+        //currentState() {
+        //    // Get the first state from the states array
+        //    if (this.card.states && this.card.states.length > 0) {
+        //        return this.card.states[0].display_name || this.card.states[0].name;
+        //    }
+        //    return 'No state';
+        //},
 
         currentStateObject() {
             // Get the first state object from the states array

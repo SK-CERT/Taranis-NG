@@ -7,7 +7,7 @@ from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.report_item import ReportItem
-from model.state_system import StateDefinition
+from model.state import StateDefinition
 from sqlalchemy import and_, func, or_, orm
 from sqlalchemy.sql.expression import cast
 
@@ -69,7 +69,7 @@ class Product(db.Model):
     user = db.relationship("User")
 
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
-    state = db.relationship(lambda: StateDefinition, lazy="select")
+    state = db.relationship(StateDefinition, lazy="joined")
 
     report_items = db.relationship("ReportItem", secondary="product_report_item")
 
@@ -134,7 +134,7 @@ class Product(db.Model):
             items_with_no_state = db.session.query(cls).filter(cls.state_id.is_(None)).count()
 
             if items_with_no_state > 0:
-                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "No State", "color": "#9E9E9E", "icon": "mdi-help"}
+                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "no_state", "color": "#9E9E9E", "icon": "mdi-help"}
 
             return state_counts
 

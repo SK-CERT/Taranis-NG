@@ -7,10 +7,14 @@ Create Date: 2025-10-25 10:00:00.000000
 """
 
 import logging
+from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
+from sqlalchemy.dialects import postgresql
+
+from shared.common import TZ
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +25,7 @@ branch_labels = None
 depends_on = None
 
 Base = orm.declarative_base()
+default_updated_by = "system-migration"
 
 
 class PermissionStateSystem(Base):
@@ -85,7 +90,8 @@ class StateDefinitionMigration(Base):
     color = sa.Column(sa.String(7))
     icon = sa.Column(sa.String(50))
     editable = sa.Column(sa.Boolean, default=True)
-    created = sa.Column(sa.DateTime, default=sa.func.now())
+    updated_by = sa.Column(sa.String())
+    updated_at = sa.Column(sa.DateTime())
 
     def __init__(
         self,
@@ -93,14 +99,15 @@ class StateDefinitionMigration(Base):
         description: str,
         color: str,
         icon: str,
-        editable: bool = True,
     ) -> None:
         """Initialize state definition."""
         self.display_name = display_name
         self.description = description
         self.color = color
         self.icon = icon
-        self.editable = editable
+        self.editable = False
+        self.updated_at = datetime.now(TZ)
+        self.updated_by = default_updated_by
 
 
 class StateEntityTypeMigration(Base):
@@ -114,24 +121,25 @@ class StateEntityTypeMigration(Base):
     is_active = sa.Column(sa.Boolean, default=True)
     editable = sa.Column(sa.Boolean, default=True)
     sort_order = sa.Column(sa.Integer, default=0)
-    created = sa.Column(sa.DateTime, default=sa.func.now())
+    updated_by = sa.Column(sa.String())
+    updated_at = sa.Column(sa.DateTime())
 
     def __init__(
         self,
         entity_type: str,
         state_id: int,
         state_type: str = "normal",
-        is_active: bool = True,
-        editable: bool = True,
         sort_order: int = 0,
     ) -> None:
         """Initialize state entity type."""
         self.entity_type = entity_type
         self.state_id = state_id
         self.state_type = state_type
-        self.is_active = is_active
-        self.editable = editable
+        self.is_active = True
+        self.editable = False
         self.sort_order = sort_order
+        self.updated_at = datetime.now(TZ)
+        self.updated_by = default_updated_by
 
 
 def upgrade() -> None:
@@ -144,35 +152,37 @@ def upgrade() -> None:
         sa.Column("color", sa.String(7)),  # Hex color code
         sa.Column("icon", sa.String(50)),
         sa.Column("editable", sa.Boolean(), default=True),
-        sa.Column("created", sa.DateTime(), default=sa.func.now()),
+        sa.Column("updated_by", sa.VARCHAR()),
+        sa.Column("updated_at", postgresql.TIMESTAMP(), server_default=sa.text("CURRENT_TIMESTAMP")),
     )
 
     op.create_table(
         "state_entity_type",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("entity_type", sa.Enum("report_item", "product", name="entity_type_enum"), nullable=False),
-        sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id"), nullable=False),
+        sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id", ondelete="CASCADE"), nullable=False),
         sa.Column("state_type", sa.Enum("normal", "default", "final", name="state_type_enum"), default="normal"),
         sa.Column("is_active", sa.Boolean(), default=True),
         sa.Column("editable", sa.Boolean(), default=True),
         sa.Column("sort_order", sa.Integer(), default=0),
-        sa.Column("created", sa.DateTime(), default=sa.func.now()),
+        sa.Column("updated_by", sa.VARCHAR()),
+        sa.Column("updated_at", postgresql.TIMESTAMP(), server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.UniqueConstraint("entity_type", "state_id", name="unique_state_type"),
     )
 
     # Add state_id column to product table
-    op.add_column("product", sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id"), nullable=True))
+    op.add_column("product", sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id", ondelete="SET NULL"), nullable=True))
 
     # Add state_id column to report_item table
-    op.add_column("report_item", sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id"), nullable=True))
+    op.add_column("report_item", sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id", ondelete="SET NULL"), nullable=True))
 
     # Insert default states
     session = orm.Session(bind=op.get_bind())
 
     default_states = [
-        StateDefinitionMigration("published", "Product has been published", "#9932CC", "mdi-checkbox-marked", editable=False),
-        StateDefinitionMigration("work_in_progress", "Report/Product is being processed", "#FF9800", "mdi-traffic-cone", editable=False),
-        StateDefinitionMigration("completed", "Report has been completed", "#2E7D32", "mdi-checkbox-marked", editable=False),
+        StateDefinitionMigration("published", "Product has been published", "#9932CC", "mdi-checkbox-marked"),
+        StateDefinitionMigration("work_in_progress", "Report/Product is being processed", "#FF9800", "mdi-traffic-cone"),
+        StateDefinitionMigration("completed", "Report has been completed", "#2E7D32", "mdi-checkbox-marked"),
     ]
 
     for state in default_states:
@@ -195,22 +205,22 @@ def upgrade() -> None:
     if published_state:
         # Published state only for products
         state_entity_mappings.append(
-            StateEntityTypeMigration("product", published_state.id, "final", is_active=True, editable=False, sort_order=20),
+            StateEntityTypeMigration("product", published_state.id, "final", sort_order=20),
         )
 
     if wip_state:
         # Work-in-Progress for both report_item and product
         state_entity_mappings.append(
-            StateEntityTypeMigration("report_item", wip_state.id, "default", is_active=True, editable=False, sort_order=10),
+            StateEntityTypeMigration("report_item", wip_state.id, "default", sort_order=10),
         )
         state_entity_mappings.append(
-            StateEntityTypeMigration("product", wip_state.id, "default", is_active=True, editable=False, sort_order=10),
+            StateEntityTypeMigration("product", wip_state.id, "default", sort_order=10),
         )
 
     if completed_state:
         # Completed state only for report_item
         state_entity_mappings.append(
-            StateEntityTypeMigration("report_item", completed_state.id, "final", is_active=True, editable=False, sort_order=20),
+            StateEntityTypeMigration("report_item", completed_state.id, "final", sort_order=20),
         )
 
     # Add all mappings to session
@@ -279,7 +289,7 @@ def downgrade() -> None:
     logger.info("Downgrading state system...")
 
     logger.info("Recreating completed column in report_item table...")
-    op.add_column("report_item", sa.Column("completed", sa.Boolean(), nullable=False, default=False))
+    op.add_column("report_item", sa.Column("completed", sa.Boolean(), nullable=True, server_default=sa.text("FALSE")))
 
     logger.info("Restoring completed column data from state_id...")
     # Get "Completed" state ID and update completed column
@@ -290,6 +300,7 @@ def downgrade() -> None:
         bind.execute(sa.text("UPDATE report_item SET completed = true WHERE state_id = :state_id"), {"state_id": completed_state_id})
 
     logger.info("Restored completed column from state_id")
+    op.alter_column("report_item", "completed", nullable=False)
 
     logger.info("Dropping state_id columns...")
     op.drop_column("product", "state_id")
@@ -309,5 +320,7 @@ def downgrade() -> None:
     # Drop tables in reverse order due to foreign key constraints
     op.drop_table("state_entity_type")
     op.drop_table("state")
+    op.execute("DROP TYPE IF EXISTS entity_type_enum")
+    op.execute("DROP TYPE IF EXISTS state_type_enum")
 
     logger.info("State system tables dropped")

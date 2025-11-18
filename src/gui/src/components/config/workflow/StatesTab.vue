@@ -48,31 +48,24 @@
                 <v-icon :color="item.color">{{ item.icon }}</v-icon>
             </template>
 
-            <template v-slot:item.editable="{ item }">
-                <v-chip :color="item.editable ? 'green' : 'grey'" label>
-                    <v-icon left>{{ item.editable ? 'mdi-pencil' : 'mdi-lock' }}</v-icon>
-                    {{ item.editable ? $t('workflow.states.editable') : $t('workflow.states.system') }}
-                </v-chip>
-            </template>
-
             <template v-slot:item.actions="{ item }">
                 <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
-                        <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editItem(item)">
-                            mdi-pencil
+                        <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? undefined : 'error'">
+                            {{ item.editable ? 'mdi-pencil' : 'mdi-lock' }}
                         </v-icon>
                     </template>
-                    <span>{{ $t('common.edit') }}</span>
+                    <span>{{ item.editable ? $t('common.edit') : $t('workflow.states.cannot_edit_system_state') }}</span>
                 </v-tooltip>
                 <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
-                        <v-icon small v-bind="attrs" v-on="on" @click="deleteItem(item)" :disabled="!item.editable"
-                            :color="item.editable ? '' : 'grey'">
-                            mdi-delete
+                        <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? undefined : 'error'">
+                            {{ item.editable ? 'mdi-delete' : 'mdi-lock' }}
                         </v-icon>
                     </template>
-                    <span>{{ item.editable ? $t('common.delete') : $t('workflow.states.cannot_delete_system_state')
-                    }}</span>
+                    <span>
+                        {{ item.editable ? $t('common.delete') : $t('workflow.states.cannot_delete_system_state')}}
+                    </span>
                 </v-tooltip>
             </template>
 
@@ -99,11 +92,10 @@ export default {
         return {
             search: "",
             headers: [
-                { text: this.$t('workflow.states.display_name'), value: 'display_name' },
+                { text: this.$t('workflow.states.display_name'), value: 'display_name'},
                 { text: this.$t('workflow.states.description'), value: 'description' },
                 { text: this.$t('workflow.states.color'), value: 'color' },
                 { text: this.$t('workflow.states.icon'), value: 'icon' },
-                { text: this.$t('workflow.states.type'), value: 'editable' },
                 { text: this.$t('settings.actions'), value: 'actions', sortable: false },
             ],
             records: [],
@@ -119,14 +111,12 @@ export default {
                 editable: true,
             },
             defaultItem: {
-                id: -1,
                 display_name: "",
                 description: "",
                 color: "#2196F3",
                 icon: "mdi-circle",
                 editable: true,
             },
-            date_format: ""
         };
     },
     mixins: [AuthMixin],
@@ -150,14 +140,6 @@ export default {
         fetchRecords() {
             if (this.checkPermission(Permissions.CONFIG_WORKFLOW_ACCESS)) {
                 this.$store.dispatch('getAllStateDefinitions', { search: '' }).then(() => {
-                    var dateFmt = getSetting(Settings.DATE_FORMAT);
-                    var timeFmt = getSetting(Settings.TIME_FORMAT);
-                    if (dateFmt != "" && timeFmt != "") {
-                        this.date_format = dateFmt + " " + timeFmt;
-                    } else {
-                        this.date_format = "yyyy-MM-dd HH:mm:ss"; // Default format
-                    }
-
                     this.records = this.$store.getters.getStateDefinitions.items;
                 });
             }

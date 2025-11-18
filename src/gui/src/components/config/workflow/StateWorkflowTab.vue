@@ -60,7 +60,7 @@
                 </template>
 
                 <template v-slot:item.state_type="{ item }">
-                    <v-chip label :color="getStateTypeColor(item.state_type)">
+                    <v-chip label :color="'grey'">
                         <v-icon left>{{ getStateTypeIcon(item.state_type) }}</v-icon>
                         {{ $te('workflow.state_types.' + item.state_type) ? $t('workflow.state_workflow.state_types.' +
                             item.state_type) : item.state_type }}
@@ -68,40 +68,31 @@
                 </template>
 
                 <template v-slot:item.is_active="{ item }">
-                    <v-icon :color="item.is_active ? 'green' : 'red'">
+                    <v-icon :color="item.is_active ? 'green' : 'error'">
                         {{ item.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}
                     </v-icon>
-                </template>
-
-                <template v-slot:item.editable="{ item }">
-                    <v-chip :color="item.editable ? 'green' : 'grey'" label>
-                        <v-icon left>{{ item.editable ? 'mdi-pencil' : 'mdi-lock' }}</v-icon>
-                        {{ item.editable ? $t('workflow.states.editable') : $t('workflow.states.system') }}
-                    </v-chip>
                 </template>
 
                 <template v-slot:item.actions="{ item }">
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
-                            <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editItem(item)">
-                                mdi-pencil
+                            <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? undefined : 'error'">
+                                {{ item.editable ? 'mdi-pencil' : 'mdi-lock' }}
                             </v-icon>
                         </template>
-                        <span>{{ $t('common.edit') }}</span>
+                        <span>{{ item.editable ? $t('common.edit') : $t('workflow.state_workflow.cannot_edit_system_association') }}</span>
                     </v-tooltip>
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
-                            <v-icon small v-bind="attrs" v-on="on" @click="deleteItem(item)" :disabled="!item.editable"
-                                :color="item.editable ? '' : 'grey'">
-                                mdi-delete
+                            <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? undefined : 'error'">
+                                {{ item.editable ? 'mdi-delete' : 'mdi-lock' }}
                             </v-icon>
                         </template>
-                        <span>{{ item.editable ? $t('common.delete') :
-                            $t('workflow.state_workflow.cannot_delete_system_association')
-                            }}</span>
+                        <span>
+                            {{ item.editable ? $t('common.delete') : $t('workflow.state_workflow.cannot_delete_system_association') }}
+                        </span>
                     </v-tooltip>
                 </template>
-
             </v-data-table>
         </v-card>
     </v-container>
@@ -130,7 +121,6 @@ export default {
                 { text: this.$t('workflow.state_workflow.state_type'), value: 'state_type' },
                 { text: this.$t('workflow.state_workflow.is_active'), value: 'is_active' },
                 { text: this.$t('workflow.state_workflow.sort_order'), value: 'sort_order' },
-                { text: this.$t('workflow.state_workflow.type'), value: 'editable' },
                 { text: this.$t('settings.actions'), value: 'actions', sortable: false },
             ],
             records: [],
@@ -200,15 +190,6 @@ export default {
                 'product': 'mdi-package-variant'
             };
             return icons[entityType] || 'mdi-help';
-        },
-
-        getStateTypeColor(stateType) {
-            const colors = {
-                'normal': 'blue',
-                'default': 'orange',
-                'final': 'green'
-            };
-            return colors[stateType] || 'grey';
         },
 
         getStateTypeIcon(stateType) {
