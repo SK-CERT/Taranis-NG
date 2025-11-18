@@ -23,5 +23,25 @@ providers:
         directory: /etc/traefik/dynamic
         watch: true
 
+# ACME Configuration
+# Uncomment to enable automatic certificate management
+# certificatesResolvers:
+#   myresolver:
+#     acme:
+#       email: somebody@example.com
+#       storage: /letsencrypt/acme.json
+#       # caServer: https://acme-v02.api.letsencrypt.org/directory  # Let's Encrypt production (default)
+#       # caServer: https://acme.zerossl.com/v2/DV90  # ZeroSSL (requires EAB)
+#       # caServer: https://example.com/v2/directory  # Custom server example (requires EAB)
+#       # Private key type and size
+#       # keyType: RSA4096  # Options: RSA2048, RSA4096, RSA8192
+#       keyType: EC384  # Options: EC256, EC384
+#       # For External Account Binding (EAB):
+#       eab:
+#         kid: {YOUR_KID_HERE}
+#         hmacEncoded: {YOUR_HMAC_ENCODED_HERE}
+#       httpChallenge:
+#         entryPoint: web
+
 # Comment out the following lines to disable the access log
 accessLog: {}
