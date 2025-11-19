@@ -69,7 +69,7 @@ class Product(db.Model):
     user = db.relationship("User")
 
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
-    state = db.relationship(StateDefinition, lazy="joined")
+    state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
 
     report_items = db.relationship("ReportItem", secondary="product_report_item")
 
@@ -190,10 +190,12 @@ class Product(db.Model):
             .distinct()
             .group_by(Product.id)
         )
-
         query = query.outerjoin(
             ACLEntry,
-            and_(cast(Product.product_type_id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE),
+            and_(
+                cast(Product.product_type_id, sqlalchemy.String) == ACLEntry.item_id,
+                ACLEntry.item_type == ItemType.PRODUCT_TYPE,
+            ),
         )
         query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
@@ -242,21 +244,6 @@ class Product(db.Model):
             product.see = True
             product.access = result.access > 0 or result.acls == 0
             product.modify = result.modify > 0 or result.acls == 0
-
-            # Add state information to the product (single state only)
-            if product.state_id and product.state:
-                product.states = [
-                    {
-                        "id": product.state.id,
-                        "display_name": product.state.display_name,
-                        "description": product.state.description,
-                        "color": product.state.color,
-                        "icon": product.state.icon,
-                    },
-                ]
-            else:
-                product.states = []
-
             products.append(product)
 
             for report_item in product.report_items:
@@ -315,7 +302,6 @@ class Product(db.Model):
         """
         product = db.session.get(cls, id)
         if product is not None:
-            # With direct state_id foreign key, no additional cleanup needed
             db.session.delete(product)
             db.session.commit()
 

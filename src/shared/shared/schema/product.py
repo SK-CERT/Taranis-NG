@@ -5,6 +5,7 @@ from marshmallow import EXCLUDE, Schema, fields
 from shared.schema.acl_entry import ACLEntryStatusSchema
 from shared.schema.presentation import PresentationSchema
 from shared.schema.report_item import ReportItemPresentationSchema
+from shared.schema.state import StateDefinitionSchema
 
 
 class ProductSchemaBase(Schema):
@@ -30,4 +31,4 @@ class ProductSchema(ProductSchemaBase):
 class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, PresentationSchema):
     """Product presentation schema."""
 
-    states = fields.List(fields.Dict(), dump_only=True)
+    state = fields.Nested(StateDefinitionSchema, allow_none=True)

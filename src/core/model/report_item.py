@@ -371,7 +371,7 @@ class ReportItem(db.Model):
         for report_item_type in report_item_types:
             report_item_type_ids.add(report_item_type.id)
 
-        last_sync_time = datetime.now(tz=TZ)
+        last_sync_time = datetime.now(TZ)
 
         query = cls.query.filter(
             ReportItem.last_updated >= last_synced,
@@ -456,7 +456,7 @@ class ReportItem(db.Model):
                 query = query.filter(or_(ReportItem.state_id != completed_state.id, ReportItem.state_id.is_(None)))
 
         if filter.get("range", "ALL") != "ALL":
-            date_limit = datetime.now(tz=TZ)
+            date_limit = datetime.now(TZ)
             if filter["range"] == "TODAY":
                 date_limit = date_limit.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -541,20 +541,6 @@ class ReportItem(db.Model):
                 report_item.see = True
                 report_item.access = True
                 report_item.modify = False
-                # Add state information to the report item (single state only)
-                if report_item.state_id and report_item.state:
-                    report_item.states = [
-                        {
-                            "id": report_item.state.id,
-                            "name": report_item.state.display_name,
-                            "display_name": report_item.state.display_name,
-                            "description": report_item.state.description,
-                            "color": report_item.state.color,
-                            "icon": report_item.state.icon,
-                        },
-                    ]
-                else:
-                    report_item.states = []
                 report_items.append(report_item)
         else:
             for result in results:
@@ -562,20 +548,6 @@ class ReportItem(db.Model):
                 report_item.see = True
                 report_item.access = result.access > 0 or result.acls == 0
                 report_item.modify = result.modify > 0 or result.acls == 0
-                # Add state information to the report item (single state only)
-                if report_item.state_id and report_item.state:
-                    report_item.states = [
-                        {
-                            "id": report_item.state.id,
-                            "name": report_item.state.display_name,
-                            "display_name": report_item.state.display_name,
-                            "description": report_item.state.description,
-                            "color": report_item.state.color,
-                            "icon": report_item.state.icon,
-                        },
-                    ]
-                else:
-                    report_item.states = []
                 report_items.append(report_item)
 
         report_items_schema = ReportItemPresentationSchema(many=True)
@@ -678,7 +650,7 @@ class ReportItem(db.Model):
                 # Beware! input data doesnt't contain ID (it's from remote system) so schema.load() ALWAYS create new record!
                 # This is workaround to avoid of creating duplicity data
                 new_report_item.id = existing_report_item.id
-                new_report_item.last_updated = datetime.now(tz=TZ)
+                new_report_item.last_updated = datetime.now(TZ)
                 db.session.merge(new_report_item)
                 # this code we can use for future attribute parsing:
                 # for key, value in item_data.items():
@@ -731,12 +703,12 @@ class ReportItem(db.Model):
                                 modified = True
                                 attribute.value = data["attribute_value"]
                                 attribute.user = user
-                                attribute.last_updated = datetime.now(tz=TZ)
+                                attribute.last_updated = datetime.now(TZ)
                             if data.get("value_description", False) and attribute.value_description != data["value_description"]:
                                 modified = True
                                 attribute.value_description = data["value_description"]
                                 attribute.user = user
-                                attribute.last_updated = datetime.now(tz=TZ)
+                                attribute.last_updated = datetime.now(TZ)
                             break
 
             if "add" in data:
@@ -797,7 +769,7 @@ class ReportItem(db.Model):
                         report_item.remote_report_items.remove(remote_report_item_to_delete)
 
             if modified:
-                report_item.last_updated = datetime.now(tz=TZ)
+                report_item.last_updated = datetime.now(TZ)
                 data["user_id"] = user.id
                 data["report_item_id"] = int(id)
                 report_item.update_cpes()
@@ -910,7 +882,7 @@ class ReportItem(db.Model):
         new_attribute.binary_data = file_data
         report_item.attributes.append(new_attribute)
 
-        report_item.last_updated = datetime.now(tz=TZ)
+        report_item.last_updated = datetime.now(TZ)
 
         data = {}
         data["add"] = True
@@ -949,7 +921,7 @@ class ReportItem(db.Model):
         if attribute_to_delete is not None:
             report_item.attributes.remove(attribute_to_delete)
 
-        report_item.last_updated = datetime.now(tz=TZ)
+        report_item.last_updated = datetime.now(TZ)
 
         data = {}
         data["delete"] = True

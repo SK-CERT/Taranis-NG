@@ -919,7 +919,7 @@ export default {
                     const selectedStateObject = this.selectedState ?
                         this.availableStates.find(state => state.display_name === this.selectedState) : null;
 
-                    this.$root.$emit('report-item-states-updated', {
+                    this.$root.$emit('report-item-state-updated', {
                         report_item_id: this.report_item.id,
                         state: this.selectedState,
                         state_object: selectedStateObject

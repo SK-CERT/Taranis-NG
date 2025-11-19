@@ -225,12 +225,11 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
 
     Attributes:
         remote_user -- String field representing the remote user. Allows None as a value.
-        states -- List of states associated with the report item.
+        state -- State associated with the report item.
     """
 
     remote_user = fields.Str(allow_none=True)
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
-    states = fields.Raw(allow_none=True)
 
 
 class ReportItem:
