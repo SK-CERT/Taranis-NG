@@ -201,7 +201,7 @@
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
 import { createNewReportItem, updateReportItem, lockReportItem, unlockReportItem, holdLockReportItem, getReportItem, getReportItemData, getReportItemLocks, aiGenerate } from "@/api/analyze";
-import { getEntityTypeStates, getEntityStates, setEntityState, removeEntityState } from "@/api/state";
+import { getEntityTypeStates, setEntityState, removeEntityState } from "@/api/state";
 import AttributeContainer from "@/components/common/attribute/AttributeContainer";
 import NewsItemSelector from "@/components/analyze/NewsItemSelector";
 import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
@@ -517,7 +517,7 @@ export default {
                     data.title = this.report_item.title
                 } else if (field_id === 'title_prefix') {
                     data.title_prefix = this.report_item.title_prefix
-                } else if (field_id === 'completed') {
+                } else if (field_id === 'completed') {               // ???????????
                     data.completed = this.report_item.completed
                 }
                 updateReportItem(this.report_item.id, data).then(() => { })
@@ -596,9 +596,6 @@ export default {
                 this.report_item.title_prefix = data.title_prefix;
                 this.report_item.report_item_type_id = data.report_item_type_id;
                 this.report_item.completed = data.completed;
-
-                // Load current states for this report item
-                await this.loadCurrentStates();
 
                 if (!this.report_types || !this.report_types.length) {
                     return;
@@ -824,12 +821,11 @@ export default {
         // State management methods
         async loadAvailableStates() {
             try {
-                console.log('[DEBUG] Loading available states for report_item');
                 const response = await getEntityTypeStates('report_item');
                 this.availableStates = response.data.states;
-                console.log('[DEBUG] Available states loaded:', this.availableStates);
+                console.log('[DEBUG] Available states for REPORT loaded:', this.availableStates.map(x => x.display_name).join(', '));
             } catch (error) {
-                console.error('Failed to load available states:', error);
+                console.error('Failed to load available states for REPORT:', error);
                 this.availableStates = [];
             }
         },
@@ -841,30 +837,6 @@ export default {
 
             if (defaultState) {
                 this.selectedState = defaultState.display_name;
-            }
-        },
-
-        async loadCurrentStates() {
-            if (!this.edit || !this.report_item.id) return;
-
-            console.log('[DEBUG] Loading current states for report_item', this.report_item.id);
-            try {
-                const response = await getEntityStates('report_item', this.report_item.id);
-                const states = response.data.states || response.data || [];
-                // For single state, get the first state if any
-                this.currentEntityState = states.length > 0 ? states[0] : null;
-                this.selectedState = this.currentEntityState ? this.currentEntityState.display_name : null;
-                console.log('[DEBUG] Current state loaded:', {
-                    currentEntityState: this.currentEntityState,
-                    selectedState: this.selectedState
-                });
-
-                // Maintain backward compatibility with completed field
-                this.report_item.completed = this.selectedState === 'Completed';
-            } catch (error) {
-                console.error('Failed to load current states:', error);
-                this.currentEntityState = null;
-                this.selectedState = null;
             }
         },
 
@@ -891,10 +863,6 @@ export default {
                 // Get current state name
                 const currentStateName = this.currentEntityState ? this.currentEntityState.display_name : null;
 
-                // Determine state changes
-                const statesToAdd = this.selectedState && this.selectedState !== currentStateName ? [this.selectedState] : [];
-                const statesToRemove = currentStateName && this.selectedState !== currentStateName ? [currentStateName] : [];
-
                 console.log('[DEBUG] State changes', {
                     currentStateName,
                     newState: this.selectedState
@@ -908,9 +876,6 @@ export default {
                     } else {
                         await removeEntityState('report_item', this.report_item.id);
                     }
-
-                    // Reload current states to get updated data
-                    await this.loadCurrentStates();
 
                     // Update completed field for backward compatibility
                     this.report_item.completed = this.selectedState === 'Completed';
@@ -927,8 +892,6 @@ export default {
                 }
             } catch (error) {
                 console.error('Failed to update states:', error);
-                // Revert changes on error
-                await this.loadCurrentStates();
             }
         },
 

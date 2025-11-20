@@ -91,66 +91,6 @@ class EntityTypeStates(Resource):
 class EntityStates(Resource):
     """Manage states for a specific entity."""
 
-    @auth_required("ANALYZE_ACCESS")
-    def get(self, entity_type: str, entity_id: str) -> dict:
-        """Get current states for the specified entity.
-
-        Args:
-            entity_type: The entity type
-            entity_id: The entity ID
-
-        Returns:
-            dict: Current states of the entity
-        """
-        try:
-            # Convert entity_id to integer since the database expects it
-            try:
-                entity_id_int = int(entity_id)
-            except ValueError:
-                return {"message": f"Invalid entity_id: {entity_id}. Must be a valid integer."}, HTTPStatus.BAD_REQUEST
-
-            # Get current state for the entity
-            result = []
-            try:
-                if entity_type == "report_item":
-                    entity = ReportItem.find(entity_id_int)
-                    if entity and entity.state_id:
-                        state_def = StateDefinition.get_by_id(entity.state_id)
-                        if state_def:
-                            result.append(
-                                {
-                                    "id": state_def.id,
-                                    "display_name": state_def.display_name,
-                                    "description": state_def.description,
-                                    "color": state_def.color,
-                                    "icon": state_def.icon,
-                                    "assigned_at": None,  # Not tracked with state_id approach
-                                    "notes": state_def.description,
-                                },
-                            )
-                elif entity_type == "product":
-                    entity = Product.find(entity_id_int)
-                    if entity and entity.state_id:
-                        state_def = StateDefinition.get_by_id(entity.state_id)
-                        if state_def:
-                            result.append(
-                                {
-                                    "id": state_def.id,
-                                    "display_name": state_def.display_name,
-                                    "description": state_def.description,
-                                    "color": state_def.color,
-                                    "icon": state_def.icon,
-                                    "assigned_at": None,  # Not tracked with state_id approach
-                                    "notes": state_def.description,
-                                },
-                            )
-            except Exception as error:
-                logger.exception(f"Failed to get entity state: {error}")
-
-            return {"entity_type": entity_type, "entity_id": entity_id, "states": result}
-        except Exception as error:
-            return {"message": f"Error getting states for entity {entity_type}:{entity_id}: {error}"}, HTTPStatus.INTERNAL_SERVER_ERROR
-
     @auth_required("ANALYZE_UPDATE")
     def post(self, entity_type: str, entity_id: str) -> dict:  # noqa: C901, PLR0911, PLR0912
         """Set state for the specified entity (replaces any existing state).

@@ -10,16 +10,6 @@ export function getEntityTypeStates(entityType) {
 }
 
 /**
- * Get current states for a specific entity
- * @param {string} entityType - The entity type
- * @param {string} entityId - The entity ID
- * @returns {Promise} API response with current entity states
- */
-export function getEntityStates(entityType, entityId) {
-  return ApiService.get(`/state/entities/${entityType}/${entityId}/states`);
-}
-
-/**
  * Set state for a specific entity (replaces any existing state)
  * @param {string} entityType - The entity type
  * @param {string} entityId - The entity ID

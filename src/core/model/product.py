@@ -73,7 +73,7 @@ class Product(db.Model):
 
     report_items = db.relationship("ReportItem", secondary="product_report_item")
 
-    def __init__(self, id: int, title: str, description: str, product_type_id: int, report_items: list[ReportItem]) -> None:  # noqa: A002
+    def __init__(self, id: int, title: str, description: str, product_type_id: int, state_id: int, report_items: list[ReportItem]) -> None:  # noqa: A002
         """Initialize a product."""
         if id != -1:
             self.id = id
@@ -83,6 +83,7 @@ class Product(db.Model):
         self.title = title
         self.description = description
         self.product_type_id = product_type_id
+        self.state_id = state_id
         self.subtitle = ""
         self.tag = ""
 
@@ -288,6 +289,7 @@ class Product(db.Model):
         original_product.title = product.title
         original_product.description = product.description
         original_product.product_type_id = product.product_type_id
+        original_product.state_id = product.state_id
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
 

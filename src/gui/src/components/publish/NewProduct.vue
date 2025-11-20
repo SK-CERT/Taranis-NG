@@ -1,6 +1,6 @@
 <template>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addProduct">
+        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addEmptyProduct">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
             <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
@@ -17,12 +17,12 @@
                         <span v-else>{{ $t('product.edit') }}</span>
                     </v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-select :key="`state-select-${selectedState}`" :disabled="!canModify"
-                              style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="selectedState"
-                              :items="availableStates"
+                    <v-select :key="`state-select-${selected_state_id}`" :disabled="!canModify"
+                              style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="selected_state_id"
+                              :items="available_states"
                               :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
-                              item-value="display_name" :label="$t('product.state')" append-icon="mdi-chevron-down"
-                              :menu-props="{ maxWidth: '300px' }" @change="onStateChange">
+                              item-value="id" :label="$t('product.state')" append-icon="mdi-chevron-down"
+                              :menu-props="{ maxWidth: '300px' }" @change="saveProduct('state_id')">
 
                         <template v-slot:item="{ item }">
                             <v-list-item-avatar>
@@ -44,23 +44,23 @@
                     </v-btn>
                 </v-toolbar>
 
-                <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
+                <v-form @submit.prevent="addProduct" id="form" ref="form" class="px-4">
                     <v-row no-gutters>
                         <v-col cols="6" class="pr-3">
                             <v-combobox v-on:change="productSelected" :disabled="!canModify" v-model="selected_type"
                                         :items="product_types" item-text="title" :label="$t('product.report_type')"
-                                        name="report_type" v-validate="'required'" @blur="onBlur('product_type')" />
+                                        name="report_type" v-validate="'required'" @blur="saveProduct('report_type')" />
                         </v-col>
                         <v-col cols="6" class="pr-3">
                             <v-text-field :disabled="!canModify" :label="$t('product.title')" name="title" type="text"
                                           v-model="product.title" v-validate="'required'" data-vv-name="title"
                                           :error-messages="errors.collect('title')" :spellcheck="$store.state.settings.spellcheck"
-                                          @blur="onBlur('title')" @keyup="onKeyUp('title')" />
+                                          @blur="saveProduct('title')" />
                         </v-col>
                         <v-col cols="12" class="pr-3">
                             <v-textarea :disabled="!canModify" :label="$t('product.description')" name="description"
                                         v-model="product.description" :spellcheck="$store.state.settings.spellcheck"
-                                        @blur="onBlur('description')" @keyup="onKeyUp('description')" />
+                                        @blur="saveProduct('description')" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters>
@@ -126,7 +126,7 @@
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
     import { createProduct, publishProduct, updateProduct } from "@/api/publish";
-    import { getEntityTypeStates, getEntityStates, setEntityState, removeEntityState } from "@/api/state";
+    import { getEntityTypeStates } from "@/api/state";
     import ReportItemSelector from "@/components/publish/ReportItemSelector";
     import Permissions from "@/services/auth/permissions";
     import MessageBox from "@/components/common/MessageBox.vue";
@@ -152,14 +152,13 @@
                 title: "",
                 description: "",
                 product_type_id: null,
+                state_id: null,
                 report_items: [],
             },
             msgbox_visible: false,
-            key_timeout: null,
             // State management
-            availableStates: [],
-            selectedState: null,
-            currentEntityState: null,
+            available_states: [],
+            selected_state_id: null,
         }),
         mixins: [AuthMixin],
         watch: {
@@ -188,7 +187,7 @@
             }
         },
         methods: {
-            addProduct() {
+            addEmptyProduct() {
                 this.visible = true;
                 this.edit = false;
                 this.show_error = false;
@@ -200,17 +199,32 @@
                 this.product.title = "";
                 this.product.description = "";
                 this.product.product_type_id = null;
+                this.product.state_id = null;
                 this.product.report_items = [];
-                this.selectedState = null;
-                this.currentEntityState = null;
+                this.selected_state_id = null;
+                this.selectDefaultState();
                 this.resetValidation();
-
-                // Auto-select default state if available
-                this.selectDefaultStates();
             },
 
             publishConfirmation() {
                 this.msgbox_visible = true;
+            },
+
+            prepareProduct() {
+                this.show_validation_error = false;
+                this.show_error = false;
+
+                this.product.product_type_id = this.selected_type.id;
+                this.product.state_id = this.selected_state_id;
+
+                this.product.report_items = [];
+                for (let i = 0; i < this.report_items.length; i++) {
+                    this.product.report_items.push(
+                        {
+                            id: this.report_items[i].id
+                        }
+                    )
+                }
             },
 
             publishProduct() {
@@ -221,19 +235,7 @@
 
                             if (!this.$validator.errors.any()) {
 
-                                this.show_validation_error = false;
-                                this.show_error = false;
-
-                                this.product.product_type_id = this.selected_type.id;
-
-                                this.product.report_items = [];
-                                for (let i = 0; i < this.report_items.length; i++) {
-                                    this.product.report_items.push(
-                                        {
-                                            id: this.report_items[i].id
-                                        }
-                                    )
-                                }
+                                this.prepareProduct();
 
                                 if (this.product.id !== -1) {
                                     updateProduct(this.product).then(() => {
@@ -273,19 +275,7 @@
 
                     if (!this.$validator.errors.any()) {
 
-                        this.show_validation_error = false;
-                        this.show_error = false;
-
-                        this.product.product_type_id = this.selected_type.id;
-
-                        this.product.report_items = [];
-                        for (let i = 0; i < this.report_items.length; i++) {
-                            this.product.report_items.push(
-                                {
-                                    id: this.report_items[i].id
-                                }
-                            )
-                        }
+                        this.prepareProduct();
 
                         const getPreviewUrl = (product) => {
                             let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + product + "/overview?jwt=" + this.$store.getters.getJWT;
@@ -321,74 +311,37 @@
                 })
             },
 
-            add() {
+            addProduct() {
                 this.$validator.validateAll().then(() => {
-
                     if (!this.$validator.errors.any()) {
+                        this.prepareProduct();
+                        createProduct(this.product).then((response) => {
+                            this.product.id = response.data;
+                            this.resetValidation();
+                            this.visible = false;
+                            this.$root.$emit('notification', { type: 'success', loc: 'product.successful' })
 
-                        this.show_validation_error = false;
-                        this.show_error = false;
+                        }).catch(() => {
+                            this.show_error = true;
+                        })
 
-                        this.product.product_type_id = this.selected_type.id;
-
-                        this.product.report_items = [];
-                        for (let i = 0; i < this.report_items.length; i++) {
-                            this.product.report_items.push(
-                                {
-                                    id: this.report_items[i].id
-                                }
-                            )
-                        }
-
-                        if (this.product.id !== -1) {
-                            updateProduct(this.product).then(() => {
-
-                                this.resetValidation();
-                                this.visible = false;
-
-                                this.$root.$emit('notification',
-                                    {
-                                        type: 'success',
-                                        loc: 'product.successful_edit'
-                                    }
-                                )
-                            }).catch(() => {
-
-                                this.show_error = true;
-                            })
-                        } else {
-                            createProduct(this.product).then(async (response) => {
-                                // Set the new product ID
-                                this.product.id = response.data;
-
-                                // Apply default state to the new product if one is selected
-                                if (this.selectedState) {
-                                    try {
-                                        await setEntityState('product', this.product.id, this.selectedState);
-                                    } catch (error) {
-                                        console.error('Failed to apply default state to new product:', error);
-                                    }
-                                }
-
-                                this.resetValidation();
-                                this.visible = false;
-
-                                this.$root.$emit('notification',
-                                    {
-                                        type: 'success',
-                                        loc: 'product.successful'
-                                    }
-                                )
-
-                            }).catch(() => {
-
-                                this.show_error = true;
-                            })
-                        }
                     } else {
-
                         this.show_validation_error = true;
                     }
+                })
+            },
+
+            saveProduct() {
+                if (!this.edit || this.product.id === -1) {
+                    return;
+                }
+                this.prepareProduct();
+                updateProduct(this.product).then(() => {
+                    this.resetValidation();
+                    this.$root.$emit('notification', { type: 'success', loc: 'product.successful_edit' })
+
+                }).catch(() => {
+                    this.show_error = true;
                 })
             },
 
@@ -397,156 +350,30 @@
                 this.show_validation_error = false;
             },
 
-            onBlur(field_id) {
-                if (this.edit === true) {
-                    this.autoSave(field_id);
-                }
-            },
-
-            onKeyUp(field_id) {
-                if (this.edit === true) {
-                    clearTimeout(this.key_timeout);
-                    let self = this;
-                    this.key_timeout = setTimeout(function () {
-                        self.autoSave(field_id);
-                    }, 1000);
-                }
-            },
-
-            autoSave(field_id) {
-                if (this.edit === true && this.product.id !== -1) {
-                    // Update the product type ID if needed
-                    if (this.selected_type) {
-                        this.product.product_type_id = this.selected_type.id;
-                    }
-
-                    // Update report items
-                    this.product.report_items = [];
-                    for (let i = 0; i < this.report_items.length; i++) {
-                        this.product.report_items.push({
-                            id: this.report_items[i].id
-                        });
-                    }
-
-                    updateProduct(this.product).then(() => {
-                        // Silent auto-save, no notification
-                    }).catch(() => {
-                        this.show_error = true;
-                    });
-                }
-            },
-
-            // State management methods
             async loadAvailableStates() {
                 try {
-                    console.log('[DEBUG] Loading available states for product');
                     const response = await getEntityTypeStates('product');
-                    this.availableStates = response.data.states;
-                    console.log('[DEBUG] Available states loaded:', this.availableStates);
+                    this.available_states = response.data.states;
 
-                    // Auto-select default state after loading states (for new products)
-                    if (!this.edit) {
-                        this.selectDefaultStates();
-                    }
                 } catch (error) {
-                    console.error('Failed to load available states:', error);
-                    this.availableStates = [];
+                    console.error('Failed to load available states for PRODUCT:', error);
+                    this.available_states = [];
                 }
             },
 
-            selectDefaultStates() {
-                if (!this.availableStates) return;
+            selectDefaultState() {
+                if (!this.available_states) return;
 
-                const defaultState = this.availableStates.find(state => state.is_default);
-
+                const defaultState = this.available_states.find(state => state.is_default);
                 if (defaultState) {
-                    console.log('[DEBUG] Setting default state for product:', defaultState.display_name);
-                    this.selectedState = defaultState.display_name;
+                    this.selected_state_id = defaultState.id;
                 }
             },
 
-            async loadCurrentStates() {
-                if (!this.edit || !this.product.id || this.product.id === -1) return;
-
-                console.log('[DEBUG] Loading current states for product', this.product.id);
-                try {
-                    const response = await getEntityStates('product', this.product.id);
-                    const states = response.data.states || response.data || [];
-                    // For single state, get the first state if any
-                    this.currentEntityState = states.length > 0 ? states[0] : null;
-                    this.selectedState = this.currentEntityState ? this.currentEntityState.display_name : null;
-                    console.log('[DEBUG] Current state loaded:', {
-                        currentEntityState: this.currentEntityState,
-                        selectedState: this.selectedState
-                    });
-                } catch (error) {
-                    console.error('Failed to load current states:', error);
-                    this.currentEntityState = null;
-                    this.selectedState = null;
-                }
-            },
-
-            async onStateChange() {
-                console.log('[DEBUG] onStateChange called', {
-                    edit: this.edit,
-                    productId: this.product.id,
-                    selectedState: this.selectedState,
-                    currentEntityState: this.currentEntityState
-                });
-
-                // For new items, just store the selection - it will be applied when the item is created
-                if (!this.edit) {
-                    console.log('[DEBUG] New item mode - storing selected state for later application');
-                    return;
-                }
-
-                if (!this.product.id || this.product.id === -1) {
-                    console.log('[DEBUG] Skipping state change - no product ID');
-                    return;
-                }
-
-                try {
-                    // Get current state name
-                    const currentStateName = this.currentEntityState ? this.currentEntityState.display_name : null;
-
-                    // Determine state changes
-                    console.log('[DEBUG] State changes', {
-                        currentStateName,
-                        newState: this.selectedState
-                    });
-
-                    if (this.selectedState !== currentStateName) {
-                        console.log('[DEBUG] Sending state change request');
-                        // Use new single state API
-                        if (this.selectedState) {
-                            await setEntityState('product', this.product.id, this.selectedState);
-                        } else {
-                            await removeEntityState('product', this.product.id);
-                        }
-
-                        // Reload current states to get updated data
-                        await this.loadCurrentStates();
-
-                        // Emit update event for real-time sync with full state objects
-                        const selectedStateObject = this.selectedState ?
-                            this.availableStates.find(state => state.display_name === this.selectedState) : null;
-
-                        this.$root.$emit('product-state-updated', {
-                            product_id: this.product.id,
-                            state: this.selectedState,
-                            state_object: selectedStateObject
-                        });
-                    }
-                } catch (error) {
-                    console.error('Failed to update states:', error);
-                    // Revert changes on error
-                    await this.loadCurrentStates();
-                }
-            },
         },
-        async mounted() {
-            // Load available states for products
-            await this.loadAvailableStates();
+
+        mounted() {
+            this.loadAvailableStates();
 
             this.$root.$on('new-product', (data) => {
                 this.visible = true;
@@ -565,7 +392,7 @@
                 }
             });
 
-            this.$root.$on('show-product-edit', async (data) => {
+            this.$root.$on('show-product-edit', (data) => {
                 this.visible = true;
                 this.edit = true;
                 this.modify = data.modify;
@@ -580,8 +407,13 @@
                 this.product.description = data.description;
                 this.product.product_type_id = data.product_type_id;
 
-                // Load current states for this product
-                await this.loadCurrentStates();
+                if (data.state) {
+                    this.product.state_id = data.state.id;
+                    this.selected_state_id = data.state.id;
+                } else {
+                    this.product.state_id = null;
+                    this.selectDefaultState();
+                }
 
                 for (let i = 0; i < this.product_types.length; i++) {
                     if (this.product_types[i].id === this.product.product_type_id) {
@@ -593,6 +425,7 @@
                 this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + data.id + "/overview?jwt=" + this.$store.getters.getJWT
             });
         },
+
         beforeDestroy() {
             this.$root.$off('new-product')
             this.$root.$off('show-product-edit')

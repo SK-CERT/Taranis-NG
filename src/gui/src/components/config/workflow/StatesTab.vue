@@ -77,8 +77,6 @@
 import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from "@/api/config";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
-import { format } from 'date-fns';
-import Settings, { getSetting } from "@/services/settings";
 import StateEditDialog from "./StateEditDialog.vue";
 import StateDeleteDialog from "./StateDeleteDialog.vue";
 

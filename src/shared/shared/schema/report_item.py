@@ -76,7 +76,7 @@ class ReportItemAttribute:
         user (str): The user who created or last updated the attribute.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         id: int,  # noqa: A002
         value: str,
@@ -260,6 +260,7 @@ class ReportItem:
         last_updated: str,
         completed: bool,
         report_item_type_id: int,
+        state_id: int,
         news_item_aggregates: list,
         remote_report_items: list,
         attributes: dict,
@@ -274,6 +275,7 @@ class ReportItem:
         self.last_updated = last_updated
         self.completed = completed
         self.report_item_type_id = report_item_type_id
+        self.state_id = state_id
         self.news_item_aggregates = news_item_aggregates
         self.attributes = attributes
         self.remote_report_items = remote_report_items

@@ -240,7 +240,7 @@ class ReportItem(db.Model):
     report_item_type = db.relationship("ReportItemType", viewonly=True)
 
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
-    state = db.relationship(StateDefinition, lazy="joined")
+    state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
 
     news_item_aggregates = db.relationship("NewsItemAggregate", secondary="report_item_news_item_aggregate")
 
@@ -262,6 +262,7 @@ class ReportItem(db.Model):
         title: str,
         title_prefix: str,
         report_item_type_id: int,
+        state_id: int,
         news_item_aggregates: list,
         remote_report_items: list,
         attributes: list,
@@ -277,6 +278,7 @@ class ReportItem(db.Model):
         self.title = title
         self.title_prefix = title_prefix
         self.report_item_type_id = report_item_type_id
+        self.state_id = state_id
         self.attributes = attributes
         self.report_item_cpes = []
         self.subtitle = ""
