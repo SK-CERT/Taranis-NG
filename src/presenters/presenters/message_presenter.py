@@ -49,11 +49,11 @@ class MESSAGEPresenter(BasePresenter):
         def generate_part(template_path: str, template_string: str | None = None) -> str:
             input_data = BasePresenter.generate_input_data(presenter_input)
             if template_string:
-                env = jinja2.Environment(autoescape=True)
+                env = jinja2.Environment(autoescape=False)  # noqa: S701 # no autoescape is safe for plaintext
                 template = env.from_string(template_string)
             else:
                 head, tail = BasePresenter.resolve_template_path(template_path)
-                env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=True)
+                env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=False)  # noqa: S701 # no autoescape is safe for plaintext
                 template = env.get_template(tail)
 
             BasePresenter.load_filters(env)
@@ -72,8 +72,8 @@ class MESSAGEPresenter(BasePresenter):
                 presenter_output["att_file_name"] = generate_part(None, att_file_name)
             if att_template_path:
                 presenter_input.param_key_values.update({"PDF_TEMPLATE_PATH": att_template_path})
-                pdf_presnter = PDFPresenter()
-                pdf_output = pdf_presnter.generate(presenter_input)
+                pdf_presenter = PDFPresenter()
+                pdf_output = pdf_presenter.generate(presenter_input)
                 presenter_output["mime_type"] = pdf_output["mime_type"]
                 presenter_output["data"] = pdf_output["data"]
             return presenter_output
