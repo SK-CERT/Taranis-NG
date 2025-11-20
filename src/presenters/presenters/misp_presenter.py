@@ -4,12 +4,13 @@ Returns:
     dict: The presenter output containing the MIME type and data.
 """
 
-import jinja2
-
 from base64 import b64encode
 
-from .base_presenter import BasePresenter
+import jinja2
+
 from shared.config_presenter import ConfigPresenter
+
+from .base_presenter import BasePresenter
 
 
 class MISPPresenter(BasePresenter):
@@ -30,7 +31,7 @@ class MISPPresenter(BasePresenter):
     description = config.description
     parameters = config.parameters
 
-    def generate(self, presenter_input):
+    def generate(self, presenter_input: dict) -> dict[str, str]:
         """Generate the output data based on the presenter input.
 
         Arguments:
@@ -45,7 +46,7 @@ class MISPPresenter(BasePresenter):
 
             input_data = BasePresenter.generate_input_data(presenter_input)
 
-            env = jinja2.Environment(loader=jinja2.FileSystemLoader(head))
+            env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=False)  # noqa: S701 # no autoescape is safe for JSON
 
             output_text = env.get_template(tail).render(data=input_data).encode()
 
@@ -53,10 +54,7 @@ class MISPPresenter(BasePresenter):
 
             data = base64_bytes.decode("UTF-8")
 
-            presenter_output = {"mime_type": "application/json", "data": data}
-
-            return presenter_output
+            return {"mime_type": "application/json", "data": data}
         except Exception as error:
             BasePresenter.print_exception(self, error)
-            presenter_output = {"mime_type": "text/plain", "data": b64encode((f"TEMPLATING ERROR\n{error}").encode()).decode("UTF-8")}
-            return presenter_output
+            return {"mime_type": "text/plain", "data": b64encode((f"TEMPLATING ERROR\n{error}").encode()).decode("UTF-8")}
