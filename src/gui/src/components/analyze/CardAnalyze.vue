@@ -207,75 +207,12 @@
                 this.cardItemToolbar(this.msgbox_action);
             },
 
-            handleStateUpdate(data) {
-                // Update card state when state is changed via SSE or NewReportItem
-                const targetId = data.report_item_id || data.entity_id;
-                if (targetId === this.card.id) {
-                    console.log('Updating state for report item', targetId, data);
-
-                    // Handle single state update
-                    if (data.state_object) {
-                        // Single state object provided
-                        this.card.state = data.state_object;
-                    } else if (data.state) {
-                        // Single state name provided, create minimal state object
-                        const availableState = this.$parent && this.$parent.availableStates &&
-                            this.$parent.availableStates.find(state => state.display_name === data.state);
-                        if (availableState) {
-                            this.card.state = availableState;
-                        } else {
-                            // Create minimal object with just the state name
-                            console.log('Missing state in availableStates?:', data.state);
-                            this.card.state = {
-                                name: data.state,
-                                display_name: data.state,
-                                color: '#9E9E9E',  // grey
-                                icon: 'mdi-circle'
-                            };
-                        }
-                    //} else if (data.state_objects && Array.isArray(data.state_objects)) {
-                    //    // Backward compatibility: multiple state objects (use first)
-                    //    this.card.state = data.state_objects.slice(0, 1);
-                    //} else if (data.stateObjects && Array.isArray(data.stateObjects)) {
-                    //    // Backward compatibility: stateObjects (use first)
-                    //    this.card.state = data.stateObjects.slice(0, 1);
-                    //} else if (data.states && Array.isArray(data.states)) {
-                    //    // Backward compatibility: state names array (use first)
-                    //    const stateName = data.states[0];
-                    //    if (stateName) {
-                    //        const availableState = this.$parent && this.$parent.availableStates &&
-                    //            this.$parent.availableStates.find(state => state.name === stateName);
-                    //        if (availableState) {
-                    //            this.card.state = availableState;
-                    //        } else {
-                    //            this.card.state = {
-                    //                name: stateName,
-                    //                display_name: stateName.charAt(0).toUpperCase() + stateName.slice(1).replace(/_/g, ' '),
-                    //                color: '#9E9E9E',
-                    //                icon: 'mdi-circle'
-                    //            };
-                    //        }
-                    //    } else {
-                    //        this.card.state = null;
-                    //    }
-                    } else {
-                        // No state data provided, clear states
-                        this.card.state = null;
-                    }
-                    // Force Vue reactivity update
-                    this.$forceUpdate();
-                }
-            }
         },
         mounted() {
             this.$root.$on('multi-select-off', this.multiSelectOff);
-            this.$root.$on('report-item-state-updated', this.handleStateUpdate);
-            this.$root.$on('report-item-updated', this.handleStateUpdate);
         },
         beforeDestroy() {
             this.$root.$off('multi-select-off', this.multiSelectOff);
-            this.$root.$off('report-item-state-updated', this.handleStateUpdate);
-            this.$root.$off('report-item-updated', this.handleStateUpdate);
         }
     }
 </script>

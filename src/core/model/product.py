@@ -1,5 +1,12 @@
 """Product model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.product import Product
+
 from datetime import datetime
 
 import sqlalchemy
@@ -28,7 +35,7 @@ class NewProductSchema(ProductSchemaBase):
     report_items = fields.Nested(ReportItemIdSchema, many=True)
 
     @post_load
-    def make(self, data: dict, **kwargs: object) -> object:  # noqa: ARG002
+    def make(self, data: dict, **kwargs) -> Product:  # noqa: ARG002, ANN003
         """Create a new product.
 
         Args:
@@ -145,7 +152,7 @@ class Product(db.Model):
             return {}
 
     @classmethod
-    def find(cls, product_id: int) -> object:
+    def find(cls, product_id: int) -> Product:
         """Find a product.
 
         Args:
@@ -256,7 +263,7 @@ class Product(db.Model):
         return {"total_count": count, "items": products_schema.dump(products)}
 
     @classmethod
-    def add_product(cls, product_data: dict, user_id: int) -> object:
+    def add_product(cls, product_data: dict, user_id: int) -> Product:
         """Add a product.
 
         Args:

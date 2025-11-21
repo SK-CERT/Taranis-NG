@@ -167,6 +167,7 @@ class ReportItemBaseSchema(Schema):
     created = fields.DateTime("%d.%m.%Y - %H:%M")
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
+    state_id = fields.Int()
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):
@@ -209,7 +210,7 @@ class ReportItemRemoteSchema(Schema):
     uuid = fields.Str(allow_none=True)
     title = fields.Str()
     title_prefix = fields.Str()
-    completed = fields.Bool()
+    state_id = fields.Int()
     attributes = fields.Nested(ReportItemAttributeRemoteSchema, many=True)
 
 
@@ -242,8 +243,8 @@ class ReportItem:
         title_prefix (str): The prefix of the report item title.
         created (datetime): The date and time when the report item was created.
         last_updated (datetime): The date and time when the report item was last updated.
-        completed (bool): Indicates whether the report item is completed or not.
         report_item_type_id (int): The ID of the report item type.
+        state_id (int): The ID of the state associated with the report item.
         news_item_aggregates (list): A list of news item aggregates associated with the report item.
         remote_report_items (list): A list of remote report items associated with the report item.
         attributes (dict): Additional attributes of the report item.
@@ -258,7 +259,6 @@ class ReportItem:
         title_prefix: str,
         created: str,
         last_updated: str,
-        completed: bool,
         report_item_type_id: int,
         state_id: int,
         news_item_aggregates: list,
@@ -273,7 +273,6 @@ class ReportItem:
         self.title_prefix = title_prefix
         self.created = created
         self.last_updated = last_updated
-        self.completed = completed
         self.report_item_type_id = report_item_type_id
         self.state_id = state_id
         self.news_item_aggregates = news_item_aggregates

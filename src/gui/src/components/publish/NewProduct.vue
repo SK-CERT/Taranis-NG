@@ -17,8 +17,8 @@
                         <span v-else>{{ $t('product.edit') }}</span>
                     </v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-select :key="`state-select-${selected_state_id}`" :disabled="!canModify"
-                              style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="selected_state_id"
+                    <v-select :key="`state-select-${product.state_id}`" :disabled="!canModify"
+                              style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="product.state_id"
                               :items="available_states"
                               :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
                               item-value="id" :label="$t('product.state')" append-icon="mdi-chevron-down"
@@ -158,7 +158,6 @@
             msgbox_visible: false,
             // State management
             available_states: [],
-            selected_state_id: null,
         }),
         mixins: [AuthMixin],
         watch: {
@@ -199,9 +198,7 @@
                 this.product.title = "";
                 this.product.description = "";
                 this.product.product_type_id = null;
-                this.product.state_id = null;
                 this.product.report_items = [];
-                this.selected_state_id = null;
                 this.selectDefaultState();
                 this.resetValidation();
             },
@@ -215,7 +212,6 @@
                 this.show_error = false;
 
                 this.product.product_type_id = this.selected_type.id;
-                this.product.state_id = this.selected_state_id;
 
                 this.product.report_items = [];
                 for (let i = 0; i < this.report_items.length; i++) {
@@ -366,7 +362,7 @@
 
                 const defaultState = this.available_states.find(state => state.is_default);
                 if (defaultState) {
-                    this.selected_state_id = defaultState.id;
+                    this.product.state_id = defaultState.id;
                 }
             },
 
@@ -406,14 +402,7 @@
                 this.product.title = data.title;
                 this.product.description = data.description;
                 this.product.product_type_id = data.product_type_id;
-
-                if (data.state) {
-                    this.product.state_id = data.state.id;
-                    this.selected_state_id = data.state.id;
-                } else {
-                    this.product.state_id = null;
-                    this.selectDefaultState();
-                }
+                this.product.state_id = data.state_id;
 
                 for (let i = 0; i < this.product_types.length; i++) {
                     if (this.product_types[i].id === this.product.product_type_id) {

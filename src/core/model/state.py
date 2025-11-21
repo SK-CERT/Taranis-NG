@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 import logging
 from datetime import datetime
 from http import HTTPStatus
-from typing import ClassVar
 
 from managers.db_manager import db
 from marshmallow import post_load
+from model.enum import StateEntityTypeEnum, StateEnum
 from sqlalchemy import Enum
 
 from shared.common import TZ
@@ -155,7 +155,10 @@ class StateTypeDefinition(db.Model):
     __tablename__ = "state_entity_type"
 
     id = db.Column(db.Integer, primary_key=True)
-    entity_type = db.Column(Enum("report_item", "product", name="entity_type_enum"), nullable=False)
+    entity_type = db.Column(
+        Enum(StateEntityTypeEnum.REPORT_ITEM.value, StateEntityTypeEnum.PRODUCT.value, name="entity_type_enum"),
+        nullable=False,
+    )
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=False)
     state_type = db.Column(Enum("normal", "default", "final", name="state_type_enum"), default="normal")
     is_active = db.Column(db.Boolean, default=True)
@@ -173,7 +176,7 @@ class StateTypeDefinition(db.Model):
         """Get all state types in JSON format based on a search query.
 
         Args:
-            entity_type (str): entity type filter.
+            entity_type (str | None): entity type filter.
 
         Returns:
             dict: Dictionary containing total count and list of state types in JSON format.
@@ -243,17 +246,10 @@ class StateTypeDefinition(db.Model):
 class StateManager:
     """Manages state operations for entities with generic, flexible methods."""
 
-    # Entity type constants
-    ENTITY_REPORT_ITEM = "report_item"
-    ENTITY_PRODUCT = "product"
-
-    # Valid entity types (removed news_item_aggregate as it won't have state_id column)
-    VALID_ENTITY_TYPES: ClassVar[set[str]] = {ENTITY_REPORT_ITEM, ENTITY_PRODUCT}
-
     @staticmethod
     def validate_entity_type(entity_type: str) -> bool:
         """Validate that entity type is supported."""
-        return entity_type in StateManager.VALID_ENTITY_TYPES
+        return entity_type in [e.value for e in StateEntityTypeEnum]
 
     @staticmethod
     def get_allowed_states(entity_type: str) -> list[str]:
@@ -312,14 +308,14 @@ class StateManager:
 
         # Update the entity's state_id column
         try:
-            if entity_type == StateManager.ENTITY_REPORT_ITEM:
+            if entity_type == StateEntityTypeEnum.REPORT_ITEM.value:
                 from model.report_item import ReportItem  # noqa: PLC0415
 
                 report_item = ReportItem.find(entity_id)
                 if report_item:
                     report_item.state_id = state_id
                     return True
-            elif entity_type == StateManager.ENTITY_PRODUCT:
+            elif entity_type == StateEntityTypeEnum.PRODUCT.value:
                 from model.product import Product  # noqa: PLC0415
 
                 product = Product.find(entity_id)
@@ -353,14 +349,14 @@ class StateManager:
             return False
 
         try:
-            if entity_type == StateManager.ENTITY_REPORT_ITEM:
+            if entity_type == StateEntityTypeEnum.REPORT_ITEM.value:
                 from model.report_item import ReportItem  # noqa: PLC0415
 
                 report_item = ReportItem.find(entity_id)
                 if report_item:
                     report_item.state_id = None
                     return True
-            elif entity_type == StateManager.ENTITY_PRODUCT:
+            elif entity_type == StateEntityTypeEnum.PRODUCT.value:
                 from model.product import Product  # noqa: PLC0415
 
                 product = Product.find(entity_id)
@@ -398,12 +394,12 @@ class StateManager:
 
         # Check if entity has this state
         try:
-            if entity_type == StateManager.ENTITY_REPORT_ITEM:
+            if entity_type == StateEntityTypeEnum.REPORT_ITEM.value:
                 from model.report_item import ReportItem  # noqa: PLC0415
 
                 report_item = ReportItem.find(entity_id)
                 return report_item and report_item.state_id == state_def.id
-            if entity_type == StateManager.ENTITY_PRODUCT:
+            if entity_type == StateEntityTypeEnum.PRODUCT.value:
                 from model.product import Product  # noqa: PLC0415
 
                 product = Product.find(entity_id)
@@ -411,7 +407,28 @@ class StateManager:
 
             return False
 
-        except Exception:
+        except Exception as exc:
+            logger.exception(f"Error in has_state: {exc}")
+            return False
+
+    @staticmethod
+    def is_this_state_same_as(state_id: int, state_enum: StateEnum) -> bool:
+        """Check if a State ID belongs to the State name.
+
+        Can be used in case when entity record isn't created yet (doesn't have ID).
+
+        Args:
+            state_id: ID of the state
+            state_enum: StateEnum value to compare against
+        Returns:
+            bool: True if the state ID matches the state name, False otherwise
+        """
+        try:
+            state = StateDefinition.get_by_name(state_enum.value)
+            return state and state.id == state_id
+
+        except Exception as exc:
+            logger.exception(f"Error in is_this_state_same_as: {exc}")
             return False
 
     @staticmethod

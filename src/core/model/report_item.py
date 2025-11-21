@@ -6,13 +6,23 @@ created timestamp, and more. The class also includes methods for finding report 
 The module also defines several schemas for creating and validating report items and their attributes.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.report_item import ReportItem
+    from model.user import User
+
 import uuid as uuid_generator
 from datetime import datetime
+from http import HTTPStatus
 
 import sqlalchemy
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.enum import StateEnum
 from model.news_item import NewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
 from model.state import StateDefinition
@@ -118,7 +128,7 @@ class ReportItemAttribute(db.Model):
         self.attribute_group_item_title = attribute_group_item_title
 
     @classmethod
-    def find(cls, attribute_id: int) -> object:
+    def find(cls, attribute_id: int) -> ReportItemAttribute:
         """Find a report item attribute by its ID.
 
         Args:
@@ -144,7 +154,7 @@ class NewReportItemAttributeSchema(ReportItemAttributeBaseSchema):
     """
 
     @post_load
-    def make_report_item_attribute(self, data: dict, **kwargs: object) -> ReportItemAttribute:  # noqa: ARG002
+    def make_report_item_attribute(self, data: dict, **kwargs) -> ReportItemAttribute:  # noqa: ARG002, ANN003
         """Create a report item attribute.
 
         This method takes in data and creates a ReportItemAttribute object.
@@ -176,7 +186,7 @@ class NewReportItemSchema(ReportItemBaseSchema):
     attributes = fields.Nested(NewReportItemAttributeSchema, many=True)
 
     @post_load
-    def make(self, data: dict, **kwargs: object) -> object:  # noqa: ARG002
+    def make(self, data: dict, **kwargs) -> ReportItem:  # noqa: ARG002, ANN003
         """Create a new ReportItem object.
 
         Args:
@@ -299,7 +309,7 @@ class ReportItem(db.Model):
         self.tag = "mdi-file-table-outline"
 
     @classmethod
-    def find(cls, report_item_id: int) -> object:
+    def find(cls, report_item_id: int) -> ReportItem:
         """Find a report item by its ID.
 
         Args:
@@ -311,7 +321,7 @@ class ReportItem(db.Model):
         return db.session.get(cls, report_item_id)
 
     @classmethod
-    def find_by_uuid(cls, report_item_uuid: str) -> object:
+    def find_by_uuid(cls, report_item_uuid: str) -> ReportItem:
         """Find a report item by its UUID.
 
         Args:
@@ -323,7 +333,7 @@ class ReportItem(db.Model):
         return cls.query.filter_by(uuid=report_item_uuid).first()
 
     @classmethod
-    def allowed_with_acl(cls, report_item_id: int, user: object, see: bool, access: bool, modify: bool) -> bool:
+    def allowed_with_acl(cls, report_item_id: int, user: User, see: bool, access: bool, modify: bool) -> bool:
         """Check if the user is allowed to perform actions on a report item based on ACL.
 
         Args:
@@ -393,7 +403,7 @@ class ReportItem(db.Model):
         return items, last_sync_time
 
     @classmethod
-    def get(cls, group: str, filter: dict, offset: int, limit: int, user: str) -> tuple[list, int]:  # noqa: A002
+    def get(cls, group: str, filter: dict, offset: int, limit: int, user: User) -> tuple[list, int]:  # noqa: A002
         """Retrieve report items based on specified criteria.
 
         Args:
@@ -446,14 +456,12 @@ class ReportItem(db.Model):
             )
 
         if filter.get("completed", "").lower() == "true":
-            # Find completed state ID
-            completed_state = StateDefinition.get_by_name("Completed")
+            completed_state = StateDefinition.get_by_name(StateEnum.COMPLETED.value)
             if completed_state:
                 query = query.filter(ReportItem.state_id == completed_state.id)
 
         if filter.get("incompleted", "").lower() == "true":
-            # Find completed state ID and filter out items with that state
-            completed_state = StateDefinition.get_by_name("Completed")
+            completed_state = StateDefinition.get_by_name(StateEnum.COMPLETED.value)
             if completed_state:
                 query = query.filter(or_(ReportItem.state_id != completed_state.id, ReportItem.state_id.is_(None)))
 
@@ -520,7 +528,7 @@ class ReportItem(db.Model):
         return []
 
     @classmethod
-    def get_json(cls, group: str, filter: dict, offset: int, limit: int, user: str) -> dict:  # noqa: A002
+    def get_json(cls, group: str, filter: dict, offset: int, limit: int, user: User) -> dict:  # noqa: A002
         """Get the JSON representation of report items.
 
         This method retrieves report items based on the provided parameters and returns them in JSON format.
@@ -590,7 +598,7 @@ class ReportItem(db.Model):
         return list(groups)
 
     @classmethod
-    def add_report_item(cls, report_item_data: dict, user: object) -> tuple[object, int]:
+    def add_report_item(cls, report_item_data: dict, user: User) -> tuple[ReportItem, HTTPStatus]:
         """Add a report item to the database.
 
         This method takes in report_item_data and user as arguments and adds a new report item to the database.
@@ -607,7 +615,7 @@ class ReportItem(db.Model):
         report_item = report_item_schema.load(report_item_data)
 
         if not ReportItemType.allowed_with_acl(report_item.report_item_type_id, user, see=False, access=False, modify=True):
-            return "Unauthorized access to report item type", 401
+            return "Unauthorized access to report item type", HTTPStatus.UNAUTHORIZED
 
         report_item.user_id = user.id
         for attribute in report_item.attributes:
@@ -618,7 +626,7 @@ class ReportItem(db.Model):
         db.session.add(report_item)
         db.session.commit()
 
-        return report_item, 200
+        return report_item, HTTPStatus.OK
 
     @classmethod
     def add_remote_report_items(cls, report_item_data: list, remote_node_name: str) -> None:
@@ -667,7 +675,7 @@ class ReportItem(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_report_item(cls, id: int, data: dict, user: object) -> tuple[bool, dict]:  # noqa: A002, C901, PLR0912
+    def update_report_item(cls, id: int, data: dict, user: User) -> tuple[bool, dict]:  # noqa: A002, C901, PLR0912
         """Update a report item with the given data.
 
         Args:
@@ -680,7 +688,6 @@ class ReportItem(db.Model):
         """
         modified = False
         new_attribute = None
-        added_aggregates = []  # Track added aggregates
         report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data:
@@ -688,15 +695,14 @@ class ReportItem(db.Model):
                     modified = True
                     report_item.title = data["title"]
                     data["title"] = ""
-
                 if "title_prefix" in data and report_item.title_prefix != data["title_prefix"]:
                     modified = True
                     report_item.title_prefix = data["title_prefix"]
                     data["title_prefix"] = ""
-
-                # Note: 'completed' is now handled through the state system API
-                # The frontend should use the state endpoints instead
-
+                if "state_id" in data and report_item.state_id != data["state_id"]:
+                    modified = True
+                    report_item.state_id = data["state_id"]
+                    data["state_id"] = ""
                 if "attribute_id" in data:
                     for attribute in report_item.attributes:
                         # convert ID to string, we compare types: int & int or int & str
@@ -722,11 +728,9 @@ class ReportItem(db.Model):
 
                 if "aggregate_ids" in data:
                     modified = True
-                    added_aggregates = []
                     for aggregate_id in data["aggregate_ids"]:
                         aggregate = NewsItemAggregate.find(aggregate_id)
                         report_item.news_item_aggregates.append(aggregate)
-                        added_aggregates.append(aggregate_id)
 
                 if "remote_report_item_ids" in data:
                     modified = True
@@ -756,7 +760,6 @@ class ReportItem(db.Model):
 
                     if aggregate_to_delete is not None:
                         modified = True
-                        aggregate_id = aggregate_to_delete.id
                         report_item.news_item_aggregates.remove(aggregate_to_delete)
 
                 if "remote_report_item_id" in data:
@@ -806,11 +809,8 @@ class ReportItem(db.Model):
                 if "title_prefix" in data:
                     data["title_prefix"] = report_item.title_prefix
 
-                if "completed" in data:
-                    from model.state import StateManager  # noqa: PLC0415 Must be here, because circular import error
-
-                    # Check if report item has 'completed' state
-                    data["completed"] = StateManager.has_state("report_item", report_item.id, "completed")
+                if "state_id" in data:
+                    data["state_id"] = report_item.state_id
 
                 if "attribute_id" in data:
                     for attribute in report_item.attributes:
@@ -851,7 +851,7 @@ class ReportItem(db.Model):
         return data
 
     @classmethod
-    def add_attachment(cls, id: int, attribute_group_item_id: int, user: object, file: object, description: str) -> dict:  # noqa: A002
+    def add_attachment(cls, id: int, attribute_group_item_id: int, user: User, file: object, description: str) -> dict:  # noqa: A002
         """Add an attachment to a report item.
 
         Args:
@@ -897,7 +897,7 @@ class ReportItem(db.Model):
         return data
 
     @classmethod
-    def remove_attachment(cls, id: int, attribute_id: int, user: object) -> dict:  # noqa: A002
+    def remove_attachment(cls, id: int, attribute_id: int, user: User) -> dict:  # noqa: A002
         """Remove an attachment from a report item.
 
         Args:
@@ -944,15 +944,13 @@ class ReportItem(db.Model):
 
         Returns:
             tuple: A tuple containing the status message and the HTTP status code.
-                The status message is "success" if the report item was deleted successfully.
-                The HTTP status code is 200 if the report item was deleted successfully.
         """
         report_item = db.session.get(cls, id)
         if report_item is not None:
             # With direct state_id foreign key, no additional cleanup needed
             db.session.delete(report_item)
             db.session.commit()
-            return "success", 200
+            return "success", HTTPStatus.OK
         return None
 
     def update_cpes(self) -> None:
@@ -964,7 +962,7 @@ class ReportItem(db.Model):
         self.report_item_cpes = []
         from model.state import StateManager  # noqa: PLC0415 Must be here, because circular import error
 
-        if StateManager.has_state("report_item", self.id, "completed"):
+        if StateManager.is_this_state_same_as(self.state_id, StateEnum.COMPLETED):
             for attribute in self.attributes:
                 item = AttributeGroupItem.find(attribute.attribute_group_item_id)
                 if item.attribute.type == AttributeType.CPE:
@@ -978,8 +976,6 @@ class ReportItem(db.Model):
             dict: Dictionary with state names as keys and counts as values
         """
         try:
-            from model.state import StateDefinition  # noqa: PLC0415 Must be here, because circular import error
-
             # Initialize counts
             state_counts = {}
 

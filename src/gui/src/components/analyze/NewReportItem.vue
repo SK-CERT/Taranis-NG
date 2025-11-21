@@ -1,6 +1,6 @@
 <template>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addReportItem">
+        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addEmptyReportItem">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
             <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
@@ -28,12 +28,12 @@
 
                     <v-spacer></v-spacer>
 
-                    <v-select :key="`state-select-${selectedState}`" :disabled="!canModify"
-                        style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="selectedState"
-                        :items="availableStates"
+                    <v-select :key="`state-select-${report_item.state_id}`" :disabled="!canModify"
+                        style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="report_item.state_id"
+                        :items="available_states"
                         :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
-                        item-value="display_name" :label="$t('report_item.state')" append-icon="mdi-chevron-down"
-                        :menu-props="{ maxWidth: '300px' }" @change="onStateChange">
+                        item-value="id" :label="$t('report_item.state')" append-icon="mdi-chevron-down"
+                        :menu-props="{ maxWidth: '300px' }" @change="saveReportItem('state_id')">
 
                         <template v-slot:item="{ item }">
                             <v-list-item-avatar>
@@ -57,7 +57,7 @@
                 <v-row>
                     <v-col :cols="verticalView ? 6 : 12"
                         :style="verticalView ? 'height:calc(100vh - 3em); overflow-y: auto;' : ''">
-                        <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
+                        <v-form @submit.prevent="addReportItem" id="form" ref="form" class="px-4">
                             <v-row no-gutters>
                                 <v-col cols="12" v-if="edit">
                                     <span class="caption grey--text">ID: {{ report_item.uuid }}</span>
@@ -68,7 +68,7 @@
                                         name="report_type" v-validate="'required'" />
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
-                                    <v-text-field @focus="onFocus('title_prefix')" @blur="onBlur('title_prefix')"
+                                    <v-text-field @focus="onFocus('title_prefix')" @blur="saveReportItem('title_prefix')"
                                         @keyup="onKeyUp('title_prefix')" :class="getLockedStyle('title_prefix')"
                                         :disabled="field_locks.title_prefix || !canModify"
                                         :label="$t('report_item.title_prefix')" name="title_prefix"
@@ -76,7 +76,7 @@
                                         :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
-                                    <v-text-field @focus="onFocus('title')" @blur="onBlur('title')"
+                                    <v-text-field @focus="onFocus('title')" @blur="saveReportItem('title')"
                                         @keyup="onKeyUp('title')" :class="getLockedStyle('title')"
                                         :disabled="field_locks.title || !canModify" :label="$t('report_item.title')"
                                         name="title" type="text" v-model="report_item.title" v-validate="'required'"
@@ -198,318 +198,255 @@
 </style>
 
 <script>
-import AuthMixin from "@/services/auth/auth_mixin";
-import Permissions from "@/services/auth/permissions";
-import { createNewReportItem, updateReportItem, lockReportItem, unlockReportItem, holdLockReportItem, getReportItem, getReportItemData, getReportItemLocks, aiGenerate } from "@/api/analyze";
-import { getEntityTypeStates, setEntityState, removeEntityState } from "@/api/state";
-import AttributeContainer from "@/components/common/attribute/AttributeContainer";
-import NewsItemSelector from "@/components/analyze/NewsItemSelector";
-import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import Permissions from "@/services/auth/permissions";
+    import { createNewReportItem, updateReportItem, lockReportItem, unlockReportItem, holdLockReportItem, getReportItem, getReportItemData, getReportItemLocks, aiGenerate } from "@/api/analyze";
+    import { getEntityTypeStates } from "@/api/state";
+    import AttributeContainer from "@/components/common/attribute/AttributeContainer";
+    import NewsItemSelector from "@/components/analyze/NewsItemSelector";
+    import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
 
-export default {
-    name: "NewReportItem",
-    props: {
-        add_button: Boolean,
-        read_only: Boolean,
-    },
-
-    components: { NewsItemSelector, AttributeContainer, RemoteReportItemSelector },
-    data: () => ({
-        expand_panel_groups: [],
-        expand_group_items: [],
-        visible: false,
-        edit: false,
-        modify: true,
-        overlay: false,
-        local_reports: true,
-        key_timeout: null,
-        show_validation_error: false,
-        show_error: false,
-        report_types: [],
-        selected_type: null,
-        attribute_groups: [],
-        news_item_aggregates: [],
-        remote_report_items: [],
-        field_locks: {
-            title_prefix: false,
-            title: false
+    export default {
+        name: "NewReportItem",
+        props: {
+            add_button: Boolean,
+            read_only: Boolean,
         },
-        report_item: {
-            id: null,
-            uuid: null,
-            title: "",
-            title_prefix: "",
-            completed: false,
-            report_item_type_id: null,
+
+        components: { NewsItemSelector, AttributeContainer, RemoteReportItemSelector },
+        data: () => ({
+            expand_panel_groups: [],
+            expand_group_items: [],
+            visible: false,
+            edit: false,
+            modify: true,
+            overlay: false,
+            local_reports: true,
+            key_timeout: null,
+            show_validation_error: false,
+            show_error: false,
+            report_types: [],
+            selected_type: null,
+            attribute_groups: [],
             news_item_aggregates: [],
             remote_report_items: [],
-            attributes: []
-        },
-        auto_generate_icon: {},
-        auto_generate_icon_timer: {},
-        // State management
-        availableStates: [],
-        selectedState: null,
-        currentEntityState: null,
-    }),
-
-    watch: {
-        // Remove double scrollbars when a report item is open
-        // There is a very nasty bug: when you open this screen for a second time, two scrollbars are shown.
-        // In the past, there was an attempt to fix this, but previous code doesn't work (possibly unfinished?)
-        // The problem is that the main 'html' tag is missing the 'overflow-y-hidden' class/style on the second open
-        // 1. open: new inicialization works ok    2. open: something remove style when the same screen is visible again
-        // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
-        // It's good to find a better solution than this quick fix.
-        visible(val) {
-            if (val) {
-                document.documentElement.style.overflow = 'hidden'
-            }
-            else {
-                document.documentElement.style.overflow = 'auto'
-            }
-        },
-        $route() {
-            this.local_reports = !window.location.pathname.includes('/group/');
-        }
-    },
-
-    computed: {
-        verticalView: {
-            get() {
-                return this.$store.getters.getVerticalView;
+            field_locks: {
+                title_prefix: false,
+                title: false
             },
-            set(val) {
-                this.$store.commit("setVerticalView", val);
-            }
-        },
+            report_item: {
+                id: null,
+                uuid: null,
+                title: "",
+                title_prefix: "",
+                report_item_type_id: null,
+                state_id: null,
+                news_item_aggregates: [],
+                remote_report_items: [],
+                attributes: []
+            },
+            auto_generate_icon: {},
+            auto_generate_icon_timer: {},
+            // State management
+            available_states: [],
+        }),
 
-        canCreate() {
-            return this.checkPermission(Permissions.ANALYZE_CREATE) && this.local_reports === true
-        },
-
-        canModify() {
-            const canModify = this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true);
-            console.log('[DEBUG] canModify computed:', {
-                edit: this.edit,
-                hasAnalyzeUpdate: this.checkPermission(Permissions.ANALYZE_UPDATE),
-                modify: this.modify,
-                canModify: canModify
-            });
-            return canModify;
-        },
-        expandPanelGroups() {
-            return this.expand_groups();
-        }
-    },
-
-    methods: {
-        addReportItem() {
-            this.visible = true;
-            this.modify = true;
-            this.edit = false
-            this.overlay = false
-            this.show_error = false;
-            this.field_locks.title = false;
-            this.field_locks.title_prefix = false;
-            this.attachmets_attributes_count = 0;
-            this.selected_type = null;
-            this.attribute_groups = [];
-            this.news_item_aggregates = [];
-            this.remote_report_items = []
-            this.report_item.id = null;
-            this.report_item.uuid = null;
-            this.report_item.title = "";
-            this.report_item.title_prefix = "";
-            this.report_item.completed = false;
-            this.selectedState = null;
-            this.currentEntityState = null;
-            this.resetValidation();
-            this.reset_auto_generate();
-
-            // Auto-select default state if available
-            this.selectDefaultStates();
-        },
-
-        reportSelected() {
-
-            this.attribute_groups = [];
-            this.expand_group_items = [];
-
-            for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
-                let group = {
-                    id: this.selected_type.attribute_groups[i].id,
-                    title: this.selected_type.attribute_groups[i].title,
-                    attribute_group_items: []
-                };
-
-                for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
-                    group.attribute_group_items.push({
-                        attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
-                        values: []
-                    })
+        watch: {
+            // Remove double scrollbars when a report item is open
+            // There is a very nasty bug: when you open this screen for a second time, two scrollbars are shown.
+            // In the past, there was an attempt to fix this, but previous code doesn't work (possibly unfinished?)
+            // The problem is that the main 'html' tag is missing the 'overflow-y-hidden' class/style on the second open
+            // 1. open: new inicialization works ok    2. open: something remove style when the same screen is visible again
+            // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
+            // It's good to find a better solution than this quick fix.
+            visible(val) {
+                if (val) {
+                    document.documentElement.style.overflow = 'hidden'
                 }
-
-                this.attribute_groups.push(group)
-                this.expand_group_items.push({ values: Array.from(Array(group.attribute_group_items.length).keys()) });
+                else {
+                    document.documentElement.style.overflow = 'auto'
+                }
+            },
+            $route() {
+                this.local_reports = !window.location.pathname.includes('/group/');
             }
         },
 
-        cancel() {
-            setTimeout(() => {
-                //this.$root.$emit('mouse-click-close');
-                this.$root.$emit('change-state', 'DEFAULT');
-                this.resetValidation();
-                this.visible = false;
-                this.$root.$emit('first-dialog', '');
-            }, 150);
+        computed: {
+            verticalView: {
+                get() {
+                    return this.$store.getters.getVerticalView;
+                },
+                set(val) {
+                    this.$store.commit("setVerticalView", val);
+                }
+            },
 
+            canCreate() {
+                return this.checkPermission(Permissions.ANALYZE_CREATE) && this.local_reports === true
+            },
+
+            canModify() {
+                return this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true);
+            },
+            expandPanelGroups() {
+                return this.expand_groups();
+            }
         },
 
-        add() {
-            this.$validator.validateAll().then(() => {
+        methods: {
+            addEmptyReportItem() {
+                this.visible = true;
+                this.modify = true;
+                this.edit = false
+                this.overlay = false
+                this.show_error = false;
+                this.field_locks.title = false;
+                this.field_locks.title_prefix = false;
+                this.attachmets_attributes_count = 0;
+                this.selected_type = null;
+                this.attribute_groups = [];
+                this.news_item_aggregates = [];
+                this.remote_report_items = []
+                this.report_item.id = null;
+                this.report_item.uuid = null;
+                this.report_item.title = "";
+                this.report_item.title_prefix = "";
+                this.report_item.report_item_type_id = null;
+                this.selectDefaultState();
+                this.resetValidation();
+                this.reset_auto_generate();
+            },
 
-                if (!this.$validator.errors.any()) {
+            reportSelected() {
 
-                    this.overlay = true
+                this.attribute_groups = [];
+                this.expand_group_items = [];
 
-                    this.show_validation_error = false;
-                    this.show_error = false;
+                for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
+                    let group = {
+                        id: this.selected_type.attribute_groups[i].id,
+                        title: this.selected_type.attribute_groups[i].title,
+                        attribute_group_items: []
+                    };
 
-                    this.report_item.report_item_type_id = this.selected_type.id;
-
-                    this.report_item.news_item_aggregates = [];
-                    for (let i = 0; i < this.news_item_aggregates.length; i++) {
-                        this.report_item.news_item_aggregates.push(
-                            {
-                                id: this.news_item_aggregates[i].id
-                            }
-                        )
+                    for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
+                        group.attribute_group_items.push({
+                            attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
+                            values: []
+                        })
                     }
 
-                    this.report_item.remote_report_items = [];
-                    for (let i = 0; i < this.remote_report_items.length; i++) {
-                        this.report_item.remote_report_items.push(
-                            {
-                                id: this.remote_report_items[i].id
-                            }
-                        )
-                    }
+                    this.attribute_groups.push(group)
+                    this.expand_group_items.push({ values: Array.from(Array(group.attribute_group_items.length).keys()) });
+                }
+            },
 
-                    this.report_item.attributes = [];
-                    for (let i = 0; i < this.attribute_groups.length; i++) {
+            cancel() {
+                setTimeout(() => {
+                    //this.$root.$emit('mouse-click-close');
+                    this.$root.$emit('change-state', 'DEFAULT');
+                    this.resetValidation();
+                    this.visible = false;
+                    this.$root.$emit('first-dialog', '');
+                }, 150);
 
-                        for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+            },
 
-                            for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+            addReportItem() {
+                this.$validator.validateAll().then(() => {
 
-                                let value = this.attribute_groups[i].attribute_group_items[j].values[k].value
-                                let value_description = this.attribute_groups[i].attribute_group_items[j].values[k].value_description
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'CPE') {
-                                    value = value.replace("*", "%")
-                                } else if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'BOOLEAN') {
-                                    if (value === true) {
-                                        value = "true"
-                                    } else {
-                                        value = "false"
+                    if (!this.$validator.errors.any()) {
+
+                        this.overlay = true
+
+                        this.show_validation_error = false;
+                        this.show_error = false;
+
+                        this.report_item.report_item_type_id = this.selected_type.id;
+
+                        this.report_item.news_item_aggregates = [];
+                        for (let i = 0; i < this.news_item_aggregates.length; i++) {
+                            this.report_item.news_item_aggregates.push(
+                                {
+                                    id: this.news_item_aggregates[i].id
+                                }
+                            )
+                        }
+
+                        this.report_item.remote_report_items = [];
+                        for (let i = 0; i < this.remote_report_items.length; i++) {
+                            this.report_item.remote_report_items.push(
+                                {
+                                    id: this.remote_report_items[i].id
+                                }
+                            )
+                        }
+
+                        this.report_item.attributes = [];
+                        for (let i = 0; i < this.attribute_groups.length; i++) {
+
+                            for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+
+                                for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+
+                                    let value = this.attribute_groups[i].attribute_group_items[j].values[k].value
+                                    let value_description = this.attribute_groups[i].attribute_group_items[j].values[k].value_description
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'CPE') {
+                                        value = value.replace("*", "%")
+                                    } else if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'BOOLEAN') {
+                                        if (value === true) {
+                                            value = "true"
+                                        } else {
+                                            value = "false"
+                                        }
+                                    }
+
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type !== 'ATTACHMENT') {
+                                        this.report_item.attributes.push({
+                                            id: -1,
+                                            value: value,
+                                            value_description: value_description,
+                                            attribute_group_item_id: this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id
+                                        })
                                     }
                                 }
-
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type !== 'ATTACHMENT') {
-                                    this.report_item.attributes.push({
-                                        id: -1,
-                                        value: value,
-                                        value_description: value_description,
-                                        attribute_group_item_id: this.attribute_groups[i].attribute_group_items[j].attribute_group_item.id
-                                    })
-                                }
                             }
                         }
+
+                        createNewReportItem(this.report_item).then((response) => {
+                            this.report_item.id = response.data;
+
+                            this.attachmets_attributes_count = 0
+                            for (let i = 0; i < this.attribute_groups.length; i++) {
+                                for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'ATTACHMENT') {
+                                        this.attachmets_attributes_count++
+                                    }
+                                }
+                            }
+
+                            if (this.attachmets_attributes_count > 0) {
+                                this.$root.$emit('dropzone-new-process', { report_item_id: response.data });
+                            } else {
+                                this.$root.$emit('attachments-uploaded', {});
+                            }
+
+                        }).catch(() => {
+                            this.show_error = true;
+                            this.overlay = false
+                        })
+
+                    } else {
+                        this.show_validation_error = true;
                     }
+                })
+            },
 
-                    createNewReportItem(this.report_item).then(async (response) => {
-                        // Set the new report item ID
-                        this.report_item.id = response.data;
-
-                        // Apply default state to the new report item if one is selected
-                        if (this.selectedState) {
-                            try {
-                                await setEntityState('report_item', this.report_item.id, this.selectedState);
-                            } catch (error) {
-                                console.error('Failed to apply default state to new report item:', error);
-                            }
-                        }
-
-                        this.attachmets_attributes_count = 0
-                        for (let i = 0; i < this.attribute_groups.length; i++) {
-                            for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute_group_item.attribute.type === 'ATTACHMENT') {
-                                    this.attachmets_attributes_count++
-                                }
-                            }
-                        }
-
-                        if (this.attachmets_attributes_count > 0) {
-                            this.$root.$emit('dropzone-new-process', { report_item_id: response.data });
-                        } else {
-                            this.$root.$emit('attachments-uploaded', {});
-                        }
-
-                        // Emit event to refresh the report items list
-                        this.$root.$emit('report-items-updated');
-
-                    }).catch(() => {
-
-                        this.show_error = true;
-                        this.overlay = false
-                    })
-
-                } else {
-
-                    this.show_validation_error = true;
+            saveReportItem(field_id) {
+                if (!this.edit) {
+                    return;
                 }
-            })
-        },
-
-        resetValidation() {
-            this.$validator.reset();
-            this.show_validation_error = false;
-        },
-
-        getLockedStyle(field_id) {
-            return this.field_locks[field_id] === true ? 'locked-style' : ''
-        },
-
-        onFocus(field_id) {
-            if (this.edit === true) {
-                lockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => {
-                })
-            }
-        },
-
-        onBlur(field_id) {
-            if (this.edit === true) {
-
-                this.onEdit(field_id)
-                unlockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => {
-                })
-            }
-        },
-
-        onKeyUp(field_id) {
-            if (this.edit === true) {
-
-                clearTimeout(this.key_timeout);
-                let self = this;
-                this.key_timeout = setTimeout(function () {
-                    holdLockReportItem(self.report_item.id, { 'field_id': field_id }).then(() => {
-                    })
-                }, 1000);
-            }
-        },
-
-        onEdit(field_id) {
-            if (this.edit === true) {
 
                 let data = {}
                 data.update = true
@@ -517,438 +454,398 @@ export default {
                     data.title = this.report_item.title
                 } else if (field_id === 'title_prefix') {
                     data.title_prefix = this.report_item.title_prefix
-                } else if (field_id === 'completed') {               // ???????????
-                    data.completed = this.report_item.completed
+                } else if (field_id === 'state_id') {
+                    data.state_id = this.report_item.state_id
                 }
+
                 updateReportItem(this.report_item.id, data).then(() => { })
-            }
-        },
+                unlockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => { })
+            },
 
-        report_item_locked(data) {
-            if (this.edit === true && this.report_item.id === data.report_item_id) {
-                if (data.user_id !== this.$store.getters.getUserId) {
-                    this.field_locks[data.field_id] = true
+            resetValidation() {
+                this.$validator.reset();
+                this.show_validation_error = false;
+            },
+
+            getLockedStyle(field_id) {
+                return this.field_locks[field_id] === true ? 'locked-style' : ''
+            },
+
+            onFocus(field_id) {
+                if (this.edit === true) {
+                    lockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => { })
                 }
-            }
-        },
+            },
 
-        report_item_unlocked(data) {
-            if (this.edit === true && this.report_item.id === data.report_item_id) {
-                if (data.user_id !== this.$store.getters.getUserId) {
-                    this.field_locks[data.field_id] = false
+            onKeyUp(field_id) {
+                if (this.edit === true) {
+
+                    clearTimeout(this.key_timeout);
+                    let self = this;
+                    this.key_timeout = setTimeout(function () {
+                        holdLockReportItem(self.report_item.id, { 'field_id': field_id }).then(() => {
+                        })
+                    }, 1000);
                 }
-            }
-        },
+            },
 
-        report_item_updated(data_info) {
-            if (this.edit === true && this.report_item.id === data_info.report_item_id) {
-                if (data_info.user_id !== this.$store.getters.getUserId) {
-                    getReportItemData(this.report_item.id, data_info).then((response) => {
-                        let data = response.data
-                        if (data.title !== undefined) {
-                            this.report_item.title = data.title
-                        } else if (data.title_prefix !== undefined) {
-                            this.report_item.title_prefix = data.title_prefix
-                        } else if (data.completed !== undefined) {
-                            this.report_item.completed = data.completed
-                        }
-                        // if more users work on the same report -> update locked field with new value
-                        // there is duplicity code attributes_mixin.js: report_item_updated() but runs later (up 2 seconds) this place is much more faster
-                        if (data.update !== undefined) {
-                            endLoop: for (let i = 0; i < this.attribute_groups.length; i++) {
-                                for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                                    for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
-                                        if (this.attribute_groups[i].attribute_group_items[j].values[k].id == data.attribute_id) {
-                                            this.attribute_groups[i].attribute_group_items[j].values[k].value = data.attribute_value;
-                                            this.attribute_groups[i].attribute_group_items[j].values[k].value_description = data.attribute_value_description;
-                                            break endLoop;
+            report_item_locked(data) {
+                if (this.edit === true && this.report_item.id === data.report_item_id) {
+                    if (data.user_id !== this.$store.getters.getUserId) {
+                        this.field_locks[data.field_id] = true
+                    }
+                }
+            },
+
+            report_item_unlocked(data) {
+                if (this.edit === true && this.report_item.id === data.report_item_id) {
+                    if (data.user_id !== this.$store.getters.getUserId) {
+                        this.field_locks[data.field_id] = false
+                    }
+                }
+            },
+
+            report_item_updated(data_info) {
+                if (this.edit === true && this.report_item.id === data_info.report_item_id) {
+                    if (data_info.user_id !== this.$store.getters.getUserId) {
+                        getReportItemData(this.report_item.id, data_info).then((response) => {
+                            let data = response.data
+                            if (data.title !== undefined) {
+                                this.report_item.title = data.title
+                            } else if (data.title_prefix !== undefined) {
+                                this.report_item.title_prefix = data.title_prefix
+                            } else if (data.state_id !== undefined) {
+                                this.report_item.state_id = data.state_id
+                            }
+                            // if more users work on the same report -> update locked field with new value
+                            // there is duplicity code attributes_mixin.js: report_item_updated() but runs later (up 2 seconds) this place is much more faster
+                            if (data.update !== undefined) {
+                                endLoop: for (let i = 0; i < this.attribute_groups.length; i++) {
+                                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                                        for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+                                            if (this.attribute_groups[i].attribute_group_items[j].values[k].id == data.attribute_id) {
+                                                this.attribute_groups[i].attribute_group_items[j].values[k].value = data.attribute_value;
+                                                this.attribute_groups[i].attribute_group_items[j].values[k].value_description = data.attribute_value_description;
+                                                break endLoop;
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                    })
-                }
-            }
-        },
-
-        showDetail(report_item) {
-            this.reset_auto_generate();
-            getReportItem(report_item.id).then(async (response) => {
-                let data = response.data;
-
-                this.edit = true;
-                this.overlay = false;
-                this.show_error = false;
-                this.modify = report_item.modify;
-
-                this.field_locks.title = false;
-                this.field_locks.title_prefix = false;
-
-                this.selected_type = null;
-                this.attribute_groups = [];
-                this.news_item_aggregates = data.news_item_aggregates;
-                this.remote_report_items = data.remote_report_items;
-
-                this.report_item.id = data.id;
-                this.report_item.uuid = data.uuid;
-                this.report_item.title = data.title;
-                this.report_item.title_prefix = data.title_prefix;
-                this.report_item.report_item_type_id = data.report_item_type_id;
-                this.report_item.completed = data.completed;
-
-                if (!this.report_types || !this.report_types.length) {
-                    return;
-                }
-
-                for (let i = 0; i < this.report_types.length; i++) {
-                    if (this.report_types[i].id === this.report_item.report_item_type_id) {
-                        this.selected_type = this.report_types[i];
-
-                        this.expand_panel_groups = Array.from(Array(this.selected_type.attribute_groups.length).keys());
-                        this.expand_group_items = [];
-
-                        for (let j = 0; j < this.expand_panel_groups.length; j++) {
-                            this.expand_group_items.push({ values: Array.from(Array(this.selected_type.attribute_groups[j].attribute_group_items.length).keys()) });
-                        }
-                        break;
+                        })
                     }
                 }
-                this.visible = true;
+            },
 
-                getReportItemLocks(this.report_item.id).then((response) => {
-                    let locks_data = response.data
+            showDetail(report_item) {
+                this.reset_auto_generate();
+                getReportItem(report_item.id).then((response) => {
+                    let data = response.data;
 
-                    if (locks_data.title !== undefined && locks_data.title !== null) {
-                        this.field_locks['title'] = true
-                    } else if (locks_data.title_prefix !== undefined && locks_data.title_prefix !== null) {
-                        this.field_locks['title_prefix'] = true
+                    this.edit = true;
+                    this.overlay = false;
+                    this.show_error = false;
+                    this.modify = report_item.modify;
+
+                    this.field_locks.title = false;
+                    this.field_locks.title_prefix = false;
+
+                    this.selected_type = null;
+                    this.attribute_groups = [];
+                    this.news_item_aggregates = data.news_item_aggregates;
+                    this.remote_report_items = data.remote_report_items;
+
+                    this.report_item.id = data.id;
+                    this.report_item.uuid = data.uuid;
+                    this.report_item.title = data.title;
+                    this.report_item.title_prefix = data.title_prefix;
+                    this.report_item.report_item_type_id = data.report_item_type_id;
+                    this.report_item.state_id = data.state_id;
+
+                    if (!this.report_types || !this.report_types.length) {
+                        return;
                     }
 
-                    for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
-                        let group = {
-                            id: this.selected_type.attribute_groups[i].id,
-                            title: this.selected_type.attribute_groups[i].title,
-                            attribute_group_items: []
-                        };
+                    for (let i = 0; i < this.report_types.length; i++) {
+                        if (this.report_types[i].id === this.report_item.report_item_type_id) {
+                            this.selected_type = this.report_types[i];
 
-                        for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
+                            this.expand_panel_groups = Array.from(Array(this.selected_type.attribute_groups.length).keys());
+                            this.expand_group_items = [];
 
-                            let values = [];
-                            for (let k = 0; k < data.attributes.length; k++) {
-                                if (data.attributes[k].attribute_group_item_id === this.selected_type.attribute_groups[i].attribute_group_items[j].id) {
-
-                                    let value = data.attributes[k].value
-                                    let value_description = data.attributes[k].value_description
-                                    if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
-                                        value = value.replace("%", "*")
-                                    } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
-                                        value = value === "true";
-                                    }
-
-                                    let locked = false
-                                    if (locks_data["'" + data.attributes[k].id + "'"] !== undefined && locks_data["'" + data.attributes[k].id + "'"] !== null) {
-                                        locked = true
-                                    }
-
-                                    values.push({
-                                        id: data.attributes[k].id,
-                                        index: values.length,
-                                        value: value,
-                                        value_description: value_description,
-                                        binary_mime_type: data.attributes[k].binary_mime_type,
-                                        binary_size: data.attributes[k].binary_size,
-                                        binary_description: data.attributes[k].binary_description,
-                                        last_updated: data.attributes[k].last_updated,
-                                        user: data.attributes[k].user,
-                                        locked: locked,
-                                        remote: false
-                                    });
-                                }
+                            for (let j = 0; j < this.expand_panel_groups.length; j++) {
+                                this.expand_group_items.push({ values: Array.from(Array(this.selected_type.attribute_groups[j].attribute_group_items.length).keys()) });
                             }
+                            break;
+                        }
+                    }
+                    this.visible = true;
 
-                            for (let l = 0; l < data.remote_report_items.length; l++) {
-                                for (let k = 0; k < data.remote_report_items[l].attributes.length; k++) {
-                                    if (data.remote_report_items[l].attributes[k].attribute_group_item_title === this.selected_type.attribute_groups[i].attribute_group_items[j].title) {
+                    getReportItemLocks(this.report_item.id).then((response) => {
+                        let locks_data = response.data
 
-                                        let value = data.remote_report_items[l].attributes[k].value
-                                        let value_description = data.remote_report_items[l].attributes[k].value_description
+                        if (locks_data.title !== undefined && locks_data.title !== null) {
+                            this.field_locks['title'] = true
+                        } else if (locks_data.title_prefix !== undefined && locks_data.title_prefix !== null) {
+                            this.field_locks['title_prefix'] = true
+                        }
+
+                        for (let i = 0; i < this.selected_type.attribute_groups.length; i++) {
+                            let group = {
+                                id: this.selected_type.attribute_groups[i].id,
+                                title: this.selected_type.attribute_groups[i].title,
+                                attribute_group_items: []
+                            };
+
+                            for (let j = 0; j < this.selected_type.attribute_groups[i].attribute_group_items.length; j++) {
+
+                                let values = [];
+                                for (let k = 0; k < data.attributes.length; k++) {
+                                    if (data.attributes[k].attribute_group_item_id === this.selected_type.attribute_groups[i].attribute_group_items[j].id) {
+
+                                        let value = data.attributes[k].value
+                                        let value_description = data.attributes[k].value_description
                                         if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
                                             value = value.replace("%", "*")
                                         } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
                                             value = value === "true";
                                         }
 
+                                        let locked = false
+                                        if (locks_data["'" + data.attributes[k].id + "'"] !== undefined && locks_data["'" + data.attributes[k].id + "'"] !== null) {
+                                            locked = true
+                                        }
+
                                         values.push({
-                                            id: data.remote_report_items[l].attributes[k].id,
+                                            id: data.attributes[k].id,
                                             index: values.length,
                                             value: value,
                                             value_description: value_description,
-                                            last_updated: data.remote_report_items[l].attributes[k].last_updated,
-                                            binary_mime_type: data.remote_report_items[l].attributes[k].binary_mime_type,
-                                            binary_size: data.remote_report_items[l].attributes[k].binary_size,
-                                            binary_description: data.remote_report_items[l].attributes[k].binary_description,
-                                            user: { name: data.remote_report_items[l].remote_user },
-                                            locked: false,
-                                            remote: true
+                                            binary_mime_type: data.attributes[k].binary_mime_type,
+                                            binary_size: data.attributes[k].binary_size,
+                                            binary_description: data.attributes[k].binary_description,
+                                            last_updated: data.attributes[k].last_updated,
+                                            user: data.attributes[k].user,
+                                            locked: locked,
+                                            remote: false
                                         });
                                     }
                                 }
-                            }
 
-                            group.attribute_group_items.push({
-                                attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
-                                values: values
-                            })
-                        }
+                                for (let l = 0; l < data.remote_report_items.length; l++) {
+                                    for (let k = 0; k < data.remote_report_items[l].attributes.length; k++) {
+                                        if (data.remote_report_items[l].attributes[k].attribute_group_item_title === this.selected_type.attribute_groups[i].attribute_group_items[j].title) {
 
-                        this.attribute_groups.push(group)
-                    }
-                })
-            })
-        },
+                                            let value = data.remote_report_items[l].attributes[k].value
+                                            let value_description = data.remote_report_items[l].attributes[k].value_description
+                                            if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
+                                                value = value.replace("%", "*")
+                                            } else if (this.selected_type.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
+                                                value = value === "true";
+                                            }
 
-        updateRemoteAttributes() {
-            for (let i = 0; i < this.attribute_groups.length; i++) {
-                for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                    for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
-                        if (this.attribute_groups[i].attribute_group_items[j].values[k].remote === true) {
-                            this.attribute_groups[i].attribute_group_items[j].values.splice(k, 1)
-                            k--
-                        }
-                    }
-
-                    for (let l = 0; l < this.remote_report_items.length; l++) {
-                        for (let k = 0; k < this.remote_report_items[l].attributes.length; k++) {
-                            if (this.remote_report_items[l].attributes[k].attribute_group_item_title === this.attribute_groups[i].attribute_group_items[j].title) {
-
-                                let value = this.remote_report_items[l].attributes[k].value
-                                if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
-                                    value = value.replace("%", "*")
-                                } else if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
-                                    value = value === "true";
+                                            values.push({
+                                                id: data.remote_report_items[l].attributes[k].id,
+                                                index: values.length,
+                                                value: value,
+                                                value_description: value_description,
+                                                last_updated: data.remote_report_items[l].attributes[k].last_updated,
+                                                binary_mime_type: data.remote_report_items[l].attributes[k].binary_mime_type,
+                                                binary_size: data.remote_report_items[l].attributes[k].binary_size,
+                                                binary_description: data.remote_report_items[l].attributes[k].binary_description,
+                                                user: { name: data.remote_report_items[l].remote_user },
+                                                locked: false,
+                                                remote: true
+                                            });
+                                        }
+                                    }
                                 }
 
-                                this.attribute_groups[i].attribute_group_items[j].values.push({
-                                    id: this.remote_report_items[l].attributes[k].id,
-                                    index: this.attribute_groups[i].attribute_group_items[j].values.length,
-                                    value: value,
-                                    last_updated: this.remote_report_items[l].attributes[k].last_updated,
-                                    binary_mime_type: this.remote_report_items[l].attributes[k].binary_mime_type,
-                                    binary_size: this.remote_report_items[l].attributes[k].binary_size,
-                                    binary_description: this.remote_report_items[l].attributes[k].binary_description,
-                                    user: { name: this.remote_report_items[l].remote_user },
-                                    locked: false,
-                                    remote: true
-                                });
+                                group.attribute_group_items.push({
+                                    attribute_group_item: this.selected_type.attribute_groups[i].attribute_group_items[j],
+                                    values: values
+                                })
+                            }
+
+                            this.attribute_groups.push(group)
+                        }
+                    })
+                })
+            },
+
+            updateRemoteAttributes() {
+                for (let i = 0; i < this.attribute_groups.length; i++) {
+                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                        for (let k = 0; k < this.attribute_groups[i].attribute_group_items[j].values.length; k++) {
+                            if (this.attribute_groups[i].attribute_group_items[j].values[k].remote === true) {
+                                this.attribute_groups[i].attribute_group_items[j].values.splice(k, 1)
+                                k--
+                            }
+                        }
+
+                        for (let l = 0; l < this.remote_report_items.length; l++) {
+                            for (let k = 0; k < this.remote_report_items[l].attributes.length; k++) {
+                                if (this.remote_report_items[l].attributes[k].attribute_group_item_title === this.attribute_groups[i].attribute_group_items[j].title) {
+
+                                    let value = this.remote_report_items[l].attributes[k].value
+                                    if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'CPE') {
+                                        value = value.replace("%", "*")
+                                    } else if (this.attribute_groups[i].attribute_group_items[j].attribute.type === 'BOOLEAN') {
+                                        value = value === "true";
+                                    }
+
+                                    this.attribute_groups[i].attribute_group_items[j].values.push({
+                                        id: this.remote_report_items[l].attributes[k].id,
+                                        index: this.attribute_groups[i].attribute_group_items[j].values.length,
+                                        value: value,
+                                        last_updated: this.remote_report_items[l].attributes[k].last_updated,
+                                        binary_mime_type: this.remote_report_items[l].attributes[k].binary_mime_type,
+                                        binary_size: this.remote_report_items[l].attributes[k].binary_size,
+                                        binary_description: this.remote_report_items[l].attributes[k].binary_description,
+                                        user: { name: this.remote_report_items[l].remote_user },
+                                        locked: false,
+                                        remote: true
+                                    });
+                                }
                             }
                         }
                     }
                 }
-            }
-        },
+            },
 
-        expand_groups() {
-            return this.expand_panel_groups = Array.from(Array(this.attribute_groups.length).keys());
-        },
+            expand_groups() {
+                return this.expand_panel_groups = Array.from(Array(this.attribute_groups.length).keys());
+            },
 
-        auto_generate(attribute_group_item_id) {
-            if (!this.auto_generate_icon[attribute_group_item_id]) {
-                this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-creation");
-            }
-            // Prevent multiple runs if icon indicates a timer is active
-            if (this.auto_generate_icon[attribute_group_item_id].startsWith("mdi-timer-sand")) {
-                return;
-            }
-            this.set_auto_generate_icon(attribute_group_item_id, "wait");
-            const news_item_agreggate_ids = this.news_item_aggregates.map(item => item.id);
-            aiGenerate(attribute_group_item_id, news_item_agreggate_ids).then((response) => {
-                if (response.data.message) {
-                    if (this.setAttributeGroupItemValue(attribute_group_item_id, response.data.message)) {
-                        this.set_auto_generate_icon(attribute_group_item_id, "");
-                        return;
-                    }
-                } else {
-                    this.setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(response.data));
+            auto_generate(attribute_group_item_id) {
+                if (!this.auto_generate_icon[attribute_group_item_id]) {
+                    this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-creation");
                 }
-                this.set_auto_generate_icon(attribute_group_item_id, "error");
-            }).catch((error) => {
-                this.setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(error.response.data));
-                this.set_auto_generate_icon(attribute_group_item_id, "error");
-            });
-        },
-
-        setAttributeGroupItemValue(attribute_group_item_id, value) {
-            for (let i = 0; i < this.attribute_groups.length; i++) {
-                for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
-                    const item = this.attribute_groups[i].attribute_group_items[j];
-                    if (item.attribute_group_item.id === attribute_group_item_id) {
-                        item.values[0].value = value;
-                        return true;
-                    }
+                // Prevent multiple runs if icon indicates a timer is active
+                if (this.auto_generate_icon[attribute_group_item_id].startsWith("mdi-timer-sand")) {
+                    return;
                 }
-            }
-            return false;
-        },
-
-        set_auto_generate_icon(attribute_group_item_id, state) {
-            if (this.auto_generate_icon_timer[attribute_group_item_id]) {
-                clearTimeout(this.auto_generate_icon_timer[attribute_group_item_id]);
-                this.auto_generate_icon_timer[attribute_group_item_id] = null;
-            }
-            if (state === "wait") {
-                const ico = this.auto_generate_icon[attribute_group_item_id]
-                if (ico == "mdi-timer-sand") {
-                    this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-timer-sand-complete");
-                } else if (ico == "mdi-timer-sand-complete") {
-                    this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-timer-sand-paused");
-                } else {
-                    this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-timer-sand");
-                }
-                this.auto_generate_icon_timer[attribute_group_item_id] = setTimeout(() => { this.set_auto_generate_icon(attribute_group_item_id, state) }, 500);
-            } else if (state === "error") {
-                this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-exclamation-thick");
-            } else {
-                this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-creation");
-            }
-        },
-
-        reset_auto_generate() {
-            this.auto_generate_icon = {};
-            this.auto_generate_icon_timer = {};
-        },
-
-        // State management methods
-        async loadAvailableStates() {
-            try {
-                const response = await getEntityTypeStates('report_item');
-                this.availableStates = response.data.states;
-                console.log('[DEBUG] Available states for REPORT loaded:', this.availableStates.map(x => x.display_name).join(', '));
-            } catch (error) {
-                console.error('Failed to load available states for REPORT:', error);
-                this.availableStates = [];
-            }
-        },
-
-        selectDefaultStates() {
-            if (!this.availableStates) return;
-
-            const defaultState = this.availableStates.find(state => state.is_default);
-
-            if (defaultState) {
-                this.selectedState = defaultState.display_name;
-            }
-        },
-
-        async onStateChange() {
-            console.log('[DEBUG] onStateChange called', {
-                edit: this.edit,
-                reportItemId: this.report_item.id,
-                selectedState: this.selectedState,
-                currentEntityState: this.currentEntityState
-            });
-
-            // For new items, just store the selection - it will be applied when the item is created
-            if (!this.edit) {
-                console.log('[DEBUG] New item mode - storing selected state for later application');
-                return;
-            }
-
-            if (!this.report_item.id) {
-                console.log('[DEBUG] Skipping state change - no report item ID');
-                return;
-            }
-
-            try {
-                // Get current state name
-                const currentStateName = this.currentEntityState ? this.currentEntityState.display_name : null;
-
-                console.log('[DEBUG] State changes', {
-                    currentStateName,
-                    newState: this.selectedState
-                });
-
-                if (this.selectedState !== currentStateName) {
-                    console.log('[DEBUG] Sending state change request');
-                    // Use new single state API
-                    if (this.selectedState) {
-                        await setEntityState('report_item', this.report_item.id, this.selectedState);
+                this.set_auto_generate_icon(attribute_group_item_id, "wait");
+                const news_item_agreggate_ids = this.news_item_aggregates.map(item => item.id);
+                aiGenerate(attribute_group_item_id, news_item_agreggate_ids).then((response) => {
+                    if (response.data.message) {
+                        if (this.setAttributeGroupItemValue(attribute_group_item_id, response.data.message)) {
+                            this.set_auto_generate_icon(attribute_group_item_id, "");
+                            return;
+                        }
                     } else {
-                        await removeEntityState('report_item', this.report_item.id);
+                        this.setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(response.data));
                     }
+                    this.set_auto_generate_icon(attribute_group_item_id, "error");
+                }).catch((error) => {
+                    this.setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(error.response.data));
+                    this.set_auto_generate_icon(attribute_group_item_id, "error");
+                });
+            },
 
-                    // Update completed field for backward compatibility
-                    this.report_item.completed = this.selectedState === 'Completed';
-
-                    // Emit update event for real-time sync with full state objects
-                    const selectedStateObject = this.selectedState ?
-                        this.availableStates.find(state => state.display_name === this.selectedState) : null;
-
-                    this.$root.$emit('report-item-state-updated', {
-                        report_item_id: this.report_item.id,
-                        state: this.selectedState,
-                        state_object: selectedStateObject
-                    });
+            setAttributeGroupItemValue(attribute_group_item_id, value) {
+                for (let i = 0; i < this.attribute_groups.length; i++) {
+                    for (let j = 0; j < this.attribute_groups[i].attribute_group_items.length; j++) {
+                        const item = this.attribute_groups[i].attribute_group_items[j];
+                        if (item.attribute_group_item.id === attribute_group_item_id) {
+                            item.values[0].value = value;
+                            return true;
+                        }
+                    }
                 }
-            } catch (error) {
-                console.error('Failed to update states:', error);
-            }
+                return false;
+            },
+
+            set_auto_generate_icon(attribute_group_item_id, state) {
+                if (this.auto_generate_icon_timer[attribute_group_item_id]) {
+                    clearTimeout(this.auto_generate_icon_timer[attribute_group_item_id]);
+                    this.auto_generate_icon_timer[attribute_group_item_id] = null;
+                }
+                if (state === "wait") {
+                    const ico = this.auto_generate_icon[attribute_group_item_id]
+                    if (ico == "mdi-timer-sand") {
+                        this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-timer-sand-complete");
+                    } else if (ico == "mdi-timer-sand-complete") {
+                        this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-timer-sand-paused");
+                    } else {
+                        this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-timer-sand");
+                    }
+                    this.auto_generate_icon_timer[attribute_group_item_id] = setTimeout(() => { this.set_auto_generate_icon(attribute_group_item_id, state) }, 500);
+                } else if (state === "error") {
+                    this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-exclamation-thick");
+                } else {
+                    this.$set(this.auto_generate_icon, attribute_group_item_id, "mdi-creation");
+                }
+            },
+
+            reset_auto_generate() {
+                this.auto_generate_icon = {};
+                this.auto_generate_icon_timer = {};
+            },
+
+            async loadAvailableStates() {
+                try {
+                    const response = await getEntityTypeStates('report_item');
+                    this.available_states = response.data.states;
+                } catch (error) {
+                    console.error('Failed to load available states for REPORT:', error);
+                    this.available_states = [];
+                }
+            },
+
+            selectDefaultState() {
+                if (!this.available_states) return;
+
+                const defaultState = this.available_states.find(state => state.is_default);
+                if (defaultState) {
+                    this.report_item.state_id = defaultState.id;
+                }
+            },
+
+        },
+        mixins: [AuthMixin],
+
+        mounted() {
+            this.loadAvailableStates();
+
+            this.$root.$on('attachments-uploaded', () => {
+                this.attachmets_attributes_count--
+                if (this.attachmets_attributes_count <= 0) {
+                    this.$validator.reset();
+                    this.visible = false;
+                    this.overlay = false
+                    this.$root.$emit('notification', { type: 'success', loc: 'report_item.successful' });
+                }
+            });
+
+            this.local_reports = !window.location.pathname.includes('/group/');
+
+            this.$store.dispatch('getAllReportItemTypes', { search: '' }).then(() => {
+                this.report_types = this.$store.getters.getReportItemTypes.items;
+            });
+
+            this.$root.$on('new-report', (data) => {
+                this.visible = true;
+                this.selected_type = null;
+                this.attribute_groups = [];
+                this.news_item_aggregates = data;
+
+                this.$root.$emit('first-dialog', 'push');
+            });
+
+            this.$root.$on('report-item-locked', this.report_item_locked);
+            this.$root.$on('report-item-unlocked', this.report_item_unlocked);
+            this.$root.$on('report-item-updated', this.report_item_updated);
         },
 
-        // removeState method removed - not needed for single state selection
+        beforeDestroy() {
+            this.$root.$off('attachments-uploaded')
+            this.$root.$off('new-report')
+            this.$root.$off('show-edit') // ???
 
-    },
-    mixins: [AuthMixin],
-
-    async mounted() {
-        // Load available states for report items
-        await this.loadAvailableStates();
-
-        this.$root.$on('attachments-uploaded', () => {
-            this.attachmets_attributes_count--
-            if (this.attachmets_attributes_count <= 0) {
-                this.$validator.reset();
-                this.visible = false;
-                this.overlay = false
-                this.$root.$emit('notification',
-                    {
-                        type: 'success',
-                        loc: 'report_item.successful'
-                    }
-                );
-                // Emit event to refresh the report items list
-                this.$root.$emit('report-items-updated');
-            }
-        });
-
-        this.local_reports = !window.location.pathname.includes('/group/');
-
-        this.$store.dispatch('getAllReportItemTypes', { search: '' }).then(() => {
-            this.report_types = this.$store.getters.getReportItemTypes.items;
-        });
-
-        this.$root.$on('new-report', (data) => {
-            this.visible = true;
-            this.selected_type = null;
-            this.attribute_groups = [];
-            this.news_item_aggregates = data;
-
-            this.$root.$emit('first-dialog', 'push');
-        });
-
-        this.$root.$on('report-item-locked', this.report_item_locked);
-        this.$root.$on('report-item-unlocked', this.report_item_unlocked);
-        this.$root.$on('report-item-updated', this.report_item_updated);
-    },
-
-    beforeDestroy() {
-        this.$root.$off('attachments-uploaded')
-        this.$root.$off('new-report')
-        this.$root.$off('show-edit')
-
-        this.$root.$off('report-item-locked', this.report_item_locked);
-        this.$root.$off('report-item-unlocked', this.report_item_unlocked);
-        this.$root.$off('report-item-updated', this.report_item_updated);
+            this.$root.$off('report-item-locked', this.report_item_locked);
+            this.$root.$off('report-item-unlocked', this.report_item_unlocked);
+            this.$root.$off('report-item-updated', this.report_item_updated);
+        }
     }
-}
 </script>

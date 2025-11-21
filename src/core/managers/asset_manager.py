@@ -5,6 +5,7 @@ import threading
 from managers import publishers_manager
 from managers.db_manager import db
 from model.asset import Asset
+from model.enum import StateEnum
 from model.publisher_preset import PublisherPreset
 from model.state import StateManager
 
@@ -17,7 +18,7 @@ def remove_vulnerability(report_item_id: int) -> None:
 
 def report_item_changed(report_item: object) -> None:
     """Handle report item changes."""
-    if StateManager.has_state("report_item", report_item.id, "completed"):
+    if StateManager.is_this_state_same_as(report_item.state_id, StateEnum.COMPLETED):
         cpes = [cpe.value for cpe in report_item.report_item_cpes]
 
         assets = Asset.get_by_cpe(cpes)

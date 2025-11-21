@@ -22,7 +22,7 @@
                                 </v-sheet>
 
                                 <v-divider class="my-2"></v-divider>
-                                <v-icon class="mr-2">
+                                <v-icon class="mr-2" color="primary">
                                     mdi-email-multiple
                                 </v-icon>
                                 <span class="caption grey--text"><strong>{{ getData.total_news_items }}</strong> {{
@@ -39,16 +39,17 @@
                                 <div class="title mb-2">{{ $t('dashboard.collect.title') }}</div>
                                 <div class="subheading grey--text">{{ $t('dashboard.collect.status') }}</div>
                                 <v-divider class="my-2"></v-divider>
+
                                 <v-icon class="mr-2" color="green">
                                     mdi-lightbulb-off-outline
                                 </v-icon>
-                                <span class="caption grey--text ">Collectors are pending at the moment.</span>
-                                <v-divider inset></v-divider>
+                                <span class="caption grey--text">Collectors are pending at the moment.</span>
+                                <v-divider inset class="mb-2 mt-2"></v-divider>
 
-                                <v-icon class="mr-2">
+                                <v-icon class="mr-2" color="primary">
                                     mdi-clock-check-outline
                                 </v-icon>
-                                <span class="caption grey--text ">
+                                <span class="caption grey--text">
                                     Last successful run ended at <b>{{ getData.latest_collected }}</b>
                                 </span>
                             </v-card-text>
@@ -85,7 +86,7 @@
                                 <!-- Total summary -->
                                 <div class="d-flex align-center mt-2">
                                     <v-icon class="mr-2" color="primary">
-                                        mdi-chart-bar
+                                        mdi-file-document
                                     </v-icon>
                                     <span class="caption grey--text">
                                         <b>{{ getData.total_report_items || 0 }}</b> {{ $t('dashboard.analyze.total') }}.

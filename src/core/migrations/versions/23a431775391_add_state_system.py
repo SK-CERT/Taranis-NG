@@ -11,6 +11,7 @@ from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
+from model.enum import StateEntityTypeEnum, StateEnum
 from sqlalchemy import orm
 from sqlalchemy.dialects import postgresql
 
@@ -95,13 +96,13 @@ class StateDefinitionMigration(Base):
 
     def __init__(
         self,
-        display_name: str,
+        display_name: StateEnum,
         description: str,
         color: str,
         icon: str,
     ) -> None:
         """Initialize state definition."""
-        self.display_name = display_name
+        self.display_name = display_name.value
         self.description = description
         self.color = color
         self.icon = icon
@@ -115,7 +116,10 @@ class StateEntityTypeMigration(Base):
 
     __tablename__ = "state_entity_type"
     id = sa.Column(sa.Integer, primary_key=True)
-    entity_type = sa.Column(sa.Enum("report_item", "product", name="entity_type_enum"), nullable=False)
+    entity_type = sa.Column(
+        sa.Enum(StateEntityTypeEnum.REPORT_ITEM.value, StateEntityTypeEnum.PRODUCT.value, name="entity_type_enum"),
+        nullable=False,
+    )
     state_id = sa.Column(sa.Integer, sa.ForeignKey("state.id"), nullable=False)
     state_type = sa.Column(sa.Enum("normal", "default", "final", name="state_type_enum"), default="normal")
     is_active = sa.Column(sa.Boolean, default=True)
@@ -126,13 +130,13 @@ class StateEntityTypeMigration(Base):
 
     def __init__(
         self,
-        entity_type: str,
+        entity_type: StateEntityTypeEnum,
         state_id: int,
         state_type: str = "normal",
         sort_order: int = 0,
     ) -> None:
         """Initialize state entity type."""
-        self.entity_type = entity_type
+        self.entity_type = entity_type.value
         self.state_id = state_id
         self.state_type = state_type
         self.is_active = True
@@ -159,7 +163,11 @@ def upgrade() -> None:
     op.create_table(
         "state_entity_type",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("entity_type", sa.Enum("report_item", "product", name="entity_type_enum"), nullable=False),
+        sa.Column(
+            "entity_type",
+            sa.Enum(StateEntityTypeEnum.REPORT_ITEM.value, StateEntityTypeEnum.PRODUCT.value, name="entity_type_enum"),
+            nullable=False,
+        ),
         sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id", ondelete="CASCADE"), nullable=False),
         sa.Column("state_type", sa.Enum("normal", "default", "final", name="state_type_enum"), default="normal"),
         sa.Column("is_active", sa.Boolean(), default=True),
@@ -180,9 +188,9 @@ def upgrade() -> None:
     session = orm.Session(bind=op.get_bind())
 
     default_states = [
-        StateDefinitionMigration("published", "Product has been published", "#9932CC", "mdi-checkbox-marked"),
-        StateDefinitionMigration("work_in_progress", "Report/Product is being processed", "#FF9800", "mdi-traffic-cone"),
-        StateDefinitionMigration("completed", "Report has been completed", "#2E7D32", "mdi-checkbox-marked"),
+        StateDefinitionMigration(StateEnum.PUBLISHED, "Product has been published", "#2E7D32", "mdi-checkbox-marked"),
+        StateDefinitionMigration(StateEnum.WORK_IN_PROGRESS, "Report/Product is being processed", "#FF9800", "mdi-traffic-cone"),
+        StateDefinitionMigration(StateEnum.COMPLETED, "Report has been completed", "#2E7D32", "mdi-checkbox-marked"),
     ]
 
     for state in default_states:
@@ -195,9 +203,9 @@ def upgrade() -> None:
     logger.info("Populating state_entity_type table...")
 
     # Get state IDs for mapping
-    published_state = session.query(StateDefinitionMigration).filter_by(display_name="published").first()
-    wip_state = session.query(StateDefinitionMigration).filter_by(display_name="work_in_progress").first()
-    completed_state = session.query(StateDefinitionMigration).filter_by(display_name="completed").first()
+    published_state = session.query(StateDefinitionMigration).filter_by(display_name=StateEnum.PUBLISHED.value).first()
+    wip_state = session.query(StateDefinitionMigration).filter_by(display_name=StateEnum.WORK_IN_PROGRESS.value).first()
+    completed_state = session.query(StateDefinitionMigration).filter_by(display_name=StateEnum.COMPLETED.value).first()
 
     # Create state-entity type mappings using SQLAlchemy
     state_entity_mappings = []
@@ -205,22 +213,22 @@ def upgrade() -> None:
     if published_state:
         # Published state only for products
         state_entity_mappings.append(
-            StateEntityTypeMigration("product", published_state.id, "final", sort_order=20),
+            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, published_state.id, "final", sort_order=20),
         )
 
     if wip_state:
         # Work-in-Progress for both report_item and product
         state_entity_mappings.append(
-            StateEntityTypeMigration("report_item", wip_state.id, "default", sort_order=10),
+            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, wip_state.id, "default", sort_order=10),
         )
         state_entity_mappings.append(
-            StateEntityTypeMigration("product", wip_state.id, "default", sort_order=10),
+            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, wip_state.id, "default", sort_order=10),
         )
 
     if completed_state:
         # Completed state only for report_item
         state_entity_mappings.append(
-            StateEntityTypeMigration("report_item", completed_state.id, "final", sort_order=20),
+            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, completed_state.id, "final", sort_order=20),
         )
 
     # Add all mappings to session
@@ -233,7 +241,7 @@ def upgrade() -> None:
     logger.info("Migrating existing report_item completed states to new state system...")
 
     # Get the "Completed" state ID
-    completed_state = session.query(StateDefinitionMigration).filter_by(display_name="Completed").first()
+    completed_state = session.query(StateDefinitionMigration).filter_by(display_name=StateEnum.COMPLETED.value).first()
     if completed_state:
         # Update report_items that were completed to use the new state
         bind = op.get_bind()
@@ -294,8 +302,10 @@ def downgrade() -> None:
     logger.info("Restoring completed column data from state_id...")
     # Get "Completed" state ID and update completed column
     bind = op.get_bind()
-    completed_state_id = bind.execute(sa.text("SELECT id FROM state WHERE display_name = 'Completed'")).scalar()
-
+    completed_state_id = bind.execute(
+        sa.text("SELECT id FROM state WHERE display_name = :name"),
+        {"name": StateEnum.COMPLETED.value},
+    ).scalar()
     if completed_state_id:
         bind.execute(sa.text("UPDATE report_item SET completed = true WHERE state_id = :state_id"), {"state_id": completed_state_id})
 
