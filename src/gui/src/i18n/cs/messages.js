@@ -119,7 +119,6 @@ const messages_cs = {
         collected: "Indexováno",
         published: "Publikováno",
         source: "Zdroj",
-        status: "Stav",
         node: "Instance",
         description: "Popis",
         in_analyze: "Probíhá analýza",
@@ -771,7 +770,7 @@ const messages_cs = {
                 MONTH: "Zobrazit reporty za minulý měsíc"
             },
             sort: {
-                time: {
+                date: {
                     ascending: "Seřadit reporty podle data vytvoření vzestupně",
                     descending: "Seřadit reporty podle data vytvoření sestupně"
                 }
@@ -1021,10 +1020,10 @@ const messages_cs = {
         add: "Přidat",
         add_btn: "Přidat",
         save: "Uložit",
-        delete: "Smazat",
         edit: "Upravit",
         up: "Přesunout výše",
         down: "Přesunout níže",
+        delete: "Smazat",
         cancel: "Zrušit",
         messagebox: {
             yes: "Ano",

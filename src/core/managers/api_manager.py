@@ -1,8 +1,11 @@
+"""API Manager to initialize all API endpoints."""
+
+from api import analyze, assess, assets, auth, bots, collectors, config, dashboard, isalive, publish, remote, sse, state, user
 from flask_restful import Api
-from api import *
 
 
-def initialize(app):
+def initialize(app: object) -> None:
+    """Initialize all API endpoints."""
     api = Api(app)
 
     assess.initialize(api)
@@ -18,3 +21,4 @@ def initialize(app):
     bots.initialize(api)
     remote.initialize(api)
     dashboard.initialize(api)
+    state.initialize(api)

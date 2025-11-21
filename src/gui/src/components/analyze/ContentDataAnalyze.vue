@@ -108,7 +108,7 @@
                 this.$store.dispatch("getAllReportItems", { group: group, filter: this.filter, offset: offset, limit: limit })
                     .then(() => {
                         const report_types = Object.values(this.$store.getters.getReportItemTypes.items);
-                        this.collections = this.collections.concat(this.$store.getters.getReportItems.items);
+                        this.collections = this.$store.getters.getReportItems.items;
                         for (let i = 0; i < this.collections.length; i++) {
                             let report_type = report_types.filter(x => x.id == this.collections[i].report_item_type_id);
                             if (report_type.length) {
