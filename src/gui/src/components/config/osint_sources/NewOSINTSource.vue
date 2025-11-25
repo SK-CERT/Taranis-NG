@@ -38,7 +38,7 @@
                                         :disabled="edit"
                                         v-model="selected_collector"
                                         :items="selected_node.collectors"
-                                        item-text="name_with_id"
+                                        item-text="name"
                                         :label="$t('osint_source.collector')" />
                         </v-col>
                     </v-row>
@@ -360,6 +360,15 @@
             }
         },
         watch: {
+            selected_node(newNode) {
+                // Reset selected_collector when node changes
+                if (newNode && newNode.collectors && newNode.collectors.length > 0) {
+                    this.selected_collector = newNode.collectors[0]; // Select first collector by default
+                } else {
+                    this.selected_collector = null; // No collectors available
+                }
+            },
+
             selected_collector(newCollector) {
                 if (!this.edit) {
                     if (newCollector && newCollector.parameters) {
@@ -374,11 +383,6 @@
             this.$store.dispatch('getAllCollectorsNodes', { search: '' })
                 .then(() => {
                     this.nodes = this.$store.getters.getCollectorsNodes.items
-                    for (let i = 0; i < this.nodes.length; i++) {
-                        for (let j = 0; j < this.nodes[i].collectors.length; j++) {
-                            this.nodes[i].collectors[j].name_with_id = this.nodes[i].collectors[j].name + " (ID: " + this.nodes[i].collectors[j].id + ")"
-                        }
-                    }
                 });
 
             this.$store.dispatch('getAllWordLists', { search: '' })
@@ -423,7 +427,6 @@
                             break;
                         }
                     }
-
                     if (found) {
                         break
                     }

@@ -2,6 +2,7 @@
 """Database migration script."""
 
 import sys
+
 from alembic import command, script
 from alembic.runtime.migration import MigrationContext
 from flask import Flask
@@ -35,7 +36,7 @@ with app.app_context():
         if current_rev != head_rev:
             command.upgrade(config, revision="+1")
         else:
-            print("Already at the latest revision:", head_rev, flush=True)
+            print("Already at the latest revision:", head_rev, flush=True)  # noqa: T201
     elif command_name == "downgrade":
         command.downgrade(config, revision="-1")
     elif command_name == "revision":
@@ -44,5 +45,7 @@ with app.app_context():
         with db_manager.db.engine.begin() as connection:
             regenerate_all(connection)
     else:
+        if command_name != "":
+            print("Unknown command:", command_name, flush=True)  # noqa: T201
         command.upgrade(config, revision="head")
     db_manager.db.engine.dispose()

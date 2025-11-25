@@ -1,15 +1,18 @@
 """This module provides methods for interacting with the Taranis-NG API."""
 
 import os
-import requests
 import urllib
+from http import HTTPStatus
+from pathlib import Path
+
+import requests
 from config import Config
+
 from shared.log_manager import logger
 
 
 class CoreApi:
-    """
-    The CoreApi class provides methods for interacting with the Taranis-NG API.
+    """The CoreApi class provides methods for interacting with the Taranis-NG API.
 
     Attributes:
         api_url (str): The URL of the Taranis-NG API.
@@ -23,20 +26,18 @@ class CoreApi:
     """
 
     api_url = os.getenv("TARANIS_NG_CORE_URL")
-    if api_url.endswith("/"):
-        api_url = api_url[:-1]
-    headers = {"Authorization": f"Bearer {Config.API_KEY}"}
+    api_url = api_url.removesuffix("/")
+    headers = {"Authorization": f"Bearer {Config.API_KEY}"}  # noqa: RUF012
 
-    def read_collector_config_id():
-        """
-        Read the collector configuration ID from the configuration file.
+    def read_collector_config_id() -> dict:
+        """Read the collector configuration ID from the configuration file.
 
         Returns:
             dict: A dictionary containing the collector ID or an error message.
         """
-        config_file = os.getenv("COLLECTOR_CONFIG_FILE")
+        config_file = Path(os.getenv("COLLECTOR_CONFIG_FILE"))
         try:
-            with open(config_file, "r") as file:
+            with config_file.open() as file:
                 return {"id": file.read().strip()}
         except Exception as ex:
             msg = "Cannot read collector config file. Try re-saving the Collector in the application"
@@ -44,9 +45,8 @@ class CoreApi:
             return {"error": msg}
 
     @classmethod
-    def get_osint_sources(cls, collector_type):
-        """
-        Retrieve the OSINT sources for a given collector type.
+    def get_osint_sources(cls, collector_type: str) -> tuple[dict, HTTPStatus]:
+        """Retrieve the OSINT sources for a given collector type.
 
         Args:
             collector_type (str): The type of collector.
@@ -56,24 +56,24 @@ class CoreApi:
         """
         result = cls.read_collector_config_id()
         if "error" in result:
-            return result, 500
-        else:
-            id = result["id"]
+            return result, HTTPStatus.INTERNAL_SERVER_ERROR
+        collector_id = result["id"]
 
         try:
             response = requests.get(
-                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(id)}/osint-sources?api_key={urllib.parse.quote(Config.API_KEY)}"
+                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/osint-sources?api_key={urllib.parse.quote(Config.API_KEY)}"
                 f"&collector_type={urllib.parse.quote(collector_type)}",
                 headers=cls.headers,
+                timeout=10,
             )
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Get OSINT sources failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 503
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
-    def update_collector_status(cls):
+    def update_collector_status(cls) -> tuple[dict, HTTPStatus]:
         """Update the status of the collector.
 
         This method retrieves the collector ID from the environment variable COLLECTOR_CONFIG_FILE,
@@ -85,21 +85,20 @@ class CoreApi:
         """
         result = cls.read_collector_config_id()
         if "error" in result:
-            return result, 500
-        else:
-            id = result["id"]
+            return result, HTTPStatus.INTERNAL_SERVER_ERROR
+        collector_id = result["id"]
 
         try:
-            response = requests.get(f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(id)}", headers=cls.headers)
+            response = requests.get(f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}", headers=cls.headers, timeout=10)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Update collector status failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 503
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
-    def update_collector_last_attempt(cls, source_id):
-        """Update collector's "last attempted" record with current datetime.
+    def update_source_last_attempt(cls, source_id: str) -> tuple[dict, HTTPStatus]:
+        """Update OSINT source's "last attempted" record with current datetime.
 
         Args:
             source_id (str): The ID of the source.
@@ -109,17 +108,19 @@ class CoreApi:
         """
         try:
             response = requests.get(
-                f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/attempt", headers=cls.headers
+                f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/attempt",
+                headers=cls.headers,
+                timeout=10,
             )
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Update collector last attemt failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 503
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
-    def update_collector_last_error_message(cls, source_id, error_message):
-        """Update collector's "last error message" record with current one.
+    def update_source_last_error_message(cls, source_id: str, error_message: str) -> tuple[dict, HTTPStatus]:
+        """Update OSINT source's "last error message" record with current one.
 
         Args:
             source_id (str): The ID of the source.
@@ -131,15 +132,15 @@ class CoreApi:
         try:
             encoded_message = f"?message={urllib.parse.quote(error_message)}" if error_message else ""
             url = f"{cls.api_url}/api/v1/collectors/osint-sources/{urllib.parse.quote(source_id)}/error_message{encoded_message}"
-            response = requests.get(url, headers=cls.headers)
+            response = requests.get(url, headers=cls.headers, timeout=10)
             return response.json(), response.status_code
         except Exception as ex:
             msg = "Update collector last error message failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 503
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @classmethod
-    def add_news_items(cls, news_items):
+    def add_news_items(cls, news_items: list) -> tuple[dict, HTTPStatus]:
         """Add news items to the collector.
 
         This method sends a POST request to the API endpoint for adding news items to the collector.
@@ -149,14 +150,11 @@ class CoreApi:
 
         Returns:
             int: The HTTP status code of the response.
-
-        Raises:
-            Exception: If an error occurs during the request.
         """
         try:
-            response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers)
+            response = requests.post(f"{cls.api_url}/api/v1/collectors/news-items", json=news_items, headers=cls.headers, timeout=10)
             return response.status_code
         except Exception as ex:
             msg = "Add news items failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 503
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
