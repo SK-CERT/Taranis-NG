@@ -148,9 +148,12 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="msgbox_visible"
-                        @buttonYes="handleMsgBox" @buttonCancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')" :message="card.title">
+            <MessageBox v-model="msgbox_visible"
+                        @yes="handleMsgBox"
+                        @cancel="msgbox_visible = false"
+                        :title="$t('common.messagebox.delete')"
+                        :message="card.title"
+                        :alert=true>
             </MessageBox>
         </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 grey lighten-4 rounded">

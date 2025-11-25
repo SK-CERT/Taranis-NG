@@ -73,8 +73,12 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="msgbox_visible" @buttonYes="handleMsgBox"
-                        @buttonCancel="cancelMsgBox" :title="$t(msgBoxTitle)" :message="card.title">
+            <MessageBox v-model="msgbox_visible"
+                        @yes="handleMsgBox"
+                        @cancel="cancelMsgBox"
+                        :title="$t(msgBoxTitle)"
+                        :message="card.title"
+                        :alert=false>
             </MessageBox>
         </v-row>
     </v-container>

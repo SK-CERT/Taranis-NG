@@ -53,19 +53,19 @@ class StateDefinitionSchema(Schema):
 
     @post_load
     def make(self, data: dict, **kwargs) -> StateDefinition:  # noqa: ARG002, ANN003
-        """Create a AiProvider instance from the deserialized data.
+        """Create a State instance from the deserialized data.
 
         Args:
-            data (dict): The deserialized data containing local AI modelr attributes.
+            data (dict): The deserialized data containing State attributes.
             **kwargs: Additional keyword arguments.
 
         Returns:
-            AiProvider: An instance of AiProvider initialized with the provided data.
+            State: An instance of State initialized with the provided data.
         """
         return StateDefinition(**data)
 
 
-class StateTypeDefinition:
+class StateEntityType:
     """Data model for State Type Definitions."""
 
     def __init__(
@@ -78,7 +78,7 @@ class StateTypeDefinition:
         editable: bool,
         sort_order: int,
     ) -> None:
-        """Initialize a StateTypeDefinition instance.
+        """Initialize a StateEntityType instance.
 
         Args:
             id (int): Unique identifier for the state type.
@@ -99,7 +99,7 @@ class StateTypeDefinition:
         # updated_by and updated_at are set on the server
 
 
-class StateTypeDefinitionSchema(Schema):
+class StateEntityTypeSchema(Schema):
     """Marshmallow schema for serializing and deserializing State Type objects."""
 
     class Meta:
@@ -119,14 +119,14 @@ class StateTypeDefinitionSchema(Schema):
     state = fields.Nested(StateDefinitionSchema)
 
     @post_load
-    def make(self, data: dict, **kwargs) -> StateTypeDefinition:  # noqa: ARG002, ANN003
-        """Create a StateTypeDefinition instance from the deserialized data.
+    def make(self, data: dict, **kwargs) -> StateEntityType:  # noqa: ARG002, ANN003
+        """Create a StateEntityType instance from the deserialized data.
 
         Args:
-            data (dict): The deserialized data containing StateTypeDefinition.
+            data (dict): The deserialized data containing StateEntityType.
             **kwargs: Additional keyword arguments.
 
         Returns:
-            StateTypeDefinition: An instance of StateTypeDefinition initialized with the provided data.
+            StateEntityType: An instance of StateEntityType initialized with the provided data.
         """
-        return StateTypeDefinition(**data)
+        return StateEntityType(**data)

@@ -100,9 +100,12 @@
                         </v-col>
                     </v-row>
                     <v-row>
-                        <MessageBox class="justify-center" v-if="msgbox_visible" @buttonYes="publishProduct"
-                                    @buttonCancel="msgbox_visible = false" :title="$t('product.publish_confirmation')"
-                                    :message="product.title">
+                        <MessageBox v-model="msgbox_visible"
+                                    @yes="publishProduct"
+                                    @cancel="msgbox_visible = false"
+                                    :title="$t('product.publish_confirmation')"
+                                    :message="product.title"
+                                    :alert=false>
                         </MessageBox>
                     </v-row>
 

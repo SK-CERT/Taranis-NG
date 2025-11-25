@@ -112,9 +112,12 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="msgbox_visible"
-                        @buttonYes="handleMsgBox" @buttonCancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title">
+            <MessageBox v-model="msgbox_visible"
+                        @yes="handleMsgBox"
+                        @cancel="msgbox_visible = false"
+                        :title="$t('common.messagebox.delete')"
+                        :message="news_item.news_item_data.title"
+                        :alert=true>
             </MessageBox>
         </v-row>
     </v-container>

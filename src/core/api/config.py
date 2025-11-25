@@ -49,15 +49,15 @@ from model import (
 )
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
-from model.state import StateDefinition, StateTypeDefinition
+from model.state import StateDefinition, StateEntityType
 
 from shared.schema.ai_provider import AiProviderSchema
 from shared.schema.data_provider import DataProviderSchema
 from shared.schema.role import PermissionSchema
-from shared.schema.state import StateDefinitionSchema, StateTypeDefinitionSchema
+from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
 
 
-class DictionariesReload(Resource):
+class DictionariesReloadResource(Resource):
     """Dictionaries reload API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
@@ -73,7 +73,7 @@ class DictionariesReload(Resource):
         return "success", HTTPStatus.OK
 
 
-class Attributes(Resource):
+class AttributesResource(Resource):
     """Attributes API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_ACCESS")
@@ -103,7 +103,7 @@ class Attributes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Attribute(Resource):
+class AttributeResource(Resource):
     """Attribute API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
@@ -139,7 +139,7 @@ class Attribute(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class AttributeEnums(Resource):
+class AttributeEnumsResource(Resource):
     """Attribute enums API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_ACCESS")
@@ -179,7 +179,7 @@ class AttributeEnums(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class AttributeEnum(Resource):
+class AttributeEnumResource(Resource):
     """Attribute enum API endpoint."""
 
     @auth_required("CONFIG_ATTRIBUTE_UPDATE")
@@ -217,7 +217,7 @@ class AttributeEnum(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class AiProviders(Resource):
+class AiProvidersResource(Resource):
     """AI models API endpoint."""
 
     @auth_required("CONFIG_AI_ACCESS")
@@ -250,7 +250,7 @@ class AiProviders(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class AiProvider(Resource):
+class AiProviderResource(Resource):
     """AI model API endpoint."""
 
     @auth_required("CONFIG_AI_UPDATE")
@@ -289,7 +289,7 @@ class AiProvider(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class DataProvider(Resource):
+class DataProviderResource(Resource):
     """Data provider API endpoint."""
 
     @auth_required("CONFIG_DATA_PROVIDER_UPDATE")
@@ -328,7 +328,7 @@ class DataProvider(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class DataProviders(Resource):
+class DataProvidersResource(Resource):
     """Data provider API endpoint."""
 
     @auth_required("CONFIG_DATA_PROVIDER_ACCESS")
@@ -361,7 +361,7 @@ class DataProviders(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ReportItemTypesConfig(Resource):
+class ReportItemTypesConfigResource(Resource):
     """Report item types API endpoint."""
 
     @auth_required("CONFIG_REPORT_TYPE_ACCESS")
@@ -391,7 +391,7 @@ class ReportItemTypesConfig(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ReportItemType(Resource):
+class ReportItemTypeResource(Resource):
     """Report item type API endpoint."""
 
     @auth_required("CONFIG_REPORT_TYPE_UPDATE")
@@ -427,7 +427,7 @@ class ReportItemType(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ProductTypes(Resource):
+class ProductTypesResource(Resource):
     """Product types API endpoint."""
 
     @auth_required("CONFIG_PRODUCT_TYPE_ACCESS")
@@ -457,7 +457,7 @@ class ProductTypes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ProductType(Resource):
+class ProductTypeResource(Resource):
     """Product type API endpoint."""
 
     @auth_required("CONFIG_PRODUCT_TYPE_UPDATE")
@@ -493,7 +493,7 @@ class ProductType(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Permissions(Resource):
+class PermissionsResource(Resource):
     """Permissions API endpoint."""
 
     @auth_required("CONFIG_ACCESS")
@@ -509,7 +509,7 @@ class Permissions(Resource):
         return Permission.get_all_json(search)
 
 
-class ExternalPermissions(Resource):
+class ExternalPermissionsResource(Resource):
     """External permissions API endpoint."""
 
     @auth_required("MY_ASSETS_CONFIG")
@@ -524,7 +524,7 @@ class ExternalPermissions(Resource):
         return {"total_count": len(permissions), "items": permissions_schema.dump(permissions)}
 
 
-class Roles(Resource):
+class RolesResource(Resource):
     """Roles API endpoint."""
 
     @auth_required("CONFIG_ROLE_ACCESS")
@@ -554,7 +554,7 @@ class Roles(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Role(Resource):
+class RoleResource(Resource):
     """Role API endpoint."""
 
     @auth_required("CONFIG_ROLE_UPDATE")
@@ -590,7 +590,7 @@ class Role(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ACLEntries(Resource):
+class ACLEntriesResource(Resource):
     """ACL entries API endpoint."""
 
     @auth_required("CONFIG_ACL_ACCESS")
@@ -620,7 +620,7 @@ class ACLEntries(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ACLEntry(Resource):
+class ACLEntryResource(Resource):
     """ACL entry API endpoint."""
 
     @auth_required("CONFIG_ACL_UPDATE")
@@ -656,7 +656,7 @@ class ACLEntry(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Organizations(Resource):
+class OrganizationsResource(Resource):
     """Organizations API endpoint."""
 
     @auth_required("CONFIG_ORGANIZATION_ACCESS")
@@ -686,7 +686,7 @@ class Organizations(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Organization(Resource):
+class OrganizationResource(Resource):
     """Organization API endpoint."""
 
     @auth_required("CONFIG_ORGANIZATION_UPDATE")
@@ -722,7 +722,7 @@ class Organization(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Users(Resource):
+class UsersResource(Resource):
     """Users API endpoint."""
 
     @auth_required("CONFIG_USER_ACCESS")
@@ -755,7 +755,7 @@ class Users(Resource):
         return None
 
 
-class User(Resource):
+class UserResource(Resource):
     """User API endpoint."""
 
     @auth_required("CONFIG_USER_UPDATE")
@@ -802,7 +802,7 @@ class User(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ExternalUsers(Resource):
+class ExternalUsersResource(Resource):
     """External users API endpoint."""
 
     @auth_required("MY_ASSETS_CONFIG")
@@ -833,7 +833,7 @@ class ExternalUsers(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class ExternalUser(Resource):
+class ExternalUserResource(Resource):
     """External user API endpoint."""
 
     @auth_required("MY_ASSETS_CONFIG")
@@ -870,7 +870,7 @@ class ExternalUser(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class Settings(Resource):
+class SettingsResource(Resource):
     """Settings API endpoint."""
 
     @jwt_required()
@@ -887,7 +887,7 @@ class Settings(Resource):
         return setting.Setting.get_all_json(user, search)
 
 
-class Setting(Resource):
+class SettingResource(Resource):
     """Settings API endpoint."""
 
     @auth_required("CONFIG_SETTINGS_UPDATE")
@@ -910,7 +910,7 @@ class Setting(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class UserSetting(Resource):
+class UserSettingResource(Resource):
     """Settings API endpoint."""
 
     @jwt_required()
@@ -934,7 +934,7 @@ class UserSetting(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class WordLists(Resource):
+class WordListsResource(Resource):
     """Word lists API endpoint."""
 
     @auth_required("CONFIG_WORD_LIST_ACCESS")
@@ -964,7 +964,7 @@ class WordLists(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class WordList(Resource):
+class WordListResource(Resource):
     """Word list API endpoint."""
 
     @auth_required("CONFIG_WORD_LIST_DELETE")
@@ -1000,7 +1000,7 @@ class WordList(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class CollectorsNodes(Resource):
+class CollectorsNodesResource(Resource):
     """Collectors nodes API endpoint."""
 
     @auth_required("CONFIG_COLLECTORS_NODE_ACCESS")
@@ -1030,7 +1030,7 @@ class CollectorsNodes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class CollectorsNode(Resource):
+class CollectorsNodeResource(Resource):
     """Collectors node API endpoint."""
 
     @auth_required("CONFIG_COLLECTORS_NODE_UPDATE")
@@ -1066,7 +1066,7 @@ class CollectorsNode(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class OSINTSources(Resource):
+class OSINTSourcesResource(Resource):
     """OSINT sources API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_ACCESS")
@@ -1096,7 +1096,7 @@ class OSINTSources(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class OSINTSource(Resource):
+class OSINTSourceResource(Resource):
     """OSINT source API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_UPDATE")
@@ -1134,7 +1134,7 @@ class OSINTSource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class OSINTSourcesExport(Resource):
+class OSINTSourcesExportResource(Resource):
     """OSINT sources export API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_ACCESS")
@@ -1153,7 +1153,7 @@ class OSINTSourcesExport(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class OSINTSourcesImport(Resource):
+class OSINTSourcesImportResource(Resource):
     """OSINT sources import API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_CREATE")
@@ -1174,7 +1174,7 @@ class OSINTSourcesImport(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class OSINTSourceGroups(Resource):
+class OSINTSourceGroupsResource(Resource):
     """OSINT source groups API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_ACCESS")
@@ -1204,7 +1204,7 @@ class OSINTSourceGroups(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class OSINTSourceGroup(Resource):
+class OSINTSourceGroupResource(Resource):
     """OSINT source group API endpoint."""
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_UPDATE")
@@ -1245,7 +1245,7 @@ class OSINTSourceGroup(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class RemoteAccesses(Resource):
+class RemoteAccessesResource(Resource):
     """Remote accesses API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
@@ -1275,7 +1275,7 @@ class RemoteAccesses(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class RemoteAccess(Resource):
+class RemoteAccessResource(Resource):
     """Remote access API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
@@ -1313,7 +1313,7 @@ class RemoteAccess(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class RemoteNodes(Resource):
+class RemoteNodesResource(Resource):
     """Remote nodes API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
@@ -1343,7 +1343,7 @@ class RemoteNodes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class RemoteNode(Resource):
+class RemoteNodeResource(Resource):
     """Remote node API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
@@ -1381,7 +1381,7 @@ class RemoteNode(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class RemoteNodeConnect(Resource):
+class RemoteNodeConnectResource(Resource):
     """Remote node connect API endpoint."""
 
     @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
@@ -1401,7 +1401,7 @@ class RemoteNodeConnect(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PresentersNodes(Resource):
+class PresentersNodesResource(Resource):
     """Presenters nodes API endpoint."""
 
     @auth_required("CONFIG_PRESENTERS_NODE_ACCESS")
@@ -1431,7 +1431,7 @@ class PresentersNodes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PresentersNode(Resource):
+class PresentersNodeResource(Resource):
     """Presenters node API endpoint."""
 
     @auth_required("CONFIG_PRESENTERS_NODE_UPDATE")
@@ -1467,7 +1467,7 @@ class PresentersNode(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PublisherNodes(Resource):
+class PublisherNodesResource(Resource):
     """Publisher nodes API endpoint."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_ACCESS")
@@ -1497,7 +1497,7 @@ class PublisherNodes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PublishersNode(Resource):
+class PublishersNodeResource(Resource):
     """Publisher node API endpoint."""
 
     @auth_required("CONFIG_PUBLISHERS_NODE_UPDATE")
@@ -1533,7 +1533,7 @@ class PublishersNode(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PublisherPresets(Resource):
+class PublisherPresetsResource(Resource):
     """Publisher presets API endpoint."""
 
     @auth_required("CONFIG_PUBLISHER_PRESET_ACCESS")
@@ -1563,7 +1563,7 @@ class PublisherPresets(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class PublisherPreset(Resource):
+class PublisherPresetResource(Resource):
     """Publisher preset API endpoint."""
 
     @auth_required("CONFIG_PUBLISHER_PRESET_UPDATE")
@@ -1599,7 +1599,7 @@ class PublisherPreset(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class BotNodes(Resource):
+class BotNodesResource(Resource):
     """Bot nodes API endpoint."""
 
     @auth_required("CONFIG_BOTS_NODE_ACCESS")
@@ -1629,7 +1629,7 @@ class BotNodes(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class BotsNode(Resource):
+class BotsNodeResource(Resource):
     """Bot node API endpoint."""
 
     @auth_required("CONFIG_BOTS_NODE_UPDATE")
@@ -1665,7 +1665,7 @@ class BotsNode(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class BotPresets(Resource):
+class BotPresetsResource(Resource):
     """Bot presets API endpoint."""
 
     @auth_required("CONFIG_BOT_PRESET_ACCESS")
@@ -1695,7 +1695,7 @@ class BotPresets(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class BotPreset(Resource):
+class BotPresetResource(Resource):
     """Bot preset API endpoint."""
 
     @auth_required("CONFIG_BOT_PRESET_UPDATE")
@@ -1731,7 +1731,7 @@ class BotPreset(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class StateDefinitionsAPI(Resource):
+class StateDefinitionsResource(Resource):
     """State definitions API endpoint."""
 
     @auth_required("CONFIG_WORKFLOW_ACCESS")
@@ -1768,7 +1768,7 @@ class StateDefinitionsAPI(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class StateDefinitionAPI(Resource):
+class StateDefinitionResource(Resource):
     """State definition API endpoint."""
 
     @auth_required("CONFIG_WORKFLOW_UPDATE")
@@ -1820,7 +1820,7 @@ class StateDefinitionAPI(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class StateEntityTypesAPI(Resource):
+class StateEntityTypesResource(Resource):
     """State entity type associations API endpoint."""
 
     @auth_required("CONFIG_WORKFLOW_ACCESS")
@@ -1832,7 +1832,7 @@ class StateEntityTypesAPI(Resource):
         """
         try:
             entity_type = request.args.get("entity_type")
-            return StateTypeDefinition.get_all_json(entity_type)
+            return StateEntityType.get_all_json(entity_type)
 
         except Exception as ex:
             msg = "Could not get state-entity type associations"
@@ -1848,8 +1848,8 @@ class StateEntityTypesAPI(Resource):
         """
         try:
             user = auth_manager.get_user_from_jwt()
-            state_def = StateTypeDefinition.add_new(request.json, user.name)
-            schema = StateTypeDefinitionSchema()
+            state_def = StateEntityType.add_new(request.json, user.name)
+            schema = StateEntityTypeSchema()
             return schema.dump(state_def), HTTPStatus.CREATED
 
         except Exception as ex:
@@ -1859,7 +1859,7 @@ class StateEntityTypesAPI(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class StateEntityTypeAPI(Resource):
+class StateEntityTypeResource(Resource):
     """State entity type association API endpoint."""
 
     @auth_required("CONFIG_WORKFLOW_UPDATE")
@@ -1872,7 +1872,7 @@ class StateEntityTypeAPI(Resource):
             (dict, int): The updated association
         """
         try:
-            state_type = db.session.get(StateTypeDefinition, state_entity_type_id)
+            state_type = db.session.get(StateEntityType, state_entity_type_id)
             if not state_type:
                 return {"error": "State entity-type not found"}, HTTPStatus.NOT_FOUND
 
@@ -1900,7 +1900,7 @@ class StateEntityTypeAPI(Resource):
             (dict, int): The result
         """
         try:
-            state_type = db.session.get(StateTypeDefinition, state_entity_type_id)
+            state_type = db.session.get(StateEntityType, state_entity_type_id)
             if not state_type:
                 return {"error": "Association not found"}, HTTPStatus.NOT_FOUND
 
@@ -1925,79 +1925,79 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Args:
         api (Flask): The Flask application
     """
-    api.add_resource(DictionariesReload, "/api/v1/config/reload-enum-dictionaries/<string:dictionary_type>")
-    api.add_resource(Attributes, "/api/v1/config/attributes")
-    api.add_resource(Attribute, "/api/v1/config/attributes/<int:attribute_id>")
-    api.add_resource(AttributeEnums, "/api/v1/config/attributes/<int:attribute_id>/enums")
-    api.add_resource(AttributeEnum, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
-    api.add_resource(AiProviders, "/api/v1/config/aiproviders")
-    api.add_resource(AiProvider, "/api/v1/config/aiprovider/<int:ai_provider_id>")
-    api.add_resource(DataProviders, "/api/v1/config/data-providers")
-    api.add_resource(DataProvider, "/api/v1/config/data-provider/<int:data_provider_id>")
+    api.add_resource(DictionariesReloadResource, "/api/v1/config/reload-enum-dictionaries/<string:dictionary_type>")
+    api.add_resource(AttributesResource, "/api/v1/config/attributes")
+    api.add_resource(AttributeResource, "/api/v1/config/attributes/<int:attribute_id>")
+    api.add_resource(AttributeEnumsResource, "/api/v1/config/attributes/<int:attribute_id>/enums")
+    api.add_resource(AttributeEnumResource, "/api/v1/config/attributes/<int:attribute_id>/enums/<int:enum_id>")
+    api.add_resource(AiProvidersResource, "/api/v1/config/aiproviders")
+    api.add_resource(AiProviderResource, "/api/v1/config/aiprovider/<int:ai_provider_id>")
+    api.add_resource(DataProvidersResource, "/api/v1/config/data-providers")
+    api.add_resource(DataProviderResource, "/api/v1/config/data-provider/<int:data_provider_id>")
 
-    api.add_resource(ReportItemTypesConfig, "/api/v1/config/report-item-types")
-    api.add_resource(ReportItemType, "/api/v1/config/report-item-types/<int:type_id>")
+    api.add_resource(ReportItemTypesConfigResource, "/api/v1/config/report-item-types")
+    api.add_resource(ReportItemTypeResource, "/api/v1/config/report-item-types/<int:type_id>")
 
-    api.add_resource(ProductTypes, "/api/v1/config/product-types")
-    api.add_resource(ProductType, "/api/v1/config/product-types/<int:type_id>")
+    api.add_resource(ProductTypesResource, "/api/v1/config/product-types")
+    api.add_resource(ProductTypeResource, "/api/v1/config/product-types/<int:type_id>")
 
-    api.add_resource(Permissions, "/api/v1/config/permissions")
-    api.add_resource(ExternalPermissions, "/api/v1/config/external-permissions")
-    api.add_resource(Roles, "/api/v1/config/roles")
-    api.add_resource(Role, "/api/v1/config/roles/<int:role_id>")
-    api.add_resource(ACLEntries, "/api/v1/config/acls")
-    api.add_resource(ACLEntry, "/api/v1/config/acls/<int:acl_id>")
+    api.add_resource(PermissionsResource, "/api/v1/config/permissions")
+    api.add_resource(ExternalPermissionsResource, "/api/v1/config/external-permissions")
+    api.add_resource(RolesResource, "/api/v1/config/roles")
+    api.add_resource(RoleResource, "/api/v1/config/roles/<int:role_id>")
+    api.add_resource(ACLEntriesResource, "/api/v1/config/acls")
+    api.add_resource(ACLEntryResource, "/api/v1/config/acls/<int:acl_id>")
 
-    api.add_resource(Organizations, "/api/v1/config/organizations")
-    api.add_resource(Organization, "/api/v1/config/organizations/<int:organization_id>")
+    api.add_resource(OrganizationsResource, "/api/v1/config/organizations")
+    api.add_resource(OrganizationResource, "/api/v1/config/organizations/<int:organization_id>")
 
-    api.add_resource(Users, "/api/v1/config/users")
-    api.add_resource(User, "/api/v1/config/users/<int:user_id>")
+    api.add_resource(UsersResource, "/api/v1/config/users")
+    api.add_resource(UserResource, "/api/v1/config/users/<int:user_id>")
 
-    api.add_resource(ExternalUsers, "/api/v1/config/external-users")
-    api.add_resource(ExternalUser, "/api/v1/config/external-users/<int:user_id>")
+    api.add_resource(ExternalUsersResource, "/api/v1/config/external-users")
+    api.add_resource(ExternalUserResource, "/api/v1/config/external-users/<int:user_id>")
 
-    api.add_resource(Settings, "/api/v1/config/settings")
-    api.add_resource(Setting, "/api/v1/config/settings/<int:setting_id>")
-    api.add_resource(UserSetting, "/api/v1/config/user-settings/<int:setting_id>")
-    api.add_resource(WordLists, "/api/v1/config/word-lists")
-    api.add_resource(WordList, "/api/v1/config/word-lists/<int:word_list_id>")
+    api.add_resource(SettingsResource, "/api/v1/config/settings")
+    api.add_resource(SettingResource, "/api/v1/config/settings/<int:setting_id>")
+    api.add_resource(UserSettingResource, "/api/v1/config/user-settings/<int:setting_id>")
+    api.add_resource(WordListsResource, "/api/v1/config/word-lists")
+    api.add_resource(WordListResource, "/api/v1/config/word-lists/<int:word_list_id>")
 
-    api.add_resource(CollectorsNodes, "/api/v1/config/collectors-nodes")
-    api.add_resource(CollectorsNode, "/api/v1/config/collectors-nodes/<string:node_id>")
-    api.add_resource(OSINTSources, "/api/v1/config/osint-sources")
-    api.add_resource(OSINTSource, "/api/v1/config/osint-sources/<string:source_id>")
-    api.add_resource(OSINTSourcesExport, "/api/v1/config/export-osint-sources")
-    api.add_resource(OSINTSourcesImport, "/api/v1/config/import-osint-sources")
-    api.add_resource(OSINTSourceGroups, "/api/v1/config/osint-source-groups")
-    api.add_resource(OSINTSourceGroup, "/api/v1/config/osint-source-groups/<string:group_id>")
+    api.add_resource(CollectorsNodesResource, "/api/v1/config/collectors-nodes")
+    api.add_resource(CollectorsNodeResource, "/api/v1/config/collectors-nodes/<string:node_id>")
+    api.add_resource(OSINTSourcesResource, "/api/v1/config/osint-sources")
+    api.add_resource(OSINTSourceResource, "/api/v1/config/osint-sources/<string:source_id>")
+    api.add_resource(OSINTSourcesExportResource, "/api/v1/config/export-osint-sources")
+    api.add_resource(OSINTSourcesImportResource, "/api/v1/config/import-osint-sources")
+    api.add_resource(OSINTSourceGroupsResource, "/api/v1/config/osint-source-groups")
+    api.add_resource(OSINTSourceGroupResource, "/api/v1/config/osint-source-groups/<string:group_id>")
 
-    api.add_resource(RemoteAccesses, "/api/v1/config/remote-accesses")
-    api.add_resource(RemoteAccess, "/api/v1/config/remote-accesses/<int:remote_access_id>")
+    api.add_resource(RemoteAccessesResource, "/api/v1/config/remote-accesses")
+    api.add_resource(RemoteAccessResource, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
-    api.add_resource(RemoteNodes, "/api/v1/config/remote-nodes")
-    api.add_resource(RemoteNode, "/api/v1/config/remote-nodes/<int:remote_node_id>")
-    api.add_resource(RemoteNodeConnect, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
+    api.add_resource(RemoteNodesResource, "/api/v1/config/remote-nodes")
+    api.add_resource(RemoteNodeResource, "/api/v1/config/remote-nodes/<int:remote_node_id>")
+    api.add_resource(RemoteNodeConnectResource, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
 
-    api.add_resource(PresentersNodes, "/api/v1/config/presenters-nodes")
-    api.add_resource(PresentersNode, "/api/v1/config/presenters-nodes/<string:node_id>")
+    api.add_resource(PresentersNodesResource, "/api/v1/config/presenters-nodes")
+    api.add_resource(PresentersNodeResource, "/api/v1/config/presenters-nodes/<string:node_id>")
 
-    api.add_resource(PublisherNodes, "/api/v1/config/publishers-nodes")
-    api.add_resource(PublishersNode, "/api/v1/config/publishers-nodes/<string:node_id>")
+    api.add_resource(PublisherNodesResource, "/api/v1/config/publishers-nodes")
+    api.add_resource(PublishersNodeResource, "/api/v1/config/publishers-nodes/<string:node_id>")
 
-    api.add_resource(PublisherPresets, "/api/v1/config/publishers-presets")
-    api.add_resource(PublisherPreset, "/api/v1/config/publishers-presets/<string:preset_id>")
+    api.add_resource(PublisherPresetsResource, "/api/v1/config/publishers-presets")
+    api.add_resource(PublisherPresetResource, "/api/v1/config/publishers-presets/<string:preset_id>")
 
-    api.add_resource(BotNodes, "/api/v1/config/bots-nodes")
-    api.add_resource(BotsNode, "/api/v1/config/bots-nodes/<string:node_id>")
+    api.add_resource(BotNodesResource, "/api/v1/config/bots-nodes")
+    api.add_resource(BotsNodeResource, "/api/v1/config/bots-nodes/<string:node_id>")
 
-    api.add_resource(BotPresets, "/api/v1/config/bots-presets")
-    api.add_resource(BotPreset, "/api/v1/config/bots-presets/<string:preset_id>")
+    api.add_resource(BotPresetsResource, "/api/v1/config/bots-presets")
+    api.add_resource(BotPresetResource, "/api/v1/config/bots-presets/<string:preset_id>")
 
-    api.add_resource(StateDefinitionsAPI, "/api/v1/config/state-definitions")
-    api.add_resource(StateDefinitionAPI, "/api/v1/config/state-definitions/<int:state_id>")
-    api.add_resource(StateEntityTypesAPI, "/api/v1/config/state-entity-types")
-    api.add_resource(StateEntityTypeAPI, "/api/v1/config/state-entity-types/<int:state_entity_type_id>")
+    api.add_resource(StateDefinitionsResource, "/api/v1/config/state-definitions")
+    api.add_resource(StateDefinitionResource, "/api/v1/config/state-definitions/<int:state_id>")
+    api.add_resource(StateEntityTypesResource, "/api/v1/config/state-entity-types")
+    api.add_resource(StateEntityTypeResource, "/api/v1/config/state-entity-types/<int:state_entity_type_id>")
 
     Permission.add("CONFIG_ACCESS", "Configuration access", "Access to Configuration module")
 

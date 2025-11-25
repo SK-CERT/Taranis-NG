@@ -20,7 +20,7 @@ class ProductSchemaBase(Schema):
     title = fields.Str()
     description = fields.Str()
     product_type_id = fields.Int()
-    state_id = fields.Int()
+    state_id = fields.Int(allow_none=True)
 
 
 class ProductSchema(ProductSchemaBase):

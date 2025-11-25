@@ -167,7 +167,7 @@ class ReportItemBaseSchema(Schema):
     created = fields.DateTime("%d.%m.%Y - %H:%M")
     last_updated = fields.DateTime("%d.%m.%Y - %H:%M")
     report_item_type_id = fields.Int(load_default=None, allow_none=True)
-    state_id = fields.Int()
+    state_id = fields.Int(allow_none=True)
 
 
 class RemoteReportItemSchema(ReportItemBaseSchema, PresentationSchema):

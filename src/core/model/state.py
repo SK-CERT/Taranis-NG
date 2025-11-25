@@ -17,7 +17,7 @@ from model.enum import StateEntityTypeEnum, StateEnum
 from sqlalchemy import Enum
 
 from shared.common import TZ
-from shared.schema.state import StateDefinitionSchema, StateTypeDefinitionSchema
+from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +54,6 @@ class StateDefinition(db.Model):
     updated_at = db.Column(db.DateTime)
 
     @classmethod
-    def get_by_id(cls, state_id: int) -> StateDefinition | None:
-        """Get state definition by ID."""
-        return cls.query.filter_by(id=state_id).first()
-
-    @classmethod
     def get_by_name(cls, display_name: str) -> StateDefinition | None:
         """Get state definition by display name."""
         return cls.query.filter_by(display_name=display_name).first()
@@ -73,6 +68,36 @@ class StateDefinition(db.Model):
 
         schema = StateDefinitionSchema(many=True)
         return {"total_count": len(results), "items": schema.dump(results)}, HTTPStatus.OK
+
+    @classmethod
+    def get_full_by_entity_json(cls, entity_type: str, include_inactive: bool | None = None) -> dict:
+        """Get states by entity type in JSON format."""
+        query = (
+            db.session.query(StateEntityType, StateDefinition)
+            .join(StateDefinition, StateEntityType.state_id == StateDefinition.id)
+            .filter(StateEntityType.entity_type == entity_type)
+        )
+        if not include_inactive:
+            query = query.filter(StateEntityType.is_active.is_(True))
+        records = query.order_by(StateEntityType.sort_order, StateDefinition.display_name).all()
+
+        result = []
+        for state_type_def, state in records:
+            result.append(
+                {
+                    "id": state.id,
+                    "display_name": state.display_name,
+                    "description": state.description,
+                    "color": state.color,
+                    "icon": state.icon,
+                    "is_default": state_type_def.state_type == "default",
+                    "is_active": state_type_def.is_active,
+                    "state_type": state_type_def.state_type,
+                    "sort_order": state_type_def.sort_order,
+                },
+            )
+
+        return {"entity_type": entity_type, "states": result, "include_inactive": include_inactive}
 
     @classmethod
     def add_new(cls, data: dict, user_name: str) -> StateDefinition:
@@ -132,11 +157,11 @@ class StateDefinition(db.Model):
         return {"message": "State definition deleted successfully"}, HTTPStatus.OK
 
 
-class NewStateTypeDefinitionSchema(StateTypeDefinitionSchema):
+class NewStateEntityTypeSchema(StateEntityTypeSchema):
     """New State type Schema."""
 
     @post_load
-    def make(self, data: dict, **kwargs) -> StateTypeDefinition:  # noqa: ARG002, ANN003
+    def make(self, data: dict, **kwargs) -> StateEntityType:  # noqa: ARG002, ANN003
         """Create a new State type.
 
         Args:
@@ -144,12 +169,12 @@ class NewStateTypeDefinitionSchema(StateTypeDefinitionSchema):
             **kwargs: Additional keyword arguments.
 
         Returns:
-            StateTypeDefinition: New State type object.
+            StateEntityType: New State type object.
         """
-        return StateTypeDefinition(**data)
+        return StateEntityType(**data)
 
 
-class StateTypeDefinition(db.Model):
+class StateEntityType(db.Model):
     """Defines which states are allowed for which entity types with additional metadata."""
 
     __tablename__ = "state_entity_type"
@@ -183,16 +208,16 @@ class StateTypeDefinition(db.Model):
         """
         query = cls.query
         if entity_type:
-            query = query.filter(StateTypeDefinition.entity_type == entity_type)
-        results = query.order_by(StateTypeDefinition.entity_type, StateTypeDefinition.sort_order).all()
+            query = query.filter(StateEntityType.entity_type == entity_type)
+        results = query.order_by(StateEntityType.entity_type, StateEntityType.sort_order).all()
 
-        schema = StateTypeDefinitionSchema(many=True)
+        schema = StateEntityTypeSchema(many=True)
         return {"total_count": len(results), "items": schema.dump(results)}, HTTPStatus.OK
 
     @classmethod
-    def add_new(cls, data: dict, user_name: str) -> StateTypeDefinition:
+    def add_new(cls, data: dict, user_name: str) -> StateEntityType:
         """Create a new state type."""
-        schema = NewStateTypeDefinitionSchema()
+        schema = NewStateEntityTypeSchema()
         new = schema.load(data)
         new.updated_by = user_name
         new.updated_at = datetime.now(TZ)
@@ -200,9 +225,9 @@ class StateTypeDefinition(db.Model):
         db.session.commit()
         return new
 
-    def update(self, data: dict, user_name: str) -> StateTypeDefinition:
+    def update(self, data: dict, user_name: str) -> StateEntityType:
         """Update state type definition."""
-        schema = StateTypeDefinitionSchema()
+        schema = StateEntityTypeSchema()
         new = schema.load(data)
         self.entity_type = new.entity_type
         self.state_id = new.state_id
@@ -216,200 +241,9 @@ class StateTypeDefinition(db.Model):
         db.session.commit()
         return self
 
-    @classmethod
-    def get_allowed_states(cls, entity_type: str) -> list[StateDefinition]:
-        """Get all states allowed for a specific entity type."""
-        return (
-            db.session.query(StateDefinition)
-            .join(cls)
-            .filter(cls.entity_type == entity_type)
-            .filter(cls.is_active.is_(True))
-            .order_by(cls.sort_order)
-            .all()
-        )
-
-    @classmethod
-    def is_state_allowed(cls, entity_type: str, state_name: str) -> bool:
-        """Check if a state is allowed for an entity type."""
-        result = (
-            db.session.query(cls)
-            .join(StateDefinition)
-            .filter(cls.entity_type == entity_type)
-            .filter(cls.is_active.is_(True))
-            .filter(StateDefinition.display_name == state_name)
-            .first()
-        )
-
-        return result is not None
-
 
 class StateManager:
     """Manages state operations for entities with generic, flexible methods."""
-
-    @staticmethod
-    def validate_entity_type(entity_type: str) -> bool:
-        """Validate that entity type is supported."""
-        return entity_type in [e.value for e in StateEntityTypeEnum]
-
-    @staticmethod
-    def get_allowed_states(entity_type: str) -> list[str]:
-        """Get list of state names allowed for an entity type."""
-        if not StateManager.validate_entity_type(entity_type):
-            return []
-
-        allowed_states = StateTypeDefinition.get_allowed_states(entity_type)
-        return [state.display_name for state in allowed_states]
-
-    @staticmethod
-    def is_state_allowed(entity_type: str, state_name: str) -> bool:
-        """Check if a state is allowed for an entity type."""
-        if not StateManager.validate_entity_type(entity_type):
-            return False
-
-        return StateTypeDefinition.is_state_allowed(entity_type, state_name)
-
-    @staticmethod
-    def set_state(
-        entity_type: str,
-        entity_id: int,
-        state_id: int,
-    ) -> bool:
-        """Set a state for an entity using the state_id column.
-
-        Args:
-            entity_type: Type of entity ('report_item', 'product')
-            entity_id: ID of the entity
-            state_id: ID of the state to set
-
-        Returns:
-            bool: True if state was set successfully, False otherwise
-        """
-        # Validate entity type
-        if not StateManager.validate_entity_type(entity_type):
-            logger.debug(f"Invalid entity type: {entity_type}")
-            return False
-
-        # Ensure entity_id is an integer
-        try:
-            entity_id = int(entity_id)
-        except (TypeError, ValueError):
-            logger.debug(f"Invalid entity_id: {entity_id}")
-            return False
-
-        state_def = StateDefinition.get_by_id(state_id)
-        if not state_def:
-            logger.debug(f"State definition not found: {state_id}")
-            return False
-
-        # Validate state is allowed for this entity type
-        if not StateManager.is_state_allowed(entity_type, state_def.display_name):
-            logger.debug(f"State '{state_def.display_name}' not allowed for entity type '{entity_type}'")
-            return False
-
-        # Update the entity's state_id column
-        try:
-            if entity_type == StateEntityTypeEnum.REPORT_ITEM.value:
-                from model.report_item import ReportItem  # noqa: PLC0415
-
-                report_item = ReportItem.find(entity_id)
-                if report_item:
-                    report_item.state_id = state_id
-                    return True
-            elif entity_type == StateEntityTypeEnum.PRODUCT.value:
-                from model.product import Product  # noqa: PLC0415
-
-                product = Product.find(entity_id)
-                if product:
-                    product.state_id = state_id
-                    return True
-
-            logger.debug(f"Entity not found: {entity_type}:{entity_id}")
-            return False
-
-        except Exception as error:
-            logger.exception(f"Error setting state for {entity_type}:{entity_id}: {error}")
-            return False
-
-    @staticmethod
-    def remove_state(entity_type: str, entity_id: str) -> bool:
-        """Remove a state from an entity by setting state_id to None.
-
-        Args:
-            entity_type: Type of entity ('report_item', 'product')
-            entity_id: ID of the entity
-
-        Returns:
-            bool: True if state was removed successfully, False otherwise
-        """
-        # Coerce entity_id to int for safety
-        try:
-            entity_id = int(entity_id)
-        except (TypeError, ValueError):
-            logger.debug(f"Invalid entity_id provided to StateManager.remove_state: {entity_id}")
-            return False
-
-        try:
-            if entity_type == StateEntityTypeEnum.REPORT_ITEM.value:
-                from model.report_item import ReportItem  # noqa: PLC0415
-
-                report_item = ReportItem.find(entity_id)
-                if report_item:
-                    report_item.state_id = None
-                    return True
-            elif entity_type == StateEntityTypeEnum.PRODUCT.value:
-                from model.product import Product  # noqa: PLC0415
-
-                product = Product.find(entity_id)
-                if product:
-                    product.state_id = None
-                    return True
-
-            logger.debug(f"Entity not found: {entity_type}:{entity_id}")
-            return False
-
-        except Exception as e:
-            logger.exception(f"Error removing state for {entity_type}:{entity_id}: {e}")
-            return False
-
-    @staticmethod
-    def has_state(entity_type: str, entity_id: int, state_name: str) -> bool:
-        """Check if an entity has a specific state.
-
-        Args:
-            entity_type: Type of entity ('report_item', 'product')
-            entity_id: ID of the entity
-            state_name: Name of the state to check
-
-        Returns:
-            bool: True if entity has the state, False otherwise
-        """
-        # Validate entity type
-        if not StateManager.validate_entity_type(entity_type):
-            return False
-
-        # Get state definition
-        state_def = StateDefinition.get_by_name(state_name)
-        if not state_def:
-            return False
-
-        # Check if entity has this state
-        try:
-            if entity_type == StateEntityTypeEnum.REPORT_ITEM.value:
-                from model.report_item import ReportItem  # noqa: PLC0415
-
-                report_item = ReportItem.find(entity_id)
-                return report_item and report_item.state_id == state_def.id
-            if entity_type == StateEntityTypeEnum.PRODUCT.value:
-                from model.product import Product  # noqa: PLC0415
-
-                product = Product.find(entity_id)
-                return product and product.state_id == state_def.id
-
-            return False
-
-        except Exception as exc:
-            logger.exception(f"Error in has_state: {exc}")
-            return False
 
     @staticmethod
     def is_this_state_same_as(state_id: int, state_enum: StateEnum) -> bool:
@@ -430,55 +264,3 @@ class StateManager:
         except Exception as exc:
             logger.exception(f"Error in is_this_state_same_as: {exc}")
             return False
-
-    @staticmethod
-    def set_state_by_name(
-        entity_type: str,
-        entity_id: int,
-        state_name: str | None = None,
-        commit: bool = True,
-    ) -> bool:
-        """Set a state for an entity by name (replaces any existing state).
-
-        Args:
-            entity_type: Type of entity
-            entity_id: ID of the entity
-            state_name: Name of the state to set (None to remove current state)
-            commit: Whether to commit the transaction
-
-        Returns:
-            bool: True if state was set successfully, False otherwise
-        """
-        if not state_name:
-            # No state provided - remove current state
-            success = StateManager.remove_state(entity_type, entity_id, None)
-        else:
-            # Set the specified state
-            state_def = StateDefinition.get_by_name(state_name)
-            success = StateManager.set_state(entity_type, entity_id, state_def.id) if state_def else False
-
-        if commit:
-            db.session.commit()
-
-        return success
-
-    @staticmethod
-    def remove_current_state(entity_type: str, entity_id: int, user_id: int | None = None, commit: bool = True) -> bool:
-        """Remove current state from an entity (clears the state_id).
-
-        Args:
-            entity_type: Type of entity
-            entity_id: ID of the entity
-            user_id: ID of the user performing the action
-            commit: Whether to commit the transaction
-
-        Returns:
-            bool: True if state was removed successfully, False otherwise
-        """
-        # Clear the entity's current state
-        success = StateManager.remove_state(entity_type, entity_id, None, user_id)
-
-        if commit:
-            db.session.commit()
-
-        return success
