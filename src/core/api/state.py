@@ -1,11 +1,11 @@
 """State management API endpoints."""
 
-import traceback
 from http import HTTPStatus
 
 from flask import request
 from flask_restful import Resource
-from managers.auth_manager import auth_required
+from managers import log_manager
+from managers.auth_manager import auth_required, get_user_from_jwt
 from managers.state_manager import StateManagementUtilities
 from model.state import StateDefinition
 
@@ -27,7 +27,7 @@ class EntityTypeStatesResource(Resource):
     """Get available states for an entity type."""
 
     @auth_required("ANALYZE_ACCESS")
-    def get(self, entity_type: str) -> dict:
+    def get(self, entity_type: str) -> tuple[dict, HTTPStatus]:
         """Get available states for the specified entity type.
 
         Args:
@@ -45,11 +45,9 @@ class EntityTypeStatesResource(Resource):
             return StateDefinition.get_full_by_entity_json(entity_type, include_inactive), HTTPStatus.OK
 
         except Exception as error:
-            error_details = traceback.format_exc()
-            return {
-                "message": f"Error getting states for entity type {entity_type}: {error}",
-                "details": error_details,
-            }, HTTPStatus.INTERNAL_SERVER_ERROR
+            msg = f"Error getting states for entity type {entity_type}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, error)
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 def initialize(api: object) -> None:

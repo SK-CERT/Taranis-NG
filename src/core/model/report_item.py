@@ -22,10 +22,9 @@ import sqlalchemy
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
-from model.enum import StateEnum
 from model.news_item import NewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
-from model.state import StateDefinition
+from model.state import StateDefinition, StateEnum
 from sqlalchemy import and_, func, or_, orm, text
 from sqlalchemy.sql.expression import cast
 

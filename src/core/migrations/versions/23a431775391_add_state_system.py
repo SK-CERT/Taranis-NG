@@ -11,7 +11,7 @@ from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
-from model.enum import StateEntityTypeEnum, StateEnum
+from model.state import StateEntityTypeEnum, StateEnum, StateTypeEnum
 from sqlalchemy import orm
 from sqlalchemy.dialects import postgresql
 
@@ -121,7 +121,10 @@ class StateEntityTypeMigration(Base):
         nullable=False,
     )
     state_id = sa.Column(sa.Integer, sa.ForeignKey("state.id"), nullable=False)
-    state_type = sa.Column(sa.Enum("normal", "default", "final", name="state_type_enum"), default="normal")
+    state_type = sa.Column(
+        sa.Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.DEFAULT.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
+        default=StateTypeEnum.NORMAL.value,
+    )
     is_active = sa.Column(sa.Boolean, default=True)
     editable = sa.Column(sa.Boolean, default=True)
     sort_order = sa.Column(sa.Integer, default=0)
@@ -132,13 +135,13 @@ class StateEntityTypeMigration(Base):
         self,
         entity_type: StateEntityTypeEnum,
         state_id: int,
-        state_type: str = "normal",
+        state_type: StateTypeEnum,
         sort_order: int = 0,
     ) -> None:
         """Initialize state entity type."""
         self.entity_type = entity_type.value
         self.state_id = state_id
-        self.state_type = state_type
+        self.state_type = state_type.value
         self.is_active = True
         self.editable = False
         self.sort_order = sort_order
@@ -169,7 +172,11 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("state_type", sa.Enum("normal", "default", "final", name="state_type_enum"), default="normal"),
+        sa.Column(
+            "state_type",
+            sa.Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.DEFAULT.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
+            default=StateTypeEnum.NORMAL.value,
+        ),
         sa.Column("is_active", sa.Boolean(), default=True),
         sa.Column("editable", sa.Boolean(), default=True),
         sa.Column("sort_order", sa.Integer(), default=0),
@@ -213,22 +220,22 @@ def upgrade() -> None:
     if published_state:
         # Published state only for products
         state_entity_mappings.append(
-            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, published_state.id, "final", sort_order=20),
+            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, published_state.id, StateTypeEnum.FINAL, sort_order=20),
         )
 
     if wip_state:
         # Work-in-Progress for both report_item and product
         state_entity_mappings.append(
-            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, wip_state.id, "default", sort_order=10),
+            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, wip_state.id, StateTypeEnum.DEFAULT, sort_order=10),
         )
         state_entity_mappings.append(
-            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, wip_state.id, "default", sort_order=10),
+            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, wip_state.id, StateTypeEnum.DEFAULT, sort_order=10),
         )
 
     if completed_state:
         # Completed state only for report_item
         state_entity_mappings.append(
-            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, completed_state.id, "final", sort_order=20),
+            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, completed_state.id, StateTypeEnum.FINAL, sort_order=20),
         )
 
     # Add all mappings to session

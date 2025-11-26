@@ -5,9 +5,8 @@ import threading
 from managers import publishers_manager
 from managers.db_manager import db
 from model.asset import Asset
-from model.enum import StateEnum
 from model.publisher_preset import PublisherPreset
-from model.state import StateManager
+from model.state import StateEnum, StateManager
 
 
 def remove_vulnerability(report_item_id: int) -> None:

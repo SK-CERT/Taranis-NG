@@ -9,17 +9,40 @@ if TYPE_CHECKING:
 
 import logging
 from datetime import datetime
+from enum import Enum as PyEnum  # to avoid name clash with SQLAlchemy Enum
 from http import HTTPStatus
 
 from managers.db_manager import db
 from marshmallow import post_load
-from model.enum import StateEntityTypeEnum, StateEnum
 from sqlalchemy import Enum
 
 from shared.common import TZ
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
 
 logger = logging.getLogger(__name__)
+
+
+class StateEnum(PyEnum):
+    """States."""
+
+    COMPLETED = "completed"
+    PUBLISHED = "published"
+    WORK_IN_PROGRESS = "work_in_progress"
+
+
+class StateEntityTypeEnum(PyEnum):
+    """State entity types."""
+
+    PRODUCT = "product"
+    REPORT_ITEM = "report_item"
+
+
+class StateTypeEnum(PyEnum):
+    """State types."""
+
+    DEFAULT = "default"
+    FINAL = "final"
+    NORMAL = "normal"
 
 
 class NewStateDefinitionSchema(StateDefinitionSchema):
@@ -90,7 +113,7 @@ class StateDefinition(db.Model):
                     "description": state.description,
                     "color": state.color,
                     "icon": state.icon,
-                    "is_default": state_type_def.state_type == "default",
+                    "is_default": state_type_def.state_type == StateTypeEnum.DEFAULT.value,
                     "is_active": state_type_def.is_active,
                     "state_type": state_type_def.state_type,
                     "sort_order": state_type_def.sort_order,
@@ -130,28 +153,6 @@ class StateDefinition(db.Model):
         if not self.editable:
             return {"error": "This state definition cannot be deleted"}, HTTPStatus.FORBIDDEN
 
-        # Check if state is in use by checking entity state_id columns
-        in_use_count = 0
-
-        # Check if any report_items have this state
-        try:
-            from model.report_item import ReportItem  # noqa: PLC0415
-
-            in_use_count += db.session.query(ReportItem).filter(ReportItem.state_id == self.id).count()
-        except Exception as exc:
-            logger.exception("Error checking ReportItem usage for state %s: %s", self.id, exc)
-
-        # Check if any products have this state
-        try:
-            from model.product import Product  # noqa: PLC0415
-
-            in_use_count += db.session.query(Product).filter(Product.state_id == self.id).count()
-        except Exception as exc:
-            logger.exception("Error checking Product usage for state %s: %s", self.id, exc)
-
-        if in_use_count > 0:
-            return {"error": "Cannot delete state definition that is in use"}, HTTPStatus.CONFLICT
-
         db.session.delete(self)
         db.session.commit()
         return {"message": "State definition deleted successfully"}, HTTPStatus.OK
@@ -185,7 +186,10 @@ class StateEntityType(db.Model):
         nullable=False,
     )
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=False)
-    state_type = db.Column(Enum("normal", "default", "final", name="state_type_enum"), default="normal")
+    state_type = db.Column(
+        Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.DEFAULT.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
+        default=StateTypeEnum.NORMAL.value,
+    )
     is_active = db.Column(db.Boolean, default=True)
     editable = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)

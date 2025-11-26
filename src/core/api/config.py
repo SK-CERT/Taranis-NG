@@ -1731,7 +1731,7 @@ class BotPresetResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class StateDefinitionsResource(Resource):
+class StatesResource(Resource):
     """State definitions API endpoint."""
 
     @auth_required("CONFIG_WORKFLOW_ACCESS")
@@ -1768,7 +1768,7 @@ class StateDefinitionsResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
-class StateDefinitionResource(Resource):
+class StateResource(Resource):
     """State definition API endpoint."""
 
     @auth_required("CONFIG_WORKFLOW_UPDATE")
@@ -1994,8 +1994,8 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(BotPresetsResource, "/api/v1/config/bots-presets")
     api.add_resource(BotPresetResource, "/api/v1/config/bots-presets/<string:preset_id>")
 
-    api.add_resource(StateDefinitionsResource, "/api/v1/config/state-definitions")
-    api.add_resource(StateDefinitionResource, "/api/v1/config/state-definitions/<int:state_id>")
+    api.add_resource(StatesResource, "/api/v1/config/state-definitions")
+    api.add_resource(StateResource, "/api/v1/config/state-definitions/<int:state_id>")
     api.add_resource(StateEntityTypesResource, "/api/v1/config/state-entity-types")
     api.add_resource(StateEntityTypeResource, "/api/v1/config/state-entity-types/<int:state_entity_type_id>")
 
