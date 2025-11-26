@@ -68,7 +68,6 @@ class NewsItemDataBaseSchema(Schema):
     author = fields.Str()
     collected = fields.DateTime("%d.%m.%Y - %H:%M")
     osint_source_id = fields.Str(load_default=None, allow_none=True)
-    tags = fields.List(fields.String(), required=False)
 
 
 class NewsItemData:
@@ -227,8 +226,6 @@ class NewsItemAggregateSchema(Schema):
     me_like = fields.Bool()
     me_dislike = fields.Bool()
     in_reports_count = fields.Int()
-    tags = fields.List(fields.String(), required=False)
-    statuses = fields.Raw(required=False)  # State information from multi-state system
     news_items = fields.Nested(NewsItemPresentationSchema, many=True)
 
 
