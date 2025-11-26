@@ -50,13 +50,13 @@ class MESSAGEPresenter(BasePresenter):
             input_data = BasePresenter.generate_input_data(presenter_input)
             if template_string:
                 env = jinja2.Environment(autoescape=False)  # noqa: S701 # no autoescape is safe for plaintext
+                BasePresenter.load_filters(env)
                 template = env.from_string(template_string)
             else:
                 head, tail = BasePresenter.resolve_template_path(template_path)
                 env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=False)  # noqa: S701 # no autoescape is safe for plaintext
+                BasePresenter.load_filters(env)
                 template = env.get_template(tail)
-
-            BasePresenter.load_filters(env)
             func_dict = {
                 "vars": vars,
             }
