@@ -105,15 +105,6 @@ class Product(db.Model):
         self.tag = "mdi-file-pdf-outline"
 
     @classmethod
-    def count_all(cls) -> int:
-        """Count all products.
-
-        Returns:
-            int: Number of products
-        """
-        return cls.query.count()
-
-    @classmethod
     def count_by_states(cls) -> dict:
         """Count products by their states.
 
@@ -121,29 +112,35 @@ class Product(db.Model):
             dict: Dictionary with state names as keys and counts as values
         """
         try:
-            # Initialize counts
             state_counts = {}
+            result = (
+                db.session.query(
+                    cls.state_id,
+                    db.func.count(cls.id).label("count"),
+                    StateDefinition.display_name,
+                    StateDefinition.color,
+                    StateDefinition.icon,
+                )
+                .outerjoin(StateDefinition, StateDefinition.id == cls.state_id)
+                .group_by(
+                    cls.state_id,
+                    StateDefinition.display_name,
+                    StateDefinition.color,
+                    StateDefinition.icon,
+                )
+                .all()
+            )
+            for _state_id, count, display_name, color, icon in result:
+                disp = "no_state" if display_name is None else display_name
+                col = "#9E9E9E" if color is None else color
+                ico = "mdi-help" if icon is None else icon
 
-            # Count items by actual state_id values in database (not just active states)
-            result = db.session.query(cls.state_id, db.func.count(cls.id)).filter(cls.state_id.isnot(None)).group_by(cls.state_id).all()
-
-            # Get state definitions for the found state_ids
-            for state_id, count in result:
-                state_def = StateDefinition.query.filter_by(id=state_id).first()
-                if state_def:
-                    state_counts[state_def.display_name] = {
-                        "count": count,
-                        "display_name": state_def.display_name,
-                        "color": state_def.color,
-                        "icon": state_def.icon,
-                    }
-
-            # Count items with no state
-            items_with_no_state = db.session.query(cls).filter(cls.state_id.is_(None)).count()
-
-            if items_with_no_state > 0:
-                state_counts["no_state"] = {"count": items_with_no_state, "display_name": "no_state", "color": "#9E9E9E", "icon": "mdi-help"}
-
+                state_counts[disp] = {
+                    "count": count,
+                    "display_name": disp,
+                    "color": col,
+                    "icon": ico,
+                }
             return state_counts
 
         except Exception as error:

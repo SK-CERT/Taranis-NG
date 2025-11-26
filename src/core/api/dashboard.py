@@ -30,15 +30,12 @@ class Dashboard(Resource):
             return {"error": msg}, 400
 
         total_news_items = NewsItemData.count_all()
-        total_products = Product.count_all()
-
-        # Get comprehensive state-based counts for report items
+        # counts for report items
         report_item_states = ReportItem.count_by_states()
-
-        # Get comprehensive state-based counts for products
-        product_states = Product.count_by_states()
-
         total_report_items = sum(state["count"] for state in report_item_states.values())
+        # counts for products
+        product_states = Product.count_by_states()
+        total_products = sum(state["count"] for state in product_states.values())
 
         total_database_items = total_news_items + total_products + total_report_items
         latest_collected = NewsItemData.latest_collected()
