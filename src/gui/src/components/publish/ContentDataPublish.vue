@@ -78,7 +78,7 @@
 
         mounted() {
             this.updateData();
-            this.$root.$on('notification', () => {
+            this.$root.$on(['notification', 'product-updated'], () => {
                 this.updateData(true, true)
             });
             this.$root.$on('update-products-filter', (filter) => {
@@ -89,6 +89,7 @@
 
         beforeDestroy() {
             this.$root.$off('notification');
+            this.$root.$off('product-updated');
             this.$root.$off('update-products-filter');
         }
     }

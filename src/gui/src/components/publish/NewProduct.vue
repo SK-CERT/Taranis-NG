@@ -337,7 +337,7 @@
                 this.prepareProduct();
                 updateProduct(this.product).then(() => {
                     this.resetValidation();
-                    this.$root.$emit('notification', { type: 'success', loc: 'product.successful_edit' })
+                    this.$root.$emit('product-updated')
 
                 }).catch(() => {
                     this.show_error = true;
