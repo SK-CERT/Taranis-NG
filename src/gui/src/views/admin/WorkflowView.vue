@@ -8,20 +8,21 @@
         </v-tabs>
 
         <v-tabs-items v-model="activeTab">
+            <!-- activeTab = 0 -> mounts/demounts tab -> fetch always new data on tab switch -->
             <v-tab-item>
-                <StatesTab />
+                <StatesTab v-if="activeTab === 0" />
             </v-tab-item>
 
             <v-tab-item>
-                <StateWorkflowTab />
+                <StateWorkflowTab v-if="activeTab === 1" />
             </v-tab-item>
 
             <v-tab-item>
-                <TagsTab />
+                <TagsTab v-if="activeTab === 2" />
             </v-tab-item>
 
             <v-tab-item>
-                <TagWorkflowTab />
+                <TagWorkflowTab v-if="activeTab === 3" />
             </v-tab-item>
         </v-tabs-items>
     </v-container>
