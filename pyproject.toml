@@ -78,7 +78,7 @@ docstring-code-format = true
 convention = "google"
 
 [tool.ruff.lint.pylint]
-max-args = 12
+max-args = 15
 max-branches = 20
 max-returns = 10
 max-statements = 80

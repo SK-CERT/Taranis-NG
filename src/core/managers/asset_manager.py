@@ -1,21 +1,24 @@
+"""Asset Manager to handle asset-related operations."""
+
 import threading
 
-from managers.db_manager import db
 from managers import publishers_manager
+from managers.db_manager import db
 from model.asset import Asset
 from model.publisher_preset import PublisherPreset
+from model.state import StateEnum, StateManager
 
 
-def remove_vulnerability(report_item_id):
+def remove_vulnerability(report_item_id: int) -> None:
+    """Remove vulnerability from assets."""
     Asset.remove_vulnerability(report_item_id)
     db.session.commit()
 
 
-def report_item_changed(report_item):
-    if report_item.completed:
-        cpes = []
-        for cpe in report_item.report_item_cpes:
-            cpes.append(cpe.value)
+def report_item_changed(report_item: object) -> None:
+    """Handle report item changes."""
+    if StateManager.is_this_state_same_as(report_item.state_id, StateEnum.COMPLETED):
+        cpes = [cpe.value for cpe in report_item.report_item_cpes]
 
         assets = Asset.get_by_cpe(cpes)
 
@@ -29,14 +32,14 @@ def report_item_changed(report_item):
 
         publisher_preset = PublisherPreset.find_for_notifications()
         if publisher_preset is not None:
+
             class NotificationThread(threading.Thread):
                 @classmethod
-                def run(cls):
+                def run(cls) -> None:
                     for notification_group in notification_groups:
                         for template in notification_group.templates:
                             recipients = [recipient.email for recipient in template.recipients]
-                            publishers_manager.publish(publisher_preset, None, template.message_title,
-                                                       template.message_body, recipients)
+                            publishers_manager.publish(publisher_preset, None, template.message_title, template.message_body, recipients)
 
             notification_thread = NotificationThread()
             notification_thread.start()

@@ -66,9 +66,12 @@
             <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" :verticalView="verticalView" />
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="msgbox_visible"
-                        @buttonYes="removeFromSelector(to_delete)" @buttonCancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.remove')" :message="to_delete.title">
+            <MessageBox v-model="msgbox_visible"
+                        @yes="removeFromSelector(to_delete)"
+                        @cancel="msgbox_visible = false"
+                        :title="$t('common.messagebox.remove')"
+                        :message="to_delete.title"
+                        :alert=false>
             </MessageBox>
         </v-row>
     </v-container>

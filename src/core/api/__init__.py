@@ -13,5 +13,6 @@ __all__ = [
     "publish",
     "remote",
     "sse",
+    "state",
     "user",
 ]

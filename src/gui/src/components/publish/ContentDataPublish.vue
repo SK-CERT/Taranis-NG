@@ -51,7 +51,7 @@
                     }
                     this.collections = []
                 }
-                this.$store.dispatch("getAllProducts", {filter: this.filter, offset:offset, limit:limit})
+                this.$store.dispatch("getAllProducts", { filter: this.filter, offset: offset, limit: limit })
                     .then(() => {
                         const product_types = Object.values(this.$store.getters.getProductTypes.items);
                         this.collections = this.collections.concat(this.$store.getters.getProducts.items);
@@ -78,7 +78,7 @@
 
         mounted() {
             this.updateData();
-            this.$root.$on('notification', () => {
+            this.$root.$on(['notification', 'product-updated'], () => {
                 this.updateData(true, true)
             });
             this.$root.$on('update-products-filter', (filter) => {
@@ -89,6 +89,7 @@
 
         beforeDestroy() {
             this.$root.$off('notification');
+            this.$root.$off('product-updated');
             this.$root.$off('update-products-filter');
         }
     }
