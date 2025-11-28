@@ -19,6 +19,14 @@ For debugging and testing purposes, the module also defines the following variab
 - log_data: A dictionary containing the log level, number of workers, bind address and port, workers per core, host, and port.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gunicorn.http.message import Request
+    from gunicorn.workers.base import Worker
+
 import logging
 import multiprocessing
 import os
@@ -44,12 +52,13 @@ workers = web_concurrency
 bind = use_bind
 keepalive = 120
 errorlog = "-"
+limit_request_line = 8192
 
 
 class CustomGunicornLogger(Logger):
     """Override Gunicorn logger to customize log output."""
 
-    def setup(self, cfg) -> None:
+    def setup(self, cfg) -> None:  # noqa: ANN001
         """Set up a custom logger."""
         super().setup(cfg)
         filter_strings = ["Closing connection.", "/isalive", "OPTIONS /api"]
@@ -86,7 +95,7 @@ class CustomGunicornLogger(Logger):
 logger_class = CustomGunicornLogger
 
 
-def pre_request(worker, req) -> None:
+def pre_request(worker: Worker, req: Request) -> None:
     """Log formatted request details just before a worker processes the request."""
     censored = {"jwt=", "api_key="}
     query = req.query
