@@ -18,7 +18,7 @@ dependencies = [
     "requests==2.32.5",
     "tweepy==4.16.0",
     "urllib3==2.5.0",
-    "pymisp==2.5.17.2"
+    "pymisp==2.5.17.3"
 ]
 
 [build-system]
