@@ -5,7 +5,7 @@ description = "Taranis-NG Core service."
 requires-python = ">=3.10"
 dependencies = [
     "alembic==1.17.2",
-    "beautifulsoup4==4.14.2",
+    "beautifulsoup4==4.14.3",
     "Flask==3.1.2",
     "Flask-Cors==6.0.1",
     "Flask-JWT-Extended==4.7.1",
@@ -18,7 +18,7 @@ dependencies = [
     "Jinja2==3.1.6",
     "ldap3 @ git+https://github.com/cannatag/ldap3.git@refs/pull/983/head",
     "marshmallow==4.1.0",
-    "psycopg[binary]==3.2.13",
+    "psycopg[binary]==3.3.0",
     "pycryptodomex==3.23.0",
     "PyJWT==2.10.1",
     "python-dotenv==1.2.1",
@@ -28,7 +28,7 @@ dependencies = [
     "sseclient-py==1.8.0",
     "SQLAlchemy==2.0.44",
     "tqdm==4.67.1",
-    "Werkzeug==3.1.3",
+    "Werkzeug==3.1.4",
     "langchain==1.1.0",
     "langchain-openai==1.1.0"
 ]

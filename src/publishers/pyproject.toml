@@ -4,7 +4,7 @@ version = "v24.11.1"
 description = "Taranis-NG Publishers service."
 requires-python = ">=3.10"
 dependencies = [
-    "beautifulsoup4==4.14.2",
+    "beautifulsoup4==4.14.3",
     "envelope==2.3.0",
     "Flask==3.1.2",
     "Flask-Cors==6.0.1",
@@ -18,7 +18,7 @@ dependencies = [
     "requests==2.32.5",
     "tweepy==4.16.0",
     "urllib3==2.5.0",
-    "pymisp==2.5.17.2"
+    "pymisp==2.5.17.3"
 ]
 
 [build-system]
