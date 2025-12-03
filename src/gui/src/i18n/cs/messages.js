@@ -762,6 +762,7 @@ const messages_cs = {
       enum_selector: "Zobrazit okno s hledáním hodnot",
       delete_value: "Smazat hodnotu tohoto atributu",
       add_value: "Přidat novou hodnotu k tomuto atributu",
+      auto_generate: "Automaticky generovat",
     },
   },
 
@@ -843,7 +844,7 @@ const messages_cs = {
         MONTH: "Zobrazit novinky za minulý měsíc",
       },
       sort: {
-        time: {
+        date: {
           ascending: "Seřadit novinky podle data indexace vzestupně",
           descending: "Seřadit novinky podle data indexace sestupně",
         },
