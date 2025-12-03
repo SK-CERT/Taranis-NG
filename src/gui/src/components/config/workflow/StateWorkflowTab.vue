@@ -20,12 +20,10 @@
                                       :label="$t('workflow.state_workflow.filter_by_entity_type')" clearable dense
                                       hide-details class="mr-4">
                                 <template v-slot:item="{ item }">
-                                    {{ item.value === 'all' ? item.text : ($te('workflow.entity_types.' + item.value) ?
-                                        $t('workflow.state_workflow.entity_types.' + item.value) : item.value) }}
+                                    {{ item.text }}
                                 </template>
                                 <template v-slot:selection="{ item }">
-                                    {{ item.value === 'all' ? item.text : ($te('workflow.entity_types.' + item.value) ?
-                                        $t('workflow.state_workflow.entity_types.' + item.value) : item.value) }}
+                                    {{ item.text }}
                                 </template>
                             </v-select>
                         </v-col>
@@ -45,7 +43,6 @@
                                 @yes="deleteRecord"
                                 @cancel="closeDelete"
                                 :title="$t('common.messagebox.delete')"
-                                :message="editedItem.display_name"
                                 :alert=true>
                     </MessageBox>
                 </template>
@@ -53,8 +50,7 @@
                 <template v-slot:item.entity_type="{ item }">
                     <v-chip label :color="getEntityTypeColor(item.entity_type)">
                         <v-icon left>{{ getEntityTypeIcon(item.entity_type) }}</v-icon>
-                        {{  $te('workflow.entity_types.' + item.entity_type) ? $t('workflow.state_workflow.entity_types.'
-                            + item.entity_type) : item.entity_type }}
+                        {{ $t('workflow.entity_types.' + item.entity_type) }}
                     </v-chip>
                 </template>
 
@@ -67,8 +63,7 @@
                 <template v-slot:item.state_type="{ item }">
                     <v-chip label :color="'grey'">
                         <v-icon left>{{ getStateTypeIcon(item.state_type) }}</v-icon>
-                        {{ $te('workflow.state_types.' + item.state_type) ? $t('workflow.state_workflow.state_types.' +
-                            item.state_type) : item.state_type }}
+                        {{ $t('workflow.state_types.' + item.state_type) }}
                     </v-chip>
                 </template>
 
@@ -151,9 +146,8 @@
                     sort_order: 0
                 },
                 entityTypeFilter: [
-                    { text: this.$t('workflow.state_workflow.all_entity_types'), value: 'all' },
-                    { text: 'Report Items', value: 'report_item' },
-                    { text: 'Products', value: 'product' }
+                    { text: this.$t('workflow.entity_types.report_item'), value: 'report_item' },
+                    { text: this.$t('workflow.entity_types.product'), value: 'product' }
                 ]
             };
         },
@@ -167,7 +161,7 @@
             }
         },
         watch: {
-            filterEntityType(newVal) {
+            filterEntityType() {
                 this.fetchRecords();
             }
         },
@@ -200,7 +194,7 @@
             getStateTypeIcon(stateType) {
                 const icons = {
                     'normal': 'mdi-circle',
-                    'default': 'mdi-star',
+                    'initial': 'mdi-star',
                     'final': 'mdi-flag-checkered'
                 };
                 return icons[stateType] || 'mdi-help';
@@ -212,7 +206,7 @@
                     this.$store.dispatch('getAllStateDefinitions', { search: '' }).then(() => {
                         // Then fetch state-entity type associations
                         const filter = {};
-                        if (this.filterEntityType && this.filterEntityType !== 'all') {
+                        if (this.filterEntityType) {
                             filter.entity_type = this.filterEntityType;
                         }
 
@@ -273,7 +267,7 @@
                         this.showMsg("error", "workflow.state_workflow.error");
                     });
                 } else {
-                    createNewStateEntityType(submitData).then((response) => {
+                    createNewStateEntityType(submitData).then(() => {
                         this.showMsg("success", "workflow.state_workflow.successful");
                         this.closeEdit();
                         this.fetchRecords(); // Refresh to get complete data

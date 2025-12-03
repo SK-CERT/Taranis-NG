@@ -16,10 +16,10 @@
                                       :rules="[v => !!v || $t('workflow.state_workflow.entity_type_required')]"
                                       required>
                                 <template v-slot:item="{ item }">
-                                    {{ $te('workflow.entity_types.' + item) ? $t('workflow.state_workflow.entity_types.' + item) : item }}
+                                    {{ $t('workflow.entity_types.' + item) }}
                                 </template>
                                 <template v-slot:selection="{ item }">
-                                    {{ $te('workflow.entity_types.' + item) ? $t('workflow.state_workflow.entity_types.' + item) : item }}
+                                    {{ $t('workflow.entity_types.' + item) }}
                                 </template>
                             </v-select>
                         </v-col>
@@ -52,10 +52,10 @@
                                       :label="$t('workflow.state_workflow.state_type')"
                                       :disabled="!isEditable">
                                 <template v-slot:item="{ item }">
-                                    {{ $te('workflow.state_types.' + item) ? $t('workflow.state_workflow.state_types.' + item) : item }}
+                                    {{ $t('workflow.state_types.' + item) }}
                                 </template>
                                 <template v-slot:selection="{ item }">
-                                    {{ $te('workflow.state_types.' + item) ? $t('workflow.state_workflow.state_types.' + item) : item }}
+                                    {{ $t('workflow.state_types.' + item) }}
                                 </template>
                             </v-select>
                         </v-col>
@@ -119,7 +119,7 @@
                     sort_order: 0
                 },
                 entityTypes: ["report_item", "product"],
-                stateTypes: ["normal", "default", "final"]
+                stateTypes: ["normal", "initial", "final"]
             };
         },
         computed: {
