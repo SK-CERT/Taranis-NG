@@ -61,22 +61,24 @@ const messages_cs = {
 
   dashboard: {
     assess: {
-      tagcloud: "Mrak štítků pro nejnovější shromážděné novinky.",
+      tagcloud: "Mrak štítků pro shromážděné novinky",
       total: "novinek celkem",
     },
     collect: {
       title: "Kolektory",
       status: "Stav aktivity kolektorů",
+      pending: "Kolektory jsou momentálně pozastaveny",
+      last_attempt: "Poslední úspěšné spuštění skončilo v",
     },
     analyze: {
       status: "Stavy analýz",
-      report_items: "analýzy",
+      report_items: "",
       total: "analýz celkem",
     },
     publish: {
-      status: "Stavy produktů",
-      products: "produkty",
-      total: "produktů celkem",
+      status: "Stavy publikací",
+      products: "",
+      total: "publikací celkem",
     },
     database: {
       title: "Databáze",
@@ -88,8 +90,7 @@ const messages_cs = {
   nav_menu: {
     enter: "Vytvořit novinku",
     newsitems: "Novinky",
-    products: "Reporty",
-    publications: "Publikace",
+    products: "Publikace",
     favourites: "Oblíbené",
     configuration: "Nastavení",
     collectors_nodes: "Instance kolektorů",
@@ -1068,6 +1069,15 @@ const messages_cs = {
       removed_error: "Asociace stavu je používána a nelze ji smazat",
       state_required: "Stav je povinný",
       entity_type_required: "Typ entity je povinný",
+    },
+    entity_types: {
+      report_item: "Analýza",
+      product: "Publikace",
+    },
+    state_types: {
+      normal: "Normální",
+      initial: "Počáteční",
+      final: "Konečný",
     },
   },
 

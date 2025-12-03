@@ -61,12 +61,14 @@ const messages_en = {
 
   dashboard: {
     assess: {
-      tagcloud: "Tagcloud for latest collected news items.",
+      tagcloud: "Tagcloud for latest collected news items",
       total: "news items in total",
     },
     collect: {
       title: "Collectors",
       status: "Collectors activity status",
+      pending: "Collectors are pending at the moment",
+      last_attempt: "Last successful run ended at",
     },
     analyze: {
       status: "Report items status",
@@ -89,7 +91,6 @@ const messages_en = {
     enter: "Create news item",
     newsitems: "News Items",
     products: "Products",
-    publications: "Publications",
     favourites: "Favourites",
     configuration: "Configuration",
     collectors_nodes: "Collector Nodes",
@@ -1069,6 +1070,15 @@ const messages_en = {
       removed_error: "State association is in use and could not be deleted",
       state_required: "State Required",
       entity_type_required: "Entity Type Required",
+    },
+    entity_types: {
+      report_item: "Report Item",
+      product: "Product",
+    },
+    state_types: {
+      normal: "Normal",
+      initial: "Initial",
+      final: "Final",
     },
   },
 

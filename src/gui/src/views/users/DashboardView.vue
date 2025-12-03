@@ -10,7 +10,7 @@
                     <template>
                         <v-card class="mt-4 mx-auto" max-width="100%">
                             <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('main_menu.assess') }}</div>
+                                <div class="title mb-2">{{ $t('nav_menu.newsitems') }}</div>
                                 <div class="subheading grey--text">{{ $t('dashboard.assess.tagcloud') }}</div>
                                 <v-divider class="my-2"></v-divider>
 
@@ -43,14 +43,14 @@
                                 <v-icon class="mr-2" color="green">
                                     mdi-lightbulb-off-outline
                                 </v-icon>
-                                <span class="caption grey--text">Collectors are pending at the moment.</span>
+                                <span class="caption grey--text">{{ $t('dashboard.collect.pending') }}</span>
                                 <v-divider inset class="mb-2 mt-2"></v-divider>
 
                                 <v-icon class="mr-2" color="primary">
                                     mdi-clock-check-outline
                                 </v-icon>
                                 <span class="caption grey--text">
-                                    Last successful run ended at <b>{{ getData.latest_collected }}</b>
+                                    {{ $t('dashboard.collect.last_attempt') }} <b>{{ getData.latest_collected }}</b>
                                 </span>
                             </v-card-text>
                         </v-card>
@@ -59,7 +59,7 @@
                     <template>
                         <v-card class="mt-4 mx-auto" max-width="100%">
                             <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('main_menu.analyze') }}</div>
+                                <div class="title mb-2">{{ $t('nav_menu.report_items') }}</div>
                                 <div class="subheading grey--text">{{ $t('dashboard.analyze.status') }}</div>
                                 <v-divider class="my-2"></v-divider>
 
@@ -76,7 +76,7 @@
                                                     ? $t('workflow.states.' + stateData.display_name)
                                                     : stateData.display_name
                                                   ).toLowerCase()}}
-                                                {{ $t('dashboard.analyze.report_items') }}.
+                                                {{ $t('dashboard.analyze.report_items') }}
                                             </span>
                                         </div>
                                         <v-divider inset class="mb-2"></v-divider>
@@ -89,7 +89,7 @@
                                         mdi-file-document
                                     </v-icon>
                                     <span class="caption grey--text">
-                                        <b>{{ getData.total_report_items || 0 }}</b> {{ $t('dashboard.analyze.total') }}.
+                                        <b>{{ getData.total_report_items || 0 }}</b> {{ $t('dashboard.analyze.total') }}
                                     </span>
                                 </div>
                             </v-card-text>
@@ -99,7 +99,7 @@
                     <template>
                         <v-card class="mt-4 mx-auto" max-width="100%">
                             <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('main_menu.publish') }}</div>
+                                <div class="title mb-2">{{ $t('nav_menu.products') }}</div>
                                 <div class="subheading grey--text">{{ $t('dashboard.publish.status') }}</div>
                                 <v-divider class="my-2"></v-divider>
 
@@ -116,7 +116,7 @@
                                                     ? $t('workflow.states.' + stateData.display_name)
                                                     : stateData.display_name
                                                   ).toLowerCase()}}
-                                                {{ $t('dashboard.publish.products') }}.
+                                                {{ $t('dashboard.publish.products') }}
                                             </span>
                                         </div>
                                         <v-divider inset class="mb-2"></v-divider>
@@ -129,7 +129,7 @@
                                         mdi-package-variant
                                     </v-icon>
                                     <span class="caption grey--text">
-                                        <b>{{ getData.total_products || 0 }}</b> {{ $t('dashboard.publish.total') }}.
+                                        <b>{{ getData.total_products || 0 }}</b> {{ $t('dashboard.publish.total') }}
                                     </span>
                                 </div>
                             </v-card-text>
@@ -146,7 +146,7 @@
                                     mdi-database
                                 </v-icon>
                                 <span class="caption grey--text"><b>{{ getData.total_database_items }}</b> {{
-                                    $t('dashboard.database.total') }}.</span>
+                                    $t('dashboard.database.total') }}</span>
                             </v-card-text>
                         </v-card>
                     </template>

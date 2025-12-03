@@ -54,7 +54,6 @@ const messages_sk = {
         enter: "Vytvoriť novinku",
         newsitems: "Novinky",
         products: "Produkty",
-        publications: "Publikácie",
         recent: "Najnovšie",
         popular: "Populárne",
         favourites: "Obľúbené",
