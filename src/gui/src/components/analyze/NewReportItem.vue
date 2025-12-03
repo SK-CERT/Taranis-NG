@@ -40,10 +40,9 @@
                                 <v-icon :color="item.color">{{ item.icon }}</v-icon>
                             </v-list-item-avatar>
                             <v-list-item-content>
-                                <v-list-item-title>{{ $te('workflow.states.' + item.display_name) ?
-                                    $t('workflow.states.' + item.display_name) : item.display_name
-                                }}</v-list-item-title>
-                                <v-list-item-subtitle>{{ item.description }}</v-list-item-subtitle>
+                                <v-list-item-title>
+                                    {{ $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name}}
+                                </v-list-item-title>
                             </v-list-item-content>
                         </template>
                     </v-select>

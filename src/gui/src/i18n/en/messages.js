@@ -1065,7 +1065,6 @@ const messages_en = {
             edit_state_association: "Edit State Association",
             delete_state_association: "Delete State Association",
             filter_by_entity_type: "Filter by Entity Type",
-            all_entity_types: "All Entity Types",
             delete_state_association_confirm: "Are you sure you want to delete this state association?",
             association_already_exists: "This state association already exists",
             successful: "New association was successfully added",
@@ -1078,6 +1077,15 @@ const messages_en = {
             state_required: "State Required",
             entity_type_required: "Entity Type Required",
         },
+        entity_types: {
+            report_item: "Report Item",
+            product: "Product",
+        },
+        state_types: {
+            normal: "Normal",
+            initial: "Initial",
+            final: "Final",
+        }
     },
 
     ai_provider: {

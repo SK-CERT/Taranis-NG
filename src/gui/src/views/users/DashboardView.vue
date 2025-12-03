@@ -180,8 +180,8 @@ export default {
         tag_cloud: [],
     }),
     methods: {
-        wordClickHandler(name, value, vm) {
-            console.log('Word:', name, 'Quantity:', value);
+        wordClickHandler(name, value) {
+            console.log('Word:', name, ', Quantity:', value);
         },
 
         refreshTagCloud() {

@@ -122,7 +122,7 @@ class StateEntityTypeMigration(Base):
     )
     state_id = sa.Column(sa.Integer, sa.ForeignKey("state.id"), nullable=False)
     state_type = sa.Column(
-        sa.Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.DEFAULT.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
+        sa.Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.INITIAL.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
         default=StateTypeEnum.NORMAL.value,
     )
     is_active = sa.Column(sa.Boolean, default=True)
@@ -174,7 +174,7 @@ def upgrade() -> None:
         sa.Column("state_id", sa.Integer(), sa.ForeignKey("state.id", ondelete="CASCADE"), nullable=False),
         sa.Column(
             "state_type",
-            sa.Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.DEFAULT.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
+            sa.Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.INITIAL.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
             default=StateTypeEnum.NORMAL.value,
         ),
         sa.Column("is_active", sa.Boolean(), default=True),
@@ -196,7 +196,7 @@ def upgrade() -> None:
 
     default_states = [
         StateDefinitionMigration(StateEnum.PUBLISHED, "Product has been published", "#2E7D32", "mdi-checkbox-marked"),
-        StateDefinitionMigration(StateEnum.WORK_IN_PROGRESS, "Report/Product is being processed", "#FF9800", "mdi-traffic-cone"),
+        StateDefinitionMigration(StateEnum.WORK_IN_PROGRESS, "Item is being processed", "#FF9800", "mdi-traffic-cone"),
         StateDefinitionMigration(StateEnum.COMPLETED, "Report has been completed", "#2E7D32", "mdi-checkbox-marked"),
     ]
 
@@ -226,10 +226,10 @@ def upgrade() -> None:
     if wip_state:
         # Work-in-Progress for both report_item and product
         state_entity_mappings.append(
-            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, wip_state.id, StateTypeEnum.DEFAULT, sort_order=10),
+            StateEntityTypeMigration(StateEntityTypeEnum.REPORT_ITEM, wip_state.id, StateTypeEnum.INITIAL, sort_order=10),
         )
         state_entity_mappings.append(
-            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, wip_state.id, StateTypeEnum.DEFAULT, sort_order=10),
+            StateEntityTypeMigration(StateEntityTypeEnum.PRODUCT, wip_state.id, StateTypeEnum.INITIAL, sort_order=10),
         )
 
     if completed_state:

@@ -40,9 +40,9 @@ class StateEntityTypeEnum(PyEnum):
 class StateTypeEnum(PyEnum):
     """State types."""
 
-    DEFAULT = "default"
-    FINAL = "final"
     NORMAL = "normal"
+    INITIAL = "initial"
+    FINAL = "final"
 
 
 class NewStateDefinitionSchema(StateDefinitionSchema):
@@ -113,7 +113,7 @@ class StateDefinition(db.Model):
                     "description": state.description,
                     "color": state.color,
                     "icon": state.icon,
-                    "is_default": state_type_def.state_type == StateTypeEnum.DEFAULT.value,
+                    "is_default": state_type_def.state_type == StateTypeEnum.INITIAL.value,
                     "is_active": state_type_def.is_active,
                     "state_type": state_type_def.state_type,
                     "sort_order": state_type_def.sort_order,
@@ -187,7 +187,7 @@ class StateEntityType(db.Model):
     )
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=False)
     state_type = db.Column(
-        Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.DEFAULT.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
+        Enum(StateTypeEnum.NORMAL.value, StateTypeEnum.INITIAL.value, StateTypeEnum.FINAL.value, name="state_type_enum"),
         default=StateTypeEnum.NORMAL.value,
     )
     is_active = db.Column(db.Boolean, default=True)
