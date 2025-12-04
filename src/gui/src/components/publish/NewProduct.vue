@@ -1,7 +1,6 @@
 <template>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate"
-               @click="addProduct">
+        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addEmptyProduct">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
             <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
@@ -17,51 +16,56 @@
                         <span v-if="!edit">{{ $t('product.add_new') }}</span>
                         <span v-else>{{ $t('product.edit') }}</span>
                     </v-toolbar-title>
-
                     <v-spacer></v-spacer>
-                    <v-btn v-if="canModify" text dark type="submit" form="form">
+                    <v-select :key="`state-select-${product.state_id}`" :disabled="!canModify"
+                              style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="product.state_id"
+                              :items="available_states"
+                              :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
+                              item-value="id" :label="$t('product.state')" append-icon="mdi-chevron-down"
+                              :menu-props="{ maxWidth: '300px' }" @change="saveProduct('state_id')">
+
+                        <template v-slot:item="{ item }">
+                            <v-list-item-avatar>
+                                <v-icon :color="item.color">{{ item.icon }}</v-icon>
+                            </v-list-item-avatar>
+                            <v-list-item-content>
+                                <v-list-item-title>
+                                    {{ $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name }}
+                                </v-list-item-title>
+                            </v-list-item-content>
+                        </template>
+                    </v-select>
+                    <v-btn v-if="!edit && canModify" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
                         <span>{{ $t('common.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
-                <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
+                <v-form @submit.prevent="addProduct" id="form" ref="form" class="px-4">
                     <v-row no-gutters>
                         <v-col cols="6" class="pr-3">
-                            <v-combobox v-on:change="productSelected"
-                                        :disabled="!canModify"
-                                        v-model="selected_type"
-                                        :items="product_types"
-                                        item-text="title"
-                                        :label="$t('product.report_type')"
-                                        name="report_type"
-                                        v-validate="'required'"
-                            />
+                            <v-combobox v-on:change="productSelected" :disabled="!canModify" v-model="selected_type"
+                                        :items="product_types" item-text="title" :label="$t('product.report_type')"
+                                        name="report_type" v-validate="'required'" @blur="saveProduct('report_type')" />
                         </v-col>
                         <v-col cols="6" class="pr-3">
-                            <v-text-field :disabled="!canModify"
-                                          :label="$t('product.title')"
-                                          name="title"
-                                          type="text"
-                                          v-model="product.title"
-                                          v-validate="'required'"
-                                          data-vv-name="title"
-                                          :error-messages="errors.collect('title')"
-                                          :spellcheck="$store.state.settings.spellcheck" />
+                            <v-text-field :disabled="!canModify" :label="$t('product.title')" name="title" type="text"
+                                          v-model="product.title" v-validate="'required'" data-vv-name="title"
+                                          :error-messages="errors.collect('title')" :spellcheck="$store.state.settings.spellcheck"
+                                          @blur="saveProduct('title')" />
                         </v-col>
                         <v-col cols="12" class="pr-3">
-                            <v-textarea :disabled="!canModify"
-                                        :label="$t('product.description')"
-                                        name="description"
-                                        v-model="product.description"
-                                        :spellcheck="$store.state.settings.spellcheck" />
+                            <v-textarea :disabled="!canModify" :label="$t('product.description')" name="description"
+                                        v-model="product.description" :spellcheck="$store.state.settings.spellcheck"
+                                        @blur="saveProduct('description')" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters>
                         <v-col cols="12" class="mb-2">
-                            <v-btn v-bind="UI.BUTTON.ADD_NEW_IN" v-if="canModify" @click="$refs.report_item_selector.openSelector()">
+                            <v-btn v-bind="UI.BUTTON.ADD_NEW_IN" v-if="canModify"
+                                   @click="$refs.report_item_selector.openSelector()">
                                 <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                                <span>{{$t('report_item.select')}}</span>
+                                <span>{{ $t('report_item.select') }}</span>
                             </v-btn>
                         </v-col>
                         <v-col cols="12">
@@ -71,15 +75,14 @@
                     </v-row>
                     <v-row no-gutters>
                         <v-col cols="12">
-                            <v-checkbox v-for="preset in publisher_presets" :key="preset.id"
-                                        :label="preset.name" :disabled="!canModify" v-model="preset.selected">
+                            <v-checkbox v-for="preset in publisher_presets" :key="preset.id" :label="preset.name"
+                                        :disabled="!canModify" v-model="preset.selected">
                             </v-checkbox>
                         </v-col>
                     </v-row>
                     <v-row no-gutters class="pt-4">
                         <v-col cols="6">
-                            <v-btn :href="preview_link" style="display: none"
-                                   target="_blank" ref="previewBtn">
+                            <v-btn :href="preview_link" style="display: none" target="_blank" ref="previewBtn">
                             </v-btn>
                             <v-btn depressed small @click="previewProduct($event)">
                                 <v-icon left>mdi-eye-outline</v-icon>
@@ -94,9 +97,12 @@
                         </v-col>
                     </v-row>
                     <v-row>
-                        <MessageBox class="justify-center" v-if="msgbox_visible"
-                                    @buttonYes="publishProduct" @buttonCancel="msgbox_visible = false"
-                                    :title="$t('product.publish_confirmation')" :message="product.title">
+                        <MessageBox v-model="msgbox_visible"
+                                    @yes="publishProduct"
+                                    @cancel="msgbox_visible = false"
+                                    :title="$t('product.publish_confirmation')"
+                                    :message="product.title"
+                                    :alert=false>
                         </MessageBox>
                     </v-row>
 
@@ -120,6 +126,7 @@
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
     import { createProduct, publishProduct, updateProduct } from "@/api/publish";
+    import { getEntityTypeStates } from "@/api/state";
     import ReportItemSelector from "@/components/publish/ReportItemSelector";
     import Permissions from "@/services/auth/permissions";
     import MessageBox from "@/components/common/MessageBox.vue";
@@ -145,9 +152,12 @@
                 title: "",
                 description: "",
                 product_type_id: null,
+                state_id: null,
                 report_items: [],
             },
             msgbox_visible: false,
+            // State management
+            available_states: [],
         }),
         mixins: [AuthMixin],
         watch: {
@@ -176,7 +186,7 @@
             }
         },
         methods: {
-            addProduct() {
+            addEmptyProduct() {
                 this.visible = true;
                 this.edit = false;
                 this.show_error = false;
@@ -189,11 +199,28 @@
                 this.product.description = "";
                 this.product.product_type_id = null;
                 this.product.report_items = [];
+                this.selectDefaultState();
                 this.resetValidation();
             },
 
             publishConfirmation() {
                 this.msgbox_visible = true;
+            },
+
+            prepareProduct() {
+                this.show_validation_error = false;
+                this.show_error = false;
+
+                this.product.product_type_id = this.selected_type.id;
+
+                this.product.report_items = [];
+                for (let i = 0; i < this.report_items.length; i++) {
+                    this.product.report_items.push(
+                        {
+                            id: this.report_items[i].id
+                        }
+                    )
+                }
             },
 
             publishProduct() {
@@ -204,19 +231,7 @@
 
                             if (!this.$validator.errors.any()) {
 
-                                this.show_validation_error = false;
-                                this.show_error = false;
-
-                                this.product.product_type_id = this.selected_type.id;
-
-                                this.product.report_items = [];
-                                for (let i = 0; i < this.report_items.length; i++) {
-                                    this.product.report_items.push(
-                                        {
-                                            id: this.report_items[i].id
-                                        }
-                                    )
-                                }
+                                this.prepareProduct();
 
                                 if (this.product.id !== -1) {
                                     updateProduct(this.product).then(() => {
@@ -256,19 +271,7 @@
 
                     if (!this.$validator.errors.any()) {
 
-                        this.show_validation_error = false;
-                        this.show_error = false;
-
-                        this.product.product_type_id = this.selected_type.id;
-
-                        this.product.report_items = [];
-                        for (let i = 0; i < this.report_items.length; i++) {
-                            this.product.report_items.push(
-                                {
-                                    id: this.report_items[i].id
-                                }
-                            )
-                        }
+                        this.prepareProduct();
 
                         const getPreviewUrl = (product) => {
                             let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + product + "/overview?jwt=" + this.$store.getters.getJWT;
@@ -304,63 +307,37 @@
                 })
             },
 
-            add() {
+            addProduct() {
                 this.$validator.validateAll().then(() => {
-
                     if (!this.$validator.errors.any()) {
+                        this.prepareProduct();
+                        createProduct(this.product).then((response) => {
+                            this.product.id = response.data;
+                            this.resetValidation();
+                            this.visible = false;
+                            this.$root.$emit('notification', { type: 'success', loc: 'product.successful' })
 
-                        this.show_validation_error = false;
-                        this.show_error = false;
+                        }).catch(() => {
+                            this.show_error = true;
+                        })
 
-                        this.product.product_type_id = this.selected_type.id;
-
-                        this.product.report_items = [];
-                        for (let i = 0; i < this.report_items.length; i++) {
-                            this.product.report_items.push(
-                                {
-                                    id: this.report_items[i].id
-                                }
-                            )
-                        }
-
-                        if (this.product.id !== -1) {
-                            updateProduct(this.product).then(() => {
-
-                                this.resetValidation();
-                                this.visible = false;
-
-                                this.$root.$emit('notification',
-                                    {
-                                        type: 'success',
-                                        loc: 'product.successful_edit'
-                                    }
-                                )
-                            }).catch(() => {
-
-                                this.show_error = true;
-                            })
-                        } else {
-                            createProduct(this.product).then(() => {
-
-                                this.resetValidation();
-                                this.visible = false;
-
-                                this.$root.$emit('notification',
-                                    {
-                                        type: 'success',
-                                        loc: 'product.successful'
-                                    }
-                                )
-
-                            }).catch(() => {
-
-                                this.show_error = true;
-                            })
-                        }
                     } else {
-
                         this.show_validation_error = true;
                     }
+                })
+            },
+
+            saveProduct() {
+                if (!this.edit || this.product.id === -1) {
+                    return;
+                }
+                this.prepareProduct();
+                updateProduct(this.product).then(() => {
+                    this.resetValidation();
+                    this.$root.$emit('product-updated')
+
+                }).catch(() => {
+                    this.show_error = true;
                 })
             },
 
@@ -368,8 +345,31 @@
                 this.$validator.reset();
                 this.show_validation_error = false;
             },
+
+            async loadAvailableStates() {
+                try {
+                    const response = await getEntityTypeStates('product');
+                    this.available_states = response.data.states;
+
+                } catch (error) {
+                    console.error('Failed to load available states for PRODUCT:', error);
+                    this.available_states = [];
+                }
+            },
+
+            selectDefaultState() {
+                if (!this.available_states) return;
+
+                const defaultState = this.available_states.find(state => state.is_default);
+                if (defaultState) {
+                    this.product.state_id = defaultState.id;
+                }
+            },
+
         },
+
         mounted() {
+            this.loadAvailableStates();
 
             this.$root.$on('new-product', (data) => {
                 this.visible = true;
@@ -402,6 +402,7 @@
                 this.product.title = data.title;
                 this.product.description = data.description;
                 this.product.product_type_id = data.product_type_id;
+                this.product.state_id = data.state_id;
 
                 for (let i = 0; i < this.product_types.length; i++) {
                     if (this.product_types[i].id === this.product.product_type_id) {
@@ -413,6 +414,7 @@
                 this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + data.id + "/overview?jwt=" + this.$store.getters.getJWT
             });
         },
+
         beforeDestroy() {
             this.$root.$off('new-product')
             this.$root.$off('show-product-edit')

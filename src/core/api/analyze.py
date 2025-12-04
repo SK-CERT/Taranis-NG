@@ -171,7 +171,7 @@ class ReportItemData(Resource):
                 "add",
                 "title",
                 "title_prefix",
-                "completed",
+                "state_id",
                 "attribute_id",
                 "aggregate_ids",
                 "remote_report_item_ids",
@@ -200,7 +200,7 @@ class ReportItemLocks(Resource):
     """Report item locks API endpoint."""
 
     @auth_required("ANALYZE_UPDATE", ACLCheck.REPORT_ITEM_MODIFY)
-    def get(self, report_item_id: int) -> object:
+    def get(self, report_item_id: int) -> dict:
         """Get report item locks.
 
         Args:

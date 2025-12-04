@@ -1,6 +1,13 @@
 """Data Provider Model."""
 
-from datetime import datetime
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.data_provider import DataProvider
+
+from datetime import UTC, datetime
 
 from managers.db_manager import db
 from marshmallow import post_load
@@ -43,7 +50,7 @@ class DataProvider(db.Model):
         self.web_url = web_url
 
     @classmethod
-    def find(cls, data_provider_id: int) -> object:
+    def find(cls, data_provider_id: int) -> DataProvider:
         """Find a Data Provider by ID.
 
         Args:
@@ -95,7 +102,7 @@ class DataProvider(db.Model):
         return {"total_count": count, "items": schema.dump(data_providers)}
 
     @classmethod
-    def add_new(cls, data: dict, user_name: str) -> object:
+    def add_new(cls, data: dict, user_name: str) -> DataProvider:
         """Add a new Data Provider.
 
         Args:
@@ -114,7 +121,7 @@ class DataProvider(db.Model):
         return new
 
     @classmethod
-    def update(cls, data_provider_id: int, data: dict, user_name: str) -> object:
+    def update(cls, data_provider_id: int, data: dict, user_name: str) -> DataProvider:
         """Update an existing Data Provider.
 
         Args:
@@ -152,7 +159,7 @@ class NewDataProviderSchema(DataProviderSchema):
     """New Data Provider Schema."""
 
     @post_load
-    def make(self, data: dict, **kwargs: object) -> DataProvider:  # noqa: ARG002
+    def make(self, data: dict, **kwargs) -> DataProvider:  # noqa: ARG002, ANN003
         """Create a new Data Provider.
 
         Args:

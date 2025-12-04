@@ -13,7 +13,6 @@ export function getNewsItemsByGroup(group_id, filter_data) {
     filter += "&read=" + encodeURIComponent(filter_data.filter.read)
     filter += "&important=" + encodeURIComponent(filter_data.filter.important)
     filter += "&relevant=" + encodeURIComponent(filter_data.filter.relevant)
-    filter += "&in_analyze=" + encodeURIComponent(filter_data.filter.in_analyze)
     filter += "&range=" + encodeURIComponent(filter_data.filter.range)
     filter += "&sort=" + encodeURIComponent(filter_data.filter.sort)
     filter += "&offset=" + encodeURIComponent(filter_data.offset)

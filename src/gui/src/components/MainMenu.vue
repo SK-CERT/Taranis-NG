@@ -58,42 +58,42 @@
                 },
                 {
                     title: 'main_menu.enter',
-                    icon: 'mdi-location-enter',
+                    icon: 'mdi-plus-box',
                     permission: 'ASSESS_CREATE',
                     route: '/enter',
                     show: false
                 },
                 {
                     title: 'main_menu.assess',
-                    icon: 'mdi-google-circles-extended',
+                    icon: 'mdi-newspaper-variant',
                     permission: 'ASSESS_ACCESS',
                     route: '/assess',
                     show: true
                 },
                 {
                     title: 'main_menu.analyze',
-                    icon: 'mdi-google-circles-communities',
+                    icon: 'mdi-file-table',
                     permission: 'ANALYZE_ACCESS',
                     route: '/analyze/local',
                     show: true
                 },
                 {
                     title: 'main_menu.publish',
-                    icon: 'mdi-publish',
+                    icon: 'mdi-send',
                     permission: 'PUBLISH_ACCESS',
                     route: '/publish',
                     show: true
                 },
                 {
                     title: 'main_menu.my_assets',
-                    icon: 'mdi-file-multiple-outline',
+                    icon: 'mdi-file-cabinet',
                     permission: 'MY_ASSETS_ACCESS',
                     route: '/myassets',
                     show: true
                 },
                 {
                     title: 'main_menu.config',
-                    icon: 'mdi-ballot-outline',
+                    icon: 'mdi-cog',
                     permission: 'CONFIG_ACCESS',
                     route: '/config',
                     show: true
