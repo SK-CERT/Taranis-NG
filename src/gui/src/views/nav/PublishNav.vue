@@ -1,7 +1,7 @@
 <template>
     <Navigation
             :links  = "links"
-            :icon   = "'mdi-publish'"
+            :icon   = "'mdi-send'"
     />
 </template>
 

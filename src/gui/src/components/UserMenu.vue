@@ -24,7 +24,7 @@
 
                 <v-list-item @click="settings">
                     <v-list-item-icon>
-                        <v-icon>mdi-cog-outline</v-icon>
+                        <v-icon>mdi-account-cog</v-icon>
                     </v-list-item-icon>
                     <v-list-item-content>
                         <v-list-item-title> {{ $t('user_menu.settings') }}</v-list-item-title>

@@ -1,6 +1,6 @@
 <template>
     <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addReportItem">
+        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addEmptyReportItem">
             <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
             <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
@@ -25,8 +25,27 @@
                     <v-spacer></v-spacer>
 
                     <v-switch style="padding-top:25px" v-model="verticalView" label="Side-by-side view"></v-switch>
-                    <v-switch :disabled="!canModify" style="padding-top:25px" v-model="report_item.completed"
-                              label="Completed" @change="onEdit('completed')"></v-switch>
+
+                    <v-spacer></v-spacer>
+
+                    <v-select :key="`state-select-${report_item.state_id}`" :disabled="!canModify"
+                        style="padding-top:25px; min-width: 100px; max-width: 200px;" v-model="report_item.state_id"
+                        :items="available_states"
+                        :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
+                        item-value="id" :label="$t('report_item.state')" append-icon="mdi-chevron-down"
+                        :menu-props="{ maxWidth: '300px' }" @change="saveReportItem('state_id')">
+
+                        <template v-slot:item="{ item }">
+                            <v-list-item-avatar>
+                                <v-icon :color="item.color">{{ item.icon }}</v-icon>
+                            </v-list-item-avatar>
+                            <v-list-item-content>
+                                <v-list-item-title>
+                                    {{ $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name}}
+                                </v-list-item-title>
+                            </v-list-item-content>
+                        </template>
+                    </v-select>
                     <v-btn v-if="!edit" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
                         <span>{{ $t('common.save') }}</span>
@@ -36,38 +55,38 @@
 
                 <v-row>
                     <v-col :cols="verticalView ? 6 : 12"
-                           :style="verticalView ? 'height:calc(100vh - 3em); overflow-y: auto;' : ''">
-                        <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
+                        :style="verticalView ? 'height:calc(100vh - 3em); overflow-y: auto;' : ''">
+                        <v-form @submit.prevent="addReportItem" id="form" ref="form" class="px-4">
                             <v-row no-gutters>
                                 <v-col cols="12" v-if="edit">
                                     <span class="caption grey--text">ID: {{ report_item.uuid }}</span>
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
                                     <v-combobox v-on:change="reportSelected" :disabled="edit" v-model="selected_type"
-                                                :items="report_types" item-text="title" :label="$t('report_item.report_type')"
-                                                name="report_type" v-validate="'required'" />
+                                        :items="report_types" item-text="title" :label="$t('report_item.report_type')"
+                                        name="report_type" v-validate="'required'" />
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
-                                    <v-text-field @focus="onFocus('title_prefix')" @blur="onBlur('title_prefix')"
-                                                  @keyup="onKeyUp('title_prefix')" :class="getLockedStyle('title_prefix')"
-                                                  :disabled="field_locks.title_prefix || !canModify"
-                                                  :label="$t('report_item.title_prefix')" name="title_prefix"
-                                                  v-model="report_item.title_prefix"
-                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                                    <v-text-field @focus="onFocus('title_prefix')" @blur="saveReportItem('title_prefix')"
+                                        @keyup="onKeyUp('title_prefix')" :class="getLockedStyle('title_prefix')"
+                                        :disabled="field_locks.title_prefix || !canModify"
+                                        :label="$t('report_item.title_prefix')" name="title_prefix"
+                                        v-model="report_item.title_prefix"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
-                                    <v-text-field @focus="onFocus('title')" @blur="onBlur('title')"
-                                                  @keyup="onKeyUp('title')" :class="getLockedStyle('title')"
-                                                  :disabled="field_locks.title || !canModify" :label="$t('report_item.title')"
-                                                  name="title" type="text" v-model="report_item.title" v-validate="'required'"
-                                                  data-vv-name="title" :error-messages="errors.collect('title')"
-                                                  :spellcheck="$store.state.settings.spellcheck"></v-text-field>
+                                    <v-text-field @focus="onFocus('title')" @blur="saveReportItem('title')"
+                                        @keyup="onKeyUp('title')" :class="getLockedStyle('title')"
+                                        :disabled="field_locks.title || !canModify" :label="$t('report_item.title')"
+                                        name="title" type="text" v-model="report_item.title" v-validate="'required'"
+                                        data-vv-name="title" :error-messages="errors.collect('title')"
+                                        :spellcheck="$store.state.settings.spellcheck"></v-text-field>
                                 </v-col>
                             </v-row>
                             <v-row no-gutters class="pb-4">
                                 <v-col cols="12">
                                     <v-btn v-bind="UI.BUTTON.ADD_NEW_IN" v-if="canModify"
-                                           @click="$refs.new_item_selector.openSelector()">
+                                        @click="$refs.new_item_selector.openSelector()">
                                         <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
                                         <span>{{ $t('assess.add_news_item') }}</span>
                                     </v-btn>
@@ -75,35 +94,36 @@
                             </v-row>
                             <v-row no-gutters>
                                 <v-col cols="12">
-                                    <NewsItemSelector v-if="!verticalView" ref="new_item_selector"
-                                                      :attach="false" :values="news_item_aggregates" :modify="modify"
-                                                      :report_item_id="this.report_item.id" :edit="edit"
-                                                      :verticalView="false" />
+                                    <NewsItemSelector v-if="!verticalView" ref="new_item_selector" :attach="false"
+                                        :values="news_item_aggregates" :modify="modify"
+                                        :report_item_id="this.report_item.id" :edit="edit" :verticalView="false" />
                                 </v-col>
                             </v-row>
                             <v-row no-gutters>
                                 <v-col cols="12">
                                     <RemoteReportItemSelector :values="remote_report_items" :modify="modify"
-                                                              :edit="edit" :report_item_id="this.report_item.id"
-                                                              @remote-report-items-changed="updateRemoteAttributes" />
+                                        :edit="edit" :report_item_id="this.report_item.id"
+                                        @remote-report-items-changed="updateRemoteAttributes" />
                                 </v-col>
                             </v-row>
                             <v-row>
                                 <v-col cols="12" class="pa-0 ma-0">
                                     <v-expansion-panels class="mb-1" v-for="(attribute_group, i) in attribute_groups"
-                                                        :key="attribute_group.id" v-model="expandPanelGroups" multiple>
+                                        :key="attribute_group.id" v-model="expandPanelGroups" multiple>
                                         <v-expansion-panel>
                                             <v-expansion-panel-header color="primary--text"
-                                                                      class="body-1 text-uppercase pa-3">
+                                                class="body-1 text-uppercase pa-3">
                                                 {{ attribute_group.title }}
                                             </v-expansion-panel-header>
                                             <v-expansion-panel-content>
                                                 <!--TYPES-->
                                                 <v-expansion-panels multiple focusable class="items"
-                                                                    v-model="expand_group_items[i].values">
-                                                    <v-expansion-panel v-for="attribute_item in attribute_group.attribute_group_items"
-                                                                       :key="attribute_item.id" class="item-panel">
-                                                        <v-expansion-panel-header class="pa-2 font-weight-bold primary--text rounded-0">
+                                                    v-model="expand_group_items[i].values">
+                                                    <v-expansion-panel
+                                                        v-for="attribute_item in attribute_group.attribute_group_items"
+                                                        :key="attribute_item.id" class="item-panel">
+                                                        <v-expansion-panel-header
+                                                            class="pa-2 font-weight-bold primary--text rounded-0">
                                                             <v-row>
                                                                 <!--<v-icon small left>mdi-account</v-icon>-->
                                                                 <span>
@@ -115,16 +135,19 @@
                                                             <v-row align="center">
                                                                 <v-col>
                                                                     <AttributeContainer :attribute_item="attribute_item"
-                                                                                        :edit="edit" :modify="modify"
-                                                                                        :report_item_id="report_item.id"
-                                                                                        :read_only="read_only" />
+                                                                        :edit="edit" :modify="modify"
+                                                                        :report_item_id="report_item.id"
+                                                                        :read_only="read_only" />
                                                                 </v-col>
                                                                 <v-col class="d-flex justify-end" cols="auto">
-                                                                    <v-btn v-if="!!attribute_item.attribute_group_item.ai_provider_id"
-                                                                           text small
-                                                                           @click="auto_generate(attribute_item.attribute_group_item.id)"
-                                                                           :title="$t('report_item.tooltip.auto_generate')">
-                                                                        <v-icon>{{ auto_generate_icon[attribute_item.attribute_group_item.id] || 'mdi-creation' }}</v-icon>
+                                                                    <v-btn
+                                                                        v-if="!!attribute_item.attribute_group_item.ai_provider_id"
+                                                                        text small
+                                                                        @click="auto_generate(attribute_item.attribute_group_item.id)"
+                                                                        :title="$t('report_item.tooltip.auto_generate')">
+                                                                        <v-icon>{{
+                                                                            auto_generate_icon[attribute_item.attribute_group_item.id]
+                                                                            || 'mdi-creation' }}</v-icon>
                                                                     </v-btn>
                                                                 </v-col>
                                                             </v-row>
@@ -150,10 +173,10 @@
                         </v-form>
                     </v-col>
                     <v-col v-if="verticalView" :cols="verticalView ? 6 : 0"
-                           style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
+                        style="height:calc(100vh - 3em); overflow-y: auto;" class="pa-5 taranis-ng-vertical-view">
                         <NewsItemSelector ref="new_item_selector" attach=".taranis-ng-vertical-view"
-                                          :values="news_item_aggregates" :modify="modify"
-                                          :report_item_id="this.report_item.id" :edit="edit" :verticalView="true" />
+                            :values="news_item_aggregates" :modify="modify" :report_item_id="this.report_item.id"
+                            :edit="edit" :verticalView="true" />
                     </v-col>
                 </v-row>
 
@@ -163,20 +186,21 @@
 </template>
 
 <style>
-    .taranis-ng-vertical-view {
-        position: relative;
-    }
+.taranis-ng-vertical-view {
+    position: relative;
+}
 
-    .v-dialog__content,
-    .v-dialog--fullscreen {
-        position: fixed;
-    }
+.v-dialog__content,
+.v-dialog--fullscreen {
+    position: fixed;
+}
 </style>
 
 <script>
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
     import { createNewReportItem, updateReportItem, lockReportItem, unlockReportItem, holdLockReportItem, getReportItem, getReportItemData, getReportItemLocks, aiGenerate } from "@/api/analyze";
+    import { getEntityTypeStates } from "@/api/state";
     import AttributeContainer from "@/components/common/attribute/AttributeContainer";
     import NewsItemSelector from "@/components/analyze/NewsItemSelector";
     import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
@@ -189,7 +213,6 @@
         },
 
         components: { NewsItemSelector, AttributeContainer, RemoteReportItemSelector },
-
         data: () => ({
             expand_panel_groups: [],
             expand_group_items: [],
@@ -215,14 +238,16 @@
                 uuid: null,
                 title: "",
                 title_prefix: "",
-                completed: false,
                 report_item_type_id: null,
+                state_id: null,
                 news_item_aggregates: [],
                 remote_report_items: [],
                 attributes: []
             },
             auto_generate_icon: {},
             auto_generate_icon_timer: {},
+            // State management
+            available_states: [],
         }),
 
         watch: {
@@ -261,16 +286,15 @@
             },
 
             canModify() {
-                return this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true)
+                return this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true);
             },
-
             expandPanelGroups() {
                 return this.expand_groups();
             }
         },
 
         methods: {
-            addReportItem() {
+            addEmptyReportItem() {
                 this.visible = true;
                 this.modify = true;
                 this.edit = false
@@ -287,7 +311,8 @@
                 this.report_item.uuid = null;
                 this.report_item.title = "";
                 this.report_item.title_prefix = "";
-                this.report_item.completed = false;
+                this.report_item.report_item_type_id = null;
+                this.selectDefaultState();
                 this.resetValidation();
                 this.reset_auto_generate();
             },
@@ -314,7 +339,6 @@
                     this.attribute_groups.push(group)
                     this.expand_group_items.push({ values: Array.from(Array(group.attribute_group_items.length).keys()) });
                 }
-
             },
 
             cancel() {
@@ -328,7 +352,7 @@
 
             },
 
-            add() {
+            addReportItem() {
                 this.$validator.validateAll().then(() => {
 
                     if (!this.$validator.errors.any()) {
@@ -390,6 +414,7 @@
                         }
 
                         createNewReportItem(this.report_item).then((response) => {
+                            this.report_item.id = response.data;
 
                             this.attachmets_attributes_count = 0
                             for (let i = 0; i < this.attribute_groups.length; i++) {
@@ -407,16 +432,33 @@
                             }
 
                         }).catch(() => {
-
                             this.show_error = true;
                             this.overlay = false
                         })
 
                     } else {
-
                         this.show_validation_error = true;
                     }
                 })
+            },
+
+            saveReportItem(field_id) {
+                if (!this.edit) {
+                    return;
+                }
+
+                let data = {}
+                data.update = true
+                if (field_id === 'title') {
+                    data.title = this.report_item.title
+                } else if (field_id === 'title_prefix') {
+                    data.title_prefix = this.report_item.title_prefix
+                } else if (field_id === 'state_id') {
+                    data.state_id = this.report_item.state_id
+                }
+
+                updateReportItem(this.report_item.id, data).then(() => { })
+                unlockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => { })
             },
 
             resetValidation() {
@@ -430,17 +472,7 @@
 
             onFocus(field_id) {
                 if (this.edit === true) {
-                    lockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => {
-                    })
-                }
-            },
-
-            onBlur(field_id) {
-                if (this.edit === true) {
-
-                    this.onEdit(field_id)
-                    unlockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => {
-                    })
+                    lockReportItem(this.report_item.id, { 'field_id': field_id }).then(() => { })
                 }
             },
 
@@ -453,22 +485,6 @@
                         holdLockReportItem(self.report_item.id, { 'field_id': field_id }).then(() => {
                         })
                     }, 1000);
-                }
-            },
-
-            onEdit(field_id) {
-                if (this.edit === true) {
-
-                    let data = {}
-                    data.update = true
-                    if (field_id === 'title') {
-                        data.title = this.report_item.title
-                    } else if (field_id === 'title_prefix') {
-                        data.title_prefix = this.report_item.title_prefix
-                    } else if (field_id === 'completed') {
-                        data.completed = this.report_item.completed
-                    }
-                    updateReportItem(this.report_item.id, data).then(() => { })
                 }
             },
 
@@ -497,8 +513,8 @@
                                 this.report_item.title = data.title
                             } else if (data.title_prefix !== undefined) {
                                 this.report_item.title_prefix = data.title_prefix
-                            } else if (data.completed !== undefined) {
-                                this.report_item.completed = data.completed
+                            } else if (data.state_id !== undefined) {
+                                this.report_item.state_id = data.state_id
                             }
                             // if more users work on the same report -> update locked field with new value
                             // there is duplicity code attributes_mixin.js: report_item_updated() but runs later (up 2 seconds) this place is much more faster
@@ -543,7 +559,7 @@
                     this.report_item.title = data.title;
                     this.report_item.title_prefix = data.title_prefix;
                     this.report_item.report_item_type_id = data.report_item_type_id;
-                    this.report_item.completed = data.completed;
+                    this.report_item.state_id = data.state_id;
 
                     if (!this.report_types || !this.report_types.length) {
                         return;
@@ -764,24 +780,40 @@
             reset_auto_generate() {
                 this.auto_generate_icon = {};
                 this.auto_generate_icon_timer = {};
-            }
+            },
+
+            async loadAvailableStates() {
+                try {
+                    const response = await getEntityTypeStates('report_item');
+                    this.available_states = response.data.states;
+                } catch (error) {
+                    console.error('Failed to load available states for REPORT:', error);
+                    this.available_states = [];
+                }
+            },
+
+            selectDefaultState() {
+                if (!this.available_states) return;
+
+                const defaultState = this.available_states.find(state => state.is_default);
+                if (defaultState) {
+                    this.report_item.state_id = defaultState.id;
+                }
+            },
 
         },
         mixins: [AuthMixin],
 
         mounted() {
+            this.loadAvailableStates();
+
             this.$root.$on('attachments-uploaded', () => {
                 this.attachmets_attributes_count--
                 if (this.attachmets_attributes_count <= 0) {
                     this.$validator.reset();
                     this.visible = false;
                     this.overlay = false
-                    this.$root.$emit('notification',
-                        {
-                            type: 'success',
-                            loc: 'report_item.successful'
-                        }
-                    );
+                    this.$root.$emit('notification', { type: 'success', loc: 'report_item.successful' });
                 }
             });
 
@@ -808,7 +840,7 @@
         beforeDestroy() {
             this.$root.$off('attachments-uploaded')
             this.$root.$off('new-report')
-            this.$root.$off('show-edit')
+            this.$root.$off('show-edit') // ???
 
             this.$root.$off('report-item-locked', this.report_item_locked);
             this.$root.$off('report-item-unlocked', this.report_item_unlocked);

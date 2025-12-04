@@ -1,7 +1,7 @@
 <template>
     <Navigation
             :links="links"
-            :icon="'mdi-location-enter'"
+            :icon="'mdi-plus-box'"
     />
 </template>
 

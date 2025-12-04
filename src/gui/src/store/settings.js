@@ -111,17 +111,17 @@ const mutations = {
             { key: 'g', alias: 'group', icon: 'mdi-group' },
             { key: 'G', alias: 'ungroup', icon: 'mdi-ungroup' },
             { key: 'n', alias: 'new_product', icon: 'mdi-file-outline' },
-            { key: 'a', alias: 'aggregate_open', icon: 'mdi-google-circles-extended' },
+            { key: 'a', alias: 'aggregate_open', icon: 'mdi-newspaper-variant' },
             { key: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app' },
             { key: '/', alias: 'open_search', icon: 'mdi-card-search-outline' },
             { key: 'R', alias: 'reload', icon: 'mdi-reload' },
             // switch views
             { key: 'v', alias: 'enter_view_mode', icon: 'mdi-view-headline' },
             { key: 'd', alias: 'dashboard_view', icon: 'mdi-view-dashboard-variant-outline' },
-            { key: 'z', alias: 'analyze_view', icon: 'mdi-google-circles-communities' },
-            { key: 'p', alias: 'publish_view', icon: 'mdi mdi-publish' },
-            { key: 'm', alias: 'my_assets_view', icon: 'mdi-file-multiple-outline' },
-            { key: 'c', alias: 'configuration_view', icon: 'mdi-ballot-outline' },
+            { key: 'z', alias: 'analyze_view', icon: 'mdi-file-table' },
+            { key: 'p', alias: 'publish_view', icon: 'mdi mdi-send' },
+            { key: 'm', alias: 'my_assets_view', icon: 'mdi-file-cabinet' },
+            { key: 'c', alias: 'configuration_view', icon: 'mdi-cog' },
             // assess: filter actions
             { key: 'f', alias: 'enter_filter_mode', icon: 'mdi-filter-outline' },
         ];

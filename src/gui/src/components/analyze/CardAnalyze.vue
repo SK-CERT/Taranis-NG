@@ -8,9 +8,8 @@
             </v-col>
 
             <v-col :class="UI.CLASS.card_offset">
-                <v-hover v-slot="{hover}">
-                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2"
-                            @click.stop="cardItemToolbar"
+                <v-hover v-slot="{ hover }">
+                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar"
                             :color="selectedColor">
 
                         <!--CONTENT-->
@@ -20,8 +19,20 @@
                                     <v-icon center>{{ card.tag }}</v-icon>
                                 </v-col>
                                 <v-col>
-                                    <div class="grey--text">{{card.report_type_name}}</div>
-                                    <span>{{card.title}}</span>
+                                    <div class="grey--text">{{ card.report_type_name }}</div>
+                                    <span>{{ card.title }}</span>
+                                </v-col>
+                                <v-col>
+                                    <div v-if="card.state" class="d-flex align-center">
+                                        <v-icon :color="card.state.color" class="mr-2">
+                                            {{ card.state.icon }}
+                                        </v-icon>
+                                        <span>
+                                            {{ $te('workflow.states.' + card.state.display_name) ?
+                                               $t('workflow.states.' + card.state.display_name) :
+                                               card.state.display_name }}
+                                        </span>
+                                    </div>
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ $t('card_item.created') }}</div>
@@ -38,8 +49,7 @@
                                                        :title="$t('analyze.tooltip.delete_item')">
                                                     <v-icon color="white">mdi-trash-can-outline</v-icon>
                                                 </v-btn>
-                                                <v-btn v-if="canCreateProduct" icon
-                                                       @click.stop="cardItemToolbar('new')"
+                                                <v-btn v-if="canCreateProduct" icon @click.stop="cardItemToolbar('new')"
                                                        :title="$t('analyze.tooltip.publish_item')">
                                                     <v-icon color="info">mdi-file-outline</v-icon>
                                                 </v-btn>
@@ -48,8 +58,7 @@
                                         <v-row v-if="!multiSelectActive && show_remove_action"
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
-                                                <v-btn v-if="canModify" icon
-                                                       @click.stop="showMsgBox('remove')"
+                                                <v-btn v-if="canModify" icon @click.stop="showMsgBox('remove')"
                                                        :title="$t('analyze.tooltip.remove_item')">
                                                     <v-icon color="accent">mdi-minus-circle-outline</v-icon>
                                                 </v-btn>
@@ -64,9 +73,12 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox class="justify-center" v-if="msgbox_visible"
-                        @buttonYes="handleMsgBox" @buttonCancel="cancelMsgBox"
-                        :title="$t(msgBoxTitle)" :message="card.title">
+            <MessageBox v-model="msgbox_visible"
+                        @yes="handleMsgBox"
+                        @cancel="cancelMsgBox"
+                        :title="$t(msgBoxTitle)"
+                        :message="card.title"
+                        :alert=false>
             </MessageBox>
         </v-row>
     </v-container>
@@ -89,7 +101,6 @@
         data: () => ({
             toolbar: false,
             selected: false,
-            status: "in_progress",
             msgbox_visible: false,
             msgbox_action: "",
         }),
@@ -120,10 +131,10 @@
             },
 
             itemStatus() {
-                if (this.card.completed) {
-                    return "completed"
+                if (this.card.state) {
+                    return this.card.state.name;
                 } else {
-                    return "in_progress"
+                    return "no_state";
                 }
             },
 
@@ -198,7 +209,8 @@
             handleMsgBox() {
                 this.msgbox_visible = false;
                 this.cardItemToolbar(this.msgbox_action);
-            }
+            },
+
         },
         mounted() {
             this.$root.$on('multi-select-off', this.multiSelectOff);

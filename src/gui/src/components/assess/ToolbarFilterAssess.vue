@@ -38,9 +38,6 @@
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRelevant" id="button_filter_relevant">
                         <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_relevant')">{{ UI.ICON.RELEVANT }}</v-icon>
                     </v-chip>
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterInAnalyze" id="button_filter_analyze">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_in_analyze')">{{ UI.ICON.IN_ANALYZE }}</v-icon>
-                    </v-chip>
                 </v-chip-group>
 
                 <!-- SORT -->
@@ -145,7 +142,6 @@
                 read: false,
                 important: false,
                 relevant: false,
-                in_analyze: false,
                 sort: "DATE_DESC"
             },
             timeout: null,
@@ -181,12 +177,6 @@
                 if (this.analyze_selector === false) {
                     this.$refs.toolbarGroupAssess.disableMultiSelect()
                 }
-            },
-
-            filterInAnalyze() {
-                this.filter.in_analyze = !this.filter.in_analyze;
-                this.$emit('update-news-items-filter', this.filter);
-                this.$refs.toolbarGroupAssess.disableMultiSelect()
             },
 
             filterSort(sort) {
