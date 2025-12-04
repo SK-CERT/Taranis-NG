@@ -247,13 +247,18 @@ def upgrade() -> None:
 
     logger.info("Migrating existing report_item completed states to new state system...")
 
-    # Get the "Completed" state ID
-    completed_state = session.query(StateDefinitionMigration).filter_by(display_name=StateEnum.COMPLETED.value).first()
+    bind = op.get_bind()
     if completed_state:
         # Update report_items that were completed to use the new state
-        bind = op.get_bind()
-        bind.execute(sa.text("UPDATE report_item SET state_id = :state_id WHERE completed = true"), {"state_id": completed_state.id})
-        logger.info(f"Migrated completed report_items to state_id {completed_state.id}")
+        bind.execute(
+            sa.text("UPDATE report_item SET state_id = CASE WHEN completed THEN :comp_id ELSE :wip_id END"),
+            {"comp_id": completed_state.id, "wip_id": wip_state.id},
+        )
+        logger.info(f"Migrated report_items to states: {completed_state.id}, {wip_state.id}")
+
+    if published_state:
+        bind.execute(sa.text("UPDATE product SET state_id = :pub_id"), {"pub_id": published_state.id})
+        logger.info(f"Migrated products to state: {published_state.id}")
 
     logger.info("Dropping completed column from report_item table...")
     op.drop_column("report_item", "completed")
@@ -266,9 +271,6 @@ def upgrade() -> None:
     PermissionStateSystem.add(session, "CONFIG_WORKFLOW_UPDATE", "Config workflow update", "Update workflow configuration")
     PermissionStateSystem.add(session, "CONFIG_WORKFLOW_DELETE", "Config workflow delete", "Delete workflow configuration")
     session.commit()
-
-    # Add permissions to Admin role
-    bind = op.get_bind()
 
     # Insert permissions directly into role_permission table
     admin_role_id = bind.execute(sa.text("SELECT id FROM role WHERE name = 'Admin'")).scalar()
@@ -314,7 +316,7 @@ def downgrade() -> None:
         {"name": StateEnum.COMPLETED.value},
     ).scalar()
     if completed_state_id:
-        bind.execute(sa.text("UPDATE report_item SET completed = true WHERE state_id = :state_id"), {"state_id": completed_state_id})
+        bind.execute(sa.text("UPDATE report_item SET completed = (COALESCE(state_id, 0) = :state_id)"), {"state_id": completed_state_id})
 
     logger.info("Restored completed column from state_id")
     op.alter_column("report_item", "completed", nullable=False)
@@ -324,7 +326,6 @@ def downgrade() -> None:
     op.drop_column("report_item", "state_id")
 
     # Delete state definition permissions
-    bind = op.get_bind()
     session = orm.Session(bind=bind)
 
     logger.info("Deleting state definition permissions...")
