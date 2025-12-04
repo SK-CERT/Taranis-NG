@@ -1050,7 +1050,7 @@ class CollectorsNodeResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
     @auth_required("CONFIG_COLLECTORS_NODE_DELETE")
-    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus]:
         """Delete a collectors node.
 
         Args:
@@ -1059,7 +1059,7 @@ class CollectorsNodeResource(Resource):
             (str, int): The result of the delete
         """
         try:
-            collectors_node.CollectorsNode.delete(node_id)
+            return collectors_node.CollectorsNode.delete(node_id)
         except Exception as ex:
             msg = "Could not delete collectors node"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)

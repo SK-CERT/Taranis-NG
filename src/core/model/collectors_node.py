@@ -1,28 +1,25 @@
 """Collectors Node Model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.collector import Collector
+    from model.collectors_node import CollectorsNode
+
 import uuid
 from datetime import datetime
-from marshmallow import post_load
-from sqlalchemy import orm, or_
+from http import HTTPStatus
 
 from managers.db_manager import db
 from managers.log_manager import logger
-from shared.schema.collectors_node import CollectorsNodeSchema, CollectorsNodePresentationSchema
+from marshmallow import post_load
+from model.parameter import Parameter
+from sqlalchemy import or_, orm
 
-
-class NewCollectorsNodeSchema(CollectorsNodeSchema):
-    """New Collectors Node Schema."""
-
-    @post_load
-    def make_collectors_node(self, data, **kwargs):
-        """Create Collectors Node object.
-
-        Args:
-            data (dict): The data to load
-        Returns:
-            (CollectorsNode): The CollectorsNode object
-        """
-        return CollectorsNode(name=data["name"], description=data["description"], api_url=data["api_url"], api_key=data["api_key"])
+from shared.common import TZ
+from shared.schema.collectors_node import CollectorsNodePresentationSchema, CollectorsNodeSchema
 
 
 class CollectorsNode(db.Model):
@@ -51,7 +48,7 @@ class CollectorsNode(db.Model):
 
     collectors = db.relationship("Collector", back_populates="node", cascade="all")
 
-    def __init__(self, name, description, api_url, api_key):
+    def __init__(self, name: str, description: str, api_url: str, api_key: str) -> None:
         """Initialize CollectorsNode object."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -61,12 +58,12 @@ class CollectorsNode(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct CollectorsNode object."""
         self.tag = "mdi-server-network"
 
     @classmethod
-    def get_by_api_key(cls, api_key):
+    def get_by_api_key(cls, api_key: str) -> CollectorsNode:
         """Get a node by API key.
 
         Args:
@@ -77,19 +74,19 @@ class CollectorsNode(db.Model):
         return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
-    def get_by_api_key_id(cls, api_key, id):
+    def get_by_api_key_id(cls, api_key: str, node_id: str) -> CollectorsNode:
         """Get a node by API key and node ID (more nodes can have the same key).
 
         Args:
             api_key (str): The API key
-            id (str): The ID of the collectors node
+            node_id (str): The ID of the collectors node
         Returns:
             (CollectorsNode): The CollectorsNode object
         """
-        return cls.query.filter_by(api_key=api_key, id=id).first()
+        return cls.query.filter_by(api_key=api_key, id=node_id).first()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[CollectorsNode]:
         """Get all nodes.
 
         Returns:
@@ -98,7 +95,7 @@ class CollectorsNode(db.Model):
         return cls.query.order_by(db.asc(CollectorsNode.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[CollectorsNode], int]:
         """Get nodes.
 
         Args:
@@ -116,18 +113,18 @@ class CollectorsNode(db.Model):
         return query.order_by(db.asc(CollectorsNode.name)).all(), query.count()
 
     @classmethod
-    def get_by_id(cls, id):
+    def get_by_id(cls, node_id: str) -> CollectorsNode:
         """Get a node by ID.
 
         Args:
-            id (str): The ID of the node
+            node_id (str): The ID of the node
         Returns:
             (CollectorsNode): The CollectorsNode object
         """
-        return cls.query.filter_by(id=id).first()
+        return cls.query.filter_by(id=node_id).first()
 
     @classmethod
-    def get_by_name(cls, name):
+    def get_by_name(cls, name: str) -> CollectorsNode:
         """Get a node by name.
 
         Args:
@@ -137,7 +134,7 @@ class CollectorsNode(db.Model):
         """
         return cls.query.filter_by(name=name).first()
 
-    def find_collector_by_type(self, collector_type):
+    def find_collector_by_type(self, collector_type: str) -> Collector | None:
         """Find a collector by type.
 
         Args:
@@ -152,7 +149,7 @@ class CollectorsNode(db.Model):
         return None
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all nodes in JSON format.
 
         Args:
@@ -170,8 +167,8 @@ class CollectorsNode(db.Model):
             #   orange (last ping late) < 300s
             #   red (no ping in a long time) > 300s
             try:
-                time_inactive = datetime.now() - max(nodes[i].created, nodes[i].last_seen)
-                items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"
+                time_inactive = datetime.now(TZ) - max(nodes[i].created.replace(tzinfo=TZ), nodes[i].last_seen.replace(tzinfo=TZ))
+                items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"  # noqa: PLR2004
             except Exception as ex:
                 logger.exception(f"Cannot update collector status: {ex}")
                 # if never collected before
@@ -180,7 +177,7 @@ class CollectorsNode(db.Model):
         return {"total_count": count, "items": items}
 
     @classmethod
-    def add_new(cls, node_data, collectors):
+    def add_new(cls, node_data: dict, collectors: list) -> CollectorsNode:
         """Add a new node.
 
         Args:
@@ -197,7 +194,7 @@ class CollectorsNode(db.Model):
         return node
 
     @classmethod
-    def update(cls, node_id, node_data, collectors):
+    def update(cls, node_id: str, node_data: dict, collectors: list) -> CollectorsNode:
         """Update a node.
 
         Args:
@@ -225,22 +222,65 @@ class CollectorsNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, node_id):
+    def delete(cls, node_id: str) -> tuple[dict, HTTPStatus]:
         """Delete a node.
 
         Args:
             node_id (str): The ID of the node
         """
         node = db.session.get(cls, node_id)
+
+        exist_some_source = False
         for collector in node.collectors:
             if len(collector.sources) > 0:
-                raise Exception("Collectors has mapped sources")
+                exist_some_source = True
+                break
+
+        if exist_some_source:
+            node_def = cls.query.filter(CollectorsNode.id != node_id).first()
+            if node_def is None:
+                msg = "Cannot delete the last collectors node. If you need to delete it, delete associated OSINT sources first!"
+                logger.warning(msg)
+                return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+            for collector in node.collectors:
+                for source in collector.sources:
+                    # remap collector_id
+                    for coll_def in node_def.collectors:
+                        if coll_def.type == collector.type:
+                            source.collector_id = coll_def.id
+                            # remap parameter values
+                            for pv in source.parameter_values:
+                                for coll_def_param in coll_def.parameters:
+                                    if pv.parameter.key == coll_def_param.key:
+                                        pv.parameter_id = coll_def_param.id
+                            break
+            db.session.commit()
 
         db.session.delete(node)
         db.session.commit()
+        Parameter.delete_unused()
+        return "", HTTPStatus.OK
 
-    def updateLastSeen(self):
+    def update_last_seen(self) -> None:
         """Update the last seen date of the node."""
-        self.last_seen = datetime.now()
+        self.last_seen = datetime.now(TZ)
         db.session.add(self)
         db.session.commit()
+
+
+class NewCollectorsNodeSchema(CollectorsNodeSchema):
+    """New Collectors Node Schema."""
+
+    @post_load
+    def make_collectors_node(self, data: dict, **kwargs) -> CollectorsNode:  # noqa: ANN003, ARG002
+        """Create Collectors Node object.
+
+        Args:
+            data (dict): The data to load
+            **kwargs: Additional arguments.
+
+        Returns:
+            (CollectorsNode): The CollectorsNode object
+        """
+        return CollectorsNode(name=data["name"], description=data["description"], api_url=data["api_url"], api_key=data["api_key"])

@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from managers.db_manager import db
 from marshmallow import post_load
 
+from shared.common import TZ
 from shared.schema.data_provider import DataProviderSchema
 
 
@@ -114,7 +115,7 @@ class DataProvider(db.Model):
         schema = NewDataProviderSchema()
         new = schema.load(data)
         new.updated_by = user_name
-        new.updated_at = datetime.now(tz=UTC)
+        new.updated_at = datetime.now(TZ)
         db.session.add(new)
         db.session.commit()
         return new
@@ -138,7 +139,7 @@ class DataProvider(db.Model):
         old.user_agent = new.user_agent
         old.web_url = new.web_url
         old.updated_by = user_name
-        old.updated_at = datetime.now(tz=UTC)
+        old.updated_at = datetime.now(TZ)
         db.session.commit()
         return old
 

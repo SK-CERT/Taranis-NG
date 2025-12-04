@@ -7,11 +7,13 @@ Create Date: 2025-08-06 13:41:18.166310
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import inspect, orm
+
+from shared.common import TZ
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +126,7 @@ def upgrade() -> None:
                 api_url="https://euvdservices.enisa.europa.eu/api/",
                 api_key="",
                 user_agent=default_user_agent,
-                updated_at=datetime.now(tz=UTC),
+                updated_at=datetime.now(TZ),
                 updated_by=default_updated_by,
                 web_url="https://euvd.enisa.europa.eu/vulnerability/",
             ),
@@ -136,7 +138,7 @@ def upgrade() -> None:
                 api_url="https://services.nvd.nist.gov/rest/json/cves/2.0",
                 api_key="",
                 user_agent=default_user_agent,
-                updated_at=datetime.now(tz=UTC),
+                updated_at=datetime.now(TZ),
                 updated_by=default_updated_by,
                 web_url="https://nvd.nist.gov/vuln/detail/",
             ),
@@ -148,7 +150,7 @@ def upgrade() -> None:
                 api_url="https://services.nvd.nist.gov/rest/json/cpes/2.0",
                 api_key="",
                 user_agent=default_user_agent,
-                updated_at=datetime.now(tz=UTC),
+                updated_at=datetime.now(TZ),
                 updated_by=default_updated_by,
                 web_url="https://nvd.nist.gov/products/cpe/detail/",
             ),
@@ -160,7 +162,7 @@ def upgrade() -> None:
                 api_url="https://cwe-api.mitre.org/api/v1/",
                 api_key="",
                 user_agent=default_user_agent,
-                updated_at=datetime.now(tz=UTC),
+                updated_at=datetime.now(TZ),
                 updated_by=default_updated_by,
                 web_url="https://cwe.mitre.org/data/definitions/",
             ),
@@ -172,7 +174,7 @@ def upgrade() -> None:
                 api_url="https://api.first.org/data/v1/epss",
                 api_key="",
                 user_agent=default_user_agent,
-                updated_at=datetime.now(tz=UTC),
+                updated_at=datetime.now(TZ),
                 updated_by=default_updated_by,
                 web_url="",
             ),
