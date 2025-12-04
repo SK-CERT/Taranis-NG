@@ -1,7 +1,7 @@
 """Collector cascade delete.
 
 Revision ID: 3d26f8408c91
-Revises: fdc6bba17c9b
+Revises: 23a431775391
 Create Date: 2025-11-10 10:45:32.337618
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "3d26f8408c91"
-down_revision = "fdc6bba17c9b"
+down_revision = "23a431775391"
 branch_labels = None
 depends_on = None
 
