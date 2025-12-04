@@ -991,6 +991,7 @@ class ReportItem(db.Model):
                     StateDefinition.color,
                     StateDefinition.icon,
                 )
+                .order_by(db.asc(func.count(cls.id)))
                 .all()
             )
             for _state_id, count, display_name, color, icon in result:
