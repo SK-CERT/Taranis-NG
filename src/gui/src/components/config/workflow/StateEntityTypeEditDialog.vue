@@ -118,7 +118,7 @@
                     is_active: true,
                     sort_order: 0
                 },
-                entityTypes: ["report_item", "product"],
+                entityTypes: ["product", "report_item"],
                 stateTypes: ["normal", "initial", "final"]
             };
         },
