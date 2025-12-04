@@ -146,8 +146,8 @@
                     sort_order: 0
                 },
                 entityTypeFilter: [
+                    { text: this.$t('workflow.entity_types.product'), value: 'product' },
                     { text: this.$t('workflow.entity_types.report_item'), value: 'report_item' },
-                    { text: this.$t('workflow.entity_types.product'), value: 'product' }
                 ]
             };
         },
