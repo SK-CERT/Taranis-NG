@@ -14,7 +14,7 @@ dependencies = [
     "Jinja2==3.1.6",
     "marshmallow==4.1.0",
     "python-dotenv==1.2.1",
-    "weasyprint==66.0"
+    "weasyprint==67.0"
 ]
 
 [build-system]
