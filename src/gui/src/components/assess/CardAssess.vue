@@ -64,18 +64,21 @@
                                             {{ itemLink }}
                                         </div>
 
-                                        <span class="caption font-weight-bold grey--text pl-2 pr-1">
-                                            <v-icon color="grey" size="12">mdi-thumb-up</v-icon> {{ card.likes }}
+                                        <span class="caption font-weight-bold grey--text pl-2">
+                                            <v-icon color="grey" size="12">mdi-thumb-up</v-icon>
+                                            {{ card.likes }}
                                         </span>
 
-                                        <span class="caption font-weight-bold grey--text pl-1 pr-2">
-                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ card.dislikes }}
+                                        <span class="caption font-weight-bold grey--text pl-2">
+                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon>
+                                            {{ card.dislikes }}
                                         </span>
 
-                                        <v-btn v-if="card.in_reports_count > 0" depressed x-small
-                                               color="orange lighten-2">
-                                            {{ $t('card_item.in_analyze') }}
-                                        </v-btn>
+                                        <span v-if="card.in_reports_count > 0" class="pl-2">
+                                            <v-btn depressed x-small color="orange lighten-2">{{ $t('card_item.in_analyze') }}</v-btn>
+                                        </span>
+
+                                        <v-icon v-if="card.comments != ''" class="pl-2" color="orange lighten-2">mdi-comment</v-icon>
                                     </v-col>
                                     <v-col cols="4">
                                         <!--HOVER TOOLBAR-->
