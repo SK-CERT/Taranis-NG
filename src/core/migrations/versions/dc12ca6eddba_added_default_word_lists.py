@@ -1,4 +1,4 @@
-"""added default word lists
+"""added default word lists.
 
 Revision ID: dc12ca6eddba
 Revises: ff127a2a95f4
@@ -6,8 +6,8 @@ Create Date: 2022-07-01 23:42:43.486451
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
 
@@ -22,19 +22,24 @@ depends_on = None
 
 
 class WordListREVdc12ca6eddba(Base):
+    """Word list model."""
+
     __tablename__ = "word_list"
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(), nullable=False)
     description = sa.Column(sa.String(), nullable=False)
     use_for_stop_words = sa.Column(sa.Boolean, default=False)
 
-    def __init__(self, name, description, use_for_stop_words=False):
+    def __init__(self, name: str, description: str, use_for_stop_words: bool = False) -> None:
+        """Initialize word list."""
         self.name = name
         self.description = description
         self.use_for_stop_words = use_for_stop_words
 
 
 class WordListCategoryREVdc12ca6eddba(Base):
+    """Word list category model."""
+
     __tablename__ = "word_list_category"
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(), nullable=False)
@@ -42,28 +47,32 @@ class WordListCategoryREVdc12ca6eddba(Base):
     word_list_id = sa.Column(sa.Integer, sa.ForeignKey("word_list.id"))
     link = sa.Column(sa.String(), nullable=True, default=None)
 
-    def __init__(self, name, description, word_list_id, link):
+    def __init__(self, name: str, description: str, word_list_id: int, link: str) -> None:
+        """Initialize word list category."""
         self.name = name
         self.description = description
         self.word_list_id = word_list_id
         self.link = link
 
 
-def upgrade():
+def upgrade() -> None:
+    """Add default word lists."""
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
     # English
 
     en_wordlist = WordListREVdc12ca6eddba(
-        "Default EN stop list", "English stop-word list packed with the standard Taranis NG installation.", True
+        "Default EN stop list",
+        "English stop-word list packed with the standard Taranis NG installation.",
+        use_for_stop_words=True,
     )
     session.add(en_wordlist)
     session.commit()
 
     en_wordlist_category = WordListCategoryREVdc12ca6eddba(
         "Default EN stop list",
-        "Source: https://www.maxqda.de/hilfe-mx20-dictio/stopp-listen",
+        "Source: https://github.com/stopwords-iso/stopwords-en/blob/master/stopwords-en.txt",
         en_wordlist.id,
         "https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/resources/wordlists/en_complete.csv",
     )
@@ -73,7 +82,9 @@ def upgrade():
     # Slovak
 
     sk_wordlist = WordListREVdc12ca6eddba(
-        "Default SK stop list", "Slovak stop-word list packed with the standard Taranis NG installation.", True
+        "Default SK stop list",
+        "Slovak stop-word list packed with the standard Taranis NG installation.",
+        use_for_stop_words=True,
     )
     session.add(sk_wordlist)
     session.commit()
@@ -90,7 +101,9 @@ def upgrade():
     # Highlighting
 
     highlighting_wordlist = WordListREVdc12ca6eddba(
-        "Default highlighting wordlist", "Default highlighting list packed with the standard Taranis NG installation.", False
+        "Default highlighting wordlist",
+        "Default highlighting list packed with the standard Taranis NG installation.",
+        use_for_stop_words=False,
     )
     session.add(highlighting_wordlist)
     session.commit()
@@ -105,5 +118,5 @@ def upgrade():
     session.commit()
 
 
-def downgrade():
-    pass
+def downgrade() -> None:
+    """Remove default word lists."""
