@@ -4,14 +4,11 @@
             <slot name="header">
                 <v-row justify="center">
                     <!-- SORT -->
-                    <v-chip-group
-                            v-if="values.length > 1"
-                            active-class="success"
-                            color=""
-                            class="pr-4"
-                            mandatory
-
-                    >
+                    <v-chip-group v-if="values.length > 1"
+                                  active-class="success"
+                                  color=""
+                                  class="pr-4"
+                                  mandatory>
                         <v-chip small class="px-0 mr-1" :title="$t('report_item.tooltip.sort_time')">
                             <v-icon class="px-2" small center @click="sort(false)">mdi-clock-outline</v-icon>
                         </v-chip>
@@ -36,37 +33,32 @@
 </template>
 
 <script>
-export default {
-    name: "AttributeItemLayout",
-    props: {
-        add_button: null,
-        values: Array
-    },
-    methods: {
-        add() {
-            this.$emit('add-value');
+    export default {
+        name: "AttributeItemLayout",
+        props: {
+            add_button: null,
+            values: Array
         },
+        methods: {
+            add() {
+                this.$emit('add-value');
+            },
 
-        sort(my_first, user_name) {
-            this.values.sort(function (a, b) {
+            sort(my_first, user_name) {
+                this.values.sort(function (a, b) {
 
-                if (my_first) {
-                    if (user_name === a.user.name && user_name !== b.user.name) {
-                        return 1
-                    } else if (user_name !== a.user.name && user_name === b.user.name) {
-                        return -1
+                    if (my_first) {
+                        if (user_name === a.user.name && user_name !== b.user.name) {
+                            return -1
+                        } else if (user_name !== a.user.name && user_name === b.user.name) {
+                            return 1
+                        }
                     }
-                }
-
-                if (a.last_updated < b.last_updated) {
-                    return -1
-                } else if (a.last_updated > b.last_updated) {
-                    return 1
-                } else {
-                    return 1
-                }
-            });
+                    if (a.id < b.id) return -1;
+                    if (a.id > b.id) return 1;
+                    return 0;
+                });
+            }
         }
     }
-}
 </script>
