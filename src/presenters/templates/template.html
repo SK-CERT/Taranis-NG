@@ -7,13 +7,6 @@
     <meta name="keywords" content="Security, Vulnerabilities, Report">
     <title>VULNERABILITY REPORT</title>
     <style>
-        html {
-            font-family: sans-serif;
-            line-height: 1.15;
-            -webkit-text-size-adjust: 100%;
-            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-        }
-
         body {
             padding: 0;
             margin: 0;
@@ -26,34 +19,81 @@
             background-color: #fff;
         }
 
+        h1 {
+            border-bottom: solid 1px grey;
+        }
+
+        html {
+            font-family: sans-serif;
+            line-height: 1.15;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+
+        input {
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 1px solid rgba(0,0,0,.15);
+            border-radius: 0;
+            outline: 0;
+            background-color: transparent;
+        }
+
+        input[type=checkbox] {
+            box-sizing: border-box;
+            padding: 0;
+        }
+
         table {
             border-collapse: collapse;
+        }
+
+        td.text_in_footer_table {
+            padding: 5px 15px 5px 15px;
         }
 
         th {
             text-align: inherit;
         }
 
-        input[type=checkbox] {
-            box-sizing: border-box;
-            padding: 0
+        .align-middle {
+            vertical-align: middle !important;
         }
 
-        h1 {
-            border-bottom: solid 1px grey;
+        .bold {
+            font-weight: 700;
         }
 
-        input {
-            font-size: 1rem;
-            line-height: 1.5;
-            border: 1px solid rgba(0, 0, 0, .15);
-            border-radius: 0;
-            outline: 0;
-            background-color: transparent
+        .checkbox-button__control {
+            position: relative;
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            margin-left: 5px;
+            vertical-align: middle;
+            background-color: inherit;
+            border: 1px solid gray;
         }
 
-        [tabindex="-1"]:focus:not(:focus-visible) {
-            outline: 0 !important;
+        .checkbox-button__input {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .checkbox-button__input:checked+.checkbox-button__control {
+            border-color: gray;
+        }
+
+        .checkbox-button__input:checked+.checkbox-button__control:after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 12px;
+            height: 12px;
+            background-color: black;
         }
 
         .container {
@@ -62,6 +102,128 @@
             padding-left: 15px;
             margin-right: auto;
             margin-left: auto;
+        }
+
+        .crlf {
+            white-space: pre-line;
+        }
+
+        .cvss {
+            color: red;
+            font-weight: 700;
+        }
+
+        .cvss_left {
+            padding-left: 8px;
+        }
+
+        .footer_color {
+            background-color: lightgray;
+        }
+
+        .footer_text {
+            font-size: 12px;
+        }
+
+        .header_info {
+            font-size: 12px;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem !important;
+        }
+
+        .number {
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .py-0 {
+            padding-top: 0 !important;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #212529;
+        }
+
+        .table tbody+tbody {
+            border-top: 2px solid #dee2e6;
+        }
+
+        .table th, .table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #dee2e6;
+        }
+
+        .table-bordered thead th, .table-bordered thead td {
+            border-bottom-width: 2px;
+        }
+
+        .table-borderless th, .table-borderless td, .table-borderless thead th, .table-borderless tbody+tbody {
+            border: 0;
+        }
+
+        .table-sm th, .table-sm td {
+            padding: 0.3rem;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
+        .text-justify {
+            text-align: justify !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .text_bold {
+            font-weight: 700;
+        }
+
+        .text_in_tab {
+            font-size: 14px;
+        }
+
+        .th_data {
+            background-color: #bfd5ed;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .w15 {
+            width: 15%;
+        }
+
+        .w20 {
+            width: 20%;
+        }
+
+        .w30 {
+            width: 30%;
         }
 
         @media (min-width: 576px) {
@@ -86,187 +248,6 @@
             .container {
                 max-width: 1140px;
             }
-        }
-
-        .table {
-            width: 100%;
-            margin-bottom: 1rem;
-            color: #212529;
-        }
-
-        .table th,
-        .table td {
-            padding: 0.75rem;
-            vertical-align: top;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .table thead th {
-            vertical-align: bottom;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .table tbody+tbody {
-            border-top: 2px solid #dee2e6;
-        }
-
-        .table-sm th,
-        .table-sm td {
-            padding: 0.3rem;
-        }
-
-        .table-bordered {
-            border: 1px solid #dee2e6;
-        }
-
-        .table-bordered th,
-        .table-bordered td {
-            border: 1px solid #dee2e6;
-        }
-
-        .table-bordered thead th,
-        .table-bordered thead td {
-            border-bottom-width: 2px;
-        }
-
-        .table-borderless th,
-        .table-borderless td,
-        .table-borderless thead th,
-        .table-borderless tbody+tbody {
-            border: 0;
-        }
-
-        .text-center {
-            text-align: center !important;
-        }
-
-        .text-justify {
-            text-align: justify !important;
-        }
-
-        .align-middle {
-            vertical-align: middle !important;
-        }
-
-        .py-0 {
-            padding-top: 0 !important;
-        }
-
-        .mt-2 {
-            margin-top: 0.5rem !important;
-        }
-
-        .text-right {
-            text-align: right !important;
-        }
-
-        .text-center {
-            text-align: center !important;
-        }
-
-        .title {
-            font-size: 20px;
-            font-weight: 700
-        }
-
-        .number {
-            text-align: right;
-            font-size: 12px
-        }
-
-        .w20 {
-            width: 20%
-        }
-
-        .header_info {
-            font-size: 12px
-        }
-
-        .w15 {
-            width: 15%
-        }
-
-        .cvss {
-            color: red;
-            font-weight: 700
-        }
-
-        .cvss_left {
-            padding-left: 8px;
-        }
-
-        .bold {
-            font-weight: 700
-        }
-
-        .th_data {
-            background-color: #BFD5ED;
-            font-size: 12px;
-            font-weight: 700
-        }
-
-        .text_in_tab {
-            font-size: 14px
-        }
-
-        .checkbox-button__input {
-            opacity: 0;
-            position: absolute
-        }
-
-        .checkbox-button__control {
-            position: relative;
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            margin-right: 5px;
-            margin-left: 5px;
-            vertical-align: middle;
-            background-color: inherit;
-            border: 1px solid gray
-        }
-
-        .checkbox-button__input:checked+.checkbox-button__control:after {
-            content: "";
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 11px;
-            height: 11px;
-            background-color: black
-        }
-
-        .checkbox-button__input:checked+.checkbox-button__control {
-            border-color: gray
-        }
-
-        .checkbox-button__control {
-            transform: scale(0.75)
-        }
-
-        .footer_text {
-            font-size: 12px
-        }
-
-        .footer_color {
-            background-color: lightgray
-        }
-
-        .text_bold {
-            font-weight: 700
-        }
-
-        .w30 {
-            width: 30%
-        }
-
-        td.text_in_footer_table {
-            padding: 5px 15px 5px 15px
-        }
-
-        .crlf {
-           white-space: pre-line;
         }
     </style>
 </head>
