@@ -583,9 +583,10 @@ class NewsItem(db.Model):
         NewsItemAggregate.update_status(news_item.news_item_aggregate_id)
         db.session.commit()
 
+        osint_source_ids = set()  # used for remote_access SSE event
         if "vote" in data:
-            return "success", {news_item.news_item_data.osint_source_id}, HTTPStatus.OK
-        return "success", {}, HTTPStatus.OK
+            osint_source_ids.add(news_item.news_item_data.osint_source_id)
+        return "success", osint_source_ids, HTTPStatus.OK
 
     def update_status(self, data: dict, user_id: int) -> None:
         """Update status.
@@ -1088,7 +1089,7 @@ class NewsItemAggregate(db.Model):
             if news_item.important is False:
                 all_important = False
 
-        osint_source_ids = set()
+        osint_source_ids = set()  # used for remote_access SSE event
 
         for news_item in aggregate.news_items:
             if NewsItem.allowed_with_acl(news_item.id, user, see=False, access=False, modify=True):

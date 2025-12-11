@@ -115,8 +115,9 @@ class AddNewsItems(Resource):
             collectors_node (CollectorsNode): The collectors node
         """
         osint_source_ids = news_item.NewsItemAggregate.add_news_items(request.json)
-        sse_manager.news_items_updated()
-        sse_manager.remote_access_news_items_updated(osint_source_ids)
+        if osint_source_ids:  # we create some news items
+            sse_manager.news_items_updated()
+            sse_manager.remote_access_news_items_updated(osint_source_ids)
 
 
 class CollectorStatusUpdate(Resource):

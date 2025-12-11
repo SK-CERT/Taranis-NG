@@ -1,20 +1,32 @@
 """Bots API endpoints."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from http import HTTPStatus
+
+    from flask_restful import Api
+    from model.bots_node import BotsNode
+
 from flask import request
 from flask_restful import Resource, reqparse
-
+from managers.auth_manager import api_key_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
-from managers.auth_manager import api_key_required
 from model import bot_preset, news_item, word_list
 
 
-class BotPresetsForBots(Resource):
+class BotPresetsResource(Resource):
     """Bot presets for bots API endpoint."""
 
     @api_key_required("bots")
-    def post(self, bots_node=None):
+    def post(self, bots_node: BotsNode = None) -> dict:
         """Add a new bot preset.
+
+        Args:
+            bots_node (BotsNode): The bots node
 
         Returns:
             (dict): The new bot preset
@@ -28,37 +40,43 @@ class BotPresetsForBots(Resource):
         return bot_preset.BotPreset.get_all_for_bot_json(bots_node, parameters.bot_type)
 
 
-class BotGroupAction(Resource):
+class GroupActionResource(Resource):
     """Bot group action API endpoint."""
 
     @api_key_required("bots")
-    def put(self, bots_node=None):
+    def put(self, bots_node: BotsNode = None) -> tuple[str, HTTPStatus]:  # noqa: ARG002
         """Group action for news items.
+
+        Args:
+            bots_node (BotsNode): The bots node
 
         Returns:
             response (dict): The response
-            code (int): The response code
+            code (HTTPStatus): The response code
         """
         response, osint_source_ids, code = news_item.NewsItemAggregate.group_action(request.json, None)
         sse_manager.news_items_updated()
-        if len(osint_source_ids) > 0:
+        if osint_source_ids:
             sse_manager.remote_access_news_items_updated(osint_source_ids)
         return response, code
 
 
-class NewsItemData(Resource):
+class NewsItemDataResource(Resource):
     """News item data API endpoint."""
 
     @api_key_required("bots")
-    def get(self, bots_node=None):
+    def get(self, bots_node: BotsNode = None) -> dict:  # noqa: ARG002
         """Get all news items data.
+
+        Args:
+            bots_node (BotsNode): The bots node
 
         Returns:
             (dict): All news items data
         """
         try:
             limit = None
-            if "limit" in request.args and request.args["limit"]:
+            if request.args.get("limit"):
                 limit = request.args["limit"]
         except Exception as ex:
             msg = "Get NewsItemData failed"
@@ -68,100 +86,103 @@ class NewsItemData(Resource):
         return news_item.NewsItemData.get_all_news_items_data(limit)
 
 
-class UpdateNewsItemAttributes(Resource):
+class NewsItemAttributesResource(Resource):
     """Update news item attributes API endpoint."""
 
     @api_key_required("bots")
-    def put(self, news_item_data_id, bots_node=None):
+    def put(self, news_item_data_id: int, bots_node: BotsNode = None) -> None:  # noqa: ARG002
         """Update news item attributes.
 
         Args:
             news_item_data_id (str): The news item data ID
+            bots_node (BotsNode): The bots node
+
         Returns:
             (dict): The updated news item attributes
         """
         news_item.NewsItemData.update_news_item_attributes(news_item_data_id, request.json)
 
 
-class GetNewsItemsAggregate(Resource):
+class NewsItemAggregatesResource(Resource):
     """Get news items aggregate API endpoint."""
 
     @api_key_required("bots")
-    def get(self, group_id, bots_node=None):
+    def get(self, group_id: int, bots_node: BotsNode = None) -> dict:  # noqa: ARG002
         """Get news items aggregate.
 
         Args:
-            group_id (str): The group ID
+            group_id (int): The group ID
+            bots_node (BotsNode): The bots node
+
         Returns:
             (dict): The news items aggregate
         """
         return news_item.NewsItemAggregate.get_news_items_aggregate(group_id, request.json)
 
 
-class Categories(Resource):
+class CategoriesResource(Resource):
     """Word list categories API endpoint."""
 
     @api_key_required("bots")
-    def get(self, category_id, bots_node=None):
+    def get(self, category_id: int, bots_node: BotsNode = None) -> dict:  # noqa: ARG002
         """Get word list categories.
 
         Args:
             category_id (int): The category ID
+            bots_node (BotsNode): The bots node
+
         Returns:
             (dict): The word list categories
         """
         return word_list.WordListCategory.get_categories(category_id)
 
     @api_key_required("bots")
-    def put(self, category_id, bots_node=None):
+    def put(self, category_id: int, bots_node: BotsNode = None) -> None:  # noqa: ARG002
         """Update word list categories.
 
         Args:
             category_id (int): The category ID
-        Returns:
-            (dict): The updated word list categories
+            bots_node (BotsNode): The bots node
         """
-        return word_list.WordList.add_word_list_category(category_id, request.json)
+        word_list.WordList.add_word_list_category(category_id, request.json)
 
 
-class Entries(Resource):
+class EntriesResource(Resource):
     """Word list entries API endpoint."""
 
     @api_key_required("bots")
-    def delete(self, category_id, entry_name, bots_node=None):
+    def delete(self, category_id: int, entry_name: str, bots_node: BotsNode = None) -> None:  # noqa: ARG002
         """Delete word list entries.
 
         Args:
             category_id (int): The category ID
             entry_name (str): The entry name
-        Returns:
-            (dict): The word list entries
+            bots_node (BotsNode): The bots node
         """
-        return word_list.WordListEntry.delete_entries(category_id, entry_name)
+        word_list.WordListEntry.delete_entries(category_id, entry_name)
 
     @api_key_required("bots")
-    def put(self, category_id, entry_name, bots_node=None):
+    def put(self, category_id: int, entry_name: str, bots_node: BotsNode = None) -> None:  # noqa: ARG002
         """Update word list entries.
 
         Args:
             category_id (int): The category ID
             entry_name (str): The entry name
-        Returns:
-            (dict): The updated word list entries
+            bots_node (BotsNode): The bots node
         """
-        return word_list.WordListEntry.update_word_list_entries(category_id, entry_name, request.json)
+        word_list.WordListEntry.update_word_list_entries(category_id, entry_name, request.json)
 
 
-def initialize(api):
+def initialize(api: Api) -> None:
     """Initialize bots API endpoints.
 
     Args:
         api (object): The API object
     """
-    api.add_resource(BotPresetsForBots, "/api/v1/bots/bots-presets")
-    api.add_resource(NewsItemData, "/api/v1/bots/news-item-data")
-    api.add_resource(UpdateNewsItemAttributes, "/api/v1/bots/news-item-data/<string:news_item_data_id>/attributes")
-    api.add_resource(BotGroupAction, "/api/v1/bots/news-item-aggregates-group-action")
-    api.add_resource(GetNewsItemsAggregate, "/api/v1/bots/news-item-aggregates-by-group/<string:group_id>")
-    api.add_resource(Categories, "/api/v1/bots/word-list-categories/<int:category_id>")
-    api.add_resource(Entries, "/api/v1/bots/word-list-categories/<int:category_id>/entries/<string:entry_name>")
+    api.add_resource(BotPresetsResource, "/api/v1/bots/bots-presets")
+    api.add_resource(NewsItemDataResource, "/api/v1/bots/news-item-data")
+    api.add_resource(NewsItemAttributesResource, "/api/v1/bots/news-item-data/<string:news_item_data_id>/attributes")
+    api.add_resource(GroupActionResource, "/api/v1/bots/news-item-aggregates-group-action")
+    api.add_resource(NewsItemAggregatesResource, "/api/v1/bots/news-item-aggregates-by-group/<string:group_id>")
+    api.add_resource(CategoriesResource, "/api/v1/bots/word-list-categories/<int:category_id>")
+    api.add_resource(EntriesResource, "/api/v1/bots/word-list-categories/<int:category_id>/entries/<string:entry_name>")

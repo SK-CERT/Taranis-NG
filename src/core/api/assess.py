@@ -113,7 +113,7 @@ class NewsItem(Resource):
         user = auth_manager.get_user_from_jwt()
         response, osint_source_ids, code = news_item.NewsItem.update(item_id, request.json, user.id)
         sse_manager.news_items_updated()
-        if len(osint_source_ids) > 0:
+        if osint_source_ids:
             sse_manager.remote_access_news_items_updated(osint_source_ids)
         return response, code
 
@@ -148,7 +148,7 @@ class NewsItemAggregate(Resource):
         user = auth_manager.get_user_from_jwt()
         response, osint_source_ids, code = news_item.NewsItemAggregate.update(aggregate_id, request.json, user)
         sse_manager.news_items_updated()
-        if len(osint_source_ids) > 0:
+        if osint_source_ids:
             sse_manager.remote_access_news_items_updated(osint_source_ids)
         return response, code
 
@@ -180,14 +180,16 @@ class GroupAction(Resource):
             (int): The response code
         """
         user = auth_manager.get_user_from_jwt()
-        if request.json["action"] == "DELETE":
-            response, code = news_item.NewsItemAggregate.group_action_delete(request.json, user)
-            sse_manager.news_items_updated()
-            return response, code
+        action = request.json.get("action")
+        osint_source_ids = set()
 
-        response, osint_source_ids, code = news_item.NewsItemAggregate.group_action(request.json, user)
+        if action == "DELETE":
+            response, code = news_item.NewsItemAggregate.group_action_delete(request.json, user)
+        else:
+            response, osint_source_ids, code = news_item.NewsItemAggregate.group_action(request.json, user)
+
         sse_manager.news_items_updated()
-        if len(osint_source_ids) > 0:
+        if osint_source_ids:
             sse_manager.remote_access_news_items_updated(osint_source_ids)
         return response, code
 
