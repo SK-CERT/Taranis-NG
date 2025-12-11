@@ -256,6 +256,7 @@ const messages_cs = {
     total_count: "Počet skupin zdrojů OSINT: ",
     default_group: "Nezařazeno",
     default_group_description: "Skupina pro nezařazené zdroje OSINT",
+    all: "Všechny zdroje",
   },
 
   role: {

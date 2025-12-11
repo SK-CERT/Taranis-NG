@@ -12,6 +12,10 @@ export function getUserWordLists() {
     return ApiService.get('/users/my-word-lists')
 }
 
+export function getAvailableWordLists(filter) {
+    return ApiService.get('/users/available-word-lists?search=' + filter.search)
+}
+
 export function updateUserWordLists(data) {
     return ApiService.put(`/users/my-word-lists`, data)
 }

@@ -759,11 +759,11 @@ class NewsItemAggregate(db.Model):
         return db.session.get(cls, news_item_aggregate_id)
 
     @classmethod
-    def get_by_group(cls, group_id: int, filters: dict, offset: int, limit: int, user: User) -> tuple[list[NewsItemAggregate], int]:
+    def get_by_group(cls, group_id: int | str, filters: dict, offset: int, limit: int, user: User) -> tuple[list[NewsItemAggregate], int]:
         """Get by group.
 
         Args:
-            group_id (int): Group ID
+            group_id (int | str): Group ID or "all" for all groups
             filters (dict): Filter
             offset (int): Offset
             limit (int): Limit
@@ -773,19 +773,27 @@ class NewsItemAggregate(db.Model):
         """
         query = cls.query.distinct().group_by(NewsItemAggregate.id)
 
-        query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
+        # Only filter by group if not requesting all groups
+        if group_id != "all":
+            query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
 
         query = query.join(NewsItem, NewsItem.news_item_aggregate_id == NewsItemAggregate.id)
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
         query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
 
-        query = query.outerjoin(
-            ACLEntry,
-            or_(
-                and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-                and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-            ),
-        )
+        # Build ACL conditions - check OSINT source, collector, and (when viewing all) group access
+        acl_conditions = [
+            and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
+            and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
+        ]
+
+        # When viewing all groups, also check OSINT source group ACL
+        if group_id == "all":
+            acl_conditions.append(
+                and_(NewsItemAggregate.osint_source_group_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP),
+            )
+
+        query = query.outerjoin(ACLEntry, or_(*acl_conditions))
 
         query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
@@ -832,11 +840,11 @@ class NewsItemAggregate(db.Model):
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
-    def get_by_group_json(cls, group_id: int, filters: dict, offset: int, limit: int, user: User) -> dict:
+    def get_by_group_json(cls, group_id: int | str, filters: dict, offset: int, limit: int, user: User) -> dict:
         """Get by group JSON.
 
         Args:
-            group_id (int): Group ID
+            group_id (int | str): Group ID or "all" for all groups
             filters (dict): Filter
             offset (int): Offset
             limit (int): Limit

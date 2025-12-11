@@ -18,6 +18,14 @@
             links: []
         }),
         mounted() {
+            // Add permanent "All" category
+            this.links.push({
+                icon: 'mdi-folder-multiple-outline',
+                title: this.$t('osint_source_group.all'),
+                route: '/assess/group/all',
+                id: 'all'
+            });
+
             this.$store.dispatch('getAllOSINTSourceGroupsAssess', {search:''})
                 .then(() => {
                     this.groups = this.$store.getters.getOSINTSourceGroups.items;
