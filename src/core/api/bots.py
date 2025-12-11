@@ -18,7 +18,7 @@ from managers.sse_manager import sse_manager
 from model import bot_preset, news_item, word_list
 
 
-class BotPresetsResource(Resource):
+class BotPresetsForBotsResource(Resource):
     """Bot presets for bots API endpoint."""
 
     @api_key_required("bots")
@@ -179,7 +179,7 @@ def initialize(api: Api) -> None:
     Args:
         api (object): The API object
     """
-    api.add_resource(BotPresetsResource, "/api/v1/bots/bots-presets")
+    api.add_resource(BotPresetsForBotsResource, "/api/v1/bots/bots-presets")
     api.add_resource(NewsItemDataResource, "/api/v1/bots/news-item-data")
     api.add_resource(NewsItemAttributesResource, "/api/v1/bots/news-item-data/<string:news_item_data_id>/attributes")
     api.add_resource(GroupActionResource, "/api/v1/bots/news-item-aggregates-group-action")
