@@ -77,13 +77,8 @@ class NewsItemsByGroup(Resource):
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
 
-            offset = None
-            if request.args.get("offset"):
-                offset = int(request.args["offset"])
-
-            limit = 50
-            if request.args.get("limit"):
-                limit = min(int(request.args["limit"]), HTTPStatus.OK)
+            offset = int(request.args.get("offset", 0))
+            limit = min(int(request.args.get("limit", 50)), HTTPStatus.OK)
         except Exception as ex:
             msg = "Get NewsItemsByGroup failed"
             logger.exception(f"{msg}: {ex}")

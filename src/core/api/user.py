@@ -16,8 +16,10 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import auth_manager
 from managers.auth_manager import auth_required
-from model import product_type, publisher_preset, word_list
+from model.product_type import ProductType
+from model.publisher_preset import PublisherPreset
 from model.user import Hotkey, UserWordList
+from model.word_list import WordList
 
 
 class UserHotkeys(Resource):
@@ -99,11 +101,9 @@ class AvailableWordLists(Resource):
         Returns:
             dict: A dictionary containing all word lists the user can access.
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         user = auth_manager.get_user_from_jwt()
-        return word_list.WordList.get_all_json(search, user, acl_check=True)
+        return WordList.get_all_json(search, user, acl_check=True)
 
 
 class UserProductTypes(Resource):
@@ -120,7 +120,7 @@ class UserProductTypes(Resource):
         Returns:
             list: A list of all product types in JSON format.
         """
-        return product_type.ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
+        return ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
 
 
 class UserPublisherPresets(Resource):
@@ -137,7 +137,7 @@ class UserPublisherPresets(Resource):
         Returns:
             list: A list of all publisher presets in JSON format.
         """
-        return publisher_preset.PublisherPreset.get_all_json(None)
+        return PublisherPreset.get_all_json(None)
 
 
 def initialize(api: Api) -> None:

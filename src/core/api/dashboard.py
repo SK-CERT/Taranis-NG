@@ -21,9 +21,7 @@ class Dashboard(Resource):
             (dict): The dashboard data.
         """
         try:
-            number_of_days = 0
-            if request.args.get("tag_cloud_day"):
-                number_of_days = min(int(request.args["tag_cloud_days"]), 7)
+            number_of_days = min(int(request.args.get("tag_cloud_day", 0)), 7)
         except Exception as ex:
             msg = "Get Dashboard failed"
             logger.exception(f"{msg}: {ex}")
