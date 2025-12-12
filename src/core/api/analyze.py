@@ -68,17 +68,9 @@ class ReportItems(Resource):
             if request.args.get("sort"):
                 report_filter["sort"] = request.args["sort"]
 
-            group = None
-            if request.args.get("group"):
-                group = request.args["group"]
-
-            offset = None
-            if request.args.get("offset"):
-                offset = int(request.args["offset"])
-
-            limit = 50
-            if request.args.get("limit"):
-                limit = min(int(request.args["limit"]), 200)
+            group = request.args.get("group")
+            offset = request.args.get("offset", 0)
+            limit = min(int(request.args.get("limit", 50)), 200)
         except Exception as ex:
             msg = "Get ReportItems failed"
             logger.exception(f"{msg}: {ex}")
@@ -267,15 +259,9 @@ class ReportItemAttributeEnums(Resource):
         Returns:
             (dict): report item attribute enums
         """
-        search = None
-        offset = 0
-        limit = 10
-        if request.args.get("search"):
-            search = request.args["search"]
-        if request.args.get("offset"):
-            offset = request.args["offset"]
-        if request.args.get("limit"):
-            limit = request.args["limit"]
+        search = request.args.get("search")
+        offset = request.args.get("offset", 0)
+        limit = request.args.get("limit", 10)
         return AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
 
 

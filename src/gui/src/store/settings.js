@@ -1,4 +1,4 @@
-import { getUserWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from "@/api/user";
+import { getUserWordLists, getAvailableWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from "@/api/user";
 import { getAllSettings, updateSetting } from "@/api/config";
 import Settings, { getSetting } from "@/services/settings";
 
@@ -6,7 +6,8 @@ const state = {
     settings: [],
     spellcheck: true,
     hotkeys: [],
-    word_lists: []
+    word_lists: [],
+    available_word_lists: []
 };
 
 const actions = {
@@ -29,6 +30,13 @@ const actions = {
         return getUserWordLists()
             .then(response => {
                 context.commit('setUserWordLists', response.data);
+            })
+    },
+
+    getAvailableWordLists(context, data) {
+        return getAvailableWordLists(data)
+            .then(response => {
+                context.commit('setAvailableWordLists', response.data);
             })
     },
 
@@ -67,6 +75,10 @@ const mutations = {
 
     setUserWordLists(state, word_lists) {
         state.word_lists = word_lists
+    },
+
+    setAvailableWordLists(state, word_lists) {
+        state.available_word_lists = word_lists.items
     },
 
     setUserHotkeys(state, hotkeys) {
@@ -140,6 +152,10 @@ const getters = {
 
     getProfileWordLists(state) {
         return state.word_lists;
+    },
+
+    getAvailableWordLists(state) {
+        return state.available_word_lists;
     },
 
     getProfileLanguage() {

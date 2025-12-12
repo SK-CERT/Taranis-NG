@@ -208,12 +208,10 @@
                 this.shortcuts = JSON.parse(JSON.stringify(this.$store.getters.getProfileHotkeys)) // Deep copy, don't change the original object until save
             });
 
-            if (this.checkPermission(Permissions.ASSESS_ACCESS)) {
-                this.$store.dispatch('getAllWordLists', { search: '' })
-                    .then(() => {
-                        this.word_lists = this.$store.getters.getWordLists.items
-                    });
-            }
+            this.$store.dispatch('getAvailableWordLists', { search: '' })
+                .then(() => {
+                    this.word_lists = this.$store.getters.getAvailableWordLists
+                });
         }
     }
 </script>

@@ -256,6 +256,7 @@ const messages_en = {
     total_count: "OSINT Source Sroup count: ",
     default_group: "Uncategorized",
     default_group_description: "Default group for uncategorized OSINT sources",
+    all: "All Sources",
   },
 
   role: {

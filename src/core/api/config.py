@@ -83,9 +83,7 @@ class AttributesResource(Resource):
         Returns:
             (dict): The attributes
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return attribute.Attribute.get_all_json(search)
 
     @auth_required("CONFIG_ATTRIBUTE_CREATE")
@@ -151,15 +149,9 @@ class AttributeEnumsResource(Resource):
         Returns:
             (dict): The attribute enums
         """
-        search = None
-        offset = 0
-        limit = 10
-        if request.args.get("search"):
-            search = request.args["search"]
-        if request.args.get("offset"):
-            offset = request.args["offset"]
-        if request.args.get("limit"):
-            limit = request.args["limit"]
+        search = request.args.get("search")
+        offset = request.args.get("offset", 0)
+        limit = request.args.get("limit", 10)
         return attribute.AttributeEnum.get_for_attribute_json(attribute_id, search, offset, limit)
 
     @auth_required("CONFIG_ATTRIBUTE_CREATE")
@@ -227,9 +219,7 @@ class AiProvidersResource(Resource):
         Returns:
             (dict): The AI models
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return ai_provider.AiProvider.get_all_json(search)
 
     @auth_required("CONFIG_AI_CREATE")
@@ -338,9 +328,7 @@ class DataProvidersResource(Resource):
         Returns:
             (dict): The data providers
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return data_provider.DataProvider.get_all_json(search)
 
     @auth_required("CONFIG_DATA_PROVIDER_CREATE")
@@ -371,9 +359,7 @@ class ReportItemTypesConfigResource(Resource):
         Returns:
             (dict): The report item types
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return report_item_type.ReportItemType.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_REPORT_TYPE_CREATE")
@@ -437,9 +423,7 @@ class ProductTypesResource(Resource):
         Returns:
             (dict): The product types
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return product_type.ProductType.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_PRODUCT_TYPE_CREATE")
@@ -503,9 +487,7 @@ class PermissionsResource(Resource):
         Returns:
             (dict): The permissions
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return Permission.get_all_json(search)
 
 
@@ -534,9 +516,7 @@ class RolesResource(Resource):
         Returns:
             (dict): The roles
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return role.Role.get_all_json(search)
 
     @auth_required("CONFIG_ROLE_CREATE")
@@ -600,9 +580,7 @@ class ACLEntriesResource(Resource):
         Returns:
             (dict): The ACL entries
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return acl_entry.ACLEntry.get_all_json(search)
 
     @auth_required("CONFIG_ACL_CREATE")
@@ -666,9 +644,7 @@ class OrganizationsResource(Resource):
         Returns:
             (dict): The organizations
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return organization.Organization.get_all_json(search)
 
     @auth_required("CONFIG_ORGANIZATION_CREATE")
@@ -732,9 +708,7 @@ class UsersResource(Resource):
         Returns:
             (dict): The users
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return user.User.get_all_json(search)
 
     @auth_required("CONFIG_USER_CREATE")
@@ -812,9 +786,7 @@ class ExternalUsersResource(Resource):
         Returns:
             (dict): The external users
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return user.User.get_all_external_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
@@ -880,9 +852,7 @@ class SettingsResource(Resource):
         Returns:
             (dict): The Settings
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         user = auth_manager.get_user_from_jwt()
         return setting.Setting.get_all_json(user, search)
 
@@ -944,9 +914,7 @@ class WordListsResource(Resource):
         Returns:
             (dict): The word lists
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return word_list.WordList.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_WORD_LIST_CREATE")
@@ -1010,9 +978,7 @@ class CollectorsNodesResource(Resource):
         Returns:
             (dict): The collectors nodes
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return collectors_node.CollectorsNode.get_all_json(search)
 
     @auth_required("CONFIG_COLLECTORS_NODE_CREATE")
@@ -1076,9 +1042,7 @@ class OSINTSourcesResource(Resource):
         Returns:
             (dict): The OSINT sources
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return osint_source.OSINTSource.get_all_json(search)
 
     @auth_required("CONFIG_OSINT_SOURCE_CREATE")
@@ -1184,9 +1148,7 @@ class OSINTSourceGroupsResource(Resource):
         Returns:
             (dict): The OSINT source groups
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return osint_source.OSINTSourceGroup.get_all_json(search, auth_manager.get_user_from_jwt(), acl_check=False)
 
     @auth_required("CONFIG_OSINT_SOURCE_GROUP_CREATE")
@@ -1255,9 +1217,7 @@ class RemoteAccessesResource(Resource):
         Returns:
             (dict): The remote accesses
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return remote.RemoteAccess.get_all_json(search)
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
@@ -1323,9 +1283,7 @@ class RemoteNodesResource(Resource):
         Returns:
             (dict): The remote nodes
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return remote.RemoteNode.get_all_json(search)
 
     @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
@@ -1411,9 +1369,7 @@ class PresentersNodesResource(Resource):
         Returns:
             (dict): The presenters nodes
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return presenters_node.PresentersNode.get_all_json(search)
 
     @auth_required("CONFIG_PRESENTERS_NODE_CREATE")
@@ -1477,9 +1433,7 @@ class PublisherNodesResource(Resource):
         Returns:
             (dict): The publisher nodes
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return publishers_node.PublishersNode.get_all_json(search)
 
     @auth_required("CONFIG_PUBLISHERS_NODE_CREATE")
@@ -1543,9 +1497,7 @@ class PublisherPresetsResource(Resource):
         Returns:
             (dict): The publisher presets
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return publisher_preset.PublisherPreset.get_all_json(search)
 
     @auth_required("CONFIG_PUBLISHER_PRESET_CREATE")
@@ -1609,9 +1561,7 @@ class BotNodesResource(Resource):
         Returns:
             (dict): The bot nodes
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return bots_node.BotsNode.get_all_json(search)
 
     @auth_required("CONFIG_BOTS_NODE_CREATE")
@@ -1675,9 +1625,7 @@ class BotPresetsResource(Resource):
         Returns:
             (dict): The bot presets
         """
-        search = None
-        if request.args.get("search"):
-            search = request.args["search"]
+        search = request.args.get("search")
         return bot_preset.BotPreset.get_all_json(search)
 
     @auth_required("CONFIG_BOT_PRESET_CREATE")

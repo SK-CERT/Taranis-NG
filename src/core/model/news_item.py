@@ -431,11 +431,11 @@ class NewsItem(db.Model):
         return total_relevance
 
     @classmethod
-    def get_all_by_group_and_source_query(cls, group_id: int, source_id: int, time_limit: datetime) -> Query:
+    def get_all_by_group_and_source_query(cls, group_id: str, source_id: int, time_limit: datetime) -> Query:
         """Get all news items by group and source query.
 
         Args:
-            group_id (int): Group ID
+            group_id (str): OSINT source group GUID
             source_id (int): Source ID
             time_limit (datetime): Time limit
         Returns:
@@ -722,7 +722,7 @@ class NewsItemAggregate(db.Model):
         dislikes: Dislikes
         relevance: Relevance
         comments: Comments
-        osint_source_group_id: OSINT source group ID
+        osint_source_group_id: OSINT source group GUID
         news_items: News items
         news_item_attributes: News item attributes
     """
@@ -760,11 +760,11 @@ class NewsItemAggregate(db.Model):
         return db.session.get(cls, news_item_aggregate_id)
 
     @classmethod
-    def get_by_group(cls, group_id: int, filters: dict, offset: int, limit: int, user: User) -> tuple[list[NewsItemAggregate], int]:
+    def get_by_group(cls, group_id: str, filters: dict, offset: int, limit: int, user: User) -> tuple[list[NewsItemAggregate], int]:
         """Get by group.
 
         Args:
-            group_id (int): Group ID
+            group_id (str): OSINT source group GUID or "all" for all groups
             filters (dict): Filter
             offset (int): Offset
             limit (int): Limit
@@ -774,19 +774,25 @@ class NewsItemAggregate(db.Model):
         """
         query = cls.query.distinct().group_by(NewsItemAggregate.id)
 
-        query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
+        # Only filter by group if not requesting all groups
+        if group_id != "all":
+            query = query.filter(NewsItemAggregate.osint_source_group_id == group_id)
 
         query = query.join(NewsItem, NewsItem.news_item_aggregate_id == NewsItemAggregate.id)
         query = query.join(NewsItemData, NewsItem.news_item_data_id == NewsItemData.id)
         query = query.outerjoin(OSINTSource, NewsItemData.osint_source_id == OSINTSource.id)
 
-        query = query.outerjoin(
-            ACLEntry,
-            or_(
-                and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
-                and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
-            ),
-        )
+        # Build ACL conditions - check OSINT source, collector and OSINT source group access (when viewing 'all')
+        acl_conditions = [
+            and_(NewsItemData.osint_source_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE),
+            and_(OSINTSource.collector_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.COLLECTOR),
+        ]
+        if group_id == "all":
+            acl_conditions.append(
+                and_(NewsItemAggregate.osint_source_group_id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP),
+            )
+
+        query = query.outerjoin(ACLEntry, or_(*acl_conditions))
 
         query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
@@ -833,11 +839,11 @@ class NewsItemAggregate(db.Model):
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
-    def get_by_group_json(cls, group_id: int, filters: dict, offset: int, limit: int, user: User) -> dict:
+    def get_by_group_json(cls, group_id: str, filters: dict, offset: int, limit: int, user: User) -> dict:
         """Get by group JSON.
 
         Args:
-            group_id (int): Group ID
+            group_id (str): OSINT source group GUID or "all" for all groups
             filters (dict): Filter
             offset (int): Offset
             limit (int): Limit
@@ -903,12 +909,12 @@ class NewsItemAggregate(db.Model):
             NewsItemAggregateSearchIndex.prepare(aggregate)
 
     @classmethod
-    def create_new_for_group(cls, news_item_data: NewsItemData, osint_source_group_id: int) -> None:
+    def create_new_for_group(cls, news_item_data: NewsItemData, osint_source_group_id: str) -> None:
         """Create new for group.
 
         Args:
             news_item_data (NewsItemData): News item data
-            osint_source_group_id (int): OSINT source group ID
+            osint_source_group_id (str): OSINT source group GUID
         """
         news_item = NewsItem()
         news_item.news_item_data = news_item_data
@@ -1000,13 +1006,13 @@ class NewsItemAggregate(db.Model):
             db.session.commit()
 
     @classmethod
-    def add_remote_news_items(cls, news_items_data_list: list[dict], remote_node: RemoteNode, osint_source_group_id: int) -> None:
+    def add_remote_news_items(cls, news_items_data_list: list[dict], remote_node: RemoteNode, osint_source_group_id: str) -> None:
         """Add remote news items.
 
         Args:
             news_items_data_list (list[dict]): News items data list
             remote_node (RemoteNode): Remote node
-            osint_source_group_id (int): OSINT source group ID
+            osint_source_group_id (str): OSINT source group GUID
         """
         news_item_data_schema = NewNewsItemDataSchema(many=True)
         news_items_data = news_item_data_schema.load(news_items_data_list)
@@ -1364,12 +1370,12 @@ class NewsItemAggregate(db.Model):
                 NewsItemAggregate.update_status(aggregate.id)
 
     @classmethod
-    def create_single_aggregate(cls, news_item: NewsItem, group_id: int) -> None:
+    def create_single_aggregate(cls, news_item: NewsItem, group_id: str) -> None:
         """Create single aggregate.
 
         Args:
             news_item (NewsItem): News item
-            group_id (int): Group ID
+            group_id (str): OSINT source group GUID
         """
         new_aggregate = NewsItemAggregate()
         new_aggregate.title = news_item.news_item_data.title
@@ -1413,11 +1419,11 @@ class NewsItemAggregate(db.Model):
                     aggregate.read = False
 
     @classmethod
-    def get_news_items_aggregate(cls, source_group_id: int, limit: datetime) -> list[NewsItemAggregate]:
+    def get_news_items_aggregate(cls, source_group_id: str, limit: datetime) -> list[NewsItemAggregate]:
         """Get news items aggregate.
 
         Args:
-            source_group_id (int): Source group ID
+            source_group_id (str): Source group GUID
             limit (datetime): Limit
         Returns:
             News item aggregates
@@ -1428,11 +1434,11 @@ class NewsItemAggregate(db.Model):
         return news_item_aggregate_schema.dumps(news_item_aggregates)
 
     @classmethod
-    def get_news_items_aggregate_by_source_group(cls, source_group_id: int) -> list[NewsItemAggregate]:
+    def get_news_items_aggregate_by_source_group(cls, source_group_id: str) -> list[NewsItemAggregate]:
         """Get news items aggregate by source group.
 
         Args:
-            source_group_id (int): Source group ID
+            source_group_id (str): Source group GUID
         Returns:
             list[NewsItemAggregate]: News item aggregates
         """

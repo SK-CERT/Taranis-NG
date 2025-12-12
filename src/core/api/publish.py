@@ -49,13 +49,8 @@ class Products(Resource):
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
 
-            offset = None
-            if request.args.get("offset"):
-                offset = int(request.args["offset"])
-
-            limit = 50
-            if request.args.get("limit"):
-                limit = min(int(request.args["limit"]), 200)
+            offset = int(request.args.get("offset", 0))
+            limit = min(int(request.args.get("limit", 50)), 200)
         except Exception as ex:
             msg = "Get Products failed"
             logger.exception(f"{msg}: {ex}")

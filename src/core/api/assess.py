@@ -45,16 +45,22 @@ class AddNewsItem(Resource):
 class NewsItemsByGroup(Resource):
     """News items by group API endpoint."""
 
-    @auth_required("ASSESS_ACCESS", ACLCheck.OSINT_SOURCE_GROUP_ACCESS)
+    @auth_required("ASSESS_ACCESS")
     def get(self, group_id: str) -> dict:
         """Get news items by group.
 
         Args:
-            group_id (str): The group ID
+            group_id (str): The group ID (or 'all' for all groups)
+
         Returns:
             (dict): The news items by group
         """
         user = auth_manager.get_user_from_jwt()
+
+        # Apply ACL check only for specific groups, not for 'all'
+        # Check if user has access to this specific group
+        if group_id != "all" and not auth_manager.check_acl(group_id, ACLCheck.OSINT_SOURCE_GROUP_ACCESS, user):
+            return {"error": "Access denied"}, HTTPStatus.FORBIDDEN
 
         try:
             filters = {}
@@ -71,13 +77,8 @@ class NewsItemsByGroup(Resource):
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
 
-            offset = None
-            if request.args.get("offset"):
-                offset = int(request.args["offset"])
-
-            limit = 50
-            if request.args.get("limit"):
-                limit = min(int(request.args["limit"]), HTTPStatus.OK)
+            offset = int(request.args.get("offset", 0))
+            limit = min(int(request.args.get("limit", 50)), HTTPStatus.OK)
         except Exception as ex:
             msg = "Get NewsItemsByGroup failed"
             logger.exception(f"{msg}: {ex}")

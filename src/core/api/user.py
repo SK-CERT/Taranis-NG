@@ -16,8 +16,10 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from managers import auth_manager
 from managers.auth_manager import auth_required
-from model import product_type, publisher_preset
+from model.product_type import ProductType
+from model.publisher_preset import PublisherPreset
 from model.user import Hotkey, UserWordList
+from model.word_list import WordList
 
 
 class UserHotkeys(Resource):
@@ -85,6 +87,25 @@ class UserWordLists(Resource):
         return UserWordList.update(user, request.json)
 
 
+class AvailableWordLists(Resource):
+    """A resource class for retrieving all available word lists with ACL filtering.
+
+    Attributes:
+        Resource: A base class for implementing API resources.
+    """
+
+    @jwt_required()
+    def get(self) -> dict:
+        """Retrieve all available word lists with ACL filtering.
+
+        Returns:
+            dict: A dictionary containing all word lists the user can access.
+        """
+        search = request.args.get("search")
+        user = auth_manager.get_user_from_jwt()
+        return WordList.get_all_json(search, user, acl_check=True)
+
+
 class UserProductTypes(Resource):
     """Flask-RESTful resource that handles HTTP GET requests for retrieving all product types associated with the authenticated user.
 
@@ -99,7 +120,7 @@ class UserProductTypes(Resource):
         Returns:
             list: A list of all product types in JSON format.
         """
-        return product_type.ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
+        return ProductType.get_all_json(None, auth_manager.get_user_from_jwt(), acl_check=True)
 
 
 class UserPublisherPresets(Resource):
@@ -116,7 +137,7 @@ class UserPublisherPresets(Resource):
         Returns:
             list: A list of all publisher presets in JSON format.
         """
-        return publisher_preset.PublisherPreset.get_all_json(None)
+        return PublisherPreset.get_all_json(None)
 
 
 def initialize(api: Api) -> None:
@@ -130,10 +151,12 @@ def initialize(api: Api) -> None:
     Resources:
         - UserHotkeys: Endpoint for user hotkeys at "/api/v1/users/my-hotkeys".
         - UserWordLists: Endpoint for user word lists at "/api/v1/users/my-word-lists".
+        - AvailableWordLists: Endpoint for available word lists at "/api/v1/users/available-word-lists".
         - UserProductTypes: Endpoint for user product types at "/api/v1/users/my-product-types".
         - UserPublisherPresets: Endpoint for user publisher presets at "/api/v1/users/my-publisher-presets".
     """
     api.add_resource(UserHotkeys, "/api/v1/users/my-hotkeys")
     api.add_resource(UserWordLists, "/api/v1/users/my-word-lists")
+    api.add_resource(AvailableWordLists, "/api/v1/users/available-word-lists")
     api.add_resource(UserProductTypes, "/api/v1/users/my-product-types")
     api.add_resource(UserPublisherPresets, "/api/v1/users/my-publisher-presets")
