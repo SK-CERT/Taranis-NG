@@ -8,7 +8,7 @@ dependencies = [
     "dateparser==1.2.2",
     "feedparser==6.0.12",
     "Flask==3.1.2",
-    "Flask-Cors==6.0.1",
+    "Flask-Cors==6.0.2",
     "Flask-RESTful==0.3.10",
     "gevent==25.9.1",
     "gunicorn==23.0.0",
