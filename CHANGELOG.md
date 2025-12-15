@@ -1,9 +1,5 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-
 ---
 
 ## [v25.12.1] - 2025-12-15
@@ -43,7 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Update stop lists #934
     - Update English stop list
     - Add Czech stop list
-    - (for update you need reimport old, use Delete existing words to avoid duplicity)
+    - for update you need reimport old, use Delete existing words to avoid duplicity
 
 - Comment icon in News items #933
     - Add comment icon to asses to indicate comments presence. It allow user identify what items have comment.
@@ -172,7 +168,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Remove empty html tags on manual user news item input
     - New function text_to_simple_html for future using (formatting other collectors content to display properly line breaks in news feed)
 
-- Fix not working report items
+- Fix not working report items #843
     - Fix not working report items in Analyze (caused by #831 HTML News items)
 
 - Exclude html tags from new items indexing and some mastodon fixes #842
