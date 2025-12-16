@@ -2,10 +2,15 @@
 
 ---
 
-## [v25.12.1] - 2025-12-15
+## [v25.12.1] - 2025-12-16
 
-- Increase version to v25.12.1 #950
+- Increase version to v25.12.1 + new Products API filter #950
     - version bump to 25.12.1
+    - added to existing API for get Products new range type filter: DATE
+    - when you use DATE filter you need pass another two new parameters: date_from, date_to
+    - date is in ISO format: YYYY-MM-DD
+    - added to Product JSON output new information field: Created
+    - better error handling in API processing when some deeper error occured
 
 - All News Item category, Available Wordlist API #947
     - All category for News Items - respects ACLs
