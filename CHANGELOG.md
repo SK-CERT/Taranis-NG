@@ -1,8 +1,760 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+---
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [v25.12.1] - 2025-12-16
+
+- Increase version to v25.12.1 + new Products API filter #950
+    - version bump to 25.12.1
+    - added to existing API for get Products new range type filter: DATE
+    - when you use DATE filter you need pass another two new parameters: date_from, date_to
+    - date is in ISO format: YYYY-MM-DD
+    - added to Product JSON output new information field: Created
+    - better error handling in API processing when some deeper error occured
+
+- All News Item category, Available Wordlist API #947
+    - All category for News Items - respects ACLs
+    - Fix error when users which are not admins do not see word lists in User Settings
+    - simplified request.args.get()
+    - some generic "from import" is exactly defined
+    - fixed osint_source_group_id type (it's GUID)
+    - added possibility use color in navigation buttons
+    - All sources and Uncategorized buttons have now own colors (blue and grey)
+
+- Small fix #949
+    - crash with same Resource name exists
+
+- Optimise news-items-updated events #948
+    - don't trigger news-items-updated & remote_access_news_items_updated event if no new items were collected (no useless screen blinking in Asses screen each time when crawler finish his job)
+    - fixed crash when executing remote_access_news_items_updated with no IDs
+    - ruff checks + optimize code
+
+- Vulnerability report css style cleanup (html, pdf) #946
+    - Replaced bootstrap.css (196KB) with main.css (3KB) to reduce legacy bloat and eliminate numerous [WARNING]s in the presenter log when rendering PDFs. Visual style remains identical.
+    - Merged custom.css into main.css.
+    - pdf_template.html now uses only the smaller main.css. PDF rendering speed increased.
+    - template.html: sorted styles for clarity; improved checkboxes.
+    - No other visual changes—pure cleanup!
+
+- Fix attribute sort #945
+    - Fixed sorting on attributes:
+        - bad sorting "Sort values from newest" - was sorting by last updated value, after processing sort was impossible show original order
+        - wrong behavior for: "Show my values first then others" - opposite working (your values were last)
+
+- Update stop lists #934
+    - Update English stop list
+    - Add Czech stop list
+    - for update you need reimport old, use Delete existing words to avoid duplicity
+
+- Comment icon in News items #933
+    - Add comment icon to asses to indicate comments presence. It allow user identify what items have comment.
+
+- Osint sources screen fixes, Db constraints.. #912
+    - fix: Osint sources screen, collectors are not refreshed on node combo change (multiple nodes case)
+    - add: in collectors node delete action remap osint sources to next node (avoid loosing sources, allow delete node)
+    - add: delete unused parameters after node delete action (we don't delete them to this moment yet, dead records)
+    - add: cascade delete for all nodes (7x)
+    - add: show warning on unknown db_migration.py command
+    - remove ID from collector combo
+    - remove some dead data initialization in OSINT source import
+    - add: better error messages on delete action in collector nodes, not just generic error message (show backend error on frontend)
+    - changed some function names (misleading names)
+    - removed unused code
+    - again ruff checks on not processed files
+
+- States #908
+    - added states to entities report item and product
+    - added editing of states
+    - added assigning states to entities
+    - fixed minor bug in dark mode
+    - fixed translations, added CZ translations
+
+- Fix: Request Line is too large (4XXX > 4094) #923
+    - This is quick fix. We need change way of sending long jwt token via path in url and put it inside body
+    - In gunicorn we change default value 4094 to 8192
+
+- Fix in message Jinja filters #922
+    - Jinja filters were loaded too late causing templating error when used in message presenter
+
+- Fix Jinja for plaintext #916
+    - remove autoescape for plaintext
+    - fixes rendering of symbols like ' or "
+    - fixed typo
+
+- Support for ACME #909
+    - added config for ACME
+    - works with custom CA
+    - added example of TLS configuration
+
+- Fixed selection color on dark theme #907
+    - records selection (News, grouped News, Reports, Osint sources)
+    - unified selection color
+
+- Remove unused vue sources #897
+    - some unused .vue and .js sources were removed
+
+- Fixed refresh on News items group actions #896
+    - Refresh on News items group action was not working (non existing event: update-news-items-list) Nobody noticed it yet?
+
+- Crash on new report when you click on some sub aggregate item #895
+    - Fixed: AttributeError: 'NoneType' object has no attribute 'news_item_data'. It was caused by calling showItemDetail in NewsItemSelector.vue where was send wrong parameter. Now is called child function that emit correct parameter. (It was crashing when you create new report, add some news item aggregates and then click on some on some sub aggregate item)
+    - Tidy up code in NewReportItem
+
+- Add 'Hide source link' option to News items screen #883
+    - move 'Show source link on news items' from user settings to News items screen icon
+    - will be stored in local storage as other options on the page
+
+- Additional fix for #784 Data providers #882
+    - crash fix
+    - fix ruff
+
+- Data providers #784
+    - added API configuration for CWE, EPSS, EUVD, NVD, CPE
+    - renamed local AI models to AI models
+    - small fixes
+
+- Fixed: No module named 'langchain.chains' #881
+    - Fixed: No module named 'langchain.chains' after upgrading langchain from 0.3.27 to 1.0.1 in /src/core
+
+- Show/hide news items reviews #875
+    - adds button to hide or show review of all news items to filter toolbar
+    - stays persistent across categories
+
+- Fix multiple AI buttons on Analyze form#874
+    - Each AI button on Analyze form now has own status and animation (before they share one status)
+
+- Tag cloud improvements #873
+    - Optimise TAG cloud creation (speed)
+    - Add "-" char inside TAG words (now CVE looks better ;-)
+    - Better split when creating TAG words (now splitting on white space chars, before failed on TAB, NBSP)
+    - Fixed TAG word creation (don't use HTML tags as words)
+    - Fixed background color of TAG cloud on dark theme
+    - Added new user setting: Colorful tag cloud
+    - small GUI changes on Dashbord screen
+    - Added support for delayed setting loading (isInitializedSetting, settings-loaded)
+    - Ruff precomit checks
+
+- Small migration fix #872
+    - Fix: cannot drop table user_profile because other objects depend on it. Constraint user_profile_id_fkey on table "user" depends on table user_profile
+
+- User settings #867
+    - Added support for generic global/user settings. We have big need of user customization and this simplify future process. Developer now just add setting definition and can immediately use it in code by (get_setting - python, getSetting - js, vue), No other coding.
+    - Added new table settings_user that is sub-table for settings. Each user has own records. There are global and user settings now.
+    - New table user_word_list (before user_profile_word_list). All user worlists are migrated
+    - Some API optimizations in old settings code
+    - Fixed news item keywords highlighting in dark theme
+    - Heavy corrections in code (ruff checks)
+    - Fixed jinja2.exceptions.UndefinedError: 'dict object' has no attribute 'baseScore' - added default values for empty CVSS
+    - Added new user setting: Show source link in news items (default True)
+    - Fixed: In agregate news items content was displayed html code instead of formatted text
+    - Some small source refactoring
+
+- Additional fix to #854 #855
+    - Additional fix to #854 (Fixed filter bug in 'Select Report Items' in Publish screen)
+    - Select Report Items from Remote Nodes show local reports
+
+- Fixed filter bug in 'Select Report Items' in Publish screen #854
+    - Fixed filter bug in Publish screen when you use 'Select Report Items' and previously you use 'Select Report Items from Remote Nodes' dialog in Analyze screen. Selector start show just REMOTE reports until you hard reload the page
+
+- Fix plaintext in collected content #853
+    - Fix saving plaintext as HTML if RSS scraping returns raw text.
+
+- Fix 'NewsItemData' object has no attribute 'content_plaintext' + Add review for title if it's empty #845
+    - Fixed 'NewsItemData' object has no attribute 'content_plaintext' (caused by previous changes)
+    - replaced HTTP codes constants with readable enumerator
+    - Small TimeZone fix
+    - In WEB collector use beginning of the review for title if it's empty
+    - Decreased waiting time for find element in web collector from 15 -> 7 sec
+
+- Add HTML display support for WEB-collected news items #844
+    - Added HTML content support for WEB-type collected items
+    - Works only on new items; old crawled text remains plain text (losing line breaks)
+    - Added extra strip() step to remove_empty_html_tags output — removes useless leading and trailing whitespace
+    - Remove empty html tags on manual user news item input
+    - New function text_to_simple_html for future using (formatting other collectors content to display properly line breaks in news feed)
+
+- Fix not working report items #843
+    - Fix not working report items in Analyze (caused by #831 HTML News items)
+
+- Exclude html tags from new items indexing and some mastodon fixes #842
+    - mastodon publisher: fixed crash on empty status
+    - mastodon publisher: add skip message instead failed post
+    - don't store html tags for new items searching
+
+- Small fixes #841
+    - fix broken templates\template_osint.html (bad merge?)
+    - small Import optimizations
+    - remove empty defaults from parameters
+    - Use Tor: added default value, read setting with read_bool_parameter
+    - revert id names changes in news_item.py (crashing, not complete)
+    - Code refactoring (ruff checks)
+
+- Fixes #839
+    - fixes of issues caused by #831
+
+- Store manually-entered news content as HTML #840
+    - Store manually-entered news content as HTML instead of plain text.
+    - Add `<u>, <s>` to allowed tags in HTML sanitizer.
+    - Code refactoring (ruff checks)
+
+- HTML in news item content #831
+    - Sanitized HTML may now be in news item content
+    - introduced new parameter for RSS collector - PREFER_SCRAPING, tries to scrape web from feed link every time.
+      Otherwise, feed link is only used as last resort if no summary and content is available in feed
+    - improved logic for web scraping feed links - scrapes `<p>`, if no `<p>` are found, tries `<pre>`, if no tags are found, treats data as plaintext
+    - updated OSINT sources
+    - docstrings, making ruff happy
+
+- Fix bad `<div>` tags on OSINT template report #830
+
+- Djlint #828
+    - added linting of Jinja templates - passes
+    - formatting is off
+    - added badges of used tools and libraries
+
+- MESSAGE Presenter: added support for custom attachment file names #829
+    - Introduced new parameter for specifying attachment file name.
+    - Defaults to `file_YYYYmmddHHMMSS` if left empty.
+    - Supports static strings or Jinja templates (e.g. `file_{{ data.product.title }}`).
+
+- Some corrections of templates (formatting, fixes) #803
+    - fixed some broken templates (previous changes)
+    - fixed CVSS field in OSINT Report template
+    - restored JINJA formatting in code (previous changes)
+    - fixed some possible crashes on templates (missing fields)
+    - better display of array values
+
+- Minor fixes #802
+    - Just some minor fixes including docstrings and type annotations
+
+- side-by-side view: adjust news panel behavior and fix ESC handling #801
+    - Show news item only on the right side of the screen in side-by-side mode (before in fullscreen). This allows users to read/copy news while writing a report simultaneously.
+    - Fixed ESC key handling in side-by-side view: pressing ESC now closes only the news panel, not also the parent report.
+
+- Improved templating #800
+    - improved security of Jinja templating - uses only files in predefined directory
+    - added Jinja filter for TLP colours - also modified templates using it
+    - refactoring of code
+    - other fixes, mainly annotations, docstrings
+
+- Fixing run and conf files #799
+    - fixed formatting
+    - slight refactoring
+    - added docstrings
+    - added missing __init__.py
+
+- Basic formatting #798
+    - This adresses following in non Python files:
+        - missing newlines at the end of the file
+        - useless whitespace in files
+        - some basic Jinja HTML formatting
+
+- uv and ruff in GitHub Actions #797
+    - uses uv and ruff for GitHub Actions
+    - ruff should fail because the code is not formatted properly - this will be addressed in following commits
+
+- Use uv, pyproject.toml #783
+    - uses uv instead of pip for container building
+    - uses pyproject.toml instead of requirements.txt
+
+- Add pyproject.toml and ruff #782
+    - instead of Black, Flake etc. use just ruff, it is fast and all-in-one
+    - add pyproject.toml for configuration
+
+- Jinja template loading secured #759
+    - Adresses #725 CESNET pentest: Arbitrary file read by /config/product/types
+    - PDF is typeset without temporary files
+    - unified Jinja template path handling for all presenters
+
+- Enable HTTP/3 #760
+    - requires open UDP port 443
+
+- Bump pre-commit plugins #781
+    - updated pre-commit plugins versions
+
+- improve English translations #753
+    - English i18n file has been modified for better English.
+
+- Fixed TAG CLOUD ignoring stop words #752
+    - fixed bug that TAG CLOUD doesn't take in account stop words
+    - remove redundant .distinct() from TAG CLOUD query (there is already .group_by)
+    - remove SQL duplicity logs when SQL debugging is ON
+    - web collector added warnings: "Element found, but text content is empty", "Element not found" that can help you find wrong defined selectors
+    - web collector: changed rest of functions and removed @classmethod attribute. Now is unified
+
+- GUI improvements #743
+    - password and API key hiding with reveal button
+    - added translation strings
+    - added tooltips for some icons - delete, edit...
+
+- Add max_cvss to product #748
+    - Add maximum value of CVSSs from reports to product similarly to TLP.
+
+- Disallow Crawlers #741
+    - added robots meta tag
+    - added robots.txt
+
+- Small AI changes #742
+    - Allow run model when no news items are attached to report (just log this action)
+    - Show better error message on backend in case of problems with LLM connecting
+    - Name changed: AI Provider -> Local AI model
+    - Updated documentation
+    - Added animation when AI prompt is running
+    - Don't run another request when AI prompt is already running
+
+- Small docs changes #740
+
+- Documentation tidy-up #739
+    - Added AI-related documentation
+    - Updated existing documentation
+    - Created additional help file howto.md – guides for using Taranis NG to perform specific tasks
+    - Main README.md kept minimal: overview only; Docker-specific instructions separated to avoid mixing content
+    - Management script help moved to howto.md (unrelated to Docker build process)
+    - Removed duplicate CPE upload section from main and Docker READMEs — full version retained in howto.md
+    - Removed obsolete demo files from Docusaurus (only outdated examples, no active content)
+    - Renamed folder doc › docs (all documentation will reside here)
+    - Fixed broken taranis-logo.svg in assets (may still be unused)
+
+- Optimize case-insensitive search performance #733
+    - optimize case-insensitive search performance: func.lower() + .like() -> .ilike()
+    - optimize code
+
+- Login page is visible for logged user #732
+    - Fix #729 Login page is visible for logged in user
+    - This should not be visible and should just redirect user to dashboard page.
+
+- Translation strings tidy up #731
+    - Language strings have been tidied up (most 5 repeated strings).
+    - By changing just 5 strings, you can now translate the app in over 100 places.
+    - Translation has been simplified by reducing the word count by 113.
+
+- Add AI support for creating report items - Part 2 (GUI configuration) #730
+    - added GUI for AI configuration
+
+- Improve security part 1 #728
+    - removed unused code
+    - port 5002 (or whatever user set) was open to internet, it is available only from localhost now
+    - added permanent redirect to HTTPS, HTTP response code 308
+
+- Add AI support for creating report items - Part 1 #727
+    - add support for creating AI summaries or other text processing. It's based on user defined prompt that process added news items and AI generated result is filled to the text field.
+    - add database table (AI_PROVIDER) where are stored AI connections (openai, ollama supported)
+    - in Configuration / Report types you can assign AI + prompt to specified report item attribute
+    - in Analyze you can see now on defined report item attribute AI button. Pressing it will process added news items and fill output to text field
+    - this is just 1. part. There is need add settings screen to edit AI providers and documentation. For early testing you can insert some values to ai_provider table and then you can see AI things. Example for local Ollama server:
+
+        `INSERT INTO public.ai_provider ("name", api_type, api_url, api_key, model) VALUES('Ollama - llama3.2:1b', 'openai', 'http://localhost:11434/v1', 'none', 'llama3.2:1b');`
+
+- Improve news item content display #715
+    - Improve displaying of scraped content in news item - respects newlines
+
+- Update Alpine Linux #714
+    - Bump Alpine Linux to 3.22
+
+- Improved collector behaviour #690
+    - better HTTP error handling
+    - now possible to parse multiple articles on single Web page
+
+- Improve use of objects #670
+    - No new features, just refactoring and using objects instead of parameters.
+
+- minor GUI improvements #681
+    - Show item type instead of static Title string in Configuration for bots, publishers and products.
+
+- Added to Message presenter PDF template attachment #686
+    - Added to Message presenter PDF template attachment
+    - Added possibility preview message attachment by holding Ctrl key
+    - Unify all modules (presenter, publisher, collector, bot) parameter_values storage with the same name and meaning. Changed parameter_values_map, parameter_values -> param_key_values. Now we can use shared functions between all modules. Also this fix same name issues for various object types (class object vs dictionary types). It was misleading.
+    - Added message if there is no data for preview (before application crash in this case)
+
+- Web Application Manifest #685
+    - Added manifest, icons and screenshots
+    - localized to EN, CZ, SK
+    - fixed naming of Taranis NG to be consistent
+
+- Fixed missing Enter/Assess button #684
+    - Fixed missing Enter/Assess button. Button was referenced by index and functionality hides incorrect object based on user rights.
+
+- fontTools is ignoring global logging settings #683
+    - Fix for fontTools module which is ignoring global logging settings and puts garbage into the logs
+
+- Add WARNING_INTERVAL to non-RSS sources #680
+    - Add WARNING_INTERVAL parameter to non-RSS OSINT sources
+
+- Add WARNING_INTERVAL to RSS sources #679
+    - Add WARNING_INTERVAL parameter to RSS OSINT sources
+
+- Correct deprecated jwt.decode() in python-keycloak #674
+    - There was change in jwt.decode() function by upgrading python-keycloak library
+
+- Fixed error message in Bots (master_id) #673
+    - Fixed error message in Bots: cannot access local variable 'master_id' where it is not associated with a value. It was caused previous commit.
+
+- Fixed authentification for collectors when exists multiple nodes #672
+    - Fixed verification for collectors in case when more nodes share the same API_KEY. Warning: "Collector ID does not match"
+
+- Fixed Core logger wrong SSE prefix #671
+    - Removed prefix (SSE) in logs that display on wrong places.
+
+- Replace deprecated ExpandedPyMISP with PyMISP #669
+    - Fix pymisp bump from 2.5.10 to 2.5.12
+
+- Fix error in Bots: ModuleNotFoundError: No module named 'bs4' #668
+    - Fix error in Bots: ModuleNotFoundError: No module named 'bs4' (BeautifulSoup) due moving print_news_item to news_item.py.
+
+- Fix error in Presenters: ModuleNotFoundError: No module named 'bs4' #654
+    - Fix error in Presenters: ModuleNotFoundError: No module named 'bs4' (BeautifulSoup) due moving print_news_item to news_item.py.
+
+- Prefix in Collectors logs (proxy, fetch feed) #653
+    - Add missing prefix for proxy property in Collectors log
+    - Add to RSS collector Exception handling for fetch feed. This also add missing prefix in logs
+
+- Fix Collector Content debug print & Tuple Error, Keycloak Auth #652
+    - Fixed debug print for new item’s Content property (previously displayed as an array of strings; issue introduced in the last PR)
+    - Fixed Keycloak authentication compatibility with the latest Keycloak versions
+    - Fixed collector error: An unhandled exception occurred during scheduled collector run: '>' not supported between instances of 'tuple' and 'int'
+
+- Improve log clarity in Check-if-modified #651
+    - Fixed missing source name in Check-if-modified log message. In multithreaded execution, adjacent log lines made it difficult to associate messages with their respective sources.
+
+- Fixed errors when starting or restarting the entire Taranis (delayed start, between containers) #643
+    - Fixed connection error in "Bots/SSE" and "Collector/Report status" when starting or restarting the entire Taranis. Core is not ready yet, and we need to connect a little bit later. Now the start logs are error free.
+    - Added to logs: "Awaiting initialization of CORE (timeout: 20s)" message to indicate background activity for delayed processes.
+
+- Fix Bots schedulling and logger issues #642
+    - Minor logger fixes for Bots.
+    - Fixed Bots scheduling, until now they run only once at beginning (scheduler was being overwritten; threading added, same approach as in Collectors).
+    - Bots SSE now remains active after losing Core connection or after unexpected crash (attempts reconnect every 30 seconds).
+    - Removed "next run" info from the "Collection finished" message. Since the job is still running and the information contains old value -> this is misleading. This value is increased only after job exits.
+    - Moved time_manager, log_manager to shared (no more same code for each module, duplicity, not updated versions)
+
+- Improved logging #641
+    - improved logging (again and hopefully correctly)
+    - refactored some collectors
+
+- Unified Configuration #636
+    - Unified Global Configuration and My Assets module configuration. Now everything is under a single Configuration. All permissions and rights remain unchanged and work as expected.
+    - Moved the Configuration menu item to the far right.
+    - Fixed bug where external users couldn’t be edited without entering a password.
+    - Corrected access rights to Settings.
+    - Fixed typo
+
+- Added coloring to OSINT sources records #635
+    - Added coloring to OSINT sources records: Green - Ok, Gray - disabled, Red - error, Orange - not collected for N days
+    - Added default value 30 days for "No new data warning interval in days (0 to disable)" parameter in collectors
+    - Fix bug caused by #613 Add support for default values when creating new Collectors… Opening existing record add default values too
+
+- Preparation for user settings table (Part 1) #627
+    - preparation for user settings table (replacement for user profile)
+    - remap hotkeys to user table (before to profile table)
+    - hide OPTIONS requests in gunicorn core log
+
+- Add support for default values when creating new Collectors, Bots … #613
+    - Add support for default values when creating new Collectors, Publisher presets, Bot presets and Product types
+    - Automatically select first node and first type on New action
+
+- Improve web collector #612
+    - Improve collector scheduling (cancel old to avoid parallel running of the same tasks)
+    - Add check for changes
+    - Better logs
+
+- Fixed crash by creating external user #607
+    - Creating external user was not working
+
+- Add cascade delete to User, Organization and Word_list #604
+    - Add cascade delete to User, Organization and Word_list to able delete these records without errors. Some deletion logic is still maintained by Taranis.
+    - Fixed Issue #96: Deleting organization with associated accounts fails
+
+- Remove yarm.lock file from doc directory #603
+    - Remove yarm.lock file from doc directory due a lot of security alerts (npm will be used)
+    - Docusaurus is still not used yet.
+    - Removed 71/108 alerts
+
+- Better whitespace processing in Title, Review when processing RSS, Web sources #602
+    - Better whitespace processing in Title, Review when processing RSS, Web sources. Corrected also manual input
+    - Title decreased to max 200 chars (based on readability and max length usage in real world) This avoid creating very long Titles that spam user screen
+    - This update also correct nasty Title and Review line breaking in docker debug logging when text contains 'bad' chars
+
+- CSP update #600
+    - Added frame-src and frame-ancestor to CSP.
+
+- Added messages to HTTP response status codes #601
+    - Added messages to HTTP response status codes (were empty)
+    - Fixed crash on reading empty EMAILS_LIMIT parameter
+
+- Hide password in configuration #590
+    - Fix issue #134 Hide password in configuration
+    - based on key type name because it's dynamic building component
+
+- Improved HTML sanitization, enhanced input validation across collectors (refactored shared functions) #589
+    - Introduced a common module for functions shared across Docker containers.
+    - Unified smart_truncate() function for all collectors (review field).
+    - Replaced regex with BeautifulSoup for HTML sanitization.
+    - Unified strip_html() function for all collectors.
+    - Unified print_news_item() function for web and RSS collectors.
+    - Improved input sanitization for manual input of news items (HTML tags, scripts, excessively long reviews, etc.).
+
+- Added posibility manualy regenerate all parameters + Fix issue #572 #587
+    - Added: possibility manually regenerate all parameters (just run in core: python db_migration.py regenerate)
+    - Fixed: Issue #572: Error when manually run migration on the already latest version
+
+- Email sender filtering #577
+    - Added optional filtering for email collector based on sender of the email.
+    - Added mailing list OSINT sources
+    - Added EMAILS_LIMIT parameter in email collector (default off)
+
+- Added custom labels for Pull requests (visible on github) #586
+    - This is visible on on github pull requests screen
+
+- Truncate on symbol Jinja filter #576
+    - Truncates text on specific symbol
+
+- Improve Tag Cloud words (handle accented characters, filter short words) #575
+    - Added support for Tag Cloud words with accented characters (like über)
+    - Filter short words (length < 3)
+    - Fix issue #35 Tag cloud has troubles with umlauts and other characters
+
+- Unify button order in news item screens #574
+    - Unify buttons (delete) in same order as in main news item screen. Now it's same in Single news item detail, Aggregate Detail and News item detail screen.
+    - Issue #39 Assess: Order of action buttons in CardAssess and NewsItemDetail differ
+
+- Sorting of OSINT sources unintuitive #19 #573
+    - OSINT sources are sorted a < z < A < Z. Ignorance of case is more intuitive in this case.
+
+- Restructure custom Jinja filters #571
+    - Restructure custom Jinja filters to seperate file and replace loading of individual filters with loading of all.
+    - added regex string replace filter
+    - sample Jinja2 templates for Mastodon post and spoiler
+
+- Fixed #535 OSINT Source Groups selection #570
+    - Fixed: #535 OSINT Source Groups selection: checkbox of last saved item is disabled
+    - Fixed bad behavior when used: Select all and Item Selected
+
+- Application settings #568
+    - Added Application settings screen in Configuration. Here will be system settings that can customize Taranis functionality (no more .env variables)
+    - Created first new settings: Date format, Time format that can be now implement in application
+    - New setting: Open the Report Item selector in Read-Only mode
+    - Fixed small hotkey crash
+
+- Run regeneration for modules only in Upgrade mode and at Latest version #566
+    - Avoid not necessary runs
+
+- Small fix for #564 (regeneration for modules failed in some cases) #565
+    - Fix regeneration for modules (Collectors, Bots..) There were cases when regeneration failed
+    - Fix typo in file name
+
+- Default bot creation #564
+    - Added creation of default bot node.
+    - Reflected in documentation.
+    - Fix migrations
+    - Removed unused env variable, fix mistakes
+
+- Fixed and reworked broken hotkeys #554
+    - Added new icons to hotkeys
+    - Added missing shortcuts to hotkeys (they were defined in code but never on the screen)
+    - Added missing description to hotkeys
+    - Added reset button to hotkeys (in past there was no possibility to get back in case of some misconfiguration)
+    - Fixed not working open source url shortcut in Assess
+    - Fixed: don't overwrite shortcuts if user press Cancel in settings
+    - Fixed duplicity keys errors for shortcuts with the same alias
+    - Fixed error: this.card_items[this.pos] is undefined Fixed error: document.querySelectorAll(...)[this.pos] is undefined
+    - Added support for uppercase letters in hotkeys (it was predefined but not possible to set)
+    - Removed hotkey.key_code column (it was useless, more keys use the same code, we now store and compare real key name which is more unique. In past you can't define for example 'r' and 'R')
+    - Small speedup in hotkeys initialization
+    - This commit make working definition/setting of hotkeys. There can be still problem if and how they work. I also fix some errors/bugs on some shortcuts that i found when i test it.
+
+- Fixed API keys authetification #553
+    - Fixed checking of API keys in CORE. To this moment all modules were checking against Collector node key - wrong. Bots, Publisher, Presenter and Remote node access can have different keys!
+    - Fixed checking of API keys in SSE. To this moment was all checking against Bots node key - wrong. Remote node access can have different key!
+    - Unify API_KEY and ACCESS_KEY. Now we can use one functionality for all modules. No extra verification functions, code...
+    - In remote_access and remote_node tables was replaced access_key column with api_key
+    - Fixed Bots authentication (was broken by big CORE migration in past)
+    - Fix publishers preset type error (publisher_type)
+    - Improved debug and error logs in Bots and overall in code (API calls)
+    - Fixed remote news item attribute creation (never worked)
+    - Removed useless initializing another instance of TaranisLogger in Bots core API
+    - Added sleep time 20 sec in Bots start (Bots failed to initialize and run, Core was not ready yet) Collectors decreased time from 30 to 20 seconds
+    - Update some error codes (400 -> 503)
+    - Better error handling in remote node connection
+
+- Mastodon publisher #528
+    - Added Mastodon publisher
+
+- Fixed error in Presenter: default_value: Field may not be null. #547
+    - This error is caused by #546 Added posibility "refresh" parameters for Presenter, Collector, Bot, and Publisher and their products
+
+- Added posibility "refresh" parameters for Presenter, Collector, Bot, and Publisher and their products #546
+    - Added cascade delete for Parameter, Presenter, Collector, Bot and Publisher tables
+    - Added cascade delete for Parameter_Values tables: osint_source_parameter_value, bot_preset_parameter_value, publisher_preset_parameter_value
+    - Added a "refresh" functionality for parameters in Presenter, Collector, Bot and Publisher. This can be called in Migration process. It was not possible to this time - you had to delete nodes (and all data) to reflect the new changes. Existing records then miss some new parameters that can cause errors in logs or missing functionality.
+    - Added default_value to Parameter table. In this moment it's only used for automatic creating of new parameters that are added by migration process. In future we add these default values to GUI.
+
+- Fixed lost data refresh in Analyze screen #532
+    - Fixed: lost data refresh in Analyze screen after pre-clicking in e.g Publish screen and back
+    - Fixed not working search in Assets. Crash with error message: TypeError: this.$root is undefined
+    - Removed non using event: force-reindex
+
+- Added baseSeverity attribute to "only CVSS number" compatibility mode #525
+    - Added baseSeverity calculation to "only CVSS number" functionality
+    - Don't show error in logs if CVSS is empty
+    - Better error message also with source string
+
+- Improved CVSS #522
+    - support for CVSS 2.0, 3.0 and 4.0 - output is standardized CVSS JSON
+    - basic support in templates
+    - front-end only validates if the CVSS vector is not malformed, calculator is not implemented
+
+- Remote node connection errors #524
+    - Fixed crash (KeyError: 0) on some actions caused by last SqlAlchemy migration
+    - Fixed crash on creating remote groups for report items
+    - Fixed endless loop when you try connect to remote node with bad SSE link (both servers are after overloaded)
+    - Added better logging to SSE (messages)
+    - Fixed bug when you create News Item Data and Updated column don't reflect current time
+    - Fixed find_by_hash function for News items that was not working
+    - Fixed find_by_uuid function for Report items that was not working
+    - Fixed add_remote_report_items function that was not working. It's still unfinished from the past but don't crash now and create all passed data on remote side. This needs to be finished someday!
+
+- fix minor bug in string evaluation #521
+    - proxy string evaluation:
+    - add empty string to the condition
+
+- Improve proxy for collectors #520
+    - Improved and unified proxy handling for collectors and implemented in Web and RSS collectors. Others might follow. Removed code related to ftp proxy, never made sense and it is not even supported by browsers anymore.
+
+- Change some datetime format in debug logs #514
+    - Changed datetime format in debug logs inside not_modified functionality. (YYYY-MM-DD HH:MM). No need to display microseconds, seconds. Better readability.
+
+- Improve RSS Collector #504
+    - Fixed intervals and formatting of few OSINT sources
+    - Improved RSS Collector
+    - added docstrings
+
+- Small fixes (warnings, table selection, linting, README) #513
+    - Fix warnings on app start: Fall back to translate the keypath with 'en' locale.
+    - Allow select text in data table (for copying) and add hand cursor
+    - Removed python linting for 3.10
+    - Updated Python version in README
+
+- Improve OSINT all file generation #503
+    - Improved OSINT all file generation with sorting
+    - Few sources improved
+
+- OSINT sources #499
+    - Various OSINT sources ready to be imported to Taranis-NG.
+
+- bump Python version to 3.13 #501
+    - For linting and for build of src/shared. Also use latest Ubuntu.
+
+- Added a remove button to products to remove report items #500
+    - Added a remove button to products to remove report items.
+    - Added tooltips for remove buttons.
+    - Fixed error: AttributeError: 'OptionEngine' object has no attribute 'execute' (Flask migration).
+    - Renamed showDeletePopup to showMsgBox due to its more generic meaning, not just for deleting.
+    - Changed the text message for removing items (delete › remove) as it was misleading.
+
+- fix send_file #498
+    - Flask send_file changed keyword arguments, see pallets/flask#4667
+
+- Fixed crash on remote node actions #490
+    - Could not update remote node
+    - Could not delete remote node
+
+- Fix CRLF #489
+    - Fix mixed line endings. All files should be LF now.
+    - Added pre-commit hook which fixes this automatically.
+    - Made print used by prestart_core.sh reliable
+
+- Add Selenium version to logs #488
+    - Add Selenium version to logs (useful to identify possible problems in old versions of selenium)
+    - Sort Imports, From
+    - In this time is fixed error "Failed to open new tab - no browser is open" in Chrome driver (Selenium bump)
+
+- Improve CORE logging #487
+    - Added solving clue message in error case when Collector ID file is missing
+    - Enhanced error handling by elevating logging levels to error and including response details conditionally.
+    - Introduced read_collector_config_id method in CoreApi for reading collector configuration ID. Refactored existing methods to use the new config ID reader.
+    - Improved exception handling with logger.exception for detailed error logs.
+    - Increase space between levelname and message in gunicorn logs
+    - Change space between levelname and message in Taranis logs (' - ' > ' ')
+
+- Fix migration and bump Python version #484
+    - This just fixes the migration which removes Atom collector and also thanks to new tweepy version released,
+    - bumps Python version for collectors and publishers. Also SQLAlchemy does not have to be ignored by dependabot anymore.
+
+- Fix and Enhance Logging in CORE #476
+    - Fixed a bug where only partial data was logged due to an issue with string concatenation
+    - Removed duplicity timestamps from Gunicorn logs
+    - Excluded debug KeepAlive records from Gunicorn logs (e.g., "Closing connection.", "/isalive")
+    - Added query strings to Gunicorn logs (very useful for debugging)
+    - Added colors to the Gunicorn logs (better readability)
+    - Censored sensitive information (e.g., JWT, API keys) in Gunicorn logs
+    - Added DocStrings
+
+- Remove ATOM collector (duplicity functionality) #466
+    - Atom collector functionality moved to RSS collector (has support for it)
+    - Existing Atom sources will be automatically migrated
+    - Removed unused code
+    - This PR replace and enhance: WIP Remove Atom Collector #465
+
+- SQLAlchemy migration 1.4.54 -> 2.0.36 #450
+    - Migrate to latest SqlAlchemy
+
+- "Clear" user data (Core migration fix) #447
+    - "Clear" user data. In last big update we broke this. It's due get_jwt_claims() functionality was removed
+    - from latest version of flask_jwt and by migration process was all user data mixed with jwt service data.
+
+- Upgrade Core part1 #430
+    - Upgrade: Python  (3.10 -> 3.13), Alpine (3.14-3.20)
+    - Migrate libraries to latest working versions and fix broken functionality (Manage..)
+    - Fixed Collector node creating (Error: missing 1 required positional argument: 'id')
+    - Move Collector, Presenter, Publisher & Bot configurations to shared. This helps us for future work like
+        - add new parameters with updates, refresh old parameters etc.. Currently this is not possible, only with recreating
+        - new node and deleting old but at cost of data loose.
+    - Create Default Collector node even if Collector docker is offline
+    - Automatic Collector node creation is tuned up, better logs, timeout processing, hints whats going on..
+    - Better loading CVE, CPE, CWE files (progress bar)
+    - Code documentation
+
+- Fix date time format for web collector #435
+    - Now it can parse dates with text prefixes, detect DDMM MMDD formats if DD > 12, month names..
+
+- Fixed: Invalid JWT: Not enough segments on Logout #434
+    - The reconnectSSE function attempts to reconnect on error. Avoid attempting to reconnect to SSE with cleared credentials.
+
+- Add license #431
+    - Add license to modified code from FIRST.ORG
+
+- Fixed logout issues #429
+    - Fixed automatic logout problem after session timeout
+    - Fixed error: TypeError: this.logout is not a function
+    - Fixed error: TypeError: this.sseConnection is undefined
+
+- Fix various problem with SSE #424
+    - Fix Error 404. When you click on Report title, title_prefix you get error 404 Not found on background. This is because API support only Integer IDs. This change add support also for strings ID type. Now start working (lock, unlock) also for title, title_prefix fields, for "updated" needs more changes in code flow.
+    - Fix old problem on not updating Attributes via SSE
+    - Fix updating value_description field
+    - Added debug messages in Core for SSE publish events
+
+- Upgrade Vue to latest V2 + bump other modules #418
+    - Upgrade Vue to latest V2 version (2.7.16) + all other modules
+    - Removed not used NPM modules (faster, smaller build of node_modules)
+    - This helps us to prepare for future Vue3 upgrade
+
+- Update requirements.txt in core #423
+    - Slightly newer version of gevent for core. It will not build anymore because of the old gevent version and produces issue
+
+- Fix import csv (Word lists), Add possibility skip unwanted columns #417
+    - Fix import csv files for single column values. There was problem with import of Word lists. When you select only single column import crash. Also there is no need import also description data in this case.
+    - Added support to skip unwanted columns
+
+- Fix 2 warnings, Speed up GUI build #416
+    - Fix warning: The package-lock.json file was created with an old version of npm, old lockfile so supplemental metadata must be fetched from the registry. This is a one-time fix-up, please be patient.
+    - package-lock.json was build with old version. Now runs GUI build much more faster! (no need conversion)
+    - Fix warning: the attribute version is obsolete, it will be ignored, please remove it to avoid potential confusion (docker-compose-platforms.yml)
+
+- Reflect NCSC-NL's Taranis3 current state in Readme #415
+
+---
 
 ## [v24.11.1] - 2024-11-04
 
@@ -221,6 +973,8 @@ Please read `docker/MIGRATE_DB.md` documentation for migrate process.
 
 Thanks for the contributions: @multiflexi, @Ximelele
 
+---
+
 ## [v23.12.1] - 2023-12-06
 
 ### Breaking Change! (Only for Docker users who use customized or new report templates)
@@ -263,6 +1017,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - Scheduled actions in Collectors are more exception-resistant.
 - A lot of various fixes.
 
+---
+
 ## [v23.09.1] - 2023-09-27
 
 ### Added
@@ -294,6 +1050,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 * Fixed bug when new templates stay hiden due wrong docker mapping
 * A lot of various fixes
 
+---
+
 ## [v22.12.1] - 2022-12-16
 
 ### GUI
@@ -321,6 +1079,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 * refactor some code to create "shared" module with data models
 * various other fixes and updates across the code base
 
+---
+
 ## [v22.05.1] - 2022-05-17
 
 ### Added
@@ -345,6 +1105,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 * monkeypatch before init by @b3n4kh in #65
 * shortcuts: ignore keypresses in search field except Escape by @sebix in #76
 
+---
+
 ## [v21.11.1] - 2021-11-19
 
 ### Added
@@ -355,6 +1117,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 * Tidied up word lists
 * Re-worked proxy handling for the RSS collector
 * Fixed issues with collector node and OSINT source status models and schemas
+
+---
 
 ## [v21.10.6] - 2021-11-10
 
@@ -367,6 +1131,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - fixed asset group updates
 - improved default templates for products
 
+---
+
 ## [v21.10.5] - 2021-11-09
 
 ### Added
@@ -374,6 +1140,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ### Changed
 - GUI and RSS collector fixes
+
+---
 
 ## [v21.10.4] - 2021-11-08
 
@@ -386,6 +1154,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - gui: upgrade for security (breaks minor stuff, will be fixed in a later release)
 - web collector: minor improvements
 
+---
+
 ## [v21.10.3] - 2021-11-08
 
 ### Changed
@@ -396,6 +1166,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
    - collectors container minimised
 - complete rewrite of web collector: more robust, better support for various selectors, upgrade to selenium 4.0.0
 
+---
+
 ## [v21.10.2] - 2021-09-25
 
 ### Added
@@ -403,6 +1175,8 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ### Changed
 - multiple usability fixes across the product
+
+---
 
 ## [v21.10.1] - 2021-09-25
 
@@ -413,6 +1187,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - Merged multiple Taranis NG repositories into one for easier understanding and management of the project
 
 
+[v25.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v25.12.1
 [v24.11.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v24.11.1
 [v23.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v23.12.1
 [v23.09.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v23.09.1
