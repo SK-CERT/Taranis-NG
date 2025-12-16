@@ -7,7 +7,7 @@ dependencies = [
     "alembic==1.17.2",
     "beautifulsoup4==4.14.3",
     "Flask==3.1.2",
-    "Flask-Cors==6.0.1",
+    "Flask-Cors==6.0.2",
     "Flask-JWT-Extended==4.7.1",
     "Flask-Migrate==4.1.0",
     "flask-oidc==2.4.0",
