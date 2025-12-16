@@ -34,7 +34,7 @@ class Products(Resource):
     """
 
     @auth_required("PUBLISH_ACCESS")
-    def get(self) -> dict[str, Any]:
+    def get(self) -> tuple[dict, HTTPStatus]:
         """Retrieve a list of products based on the provided filters.
 
         Returns:
@@ -48,15 +48,19 @@ class Products(Resource):
                 filters["range"] = request.args["range"]
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
+            if request.args.get("date_from"):
+                filters["date_from"] = request.args["date_from"]
+            if request.args.get("date_to"):
+                filters["date_to"] = request.args["date_to"]
 
             offset = int(request.args.get("offset", 0))
             limit = min(int(request.args.get("limit", 50)), 200)
+            return product.Product.get_json(filters, offset, limit, auth_manager.get_user_from_jwt()), HTTPStatus.OK
+
         except Exception as ex:
             msg = "Get Products failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, 400
-
-        return product.Product.get_json(filters, offset, limit, auth_manager.get_user_from_jwt())
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
     @auth_required("PUBLISH_CREATE")
     def post(self) -> product.Product:
@@ -121,7 +125,7 @@ class PublishProduct(Resource):
     """
 
     @auth_required("PUBLISH_PRODUCT")
-    def post(self, product_id: int, publisher_id: str) -> tuple[Any, int]:
+    def post(self, product_id: int, publisher_id: str) -> tuple[Any, HTTPStatus]:
         """Publish a product.
 
         Args:
@@ -135,7 +139,7 @@ class PublishProduct(Resource):
         product_data, status_code = presenters_manager.generate_product(product_id)
         if status_code == HTTPStatus.OK:
             return publishers_manager.publish(publisher_preset.PublisherPreset.find(publisher_id), product_data, None, None, None)
-        return "Failed to generate product", status_code
+        return {"error": "Failed to generate product"}, status_code
 
 
 class ProductsOverview(Resource):

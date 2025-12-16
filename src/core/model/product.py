@@ -220,6 +220,11 @@ class Product(db.Model):
             if filter["range"] == "MONTH":
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
+            if filter["range"] == "DATE":
+                date_limit = datetime.fromisoformat(filter["date_from"])
+                date_to = datetime.fromisoformat(filter["date_to"])
+                query = query.filter(Product.created <= date_to)
+
             query = query.filter(Product.created >= date_limit)
 
         if "sort" in filter:

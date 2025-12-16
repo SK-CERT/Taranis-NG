@@ -19,6 +19,7 @@ class ProductSchemaBase(Schema):
     id = fields.Int()
     title = fields.Str()
     description = fields.Str()
+    created = fields.DateTime()
     product_type_id = fields.Int()
     state_id = fields.Int(allow_none=True)
 
