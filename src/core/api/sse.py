@@ -1,21 +1,29 @@
 """SSE API endpoints."""
 
-from flask_restful import Resource
-import socket
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flask_restful import Api
+
 import json
-from flask import Response, stream_with_context
-from flask import request
+import socket
+from http import HTTPStatus
+
+from flask import Response, request, stream_with_context
+from flask_restful import Resource
 from managers import auth_manager
+from managers.log_manager import logger, sensitive_value
 from model.bots_node import BotsNode
 from model.remote import RemoteAccess
-from managers.log_manager import logger
 
 
-class TaranisSSE(Resource):
+class SseResource(Resource):
     """SSE API endpoint."""
 
     @stream_with_context
-    def stream(self):
+    def stream(self):  # noqa: ANN201
         """Stream data."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,7 +46,7 @@ class TaranisSSE(Resource):
             while True:
                 try:
                     b = sock.recv(1)
-                except socket.timeout:
+                except TimeoutError:
                     yield ":\n\n"
                     continue
 
@@ -67,7 +75,7 @@ class TaranisSSE(Resource):
         finally:
             sock.close()
 
-    def get(self):
+    def get(self) -> tuple[str, HTTPStatus]:
         """Get Response."""
         try:
             jwt_token = request.args.get("jwt")
@@ -79,7 +87,7 @@ class TaranisSSE(Resource):
                 if auth_manager.decode_user_from_jwt(jwt_token) is None:
                     msg = "SSE: decoding user from jwt failed."
                     logger.warning(msg)
-                    return msg, 403
+                    return msg, HTTPStatus.FORBIDDEN
             elif api_key is not None:
                 auth_type = "API key"
                 api_type = request.args.get("channel")
@@ -91,23 +99,24 @@ class TaranisSSE(Resource):
                     master_class = BotsNode
                 validated_object = master_class.get_by_api_key(api_key)
                 if not validated_object:
+                    api_key = sensitive_value(api_key)
                     msg = f"SSE: invalid {auth_type}: '{api_key}'"
                     logger.warning(msg)
-                    return msg, 403
+                    return msg, HTTPStatus.FORBIDDEN
 
             else:
                 msg = "SSE: missing authentication credentials."
                 logger.warning(msg)
-                return msg, 403
+                return msg, HTTPStatus.FORBIDDEN
 
             logger.info(f"SSE: streaming response {request.remote_addr} ({auth_type})")
             return Response(self.stream(), mimetype="text/event-stream")
         except Exception as ex:
             msg = "SSE: Error in streaming response"
             logger.exception(msg, ex)
-            return msg, 500
+            return msg, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def initialize(api):
+def initialize(api: Api) -> None:
     """Initialize API endpoints."""
-    api.add_resource(TaranisSSE, "/sse")
+    api.add_resource(SseResource, "/sse")
