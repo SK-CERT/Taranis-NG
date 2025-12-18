@@ -126,7 +126,7 @@ const messages_sk = {
         successful_edit: "OSINT zdroj bol úspešne aktualizovaný",
         removed: "OSINT zdroj bol úspešne odstránený",
         removed_error: "OSINT zdroj sa používa a nie je možné ho odstrániť",
-        filter_wordlist: "Filtrovať články pomocou zoznamov slov",
+        filter_wordlist: "Ponechať iba články, ktoré sa zhodujú aspoň s jedným slovom z vybraných zoznamov slov",
         type: "Typ",
         total_count: "Počet OSINT zdrojov: ",
         osint_source_groups: "Skupiny OSINT zdrojov",

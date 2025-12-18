@@ -218,7 +218,7 @@ const messages_en = {
         successful_edit: "OSINT source was successfully updated",
         removed: "OSINT source was successfully deleted",
         removed_error: "OSINT source is in use and could not be deleted",
-        filter_wordlist: "Filter articles using word lists",
+        filter_wordlist: "Keep only articles that match at least one word from the selected word lists",
         type: "Type",
         total_count: "OSINT Sources count: ",
         osint_source_groups: "OSINT Source Groups",

@@ -218,7 +218,7 @@ const messages_cs = {
         successful_edit: "Zdroj OSINT byl upraven",
         removed: "Zdroj OSINT byl úspěšně smazán",
         removed_error: "Zdroj OSINT je používán a nelze jej smazat",
-        filter_wordlist: "Filtrování článků pomocí seznamů slov",
+        filter_wordlist: "Zachovat pouze články, které odpovídají alespoň jednomu slovu z vybraných seznamů slov",
         type: "Typ",
         total_count: "Počet zdrojů OSINT: ",
         osint_source_groups: "Skupiny zdrojů OSINT",
