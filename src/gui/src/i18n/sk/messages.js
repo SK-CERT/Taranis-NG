@@ -113,15 +113,33 @@ const messages_sk = {
 
     osint_source: {
         add_new: "Pridať nový OSINT zdroj",
-        node: "Server zberača údajov",
-        collector: "Zberač údajov",
-        error: "Nepodarilo sa vytvoriť zadaný zdroj",
-        name: "Meno",
+        edit: "Upraviť OSINT zdroj",
+        node: "Inštancia kolektoru",
+        collector: "Kolektor",
+        error: "Nepodarilo sa uložiť tento OSINT zdroj",
+        name: "Názov",
         description: "Popis",
         last_attempt: "Posledný pokus",
         last_collected: "Posledný zber",
         last_error_message: "Posledná chyba",
-        successful: "Nový OSINT zdroj bol úspešne pridaný"
+        successful: "Nový OSINT zdroj bol úspešne pridaný",
+        successful_edit: "OSINT zdroj bol úspešne aktualizovaný",
+        removed: "OSINT zdroj bol úspešne odstránený",
+        removed_error: "OSINT zdroj sa používa a nie je možné ho odstrániť",
+        filter_wordlist: "Ponechať iba články, ktoré sa zhodujú aspoň s jedným slovom z vybraných zoznamov slov",
+        type: "Typ",
+        total_count: "Počet OSINT zdrojov: ",
+        osint_source_groups: "Skupiny OSINT zdrojov",
+        tooltip: {
+            select_all: "Vybrať všetko",
+            unselect_all: "Zrušiť výber všetkého"
+        },
+        notification: {
+            success: "Kolektory boli úspešne pridané"
+        },
+        dialog_import: "Importovať OSINT zdroje",
+        import: "Importovať",
+        export: "Exportovať"
     },
 
     product: {
