@@ -39,18 +39,16 @@
                         <!-- #tab-2 -->
                         <v-tab-item value="tab-2" class="pa-0">
                             <v-container fluid>
-                                <v-data-table
-                                    v-model="selected_word_lists"
-                                    :headers="headers"
-                                    :items="word_lists"
-                                    item-key="id"
-                                    show-select
-                                    class="elevation-1"
-                                >
+                                <v-data-table v-model="selected_word_lists"
+                                              :headers="headers"
+                                              :items="word_lists"
+                                              item-key="id"
+                                              show-select
+                                              class="elevation-1">
 
                                     <template v-slot:top>
                                         <v-toolbar flat>
-                                            <v-toolbar-title>{{$t('osint_source.word_lists')}}</v-toolbar-title>
+                                            <v-toolbar-title>{{$t('assess.tooltip.highlight_wordlist')}}</v-toolbar-title>
                                         </v-toolbar>
                                     </template>
 
@@ -95,20 +93,16 @@
             <!-- Press Key Dialog -->
             <template>
                 <div class="text-center">
-                    <v-dialog
-                            v-model="pressKeyVisible"
-                            width="300"
-                            persistent
-                            v-on:keydown="pressKey"
-                    >
+                    <v-dialog v-model="pressKeyVisible"
+                              width="300"
+                              persistent
+                              v-on:keydown="pressKey">
                         <v-card color="primary" dark>
                             <v-card-text class="white--text">
                                 {{$t('settings.press_key')}}<span class="font-weight-bold">{{$t('settings.' + hotkeyAlias)}}</span>
-                                <v-progress-linear
-                                        indeterminate
-                                        color="white"
-                                        class="mb-0"
-                                ></v-progress-linear>
+                                <v-progress-linear indeterminate
+                                                   color="white"
+                                                   class="mb-0"></v-progress-linear>
                             </v-card-text>
                         </v-card>
                     </v-dialog>

@@ -107,7 +107,7 @@
 
                                 <template v-slot:top>
                                     <v-toolbar flat>
-                                        <v-toolbar-title>{{ $t('osint_source.word_lists') }}</v-toolbar-title>
+                                        <v-toolbar-title>{{ $t('osint_source.filter_wordlist') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
 
