@@ -16,12 +16,12 @@
                             <a v-if="canAccess" :href="news_item.news_items[0].news_item_data.link" rel="noreferrer"
                                target="_blank" :title="$t('assess.tooltip.open_source')">
                                 <v-btn small icon>
-                                    <v-icon small color="accent">mdi-open-in-app</v-icon>
+                                    <v-icon small color="white">mdi-open-in-app</v-icon>
                                 </v-btn>
                             </a>
                             <v-btn v-if="canCreateReport" small icon @click.stop="cardItemToolbar('new')" data-btn="new"
                                    :title="$t('assess.tooltip.analyze_item')">
-                                <v-icon small color="accent">mdi-file-outline</v-icon>
+                                <v-icon small color="white">mdi-file-outline</v-icon>
                             </v-btn>
                             <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('read')"
                                    :title="$t('assess.tooltip.read_item')">
@@ -41,7 +41,7 @@
                             </v-btn>
                             <v-btn v-if="canDelete" small icon @click.stop="showMsgBox()"
                                    :title="$t('assess.tooltip.delete_item')">
-                                <v-icon small color="accent">mdi-delete</v-icon>
+                                <v-icon small color="white">mdi-delete</v-icon>
                             </v-btn>
                         </div>
 
@@ -325,9 +325,9 @@ export default {
 
         buttonStatus: function (active) {
             if (active) {
-                return "primary:lighten"
+                return "amber"
             } else {
-                return "accent"
+                return "white"
             }
         },
         showMsgBox() {

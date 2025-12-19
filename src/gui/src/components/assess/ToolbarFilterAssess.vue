@@ -79,17 +79,17 @@
                     <!-- Review Toggle -->
                     <v-btn x-small text @click="hideReview" class="ma-0 pa-0 mr-1" :title="$t('assess.tooltip.hide_review')">
                         <v-icon v-if="review_toggle" center color="black">mdi-text-box-remove-outline</v-icon>
-                        <v-icon v-else center color="orange">mdi-text-box-outline</v-icon>
+                        <v-icon v-else center color="amber darken-2">mdi-text-box-outline</v-icon>
                     </v-btn>
                     <!-- Source link Toggle -->
                     <v-btn x-small text @click="hideSourceLink" class="ma-0 pa-0 mr-1" :title="$t('assess.tooltip.hide_source_link')">
                         <v-icon v-if="source_link_toggle" center color="black">mdi-web-remove</v-icon>
-                        <v-icon v-else center color="orange">mdi-web</v-icon>
+                        <v-icon v-else center color="amber darken-2">mdi-web</v-icon>
                     </v-btn>
                     <!-- Wordlist Togle -->
                     <v-btn x-small text @click="hideWordlist" class="ma-0 pa-0" :title="$t('assess.tooltip.highlight_wordlist')">
                         <v-icon v-if="word_list_toggle" center color="black">mdi-alphabetical-variant-off</v-icon>
-                        <v-icon v-else center color="orange">mdi-alphabetical-variant</v-icon>
+                        <v-icon v-else center color="amber darken-2">mdi-alphabetical-variant</v-icon>
                     </v-btn>
                 </div>
             </v-col>
