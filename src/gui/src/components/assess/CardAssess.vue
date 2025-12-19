@@ -91,19 +91,19 @@
                                                            data-btn="link" :title="$t('assess.tooltip.open_source')">
                                                         <a class="alink" :href="card.news_items[0].news_item_data.link"
                                                            target="_blank" rel="noreferer">
-                                                            <v-icon color="accent">mdi-open-in-app</v-icon>
+                                                            <v-icon color="primary">mdi-open-in-app</v-icon>
                                                         </a>
                                                     </v-btn>
                                                     <v-btn v-if="!singleAggregate && canModify" icon
                                                            @click.stop="cardItemToolbar('ungroup')"
                                                            data-btn="ungroup"
                                                            :title="$t('assess.tooltip.ungroup_news_item')">
-                                                        <v-icon color="accent">mdi-ungroup</v-icon>
+                                                        <v-icon color="primary">mdi-ungroup</v-icon>
                                                     </v-btn>
                                                     <v-btn v-if="canCreateReport" icon @click.stop="cardItemToolbar('new')"
                                                            :title="$t('assess.tooltip.analyze_item')"
                                                            data-btn="new">
-                                                        <v-icon color="accent">mdi-file-outline</v-icon>
+                                                        <v-icon color="primary">mdi-file-outline</v-icon>
                                                     </v-btn>
                                                     <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
                                                            data-btn="read" :title="$t('assess.tooltip.read_item')">
@@ -128,7 +128,7 @@
                                                     <v-btn v-if="canDelete" icon @click.stop="showMsgBox()"
                                                            :title="$t('assess.tooltip.delete_item')"
                                                            data-btn="delete">
-                                                        <v-icon color="accent">{{ UI.ICON.DELETE }}</v-icon>
+                                                        <v-icon color="primary">{{ UI.ICON.DELETE }}</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                             </v-row>
@@ -137,7 +137,7 @@
                                                 <v-col v-bind="UI.CARD.COL.TOOLS">
                                                     <v-btn icon @click.stop="cardItemToolbar('remove')"
                                                            :title="$t('assess.tooltip.remove_item')">
-                                                        <v-icon color="accent">mdi-minus-circle-outline</v-icon>
+                                                        <v-icon color="primary">mdi-minus-circle-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                             </v-row>
@@ -159,7 +159,7 @@
                         :alert=true>
             </MessageBox>
         </v-row>
-        <div v-if="opened" dark class="ml-16 mb-8 grey lighten-4 rounded">
+        <div v-if="opened" dark class="ml-16 mb-8 rounded">
             <CardAssessItem v-for="news_item in card.news_items" :key="news_item.id" :news_item="news_item"
                             :analyze_selector="analyze_selector" :compact_mode="compact_mode"
                             :word_list_regex="word_list_regex"
@@ -312,6 +312,7 @@
                     return null;
                 }
             },
+
             cardItemToolbar(action) {
 
                 switch (action) {
@@ -387,9 +388,9 @@
 
             buttonStatus: function (active) {
                 if (active) {
-                    return "info"
+                    return "amber darken-2"
                 } else {
-                    return "accent"
+                    return "primary"
                 }
             },
             wordCheck(target) {

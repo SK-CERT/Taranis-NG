@@ -72,12 +72,12 @@
                                                :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS" :style="UI.STYLE.card_toolbar_strip_bottom">
                                                 <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('ungroup')" data-btn="ungroup" :title="$t('assess.tooltip.ungroup_item')">
-                                                    <v-icon color="accent">mdi-ungroup</v-icon>
+                                                    <v-icon color="primary">mdi-ungroup</v-icon>
                                                 </v-btn>
 
                                                 <v-btn v-if="canAccess" icon @click.stop="cardItemToolbar('link')" data-btn="link" :title="$t('assess.tooltip.open_source')">
                                                     <a class="alink" :href="news_item.news_item_data.link" target="_blank" rel="noreferer">
-                                                        <v-icon color="accent">mdi-open-in-app</v-icon>
+                                                        <v-icon color="primary">mdi-open-in-app</v-icon>
                                                     </a>
                                                 </v-btn>
 
@@ -98,7 +98,7 @@
                                                 </v-btn>
 
                                                 <v-btn v-if="canDelete" icon @click.stop="showMsgBox" data-btn="delete" :title="$t('assess.tooltip.delete_item')">
-                                                    <v-icon color="accent">mdi-delete</v-icon>
+                                                    <v-icon color="primary">mdi-delete</v-icon>
                                                 </v-btn>
 
                                             </v-col>
@@ -281,9 +281,9 @@
 
             buttonStatus: function (active) {
                 if (active) {
-                    return "info"
+                    return "amber darken-2"
                 } else {
-                    return "accent"
+                    return "primary"
                 }
             },
             wordCheck(target) {

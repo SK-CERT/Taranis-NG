@@ -12,11 +12,11 @@
 
                         <div v-if="!multiSelectActive && !analyze_selector">
                             <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')" :title="$t('assess.tooltip.ungroup_item')">
-                                <v-icon small color="accent">mdi-ungroup</v-icon>
+                                <v-icon small color="white">mdi-ungroup</v-icon>
                             </v-btn>
                             <a v-if="canAccess" :href="news_item.news_item_data.link" target="_blank" rel="noreferrer" :title="$t('assess.tooltip.open_source')">
                                 <v-btn small icon>
-                                    <v-icon small color="accent">mdi-open-in-app</v-icon>
+                                    <v-icon small color="white">mdi-open-in-app</v-icon>
                                 </v-btn>
                             </a>
                             <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('read')" :title="$t('assess.tooltip.read_item')">
@@ -32,7 +32,7 @@
                                 <v-icon small :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
                             </v-btn>
                             <v-btn v-if="canDelete" small icon @click.stop="showMsgBox" :title="$t('assess.tooltip.delete_item')">
-                                <v-icon small color="accent">mdi-delete</v-icon>
+                                <v-icon small color="white">mdi-delete</v-icon>
                             </v-btn>
                         </div>
 
@@ -248,9 +248,9 @@
 
             buttonStatus: function (active) {
                 if (active) {
-                    return "primary:lighten"
+                    return "amber"
                 } else {
-                    return "accent"
+                    return "white"
                 }
             },
             showMsgBox() {
