@@ -10,7 +10,7 @@ dependencies = [
     "Flask-RESTful==0.3.10",
     "gevent==25.9.1",
     "gunicorn==23.0.0",
-    "marshmallow==4.1.1",
+    "marshmallow==4.1.2",
     "oauthlib==3.3.1",
     "PySocks==1.7.1",
     "python-dotenv==1.2.1",
