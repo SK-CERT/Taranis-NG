@@ -28,7 +28,7 @@
                             <v-list-item-content v-if="!link.separator">
                                 <v-icon regular color="cx-drawer-text">{{ link.icon }}</v-icon>
                                 <v-list-item-title class="cx-drawer-text--text">
-                                    {{ $t(link.title) }}
+                                    {{ link.title }}
                                 </v-list-item-title>
                             </v-list-item-content>
                             <v-list-item-content class="separator" v-else>

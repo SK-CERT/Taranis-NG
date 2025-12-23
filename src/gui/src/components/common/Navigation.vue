@@ -13,8 +13,7 @@
                 <v-list-item-content class="py-2" v-if="!link.separator">
                     <v-icon :color="link.color || 'cx-drawer-text'">{{ link.icon }}</v-icon>
                     <v-list-item-title class="cx-drawer-text--text caption">
-                        <span v-if="link.translate">{{ $t(link.title) }}</span>
-                        <span v-else>{{ link.title }}</span>
+                        <span>{{ link.translate ? $t(link.title) : link.title }}</span>
                     </v-list-item-title>
                 </v-list-item-content>
                 <v-list-item-content class="separator py-0 blue-grey" v-else>
