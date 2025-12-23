@@ -24,7 +24,8 @@
 
                     this.links.push({
                         icon: 'mdi-home-circle-outline',
-                        title: this.$t('nav_menu.local'),
+                        title: 'nav_menu.local',
+                        translate: '1',
                         route: '/analyze/local',
                     })
 

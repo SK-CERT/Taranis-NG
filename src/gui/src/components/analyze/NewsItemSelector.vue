@@ -14,14 +14,16 @@
                             <span>{{$t('common.add')}}</span>
                         </v-btn>
                     </v-toolbar>
-                    <v-container class="pa-0 pt-12 grey darken-4" style="max-width: 96px !important; position: fixed; left: 0; top: 0; height: 100%;">
-                        <v-list dense dark>
+                    <v-container class="pa-0 pt-12 cx-drawer-bg" style="max-width: 96px !important; position: fixed; left: 0; top: 0; height: 100%;">
+                        <v-list dense color="cx-drawer-bg">
                             <v-list-item v-for="link in links" :key="link.id" @click="changeGroup($event, link.id)"
-                                         class="px-0" align="center"
-                                         :class="link.id === selected_group_id ? 'active' : ''">
-                                <v-list-item-content class="">
-                                    <v-icon>{{ link.icon }}</v-icon>
-                                    <v-list-item-title style="white-space: unset; font-size: 0.7em;">{{ link.title }}</v-list-item-title>
+                                         class="px-1" align="center"
+                                         :class="link.id == selected_group_id ? 'v-list-item--active' : ''">
+                                <v-list-item-content class="py-2">
+                                    <v-icon :color="link.color || 'cx-drawer-text'">{{ link.icon }}</v-icon>
+                                    <v-list-item-title class="cx-drawer-text--text caption" style="white-space: unset">
+                                        <span>{{ link.translate ? $t(link.title) : link.title }}</span>
+                                    </v-list-item-title>
                                 </v-list-item-content>
                             </v-list-item>
                         </v-list>
@@ -115,7 +117,7 @@
             value: "",
             groups: [],
             links: [],
-            selected_group_id: "",
+            selected_group_id: null,
             msgbox_visible: false,
             to_delete: Object,
         }),
@@ -138,7 +140,7 @@
 
             openSelector() {
                 this.selected_group_id = this.$store.getters.getCurrentGroup
-                if (this.selected_group_id === '') {
+                if (!this.selected_group_id) {
                     this.selected_group_id = this.groups[0].id
                     this.$store.dispatch("changeCurrentGroup", this.selected_group_id);
                 }
@@ -264,14 +266,8 @@
         mounted() {
             this.$store.dispatch('getAllOSINTSourceGroupsAssess', { search: '' })
                 .then(() => {
-                    this.groups = this.$store.getters.getOSINTSourceGroups.items;
-                    for (let i = 0; i < this.groups.length; i++) {
-                        this.links.push({
-                            icon: 'mdi-folder-multiple',
-                            title: this.groups[i].name,
-                            id: this.groups[i].id
-                        })
-                    }
+                    this.groups = this.$store.getters.getOSINTSourceGroupsAssess;
+                    this.links = [...this.groups]
                 });
 
             this.$root.$on('report-item-updated', this.report_item_updated)

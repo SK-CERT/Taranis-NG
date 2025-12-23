@@ -450,6 +450,40 @@ const getters = {
         return state.osint_source_groups
     },
 
+    getOSINTSourceGroupsAssess(state) {
+        // Build groups list for Assess including "All" category
+        let groups = [];
+        groups.push({
+            icon: 'mdi-folder-multiple',
+            color: '#81D4FA',
+            title: 'osint_source_group.all',
+            translate: '1',
+            route: '/assess/group/all',
+            id: 'all'
+        });
+        const items = (state.osint_source_groups && state.osint_source_groups.items) ? state.osint_source_groups.items : [];
+        for (let i = 0; i < items.length; i++) {
+            const g = items[i];
+            let title = g.name
+            let translate = ''
+            let color = null
+            if (g.default === true) {
+                title = 'osint_source_group.default_group'
+                translate = '1'
+                color = '#BDBDBD'
+            }
+            groups.push({
+                icon: 'mdi-folder-multiple',
+                color: color,
+                title: title,
+                translate: translate,
+                route: '/assess/group/' + g.id,
+                id: g.id
+            })
+        }
+        return groups;
+    },
+
     getPresentersNodes(state) {
         return state.presenters_nodes
     },
