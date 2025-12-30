@@ -476,7 +476,7 @@ def bot_management(
             logger.warning(f"Bot node '{opt_name}' already exists!")
             abort()
 
-        node = bots_node.BotsNode(opt_id, opt_name, opt_description, opt_api_url, opt_api_key)
+        node = bots_node.BotsNode("", opt_name, opt_description, opt_api_url, opt_api_key)
         modules = ConfigBot().modules
         for mod in modules:
             bott = bot.Bot(mod.name, mod.description, mod.type, [])
