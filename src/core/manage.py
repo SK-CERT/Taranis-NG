@@ -1,44 +1,51 @@
 #!/usr/bin/env python
 
 """Module for managing the application from the command line."""
+# from typing import TYPE_CHECKING
+
+# if TYPE_CHECKING:
+#     from flask.app import Flask
 
 import random
 import string
 import time
-import click
-
+from http import HTTPStatus
 from os import abort, getenv, read
+from pathlib import Path
+
+import click
 from flask import Flask
 from flask.cli import FlaskGroup
-
 from managers import db_manager
+from managers.log_manager import logger
 from model import (  # noqa: F401  Don't remove 'osint_source' and bot_preset reference otherwise relationship problems
-    user,
-    role,
-    collector,
-    collectors_node,
-    bot,
-    bots_node,
-    bot_preset,
-    permission,
-    osint_source,
-    parameter,
     apikey,
     attribute,
+    bot,
+    bot_preset,
+    bots_node,
+    collector,
+    collectors_node,
+    osint_source,
+    parameter,
+    permission,
+    role,
+    user,
 )
-from remote.collectors_api import CollectorsApi
 from remote.bots_api import BotsApi
-from managers.log_manager import logger
-from shared.config_collector import ConfigCollector
+from remote.collectors_api import CollectorsApi
+
 from shared.config_bot import ConfigBot
+from shared.config_collector import ConfigCollector
 
 
-def create_app():
+def create_app() -> Flask:
     """Create and configure the Flask application.
 
     This function initializes the Flask application, loads the configuration
     from the 'config.Config' class, and initializes the database manager.
     It also waits for the database to be ready before returning the app instance.
+
     Returns:
         Flask: The initialized Flask application instance.
     """
@@ -48,7 +55,7 @@ def create_app():
     db_manager.wait_for_db(app)
 
     @app.teardown_appcontext
-    def shutdown_session(exception=None):
+    def shutdown_session(exception: BaseException | None) -> None:  # noqa: ARG001
         db_manager.db.session.remove()
         db_manager.db.engine.dispose()
 
@@ -56,12 +63,11 @@ def create_app():
 
 
 @click.group(cls=FlaskGroup, create_app=create_app)
-def cli():
+def cli() -> None:
     """Command Line Interface (CLI) entry point for the application.
 
     This function does not implement any functionality.
     """
-    pass
 
 
 @cli.command()
@@ -73,7 +79,16 @@ def cli():
 @click.option("--name", "opt_name", default="")
 @click.option("--password", "opt_password")
 @click.option("--roles", "opt_roles")
-def account(opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, opt_password, opt_roles):
+def account(
+    opt_list: bool,
+    opt_create: bool,
+    opt_edit: bool,
+    opt_delete: bool,
+    opt_username: str,
+    opt_name: str,
+    opt_password: str,
+    opt_roles: str,
+) -> None:
     """Manage user accounts.
 
     Args:
@@ -90,9 +105,7 @@ def account(opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, 
         users = user.User.get_all()
         ordered_users = sorted(users, key=lambda x: x.id)
         for us in ordered_users:
-            roles = []
-            for r in us.roles:
-                roles.append(r.id)
+            roles = [r.id for r in us.roles]
             logger.info(f"Id: {us.id}\n\tUsername: {us.username}\n\tName: {us.name}\n\tRoles: {roles}")
 
     if opt_create:
@@ -178,7 +191,17 @@ def account(opt_list, opt_create, opt_edit, opt_delete, opt_username, opt_name, 
 @click.option("--name", "opt_name")
 @click.option("--description", "opt_description", default="")
 @click.option("--permissions", "opt_permissions")
-def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_id, opt_name, opt_description, opt_permissions):
+def role_management(
+    opt_list: bool,
+    opt_create: bool,
+    opt_edit: bool,
+    opt_delete: bool,
+    opt_filter: str,
+    opt_id: str,
+    opt_name: str,
+    opt_description: str,
+    opt_permissions: str,
+) -> None:
     """Manage roles.
 
     Args:
@@ -193,16 +216,9 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
         opt_permissions (str): Permissions assigned to the role.
     """
     if opt_list:
-        roles = None
-        if opt_filter:
-            roles = role.Role.get(opt_filter)[0]
-        else:
-            roles = role.Role.get_all()
-
+        roles = role.Role.get(opt_filter)[0] if opt_filter else role.Role.get_all()
         for ro in roles:
-            perms = []
-            for p in ro.permissions:
-                perms.append(p.id)
+            perms = [p.id for p in ro.permissions]
             logger.info(f"Id: {ro.id}\n\tName: {ro.name}\n\tDescription: {ro.description}\n\tPermissions: {perms}")
 
     if opt_create:
@@ -236,10 +252,9 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
             logger.error("Please specify a new name, description or permissions!")
             abort()
 
-    if opt_delete:
-        if not opt_id or not opt_name:
-            logger.error("Role id or name not specified!")
-            abort()
+    if opt_delete and (not opt_id or not opt_name):
+        logger.error("Role id or name not specified!")
+        abort()
 
 
 @cli.command("collector")
@@ -256,19 +271,19 @@ def role_management(opt_list, opt_create, opt_edit, opt_delete, opt_filter, opt_
 @click.option("--api-url", "opt_api_url")
 @click.option("--api-key", "opt_api_key")
 def collector_management(
-    opt_list,
-    opt_create,
-    opt_edit,
-    opt_delete,
-    opt_update,
-    opt_all,
-    opt_show_api_key,
-    opt_id,
-    opt_name,
-    opt_description,
-    opt_api_url,
-    opt_api_key,
-):
+    opt_list: bool,
+    opt_create: bool,
+    opt_edit: bool,
+    opt_delete: bool,
+    opt_update: bool,
+    opt_all: bool,
+    opt_show_api_key: bool,
+    opt_id: str,
+    opt_name: str,
+    opt_description: str,
+    opt_api_url: str,
+    opt_api_key: str,
+) -> None:
     """Manage collectors.
 
     Args:
@@ -293,18 +308,14 @@ def collector_management(
             sources = []
             for c in node.collectors:
                 capabilities.append(c.type)
-                for s in c.sources:
-                    sources.append(f"{s.name} ({s.id})")
-            if opt_show_api_key:
-                api_key_str = f"API key: {node.api_key}\n\t"
-            else:
-                api_key_str = ""
+                sources.extend(f"{s.name} ({s.id})" for s in c.sources)
+            api_key_str = f"API key: {node.api_key}\n\t" if opt_show_api_key else ""
             logger.info(
                 f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
-                f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}"
+                f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tSources: {sources}",
             )
-        # We need print here, because the prestart_core.sh relies on the output
-        print(f"Total: {len(collector_nodes)}")
+        # We need use print here, because the prestart_core.sh relies on the output
+        print(f"Total: {len(collector_nodes)}")  # noqa: T201
 
     if opt_create:
         if not opt_name or not opt_api_url or not opt_api_key:
@@ -315,7 +326,7 @@ def collector_management(
             logger.warning(f"Collector node '{opt_name}' already exists!")
             abort()
 
-        node = collectors_node.CollectorsNode(opt_name, opt_description, opt_api_url, opt_api_key)
+        node = collectors_node.CollectorsNode("", opt_name, opt_description, opt_api_url, opt_api_key)
         modules = ConfigCollector().modules
         for mod in modules:
             col = collector.Collector(mod.name, mod.description, mod.type, [])
@@ -341,13 +352,13 @@ def collector_management(
                     time.sleep(delay)
                 delay *= 2
 
-        if status_code == 200:
+        if status_code == HTTPStatus.OK:
             logger.info(f"Collector node '{opt_name}' registered.")
         else:
             logger.error(
                 "Unable to register a new collector node! Wait until the new Collector container starts and register it manually.\n"
                 f"1) running 'python manage.py collector --update --name \"{opt_name}\"'\n"
-                "2) from the Taranis configuration screen (just re-save the record)"
+                "2) from the Taranis configuration screen (just re-save the record)",
             )
 
     if opt_edit:
@@ -358,14 +369,13 @@ def collector_management(
             logger.error("Please specify a new name, description, API url or key!")
             abort()
 
-    if opt_delete:
-        if not opt_name:
-            logger.error("Collector node id or name not specified!")
-            abort()
+    if opt_delete and not opt_name:
+        logger.error("Collector node id or name not specified!")
+        abort()
 
     if opt_update:
         if not opt_all and not opt_id and not opt_name:
-            logger.error("Collector node id or name not specified!\n" "If you want to update all collectors, pass the --all parameter.")
+            logger.error("Collector node id or name not specified!\nIf you want to update all collectors, pass the --all parameter.")
             abort()
 
         nodes = None
@@ -389,7 +399,7 @@ def collector_management(
             # refresh collector node id
             try:
                 collectors_info, status_code = CollectorsApi(node.api_url, node.api_key).get_collectors_info(node.id)
-                if status_code == 200:
+                if status_code == HTTPStatus.OK:
                     logger.info(f"Collector node '{node.name}' updated.")
                 else:
                     logger.error(f"Unable to update collector node '{node.name}'.\n\tResponse: [{status_code}] {collectors_info}.")
@@ -411,19 +421,19 @@ def collector_management(
 @click.option("--api-url", "opt_api_url")
 @click.option("--api-key", "opt_api_key")
 def bot_management(
-    opt_list,
-    opt_create,
-    opt_edit,
-    opt_delete,
-    opt_update,
-    opt_all,
-    opt_show_api_key,
-    opt_id,
-    opt_name,
-    opt_description,
-    opt_api_url,
-    opt_api_key,
-):
+    opt_list: bool,
+    opt_create: bool,
+    opt_edit: bool,
+    opt_delete: bool,
+    opt_update: bool,
+    opt_all: bool,
+    opt_show_api_key: bool,
+    opt_id: str,
+    opt_name: str,
+    opt_description: str,
+    opt_api_url: str,
+    opt_api_key: str,
+) -> None:
     """Manage bots.
 
     Args:
@@ -448,18 +458,14 @@ def bot_management(
             presets = []
             for c in node.bots:
                 capabilities.append(c.type)
-                for s in c.presets:
-                    presets.append(f"{s.name} ({s.id})")
-            if opt_show_api_key:
-                api_key_str = f"API key: {node.api_key}\n\t"
-            else:
-                api_key_str = ""
+                presets.extend(f"{s.name} ({s.id})" for s in c.presets)
+            api_key_str = f"API key: {node.api_key}\n\t" if opt_show_api_key else ""
             logger.info(
                 f"Id: {node.id}\n\tName: {node.name}\n\tURL: {node.api_url}\n\t{api_key_str}Created: {node.created}\n\t"
-                f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tPresets: {presets}"
+                f"Last seen: {node.last_seen}\n\tCapabilities: {capabilities}\n\tPresets: {presets}",
             )
-        # We need print here, because the prestart_core.sh relies on the output
-        print(f"Total: {len(bot_nodes)}")
+        # We need use print here, because the prestart_core.sh relies on the output
+        print(f"Total: {len(bot_nodes)}")  # noqa: T201
 
     if opt_create:
         if not opt_name or not opt_api_url or not opt_api_key:
@@ -470,7 +476,7 @@ def bot_management(
             logger.warning(f"Bot node '{opt_name}' already exists!")
             abort()
 
-        node = bots_node.BotsNode(opt_id, opt_name, opt_description, opt_api_url, opt_api_key)
+        node = bots_node.BotsNode("", opt_name, opt_description, opt_api_url, opt_api_key)
         modules = ConfigBot().modules
         for mod in modules:
             bott = bot.Bot(mod.name, mod.description, mod.type, [])
@@ -496,13 +502,13 @@ def bot_management(
                     time.sleep(delay)
                 delay *= 2
 
-        if status_code == 200:
+        if status_code == HTTPStatus.OK:
             logger.info(f"Bot node '{opt_name}' registered.")
         else:
             logger.error(
                 "Unable to register a new bot node! Wait until the new Bot container starts and register it manually.\n"
                 f"1) running 'python manage.py bot --update --name \"{opt_name}\"'\n"
-                "2) from the Taranis configuration screen (just re-save the record)"
+                "2) from the Taranis configuration screen (just re-save the record)",
             )
 
     if opt_edit:
@@ -513,14 +519,13 @@ def bot_management(
             logger.error("Please specify a new name, description, API url or key!")
             abort()
 
-    if opt_delete:
-        if not opt_name:
-            logger.error("Bot node id or name not specified!")
-            abort()
+    if opt_delete and not opt_name:
+        logger.error("Bot node id or name not specified!")
+        abort()
 
     if opt_update:
         if not opt_all and not opt_id and not opt_name:
-            logger.error("Bot node id or name not specified!\n" "If you want to update all bots, pass the --all parameter.")
+            logger.error("Bot node id or name not specified!\nIf you want to update all bots, pass the --all parameter.")
             abort()
 
         nodes = None
@@ -544,7 +549,7 @@ def bot_management(
             # refresh bot node id
             try:
                 bots_info, status_code = BotsApi(node.api_url, node.api_key).get_bots_info(node.id)
-                if status_code == 200:
+                if status_code == HTTPStatus.OK:
                     logger.info(f"Bot node '{node.name}' updated.")
                 else:
                     logger.error(f"Unable to update bot node '{node.name}'.\n\tResponse: [{status_code}] {bots_info}.")
@@ -556,16 +561,13 @@ def bot_management(
 @click.option("--upload-cve", "opt_cve", is_flag=True)
 @click.option("--upload-cpe", "opt_cpe", is_flag=True)
 @click.option("--upload-cwe", "opt_cwe", is_flag=True)
-def dictionary_management(opt_cve, opt_cpe, opt_cwe):
-    """Manage the dictionaries by uploading and loading CVE and CPE files.
-
-    This function uploads the CVE and CPE files and loads the dictionaries accordingly.
-    If `upload_cve` is True, it uploads the CVE file and loads the CVE dictionary.
-    If `upload_cpe` is True, it uploads the CPE file and loads the CPE dictionary.
+def dictionary_management(opt_cve: bool, opt_cpe: bool, opt_cwe: bool) -> None:
+    """Manage the dictionaries by uploading and loading CVE, CPE and CWE files.
 
     Args:
-        upload_cve (bool): Indicates whether to upload the CVE file and load the CVE dictionary.
-        upload_cpe (bool): Indicates whether to upload the CPE file and load the CPE dictionary.
+        opt_cve (bool): Indicates whether to upload the CVE file and load the CVE dictionary.
+        opt_cpe (bool): Indicates whether to upload the CPE file and load the CPE dictionary.
+        opt_cwe (bool): Indicates whether to upload the CWE file and load the CWE dictionary.
     """
     if opt_cve:
         cve_update_file = getenv("CVE_UPDATE_FILE")
@@ -609,14 +611,14 @@ def dictionary_management(opt_cve, opt_cpe, opt_cwe):
     logger.info("Dictionary was uploaded.")
 
 
-def upload_to(filename):
+def upload_to(filename: str) -> None:
     """Upload a file to the specified filename.
 
     Args:
         filename (str): The name of the file to upload.
     """
     try:
-        with open(filename, "wb") as out_file:
+        with Path(filename).open("wb") as out_file:
             while True:
                 chunk = read(0, 131072)
                 if not chunk:
@@ -634,7 +636,7 @@ def upload_to(filename):
 @click.option("--name", "-n", "opt_name")
 @click.option("--user", "-u", "opt_user")
 @click.option("--expires", "-e", "opt_expires")
-def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, opt_expires):
+def api_keys_management(opt_list: bool, opt_create: bool, opt_delete: bool, opt_name: str, opt_user: str, opt_expires: str) -> None:
     """Manage API keys.
 
     This function provides functionality to list, create, and delete API keys.
@@ -651,8 +653,7 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
         apikeys = apikey.ApiKey.get_all()
         for k in apikeys:
             logger.info(
-                f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key}\n\tCreated: {k.created_at}\n\tUser id: {k.user_id}\n\t"
-                f"Expires: {k.expires_at}"
+                f"Id: {k.id}\n\tName: {k.name}\n\tKey: {k.key}\n\tCreated: {k.created_at}\n\tUser id: {k.user_id}\n\tExpires: {k.expires_at}",
             )
 
     if opt_create:
@@ -678,7 +679,7 @@ def api_keys_management(opt_list, opt_create, opt_delete, opt_name, opt_user, op
         data = {
             # 'id': None,
             "name": opt_name,
-            "key": "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=40)),
+            "key": "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=40)),  # noqa: S311
             "user_id": u.id,
             "expires_at": opt_expires if opt_expires else None,
         }

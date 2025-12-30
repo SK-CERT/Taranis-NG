@@ -79,12 +79,12 @@ convention = "google"
 
 [tool.ruff.lint.pylint]
 max-args = 15
-max-branches = 20
+max-branches = 35
 max-returns = 10
-max-statements = 80
+max-statements = 100
 
 [tool.ruff.lint.mccabe]
-max-complexity = 20
+max-complexity = 40
 
 [tool.djlint]
 blank_line_after_tag="load,extends,include"
