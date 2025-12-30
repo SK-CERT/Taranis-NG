@@ -151,6 +151,7 @@ const messages_en = {
         name: "Name",
         username: "Username",
         aggregated_items: "Aggregated News Items",
+        last_seen: "Last Seen",
     },
 
     organization: {

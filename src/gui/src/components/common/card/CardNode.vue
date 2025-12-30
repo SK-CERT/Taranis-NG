@@ -22,6 +22,10 @@
                                     <div class="grey--text">{{$t('card_item.url')}}</div>
                                     <div>{{card.api_url}}</div>
                                 </v-col>
+                                <v-col v-if="card.last_seen !== undefined && card.last_seen !== null && card.last_seen !== ''">
+                                    <div class="grey--text">{{$t('card_item.last_seen')}}</div>
+                                    <div>{{card.last_seen}}</div>
+                                </v-col>
 
                                 <!--HOVER TOOLBAR-->
                                 <v-col :style="UI.STYLE.card_hover_toolbar">

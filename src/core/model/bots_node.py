@@ -1,27 +1,22 @@
 """BotsNode model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.bot import Bot
+    from model.bots_node import BotsNode
+
 import uuid
 from datetime import datetime
+
+from managers.db_manager import db
 from marshmallow import post_load
 from sqlalchemy import or_, orm
 
-from managers.db_manager import db
-from shared.schema.bots_node import BotsNodeSchema, BotsNodePresentationSchema
-
-
-class NewBotsNodeSchema(BotsNodeSchema):
-    """Schema for creating a new BotsNode."""
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Create a new BotsNode object from the schema data.
-
-        Args:
-            data: Data from the schema.
-        Returns:
-            BotsNode object.
-        """
-        return BotsNode(**data)
+from shared.common import TZ
+from shared.schema.bots_node import BotsNodePresentationSchema, BotsNodeSchema
 
 
 class BotsNode(db.Model):
@@ -44,11 +39,18 @@ class BotsNode(db.Model):
     api_key = db.Column(db.String(), nullable=False)
 
     created = db.Column(db.DateTime, default=datetime.now)
-    last_seen = db.Column(db.DateTime, default=datetime.now)
+    last_seen = db.Column(db.DateTime)
 
     bots = db.relationship("Bot", back_populates="node", cascade="all")
 
-    def __init__(self, id, name, description, api_url, api_key):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        api_url: str,
+        api_key: str,
+    ) -> None:
         """Initialize a new BotsNode object."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -60,25 +62,26 @@ class BotsNode(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the BotsNode object."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-server-network"
 
     @classmethod
-    def get_by_api_key(cls, api_key):
+    def get_by_api_key(cls, api_key: str) -> BotsNode:
         """Get a node by API key.
 
         Args:
             api_key: API key to search for.
+
         Returns:
             Node with the given API key.
         """
         return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[BotsNode]:
         """Get all nodes.
 
         Returns:
@@ -87,11 +90,12 @@ class BotsNode(db.Model):
         return cls.query.order_by(db.asc(BotsNode.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[BotsNode], int]:
         """Get nodes with search filter.
 
         Args:
             search: Search filter.
+
         Returns:
             List of nodes and the count of nodes.
         """
@@ -104,18 +108,18 @@ class BotsNode(db.Model):
         return query.order_by(db.asc(BotsNode.name)).all(), query.count()
 
     @classmethod
-    def get_by_id(cls, id):
+    def get_by_id(cls, node_id: str) -> BotsNode:
         """Get a node by ID.
 
         Args:
-            id (str): The ID of the node
+            node_id (str): The GUID of the node
         Returns:
             (BotsNode): The BotsNode object
         """
-        return cls.query.filter_by(id=id).first()
+        return cls.query.filter_by(id=node_id).first()
 
     @classmethod
-    def get_by_name(cls, name):
+    def get_by_name(cls, name: str) -> BotsNode:
         """Get a node by name.
 
         Args:
@@ -126,11 +130,12 @@ class BotsNode(db.Model):
         return cls.query.filter_by(name=name).first()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all nodes in JSON format.
 
         Args:
             search: Search filter.
+
         Returns:
             JSON object with the total count of nodes and the items.
         """
@@ -139,7 +144,7 @@ class BotsNode(db.Model):
         return {"total_count": count, "items": node_schema.dump(nodes)}
 
     @classmethod
-    def add_new(cls, node_data, bots):
+    def add_new(cls, node_data: dict, bots: list[Bot]) -> None:
         """Add a new node.
 
         Args:
@@ -153,7 +158,7 @@ class BotsNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, node_id, node_data, bots):
+    def update(cls, node_id: str, node_data: dict, bots: list[Bot]) -> None:
         """Update a node.
 
         Args:
@@ -168,35 +173,53 @@ class BotsNode(db.Model):
         node.description = updated_node.description
         node.api_url = updated_node.api_url
         node.api_key = updated_node.api_key
-        for bot in bots:
+        for b in bots:
             found = False
             for existing_bot in node.bots:
-                if bot.type == existing_bot.type:
+                if b.type == existing_bot.type:
                     found = True
                     break
 
             if found is False:
-                node.bots.append(bot)
+                node.bots.append(b)
 
         db.session.commit()
 
     @classmethod
-    def delete(cls, node_id):
+    def delete(cls, node_id: str) -> None:
         """Delete a node.
 
         Args:
             node_id: ID of the node to delete.
         """
         node = db.session.get(cls, node_id)
-        for bot in node.bots:
-            if len(bot.presets) > 0:
-                raise Exception("Bots has mapped presets")
+        for b in node.bots:
+            if len(b.presets) > 0:
+                msg = "Bots has mapped presets"
+                raise Exception(msg)  # noqa: TRY002
 
         db.session.delete(node)
         db.session.commit()
 
-    def updateLastSeen(self):
+    def update_last_seen(self) -> None:
         """Update the last seen date of the node."""
-        self.last_seen = datetime.now()
+        self.last_seen = datetime.now(TZ)
         db.session.add(self)
         db.session.commit()
+
+
+class NewBotsNodeSchema(BotsNodeSchema):
+    """Schema for creating a new BotsNode."""
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> BotsNode:  # noqa: ARG002, ANN003
+        """Create a new BotsNode object from the schema data.
+
+        Args:
+            data: Data from the schema.
+            **kwargs: Additional arguments.
+
+        Returns:
+            BotsNode object.
+        """
+        return BotsNode(**data)

@@ -44,11 +44,18 @@ class CollectorsNode(db.Model):
     api_key = db.Column(db.String(), nullable=False)
 
     created = db.Column(db.DateTime, default=datetime.now)
-    last_seen = db.Column(db.DateTime, default=datetime.now)
+    last_seen = db.Column(db.DateTime)
 
     collectors = db.relationship("Collector", back_populates="node", cascade="all")
 
-    def __init__(self, name: str, description: str, api_url: str, api_key: str) -> None:
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        api_url: str,
+        api_key: str,
+    ) -> None:
         """Initialize CollectorsNode object."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -167,7 +174,9 @@ class CollectorsNode(db.Model):
             #   orange (last ping late) < 300s
             #   red (no ping in a long time) > 300s
             try:
-                time_inactive = datetime.now(TZ) - max(nodes[i].created.replace(tzinfo=TZ), nodes[i].last_seen.replace(tzinfo=TZ))
+                created = nodes[i].created.replace(tzinfo=TZ)
+                last_seen = nodes[i].last_seen.replace(tzinfo=TZ) if nodes[i].last_seen is not None else created
+                time_inactive = datetime.now(TZ) - max(created, last_seen)
                 items[i]["status"] = "green" if time_inactive.seconds < 60 else "orange" if time_inactive.seconds < 300 else "red"  # noqa: PLR2004
             except Exception as ex:
                 logger.exception(f"Cannot update collector status: {ex}")
@@ -273,7 +282,7 @@ class NewCollectorsNodeSchema(CollectorsNodeSchema):
     """New Collectors Node Schema."""
 
     @post_load
-    def make_collectors_node(self, data: dict, **kwargs) -> CollectorsNode:  # noqa: ANN003, ARG002
+    def make(self, data: dict, **kwargs) -> CollectorsNode:  # noqa: ANN003, ARG002
         """Create Collectors Node object.
 
         Args:
@@ -283,4 +292,4 @@ class NewCollectorsNodeSchema(CollectorsNodeSchema):
         Returns:
             (CollectorsNode): The CollectorsNode object
         """
-        return CollectorsNode(name=data["name"], description=data["description"], api_url=data["api_url"], api_key=data["api_key"])
+        return CollectorsNode(**data)
