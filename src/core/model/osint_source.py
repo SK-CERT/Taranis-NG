@@ -1,53 +1,38 @@
 """OSINT Source model and schema definitions."""
 
+from __future__ import annotations
+
+from http import HTTPStatus
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.collectors_node import CollectorsNode
+    from model.osint_source import OSINTSource, OSINTSourceGroup
+    from model.user import User
+
 import uuid
 from datetime import datetime, timedelta
 
-from marshmallow import post_load, fields
-from sqlalchemy import orm, func, or_, and_
-from sqlalchemy.types import JSON
-
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.collector import Collector
 from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
+from sqlalchemy import and_, func, or_, orm
+from sqlalchemy.types import JSON
+
+from shared.common import TZ
 from shared.schema.acl_entry import ItemType
 from shared.schema.osint_source import (
-    OSINTSourceSchema,
+    OSINTSourceGroupIdSchema,
+    OSINTSourceGroupPresentationSchema,
     OSINTSourceGroupSchema,
     OSINTSourceIdSchema,
     OSINTSourcePresentationSchema,
-    OSINTSourceGroupPresentationSchema,
-    OSINTSourceGroupIdSchema,
+    OSINTSourceSchema,
 )
 from shared.schema.word_list import WordListIdSchema
-
-
-class NewOSINTSourceSchema(OSINTSourceSchema):
-    """Schema for creating a new OSINT source.
-
-    Attributes:
-        parameter_values (List[NewParameterValueSchema]): List of parameter values.
-        word_lists (List[WordListIdSchema]): List of word list IDs.
-        osint_source_groups (List[OSINTSourceGroupIdSchema]): List of OSINT source group IDs.
-    """
-
-    parameter_values = fields.List(fields.Nested(NewParameterValueSchema))
-    word_lists = fields.List(fields.Nested(WordListIdSchema))
-    osint_source_groups = fields.List(fields.Nested(OSINTSourceGroupIdSchema))
-
-    @post_load
-    def make_osint_source(self, data, **kwargs):
-        """Create a new OSINT source object from the schema data.
-
-        Args:
-            data (dict): Schema data.
-            kwargs: Arbitrary keyword arguments.
-        Returns:
-            OSINTSource: New OSINT source object.
-        """
-        return OSINTSource(**data)
 
 
 class OSINTSource(db.Model):
@@ -81,7 +66,7 @@ class OSINTSource(db.Model):
 
     word_lists = db.relationship("WordList", secondary="osint_source_word_list")
 
-    modified = db.Column(db.DateTime, default=datetime.now)
+    modified = db.Column(db.DateTime, default=datetime.now(TZ))
     last_collected = db.Column(db.DateTime, default=None)
     last_attempted = db.Column(db.DateTime, default=None)
     state = db.Column(db.SmallInteger, default=0)
@@ -89,17 +74,26 @@ class OSINTSource(db.Model):
     last_data = db.Column(JSON, default=None)
     status = None
 
-    def __init__(self, id, name, description, collector_id, parameter_values, word_lists, osint_source_groups):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        collector_id: str,
+        parameter_values: list[ParameterValue],
+        word_lists: list[WordList],
+        osint_source_groups: list[OSINTSourceGroup],
+    ) -> None:
         """Initialize OSINT source object.
 
         Args:
-            id (str): Source ID.
+            id (str): Source GUID.
             name (str): Source name.
             description (str): Source description.
-            collector_id (str): Collector ID.
-            parameter_values (List[ParameterValue]): List of parameter values.
-            word_lists (List[WordList]): List of word lists.
-            osint_source_groups (List[OSINTSourceGroup]): List of OSINT source groups.
+            collector_id (str): Collector GUID.
+            parameter_values (list[ParameterValue]): List of parameter values.
+            word_lists (list[WordList]): List of word lists.
+            osint_source_groups (list[OSINTSourceGroup]): List of OSINT source groups.
         """
         self.id = str(uuid.uuid4())
         self.name = name
@@ -119,24 +113,24 @@ class OSINTSource(db.Model):
                 self.osint_source_groups.append(group)
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the object after being loaded from the database."""
         self.tag = "mdi-animation-outline"
 
     @classmethod
-    def find(cls, source_id):
+    def find(cls, source_id: str) -> OSINTSource:
         """Find OSINT source by ID.
 
         Args:
             source_id (str): Source ID.
+
         Returns:
             OSINTSource: OSINT source object.
         """
-        source = db.session.get(cls, source_id)
-        return source
+        return db.session.get(cls, source_id)
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[OSINTSource]:
         """Get all OSINT sources.
 
         Returns:
@@ -145,11 +139,12 @@ class OSINTSource(db.Model):
         return cls.query.order_by(db.asc(OSINTSource.name)).all()
 
     @classmethod
-    def get_all_manual(cls, user):
+    def get_all_manual(cls, user: User) -> list[OSINTSource]:
         """Get all manual OSINT sources.
 
         Args:
             user (User): User object.
+
         Returns:
             List[OSINTSource]: List of manual OSINT sources.
         """
@@ -163,16 +158,17 @@ class OSINTSource(db.Model):
             ),
         )
 
-        query = ACLEntry.apply_query(query, user, False, True, False)
+        query = ACLEntry.apply_query(query, user, see=False, access=True, modify=False)
 
         return query.order_by(db.asc(OSINTSource.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[OSINTSource], int]:
         """Get OSINT sources.
 
         Args:
             search (str): Search string.
+
         Returns:
             Tuple[List[OSINTSource], int]: List of OSINT sources and count.
         """
@@ -185,28 +181,18 @@ class OSINTSource(db.Model):
                     OSINTSource.name.ilike(search_string),
                     OSINTSource.description.ilike(search_string),
                     Collector.type.ilike(search_string),
-                )
+                ),
             )
 
         return query.order_by(func.lower(OSINTSource.name)).all(), query.count()
 
     @classmethod
-    def get_by_id(cls, id):
-        """Get OSINT source by ID.
-
-        Args:
-            id (str): Source ID.
-        Returns:
-            OSINTSource: OSINT source object.
-        """
-        return cls.query.filter_by(id=id).first()
-
-    @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all OSINT sources in JSON format.
 
         Args:
             search (str): Search string.
+
         Returns:
             dict: JSON response.
         """
@@ -215,15 +201,17 @@ class OSINTSource(db.Model):
             source.osint_source_groups = OSINTSourceGroup.get_for_osint_source(source.id)
             source.status = "green"
             for param in source.parameter_values:  # list, we can't access item by key
-                if param.parameter.key == "REFRESH_INTERVAL":
-                    if param.value == "" or param.value == "0":
-                        source.status = "gray"
-                        break  # don't check other parameters - high priority
-                if param.parameter.key == "WARNING_INTERVAL":
-                    if param.value != "" and param.value != "0":
-                        if source.last_collected and (source.last_collected + timedelta(days=int(param.value))) < datetime.now():
-                            source.status = "orange"
-                    # don't break, we need to check also REFRESH_INTERVAL because has higher priority
+                if param.parameter.key == "REFRESH_INTERVAL" and (param.value in {"", "0"}):
+                    source.status = "gray"
+                    break  # don't check other parameters - high priority
+                if (
+                    param.parameter.key == "WARNING_INTERVAL"
+                    and param.value not in {"", "0"}
+                    and source.last_collected
+                    and (source.last_collected.replace(tzinfo=TZ) + timedelta(days=int(param.value))) < datetime.now(TZ)
+                ):
+                    source.status = "orange"
+                # don't break, we need to check also REFRESH_INTERVAL because has higher priority
             if source.last_error_message and source.status != "gray":
                 source.status = "red"  # disabled has higher priority, overwrite other status
 
@@ -232,11 +220,12 @@ class OSINTSource(db.Model):
         return {"total_count": count, "items": items}
 
     @classmethod
-    def get_all_manual_json(cls, user):
+    def get_all_manual_json(cls, user: User) -> dict:
         """Get all manual OSINT sources in JSON format.
 
         Args:
             user (User): User object.
+
         Returns:
             dict: JSON response.
         """
@@ -247,12 +236,13 @@ class OSINTSource(db.Model):
         return sources_schema.dump(sources)
 
     @classmethod
-    def get_all_for_collector_json(cls, collector_node, collector_type):
+    def get_all_for_collector_json(cls, collector_node: CollectorsNode, collector_type: str) -> dict | None:
         """Get all OSINT sources for a collector in JSON format.
 
         Args:
             collector_node (CollectorNode): Collector node object.
             collector_type (str): Collector type.
+
         Returns:
             dict: JSON response.
         """
@@ -260,13 +250,15 @@ class OSINTSource(db.Model):
             if collector.type == collector_type:
                 sources_schema = OSINTSourceSchema(many=True)
                 return sources_schema.dump(collector.sources)
+        return None
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> OSINTSource:
         """Add a new OSINT source.
 
         Args:
             data (dict): OSINT source data.
+
         Returns:
             OSINTSource: New OSINT source object.
         """
@@ -286,7 +278,7 @@ class OSINTSource(db.Model):
         return osint_source
 
     @classmethod
-    def import_new(cls, osint_source, collector):
+    def import_new(cls, osint_source: OSINTSource, collector: Collector) -> None:
         """Import an existing OSINT source.
 
         Args:
@@ -300,6 +292,12 @@ class OSINTSource(db.Model):
                     new_parameter_value = ParameterValue(parameter_value.value, parameter)
                     parameter_values.append(new_parameter_value)
                     break
+        # create missing parameters (old export)
+        key_param_lookup = {param.parameter.key: param for param in osint_source.parameter_values}
+        for def_par in collector.parameters:
+            if def_par.key not in key_param_lookup:
+                new_parameter_value = ParameterValue(def_par.default_value, def_par)
+                parameter_values.append(new_parameter_value)
 
         news_osint_source = OSINTSource("", osint_source.name, osint_source.description, collector.id, parameter_values, [], [])
 
@@ -309,7 +307,7 @@ class OSINTSource(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, osint_source_id):
+    def delete(cls, osint_source_id: str) -> None:
         """Delete an OSINT source.
 
         Args:
@@ -320,12 +318,13 @@ class OSINTSource(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, osint_source_id, data):
+    def update(cls, osint_source_id: str, data: dict) -> tuple[OSINTSource, OSINTSourceGroup]:
         """Update an OSINT source.
 
         Args:
             osint_source_id (str): OSINT source ID.
             data (dict): OSINT source data.
+
         Returns:
             Tuple[OSINTSource, OSINTSourceGroup]: Updated OSINT source and default group.
         """
@@ -365,29 +364,29 @@ class OSINTSource(db.Model):
         return osint_source, default_group
 
     @classmethod
-    def update_collected(cls, osint_source_id):
+    def update_collected(cls, osint_source_id: str) -> None:
         """Update collector's "last collected" record with current datetime (only when some data is collected).
 
         Args:
             osint_source_id (int): Osint source Id.
         """
         osint_source = db.session.get(cls, osint_source_id)
-        osint_source.last_collected = datetime.now()
+        osint_source.last_collected = datetime.now(TZ)
         db.session.commit()
 
     @classmethod
-    def update_last_attempt(cls, osint_source_id):
+    def update_last_attempt(cls, osint_source_id: str) -> None:
         """Update collector's "last attempted" record with the current datetime.
 
         Args:
             osint_source_id (int): Osint source Id.
         """
         osint_source = db.session.get(cls, osint_source_id)
-        osint_source.last_attempted = datetime.now()
+        osint_source.last_attempted = datetime.now(TZ)
         db.session.commit()
 
     @classmethod
-    def update_last_error_message(cls, osint_source_id, error_message) -> None:
+    def update_last_error_message(cls, osint_source_id: str, error_message: str) -> None:
         """Update collector's "last error message" with the current one.
 
         Args:
@@ -423,33 +422,38 @@ class OSINTSourceWordList(db.Model):
     word_list_id = db.Column(db.Integer, db.ForeignKey("word_list.id"), primary_key=True)
 
 
-class NewOSINTSourceGroupSchema(OSINTSourceGroupSchema):
-    """Schema for creating a new OSINT source group.
+class NewOSINTSourceSchema(OSINTSourceSchema):
+    """Schema for creating a new OSINT source.
 
     Attributes:
-        osint_sources (List[OSINTSourceIdSchema]): List of OSINT source IDs.
+        parameter_values (List[NewParameterValueSchema]): List of parameter values.
+        word_lists (List[WordListIdSchema]): List of word list IDs.
+        osint_source_groups (List[OSINTSourceGroupIdSchema]): List of OSINT source group IDs.
     """
 
-    osint_sources = fields.Nested(OSINTSourceIdSchema, many=True)
+    parameter_values = fields.List(fields.Nested(NewParameterValueSchema))
+    word_lists = fields.List(fields.Nested(WordListIdSchema))
+    osint_source_groups = fields.List(fields.Nested(OSINTSourceGroupIdSchema))
 
     @post_load
-    def make(self, data, **kwargs):
-        """Create a new OSINT source group object from the schema data.
+    def make_osint_source(self, data: dict, **kwargs) -> OSINTSource:  # noqa: ARG002, ANN003
+        """Create a new OSINT source object from the schema data.
 
         Args:
             data (dict): Schema data.
             kwargs: Arbitrary keyword arguments.
+
         Returns:
-            OSINTSourceGroup: New OSINT source group object.
+            OSINTSource: New OSINT source object.
         """
-        return OSINTSourceGroup(**data)
+        return OSINTSource(**data)
 
 
 class OSINTSourceGroup(db.Model):
     """OSINT Source Group model.
 
     Attributes:
-        id (str): Group ID.
+        id (str): Group GUID.
         name (str): Group name.
         description (str): Group description.
         default (bool): Default group flag.
@@ -463,7 +467,14 @@ class OSINTSourceGroup(db.Model):
 
     osint_sources = db.relationship("OSINTSource", secondary="osint_source_group_osint_source")
 
-    def __init__(self, id, name, description, default, osint_sources):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        default: bool,  # noqa: ARG002
+        osint_sources: list[OSINTSource],
+    ) -> None:
         """Initialize OSINT source group object."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -475,24 +486,24 @@ class OSINTSourceGroup(db.Model):
             self.osint_sources.append(OSINTSource.find(osint_source.id))
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the object after being loaded from the database."""
         self.tag = "mdi-folder-multiple"
 
     @classmethod
-    def find(cls, group_id):
+    def find(cls, group_id: str) -> OSINTSourceGroup:
         """Find OSINT source group by ID.
 
         Args:
-            group_id (str): Group ID.
+            group_id (str): Group GUID.
+
         Returns:
             OSINTSourceGroup: OSINT source group object.
         """
-        group = db.session.get(cls, group_id)
-        return group
+        return db.session.get(cls, group_id)
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[OSINTSourceGroup]:
         """Get all OSINT source groups.
 
         Returns:
@@ -501,11 +512,12 @@ class OSINTSourceGroup(db.Model):
         return cls.query.order_by(db.asc(OSINTSourceGroup.name)).all()
 
     @classmethod
-    def get_for_osint_source(cls, osint_source_id):
+    def get_for_osint_source(cls, osint_source_id: str) -> list[OSINTSourceGroup]:
         """Get OSINT source groups for a source.
 
         Args:
-            osint_source_id (str): Source ID.
+            osint_source_id (str): Source GUID.
+
         Returns:
             List[OSINTSourceGroup]: List of OSINT source groups.
         """
@@ -518,7 +530,7 @@ class OSINTSourceGroup(db.Model):
         ).all()
 
     @classmethod
-    def get_default(cls):
+    def get_default(cls) -> OSINTSourceGroup:
         """Get the default OSINT source group.
 
         Returns:
@@ -527,7 +539,7 @@ class OSINTSourceGroup(db.Model):
         return cls.query.filter(OSINTSourceGroup.default.is_(True)).first()
 
     @classmethod
-    def allowed_with_acl(cls, group_id, user, see, access, modify):
+    def allowed_with_acl(cls, group_id: str, user: User, see: bool, access: bool, modify: bool) -> bool:
         """Check if the user is allowed to access the group.
 
         Args:
@@ -536,6 +548,7 @@ class OSINTSourceGroup(db.Model):
             see (bool): See permission.
             access (bool): Access permission.
             modify (bool): Modify permission.
+
         Returns:
             bool: True if the user is allowed to access the group, False otherwise.
         """
@@ -548,13 +561,14 @@ class OSINTSourceGroup(db.Model):
         return query.scalar() is not None
 
     @classmethod
-    def get(cls, search, user, acl_check):
+    def get(cls, search: str, user: User, acl_check: bool) -> tuple[list[OSINTSourceGroup], int]:
         """Get OSINT source groups.
 
         Args:
             search (str): Search string.
             user (User): User object.
             acl_check (bool): ACL check flag.
+
         Returns:
             Tuple[List[OSINTSourceGroup], int]: List of OSINT source groups and count
         """
@@ -562,9 +576,10 @@ class OSINTSourceGroup(db.Model):
 
         if acl_check is True:
             query = query.outerjoin(
-                ACLEntry, and_(OSINTSourceGroup.id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP)
+                ACLEntry,
+                and_(OSINTSourceGroup.id == ACLEntry.item_id, ACLEntry.item_type == ItemType.OSINT_SOURCE_GROUP),
             )
-            query = ACLEntry.apply_query(query, user, True, False, False)
+            query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
         if search is not None:
             search_string = f"%{search}%"
@@ -573,13 +588,14 @@ class OSINTSourceGroup(db.Model):
         return query.order_by(db.asc(OSINTSourceGroup.default), db.asc(OSINTSourceGroup.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search, user, acl_check):
+    def get_all_json(cls, search: str, user: User, acl_check: bool) -> dict:
         """Get all OSINT source groups in JSON format.
 
         Args:
             search (str): Search string.
             user (User): User object.
             acl_check (bool): ACL check flag.
+
         Returns:
             dict: JSON response.
         """
@@ -588,11 +604,12 @@ class OSINTSourceGroup(db.Model):
         return {"total_count": count, "items": group_schema.dump(groups)}
 
     @classmethod
-    def get_all_with_source(cls, osint_source_id):
+    def get_all_with_source(cls, osint_source_id: str) -> list[OSINTSourceGroup]:
         """Get all OSINT source groups with a specific source.
 
         Args:
             osint_source_id (str): Source ID.
+
         Returns:
             List[OSINTSourceGroup]: List of OSINT source groups.
         """
@@ -607,7 +624,7 @@ class OSINTSourceGroup(db.Model):
         return groups
 
     @classmethod
-    def add(cls, data):
+    def add(cls, data: dict) -> None:
         """Add a new OSINT source group.
 
         Args:
@@ -619,15 +636,16 @@ class OSINTSourceGroup(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, osint_source_group_id):
+    def delete(cls, osint_source_group_id: str) -> tuple[dict, HTTPStatus]:
         """Delete an OSINT source group.
 
         Args:
-            osint_source_group_id (str): OSINT source group ID.
+            osint_source_group_id (str): OSINT source group GUID.
+
         Returns:
             Tuple[str, int]: Message and status code.
         """
-        from model.news_item import NewsItemAggregate  # must be here, because circular import error
+        from model.news_item import NewsItemAggregate  # noqa: PLC0415 Must be here, because circular import error
 
         osint_source_group = db.session.get(cls, osint_source_group_id)
         if osint_source_group.default is False:
@@ -636,21 +654,21 @@ class OSINTSourceGroup(db.Model):
             # Checking multiple source group assignments is problematic due to the existence of more NewsItemsAggregate records
             # and the source assignment may change over time. Let's move them to the default group.
             default_group = cls.get_default()
-            newsItemAggregates = NewsItemAggregate.get_news_items_aggregate_by_source_group(None)  # we use db delete rule: set null
-            for item in newsItemAggregates:
+            news_item_aggregates = NewsItemAggregate.get_news_items_aggregate_by_source_group(None)  # we use db delete rule: set null
+            for item in news_item_aggregates:
                 item.osint_source_group_id = default_group.id
             db.session.commit()
-            return "", 200
-        else:
-            return {"message": "could_not_delete_default_group"}, 400
+            return "", HTTPStatus.OK
+        return {"message": "could_not_delete_default_group"}, HTTPStatus.BAD_REQUEST
 
     @classmethod
-    def update(cls, osint_source_group_id, data):
+    def update(cls, osint_source_group_id: str, data: dict) -> tuple[set, dict, HTTPStatus]:
         """Update an OSINT source group.
 
         Args:
             osint_source_group_id (str): OSINT source group ID.
             data (dict): OSINT source group data.
+
         Returns:
             Tuple[Set[OSINTSource], str, int]: Set of sources in the default group, message and status code.
         """
@@ -673,9 +691,8 @@ class OSINTSourceGroup(db.Model):
 
             db.session.commit()
 
-            return sources_in_default_group, "", 200
-        else:
-            return None, {"message": "could_not_modify_default_group"}, 400
+            return sources_in_default_group, "", HTTPStatus.OK
+        return None, {"message": "could_not_modify_default_group"}, HTTPStatus.BAD_REQUEST
 
 
 class OSINTSourceGroupOSINTSource(db.Model):
@@ -688,3 +705,26 @@ class OSINTSourceGroupOSINTSource(db.Model):
 
     osint_source_group_id = db.Column(db.String, db.ForeignKey("osint_source_group.id"), primary_key=True)
     osint_source_id = db.Column(db.String, db.ForeignKey("osint_source.id"), primary_key=True)
+
+
+class NewOSINTSourceGroupSchema(OSINTSourceGroupSchema):
+    """Schema for creating a new OSINT source group.
+
+    Attributes:
+        osint_sources (List[OSINTSourceIdSchema]): List of OSINT source IDs.
+    """
+
+    osint_sources = fields.Nested(OSINTSourceIdSchema, many=True)
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> OSINTSourceGroup:  # noqa: ARG002, ANN003
+        """Create a new OSINT source group object from the schema data.
+
+        Args:
+            data (dict): Schema data.
+            kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            OSINTSourceGroup: New OSINT source group object.
+        """
+        return OSINTSourceGroup(**data)

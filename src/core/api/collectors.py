@@ -15,7 +15,8 @@ from flask_restful import Resource, reqparse
 from managers.auth_manager import api_key_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
-from model import news_item, osint_source
+from model.news_item import NewsItemAggregate
+from model.osint_source import OSINTSource
 
 
 class OSINTSourcesForCollectors(Resource):
@@ -41,7 +42,7 @@ class OSINTSourcesForCollectors(Resource):
 
         collectors_node.update_last_seen()
 
-        return osint_source.OSINTSource.get_all_for_collector_json(collectors_node, parameters.collector_type)
+        return OSINTSource.get_all_for_collector_json(collectors_node, parameters.collector_type)
 
 
 class OSINTSourceLastAttempt(Resource):
@@ -62,7 +63,7 @@ class OSINTSourceLastAttempt(Resource):
             (dict): Empty dictionary
             (int): The response code
         """
-        source = osint_source.OSINTSource.get_by_id(osint_source_id)
+        source = OSINTSource.find(osint_source_id)
         if not source:
             msg = "OSINT source with this ID does not exists"
             logger.warning(msg)
@@ -89,7 +90,7 @@ class OSINTSourceLastErrorMessage(Resource):
             (dict): Empty dictionary
             (int): The response code
         """
-        source = osint_source.OSINTSource.get_by_id(osint_source_id)
+        source = OSINTSource.find(osint_source_id)
         if not source:
             msg = "OSINT source with this ID does not exists"
             logger.error(msg)
@@ -114,7 +115,7 @@ class AddNewsItems(Resource):
         Args:
             collectors_node (CollectorsNode): The collectors node
         """
-        osint_source_ids = news_item.NewsItemAggregate.add_news_items(request.json)
+        osint_source_ids = NewsItemAggregate.add_news_items(request.json)
         if osint_source_ids:  # we create some news items
             sse_manager.news_items_updated()
             sse_manager.remote_access_news_items_updated(osint_source_ids)
