@@ -339,7 +339,7 @@ class OSINTSource(db.Model):
             for updated_value in updated_osint_source.parameter_values:
                 if value.parameter_id == updated_value.parameter_id:
                     value.value = updated_value.value
-        # create missing parameters (resave old version source)
+        # create missing parameters (resave old version OSINT source case)
         id_param_lookup = {param.parameter.id: param for param in osint_source.parameter_values}
         for par in updated_osint_source.parameter_values:
             if par.parameter_id not in id_param_lookup:
