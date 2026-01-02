@@ -1,5 +1,12 @@
 """Parameter Model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.parameter import Parameter
+
 from managers.db_manager import db
 from managers.log_manager import logger
 from marshmallow import post_load
@@ -49,6 +56,18 @@ class Parameter(db.Model):
         self.description = description
         self.type = type
         self.default_value = default_value
+
+    @classmethod
+    def find(cls, parameter_id: int) -> Parameter:
+        """Retrieve a parameter record from the database by its ID.
+
+        Args:
+            parameter_id (int): The ID of the parameter to retrieve.
+
+        Returns:
+            Parameter: The parameter object if found, otherwise None.
+        """
+        return db.session.get(cls, parameter_id)
 
     @classmethod
     def delete_unused(cls) -> None:
