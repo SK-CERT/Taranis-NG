@@ -17,6 +17,7 @@ from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.collector import Collector
+from model.parameter import Parameter
 from model.parameter_value import NewParameterValueSchema, ParameterValue
 from model.word_list import WordList
 from sqlalchemy import and_, func, or_, orm
@@ -338,6 +339,13 @@ class OSINTSource(db.Model):
             for updated_value in updated_osint_source.parameter_values:
                 if value.parameter_id == updated_value.parameter_id:
                     value.value = updated_value.value
+        # create missing parameters (resave old version OSINT source case)
+        id_param_lookup = {param.parameter.id: param for param in osint_source.parameter_values}
+        for par in updated_osint_source.parameter_values:
+            if par.parameter_id not in id_param_lookup:
+                param = Parameter.find(par.parameter_id)
+                new_parameter_value = ParameterValue(par.value, param)
+                osint_source.parameter_values.append(new_parameter_value)
 
         osint_source.word_lists = updated_osint_source.word_lists
 
