@@ -16,7 +16,7 @@ dependencies = [
     "python-dotenv==1.2.1",
     "requests==2.32.5",
     "schedule==1.2.2",
-    "sseclient-py==1.8.0"
+    "sseclient-py==1.9.0"
 ]
 
 [build-system]
