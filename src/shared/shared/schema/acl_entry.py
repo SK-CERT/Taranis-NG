@@ -1,7 +1,8 @@
 """Module for ACL entry schema."""
 
-from marshmallow import Schema, fields, EXCLUDE
 from enum import Enum, auto
+
+from marshmallow import EXCLUDE, Schema, fields
 
 from shared.schema.presentation import PresentationSchema
 from shared.schema.role import RoleSchema
@@ -16,20 +17,16 @@ class ItemType(Enum):
         OSINT_SOURCE (auto): Represents an OSINT source item type.
         OSINT_SOURCE_GROUP (auto): Represents a group of OSINT sources.
         WORD_LIST (auto): Represents a word list item type.
-        REPORT_ITEM (auto): Represents a report item type.
         REPORT_ITEM_TYPE (auto): Represents a type of report item.
         PRODUCT_TYPE (auto): Represents a product type item.
-        DELEGATION (auto): Represents a delegation item type.
     """
 
     COLLECTOR = auto()
     OSINT_SOURCE = auto()
     OSINT_SOURCE_GROUP = auto()
     WORD_LIST = auto()
-    REPORT_ITEM = auto()
     REPORT_ITEM_TYPE = auto()
     PRODUCT_TYPE = auto()
-    DELEGATION = auto()
 
 
 class ACLEntryStatusSchema(Schema):
