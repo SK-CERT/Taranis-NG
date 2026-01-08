@@ -274,7 +274,7 @@ const messages_cs = {
         name: "Název",
         description: "Popis",
         item_type: "Typ položky",
-        item_id: "ID položky",
+        item: "Položka",
         everyone: "Všichni",
         see: "Prohlížet",
         access: "Přístup",

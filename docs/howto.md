@@ -33,8 +33,7 @@ sources you've created into different groups.
 
 If you want to restrict the access, go to Configuration -> ACLs, and create
 a new ACL by clicking `Add new`. You can pick any particular item type
-(Collector, Delegation, OSINT Source, OSINT Source Group, Product Type, Report
-Item, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
+(Collector, OSINT Source, OSINT Source Group, Product Type, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
 access types to everyone, selected users, or selected roles.
 
 # <a id="_toc4"></a>Using the default stop lists for better tag cloud

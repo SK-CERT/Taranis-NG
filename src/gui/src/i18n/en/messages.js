@@ -275,7 +275,7 @@ const messages_en = {
         name: "Name",
         description: "Description",
         item_type: "Item Type",
-        item_id: "Item ID",
+        item: "Item",
         everyone: "Everyone",
         see: "See",
         access: "Access",

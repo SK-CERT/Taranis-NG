@@ -349,12 +349,9 @@ class ReportItem(db.Model):
 
         query = query.outerjoin(
             ACLEntry,
-            or_(
-                and_(ReportItem.uuid == ACLEntry.item_id, ACLEntry.item_type == ItemType.REPORT_ITEM),
-                and_(
-                    cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
-                    ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
-                ),
+            and_(
+                cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
+                ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
             ),
         )
 
@@ -433,12 +430,9 @@ class ReportItem(db.Model):
 
             query = query.outerjoin(
                 ACLEntry,
-                or_(
-                    and_(ReportItem.uuid == ACLEntry.item_id, ACLEntry.item_type == ItemType.REPORT_ITEM),
-                    and_(
-                        cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
-                        ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
-                    ),
+                and_(
+                    cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
+                    ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
                 ),
             )
             query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
@@ -674,7 +668,7 @@ class ReportItem(db.Model):
         db.session.commit()
 
     @classmethod
-    def update_report_item(cls, id: int, data: dict, user: User) -> tuple[bool, dict]:  # noqa: A002, C901, PLR0912
+    def update_report_item(cls, id: int, data: dict, user: User) -> tuple[bool, dict]:  # noqa: A002
         """Update a report item with the given data.
 
         Args:
