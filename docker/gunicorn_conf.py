@@ -1,8 +1,7 @@
 """This module contains the configuration settings for Gunicorn.
 
 The following environment variables are used:
-- WORKERS_PER_CORE: Number of workers per CPU core. Default is 2.
-- WEB_CONCURRENCY: Number of worker processes. Default is 1.
+- GUNICORN_WORKERS: Number of Gunicorn worker threads. Useful only for CORE. Default `AUTO` other containers has default 1.
 - HOST: The host IP address to bind to. Default is 0.0.0.0.
 - PORT: The port number to bind to. Default is 80.
 - BIND: The bind address and port. If not provided, it will use the host and port values.
@@ -35,24 +34,24 @@ import typing
 
 from gunicorn.glogging import Logger
 
-workers_per_core = int(os.getenv("WORKERS_PER_CORE", "2"))
-web_concurrency = int(os.getenv("WEB_CONCURRENCY", "0"))
+try:
+    workers_count = int(os.getenv("GUNICORN_WORKERS", "1"))
+except ValueError:
+    workers_count = multiprocessing.cpu_count()
 host = os.getenv("HOST", "0.0.0.0")
 port = os.getenv("PORT", "80")
 bind_env = os.getenv("BIND", None)
 use_loglevel = os.getenv("MODULES_LOG_LEVEL", "WARNING")
 use_bind = bind_env or f"{host}:{port}"
 
-if not web_concurrency or web_concurrency <= 0:
-    web_concurrency = workers_per_core * multiprocessing.cpu_count()
-
 # Gunicorn config variables
 loglevel = use_loglevel.lower()
-workers = web_concurrency
+workers = workers_count
 bind = use_bind
 keepalive = 120
 errorlog = "-"
 limit_request_line = 8192
+print(f"Starting Gunicorn with {workers_count} workers", flush=True)  # noqa: T201
 
 
 class CustomGunicornLogger(Logger):

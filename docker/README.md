@@ -132,7 +132,7 @@ docker build -t taranis-ng-publishers . -f ./docker/Dockerfile.publishers
 | `DB_POOL_RECYCLE`           | SQLAlchemy QueuePool maximum connection age. | `300` |
 | `DB_POOL_TIMEOUT`           | SQLAlchemy QueuePool connection timeout. | `5` |
 | `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/realms/master/protocol/openid-connect/logout` |
-| `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
+| `GUNICORN_WORKERS`          | Number of Gunicorn worker threads. | `AUTO`, `8` |
 
 | Secrets file                | Description | Example |
 |-----------------------------|-------------|----------|
@@ -147,7 +147,6 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 | Environment variable        | Description | Example |
 |-----------------------------|-------------|----------|
 | `TARANIS_NG_CORE_URL`       | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
-| `WORKERS_PER_CORE`          | Number of gunicorn worker threads to spawn per CPU core. | `4` |
 
 | Secrets file                | Description | Example |
 |-----------------------------|-------------|----------|

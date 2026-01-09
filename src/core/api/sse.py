@@ -29,16 +29,18 @@ class SseResource(Resource):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(60)
         except Exception as ex:
-            logger.exception(f"SSE: Failed to create socket: {ex}")
-            return
+            msg = f"SSE: Failed to create socket: {ex}"
+            logger.exception(msg)
+            raise RuntimeError(msg) from ex
 
         try:
             sock.connect(("localhost", 5001))
             sock.settimeout(1)
         except Exception as ex:
-            logger.exception(f"SSE: Failed to connect to server: {ex}")
+            msg = f"SSE: Failed to connect to server: {ex}"
+            logger.exception(msg)
             sock.close()
-            return
+            raise RuntimeError(msg) from ex
 
         buffer = ""
         try:
@@ -111,6 +113,7 @@ class SseResource(Resource):
 
             logger.info(f"SSE: streaming response {request.remote_addr} ({auth_type})")
             return Response(self.stream(), mimetype="text/event-stream")
+
         except Exception as ex:
             msg = "SSE: Error in streaming response"
             logger.exception(msg, ex)
