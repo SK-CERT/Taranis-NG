@@ -422,29 +422,31 @@
                     for (let j = 0; j < this.nodes[i].collectors.length; j++) {
                         if (this.nodes[i].collectors[j].id === this.source.collector_id) {
                             this.selected_node = this.nodes[i]
-                            this.selected_collector = this.nodes[i].collectors[j]
+                            this.$nextTick(() => {
+                                this.selected_collector = this.nodes[i].collectors[j]
+
+                                this.values = [];
+                                for (let i = 0; i < this.selected_collector.parameters.length; i++) {
+                                    found = false;
+                                    for (let j = 0; j < this.source.parameter_values.length; j++) {
+                                        if (this.selected_collector.parameters[i].id === this.source.parameter_values[j].parameter.id) {
+                                            this.values.push(this.source.parameter_values[j].value)
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    // add mising parameter otherwise all screen data will be shifted
+                                    if (!found) {
+                                        this.values.push(this.selected_collector.parameters[i].default_value)
+                                    }
+                                }
+                            })
                             found = true;
                             break;
                         }
                     }
                     if (found) {
                         break;
-                    }
-                }
-
-                this.values = [];
-                for (let i = 0; i < this.selected_collector.parameters.length; i++) {
-                    found = false;
-                    for (let j = 0; j < this.source.parameter_values.length; j++) {
-                        if (this.selected_collector.parameters[i].id === this.source.parameter_values[j].parameter.id) {
-                            this.values.push(this.source.parameter_values[j].value)
-                            found = true;
-                            break;
-                        }
-                    }
-                    // add mising parameter otherwise all screen data will be shifted
-                    if (!found) {
-                        this.values.push(this.selected_collector.parameters[i].default_value)
                     }
                 }
 
