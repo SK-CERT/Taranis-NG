@@ -1,6 +1,6 @@
 [project]
 name = "TARANIS-NG-bots"
-version = "v24.11.1"
+version = "v25.12.1"
 description = "Taranis-NG Bots service."
 requires-python = ">=3.10"
 dependencies = [

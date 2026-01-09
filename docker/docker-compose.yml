@@ -64,7 +64,7 @@ services:
       PYTHONWARNINGS: "default"
 
       OPENID_LOGOUT_URL: ""
-      WORKERS_PER_CORE: "1"
+      GUNICORN_WORKERS: "AUTO"
 
       CVE_UPDATE_FILE: "${CVE_UPDATE_FILE}"
       CPE_UPDATE_FILE: "${CPE_UPDATE_FILE}"
@@ -122,7 +122,6 @@ services:
     environment:
       TARANIS_NG_CORE_URL: "http://core"
       TARANIS_NG_CORE_SSE: "http://core/sse"
-      WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
@@ -150,7 +149,6 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
@@ -180,7 +178,6 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
@@ -213,7 +210,6 @@ services:
         https_proxy: "${HTTPS_PROXY}"
     environment:
       TARANIS_NG_CORE_URL: "http://core"
-      WORKERS_PER_CORE: "1"
       TZ: "${TZ}"
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
