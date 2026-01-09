@@ -57,7 +57,7 @@
                     }
                 },
                 {
-                    "value": "60",
+                    "value": "0",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -279,7 +279,7 @@
                     }
                 },
                 {
-                    "value": "60",
+                    "value": "0",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -501,7 +501,7 @@
                     }
                 },
                 {
-                    "value": "60",
+                    "value": "0",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
