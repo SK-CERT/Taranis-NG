@@ -45,7 +45,7 @@
                     }
                 },
                 {
-                    "value": "False",
+                    "value": "True",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
                     }

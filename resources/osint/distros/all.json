@@ -261,7 +261,7 @@
                     }
                 },
                 {
-                    "value": "60",
+                    "value": "0",
                     "parameter": {
                         "key": "REFRESH_INTERVAL"
                     }
@@ -369,7 +369,7 @@
                     }
                 },
                 {
-                    "value": "False",
+                    "value": "True",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
                     }

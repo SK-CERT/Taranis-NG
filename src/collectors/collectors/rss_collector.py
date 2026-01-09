@@ -182,6 +182,8 @@ class RSSCollector(BaseCollector):
                 self.source.logger.debug("Using web text for content")
                 content = html_content
         review, content = self._resolve_review_content(summary, content)
+        if not read_bool_parameter("PREFER_SCRAPING", default_value=False, object_dict=self.source) and content:
+            content = text_to_simple_html(content, preformatted_text=False)
         date = self._resolve_date(published_parsed, updated_parsed, published, updated)
         for_hash = author + title + link_for_article
         return NewsItemData(
