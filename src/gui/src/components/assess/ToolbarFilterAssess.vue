@@ -252,15 +252,17 @@
             },
 
         },
-        mounted() {
+        created() {
             this.review_toggle = getLocalStorageBoolean('review-hide', false);
-            this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
-
             this.source_link_toggle = getLocalStorageBoolean('source-link-hide', false);
-            this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
-
             this.word_list_toggle = getLocalStorageBoolean('word-list-hide', false);
-            this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
+        },
+        mounted() {
+            setTimeout(() => {
+                this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
+                this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
+                this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
+            }, 100);
         }
     }
 </script>

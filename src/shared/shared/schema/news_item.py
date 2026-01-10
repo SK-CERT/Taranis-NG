@@ -161,6 +161,7 @@ class NewsItemDataPresentationSchema(NewsItemDataBaseSchema):
     """Schema for presenting news item data."""
 
     remote_source = fields.Str()
+    osint_source_name = fields.Str()
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeBaseSchema, many=True)
 

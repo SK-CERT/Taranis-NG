@@ -6,21 +6,18 @@
                     <v-checkbox v-if="!analyze_selector" v-model="selected" @change="selectionChanged"></v-checkbox>
                 </v-row>
             </v-col>
-
             <v-col :class="UI.CLASS.card_offset">
-                <v-hover v-slot="{hover}">
-                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2"
-                            @click.stop="cardItemToolbar"
-                            @mouseenter.native="toolbar=true"
-                            @mouseleave.native="toolbar=cardFocus"
-                            :color="selectedColor">
+                <v-hover v-slot="{ hover }">
+                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar"
+                        @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus" :color="selectedColor">
                         <!--CONTENT-->
-                        <v-layout v-bind="UI.CARD.LAYOUT" :class="'status ' + cardStatus">
+                        <v-layout v-bind="UI.CARD.LAYOUT" :class="['status', cardStatus, { 'read': isRead }]">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
                                 <!--COLLECTED, PUBLISHED, SOURCE-->
                                 <v-col v-bind="UI.CARD.COL.INFO">
                                     <div>
-                                        {{ $t('card_item.collected') }}: <strong>{{ news_item.news_item_data.collected }}</strong>
+                                        {{ $t('card_item.collected') }}: <strong>{{ news_item.news_item_data.collected
+                                            }}</strong>
                                     </div>
                                 </v-col>
                                 <v-col v-bind="UI.CARD.COL.INFO">
@@ -32,20 +29,22 @@
                                 <v-col v-bind="UI.CARD.COL.INFO">
                                     <div align="right">
                                         {{ $t('card_item.source') }}:
-                                        <strong>{{ news_item.news_item_data.source }}</strong>
+                                        <strong>{{ news_item.news_item_data.osint_source_name || news_item.news_item_data.source }}</strong>
                                     </div>
                                 </v-col>
 
                                 <!--TITLE-->
                                 <v-col v-bind="UI.CARD.COL.TITLE">
-                                    <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.title)"></div>
+                                    <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.title)">
+                                    </div>
                                     <div v-else>{{ news_item.news_item_data.title }}</div>
                                 </v-col>
 
                                 <!--REVIEW-->
                                 <v-col v-bind="UI.CARD.COL.REVIEW" class="review-content">
                                     <div v-if="!compact_mode">
-                                        <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.review)"></div>
+                                        <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.review)">
+                                        </div>
                                         <div v-else>{{ news_item.news_item_data.review }}</div>
                                     </div>
                                 </v-col>
@@ -53,16 +52,30 @@
                                 <!--FOOTER-->
                                 <v-row v-bind="UI.CARD.FOOTER">
                                     <v-col cols="11">
-                                        <span v-if="canAccess" class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
+                                        <span v-if="canAccess"
+                                            class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
                                             {{ news_item.news_item_data.link }}
                                         </span>
 
-                                        <span class="caption font-weight-bold grey--text pl-2 pr-1">
+                                        <span v-if="canModify" class="caption font-weight-bold pl-2 pr-1"
+                                            style="cursor: pointer;" @click.stop="cardItemToolbar('like')"
+                                            :title="$t('assess.tooltip.like_item')">
+                                            <v-icon :color="buttonStatus(news_item.me_like)"
+                                                size="12">mdi-thumb-up</v-icon> {{ news_item.likes }}
+                                        </span>
+                                        <span v-else class="caption font-weight-bold grey--text pl-2 pr-1">
                                             <v-icon color="grey" size="12">mdi-thumb-up</v-icon> {{ news_item.likes }}
                                         </span>
 
-                                        <span class="caption font-weight-bold grey--text pl-1 pr-2">
-                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ news_item.dislikes }}
+                                        <span v-if="canModify" class="caption font-weight-bold pl-1 pr-2"
+                                            style="cursor: pointer;" @click.stop="cardItemToolbar('unlike')"
+                                            :title="$t('assess.tooltip.dislike_item')">
+                                            <v-icon :color="buttonStatus(news_item.me_dislike)"
+                                                size="12">mdi-thumb-down</v-icon> {{ news_item.dislikes }}
+                                        </span>
+                                        <span v-else class="caption font-weight-bold grey--text pl-1 pr-2">
+                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ news_item.dislikes
+                                            }}
                                         </span>
                                     </v-col>
 
@@ -81,11 +94,13 @@
                                                     </a>
                                                 </v-btn>
 
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')" data-btn="read" :title="$t('assess.tooltip.read_item')">
+                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
+                                                    data-btn="read" :title="$t('assess.tooltip.read_item')">
                                                     <v-icon :color="buttonStatus(news_item.read)">mdi-eye</v-icon>
                                                 </v-btn>
 
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('important')" data-btn="important" :title="$t('assess.tooltip.important_item')">
+                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('important')"
+                                                    data-btn="important" :title="$t('assess.tooltip.important_item')">
                                                     <v-icon :color="buttonStatus(news_item.important)">mdi-star</v-icon>
                                                 </v-btn>
 
@@ -112,172 +127,158 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox v-model="msgbox_visible"
-                        @yes="handleMsgBox"
-                        @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')"
-                        :message="news_item.news_item_data.title"
-                        :alert=true>
+            <MessageBox v-model="msgbox_visible" @yes="handleMsgBox" @cancel="msgbox_visible = false"
+                :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title" :alert=true>
             </MessageBox>
         </v-row>
     </v-container>
 </template>
 
 <script>
-    import { groupAction, voteNewsItem } from "@/api/assess";
-    import { readNewsItem } from "@/api/assess";
-    import { importantNewsItem } from "@/api/assess";
-    import { deleteNewsItem } from "@/api/assess";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import MessageBox from "@/components/common/MessageBox.vue";
+import { groupAction, voteNewsItem } from "@/api/assess";
+import { readNewsItem } from "@/api/assess";
+import { importantNewsItem } from "@/api/assess";
+import { deleteNewsItem } from "@/api/assess";
+import AuthMixin from "@/services/auth/auth_mixin";
+import Permissions from "@/services/auth/permissions";
+import MessageBox from "@/components/common/MessageBox.vue";
+import CardMixin from "@/components/assess/CardMixin";
 
-    export default {
-        name: "CardAssessItem",
-        components: { MessageBox },
-        props: {
-            news_item: Object,
-            analyze_selector: Boolean,
-            compact_mode: Boolean,
-            word_list_regex: String
+export default {
+    name: "CardAssessItem",
+    components: { MessageBox },
+    props: {
+        news_item: Object,
+        analyze_selector: Boolean,
+        compact_mode: Boolean,
+        word_list_regex: String
+    },
+    mixins: [AuthMixin, CardMixin],
+    data: () => ({
+        msgbox_visible: false,
+    }),
+    computed: {
+        canAccess() {
+            return this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true
         },
-        mixins: [AuthMixin],
-        data: () => ({
-            toolbar: false,
-            selected: false,
-            msgbox_visible: false,
-        }),
-        computed: {
-            canAccess() {
-                return this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true
-            },
 
-            canModify() {
-                return this.checkPermission(Permissions.ASSESS_UPDATE) && this.news_item.modify === true
-            },
-
-            canDelete() {
-                return this.checkPermission(Permissions.ASSESS_DELETE) && this.news_item.modify === true
-            },
-
-            canCreateReport() {
-                return this.checkPermission(Permissions.ANALYZE_CREATE)
-            },
-
-            multiSelectActive() {
-                return this.$store.getters.getMultiSelect
-            },
-            selectedColor() {
-                if (this.selected === true) {
-                    return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
-                } else {
-                    return ""
-                }
-            },
-            cardFocus() {
-                if (this.$el.querySelector(".card .layout").classList.contains('focus')) {
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-            cardStatus() {
-                if (this.news_item.important) {
-                    return "important"
-                } else if (this.news_item.read) {
-                    return "read"
-                } else {
-                    return "new"
-                }
-            },
+        canModify() {
+            return this.checkPermission(Permissions.ASSESS_UPDATE) && this.news_item.modify === true
         },
-        methods: {
-            itemClicked(data) {
-                if (this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true) {
-                    this.$emit('show-item-detail', data);
-                    this.stateChange();
-                }
-            },
-            selectionChanged() {
-                if (this.selected === true) {
-                    this.$store.dispatch("select", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
-                } else {
-                    this.$store.dispatch("deselect", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
-                }
-            },
-            stateChange() {
-                this.$root.$emit('change-state', 'SHOW_ITEM');
-                this.$root.$emit('check-focus', this.$el.dataset.id);
-                this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
-            },
-            getGroupId() {
-                if (window.location.pathname.includes("/group/")) {
-                    let i = window.location.pathname.indexOf("/group/");
-                    let len = window.location.pathname.length;
-                    return window.location.pathname.substring(i + 7, len);
-                } else {
-                    return null;
-                }
-            },
-            cardItemToolbar(action) {
-                switch (action) {
-                    case "like":
-                        voteNewsItem(this.getGroupId(), this.news_item.id, 1).then(() => {
-                        });
-                        break;
 
-                    case "unlike":
-                        voteNewsItem(this.getGroupId(), this.news_item.id, -1).then(() => {
-                        });
-                        break;
+        canDelete() {
+            return this.checkPermission(Permissions.ASSESS_DELETE) && this.news_item.modify === true
+        },
 
-                    case "link":
-                        break;
+        canCreateReport() {
+            return this.checkPermission(Permissions.ANALYZE_CREATE)
+        },
 
-                    case "important":
-                        importantNewsItem(this.getGroupId(), this.news_item.id).then(() => {
-                        });
-                        break;
+        selectedColor() {
+            if (this.selected === true) {
+                return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
+            } else {
+                return ""
+            }
+        },
+        cardStatus() {
+            if (this.news_item.important) {
+                return "important"
+            } else {
+                return "new"
+            }
+        },
+        isRead() {
+            return this.news_item.read && !this.news_item.important
+        },
+    },
+    methods: {
+        itemClicked(data) {
+            if (this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true) {
+                this.$emit('show-item-detail', data);
+                this.stateChange();
+            }
+        },
+        selectionChanged() {
+            if (this.selected === true) {
+                this.$store.dispatch("select", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
+            } else {
+                this.$store.dispatch("deselect", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
+            }
+        },
+        stateChange() {
+            this.$root.$emit('change-state', 'SHOW_ITEM');
+            this.$root.$emit('check-focus', this.$el.dataset.id);
+            this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
+        },
+        getGroupId() {
+            if (window.location.pathname.includes("/group/")) {
+                let i = window.location.pathname.indexOf("/group/");
+                let len = window.location.pathname.length;
+                return window.location.pathname.substring(i + 7, len);
+            } else {
+                return null;
+            }
+        },
+        cardItemToolbar(action) {
+            switch (action) {
+                case "like":
+                    voteNewsItem(this.getGroupId(), this.news_item.id, 1).then(() => {
+                    });
+                    break;
 
-                    case "read":
-                        readNewsItem(this.getGroupId(), this.news_item.id).then(() => {
-                        });
-                        break;
+                case "unlike":
+                    voteNewsItem(this.getGroupId(), this.news_item.id, -1).then(() => {
+                    });
+                    break;
 
-                    case "delete":
-                        deleteNewsItem(this.getGroupId(), this.news_item.id).then(() => {
-                        }).catch((error) => {
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'error',
-                                    loc: 'error.' + error.response.data
-                                }
-                            )
-                        });
-                        break;
+                case "link":
+                    break;
 
-                    case "ungroup":
-                        groupAction({
-                            'group': this.getGroupId(),
-                            'action': 'UNGROUP',
-                            'items': [{ 'type': 'ITEM', 'id': this.news_item.id }]
-                        }).then(() => {
-                        }).catch((error) => {
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'error',
-                                    loc: 'error.' + error.response.data
-                                }
-                            )
-                        });
-                        break;
+                case "important":
+                    importantNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                    });
+                    break;
 
-                    default:
-                        this.toolbar = false;
-                        this.itemClicked(this.news_item);
-                        break;
-                }
-            },
+                case "read":
+                    readNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                    });
+                    break;
+
+                case "delete":
+                    deleteNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                    }).catch((error) => {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'error',
+                                loc: 'error.' + error.response.data
+                            }
+                        )
+                    });
+                    break;
+
+                case "ungroup":
+                    groupAction({
+                        'group': this.getGroupId(),
+                        'action': 'UNGROUP',
+                        'items': [{ 'type': 'ITEM', 'id': this.news_item.id }]
+                    }).then(() => {
+                    }).catch((error) => {
+                        this.$root.$emit('notification',
+                            {
+                                type: 'error',
+                                loc: 'error.' + error.response.data
+                            }
+                        )
+                    });
+                    break;
+
+                default:
+                    this.toolbar = false;
+                    this.itemClicked(this.news_item);
+                    break;
+            }
+        },
 
             buttonStatus: function (active) {
                 if (active) {
@@ -344,9 +345,26 @@
         }
     }
 </script>
+<style scoped>
+.status.read {
+    opacity: 0.5;
+}
+
+.theme--light .status.read {
+    background-color: #f5f5f5;
+}
+
+.theme--dark .status.read {
+    background-color: #2c2c2c;
+}
+
+.status.read .v-card {
+    filter: grayscale(30%);
+}
+</style>
 <style>
-    .v-dialog--fullscreen {
-        position: fixed !important;
-        top: 0;
-    }
+.v-dialog--fullscreen {
+    position: fixed !important;
+    top: 0;
+}
 </style>
