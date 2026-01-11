@@ -156,9 +156,9 @@
 </template>
 
 <script>
-import { deleteNewsItemAggregate, getNewsItem, voteNewsItem } from "@/api/assess";
-import { readNewsItem } from "@/api/assess";
-import { importantNewsItem } from "@/api/assess";
+import { deleteNewsItemAggregate, getNewsItem, voteNewsItemAggregate } from "@/api/assess";
+import { readNewsItemAggregate } from "@/api/assess";
+import { importantNewsItemAggregate } from "@/api/assess";
 import { saveNewsItemAggregate } from "@/api/assess";
 import NewsItemAttribute from "@/components/assess/NewsItemAttribute";
 import AuthMixin from "@/services/auth/auth_mixin";
@@ -272,19 +272,19 @@ export default {
         cardItemToolbar(action) {
             switch (action) {
                 case "like":
-                    voteNewsItem(this.getGroupId(), this.news_item.id, 1).then(() => {
-                        if (this.news_item.me_like === false) {
-                            this.news_item.me_like = true;
+                    voteNewsItemAggregate(this.getGroupId(), this.news_item.id, 1).then(() => {
+                        this.news_item.me_like = !this.news_item.me_like;
+                        if (this.news_item.me_like) {
                             this.news_item.me_dislike = false;
                         }
                     });
                     break;
 
                 case "unlike":
-                    voteNewsItem(this.getGroupId(), this.news_item.id, -1).then(() => {
-                        if (this.news_item.me_dislike === false) {
+                    voteNewsItemAggregate(this.getGroupId(), this.news_item.id, -1).then(() => {
+                        this.news_item.me_dislike = !this.news_item.me_dislike;
+                        if (this.news_item.me_dislike) {
                             this.news_item.me_like = false;
-                            this.news_item.me_dislike = true;
                         }
                     });
                     break;
@@ -299,13 +299,13 @@ export default {
                     break;
 
                 case "important":
-                    importantNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                    importantNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
                         this.news_item.important = this.news_item.important === false;
                     });
                     break;
 
                 case "read":
-                    readNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                    readNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
                         this.news_item.read = this.news_item.read === false;
                     });
                     break;

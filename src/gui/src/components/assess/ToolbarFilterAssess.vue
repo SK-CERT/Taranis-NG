@@ -139,7 +139,7 @@
             filter: {
                 search: "",
                 range: "ALL",
-                read: false,
+                read: true,
                 important: false,
                 relevant: false,
                 sort: "DATE_DESC"

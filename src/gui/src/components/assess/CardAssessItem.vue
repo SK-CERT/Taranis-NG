@@ -9,15 +9,18 @@
             <v-col :class="UI.CLASS.card_offset">
                 <v-hover v-slot="{ hover }">
                     <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar"
-                        @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus" :color="selectedColor">
+                        @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus"
+                        :color="selectedColor">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="['status', cardStatus, { 'read': isRead }]">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
                                 <!--COLLECTED, PUBLISHED, SOURCE-->
                                 <v-col v-bind="UI.CARD.COL.INFO">
                                     <div>
-                                        {{ $t('card_item.collected') }}: <strong>{{ news_item.news_item_data.collected
-                                            }}</strong>
+                                        {{ $t('card_item.source') }}:
+                                        <strong>{{ news_item.news_item_data.osint_source_type }} - {{
+                                            news_item.news_item_data.osint_source_name ||
+                                            news_item.news_item_data.source }}</strong>
                                     </div>
                                 </v-col>
                                 <v-col v-bind="UI.CARD.COL.INFO">
@@ -28,8 +31,8 @@
                                 </v-col>
                                 <v-col v-bind="UI.CARD.COL.INFO">
                                     <div align="right">
-                                        {{ $t('card_item.source') }}:
-                                        <strong>{{ news_item.news_item_data.osint_source_name || news_item.news_item_data.source }}</strong>
+                                        {{ $t('card_item.collected') }}: <strong>{{ news_item.news_item_data.collected
+                                        }}</strong>
                                     </div>
                                 </v-col>
 
@@ -52,11 +55,6 @@
                                 <!--FOOTER-->
                                 <v-row v-bind="UI.CARD.FOOTER">
                                     <v-col cols="11">
-                                        <span v-if="canAccess"
-                                            class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
-                                            {{ news_item.news_item_data.link }}
-                                        </span>
-
                                         <span v-if="canModify" class="caption font-weight-bold pl-2 pr-1"
                                             style="cursor: pointer;" @click.stop="cardItemToolbar('like')"
                                             :title="$t('assess.tooltip.like_item')">
@@ -77,19 +75,27 @@
                                             <v-icon color="grey" size="12">mdi-thumb-down</v-icon> {{ news_item.dislikes
                                             }}
                                         </span>
+                                        <span v-if="canAccess"
+                                            class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
+                                            {{ news_item.news_item_data.link }}
+                                        </span>
                                     </v-col>
 
-                                    <!--HOVER TOOLBAR-->
+                                    <!--TOOLBAR-->
                                     <v-col cols="1">
-                                        <v-row v-if="!multiSelectActive && !analyze_selector && hover"
-                                               :style="UI.STYLE.card_toolbar">
-                                            <v-col v-bind="UI.CARD.COL.TOOLS" :style="UI.STYLE.card_toolbar_strip_bottom">
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('ungroup')" data-btn="ungroup" :title="$t('assess.tooltip.ungroup_item')">
+                                        <v-row v-if="!multiSelectActive && !analyze_selector"
+                                            :style="UI.STYLE.card_toolbar">
+                                            <v-col v-bind="UI.CARD.COL.TOOLS"
+                                                :style="UI.STYLE.card_toolbar_strip_bottom">
+                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('ungroup')"
+                                                    data-btn="ungroup" :title="$t('assess.tooltip.ungroup_item')">
                                                     <v-icon color="primary">mdi-ungroup</v-icon>
                                                 </v-btn>
 
-                                                <v-btn v-if="canAccess" icon @click.stop="cardItemToolbar('link')" data-btn="link" :title="$t('assess.tooltip.open_source')">
-                                                    <a class="alink" :href="news_item.news_item_data.link" target="_blank" rel="noreferer">
+                                                <v-btn v-if="canAccess" icon @click.stop="cardItemToolbar('link')"
+                                                    data-btn="link" :title="$t('assess.tooltip.open_source')">
+                                                    <a class="alink" :href="news_item.news_item_data.link"
+                                                        target="_blank" rel="noreferer">
                                                         <v-icon color="primary">mdi-open-in-app</v-icon>
                                                     </a>
                                                 </v-btn>
@@ -104,15 +110,8 @@
                                                     <v-icon :color="buttonStatus(news_item.important)">mdi-star</v-icon>
                                                 </v-btn>
 
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')" data-btn="like" :title="$t('assess.tooltip.like_item')">
-                                                    <v-icon :color="buttonStatus(news_item.me_like)">mdi-thumb-up</v-icon>
-                                                </v-btn>
-
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')" data-btn="unlike" :title="$t('assess.tooltip.dislike_item')">
-                                                    <v-icon :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
-                                                </v-btn>
-
-                                                <v-btn v-if="canDelete" icon @click.stop="showMsgBox" data-btn="delete" :title="$t('assess.tooltip.delete_item')">
+                                                <v-btn v-if="canDelete" icon @click.stop="showMsgBox" data-btn="delete"
+                                                    :title="$t('assess.tooltip.delete_item')">
                                                     <v-icon color="primary">mdi-delete</v-icon>
                                                 </v-btn>
 
@@ -142,6 +141,7 @@ import { deleteNewsItem } from "@/api/assess";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
 import MessageBox from "@/components/common/MessageBox.vue";
+import AssessMixin from "@/components/assess/AssessMixin";
 import CardMixin from "@/components/assess/CardMixin";
 
 export default {
@@ -153,10 +153,8 @@ export default {
         compact_mode: Boolean,
         word_list_regex: String
     },
-    mixins: [AuthMixin, CardMixin],
-    data: () => ({
-        msgbox_visible: false,
-    }),
+    mixins: [AuthMixin, AssessMixin, CardMixin],
+    data: () => ({}),
     computed: {
         canAccess() {
             return this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true
@@ -172,24 +170,6 @@ export default {
 
         canCreateReport() {
             return this.checkPermission(Permissions.ANALYZE_CREATE)
-        },
-
-        selectedColor() {
-            if (this.selected === true) {
-                return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
-            } else {
-                return ""
-            }
-        },
-        cardStatus() {
-            if (this.news_item.important) {
-                return "important"
-            } else {
-                return "new"
-            }
-        },
-        isRead() {
-            return this.news_item.read && !this.news_item.important
         },
     },
     methods: {
@@ -210,15 +190,6 @@ export default {
             this.$root.$emit('change-state', 'SHOW_ITEM');
             this.$root.$emit('check-focus', this.$el.dataset.id);
             this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
-        },
-        getGroupId() {
-            if (window.location.pathname.includes("/group/")) {
-                let i = window.location.pathname.indexOf("/group/");
-                let len = window.location.pathname.length;
-                return window.location.pathname.substring(i + 7, len);
-            } else {
-                return null;
-            }
         },
         cardItemToolbar(action) {
             switch (action) {
@@ -258,6 +229,8 @@ export default {
                     break;
 
                 case "ungroup":
+                    // Emit event to parent to close the expanded aggregate view
+                    this.$parent.opened = false;
                     groupAction({
                         'group': this.getGroupId(),
                         'action': 'UNGROUP',
@@ -279,71 +252,8 @@ export default {
                     break;
             }
         },
-
-            buttonStatus: function (active) {
-                if (active) {
-                    return "amber darken-2"
-                } else {
-                    return "primary"
-                }
-            },
-            wordCheck(target) {
-                let parse = new Array();
-                let message = this.escapeHtml(target).split(' ');
-                let word_list = new RegExp(this.word_list_regex, "gi");
-
-                for (let i = 0; i < message.length; i++) {
-                    let res = message[i].replace(word_list, function (x) {
-                        return "<span class='wordlist'>" + x + "</span>";
-                    });
-
-                    parse.push(res + " ");
-                }
-
-                return parse.join('');
-            },
-            escapeHtml(text) {
-                let map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-
-                return text.replace(/[&<>"']/g, function (m) { return map[m]; });
-            },
-            multiSelectOff() {
-                this.selected = false
-            },
-            setFocus(id) {
-                if (this.$el.dataset.id == id) {
-                    this.toolbar = true;
-                    this.$el.querySelector(".card .layout").classList.add('focus');
-                } else {
-                    this.toolbar = false;
-                    this.$el.querySelector(".card .layout").classList.remove('focus');
-                }
-            },
-            showMsgBox() {
-                this.msgbox_visible = true;
-            },
-            handleMsgBox() {
-                this.msgbox_visible = false;
-                this.cardItemToolbar('delete')
-            }
-        },
-        mounted() {
-            this.$root.$on('multi-select-off', this.multiSelectOff);
-
-            this.$root.$on('check-focus', (id) => {
-                this.setFocus(id);
-            });
-        },
-        beforeDestroy() {
-            this.$root.$off('multi-select-off', this.multiSelectOff);
-        }
     }
+}
 </script>
 <style scoped>
 .status.read {

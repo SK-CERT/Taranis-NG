@@ -9,14 +9,18 @@
             <v-col :class="UI.CLASS.card_offset">
                 <v-hover v-slot="{ hover }">
                     <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar"
-                        @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus" :color="selectedColor">
+                        @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus"
+                        :color="selectedColor">
                         <!--CONTENT-->
                         <v-layout v-bind="UI.CARD.LAYOUT" :class="['status', cardStatus, { 'read': isRead }]">
                             <v-row v-bind="UI.CARD.ROW.CONTENT">
-                                <!--COLLECTED, PUBLISHED, SOURCE-->
+                                <!--COLLECTED, PUBLISHED, SOURCE NAME-->
                                 <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div>
-                                        {{ $t('card_item.collected') }}: <strong>{{ card.created }}</strong>
+                                    <div v-if="singleAggregate">
+                                        {{ $t('card_item.source') }}:
+                                        <strong>{{ card.news_items[0].news_item_data.osint_source_type }} - {{
+                                            card.news_items[0].news_item_data.osint_source_name ||
+                                            card.news_items[0].news_item_data.source }}</strong>
                                     </div>
                                 </v-col>
                                 <v-col v-bind="UI.CARD.COL.INFO">
@@ -26,9 +30,8 @@
                                     </div>
                                 </v-col>
                                 <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div v-if="singleAggregate" align="right">
-                                        {{ $t('card_item.source') }}:
-                                        <strong>{{ card.news_items[0].news_item_data.osint_source_name || card.news_items[0].news_item_data.source }}</strong>
+                                    <div align="right">
+                                        {{ $t('card_item.collected') }}: <strong>{{ card.created }}</strong>
                                     </div>
                                 </v-col>
 
@@ -58,10 +61,6 @@
                                                     card.news_items.length }}</div>
                                             </v-btn>
                                         </template>
-                                        <div
-                                            class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
-                                            {{ itemLink }}
-                                        </div>
 
                                         <span v-if="canModify" class="caption font-weight-bold pl-2"
                                             style="cursor: pointer;" @click.stop="cardItemToolbar('like')"
@@ -86,6 +85,11 @@
                                             {{ card.dislikes }}
                                         </span>
 
+                                        <span v-if="canAccess"
+                                            class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
+                                            {{ itemLink }}
+                                        </span>
+
                                         <span v-if="card.in_reports_count > 0" class="pl-2">
                                             <v-btn depressed x-small color="orange lighten-2">{{
                                                 $t('card_item.in_analyze') }}</v-btn>
@@ -95,8 +99,8 @@
                                             color="orange lighten-2">mdi-comment</v-icon>
                                     </v-col>
                                     <v-col cols="4">
-                                        <!--HOVER TOOLBAR-->
-                                        <div v-show="hover">
+                                        <!--TOOLBAR-->
+                                        <div>
                                             <v-row v-if="!multiSelectActive && !analyze_selector"
                                                 v-bind="UI.CARD.TOOLBAR.COMPACT"
                                                 :style="UI.STYLE.card_toolbar_strip_bottom">
@@ -105,19 +109,18 @@
                                                         @click.stop="cardItemToolbar('link')" data-btn="link"
                                                         :title="$t('assess.tooltip.open_source')">
                                                         <a class="alink" :href="card.news_items[0].news_item_data.link"
-                                                           target="_blank" rel="noreferer">
+                                                            target="_blank" rel="noreferer">
                                                             <v-icon color="primary">mdi-open-in-app</v-icon>
                                                         </a>
                                                     </v-btn>
                                                     <v-btn v-if="!singleAggregate && canModify" icon
-                                                           @click.stop="cardItemToolbar('ungroup')"
-                                                           data-btn="ungroup"
-                                                           :title="$t('assess.tooltip.ungroup_news_item')">
+                                                        @click.stop="cardItemToolbar('ungroup')" data-btn="ungroup"
+                                                        :title="$t('assess.tooltip.ungroup_items')">
                                                         <v-icon color="primary">mdi-ungroup</v-icon>
                                                     </v-btn>
-                                                    <v-btn v-if="canCreateReport" icon @click.stop="cardItemToolbar('new')"
-                                                           :title="$t('assess.tooltip.analyze_item')"
-                                                           data-btn="new">
+                                                    <v-btn v-if="canCreateReport" icon
+                                                        @click.stop="cardItemToolbar('new')"
+                                                        :title="$t('assess.tooltip.analyze_item')" data-btn="new">
                                                         <v-icon color="primary">mdi-file-outline</v-icon>
                                                     </v-btn>
                                                     <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
@@ -131,8 +134,7 @@
                                                         <v-icon :color="buttonStatus(card.important)">mdi-star</v-icon>
                                                     </v-btn>
                                                     <v-btn v-if="canDelete" icon @click.stop="showMsgBox()"
-                                                           :title="$t('assess.tooltip.delete_item')"
-                                                           data-btn="delete">
+                                                        :title="$t('assess.tooltip.delete_item')" data-btn="delete">
                                                         <v-icon color="primary">{{ UI.ICON.DELETE }}</v-icon>
                                                     </v-btn>
                                                 </v-col>
@@ -141,7 +143,7 @@
                                                 v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                                 <v-col v-bind="UI.CARD.COL.TOOLS">
                                                     <v-btn icon @click.stop="cardItemToolbar('remove')"
-                                                           :title="$t('assess.tooltip.remove_item')">
+                                                        :title="$t('assess.tooltip.remove_item')">
                                                         <v-icon color="primary">mdi-minus-circle-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
@@ -177,6 +179,7 @@ import { deleteNewsItemAggregate } from "@/api/assess";
 import AuthMixin from "@/services/auth/auth_mixin";
 import Permissions from "@/services/auth/permissions";
 import MessageBox from "@/components/common/MessageBox"
+import AssessMixin from "@/components/assess/AssessMixin";
 import CardMixin from "@/components/assess/CardMixin";
 
 export default {
@@ -191,11 +194,10 @@ export default {
         aggregate_opened: Boolean,
         data_set: String
     },
-    mixins: [AuthMixin, CardMixin],
+    mixins: [AuthMixin, AssessMixin, CardMixin],
     components: { CardAssessItem, MessageBox },
     data: () => ({
         opened: false,
-        msgbox_visible: false,
     }),
     computed: {
         canAccess() {
@@ -214,13 +216,6 @@ export default {
             return this.checkPermission(Permissions.ANALYZE_CREATE)
         },
 
-        selectedColor() {
-            if (this.selected === true || this.preselected) {
-                return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4";
-            } else {
-                return ""
-            }
-        },
         singleAggregate() {
             return this.card.news_items.length === 1
         },
@@ -237,16 +232,6 @@ export default {
             } else {
                 return "aggregate";
             }
-        },
-        cardStatus() {
-            if (this.card.important) {
-                return "important"
-            } else {
-                return "new"
-            }
-        },
-        isRead() {
-            return this.card.read && !this.card.important
         },
     },
     methods: {
@@ -293,17 +278,7 @@ export default {
             this.$root.$emit('update-pos', parseInt(this.$el.dataset.id));
         },
 
-            getGroupId() {
-                if (window.location.pathname.includes("/group/")) {
-                    let i = window.location.pathname.indexOf("/group/");
-                    let len = window.location.pathname.length;
-                    return window.location.pathname.substring(i + 7, len);
-                } else {
-                    return null;
-                }
-            },
-
-            cardItemToolbar(action) {
+        cardItemToolbar(action) {
 
             switch (action) {
                 case "like":
@@ -353,12 +328,12 @@ export default {
                     break;
 
                 case "ungroup":
+                    this.opened = false;  // Close the expanded view before ungrouping
                     groupAction({
                         'group': this.getGroupId(),
                         'action': 'UNGROUP',
                         'items': [{ 'type': 'AGGREGATE', 'id': this.card.id }]
                     }).then(() => {
-
                     }).catch((error) => {
                         this.$root.$emit('notification',
                             {
@@ -375,79 +350,11 @@ export default {
                     break;
             }
         },
-
-            buttonStatus: function (active) {
-                if (active) {
-                    return "amber darken-2"
-                } else {
-                    return "primary"
-                }
-            },
-            wordCheck(target) {
-                let parse = new Array();
-                let message = this.escapeHtml(target).split(' ');
-                let word_list = new RegExp(this.word_list_regex, "gi");
-
-                for (let i = 0; i < message.length; i++) {
-                    let res = message[i].replace(word_list, function (x) {
-                        return "<span class='wordlist'>" + x + "</span>";
-                    });
-
-                    parse.push(res + " ");
-                }
-
-                return parse.join('');
-            },
-            escapeHtml(text) {
-                let map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-
-                return text.replace(/[&<>"']/g, function (m) {
-                    return map[m];
-                });
-            },
-            multiSelectOff() {
-                this.selected = false
-            },
-            setFocus(id) {
-                if (this.$el.dataset.id == id) {
-                    this.toolbar = true;
-                    this.$el.querySelector(".card .layout").classList.add('focus');
-                } else {
-                    this.toolbar = false;
-                    this.$el.querySelector(".card .layout").classList.remove('focus');
-                }
-            },
-            showMsgBox() {
-                // console.trace('showMsgBox');
-                this.msgbox_visible = true;
-            },
-            handleMsgBox() {
-                // console.trace('handleMsgBox', this.msgbox_action);
-                this.msgbox_visible = false;
-                this.cardItemToolbar('delete')
-            }
-        },
-        created() {
-            this.opened = this.aggregate_opened;
-        },
-        mounted() {
-            this.$root.$on('multi-select-off', this.multiSelectOff);
-
-            this.$root.$on('check-focus', (id) => {
-                this.setFocus(id);
-            });
-        },
-        beforeDestroy() {
-            this.$root.$off('multi-select-off', this.multiSelectOff);
-            this.$root.$off('check-focus');
-        }
+    },
+    created() {
+        this.opened = this.aggregate_opened;
     }
+}
 </script>
 
 <style scoped>

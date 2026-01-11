@@ -1,77 +1,62 @@
+// shared mixin for assess cards
 export default {
     data: () => ({
-        toolbar: false,
-        selected: false,
+        msgbox_visible: false,
     }),
     computed: {
-        multiSelectActive() {
-            return this.$store.getters.getMultiSelect
-        },
         cardFocus() {
-            if (this.$el.querySelector(".card .layout").classList.contains('focus')) {
+            if (this.$el.querySelector(".card .layout") && this.$el.querySelector(".card .layout").classList.contains('focus')) {
                 return true;
             } else {
                 return false;
             }
         },
+        selectedColor() {
+            if (this.selected === true || this.preselected) {
+                return this.$vuetify.theme.dark ? "blue-grey darken-3" : "orange lighten-4"
+            } else {
+                return ""
+            }
+        },
+        cardStatus() {
+            const item = this.card || this.news_item;
+            if (item.important) {
+                return "important"
+            } else {
+                return "new"
+            }
+        },
+        isRead() {
+            const item = this.card || this.news_item;
+            return item.read && !item.important
+        },
     },
     methods: {
-        buttonStatus(active) {
-            if (active) {
-                return "info"
-            } else {
-                return "accent"
-            }
-        },
-        wordCheck(target) {
-            let parse = new Array();
-            let message = this.escapeHtml(target).split(' ');
-            let word_list = new RegExp(this.word_list_regex, "gi");
-
-            for (let i = 0; i < message.length; i++) {
-                let res = message[i].replace(word_list, function (x) {
-                    return "<span class='wordlist'>" + x + "</span>";
-                });
-
-                parse.push(res + " ");
-            }
-
-            return parse.join('');
-        },
-        escapeHtml(text) {
-            let map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-
-            return text.replace(/[&<>"']/g, function (m) {
-                return map[m];
-            });
-        },
-        getGroupId() {
-            if (window.location.pathname.includes("/group/")) {
-                let i = window.location.pathname.indexOf("/group/");
-                let len = window.location.pathname.length;
-                return window.location.pathname.substring(i + 7, len);
-            } else {
-                return null;
-            }
-        },
         multiSelectOff() {
             this.selected = false
         },
         setFocus(id) {
             if (this.$el.dataset.id == id) {
                 this.toolbar = true;
-                this.$el.querySelector(".card .layout").classList.add('focus');
+                const layout = this.$el.querySelector(".card .layout");
+                if (layout) {
+                    layout.classList.add('focus');
+                }
             } else {
                 this.toolbar = false;
-                this.$el.querySelector(".card .layout").classList.remove('focus');
+                const layout = this.$el.querySelector(".card .layout");
+                if (layout) {
+                    layout.classList.remove('focus');
+                }
             }
         },
+        showMsgBox() {
+            this.msgbox_visible = true;
+        },
+        handleMsgBox() {
+            this.msgbox_visible = false;
+            this.cardItemToolbar('delete')
+        }
     },
     mounted() {
         this.$root.$on('multi-select-off', this.multiSelectOff);
