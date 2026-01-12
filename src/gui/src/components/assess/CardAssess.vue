@@ -18,9 +18,11 @@
                                 <v-col v-bind="UI.CARD.COL.INFO">
                                     <div v-if="singleAggregate">
                                         {{ $t('card_item.source') }}:
-                                        <strong>{{ card.news_items[0].news_item_data.osint_source_type }} - {{
+                                        <strong>{{
                                             card.news_items[0].news_item_data.osint_source_name ||
-                                            card.news_items[0].news_item_data.source }}</strong>
+                                            card.news_items[0].news_item_data.source }} ({{
+                                                (card.news_items[0].news_item_data.osint_source_type || '').split(' ')[0]
+                                            }})</strong>
                                     </div>
                                 </v-col>
                                 <v-col v-bind="UI.CARD.COL.INFO">
@@ -51,7 +53,7 @@
 
                                 <!--FOOTER-->
                                 <v-row v-bind="UI.CARD.FOOTER">
-                                    <v-col cols="8">
+                                    <v-col cols="8" class="footer-content">
                                         <template v-if="!singleAggregate">
                                             <v-btn depressed small color="primary" data-button="aggregate"
                                                 @click.stop="openCard">
@@ -61,29 +63,6 @@
                                                     card.news_items.length }}</div>
                                             </v-btn>
                                         </template>
-
-                                        <span v-if="canModify" class="caption font-weight-bold pl-2"
-                                            style="cursor: pointer;" @click.stop="cardItemToolbar('like')"
-                                            :title="$t('assess.tooltip.like_item')">
-                                            <v-icon :color="buttonStatus(card.me_like)" size="12">mdi-thumb-up</v-icon>
-                                            {{ card.likes }}
-                                        </span>
-                                        <span v-else class="caption font-weight-bold grey--text pl-2">
-                                            <v-icon color="grey" size="12">mdi-thumb-up</v-icon>
-                                            {{ card.likes }}
-                                        </span>
-
-                                        <span v-if="canModify" class="caption font-weight-bold pl-2"
-                                            style="cursor: pointer;" @click.stop="cardItemToolbar('unlike')"
-                                            :title="$t('assess.tooltip.dislike_item')">
-                                            <v-icon :color="buttonStatus(card.me_dislike)"
-                                                size="12">mdi-thumb-down</v-icon>
-                                            {{ card.dislikes }}
-                                        </span>
-                                        <span v-else class="caption font-weight-bold grey--text pl-2">
-                                            <v-icon color="grey" size="12">mdi-thumb-down</v-icon>
-                                            {{ card.dislikes }}
-                                        </span>
 
                                         <span v-if="canAccess"
                                             class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
@@ -105,6 +84,27 @@
                                                 v-bind="UI.CARD.TOOLBAR.COMPACT"
                                                 :style="UI.STYLE.card_toolbar_strip_bottom">
                                                 <v-col v-bind="UI.CARD.COL.TOOLS">
+                                                    <span class="ml-5">
+                                                        <v-btn v-if="canModify" icon
+                                                            @click.stop="cardItemToolbar('like')" data-btn="like"
+                                                            :title="$t('assess.tooltip.like_item')">
+                                                            <v-icon
+                                                                :color="buttonStatus(card.me_like)">mdi-thumb-up</v-icon>
+                                                        </v-btn>
+                                                        {{ card.likes }}
+                                                    </span>
+                                                    <span class="mr-5">
+                                                        <v-btn v-if="canModify" icon
+                                                            @click.stop="cardItemToolbar('unlike')"
+                                                            :title="$t('assess.tooltip.dislike_item')"
+                                                            data-btn="unlike">
+                                                            <v-icon :color="buttonStatus(card.me_dislike)">
+                                                                mdi-thumb-down
+                                                            </v-icon>
+                                                        </v-btn>
+                                                        {{ card.dislikes }}
+                                                    </span>
+
                                                     <v-btn v-if="singleAggregate && canAccess" icon
                                                         @click.stop="cardItemToolbar('link')" data-btn="link"
                                                         :title="$t('assess.tooltip.open_source')">
@@ -358,6 +358,10 @@ export default {
 </script>
 
 <style scoped>
+.footer-content {
+    min-height: 48px;
+}
+
 .status.read {
     opacity: 0.5;
 }
