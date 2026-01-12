@@ -28,8 +28,8 @@
                 <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
 
                 <!-- FAVORITES -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read">
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES" v-model="activeFilters">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read" value="read">
                         <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_read')">{{ UI.ICON.UNREAD }}</v-icon>
                     </v-chip>
                     <v-chip  v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterImportant" id="button_filter_important">
@@ -126,6 +126,15 @@
             multiSelectActive() {
                 return this.$store.getters.getMultiSelect;
             },
+
+            activeFilters: {
+                get() {
+                    return this.filter.read ? ['read'] : [];
+                },
+                set() {
+                    // Chip-group requires a setter, but we handle clicks manually
+                }
+            }
         },
         data: () => ({
             status: [],
