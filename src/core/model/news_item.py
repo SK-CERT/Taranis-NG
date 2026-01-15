@@ -164,6 +164,16 @@ class NewsItemData(db.Model):
         """Return plain text version of content."""
         return strip_html(self.content) if self.content else ""
 
+    @property
+    def osint_source_name(self) -> str:
+        """Return OSINT source name."""
+        return self.osint_source.name if self.osint_source else ""
+
+    @property
+    def osint_source_type(self) -> str:
+        """Return OSINT source collector type."""
+        return self.osint_source.collector.name if self.osint_source and self.osint_source.collector else ""
+
     @classmethod
     def allowed_with_acl(cls, news_item_data_id: str, user: User, see: bool, access: bool, modify: bool) -> bool:
         """Check if user is allowed to access news item data.

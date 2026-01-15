@@ -28,8 +28,8 @@
                 <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
 
                 <!-- FAVORITES -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read">
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES" v-model="activeFilters">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read" value="read">
                         <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_read')">{{ UI.ICON.UNREAD }}</v-icon>
                     </v-chip>
                     <v-chip  v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterImportant" id="button_filter_important">
@@ -126,6 +126,15 @@
             multiSelectActive() {
                 return this.$store.getters.getMultiSelect;
             },
+
+            activeFilters: {
+                get() {
+                    return this.filter.read ? ['read'] : [];
+                },
+                set() {
+                    // Chip-group requires a setter, but we handle clicks manually
+                }
+            }
         },
         data: () => ({
             status: [],
@@ -139,7 +148,7 @@
             filter: {
                 search: "",
                 range: "ALL",
-                read: false,
+                read: true,
                 important: false,
                 relevant: false,
                 sort: "DATE_DESC"
@@ -252,15 +261,17 @@
             },
 
         },
-        mounted() {
+        created() {
             this.review_toggle = getLocalStorageBoolean('review-hide', false);
-            this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
-
             this.source_link_toggle = getLocalStorageBoolean('source-link-hide', false);
-            this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
-
             this.word_list_toggle = getLocalStorageBoolean('word-list-hide', false);
-            this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
+        },
+        mounted() {
+            setTimeout(() => {
+                this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
+                this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
+                this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
+            }, 100);
         }
     }
 </script>
