@@ -1,12 +1,10 @@
 <template>
-    <v-dialog v-model="dialogVisible"
-              max-width="550"
-              :persistent="!cancelable">
+    <v-dialog v-model="dialogVisible" max-width="550" :persistent="!cancelable">
         <v-card outlined>
             <v-card-title class="justify-center" style="text-align: center;">
                 <div style="display: inline-flex; align-items: center; max-width: 100%;">
-                    <v-icon class="mr-2" size="28" :color="alert ? 'error' : 'primary'">
-                        {{ alert ? 'mdi-alert-circle' : 'mdi-help-circle' }}
+                    <v-icon class="mr-2" size="28" :color="iconColor">
+                        {{ icon }}
                     </v-icon>
 
                     <span class="text-h6" style="word-break: break-word;">
@@ -20,43 +18,51 @@
             </v-card-text>
 
             <v-card-actions class="justify-center">
-                <v-btn
-                       @click="emitResult('yes')">
-                    {{ $t('common.messagebox.yes') }}
-                </v-btn>
-                <v-btn class="ml-4"
-                       @click="emitResult('cancel')">
-                    {{ $t('common.cancel') }}
-                </v-btn>
+                <template v-if="buttons && buttons.length">
+                    <v-btn v-for="(button, index) in buttons" :key="index" :class="index > 0 ? 'ml-4' : ''"
+                        :color="button.color" :text="button.text !== false" @click="emitResult(button.action)">
+                        {{ $te(button.label) ? $t(button.label) : button.label }}
+                    </v-btn>
+                </template>
+                <template v-else>
+                    <v-btn @click="emitResult('yes')">
+                        {{ $t('common.messagebox.yes') }}
+                    </v-btn>
+                    <v-btn class="ml-4" @click="emitResult('cancel')">
+                        {{ $t('common.cancel') }}
+                    </v-btn>
+                </template>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
 <script>
-    export default {
-        name: "MessageBox",
+export default {
+    name: "MessageBox",
 
-        props: {
-            value: { type: Boolean, default: false },
-            title: String,
-            message: String,
-            alert: Boolean,
-            cancelable: { type: Boolean, default: true }
-        },
+    props: {
+        value: { type: Boolean, default: false },
+        title: String,
+        message: String,
+        icon: { type: String, default: 'mdi-help-circle' }, // Icon name (e.g., 'mdi-alert-circle', 'mdi-help-circle')
+        iconColor: { type: String, default: 'primary' }, // Icon color (e.g., 'error', 'primary', 'warning')
+        cancelable: { type: Boolean, default: true },
+        buttons: { type: Array, default: null } // Array of { label: string, color: string, action: string, text: boolean }
+    },
 
-        computed: {
-            dialogVisible: {
-                get() { return this.value },
-                set(v) { this.$emit('input', v) }
-            }
-        },
+    computed: {
+        dialogVisible: {
+            get() { return this.value },
+            set(v) { this.$emit('input', v) }
+        }
+    },
 
-        methods: {
-            emitResult(type) {
-                this.$emit(type)
-                this.dialogVisible = false
-            }
+    methods: {
+        emitResult(type) {
+            this.$emit(type)
+            this.dialogVisible = false
         }
     }
+}
 </script>
