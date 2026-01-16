@@ -749,6 +749,10 @@ const messages_en = {
         select: "Select Report Items",
         select_remote: "Select Report Items from Remote Nodes",
         attributes: "Attributes",
+        confirm_close: {
+            message:
+            "You have unsaved changes. Are you sure you want to close this report item?",
+        },
         tooltip: {
             sort_time: "Sort values from newest",
             sort_user: "Show my values first then others",
@@ -777,6 +781,9 @@ const messages_en = {
         publish: "Publish product",
         publish_confirmation: "Are you sure you want to publish following product?",
         total_count: "Products count: ",
+        confirm_close: {
+            message: "You have unsaved changes. Are you sure you want to close this product without saving your changes?",
+        },
     },
 
     analyze: {
@@ -1223,6 +1230,13 @@ const messages_en = {
             "Some of selected aggregates or news items are already assigned to a report item",
         server_error: "Unknown server error...",
         validation: "Please fill in all required fields",
+    },
+
+    confirm_close: {
+        title: "Unsaved Changes",
+        continue: "Continue editing",
+        save_and_close: "Save and Close",
+        close: "Close without saving",
     },
 
     common: {

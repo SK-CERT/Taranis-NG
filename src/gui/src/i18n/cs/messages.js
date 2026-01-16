@@ -748,6 +748,10 @@ const messages_cs = {
         select: "Vybrat analýzy",
         select_remote: "Vybrat novinky ze vzdálených instancí",
         attributes: "Atributy",
+        confirm_close: {
+            message:
+            "Máte neuložené změny. Opravdu chcete zavřít tuto analýzu?",
+        },
         tooltip: {
             sort_time: "Seřadit hodnoty od nejnovější",
             sort_user: "Zobrazit vlastní hodnoty před ostatními",
@@ -776,6 +780,9 @@ const messages_cs = {
         publish: "Zveřejnit publikaci",
         publish_confirmation: "Opravdu chcete zveřejnit tuto publikaci?",
         total_count: "Počet typů publikací: ",
+        confirm_close: {
+            message: "Máte neuložené změny. Opravdu chcete zavřít tuto publikaci?",
+        },
     },
 
     analyze: {
@@ -1223,6 +1230,13 @@ const messages_cs = {
             "Některé vybrané novinky nebo sloučené novinky jsou již připojeny k analýze",
         server_error: "Neznámá chyba serveru...",
         validation: "Prosím vyplňte všechna povinná pole",
+    },
+
+    confirm_close: {
+        title: "Neuložené změny",
+        continue: "Pokračovat v úpravách",
+        save_and_close: "Uložit a zavřít",
+        close: "Zavřít bez uložení",
     },
 
     common: {

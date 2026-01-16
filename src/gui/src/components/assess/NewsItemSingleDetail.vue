@@ -150,7 +150,8 @@
                     @cancel="msgbox_visible = false"
                     :title="$t('common.messagebox.delete')"
                     :message="news_item.title"
-                    :alert=true>
+                    icon="mdi-alert-circle"
+                    iconColor="error">
         </MessageBox>
     </v-container>
 </template>
