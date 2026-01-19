@@ -47,19 +47,13 @@
         }),
         mixins: [AuthMixin],
         methods: {
-            filterSearch: function() {
+            filterSearch: function () {
                 clearTimeout(this.timeout);
 
                 let self = this;
-                this.timeout = setTimeout(function(){
+                this.timeout = setTimeout(function () {
                     self.$root.$emit('update-items-filter', self.filter)
-                },800);
-            },
-            changeTheme() {
-                this.$vuetify.theme.themes.light.primary = "#f0f";
-                this.$vuetify.theme.themes.light.secondary = '#f00';
-                this.$vuetify.theme.themes.light.bg = '#0f0';
-                this.$vuetify.theme.themes.light.base = '#00f';
+                }, 800);
             },
             remove(item) {
                 this.chips.splice(this.chips.indexOf(item), 1);

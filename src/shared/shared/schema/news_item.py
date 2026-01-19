@@ -161,6 +161,8 @@ class NewsItemDataPresentationSchema(NewsItemDataBaseSchema):
     """Schema for presenting news item data."""
 
     remote_source = fields.Str()
+    osint_source_name = fields.Str()
+    osint_source_type = fields.Str()
     content = fields.Str()
     attributes = fields.Nested(NewsItemAttributeBaseSchema, many=True)
 
@@ -201,14 +203,14 @@ class NewsItemTagSchema(Schema):
     n_i_d = fields.Nested(NewsItemDataSchema, many=True)
 
 
-class NewsItemPresentationSchema(NewsItemBaseSchema, ACLEntryStatusSchema):
-    """Schema for presenting a news item with ACL entry status."""
-
-
 class NewsItemSchema(NewsItemBaseSchema):
     """Schema for a news item."""
 
     news_item_data = fields.Nested(NewsItemDataPresentationSchema)
+
+
+class NewsItemPresentationSchema(NewsItemSchema, ACLEntryStatusSchema):
+    """Schema for presenting a news item with ACL entry status."""
 
 
 class NewsItemAggregateSchema(Schema):

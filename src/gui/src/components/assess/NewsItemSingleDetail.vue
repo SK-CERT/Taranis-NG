@@ -13,7 +13,7 @@
                         <v-spacer></v-spacer>
 
                         <div v-if="!multiSelectActive && !analyze_selector">
-                            <a v-if="canAccess" :href="news_item.news_items[0].news_item_data.link" rel="noreferrer"
+                            <a :href="news_item.news_items[0].news_item_data.link" rel="noreferrer"
                                target="_blank" :title="$t('assess.tooltip.open_source')">
                                 <v-btn small icon>
                                     <v-icon small color="white">mdi-open-in-app</v-icon>
@@ -155,15 +155,16 @@
 </template>
 
 <script>
-    import { deleteNewsItemAggregate, getNewsItem, voteNewsItem } from "@/api/assess";
-    import { readNewsItem } from "@/api/assess";
-    import { importantNewsItem } from "@/api/assess";
+    import { deleteNewsItemAggregate, getNewsItem, voteNewsItemAggregate } from "@/api/assess";
+    import { readNewsItemAggregate } from "@/api/assess";
+    import { importantNewsItemAggregate } from "@/api/assess";
     import { saveNewsItemAggregate } from "@/api/assess";
     import NewsItemAttribute from "@/components/assess/NewsItemAttribute";
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
     import { VueEditor } from 'vue2-editor';
     import MessageBox from "@/components/common/MessageBox.vue";
+    import NewsItemMixin from "@/components/assess/news_item_mixin";
 
     const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike', { 'script': 'sub' }, { 'script': 'super' },
@@ -178,31 +179,19 @@
     export default {
         name: "NewsItemSingleDetail",
         components: { MessageBox, NewsItemAttribute, VueEditor },
-        mixins: [AuthMixin],
+        mixins: [AuthMixin, NewsItemMixin],
         props: {
             analyze_selector: Boolean,
             attach: undefined,
             verticalView: Boolean,
         },
         computed: {
-            canAccess() {
-                return this.checkPermission(Permissions.ASSESS_ACCESS) && this.access === true
-            },
-
             canModify() {
                 return this.checkPermission(Permissions.ASSESS_UPDATE) && this.modify === true
             },
 
             canDelete() {
                 return this.checkPermission(Permissions.ASSESS_DELETE) && this.modify === true
-            },
-
-            canCreateReport() {
-                return this.checkPermission(Permissions.ANALYZE_CREATE)
-            },
-
-            multiSelectActive() {
-                return this.$store.getters.getMultiSelect
             },
         },
         data: () => ({
@@ -219,8 +208,6 @@
             access: false,
             modify: false,
             news_item: { news_items: [{ news_item_data: {} }] },
-            toolbar: false,
-            msgbox_visible: false,
         }),
         methods: {
             open(news_item) {
@@ -245,6 +232,7 @@
 
                 this.$root.$emit('first-dialog', 'push');
             },
+
             close(event) {
                 if (event) event.stopPropagation();  // prevent the ESC to close also parent window in side-view mode
                 this.visible = false;
@@ -256,34 +244,23 @@
                 this.$root.$emit('change-state', 'DEFAULT');
                 this.$root.$emit('first-dialog', '');
             },
-            openUrlToNewTab: function (url) {
-                window.open(url, "_blank");
-            },
-            getGroupId() {
-                if (window.location.pathname.includes("/group/")) {
-                    let i = window.location.pathname.indexOf("/group/");
-                    let len = window.location.pathname.length;
-                    return window.location.pathname.substring(i + 7, len);
-                } else {
-                    return null;
-                }
-            },
+
             cardItemToolbar(action) {
                 switch (action) {
                     case "like":
-                        voteNewsItem(this.getGroupId(), this.news_item.id, 1).then(() => {
-                            if (this.news_item.me_like === false) {
-                                this.news_item.me_like = true;
+                        voteNewsItemAggregate(this.getGroupId(), this.news_item.id, 1).then(() => {
+                            this.news_item.me_like = !this.news_item.me_like;
+                            if (this.news_item.me_like) {
                                 this.news_item.me_dislike = false;
                             }
                         });
                         break;
 
                     case "unlike":
-                        voteNewsItem(this.getGroupId(), this.news_item.id, -1).then(() => {
-                            if (this.news_item.me_dislike === false) {
+                        voteNewsItemAggregate(this.getGroupId(), this.news_item.id, -1).then(() => {
+                            this.news_item.me_dislike = !this.news_item.me_dislike;
+                            if (this.news_item.me_dislike) {
                                 this.news_item.me_like = false;
-                                this.news_item.me_dislike = true;
                             }
                         });
                         break;
@@ -298,13 +275,13 @@
                         break;
 
                     case "important":
-                        importantNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                        importantNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
                             this.news_item.important = this.news_item.important === false;
                         });
                         break;
 
                     case "read":
-                        readNewsItem(this.getGroupId(), this.news_item.id).then(() => {
+                        readNewsItemAggregate(this.getGroupId(), this.news_item.id).then(() => {
                             this.news_item.read = this.news_item.read === false;
                         });
                         break;
@@ -322,20 +299,6 @@
                 }
             },
 
-            buttonStatus: function (active) {
-                if (active) {
-                    return "amber"
-                } else {
-                    return "white"
-                }
-            },
-            showMsgBox() {
-                this.msgbox_visible = true;
-            },
-            handleMsgBox() {
-                this.msgbox_visible = false;
-                this.cardItemToolbar('delete')
-            },
             onTabClick(tabNumber) {
                 if (tabNumber === 3) {   // Set the editor's focus so the user can start typing immediately
                     this.$nextTick(() => {

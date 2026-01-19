@@ -833,9 +833,9 @@ const messages_cs = {
         total_count: "Počet novinek: ",
         selected_count: "Počet vybraných novinek: ",
         tooltip: {
-            filter_read: "Zobrazit/Skrýt nepřečtené novinky",
-            filter_important: "Zobrazit/Skrýt důležité novinky",
-            filter_relevant: "Zobrazit/Skrýt relevantní novinky",
+            filter_read: "Skrýt přečtené novinky",
+            filter_important: "Zobrazit důležité novinky",
+            filter_relevant: "Zobrazit relevantní novinky",
             filter_in_analyze: "Zobrazit/Skrýt analyzované novinky",
             range: {
                 ALL: "Zobrazit všechny novinky",

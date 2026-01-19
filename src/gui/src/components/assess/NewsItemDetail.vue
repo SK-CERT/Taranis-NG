@@ -7,31 +7,38 @@
                         <v-btn icon dark @click="close()" data-btn="close">
                             <v-icon>mdi-close-circle</v-icon>
                         </v-btn>
-                        <v-toolbar-title class="title-limit">{{news_item.news_item_data.title}}</v-toolbar-title>
+                        <v-toolbar-title class="title-limit">{{ news_item.news_item_data.title }}</v-toolbar-title>
                         <v-spacer></v-spacer>
 
                         <div v-if="!multiSelectActive && !analyze_selector">
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')" :title="$t('assess.tooltip.ungroup_item')">
+                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('ungroup')"
+                                   :title="$t('assess.tooltip.ungroup_item')">
                                 <v-icon small color="white">mdi-ungroup</v-icon>
                             </v-btn>
-                            <a v-if="canAccess" :href="news_item.news_item_data.link" target="_blank" rel="noreferrer" :title="$t('assess.tooltip.open_source')">
+                            <a :href="news_item.news_item_data.link" target="_blank" rel="noreferrer"
+                               :title="$t('assess.tooltip.open_source')">
                                 <v-btn small icon>
                                     <v-icon small color="white">mdi-open-in-app</v-icon>
                                 </v-btn>
                             </a>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('read')" :title="$t('assess.tooltip.read_item')">
+                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('read')"
+                                   :title="$t('assess.tooltip.read_item')">
                                 <v-icon small :color="buttonStatus(news_item.read)">mdi-eye</v-icon>
                             </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('important')" :title="$t('assess.tooltip.important_item')">
+                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('important')"
+                                   :title="$t('assess.tooltip.important_item')">
                                 <v-icon small :color="buttonStatus(news_item.important)">mdi-star</v-icon>
                             </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('like')" :title="$t('assess.tooltip.like_item')">
+                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('like')"
+                                   :title="$t('assess.tooltip.like_item')">
                                 <v-icon small :color="buttonStatus(news_item.me_like)">mdi-thumb-up</v-icon>
                             </v-btn>
-                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('unlike')" :title="$t('assess.tooltip.dislike_item')">
+                            <v-btn v-if="canModify" small icon @click.stop="cardItemToolbar('unlike')"
+                                   :title="$t('assess.tooltip.dislike_item')">
                                 <v-icon small :color="buttonStatus(news_item.me_dislike)">mdi-thumb-down</v-icon>
                             </v-btn>
-                            <v-btn v-if="canDelete" small icon @click.stop="showMsgBox" :title="$t('assess.tooltip.delete_item')">
+                            <v-btn v-if="canDelete" small icon @click.stop="showMsgBox"
+                                   :title="$t('assess.tooltip.delete_item')">
                                 <v-icon small color="white">mdi-delete</v-icon>
                             </v-btn>
                         </div>
@@ -40,10 +47,10 @@
                     <v-tabs dark centered grow>
                         <!-- TABS -->
                         <v-tab href="#tab-1">
-                            <span>{{$t('assess.source')}}</span>
+                            <span>{{ $t('assess.source') }}</span>
                         </v-tab>
                         <v-tab href="#tab-2">
-                            <span>{{$t('assess.attributes')}}</span>
+                            <span>{{ $t('assess.attributes') }}</span>
                         </v-tab>
 
                         <!-- TABS CONTENT -->
@@ -53,37 +60,50 @@
                                     <v-flex>
                                         <v-row class="text-center">
                                             <v-col>
-                                                <span class="overline font-weight-bold">{{$t('assess.collected')}}</span><br>
-                                                <span class="caption">{{news_item.news_item_data.collected}}</span>
+                                                <span class="overline font-weight-bold">
+                                                    {{ $t('assess.collected') }}
+                                                </span><br>
+                                                <span class="caption">{{ news_item.news_item_data.collected }}</span>
                                             </v-col>
                                             <v-col>
-                                                <span class="overline font-weight-bold">{{$t('assess.published')}}</span><br>
-                                                <span class="caption">{{news_item.news_item_data.published}}</span>
+                                                <span class="overline font-weight-bold">
+                                                    {{ $t('assess.published') }}
+                                                </span><br>
+                                                <span class="caption">{{ news_item.news_item_data.published }}</span>
                                             </v-col>
                                             <v-col>
-                                                <span class="overline font-weight-bold">{{$t('assess.source')}}</span><br>
-                                                <span class="caption">{{news_item.news_item_data.source}}</span>
+                                                <span class="overline font-weight-bold">
+                                                    {{ $t('assess.source') }}
+                                                </span><br>
+                                                <span class="caption">{{ news_item.news_item_data.source }}</span>
                                             </v-col>
                                             <v-col>
-                                                <span class="overline font-weight-bold">{{$t('assess.author')}}</span><br>
-                                                <span class="caption">{{news_item.news_item_data.author}}</span>
+                                                <span class="overline font-weight-bold">
+                                                    {{ $t('assess.author') }}
+                                                </span><br>
+                                                <span class="caption">{{ news_item.news_item_data.author }}</span>
                                             </v-col>
                                         </v-row>
                                     </v-flex>
                                 </v-row>
                                 <hr style="width: calc(100%); border: 0px;">
-                                <v-row class="headline">
-                                    <span class="display-1 font-weight-light py-4">{{news_item.news_item_data.title}}</span>
-                                </v-row>
-                                <v-row class="py-4">
-                                    <span class="body-2 grey--text text--darken-1" v-html="news_item.news_item_data.content"></span>
-                                </v-row>
+                                <v-col>
+                                    <v-row class="headline">
+                                        <span class="display-1 font-weight-light py-4">
+                                            {{ news_item.news_item_data.title }}
+                                        </span>
+                                    </v-row>
+                                    <v-row class="py-4">
+                                        <span class="body-2 grey--text text--darken-1"
+                                              v-html="news_item.news_item_data.content"></span>
+                                    </v-row>
+                                </v-col>
 
                                 <!-- LINKS -->
                                 <v-container fluid>
                                     <v-row>
                                         <a :href="news_item.news_item_data.link" target="_blank" rel="noreferrer">
-                                            <span>{{news_item.news_item_data.link}}</span>
+                                            <span>{{ news_item.news_item_data.link }}</span>
                                         </a>
                                     </v-row>
                                 </v-container>
@@ -121,11 +141,12 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
     import MessageBox from "@/components/common/MessageBox.vue";
+    import NewsItemMixin from "@/components/assess/news_item_mixin";
 
     export default {
         name: "NewsItemDetail",
         components: { MessageBox, NewsItemAttribute },
-        mixins: [AuthMixin],
+        mixins: [AuthMixin, NewsItemMixin],
         props: {
             analyze_selector: Boolean,
             attach: undefined
@@ -133,28 +154,14 @@
         data: () => ({
             visible: false,
             news_item: { news_item_data: {} },
-            toolbar: false,
-            msgbox_visible: false,
         }),
         computed: {
-            canAccess() {
-                return this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true
-            },
-
             canModify() {
                 return this.checkPermission(Permissions.ASSESS_UPDATE) && this.news_item.modify === true
             },
 
             canDelete() {
                 return this.checkPermission(Permissions.ASSESS_DELETE) && this.news_item.modify === true
-            },
-
-            canCreateReport() {
-                return this.checkPermission(Permissions.ANALYZE_CREATE)
-            },
-
-            multiSelectActive() {
-                return this.$store.getters.getMultiSelect
             },
         },
         methods: {
@@ -168,29 +175,19 @@
 
                 this.$root.$emit('first-dialog', 'push');
             },
+
             close() {
                 this.visible = false;
                 this.$root.$emit('change-state', 'DEFAULT');
                 this.$root.$emit('first-dialog', '');
             },
-            openUrlToNewTab: function (url) {
-                window.open(url, "_blank");
-            },
-            getGroupId() {
-                if (window.location.pathname.includes("/group/")) {
-                    let i = window.location.pathname.indexOf("/group/");
-                    let len = window.location.pathname.length;
-                    return window.location.pathname.substring(i + 7, len);
-                } else {
-                    return null;
-                }
-            },
+
             cardItemToolbar(action) {
                 switch (action) {
                     case "like":
                         voteNewsItem(this.getGroupId(), this.news_item.id, 1).then(() => {
-                            if (this.news_item.me_like === false) {
-                                this.news_item.me_like = true;
+                            this.news_item.me_like = !this.news_item.me_like;
+                            if (this.news_item.me_like) {
                                 this.news_item.me_dislike = false;
                             }
                         });
@@ -198,9 +195,9 @@
 
                     case "unlike":
                         voteNewsItem(this.getGroupId(), this.news_item.id, -1).then(() => {
-                            if (this.news_item.me_dislike === false) {
+                            this.news_item.me_dislike = !this.news_item.me_dislike;
+                            if (this.news_item.me_dislike) {
                                 this.news_item.me_like = false;
-                                this.news_item.me_dislike = true;
                             }
                         });
                         break;
@@ -244,21 +241,6 @@
                         break;
                 }
             },
-
-            buttonStatus: function (active) {
-                if (active) {
-                    return "amber"
-                } else {
-                    return "white"
-                }
-            },
-            showMsgBox() {
-                this.msgbox_visible = true;
-            },
-            handleMsgBox() {
-                this.msgbox_visible = false;
-                this.cardItemToolbar('delete')
-            }
         }
     }
 </script>
