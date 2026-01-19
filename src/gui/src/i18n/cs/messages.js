@@ -865,7 +865,6 @@ const messages_cs = {
             important_item: "Označit jako důležité",
             like_item: "To se mi líbí",
             dislike_item: "To se mi nelíbí",
-            delete_item: "Smazat novinku",
             remove_item: "Odstranit novinku",
         },
         shortcuts: {

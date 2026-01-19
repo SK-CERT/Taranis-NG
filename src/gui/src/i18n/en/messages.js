@@ -866,7 +866,6 @@ const messages_en = {
             important_item: "Mark news item as important",
             like_item: "Like news item",
             dislike_item: "Dislike news item",
-            delete_item: "Delete news item",
             remove_item: "Remove news item",
         },
         shortcuts: {

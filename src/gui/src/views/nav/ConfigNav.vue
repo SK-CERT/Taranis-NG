@@ -43,11 +43,10 @@
                 { id: 26, icon: 'mdi-application-cog-outline', title: 'nav_menu.settings', route: '/config/settings', permission: 'CONFIG_SETTINGS_ACCESS', translate: '1' },
                 { id: 27, icon: 'mdi-format-list-text', title: 'nav_menu.word_lists', route: '/config/wordlists', permission: 'CONFIG_WORD_LIST_ACCESS', translate: '1' },
                 { id: 28, icon: 'mdi-state-machine', title: 'nav_menu.workflow', route: '/config/workflow', permission: 'CONFIG_WORKFLOW_ACCESS', translate: '1' },
-                { id: 29, icon: 'mdi-creation', title: 'nav_menu.ai_providers', route: '/config/ai', permission: 'CONFIG_AI_ACCESS', translate: '1' },
-                { id: 30, icon: 'mdi-cloud-arrow-down', title: 'nav_menu.data_providers', route: '/config/data-providers', permission: 'CONFIG_DATA_PROVIDER_ACCESS', translate: '1' },
-                { id: 31, separator: '1' },
-                { id: 32, icon: 'mdi-account-group', title: 'nav_menu.external_users', route: '/config/external/users', permission: 'MY_ASSETS_CONFIG', translate: '1' },
-                { id: 33, icon: 'mdi-folder-multiple', title: 'nav_menu.asset_groups', route: '/config/external/groups', permission: 'MY_ASSETS_CONFIG', translate: '1' },
+                { id: 29, icon: 'mdi-cloud-arrow-down', title: 'nav_menu.data_providers', route: '/config/data-providers', permission: 'CONFIG_DATA_PROVIDER_ACCESS', translate: '1' },
+                { id: 30, separator: '1' },
+                { id: 31, icon: 'mdi-account-group', title: 'nav_menu.external_users', route: '/config/external/users', permission: 'MY_ASSETS_CONFIG', translate: '1' },
+                { id: 32, icon: 'mdi-folder-multiple', title: 'nav_menu.asset_groups', route: '/config/external/groups', permission: 'MY_ASSETS_CONFIG', translate: '1' },
                 { id: 34, icon: 'mdi-email-multiple-outline', title: 'nav_menu.notification_templates', route: '/config/external/templates', permission: 'MY_ASSETS_CONFIG', translate: '1' },
 
             ]

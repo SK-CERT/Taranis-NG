@@ -59,7 +59,7 @@
                                         <v-tooltip top>
                                             <template v-slot:activator="{ on, attrs }">
                                                 <v-icon v-bind="attrs" v-on="on" @click="deleteCategory(index)">
-                                                    mdi-delete
+                                                    mdi-ab-testing
                                                 </v-icon>
                                             </template>
                                             <span>{{ $t('word_list.delete_category') }}</span>
