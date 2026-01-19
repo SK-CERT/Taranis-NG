@@ -155,8 +155,7 @@
                         @yes="handleMsgBox"
                         @cancel="msgbox_visible = false"
                         :title="$t('common.messagebox.delete')"
-                        :message="card.title"
-                        :alert=true>
+                        :message="card.title">
             </MessageBox>
         </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 rounded">
@@ -434,11 +433,9 @@
                 }
             },
             showMsgBox() {
-                // console.trace('showMsgBox');
                 this.msgbox_visible = true;
             },
             handleMsgBox() {
-                // console.trace('handleMsgBox', this.msgbox_action);
                 this.msgbox_visible = false;
                 this.cardItemToolbar('delete')
             }

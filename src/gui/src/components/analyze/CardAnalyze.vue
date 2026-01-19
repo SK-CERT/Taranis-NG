@@ -78,7 +78,7 @@
                         @cancel="cancelMsgBox"
                         :title="$t(msgBoxTitle)"
                         :message="card.title"
-                        :alert=false>
+                        :icon="msgBoxIcon">
             </MessageBox>
         </v-row>
     </v-container>
@@ -145,7 +145,17 @@
                     default:
                         return "common.messagebox.delete";
                 }
-            }
+            },
+
+            msgBoxIcon() {
+                switch (this.msgbox_action) {
+                    case "remove":
+                        return { name: 'mdi-help-circle', color: 'primary' };
+                    default:
+                        return { name: 'mdi-alert-circle', color: 'error' };
+                }
+            },
+
         },
         methods: {
 
