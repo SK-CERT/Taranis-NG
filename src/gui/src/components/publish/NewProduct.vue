@@ -5,7 +5,12 @@
             <span>{{ $t('common.add_btn') }}</span>
         </v-btn>
 
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" new-product>
+        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="cancel" new-product>
+            <MessageBox v-model="showCloseConfirmation" :title="$t('confirm_close.title')"
+                        :message="$t('product.confirm_close.message')" :buttons="confirmCloseButtons"
+                        :icon="{ name: 'mdi-help-circle', color: 'warning' }"
+                        @continue="showCloseConfirmation = false" @save="saveAndClose" @close="confirmClose" />
+
             <v-card v-bind="UI.DIALOG.BASEMENT">
                 <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000">
                     <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="cancel">
@@ -97,12 +102,9 @@
                         </v-col>
                     </v-row>
                     <v-row>
-                        <MessageBox v-model="msgbox_visible"
-                                    @yes="publishProduct"
-                                    @cancel="msgbox_visible = false"
-                                    :title="$t('product.publish_confirmation')"
-                                    :message="product.title"
-                                    :alert=false>
+                        <MessageBox v-model="msgbox_visible" @yes="publishProduct" @cancel="msgbox_visible = false"
+                                    :title="$t('product.publish_confirmation')" :message="product.title"
+                                    :icon="{ name: 'mdi-help-circle', color: 'primary' }">
                         </MessageBox>
                     </v-row>
 
@@ -142,6 +144,13 @@
             show_error: false,
             modify: false,
             access: false,
+            showCloseConfirmation: false,
+            initialFormState: null,
+            confirmCloseButtons: [
+                { label: 'confirm_close.continue', color: '', action: 'continue', text: true },
+                { label: 'confirm_close.save_and_close', color: 'primary', action: 'save', text: true },
+                { label: 'confirm_close.close', color: 'error', action: 'close', text: true }
+            ],
             product_types: [],
             publisher_presets: [],
             selected_type: null,
@@ -170,7 +179,8 @@
                 else {
                     document.documentElement.style.overflow = 'auto'
                 }
-            }
+            },
+
         },
         computed: {
             canCreate() {
@@ -201,6 +211,7 @@
                 this.product.report_items = [];
                 this.selectDefaultState();
                 this.resetValidation();
+                this.initialFormState = this.snapshotForm()
             },
 
             publishConfirmation() {
@@ -262,8 +273,28 @@
             },
 
             cancel() {
+                // Check for unsaved changes only in create mode (not edit mode)
+                if (!this.edit && this.hasUnsavedChanges()) {
+                    this.showCloseConfirmation = true;
+                    return;
+                }
+
+                this.closeDialog();
+            },
+
+            confirmClose() {
+                this.showCloseConfirmation = false;
+                this.closeDialog();
+            },
+
+            saveAndClose() {
+                this.showCloseConfirmation = false;
+                this.addProduct();
+            },
+
+            closeDialog() {
                 this.resetValidation();
-                this.visible = false
+                this.visible = false;
             },
 
             previewProduct(event) {
@@ -366,6 +397,22 @@
                 }
             },
 
+
+            snapshotForm() {
+                return JSON.stringify({
+                    product: this.product,
+                    selected_type: this.selected_type,
+                    report_items: this.report_items,
+                })
+            },
+
+            hasUnsavedChanges() {
+                if (this.initialFormState !== null) {
+                    return this.snapshotForm() !== this.initialFormState
+                }
+                return false
+            },
+
         },
 
         mounted() {
@@ -374,7 +421,7 @@
             this.$root.$on('new-product', (data) => {
                 this.visible = true;
                 this.selected_type = null;
-                this.report_items = data
+                this.report_items = data;
             });
 
             this.$store.dispatch('getAllUserProductTypes', { search: '' }).then(() => {
@@ -389,6 +436,7 @@
             });
 
             this.$root.$on('show-product-edit', (data) => {
+                this.initialFormState = null;
                 this.visible = true;
                 this.edit = true;
                 this.modify = data.modify;

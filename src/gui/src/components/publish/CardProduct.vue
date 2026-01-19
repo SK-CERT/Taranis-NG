@@ -53,8 +53,7 @@
                         @yes="handleMsgBox"
                         @cancel="msgbox_visible = false"
                         :title="$t('common.messagebox.delete')"
-                        :message="card.title"
-                        :alert=true>
+                        :message="card.title">
             </MessageBox>
         </v-row>
     </v-container>

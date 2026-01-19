@@ -73,7 +73,7 @@
                         @cancel="msgbox_visible = false"
                         :title="$t('common.messagebox.remove')"
                         :message="to_delete.title"
-                        :alert=false>
+                        :icon="{ name: 'mdi-help-circle', color: 'primary' }">
             </MessageBox>
         </v-row>
     </v-container>
