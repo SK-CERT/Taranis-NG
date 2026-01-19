@@ -827,9 +827,9 @@ const messages_en = {
         total_count: "News item count: ",
         selected_count: "Selected news item count: ",
         tooltip: {
-            filter_read: "Show/hide unread news items",
-            filter_important: "Show/hide important news items",
-            filter_relevant: "Show/hide relevant news items",
+            filter_read: "Hide read news items",
+            filter_important: "Show important news items",
+            filter_relevant: "Show relevant news items",
             filter_in_analyze: "Show/hide news items in analysis",
             range: {
                 ALL: "Show all news items",

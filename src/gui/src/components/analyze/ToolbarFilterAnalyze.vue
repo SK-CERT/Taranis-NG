@@ -160,12 +160,6 @@
                 }, 300);
             },
 
-            changeTheme() {
-                this.$vuetify.theme.themes.light.primary = "#f0f";
-                this.$vuetify.theme.themes.light.secondary = '#f00';
-                this.$vuetify.theme.themes.light.bg = '#0f0';
-                this.$vuetify.theme.themes.light.base = '#00f';
-            },
             remove(item) {
                 this.chips.splice(this.chips.indexOf(item), 1);
                 this.chips = [...this.chips]
