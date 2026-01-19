@@ -1,8 +1,8 @@
 <template>
 
     <v-container class="selector_assess" :id="selfID">
-        <component v-bind:is="cardLayout()" v-for="(news_item,i) in news_items_data" :card="news_item"
-                   :key="i" :analyze_selector="analyze_selector"
+        <component v-bind:is="cardLayout()" v-for="news_item in news_items_data" :card="news_item"
+                   :key="news_item.id" :analyze_selector="analyze_selector"
                    :preselected="preselected(news_item.id)"
                    :word_list_regex="regexWordList" :data_set="data_set"
                    @show-single-aggregate-detail="showSingleAggregateDetail(news_item)"
@@ -134,7 +134,7 @@
                     if ((append === false) || reload_all) {
                         this.news_items_data = []
                     }
-                    // console.log('#', "Add:", append, "Reload:", reload_all, "O:", offset, "L:", limit, "->", this.$store.getters.getNewsItems.items.length);
+                    // console.log('#', "Add:", append, "Reload:", reload_all, "Opened:", this.aggregate_open.length, "O:", offset, "L:", limit, "->", this.$store.getters.getNewsItems.items.length);
                     if (append) {
                         this.news_items_data = this.news_items_data.concat(this.$store.getters.getNewsItems.items);
                     } else {
@@ -153,11 +153,11 @@
 
             updateFilter(filter) {
                 this.filter = filter;
-                this.updateData(false, false);
+                this.updateData(false, true);
             },
 
             setAggregateOpen(folder) {
-
+                // TODO (JP): looks like aggregate_open[] is not used, check it deeper, it looks .oppened is handled inside Cards
                 if (!this.aggregate_open.length) {
                     this.aggregate_open.push(folder.id);
                 } else if (folder.opened === false) {
@@ -180,7 +180,7 @@
             },
 
             aggregateOpen(folder) {
-
+                // TODO (JP): looks like aggregate_open[] is not used, check it deeper
                 for (let i = 0; i < this.aggregate_open.length; i++) {
                     if (this.aggregate_open[i] == folder.id && folder.news_items.length !== 1) {
                         return true;

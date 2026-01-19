@@ -20,7 +20,7 @@
                 <!-- DAY-S -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.DAYS">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP"
-                        v-for="day in days" :key="day.filter" @click="filterRange(day.filter)">
+                            v-for="day in days" :key="day.filter" @click="filterRange(day.filter)">
                         <div class="px-2" :title="$t('assess.tooltip.range.' + day.filter)">{{$t(day.title)}}</div>
                     </v-chip>
                 </v-chip-group>
@@ -32,10 +32,10 @@
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read" value="read">
                         <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_read')">{{ UI.ICON.UNREAD }}</v-icon>
                     </v-chip>
-                    <v-chip  v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterImportant" id="button_filter_important">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterImportant" id="button_filter_important" value="important">
                         <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_important')">{{ UI.ICON.IMPORTANT }}</v-icon>
                     </v-chip>
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRelevant" id="button_filter_relevant">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRelevant" id="button_filter_relevant" value="relevant">
                         <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_relevant')">{{ UI.ICON.RELEVANT }}</v-icon>
                     </v-chip>
                 </v-chip-group>
@@ -65,7 +65,7 @@
         <v-divider v-if="!analyze_selector"></v-divider>
         <v-row v-bind="UI.TOOLBAR.ROW" v-if="!analyze_selector">
             <v-col v-bind="UI.TOOLBAR.COL.SELECTOR">
-                <ToolbarGroupAssess ref="toolbarGroupAssess"/>
+                <ToolbarGroupAssess ref="toolbarGroupAssess" />
             </v-col>
         </v-row>
         <v-divider></v-divider>
@@ -127,9 +127,14 @@
                 return this.$store.getters.getMultiSelect;
             },
 
+            // this exists only because we want initialise selection on start
             activeFilters: {
                 get() {
-                    return this.filter.read ? ['read'] : [];
+                    const result = []
+                    if (this.filter.read) result.push('read')
+                    if (this.filter.important) result.push('important')
+                    if (this.filter.relevant) result.push('relevant')
+                    return result
                 },
                 set() {
                     // Chip-group requires a setter, but we handle clicks manually
@@ -215,20 +220,10 @@
                     }
                 }, 300);
             },
-
-            changeTheme() {
-                this.$vuetify.theme.themes.light.primary = "#f0f";
-                this.$vuetify.theme.themes.light.secondary = '#f00';
-                this.$vuetify.theme.themes.light.bg = '#0f0';
-                this.$vuetify.theme.themes.light.base = '#00f';
-            },
             remove(item) {
                 this.chips.splice(this.chips.indexOf(item), 1);
                 this.chips = [...this.chips]
             },
-            /*callDialog: function (e) {
-                this.$root.$emit('callDialog', e);
-            },*/
             cancel() {
             },
             add() {
@@ -267,11 +262,9 @@
             this.word_list_toggle = getLocalStorageBoolean('word-list-hide', false);
         },
         mounted() {
-            setTimeout(() => {
-                this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
-                this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
-                this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
-            }, 100);
+            this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
+            this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);
+            this.setHideStyle("word-list-hide", "hide-wordlist", this.word_list_toggle, false);
         }
     }
 </script>

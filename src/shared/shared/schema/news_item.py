@@ -203,16 +203,14 @@ class NewsItemTagSchema(Schema):
     n_i_d = fields.Nested(NewsItemDataSchema, many=True)
 
 
-class NewsItemPresentationSchema(NewsItemBaseSchema, ACLEntryStatusSchema):
-    """Schema for presenting a news item with ACL entry status."""
-
-    news_item_data = fields.Nested(NewsItemDataPresentationSchema)
-
-
 class NewsItemSchema(NewsItemBaseSchema):
     """Schema for a news item."""
 
     news_item_data = fields.Nested(NewsItemDataPresentationSchema)
+
+
+class NewsItemPresentationSchema(NewsItemSchema, ACLEntryStatusSchema):
+    """Schema for presenting a news item with ACL entry status."""
 
 
 class NewsItemAggregateSchema(Schema):

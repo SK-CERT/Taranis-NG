@@ -18,7 +18,6 @@
     import AuthMixin from "../../services/auth/auth_mixin";
     import { groupAction } from "@/api/assess";
     import Permissions from "@/services/auth/permissions";
-    import AssessMixin from "@/components/assess/AssessMixin";
 
     export default {
         name: "ToolbarGroupAssess",
@@ -27,7 +26,7 @@
         data: () => ({
             multi_select: false
         }),
-        mixins: [AuthMixin, AssessMixin],
+        mixins: [AuthMixin],
         computed: {
             canModify() {
                 return this.checkPermission(Permissions.ASSESS_UPDATE)
@@ -55,6 +54,16 @@
             }
         },
         methods: {
+            getGroupId() {
+                if (window.location.pathname.includes("/group/")) {
+                    let i = window.location.pathname.indexOf("/group/");
+                    let len = window.location.pathname.length;
+                    return window.location.pathname.substring(i + 7, len);
+                } else {
+                    return null;
+                }
+            },
+
             multiSelect() {
                 this.multi_select = !this.multi_select
                 this.$store.dispatch("multiSelect", this.multi_select)
