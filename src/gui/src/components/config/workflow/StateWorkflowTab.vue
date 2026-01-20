@@ -73,24 +73,19 @@
                 </template>
 
                 <template v-slot:item.actions="{ item }">
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? undefined : 'error'">
-                                {{ item.editable ? 'mdi-pencil' : 'mdi-lock' }}
-                            </v-icon>
-                        </template>
-                        <span>{{ item.editable ? $t('common.edit') : $t('workflow.state_workflow.cannot_edit_system_association') }}</span>
-                    </v-tooltip>
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? undefined : 'error'">
-                                {{ item.editable ? 'mdi-delete' : 'mdi-lock' }}
-                            </v-icon>
-                        </template>
-                        <span>
-                            {{ item.editable ? $t('common.delete') : $t('workflow.state_workflow.cannot_delete_system_association') }}
-                        </span>
-                    </v-tooltip>
+                    <EditButton
+                        small
+                        class="mr-2"
+                        :locked="!item.editable"
+                        :tooltip="!item.editable ? $t('workflow.state_workflow.cannot_edit_system_association') : true"
+                        @edit="editItem(item)"
+                    />
+                    <DeleteButton
+                        small
+                        :locked="!item.editable"
+                        :tooltip="!item.editable ? $t('workflow.state_workflow.cannot_delete_system_association') : true"
+                        @delete="deleteItem(item)"
+                    />
                 </template>
             </v-data-table>
         </v-card>
@@ -103,12 +98,16 @@
     import Permissions from "@/services/auth/permissions";
     import StateEntityTypeEditDialog from "./StateEntityTypeEditDialog.vue";
     import MessageBox from "@/components/common/MessageBox.vue";
+    import DeleteButton from "@/components/common/buttons/DeleteButton.vue";
+    import EditButton from "@/components/common/buttons/EditButton.vue";
 
     export default {
         name: "StateWorkflowTab",
         components: {
             MessageBox,
             StateEntityTypeEditDialog,
+            DeleteButton,
+            EditButton,
         },
         data() {
             return {

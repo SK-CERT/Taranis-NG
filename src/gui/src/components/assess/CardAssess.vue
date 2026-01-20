@@ -131,10 +131,11 @@
                                                             {{ card.important ? 'mdi-star' : 'mdi-star-outline' }}
                                                         </v-icon>
                                                     </v-btn>
-                                                    <v-btn v-if="canDelete" icon @click.stop="showMsgBox()"
-                                                           :title="$t('assess.tooltip.delete_item')" data-btn="delete">
-                                                        <v-icon color="error">mdi-delete-outline</v-icon>
-                                                    </v-btn>
+                                                    <DeleteButton
+                                                        v-if="canDelete"
+                                                        outlinedIcon
+                                                        @click="showMsgBox"
+                                                    />
                                                 </v-col>
                                             </v-row>
                                             <v-row v-if="analyze_selector && analyze_can_modify"
@@ -180,6 +181,7 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import Permissions from "@/services/auth/permissions";
     import MessageBox from "@/components/common/MessageBox.vue";
+    import DeleteButton from "@/components/common/buttons/DeleteButton.vue";
     import CardMixin from "@/components/assess/card_mixin";
 
     export default {
@@ -195,7 +197,7 @@
             data_set: String
         },
         mixins: [AuthMixin, CardMixin],
-        components: { CardAssessItem, MessageBox },
+        components: { CardAssessItem, MessageBox, DeleteButton },
         data: () => ({
             opened: false,
         }),
