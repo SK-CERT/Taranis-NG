@@ -1,7 +1,7 @@
 <template>
     <v-container>
         <v-data-table :headers="headers" :items="records" :items-per-page="-1" item-key="id" sort-by="name"
-            class="elevation-1" :search="search" :clickable="false" @click.stop disable-pagination hide-default-footer>
+                      class="elevation-1" :search="search" :clickable="false" @click.stop disable-pagination hide-default-footer>
             <template v-slot:top>
                 <v-row v-bind="UI.TOOLBAR.ROW">
                     <v-col v-bind="UI.TOOLBAR.COL.LEFT">
@@ -16,7 +16,7 @@
                     </v-col>
                     <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
                         <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="search" :label="$t('toolbar_filter.search')"
-                            single-line hide-details></v-text-field>
+                                      single-line hide-details></v-text-field>
                     </v-col>
                     <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
                         <v-btn v-bind="UI.BUTTON.ADD_NEW" @click="addItem">
@@ -26,13 +26,11 @@
                     </v-col>
                 </v-row>
 
-                <AiProviderEditDialog
-                    v-model="dialogEdit"
-                    :edited-item="editedItem"
-                    :edited-index="editedIndex"
-                    @save="saveRecord"
-                    @close="closeEdit"
-                />
+                <AiProviderEditDialog v-model="dialogEdit"
+                                      :edited-item="editedItem"
+                                      :edited-index="editedIndex"
+                                      @save="saveRecord"
+                                      @close="closeEdit" />
 
                 <MessageBox v-model="dialogDelete"
                             @yes="deleteRecord"
@@ -52,15 +50,11 @@
             </template>
 
             <template v-slot:item.actions="{ item }">
-                <EditButton
-                    small
-                    class="mr-2"
-                    @edit="editItem(item)"
-                />
-                <DeleteButton
-                    small
-                    @delete="deleteItem(item)"
-                />
+                <EditButton small
+                            class="mr-2"
+                            @edit="editItem(item)" />
+                <DeleteButton small
+                              @delete="deleteItem(item)" />
             </template>
 
         </v-data-table>
@@ -68,67 +62,67 @@
 </template>
 
 <script>
-import { createNewAiProvider, updateAiProvider, deleteAiProvider } from "@/api/config";
-import Permissions from "@/services/auth/permissions";
-import AiProviderEditDialog from "./AiProviderEditDialog.vue";
-import ProviderTabMixin from "./ProviderTabMixin.js";
+    import { createNewAiProvider, updateAiProvider, deleteAiProvider } from "@/api/config";
+    import Permissions from "@/services/auth/permissions";
+    import AiProviderEditDialog from "./AiProviderEditDialog.vue";
+    import ProviderTabMixin from "./provider_tab_mixin";
 
-export default {
-    name: "AiProvidersTab",
-    mixins: [ProviderTabMixin],
-    components: {
-        AiProviderEditDialog
-    },
-    data() {
-        return {
-            headers: [
-                { text: this.$t('ai_provider.name'), value: 'name' },
-                { text: this.$t('ai_provider.api_type'), value: 'api_type' },
-                { text: this.$t('ai_provider.api_url'), value: 'api_url' },
-                { text: this.$t('settings.api_key'), value: 'api_key', sortable: false, filterable: false },
-                { text: this.$t('ai_provider.model'), value: 'model' },
-                { text: this.$t('settings.updated_by'), value: 'updated_by' },
-                { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
-                { text: this.$t('settings.actions'), value: 'actions', sortable: false },
-            ]
-        };
-    },
-    methods: {
-        getDefaultItem() {
+    export default {
+        name: "AiProvidersTab",
+        mixins: [ProviderTabMixin],
+        components: {
+            AiProviderEditDialog
+        },
+        data() {
             return {
-                id: -1,
-                name: "Ollama - llama3:8b",
-                api_type: "openai",
-                api_url: "http://localhost:11434/v1",
-                api_key: "secret",
-                model: "llama3:8b"
+                headers: [
+                    { text: this.$t('ai_provider.name'), value: 'name' },
+                    { text: this.$t('ai_provider.api_type'), value: 'api_type' },
+                    { text: this.$t('ai_provider.api_url'), value: 'api_url' },
+                    { text: this.$t('settings.api_key'), value: 'api_key', sortable: false, filterable: false },
+                    { text: this.$t('ai_provider.model'), value: 'model' },
+                    { text: this.$t('settings.updated_by'), value: 'updated_by' },
+                    { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
+                    { text: this.$t('settings.actions'), value: 'actions', sortable: false },
+                ]
             };
         },
+        methods: {
+            getDefaultItem() {
+                return {
+                    id: -1,
+                    name: "Ollama - llama3:8b",
+                    api_type: "openai",
+                    api_url: "http://localhost:11434/v1",
+                    api_key: "secret",
+                    model: "llama3:8b"
+                };
+            },
 
-        getMessageKey(key) {
-            return `ai_provider.${key}`;
-        },
+            getMessageKey(key) {
+                return `ai_provider.${key}`;
+            },
 
-        createProvider(data) {
-            return createNewAiProvider(data);
-        },
+            createProvider(data) {
+                return createNewAiProvider(data);
+            },
 
-        updateProvider(data) {
-            return updateAiProvider(data);
-        },
+            updateProvider(data) {
+                return updateAiProvider(data);
+            },
 
-        deleteProvider(data) {
-            return deleteAiProvider(data);
-        },
+            deleteProvider(data) {
+                return deleteAiProvider(data);
+            },
 
-        fetchRecords() {
-            if (this.checkPermission(Permissions.CONFIG_AI_ACCESS)) {
-                this.$store.dispatch('getAllAiProviders', { search: '' }).then(() => {
-                    this.initializeDateFormat();
-                    this.records = this.$store.getters.getAiProviders.items;
-                });
+            fetchRecords() {
+                if (this.checkPermission(Permissions.CONFIG_AI_ACCESS)) {
+                    this.$store.dispatch('getAllAiProviders', { search: '' }).then(() => {
+                        this.initializeDateFormat();
+                        this.records = this.$store.getters.getAiProviders.items;
+                    });
+                }
             }
         }
     }
-}
 </script>

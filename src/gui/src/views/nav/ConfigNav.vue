@@ -47,7 +47,7 @@
                 { id: 30, separator: '1' },
                 { id: 31, icon: 'mdi-account-group', title: 'nav_menu.external_users', route: '/config/external/users', permission: 'MY_ASSETS_CONFIG', translate: '1' },
                 { id: 32, icon: 'mdi-folder-multiple', title: 'nav_menu.asset_groups', route: '/config/external/groups', permission: 'MY_ASSETS_CONFIG', translate: '1' },
-                { id: 34, icon: 'mdi-email-multiple-outline', title: 'nav_menu.notification_templates', route: '/config/external/templates', permission: 'MY_ASSETS_CONFIG', translate: '1' },
+                { id: 33, icon: 'mdi-email-multiple-outline', title: 'nav_menu.notification_templates', route: '/config/external/templates', permission: 'MY_ASSETS_CONFIG', translate: '1' },
 
             ]
         })

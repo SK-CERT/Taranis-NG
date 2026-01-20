@@ -1,7 +1,7 @@
 <template>
     <v-container>
         <v-data-table :headers="headers" :items="records" :items-per-page="-1" item-key="id" sort-by="name"
-            class="elevation-1" :search="search" :clickable="false" @click.stop disable-pagination hide-default-footer>
+                      class="elevation-1" :search="search" :clickable="false" @click.stop disable-pagination hide-default-footer>
             <template v-slot:top>
                 <v-row v-bind="UI.TOOLBAR.ROW">
                     <v-col v-bind="UI.TOOLBAR.COL.LEFT">
@@ -16,7 +16,7 @@
                     </v-col>
                     <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
                         <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="search" :label="$t('toolbar_filter.search')"
-                            single-line hide-details></v-text-field>
+                                      single-line hide-details></v-text-field>
                     </v-col>
                     <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
                         <v-btn v-bind="UI.BUTTON.ADD_NEW" @click="addItem">
@@ -27,10 +27,10 @@
                 </v-row>
 
                 <DataProviderEditDialog v-model="dialogEdit" :edited-item="editedItem" :edited-index="editedIndex"
-                    @save="saveRecord" @close="closeEdit" />
+                                        @save="saveRecord" @close="closeEdit" />
 
                 <MessageBox v-model="dialogDelete" @yes="deleteRecord" @cancel="closeDelete"
-                    :title="$t('common.messagebox.delete')" :message="editedItem.name" :alert=true>
+                            :title="$t('common.messagebox.delete')" :message="editedItem.name" :alert=true>
                 </MessageBox>
             </template>
 
@@ -52,69 +52,69 @@
 </template>
 
 <script>
-import { createNewDataProvider, updateDataProvider, deleteDataProvider } from "@/api/config";
-import Permissions from "@/services/auth/permissions";
-import DataProviderEditDialog from "./DataProviderEditDialog.vue";
-import ProviderTabMixin from "./ProviderTabMixin.js";
+    import { createNewDataProvider, updateDataProvider, deleteDataProvider } from "@/api/config";
+    import Permissions from "@/services/auth/permissions";
+    import DataProviderEditDialog from "./DataProviderEditDialog.vue";
+    import ProviderTabMixin from "./provider_tab_mixin";
 
-export default {
-    name: "DataProvidersTab",
-    mixins: [ProviderTabMixin],
-    components: {
-        DataProviderEditDialog
-    },
-    data() {
-        return {
-            headers: [
-                { text: this.$t('data_provider.name'), value: 'name' },
-                { text: this.$t('data_provider.api_type'), value: 'api_type' },
-                { text: this.$t('data_provider.api_url'), value: 'api_url' },
-                { text: this.$t('settings.api_key'), value: 'api_key', sortable: false, filterable: false },
-                { text: this.$t('data_provider.user_agent'), value: 'user_agent' },
-                { text: this.$t('data_provider.web_url'), value: 'web_url' },
-                { text: this.$t('settings.updated_by'), value: 'updated_by' },
-                { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
-                { text: this.$t('settings.actions'), value: 'actions', sortable: false },
-            ]
-        };
-    },
-    methods: {
-        getDefaultItem() {
+    export default {
+        name: "DataProvidersTab",
+        mixins: [ProviderTabMixin],
+        components: {
+            DataProviderEditDialog
+        },
+        data() {
             return {
-                id: -1,
-                name: "ENISA EUVD",
-                api_type: "EUVD",
-                api_url: "https://euvdservices.enisa.europa.eu/api/",
-                api_key: "",
-                user_agent: "",
-                web_url: ""
+                headers: [
+                    { text: this.$t('data_provider.name'), value: 'name' },
+                    { text: this.$t('data_provider.api_type'), value: 'api_type' },
+                    { text: this.$t('data_provider.api_url'), value: 'api_url' },
+                    { text: this.$t('settings.api_key'), value: 'api_key', sortable: false, filterable: false },
+                    { text: this.$t('data_provider.user_agent'), value: 'user_agent' },
+                    { text: this.$t('data_provider.web_url'), value: 'web_url' },
+                    { text: this.$t('settings.updated_by'), value: 'updated_by' },
+                    { text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false },
+                    { text: this.$t('settings.actions'), value: 'actions', sortable: false },
+                ]
             };
         },
+        methods: {
+            getDefaultItem() {
+                return {
+                    id: -1,
+                    name: "ENISA EUVD",
+                    api_type: "EUVD",
+                    api_url: "https://euvdservices.enisa.europa.eu/api/",
+                    api_key: "",
+                    user_agent: "",
+                    web_url: ""
+                };
+            },
 
-        getMessageKey(key) {
-            return `data_provider.${key}`;
-        },
+            getMessageKey(key) {
+                return `data_provider.${key}`;
+            },
 
-        createProvider(data) {
-            return createNewDataProvider(data);
-        },
+            createProvider(data) {
+                return createNewDataProvider(data);
+            },
 
-        updateProvider(data) {
-            return updateDataProvider(data);
-        },
+            updateProvider(data) {
+                return updateDataProvider(data);
+            },
 
-        deleteProvider(data) {
-            return deleteDataProvider(data);
-        },
+            deleteProvider(data) {
+                return deleteDataProvider(data);
+            },
 
-        fetchRecords() {
-            if (this.checkPermission(Permissions.CONFIG_DATA_PROVIDER_ACCESS)) {
-                this.$store.dispatch('getAllDataProviders', { search: '' }).then(() => {
-                    this.initializeDateFormat();
-                    this.records = this.$store.getters.getDataProviders.items;
-                });
+            fetchRecords() {
+                if (this.checkPermission(Permissions.CONFIG_DATA_PROVIDER_ACCESS)) {
+                    this.$store.dispatch('getAllDataProviders', { search: '' }).then(() => {
+                        this.initializeDateFormat();
+                        this.records = this.$store.getters.getDataProviders.items;
+                    });
+                }
             }
         }
     }
-}
 </script>
