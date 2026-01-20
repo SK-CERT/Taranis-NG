@@ -33,8 +33,7 @@
                             @yes="deleteRecord"
                             @cancel="closeDelete"
                             :title="$t('common.messagebox.delete')"
-                            :message="editedItem.display_name"
-                            :alert=true>
+                            :message="editedItem.display_name">
                 </MessageBox>
             </template>
 

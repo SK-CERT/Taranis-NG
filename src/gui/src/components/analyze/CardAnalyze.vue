@@ -69,8 +69,12 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox v-model="msgbox_visible" @yes="handleMsgBox" @cancel="cancelMsgBox" :title="$t(msgBoxTitle)"
-                :message="card.title" :alert=true>
+            <MessageBox v-model="msgbox_visible"
+                        @yes="handleMsgBox"
+                        @cancel="cancelMsgBox"
+                        :title="$t(msgBoxTitle)"
+                        :message="card.title"
+                        :icon="msgBoxIcon">
             </MessageBox>
         </v-row>
     </v-container>
@@ -138,7 +142,17 @@ export default {
                 default:
                     return "common.messagebox.delete";
             }
-        }
+        },
+
+        msgBoxIcon() {
+            switch (this.msgbox_action) {
+                case "remove":
+                    return { name: 'mdi-help-circle', color: 'primary' };
+                default:
+                    return { name: 'mdi-alert-circle', color: 'error' };
+            }
+        },
+
     },
     methods: {
 

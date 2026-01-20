@@ -1,12 +1,10 @@
 <template>
-    <v-dialog v-model="dialogVisible"
-              max-width="550"
-              :persistent="!cancelable">
+    <v-dialog v-model="dialogVisible" max-width="550" :persistent="!cancelable">
         <v-card outlined>
             <v-card-title class="justify-center" style="text-align: center;">
                 <div style="display: inline-flex; align-items: center; max-width: 100%;">
-                    <v-icon class="mr-2" size="28" :color="alert ? 'error' : 'primary'">
-                        {{ alert ? 'mdi-alert-circle' : 'mdi-help-circle' }}
+                    <v-icon class="mr-2" size="28" :color="icon.color">
+                        {{ icon.name }}
                     </v-icon>
 
                     <span class="text-h6" style="word-break: break-word;">
@@ -20,13 +18,9 @@
             </v-card-text>
 
             <v-card-actions class="justify-center">
-                <v-btn
-                       @click="emitResult('yes')">
-                    {{ $t('common.messagebox.yes') }}
-                </v-btn>
-                <v-btn class="ml-4"
-                       @click="emitResult('cancel')">
-                    {{ $t('common.cancel') }}
+                <v-btn v-for="(button, index) in buttons" :key="index" :class="index > 0 ? 'ml-4' : ''"
+                       :color="button.color" :text=true @click="emitResult(button.action)">
+                    {{ $t(button.label)}}
                 </v-btn>
             </v-card-actions>
         </v-card>
@@ -39,10 +33,25 @@
 
         props: {
             value: { type: Boolean, default: false },
+            cancelable: { type: Boolean, default: true },
             title: String,
             message: String,
-            alert: Boolean,
-            cancelable: { type: Boolean, default: true }
+            icon: {
+                type: Object,
+                default: () => ({
+                    name: 'mdi-alert-circle', // Icon name (e.g., 'mdi-alert-circle', 'mdi-help-circle')
+                    color: 'error'            // Icon color (e.g., 'error', 'primary', 'warning')
+                })
+            },
+            buttons: {
+                type: Array,
+                default() {                   // Array of { label: string, color: string, action: string}
+                    return [
+                        { label: 'common.messagebox.yes', color: 'error', action: 'yes' },
+                        { label: 'common.cancel', color: '', action: 'cancel' },
+                    ]
+                }
+            },
         },
 
         computed: {

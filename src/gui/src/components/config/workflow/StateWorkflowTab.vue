@@ -42,8 +42,7 @@
                     <MessageBox v-model="dialogDelete"
                                 @yes="deleteRecord"
                                 @cancel="closeDelete"
-                                :title="$t('common.messagebox.delete')"
-                                :alert=true>
+                                :title="$t('common.messagebox.delete')">
                     </MessageBox>
                 </template>
 

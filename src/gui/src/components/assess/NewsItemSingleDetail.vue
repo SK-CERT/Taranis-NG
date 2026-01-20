@@ -149,8 +149,7 @@
                     @yes="handleMsgBox"
                     @cancel="msgbox_visible = false"
                     :title="$t('common.messagebox.delete')"
-                    :message="news_item.title"
-                    :alert=true>
+                    :message="news_item.title">
         </MessageBox>
     </v-container>
 </template>

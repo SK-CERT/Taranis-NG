@@ -160,7 +160,7 @@ class NewsItemRemoteSchema(Schema):
 class NewsItemDataPresentationSchema(NewsItemDataBaseSchema):
     """Schema for presenting news item data."""
 
-    remote_source = fields.Str()
+    remote_source = fields.Str(allow_none=True)
     osint_source_name = fields.Str()
     osint_source_type = fields.Str()
     content = fields.Str()

@@ -157,8 +157,11 @@
             </v-col>
         </v-row>
         <v-row>
-            <MessageBox v-model="msgbox_visible" @yes="handleMsgBox" @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')" :message="card.title" :alert=true>
+            <MessageBox v-model="msgbox_visible"
+                        @yes="handleMsgBox"
+                        @cancel="msgbox_visible = false"
+                        :title="$t('common.messagebox.delete')"
+                        :message="card.title">
             </MessageBox>
         </v-row>
         <div v-if="opened" dark class="ml-16 mb-8 rounded">

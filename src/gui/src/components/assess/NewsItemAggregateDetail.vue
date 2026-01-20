@@ -79,7 +79,7 @@
         </v-row>
         <v-row>
             <MessageBox v-model="msgbox_visible" @yes="handleMsgBox" @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')" :message="news_item.title" :alert=true>
+                        :title="$t('common.messagebox.delete')" :message="news_item.title">
             </MessageBox>
         </v-row>
     </v-container>

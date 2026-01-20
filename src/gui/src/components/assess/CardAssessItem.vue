@@ -125,7 +125,7 @@
         </v-row>
         <v-row>
             <MessageBox v-model="msgbox_visible" @yes="handleMsgBox" @cancel="msgbox_visible = false"
-                :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title" :alert=true>
+                        :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title">
             </MessageBox>
         </v-row>
     </v-container>
