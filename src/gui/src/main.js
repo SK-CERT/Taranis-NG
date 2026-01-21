@@ -1,4 +1,3 @@
-import 'material-design-icons-iconfont/dist/material-design-icons.css';
 import '@mdi/font/css/materialdesignicons.css';
 import Vue from 'vue';
 import Vuetify from 'vuetify/lib';
@@ -36,24 +35,18 @@ Vue.use(VueCookies);
 Vue.use(VueSSE)
 Vue.use(DatetimePicker)
 
-Vue.use(Vuetify, {
-    directives: {
-        Scroll
-    }
-});
-
-Vue.use(Vuetify, {
-    iconfont: 'md'
-});
-
-Vue.use(Vuetify, {
-    iconfont: 'mdi'
-});
+Vue.use(Vuetify)
 
 const vuetify = new Vuetify({
     theme: {
         dark: false,
         themes: Themes['taranisDefault']
+    },
+    icons: {
+        iconfont: 'mdi',
+    },
+    directives: {
+        Scroll
     },
 });
 
