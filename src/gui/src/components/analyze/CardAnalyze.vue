@@ -39,19 +39,19 @@
                                     <span>{{ card.created }}</span>
                                 </v-col>
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
-                                    <!--HOVER TOOLBAR-->
-                                    <div v-if="hover">
+                                    <!--TOOLBAR-->
+                                    <div>
                                         <v-row v-if="!multiSelectActive && !show_remove_action"
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
-                                                <v-btn v-if="canDelete" icon class="red"
-                                                       @click.stop="showMsgBox('delete')"
-                                                       :title="$t('analyze.tooltip.delete_item')">
-                                                    <v-icon color="white">mdi-trash-can-outline</v-icon>
-                                                </v-btn>
                                                 <v-btn v-if="canCreateProduct" icon @click.stop="cardItemToolbar('new')"
                                                        :title="$t('analyze.tooltip.publish_item')">
                                                     <v-icon color="info">mdi-file-outline</v-icon>
+                                                </v-btn>
+                                                <v-btn v-if="canDelete" icon
+                                                       @click.stop="showMsgBox('delete')"
+                                                       :title="$t('analyze.tooltip.delete_item')">
+                                                    <v-icon color="error">mdi-delete-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
                                         </v-row>

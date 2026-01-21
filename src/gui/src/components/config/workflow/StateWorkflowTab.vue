@@ -75,16 +75,16 @@
                 <template v-slot:item.actions="{ item }">
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
-                            <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? undefined : 'error'">
-                                {{ item.editable ? 'mdi-pencil' : 'mdi-lock' }}
+                            <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? 'primary' : 'warning'">
+                                {{ item.editable ? 'mdi-pencil' : 'mdi-lock-outline' }}
                             </v-icon>
                         </template>
                         <span>{{ item.editable ? $t('common.edit') : $t('workflow.state_workflow.cannot_edit_system_association') }}</span>
                     </v-tooltip>
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
-                            <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? undefined : 'error'">
-                                {{ item.editable ? 'mdi-delete' : 'mdi-lock' }}
+                            <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? 'error' : 'warning'">
+                                {{ item.editable ? 'mdi-delete-outline' : 'mdi-lock-outline' }}
                             </v-icon>
                         </template>
                         <span>

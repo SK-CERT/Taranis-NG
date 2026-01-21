@@ -31,13 +31,13 @@
                                     <span>{{ card.subtitle }}</span>
                                 </v-col>
 
-                                <!--HOVER TOOLBAR-->
+                                <!--TOOLBAR-->
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
-                                    <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
+                                    <v-row v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="canDelete" icon class="red" @click.stop="showMsgBox"
+                                            <v-btn v-if="canDelete" icon @click.stop="showMsgBox"
                                                    :title="$t('publish.tooltip.delete_item')">
-                                                <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
+                                                <v-icon color="error">mdi-delete-outline</v-icon>
                                             </v-btn>
                                         </v-col>
                                     </v-row>
