@@ -2,14 +2,10 @@ import AuthMixin from "@/services/auth/auth_mixin";
 import { format } from 'date-fns';
 import Settings, { getSetting } from "@/services/settings";
 import MessageBox from "@/components/common/MessageBox.vue";
-import DeleteButton from "@/components/common/buttons/DeleteButton.vue";
-import EditButton from "@/components/common/buttons/EditButton.vue";
 
 export default {
     components: {
         MessageBox,
-        DeleteButton,
-        EditButton
     },
     mixins: [AuthMixin],
     data() {

@@ -52,19 +52,24 @@
             </template>
 
             <template v-slot:item.actions="{ item }">
-                <EditButton
-                    small
-                    class="mr-2"
-                    :locked="!item.editable"
-                    :tooltip="item.editable ? $t('common.edit') : $t('workflow.states.cannot_edit_system_state')"
-                    @edit="editItem(item)"
-                />
-                <DeleteButton
-                    small
-                    :locked="!item.editable"
-                    :tooltip="item.editable ? $t('common.delete') : $t('workflow.states.cannot_delete_system_state')"
-                    @delete="deleteItem(item)"
-                />
+                <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? 'primary' : 'warning'">
+                            {{ item.editable ? 'mdi-pencil' : 'mdi-lock-outline' }}
+                        </v-icon>
+                    </template>
+                    <span>{{ item.editable ? $t('common.edit') : $t('workflow.states.cannot_edit_system_state') }}</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? 'error' : 'warning'">
+                            {{ item.editable ? 'mdi-delete-outline' : 'mdi-lock-outline' }}
+                        </v-icon>
+                    </template>
+                    <span>
+                        {{ item.editable ? $t('common.delete') : $t('workflow.states.cannot_delete_system_state')}}
+                    </span>
+                </v-tooltip>
             </template>
 
         </v-data-table>
@@ -77,16 +82,12 @@
     import Permissions from "@/services/auth/permissions";
     import StateEditDialog from "./StateEditDialog.vue";
     import MessageBox from "@/components/common/MessageBox.vue";
-    import DeleteButton from "@/components/common/buttons/DeleteButton.vue";
-    import EditButton from "@/components/common/buttons/EditButton.vue";
 
     export default {
         name: "StatesTab",
         components: {
             MessageBox,
             StateEditDialog,
-            DeleteButton,
-            EditButton,
         },
         data() {
             return {

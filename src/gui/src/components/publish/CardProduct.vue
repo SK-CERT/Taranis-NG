@@ -21,8 +21,8 @@
                                         </v-icon>
                                         <span>
                                             {{ $te('workflow.states.' + card.state.display_name) ?
-                                                $t('workflow.states.' +
-                                                    card.state.display_name) : card.state.display_name }}
+                                               $t('workflow.states.' +
+                                               card.state.display_name) : card.state.display_name }}
                                         </span>
                                     </div>
                                 </v-col>
@@ -35,7 +35,10 @@
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <v-row v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <DeleteButton outlinedIcon v-if="canDelete" @delete.stop="showMsgBox" />
+                                            <v-btn v-if="canDelete" icon @click.stop="showMsgBox"
+                                                   :title="$t('publish.tooltip.delete_item')">
+                                                <v-icon color="error">mdi-delete-outline</v-icon>
+                                            </v-btn>
                                         </v-col>
                                     </v-row>
                                 </v-col>
@@ -57,54 +60,53 @@
 </template>
 
 <script>
-import AuthMixin from "@/services/auth/auth_mixin";
-import Permissions from "@/services/auth/permissions";
-import MessageBox from "@/components/common/MessageBox.vue";
-import DeleteButton from "@/components/common/buttons/DeleteButton.vue";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import Permissions from "@/services/auth/permissions";
+    import MessageBox from "@/components/common/MessageBox.vue";
 
-export default {
-    name: "CardProduct",
-    components: { MessageBox, DeleteButton },
-    props: ['card'],
-    data: () => ({
-        toolbar: false,
-        msgbox_visible: false,
-    }),
-    mixins: [AuthMixin],
-    computed: {
-        canDelete() {
-            return this.checkPermission(Permissions.PUBLISH_DELETE) && this.card.modify === true
+    export default {
+        name: "CardProduct",
+        components: { MessageBox },
+        props: ['card'],
+        data: () => ({
+            toolbar: false,
+            msgbox_visible: false,
+        }),
+        mixins: [AuthMixin],
+        computed: {
+            canDelete() {
+                return this.checkPermission(Permissions.PUBLISH_DELETE) && this.card.modify === true
+            },
         },
-    },
-    methods: {
-        itemClicked(data) {
-            this.$root.$emit('show-product-edit', data)
-        },
-        deleteClicked(data) {
-            this.$root.$emit('delete-product', data)
-        },
-        cardItemToolbar(action) {
-            switch (action) {
-                case "edit":
-                    break;
+        methods: {
+            itemClicked(data) {
+                this.$root.$emit('show-product-edit', data)
+            },
+            deleteClicked(data) {
+                this.$root.$emit('delete-product', data)
+            },
+            cardItemToolbar(action) {
+                switch (action) {
+                    case "edit":
+                        break;
 
-                case "delete":
-                    this.deleteClicked(this.card);
-                    break;
+                    case "delete":
+                        this.deleteClicked(this.card);
+                        break;
 
-                default:
-                    this.toolbar = false;
-                    this.itemClicked(this.card);
-                    break;
-            }
+                    default:
+                        this.toolbar = false;
+                        this.itemClicked(this.card);
+                        break;
+                }
+            },
+            showMsgBox() {
+                this.msgbox_visible = true;
+            },
+            handleMsgBox() {
+                this.msgbox_visible = false;
+                this.cardItemToolbar('delete')
+            },
         },
-        showMsgBox() {
-            this.msgbox_visible = true;
-        },
-        handleMsgBox() {
-            this.msgbox_visible = false;
-            this.cardItemToolbar('delete')
-        },
-    },
-}
+    }
 </script>

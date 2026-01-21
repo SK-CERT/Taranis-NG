@@ -30,7 +30,7 @@
                                         @save="saveRecord" @close="closeEdit" />
 
                 <MessageBox v-model="dialogDelete" @yes="deleteRecord" @cancel="closeDelete"
-                            :title="$t('common.messagebox.delete')" :message="editedItem.name" :alert=true>
+                            :title="$t('common.messagebox.delete')" :message="editedItem.name">
                 </MessageBox>
             </template>
 
@@ -43,8 +43,22 @@
             </template>
 
             <template v-slot:item.actions="{ item }">
-                <EditButton small class="mr-2" @edit="editItem(item)" />
-                <DeleteButton small @delete="deleteItem(item)" />
+                <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="editItem(item)" color="primary">
+                            mdi-pencil
+                        </v-icon>
+                    </template>
+                    <span>{{ $t('common.edit') }}</span>
+                </v-tooltip>
+                <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-icon small v-bind="attrs" v-on="on" @click="deleteItem(item)" color="error">
+                            mdi-delete-outline
+                        </v-icon>
+                    </template>
+                    <span> {{ $t('common.delete') }} </span>
+                </v-tooltip>
             </template>
 
         </v-data-table>
