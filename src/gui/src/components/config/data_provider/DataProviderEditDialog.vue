@@ -34,7 +34,7 @@
                     <v-text-field v-model="localItem.user_agent"
                         :label="$t('data_provider.user_agent')"></v-text-field>
                 </v-col>
-                <v-col cols="6">
+                <v-col cols="12">
                     <v-text-field v-model="localItem.web_url"
                         :label="$t('data_provider.web_url')"></v-text-field>
                 </v-col>
