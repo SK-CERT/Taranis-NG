@@ -985,6 +985,7 @@ const messages_en = {
     settings_enum: {
         DARK_THEME: "Dark Theme",
         DATE_FORMAT: "Date format",
+        HOTKEYS: "Enable hotkeys",
         LANGUAGE: "Language",
         REPORT_SELECTOR_READ_ONLY:
             "Open the Report Item selector in Read-Only mode",

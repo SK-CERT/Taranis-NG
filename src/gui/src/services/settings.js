@@ -7,6 +7,7 @@ const Settings = {
     TIME_FORMAT: 'TIME_FORMAT',
     // user settings
     DARK_THEME: 'DARK_THEME',
+    HOTKEYS: 'HOTKEYS',
     LANGUAGE: 'LANGUAGE',
     SPELLCHECK: 'SPELLCHECK',
     TAG_COLOR: 'TAG_COLOR',

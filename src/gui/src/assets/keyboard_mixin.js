@@ -144,6 +144,21 @@ const keyboardMixin = targetId => ({
 
         keyAction(press) {
             // console.debug("key:", press.key, press.keyCode, press.code, press.shiftKey, ", state:", this.state, ", keyboard_state:", this.keyboard_state);
+
+            // Import Settings and getSettingBoolean at runtime
+            const Settings = require('@/services/settings').default;
+            const { getSettingBoolean } = require('@/services/settings');
+
+            // Check if hotkeys are enabled in user settings
+            if (!getSettingBoolean(Settings.HOTKEYS, true)) {
+                // Hotkeys are disabled, only allow Escape key to work
+                if (press.keyCode === 27) {
+                    // Allow Escape to work even when hotkeys are disabled
+                } else {
+                    return;
+                }
+            }
+
             let search_field = document.getElementById('search')
 
             let keyAlias = "";
