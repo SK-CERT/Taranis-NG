@@ -81,9 +81,9 @@ export default {
                     this.showMsg("error", this.getMessageKey("error"));
                 })
             } else {
-                // Remove id field when creating new record
-                const { id, ...dataWithoutId } = submitData;
-                this.createProvider(dataWithoutId).then((response) => {
+                const data = { ...submitData };
+                delete data.id;  // Remove id field when creating new record
+                this.createProvider(data).then((response) => {
                     this.editedItem = Object.assign({}, response.data)
                     this.records.push(this.editedItem);
                     this.showMsg("success", this.getMessageKey("successful"));
