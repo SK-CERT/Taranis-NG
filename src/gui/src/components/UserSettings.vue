@@ -113,7 +113,6 @@
 </template>
 
 <script>
-    import Permissions from "@/services/auth/permissions";
     import AuthMixin from "@/services/auth/auth_mixin";
     import SettingsTable from "@/components/config/SettingsTable.vue";
 
