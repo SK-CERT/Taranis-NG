@@ -99,6 +99,7 @@
             },
 
             openSelector() {
+                this.$root.$emit('multi-select-off'); // deselect previous selections
                 this.$store.dispatch("multiSelectReport", true)
                 this.dialog = true;
             },
