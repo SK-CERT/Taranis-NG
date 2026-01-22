@@ -10,7 +10,7 @@
                                 <v-text-field
                                         :placeholder="$t('login.username')"
                                         name="username"
-                                        prepend-icon="person"
+                                        prepend-icon="mdi-account"
                                         type="text"
                                         v-model="username"
                                         v-validate="'required'"
@@ -24,7 +24,7 @@
                                 <v-text-field
                                         :placeholder="$t('login.password')"
                                         name="password"
-                                        prepend-icon="lock"
+                                        prepend-icon="mdi-lock"
                                         type="password"
                                         v-model="password"
                                         v-validate="'required'"
