@@ -144,6 +144,7 @@
                     this.selected_group_id = this.groups[0].id
                     this.$store.dispatch("changeCurrentGroup", this.selected_group_id);
                 }
+                this.$root.$emit('multi-select-off'); // deselect previous selections
                 this.$store.dispatch("multiSelect", true);
                 this.dialog = true;
             },
