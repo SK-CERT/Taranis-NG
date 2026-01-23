@@ -64,7 +64,7 @@ def upgrade() -> None:
     """Add new user setting for hotkeys."""
     conn = op.get_bind()
     session = Session(bind=conn)
-    SettingS4.add(session, "HOTKEYS", "B", "false", "Enable keyboard shortcuts", is_global=False, options="")
+    SettingS4.add(session, "HOTKEYS", "B", "true", "Enable keyboard shortcuts", is_global=False, options="")
     session.commit()
 
 
