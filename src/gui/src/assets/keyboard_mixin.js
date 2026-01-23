@@ -20,6 +20,7 @@ const keyboardMixin = targetId => ({
             {key: 'my_assets_view', href: '/myassets'},
             {key: 'configuration_view', href: '/config'},
         ],
+        keyActionEnabled: true,
     }),
 
     computed: {
@@ -36,7 +37,7 @@ const keyboardMixin = targetId => ({
     watch: {
         keyboard_state(val) {
             this.keyboard_state = val;
-            //window.console.debug("state>", this.state);
+            // console.log("state>", this.state);
         },
 
     },
@@ -143,7 +144,9 @@ const keyboardMixin = targetId => ({
         },
 
         keyAction(press) {
-            // console.debug("key:", press.key, press.keyCode, press.code, press.shiftKey, ", state:", this.state, ", keyboard_state:", this.keyboard_state);
+            // console.log("key:", press.key, press.keyCode, press.code, press.shiftKey, ", state:", this.state, ", keyboard_state:", this.keyboard_state);
+            if (!this.keyActionEnabled) return;  // Check if hotkeys are enabled in user settings
+
             let search_field = document.getElementById('search')
 
             let keyAlias = "";
@@ -560,6 +563,10 @@ const keyboardMixin = targetId => ({
     },
 
     created() {
+        const Settings = require('@/services/settings').default;
+        const { getSettingBoolean } = require('@/services/settings');
+        this.keyActionEnabled = getSettingBoolean(Settings.HOTKEYS, true);
+
         this.target = targetId;
         this.$root.$on('change-state', (_state) => {
             this.keyboard_state = _state;

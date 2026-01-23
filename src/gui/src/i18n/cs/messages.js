@@ -985,6 +985,7 @@ const messages_cs = {
     settings_enum: {
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: "Formát data",
+        HOTKEYS: "Povolit klávesové zkratky",
         LANGUAGE: "Jazyk",
         REPORT_SELECTOR_READ_ONLY: "Otevřít výběr reportů v režimu pouze pro čtení",
         SPELLCHECK: "Kontrolovat pravopis",

@@ -179,6 +179,7 @@ const messages_sk = {
     settings_enum: {
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: 'Formát dátumu',
+        HOTKEYS: "Povoliť klávesové skratky",
         LANGUAGE: "Jazyk",
         REPORT_SELECTOR_READ_ONLY: 'Otvoriť výber reportov v režime iba na čítanie',
         SPELLCHECK: "Kontrolovať pravopis",
