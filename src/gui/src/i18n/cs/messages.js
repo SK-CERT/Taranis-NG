@@ -798,6 +798,8 @@ const messages_cs = {
                 TODAY: "Zobrazit dnešní analýzy",
                 WEEK: "Zobrazit analýzy za poslední týden",
                 MONTH: "Zobrazit analýzy za poslední měsíc",
+                LAST_7_DAYS: "Zobrazit analýzy za posledních 7 dní",
+                LAST_31_DAYS: "Zobrazit analýzy za posledních 31 dní",
             },
             sort: {
                 time: {
@@ -842,6 +844,8 @@ const messages_cs = {
                 TODAY: "Zobrazit dnešní novinky",
                 WEEK: "Zobrazit novinky za minulý týden",
                 MONTH: "Zobrazit novinky za minulý měsíc",
+                LAST_7_DAYS: "Zobrazit novinky za posledních 7 dní",
+                LAST_31_DAYS: "Zobrazit novinky za posledních 31 dní",
             },
             sort: {
                 date: {
@@ -901,11 +905,15 @@ const messages_cs = {
 
     publish: {
         tooltip: {
+            filter_completed: "Zobrazit/Skrýt publikované produkty",
+            filter_incomplete: "Zobrazit/Skrýt nepublikované produkty",
             range: {
                 ALL: "Zobrazit všechny reporty",
                 TODAY: "Zobrazit dnešní reporty",
                 WEEK: "Zobrazit reporty za minulý týden",
                 MONTH: "Zobrazit reporty za minulý měsíc",
+                LAST_7_DAYS: "Zobrazit produkty za posledních 7 dní",
+                LAST_31_DAYS: "Zobrazit produkty za posledních 31 dní",
             },
             sort: {
                 date: {
@@ -923,6 +931,8 @@ const messages_cs = {
         today: "Dnes",
         this_week: "Tento týden",
         this_month: "Tento měsíc",
+        last_7_days: "Posledních 7 dní",
+        last_31_days: "Posledních 31 dní",
         custom_filter: "Vlastní filtrování",
     },
 

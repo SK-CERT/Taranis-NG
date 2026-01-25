@@ -48,6 +48,10 @@ class Products(Resource):
                 filters["range"] = request.args["range"]
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
+            if request.args.get("completed"):
+                filters["completed"] = request.args["completed"]
+            if request.args.get("incompleted"):
+                filters["incompleted"] = request.args["incompleted"]
             if request.args.get("date_from"):
                 filters["date_from"] = request.args["date_from"]
             if request.args.get("date_to"):

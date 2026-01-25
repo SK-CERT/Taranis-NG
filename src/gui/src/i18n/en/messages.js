@@ -799,6 +799,8 @@ const messages_en = {
                 TODAY: "Show today's report items",
                 WEEK: "Show report items for the last week",
                 MONTH: "Show report items for the last month",
+                LAST_7_DAYS: "Show report items from the last 7 days",
+                LAST_31_DAYS: "Show report items from the last 31 days",
             },
             sort: {
                 time: {
@@ -843,6 +845,8 @@ const messages_en = {
                 TODAY: "Show today's news items",
                 WEEK: "Show news items for the last week",
                 MONTH: "Show news items for the last month",
+                LAST_7_DAYS: "Show news items from the last 7 days",
+                LAST_31_DAYS: "Show news items from the last 31 days",
             },
             sort: {
                 date: {
@@ -901,11 +905,15 @@ const messages_en = {
 
     publish: {
         tooltip: {
+            filter_completed: "Show/hide published products",
+            filter_incomplete: "Show/hide unpublished products",
             range: {
                 ALL: "Show all products",
                 TODAY: "Show today's products",
                 WEEK: "Show products for the last week",
                 MONTH: "Show products for the last month",
+                LAST_7_DAYS: "Show products from the last 7 days",
+                LAST_31_DAYS: "Show products from the last 31 days",
             },
             sort: {
                 date: {
@@ -923,6 +931,8 @@ const messages_en = {
         today: "Today",
         this_week: "This Week",
         this_month: "This Month",
+        last_7_days: "Last 7 Days",
+        last_31_days: "Last 31 Days",
         custom_filter: "Custom Filter",
     },
 

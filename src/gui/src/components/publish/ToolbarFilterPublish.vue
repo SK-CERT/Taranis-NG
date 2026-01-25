@@ -24,7 +24,18 @@
                     </v-chip>
                 </v-chip-group>
 
-                <!--<v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>-->
+                <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
+
+                <!-- FAVORITES -->
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterCompleted">
+                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('publish.tooltip.filter_completed')">{{ UI.ICON.COMPLETED }}</v-icon>
+                    </v-chip>
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterIncompleted">
+                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('publish.tooltip.filter_incomplete')">{{ UI.ICON.INCOMPLETED }}</v-icon>
+                    </v-chip>
+                </v-chip-group>
+
                 <!-- SORT -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_DESC')" :title="$t('publish.tooltip.sort.date.descending')">
@@ -69,17 +80,33 @@
                 { title: 'toolbar_filter.all', icon: 'mdi-information-outline', type: 'info', filter: 'ALL' },
                 { title: 'toolbar_filter.today', icon: 'mdi-calendar-today', type: 'info', filter: 'TODAY' },
                 { title: 'toolbar_filter.this_week', icon: 'mdi-calendar-range', type: 'info', filter: 'WEEK' },
-                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' }
+                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' },
+                { title: 'toolbar_filter.last_7_days', icon: 'mdi-calendar-range', type: 'info', filter: 'LAST_7_DAYS' },
+                { title: 'toolbar_filter.last_31_days', icon: 'mdi-calendar-month', type: 'info', filter: 'LAST_31_DAYS' }
             ],
             filter: {
                 search: "",
                 range: "ALL",
+                completed: false,
+                incompleted: false,
                 sort: "DATE_DESC"
             },
             timeout: null
         }),
         mixins: [AuthMixin],
         methods: {
+            filterCompleted() {
+                this.filter.completed = !this.filter.completed;
+                this.filter.incompleted = false;
+                this.$root.$emit('update-products-filter', this.filter);
+            },
+
+            filterIncompleted() {
+                this.filter.incompleted = !this.filter.incompleted;
+                this.filter.completed = false;
+                this.$root.$emit('update-products-filter', this.filter);
+            },
+
             filterSort(sort) {
                 this.filter.sort = sort;
                 this.$root.$emit('update-products-filter', this.filter);

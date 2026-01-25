@@ -3,6 +3,8 @@ import ApiService from "@/services/api_service";
 export function getAllProducts(filter_data) {
     let filter = "?search=" + encodeURIComponent(filter_data.filter.search)
     filter += "&range=" + encodeURIComponent(filter_data.filter.range)
+    filter += "&completed=" + encodeURIComponent(filter_data.filter.completed)
+    filter += "&incompleted=" + encodeURIComponent(filter_data.filter.incompleted)
     filter += "&sort=" + encodeURIComponent(filter_data.filter.sort)
     filter += "&offset=" + encodeURIComponent(filter_data.offset)
     filter += "&limit=" + encodeURIComponent(filter_data.limit)
