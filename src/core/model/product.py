@@ -68,12 +68,16 @@ class Product(db.Model):
     description = db.Column(db.String())
 
     created = db.Column(db.DateTime, default=datetime.now)
+    last_updated = db.Column(db.DateTime, default=datetime.now)
 
     product_type_id = db.Column(db.Integer, db.ForeignKey("product_type.id"))
     product_type = db.relationship("ProductType")
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    user = db.relationship("User")
+    user = db.relationship("User", foreign_keys=[user_id])
+
+    updated_by_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    updated_by = db.relationship("User", foreign_keys=[updated_by_id])
 
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
     state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
@@ -255,6 +259,7 @@ class Product(db.Model):
             product.see = True
             product.access = result.access > 0 or result.acls == 0
             product.modify = result.modify > 0 or result.acls == 0
+            product.report_items_count = len(product.report_items)
             products.append(product)
 
             for report_item in product.report_items:
@@ -279,18 +284,20 @@ class Product(db.Model):
         product = product_schema.load(product_data)
 
         product.user_id = user_id
+        product.updated_by_id = user_id
         db.session.add(product)
         db.session.commit()
 
         return product
 
     @classmethod
-    def update_product(cls, product_id: int, product_data: dict) -> None:
+    def update_product(cls, product_id: int, product_data: dict, user_id: int) -> None:
         """Update a product.
 
         Args:
             product_id: Product id
             product_data: Product data
+            user_id: User id of who is updating
         """
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
@@ -302,6 +309,8 @@ class Product(db.Model):
         original_product.state_id = product.state_id
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
+        original_product.last_updated = datetime.now(TZ)
+        original_product.updated_by_id = user_id
 
         db.session.commit()
 

@@ -100,7 +100,8 @@ class Product(Resource):
         Args:
             product_id (int): The ID of the product to be updated.
         """
-        product.Product.update_product(product_id, request.json)
+        user = auth_manager.get_user_from_jwt()
+        product.Product.update_product(product_id, request.json, user.id)
 
     @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_TYPE_MODIFY)
     def delete(self, product_id: int) -> None:

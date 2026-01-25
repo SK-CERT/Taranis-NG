@@ -12,7 +12,7 @@
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ card.product_type_name }}</div>
-                                    <span>{{ card.title }}</span>
+                                    <span>{{ card.title }} ({{ card.report_items_count || 0 }})</span>
                                 </v-col>
                                 <v-col>
                                     <div v-if="card.state" class="d-flex align-center">
@@ -29,6 +29,16 @@
                                 <v-col>
                                     <div class="grey--text">{{ $t('card_item.description') }}</div>
                                     <span>{{ card.subtitle }}</span>
+                                </v-col>
+                                <v-col>
+                                    <div class="grey--text">{{ $t('card_item.created') }}</div>
+                                    <span>{{ card.created }}</span>
+                                    <span v-if="card.user"> - {{ card.user.name }}</span>
+                                </v-col>
+                                <v-col>
+                                    <div class="grey--text">{{ $t('card_item.updated') }}</div>
+                                    <span>{{ card.last_updated }}</span>
+                                    <span v-if="card.updated_by"> - {{ card.updated_by.name }}</span>
                                 </v-col>
 
                                 <!--TOOLBAR-->

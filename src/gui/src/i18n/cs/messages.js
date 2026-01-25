@@ -141,6 +141,7 @@ const messages_cs = {
     card_item: {
         title: "Název",
         created: "Vytvořeno",
+        updated: "Aktualizováno",
         collected: "Indexováno",
         published: "Publikováno",
         source: "Zdroj",

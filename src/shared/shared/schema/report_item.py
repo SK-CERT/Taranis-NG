@@ -204,7 +204,7 @@ class ReportItemRemoteSchema(Schema):
     """A schema for representing a remote report item.
 
     Arguments:
-        Schema -- The base schema class.
+        Schema (Schema): The base schema class.
     """
 
     uuid = fields.Str(allow_none=True)
@@ -220,17 +220,23 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     This schema inherits from the ReportItemBaseSchema, ACLEntryStatusSchema, and PresentationSchema classes.
 
     Arguments:
-        ReportItemBaseSchema -- Schema for the base report item.
-        ACLEntryStatusSchema -- Schema for the ACL entry status.
-        PresentationSchema -- Schema for the presentation.
+        ReportItemBaseSchema (Schema): Schema for the base report item.
+        ACLEntryStatusSchema (Schema): Schema for the ACL entry status.
+        PresentationSchema (Schema): Schema for the presentation.
 
     Attributes:
-        remote_user -- String field representing the remote user. Allows None as a value.
-        state -- State associated with the report item.
+        remote_user (str): String field representing the remote user. Allows None as a value.
+        state (StateDefinitionSchema): State associated with the report item.
+        news_items_count (int): The count of news items in this report item.
+        user (UserSchemaBase): User who created the report item.
+        updated_by (UserSchemaBase): User who last updated the report item.
     """
 
     remote_user = fields.Str(allow_none=True)
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
+    news_items_count = fields.Int()
+    user = fields.Nested(UserSchemaBase, allow_none=True)
+    updated_by = fields.Nested(UserSchemaBase, allow_none=True)
 
 
 class ReportItem:
