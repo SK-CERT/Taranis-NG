@@ -12,6 +12,8 @@ The module also includes an initialization function to add the resources to the 
 """
 
 import base64
+import json
+import uuid
 from http import HTTPStatus
 from typing import Any
 
@@ -19,9 +21,17 @@ from flask import Response, request
 from flask_restful import Api, Resource
 from managers import auth_manager, log_manager, presenters_manager, publishers_manager
 from managers.auth_manager import ACLCheck, auth_required
+from managers.cache_manager import redis_client
+from managers.db_manager import db
 from managers.log_manager import logger
-from model import product, product_type, publisher_preset
+from model import product, product_type, publisher_preset, report_item
 from model.permission import Permission
+from remote.presenters_api import PresentersApi
+
+from shared.schema.presenter import PresenterInput, PresenterInputSchema
+
+# Cache expiration time (60 seconds)
+PREVIEW_CACHE_TTL = 60
 
 
 class Products(Resource):
@@ -142,6 +152,58 @@ class PublishProduct(Resource):
         return {"error": "Failed to generate product"}, status_code
 
 
+class ProductsPreviewView(Resource):
+    """A resource class for serving cached preview data.
+
+    This class handles the GET request for retrieving a cached preview by token.
+
+    Attributes:
+        Resource (class): The base class for creating API resources.
+    """
+
+    def get(self, token: str) -> Response:
+        """Retrieve and serve cached preview data.
+
+        Args:
+            token (str): The preview token.
+
+        Returns:
+            Response: The cached preview data as a response object.
+        """
+        err_msg = None
+
+        if "jwt" not in request.args:
+            err_msg = "Missing JWT"
+        else:
+            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
+            if user is None:
+                err_msg = "Invalid JWT"
+
+        if err_msg:
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+
+        # Retrieve and immediately delete cached data from Redis (one-time use)
+        cache_key = f"preview:{token}"
+        try:
+            cached_bytes = redis_client.getdel(cache_key)
+            if not cached_bytes:
+                err_msg = "Preview token not found or expired"
+                log_manager.store_auth_error_activity(err_msg)
+                return Response(err_msg, HTTPStatus.NOT_FOUND, mimetype="text/plain")
+
+            cached_data = json.loads(cached_bytes)
+            preview_data = base64.b64decode(cached_data["data"])
+            preview_mime = cached_data["mime_type"]
+
+            logger.debug(f"Served and deleted preview token: {token}")
+            return Response(preview_data, mimetype=preview_mime)
+
+        except Exception as ex:
+            logger.exception(f"Failed to retrieve preview from Redis: {ex}")
+            return Response("Failed to retrieve preview", HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="text/plain")
+
+
 class ProductsOverview(Resource):
     """A resource class for retrieving product overview.
 
@@ -161,45 +223,166 @@ class ProductsOverview(Resource):
         Returns:
             Response: The product data as a response object.
         """
+        err_msg = None
+        user = None
+
         if "jwt" not in request.args:
             err_msg = "Missing JWT"
-            log_manager.store_auth_error_activity(err_msg)
-            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+        else:
+            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
+            if user is None:
+                err_msg = "Invalid JWT"
+            elif "PUBLISH_ACCESS" not in user.get_permissions():
+                err_msg = "Insufficient permissions"
+            elif not product_type.ProductType.allowed_with_acl(product_id, user, see=False, access=True, modify=False):
+                err_msg = "Unauthorized access attempt to Product Type"
 
-        user = auth_manager.decode_user_from_jwt(request.args["jwt"])
-        if user is None:
-            err_msg = "Invalid JWT"
-            log_manager.store_auth_error_activity(err_msg)
-            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
-
-        permissions = user.get_permissions()
-        if "PUBLISH_ACCESS" not in permissions:
-            err_msg = "Insufficient permissions"
-            log_manager.store_auth_error_activity(err_msg)
-            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
-
-        if not product_type.ProductType.allowed_with_acl(product_id, user, see=False, access=True, modify=False):
-            err_msg = "Unauthorized access attempt to Product Type"
+        if err_msg:
             log_manager.store_auth_error_activity(err_msg)
             return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
 
         product_data, status_code = presenters_manager.generate_product(product_id)
-        # logger.debug(f"=== GENERATED PRODUCT ({status_code}) ===\n{product_data}")
+
+        response_data = None
+        response_mime = None
+        response_status = HTTPStatus.OK
+
         if status_code != HTTPStatus.OK:
             err_msg = "Failed to generate product"
-            log_manager.store_auth_error_activity(err_msg)
-            return Response(err_msg, HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="text/plain")
-
-        if ("message_body" in product_data) and (request.args.get("ctrl", "0") == "0"):
+            response_status = HTTPStatus.INTERNAL_SERVER_ERROR
+        elif ("message_body" in product_data) and (request.args.get("ctrl", "0") == "0"):
             # it's always text response, mime_type is used for data content
-            return Response(base64.b64decode(product_data["message_body"]), mimetype="text/plain")
-
-        if product_data["data"] is None:
+            response_data = base64.b64decode(product_data["message_body"])
+            response_mime = "text/plain"
+        elif product_data.get("data") is None:
             err_msg = "No data available for preview!"
-            log_manager.store_auth_error_activity(err_msg)
-            return Response(err_msg, HTTPStatus.INTERNAL_SERVER_ERROR, mimetype="text/plain")
+            response_status = HTTPStatus.INTERNAL_SERVER_ERROR
+        else:
+            response_data = base64.b64decode(product_data["data"])
+            response_mime = product_data["mime_type"]
 
-        return Response(base64.b64decode(product_data["data"]), mimetype=product_data["mime_type"])
+        if err_msg:
+            log_manager.store_auth_error_activity(err_msg)
+            return Response(err_msg, response_status, mimetype="text/plain")
+
+        return Response(response_data, mimetype=response_mime)
+
+
+class ProductsPreview(Resource):
+    """A resource class for generating product preview without saving to database.
+
+    This class handles the POST request for generating product preview, caching it, and returning a token.
+    The product is created in-memory only and not persisted to the database.
+    Always generates fresh preview on every request.
+
+    Attributes:
+        Resource (class): The base class for creating API resources.
+    """
+
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Generate fresh preview for product data without saving to database, return token.
+
+        Returns:
+            tuple: A JSON response with the token and HTTPStatus.
+        """
+        err_msg = None
+        user = None
+
+        if "jwt" not in request.args:
+            err_msg = "Missing JWT"
+        else:
+            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
+            if user is None:
+                err_msg = "Invalid JWT"
+            elif "PUBLISH_ACCESS" not in user.get_permissions():
+                err_msg = "Insufficient permissions"
+
+        if err_msg:
+            log_manager.store_auth_error_activity(err_msg)
+            return {"error": err_msg}, HTTPStatus.UNAUTHORIZED
+
+        try:
+            product_data = request.json
+
+            # Load product type
+            product_type_id = product_data.get("product_type_id")
+            prod_type = db.session.get(product_type.ProductType, product_type_id)
+
+            if not prod_type:
+                return {"error": "Product type not found"}, HTTPStatus.NOT_FOUND
+
+            # Load report items from database
+            report_items_list = []
+            for item in product_data.get("report_items", []):
+                loaded_item = report_item.ReportItem.find(item["id"])
+                if loaded_item:
+                    report_items_list.append(loaded_item)
+
+            # Generate unique token
+            token = str(uuid.uuid4())
+
+            # Create temporary product object (not saved to database)
+            temp_product = product.Product(
+                id=-1,
+                title=product_data.get("title", ""),
+                description=product_data.get("description", ""),
+                product_type_id=product_type_id,
+                state_id=product_data.get("state_id"),
+                report_items=report_items_list,
+            )
+
+            # Use the token as temporary ID for the presenter
+            temp_product.id = token
+            temp_product.product_type = prod_type
+            temp_product.user = user
+
+            # Validate presenter configuration
+            if not prod_type.presenter:
+                return {"error": "Product type has no presenter configured"}, HTTPStatus.BAD_REQUEST
+            if not prod_type.presenter.node:
+                return {"error": "Presenter has no node configured"}, HTTPStatus.BAD_REQUEST
+
+            presenter = prod_type.presenter
+            node = presenter.node
+
+            input_data = PresenterInput(presenter.type, temp_product)
+            input_schema = PresenterInputSchema()
+
+            # Always generate fresh preview
+            generated_data, status_code = PresentersApi(node.api_url, node.api_key).generate(input_schema.dump(input_data))
+
+            if status_code != HTTPStatus.OK:
+                err_msg = f"Failed to generate preview (status: {status_code})"
+                logger.error(f"{err_msg}, data: {generated_data}")
+                return {"error": err_msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+            # Determine which data to cache
+            if ("message_body" in generated_data) and (request.args.get("ctrl", "0") == "0"):
+                preview_data = base64.b64decode(generated_data["message_body"])
+                preview_mime = "text/plain"
+            elif generated_data.get("data"):
+                preview_data = base64.b64decode(generated_data["data"])
+                preview_mime = generated_data["mime_type"]
+            else:
+                return {"error": "No data available for preview!"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+            # Store preview in Redis with automatic expiration (works across multiple workers)
+            cache_key = f"preview:{token}"
+            cache_value = json.dumps(
+                {
+                    "data": base64.b64encode(preview_data).decode("utf-8"),
+                    "mime_type": preview_mime,
+                },
+            )
+            redis_client.setex(cache_key, PREVIEW_CACHE_TTL, cache_value)
+
+            logger.info(f"Generated and cached fresh preview with token: {token}")
+            return {"token": token}, HTTPStatus.OK
+
+        except Exception as ex:
+            msg = f"Preview generation failed: {ex}"
+            logger.exception(msg)
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 def initialize(api: Api) -> None:
@@ -211,6 +394,8 @@ def initialize(api: Api) -> None:
     api.add_resource(Products, "/api/v1/publish/products")
     api.add_resource(Product, "/api/v1/publish/products/<int:product_id>")
     api.add_resource(ProductsOverview, "/api/v1/publish/products/<int:product_id>/overview")
+    api.add_resource(ProductsPreview, "/api/v1/publish/products/preview")
+    api.add_resource(ProductsPreviewView, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/<int:product_id>/publishers/<string:publisher_id>")
 
     Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")
