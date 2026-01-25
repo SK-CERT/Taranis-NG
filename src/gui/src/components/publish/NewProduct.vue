@@ -87,8 +87,6 @@
                     </v-row>
                     <v-row no-gutters class="pt-4">
                         <v-col cols="6">
-                            <v-btn :href="preview_link" style="display: none" target="_blank" ref="previewBtn">
-                            </v-btn>
                             <v-btn depressed small @click="previewProduct($event)">
                                 <v-icon left>mdi-eye-outline</v-icon>
                                 <span>{{ $t('product.preview') }}</span>
@@ -127,7 +125,7 @@
 
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
-    import { createProduct, publishProduct, updateProduct } from "@/api/publish";
+    import { createProduct, publishProduct, updateProduct, previewProduct } from "@/api/publish";
     import { getEntityTypeStates } from "@/api/state";
     import ReportItemSelector from "@/components/publish/ReportItemSelector";
     import Permissions from "@/services/auth/permissions";
@@ -145,6 +143,7 @@
             modify: false,
             access: false,
             showCloseConfirmation: false,
+            isLoading: false,
             initialFormState: null,
             confirmCloseButtons: [
                 { label: 'confirm_close.continue', color: '', action: 'continue', text: true },
@@ -155,7 +154,6 @@
             publisher_presets: [],
             selected_type: null,
             report_items: [],
-            preview_link: "",
             product: {
                 id: -1,
                 title: "",
@@ -295,41 +293,33 @@
             closeDialog() {
                 this.resetValidation();
                 this.visible = false;
+                this.isLoading = false;
             },
 
-            previewProduct(event) {
+            previewProduct() {
                 this.$validator.validateAll().then(() => {
 
                     if (!this.$validator.errors.any()) {
 
                         this.prepareProduct();
 
-                        const getPreviewUrl = (product) => {
-                            let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + product + "/overview?jwt=" + this.$store.getters.getJWT;
-                            if (event && event.ctrlKey) url += '&ctrl=1';
-                            return url;
-                        };
+                        // Call the preview API - it always generates a fresh preview and returns a token
+                        previewProduct(this.product, this.$store.getters.getJWT).then((response) => {
+                            // Get the token from response
+                            const token = response.data.token;
 
-                        if (this.product.id !== -1) {
-                            updateProduct(this.product).then(() => {
+                            // Build the preview URL with the token
+                            const apiBase = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API);
+                            const previewUrl = `${apiBase}/publish/products/preview/${token}?jwt=${this.$store.getters.getJWT}`;
 
-                                this.resetValidation();
-                                this.preview_link = getPreviewUrl(this.product.id);
-                                this.$nextTick(() => {
-                                    this.$refs.previewBtn.$el.click();
-                                });
-                            })
-                        } else {
-                            createProduct(this.product).then((response) => {
+                            // Open the preview URL in a new tab
+                            window.open(previewUrl, '_blank');
 
-                                this.product.id = response.data
-                                this.resetValidation();
-                                this.preview_link = getPreviewUrl(response.data);
-                                this.$nextTick(() => {
-                                    this.$refs.previewBtn.$el.click();
-                                });
-                            })
-                        }
+                            this.resetValidation();
+                        }).catch((error) => {
+                            console.error('Preview failed:', error);
+                            this.show_error = true;
+                        });
 
                     } else {
 
@@ -422,6 +412,7 @@
                 this.visible = true;
                 this.selected_type = null;
                 this.report_items = data;
+                this.product.id = -1;
             });
 
             this.$store.dispatch('getAllUserProductTypes', { search: '' }).then(() => {
@@ -436,6 +427,12 @@
             });
 
             this.$root.$on('show-product-edit', (data) => {
+                // Prevent race condition: ignore if already loading or if same product is already open
+                if (this.isLoading || (this.visible && this.product.id === data.id)) {
+                    return;
+                }
+
+                this.isLoading = true;
                 this.initialFormState = null;
                 this.visible = true;
                 this.edit = true;
@@ -459,7 +456,10 @@
                     }
                 }
 
-                this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + data.id + "/overview?jwt=" + this.$store.getters.getJWT
+                // Use nextTick to ensure data is fully loaded before allowing new interactions
+                this.$nextTick(() => {
+                    this.isLoading = false;
+                });
             });
         },
 

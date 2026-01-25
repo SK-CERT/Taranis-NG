@@ -5,6 +5,7 @@ from flask_cors import CORS
 from managers import (
     api_manager,
     auth_manager,
+    cache_manager,
     db_manager,
     remote_manager,
     sse_manager,
@@ -28,6 +29,7 @@ def create_app() -> Flask:
         db_manager.initialize(app)
         db_manager.create_tables()
 
+        cache_manager.initialize(app)
         auth_manager.initialize(app)
         api_manager.initialize(app)
         sse_manager.initialize(app)
