@@ -87,7 +87,7 @@
                     </v-row>
                     <v-row no-gutters class="pt-4">
                         <v-col cols="6">
-                            <v-btn depressed small @click="processProduct(false, $event)">
+                            <v-btn depressed small @click="previewProduct($event)">
                                 <v-icon left>mdi-eye-outline</v-icon>
                                 <span>{{ $t('product.preview') }}</span>
                             </v-btn>
@@ -100,7 +100,7 @@
                         </v-col>
                     </v-row>
                     <v-row>
-                        <MessageBox v-model="msgbox_visible" @yes="processProduct(true)" @cancel="msgbox_visible = false"
+                        <MessageBox v-model="msgbox_visible" @yes="publishProduct" @cancel="msgbox_visible = false"
                                     :title="$t('product.publish_confirmation')" :message="product.title"
                                     :icon="{ name: 'mdi-help-circle', color: 'primary' }">
                         </MessageBox>
@@ -125,7 +125,7 @@
 
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
-    import { createProduct, publishProduct, updateProduct } from "@/api/publish";
+    import { createProduct, publishProduct, updateProduct, previewProduct } from "@/api/publish";
     import { getEntityTypeStates } from "@/api/state";
     import ReportItemSelector from "@/components/publish/ReportItemSelector";
     import Permissions from "@/services/auth/permissions";
@@ -143,6 +143,7 @@
             modify: false,
             access: false,
             showCloseConfirmation: false,
+            isLoading: false,
             initialFormState: null,
             confirmCloseButtons: [
                 { label: 'confirm_close.continue', color: '', action: 'continue', text: true },
@@ -153,7 +154,6 @@
             publisher_presets: [],
             selected_type: null,
             report_items: [],
-            preview_link: "",
             product: {
                 id: -1,
                 title: "",
@@ -231,6 +231,37 @@
                 }
             },
 
+            validateAndSave() {
+                return this.$validator.validateAll().then(() => {
+                    if (this.$validator.errors.any()) {
+                        this.show_validation_error = true;
+                        return Promise.resolve(false);
+                    }
+
+                    this.prepareProduct();
+
+                    let savePromise;
+
+                    if (this.product.id === -1) {
+                        savePromise = createProduct(this.product).then((response) => {
+                            this.product.id = response.data;
+                        });
+                    } else {
+                        savePromise = updateProduct(this.product);
+                    }
+
+                    return savePromise
+                        .then(() => {
+                            this.resetValidation();
+                            return true;
+                        })
+                        .catch(() => {
+                            this.show_error = true;
+                            return false;
+                        });
+                });
+            },
+
             productSelected() {
 
             },
@@ -258,63 +289,46 @@
             closeDialog() {
                 this.resetValidation();
                 this.visible = false;
+                this.isLoading = false;
             },
 
-            processProduct(publish = false, event) {
-                this.msgbox_visible = false; // only relevant for publish, harmless for preview
+            previewProduct() {
+                this.$validator.validateAll().then(() => {
+                    if (!this.$validator.errors.any()) {
+                        this.prepareProduct();
 
+                        // Call the preview API - it always generates a fresh preview and returns a token
+                        previewProduct(this.product, this.$store.getters.getJWT).then((response) => {
+                            // Get the token from response
+                            const token = response.data.token;
+
+                            // Build the preview URL with the token
+                            const apiBase = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API);
+                            const previewUrl = `${apiBase}/publish/products/preview/${token}?jwt=${this.$store.getters.getJWT}`;
+
+                            // Open the preview URL in a new tab
+                            window.open(previewUrl, '_blank');
+
+                            this.resetValidation();
+                        }).catch((error) => {
+                            console.error('Preview failed:', error);
+                            this.show_error = true;
+                        });
+                    } else {
+                        this.show_validation_error = true;
+                    }
+                })
+            },
+
+            publishProduct() {
+                this.msgbox_visible = false;
                 this.validateAndSave().then((ok) => {
                     if (!ok) return;
 
-                    if (publish) {
-                        for (const preset of this.publisher_presets) {
-                            if (!preset.selected) continue;
-                            publishProduct(this.product.id, preset.id);
-                        }
-                    } else {
-                        const base = typeof process.env.VUE_APP_TARANIS_NG_CORE_API === "undefined"
-                            ? "$VUE_APP_TARANIS_NG_CORE_API"
-                            : process.env.VUE_APP_TARANIS_NG_CORE_API;
-
-                        let url = `${base}/publish/products/${this.product.id}/overview?jwt=${this.$store.getters.getJWT}`;
-                        if (event && event.ctrlKey) url += "&ctrl=1";
-
-                        window.open(url, "_blank");
+                    for (const preset of this.publisher_presets) {
+                        if (!preset.selected) continue;
+                        publishProduct(this.product.id, preset.id);
                     }
-                });
-            },
-
-            validateAndSave() {
-                return this.$validator.validateAll().then(() => {
-                    if (this.$validator.errors.any()) {
-                        this.show_validation_error = true;
-                        return false;
-                    }
-
-                    this.prepareProduct();
-
-                    const savePromise = () => {
-                        if (this.product.id !== -1) {
-                            return updateProduct(this.product).then(() => {
-                                this.$root.$emit('notification', { type: 'success', loc: 'product.successful' });
-                            });
-                        } else {
-                            return createProduct(this.product).then((res) => {
-                                this.product.id = res.data;
-                                this.$root.$emit('product-updated');
-                            });
-                        }
-                    };
-
-                    return savePromise()
-                        .then(() => {
-                            this.resetValidation();
-                            return true;
-                        })
-                        .catch(() => {
-                            this.show_error = true;
-                            return false;
-                        });
                 });
             },
 
@@ -383,6 +397,7 @@
                 this.visible = true;
                 this.selected_type = null;
                 this.report_items = data;
+                this.product.id = -1;
             });
 
             this.$store.dispatch('getAllUserProductTypes', { search: '' }).then(() => {
@@ -397,6 +412,12 @@
             });
 
             this.$root.$on('show-product-edit', (data) => {
+                // Prevent race condition: ignore if already loading or if same product is already open
+                if (this.isLoading || (this.visible && this.product.id === data.id)) {
+                    return;
+                }
+
+                this.isLoading = true;
                 this.initialFormState = null;
                 this.visible = true;
                 this.edit = true;
@@ -420,7 +441,10 @@
                     }
                 }
 
-                this.preview_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + data.id + "/overview?jwt=" + this.$store.getters.getJWT
+                // Use nextTick to ensure data is fully loaded before allowing new interactions
+                this.$nextTick(() => {
+                    this.isLoading = false;
+                });
             });
         },
 

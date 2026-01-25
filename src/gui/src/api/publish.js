@@ -27,3 +27,8 @@ export function deleteProduct(product) {
 export function publishProduct(product_id, publisher_id) {
     return ApiService.post('/publish/products/' + product_id + '/publishers/' + publisher_id, {})
 }
+
+export function previewProduct(data, jwt) {
+    // Call the preview endpoint to get a token (preview is always generated fresh)
+    return ApiService.post('/publish/products/preview?jwt=' + jwt, data)
+}
