@@ -48,6 +48,10 @@ class Products(Resource):
                 filters["range"] = request.args["range"]
             if request.args.get("sort"):
                 filters["sort"] = request.args["sort"]
+            if request.args.get("published"):
+                filters["published"] = request.args["published"]
+            if request.args.get("unpublished"):
+                filters["unpublished"] = request.args["unpublished"]
             if request.args.get("date_from"):
                 filters["date_from"] = request.args["date_from"]
             if request.args.get("date_to"):

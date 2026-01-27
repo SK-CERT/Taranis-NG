@@ -14,10 +14,10 @@ dependencies = [
     "Flask-RESTful==0.3.10",
     "Flask-SQLAlchemy==3.1.1",
     "gevent==25.9.1",
-    "gunicorn==23.0.0",
+    "gunicorn==24.1.1",
     "Jinja2==3.1.6",
     "ldap3 @ git+https://github.com/cannatag/ldap3.git@refs/pull/983/head",
-    "marshmallow==4.2.0",
+    "marshmallow==4.2.1",
     "psycopg[binary]==3.3.2",
     "pycryptodomex==3.23.0",
     "PyJWT==2.10.1",
@@ -26,10 +26,10 @@ dependencies = [
     "requests==2.32.5",
     "schedule==1.2.2",
     "sseclient-py==1.9.0",
-    "SQLAlchemy==2.0.45",
+    "SQLAlchemy==2.0.46",
     "tqdm==4.67.1",
     "Werkzeug==3.1.5",
-    "langchain==1.2.6",
+    "langchain==1.2.7",
     "langchain-openai==1.1.7"
 ]
 

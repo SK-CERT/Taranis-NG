@@ -27,7 +27,7 @@
                               :items="available_states"
                               :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
                               item-value="id" :label="$t('product.state')" append-icon="mdi-chevron-down"
-                              :menu-props="{ maxWidth: '300px' }" @change="saveProduct('state_id')">
+                              :menu-props="{ maxWidth: '300px' }" @change="updateRecord('state_id')">
 
                         <template v-slot:item="{ item }">
                             <v-list-item-avatar>
@@ -40,29 +40,29 @@
                             </v-list-item-content>
                         </template>
                     </v-select>
-                    <v-btn v-if="!edit && canModify" text dark type="submit" form="form">
+                    <v-btn v-if="!edit && canModify && product.id == -1" text dark type="submit" form="form">
                         <v-icon left>mdi-content-save</v-icon>
                         <span>{{ $t('common.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
-                <v-form @submit.prevent="addProduct" id="form" ref="form" class="px-4">
+                <v-form @submit.prevent="createRecord" id="form" ref="form" class="px-4">
                     <v-row no-gutters>
                         <v-col cols="6" class="pr-3">
                             <v-combobox v-on:change="productSelected" :disabled="!canModify" v-model="selected_type"
                                         :items="product_types" item-text="title" :label="$t('product.report_type')"
-                                        name="report_type" v-validate="'required'" @blur="saveProduct('report_type')" />
+                                        name="report_type" v-validate="'required'" @blur="updateRecord('report_type')" />
                         </v-col>
                         <v-col cols="6" class="pr-3">
                             <v-text-field :disabled="!canModify" :label="$t('product.title')" name="title" type="text"
                                           v-model="product.title" v-validate="'required'" data-vv-name="title"
                                           :error-messages="errors.collect('title')" :spellcheck="$store.state.settings.spellcheck"
-                                          @blur="saveProduct('title')" />
+                                          @blur="updateRecord('title')" />
                         </v-col>
                         <v-col cols="12" class="pr-3">
                             <v-textarea :disabled="!canModify" :label="$t('product.description')" name="description"
                                         v-model="product.description" :spellcheck="$store.state.settings.spellcheck"
-                                        @blur="saveProduct('description')" />
+                                        @blur="updateRecord('description')" />
                         </v-col>
                     </v-row>
                     <v-row no-gutters>
@@ -87,9 +87,7 @@
                     </v-row>
                     <v-row no-gutters class="pt-4">
                         <v-col cols="6">
-                            <v-btn :href="preview_link" style="display: none" target="_blank" ref="previewBtn">
-                            </v-btn>
-                            <v-btn depressed small @click="previewProduct($event)">
+                            <v-btn depressed small @click="processProduct(false, $event)">
                                 <v-icon left>mdi-eye-outline</v-icon>
                                 <span>{{ $t('product.preview') }}</span>
                             </v-btn>
@@ -102,7 +100,7 @@
                         </v-col>
                     </v-row>
                     <v-row>
-                        <MessageBox v-model="msgbox_visible" @yes="publishProduct" @cancel="msgbox_visible = false"
+                        <MessageBox v-model="msgbox_visible" @yes="processProduct(true)" @cancel="msgbox_visible = false"
                                     :title="$t('product.publish_confirmation')" :message="product.title"
                                     :icon="{ name: 'mdi-help-circle', color: 'primary' }">
                         </MessageBox>
@@ -211,7 +209,6 @@
                 this.product.report_items = [];
                 this.selectDefaultState();
                 this.resetValidation();
-                this.initialFormState = this.snapshotForm()
             },
 
             publishConfirmation() {
@@ -231,40 +228,6 @@
                             id: this.report_items[i].id
                         }
                     )
-                }
-            },
-
-            publishProduct() {
-                this.msgbox_visible = false;
-                for (let i = 0; i < this.publisher_presets.length; i++) {
-                    if (this.publisher_presets[i].selected) {
-                        this.$validator.validateAll().then(() => {
-
-                            if (!this.$validator.errors.any()) {
-
-                                this.prepareProduct();
-
-                                if (this.product.id !== -1) {
-                                    updateProduct(this.product).then(() => {
-
-                                        this.resetValidation();
-                                        publishProduct(this.product.id, this.publisher_presets[i].id)
-                                    })
-                                } else {
-                                    createProduct(this.product).then((response) => {
-
-                                        this.resetValidation();
-                                        this.product.id = response.data
-                                        publishProduct(this.product.id, this.publisher_presets[i].id)
-                                    })
-                                }
-
-                            } else {
-
-                                this.show_validation_error = true;
-                            }
-                        })
-                    }
                 }
             },
 
@@ -289,7 +252,7 @@
 
             saveAndClose() {
                 this.showCloseConfirmation = false;
-                this.addProduct();
+                this.createRecord();
             },
 
             closeDialog() {
@@ -297,84 +260,83 @@
                 this.visible = false;
             },
 
-            previewProduct(event) {
-                this.$validator.validateAll().then(() => {
+            processProduct(publish = false, event) {
+                this.msgbox_visible = false; // only relevant for publish, harmless for preview
 
-                    if (!this.$validator.errors.any()) {
+                this.validateAndSave().then((ok) => {
+                    if (!ok) return;
 
-                        this.prepareProduct();
-
-                        const getPreviewUrl = (product) => {
-                            let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API) + "/publish/products/" + product + "/overview?jwt=" + this.$store.getters.getJWT;
-                            if (event && event.ctrlKey) url += '&ctrl=1';
-                            return url;
-                        };
-
-                        if (this.product.id !== -1) {
-                            updateProduct(this.product).then(() => {
-
-                                this.resetValidation();
-                                this.preview_link = getPreviewUrl(this.product.id);
-                                this.$nextTick(() => {
-                                    this.$refs.previewBtn.$el.click();
-                                });
-                            })
-                        } else {
-                            createProduct(this.product).then((response) => {
-
-                                this.product.id = response.data
-                                this.resetValidation();
-                                this.preview_link = getPreviewUrl(response.data);
-                                this.$nextTick(() => {
-                                    this.$refs.previewBtn.$el.click();
-                                });
-                            })
+                    if (publish) {
+                        for (const preset of this.publisher_presets) {
+                            if (!preset.selected) continue;
+                            publishProduct(this.product.id, preset.id);
                         }
-
                     } else {
+                        const base = typeof process.env.VUE_APP_TARANIS_NG_CORE_API === "undefined"
+                            ? "$VUE_APP_TARANIS_NG_CORE_API"
+                            : process.env.VUE_APP_TARANIS_NG_CORE_API;
 
-                        this.show_validation_error = true;
+                        let url = `${base}/publish/products/${this.product.id}/overview?jwt=${this.$store.getters.getJWT}`;
+                        if (event && event.ctrlKey) url += "&ctrl=1";
+
+                        window.open(url, "_blank");
                     }
-                })
+                });
             },
 
-            addProduct() {
-                this.$validator.validateAll().then(() => {
-                    if (!this.$validator.errors.any()) {
-                        this.prepareProduct();
-                        createProduct(this.product).then((response) => {
-                            this.product.id = response.data;
+            validateAndSave() {
+                return this.$validator.validateAll().then(() => {
+                    if (this.$validator.errors.any()) {
+                        this.show_validation_error = true;
+                        return false;
+                    }
+
+                    this.prepareProduct();
+
+                    const savePromise = () => {
+                        if (this.product.id !== -1) {
+                            return updateProduct(this.product).then(() => {
+                                this.$root.$emit('notification', { type: 'success', loc: 'product.successful' });
+                            });
+                        } else {
+                            return createProduct(this.product).then((res) => {
+                                this.product.id = res.data;
+                                this.$root.$emit('product-updated');
+                            });
+                        }
+                    };
+
+                    return savePromise()
+                        .then(() => {
                             this.resetValidation();
-                            this.visible = false;
-                            this.$root.$emit('notification', { type: 'success', loc: 'product.successful' })
-
-                        }).catch(() => {
-                            this.show_error = true;
+                            return true;
                         })
-
-                    } else {
-                        this.show_validation_error = true;
-                    }
-                })
+                        .catch(() => {
+                            this.show_error = true;
+                            return false;
+                        });
+                });
             },
 
-            saveProduct() {
-                if (!this.edit || this.product.id === -1) {
-                    return;
-                }
-                this.prepareProduct();
-                updateProduct(this.product).then(() => {
-                    this.resetValidation();
-                    this.$root.$emit('product-updated')
+            createRecord() {
+                this.validateAndSave().then((ok) => {
+                    if (!ok) return;
 
-                }).catch(() => {
-                    this.show_error = true;
-                })
+                    this.visible = false;
+                });
+            },
+
+            updateRecord() {
+                if (!this.edit && this.product.id === -1) return;
+                this.validateAndSave().then((ok) => {
+                    if (!ok) return;
+                });
             },
 
             resetValidation() {
                 this.$validator.reset();
                 this.show_validation_error = false;
+                this.initialFormState = this.snapshotForm()
             },
 
             async loadAvailableStates() {
@@ -396,7 +358,6 @@
                     this.product.state_id = defaultState.id;
                 }
             },
-
 
             snapshotForm() {
                 return JSON.stringify({

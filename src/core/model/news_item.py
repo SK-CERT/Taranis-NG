@@ -831,6 +831,10 @@ class NewsItemAggregate(db.Model):
                 date_limit -= timedelta(days=date_limit.weekday())
             elif filters["range"] == "MONTH":
                 date_limit = date_limit.replace(day=1)
+            elif filters["range"] == "LAST_7_DAYS":
+                date_limit = datetime.now(TZ) - timedelta(days=7)
+            elif filters["range"] == "LAST_31_DAYS":
+                date_limit = datetime.now(TZ) - timedelta(days=31)
             query = query.filter(NewsItemAggregate.created >= date_limit)
 
         if "sort" in filters:

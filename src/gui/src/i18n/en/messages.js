@@ -793,13 +793,15 @@ const messages_en = {
         to: "To",
         total_count: "Report item count: ",
         tooltip: {
-            filter_completed: "Show/hide completed report items",
-            filter_incomplete: "Show/hide incomplete report items",
+            filter_completed: "Show completed report items",
+            filter_incomplete: "Show incomplete report items",
             range: {
                 ALL: "Show all report items",
                 TODAY: "Show today's report items",
                 WEEK: "Show report items for the last week",
                 MONTH: "Show report items for the last month",
+                LAST_7_DAYS: "Show report items from the last 7 days",
+                LAST_31_DAYS: "Show report items from the last 31 days",
             },
             sort: {
                 time: {
@@ -835,7 +837,7 @@ const messages_en = {
         total_count: "News item count: ",
         selected_count: "Selected news item count: ",
         tooltip: {
-            filter_read: "Hide read news items",
+            filter_read: "Show unread news items",
             filter_important: "Show important news items",
             filter_relevant: "Show relevant news items",
             filter_in_analyze: "Show/hide news items in analysis",
@@ -844,6 +846,8 @@ const messages_en = {
                 TODAY: "Show today's news items",
                 WEEK: "Show news items for the last week",
                 MONTH: "Show news items for the last month",
+                LAST_7_DAYS: "Show news items from the last 7 days",
+                LAST_31_DAYS: "Show news items from the last 31 days",
             },
             sort: {
                 date: {
@@ -902,11 +906,15 @@ const messages_en = {
 
     publish: {
         tooltip: {
+            filter_published: "Show published products",
+            filter_unpublished: "Show unpublished products",
             range: {
                 ALL: "Show all products",
                 TODAY: "Show today's products",
                 WEEK: "Show products for the last week",
                 MONTH: "Show products for the last month",
+                LAST_7_DAYS: "Show products from the last 7 days",
+                LAST_31_DAYS: "Show products from the last 31 days",
             },
             sort: {
                 date: {
@@ -924,6 +932,8 @@ const messages_en = {
         today: "Today",
         this_week: "This Week",
         this_month: "This Month",
+        last_7_days: "Last 7 Days",
+        last_31_days: "Last 31 Days",
         custom_filter: "Custom Filter",
     },
 

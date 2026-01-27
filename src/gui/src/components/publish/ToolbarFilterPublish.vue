@@ -24,16 +24,27 @@
                     </v-chip>
                 </v-chip-group>
 
-                <!--<v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>-->
+                <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
+
+                <!-- FILTER -->
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_ONE">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterPublished">
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('publish.tooltip.filter_published')">{{ UI.ICON.COMPLETED }}</v-icon>
+                    </v-chip>
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterUnpublished">
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('publish.tooltip.filter_unpublished')">{{ UI.ICON.INCOMPLETED }}</v-icon>
+                    </v-chip>
+                </v-chip-group>
+
                 <!-- SORT -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_DESC')" :title="$t('publish.tooltip.sort.date.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.DESC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_ASC')" :title="$t('publish.tooltip.sort.date.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.ASC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
                     </v-chip>
                 </v-chip-group>
             </v-col>
@@ -69,17 +80,33 @@
                 { title: 'toolbar_filter.all', icon: 'mdi-information-outline', type: 'info', filter: 'ALL' },
                 { title: 'toolbar_filter.today', icon: 'mdi-calendar-today', type: 'info', filter: 'TODAY' },
                 { title: 'toolbar_filter.this_week', icon: 'mdi-calendar-range', type: 'info', filter: 'WEEK' },
-                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' }
+                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' },
+                { title: 'toolbar_filter.last_7_days', icon: 'mdi-calendar-range', type: 'info', filter: 'LAST_7_DAYS' },
+                { title: 'toolbar_filter.last_31_days', icon: 'mdi-calendar-month', type: 'info', filter: 'LAST_31_DAYS' }
             ],
             filter: {
                 search: "",
                 range: "ALL",
+                published: false,
+                unpublished: false,
                 sort: "DATE_DESC"
             },
             timeout: null
         }),
         mixins: [AuthMixin],
         methods: {
+            filterPublished() {
+                this.filter.published = !this.filter.published;
+                this.filter.unpublished = false;
+                this.$root.$emit('update-products-filter', this.filter);
+            },
+
+            filterUnpublished() {
+                this.filter.unpublished = !this.filter.unpublished;
+                this.filter.published = false;
+                this.$root.$emit('update-products-filter', this.filter);
+            },
+
             filterSort(sort) {
                 this.filter.sort = sort;
                 this.$root.$emit('update-products-filter', this.filter);

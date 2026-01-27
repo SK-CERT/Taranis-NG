@@ -23,6 +23,8 @@
             filter: {
                 search: "",
                 range: "ALL",
+                published: false,
+                unpublished: false,
                 sort: "DATE_DESC"
             }
         }),

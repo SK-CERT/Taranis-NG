@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from model.user import User
 
 import uuid as uuid_generator
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 
 import sqlalchemy
@@ -471,6 +471,12 @@ class ReportItem(db.Model):
 
             if filter["range"] == "MONTH":
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+            if filter["range"] == "LAST_7_DAYS":
+                date_limit = date_limit - timedelta(days=7)
+
+            if filter["range"] == "LAST_31_DAYS":
+                date_limit = date_limit - timedelta(days=31)
 
             query = query.filter(ReportItem.created >= date_limit)
 
