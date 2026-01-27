@@ -209,12 +209,12 @@ class Product(db.Model):
             search_string = "%" + filter["search"] + "%"
             query = query.filter(or_(Product.title.ilike(search_string), Product.description.ilike(search_string)))
 
-        if filter.get("completed", "").lower() == "true":
+        if filter.get("published", "").lower() == "true":
             published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
             if published_state:
                 query = query.filter(Product.state_id == published_state.id)
 
-        if filter.get("incompleted", "").lower() == "true":
+        if filter.get("unpublished", "").lower() == "true":
             published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
             if published_state:
                 query = query.filter(or_(Product.state_id != published_state.id, Product.state_id.is_(None)))

@@ -792,8 +792,8 @@ const messages_en = {
         to: "To",
         total_count: "Report item count: ",
         tooltip: {
-            filter_completed: "Show/hide completed report items",
-            filter_incomplete: "Show/hide incomplete report items",
+            filter_completed: "Show completed report items",
+            filter_incomplete: "Show incomplete report items",
             range: {
                 ALL: "Show all report items",
                 TODAY: "Show today's report items",
@@ -836,7 +836,7 @@ const messages_en = {
         total_count: "News item count: ",
         selected_count: "Selected news item count: ",
         tooltip: {
-            filter_read: "Hide read news items",
+            filter_read: "Show unread news items",
             filter_important: "Show important news items",
             filter_relevant: "Show relevant news items",
             filter_in_analyze: "Show/hide news items in analysis",
@@ -905,8 +905,8 @@ const messages_en = {
 
     publish: {
         tooltip: {
-            filter_completed: "Show/hide published products",
-            filter_incomplete: "Show/hide unpublished products",
+            filter_published: "Show published products",
+            filter_unpublished: "Show unpublished products",
             range: {
                 ALL: "Show all products",
                 TODAY: "Show today's products",

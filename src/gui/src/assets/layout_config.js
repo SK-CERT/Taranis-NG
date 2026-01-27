@@ -81,9 +81,13 @@ const toolbars = {
                 mandatory: true,
                 class: "float-left"
             },
-            FAVORITES: {
+            FILTER_MULTI: {
                 activeClass: "warning",
                 multiple: true,
+                class: "float-left"
+            },
+            FILTER_ONE: {
+                activeClass: "warning",
                 class: "float-left"
             },
             SORT: {
@@ -113,17 +117,17 @@ const toolbars = {
                 color: "grey lighten-1",
                 class: "ma-0 pa-0 pt-1 pl-1 float-left"
             },
-            FAVORITES_CHIP: {
+            CHIP: {
                 small: true,
                 center: true,
                 class: "px-2"
             },
-            SORT_CHIP_A: {
+            CHIP_A: {
                 small: true,
                 center: true,
                 class: "pl-2"
             },
-            SORT_CHIP_B: {
+            CHIP_B: {
                 small: true,
                 center: true,
                 class: "pr-2"

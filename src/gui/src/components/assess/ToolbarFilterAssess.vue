@@ -27,37 +27,37 @@
 
                 <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
 
-                <!-- FAVORITES -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES" v-model="activeFilters">
+                <!-- FILTER -->
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_MULTI" v-model="activeFilters">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read" value="read">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_read')">{{ UI.ICON.UNREAD }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assess.tooltip.filter_read')">{{ UI.ICON.UNREAD }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterImportant" id="button_filter_important" value="important">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_important')">{{ UI.ICON.IMPORTANT }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assess.tooltip.filter_important')">{{ UI.ICON.IMPORTANT }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRelevant" id="button_filter_relevant" value="relevant">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assess.tooltip.filter_relevant')">{{ UI.ICON.RELEVANT }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assess.tooltip.filter_relevant')">{{ UI.ICON.RELEVANT }}</v-icon>
                     </v-chip>
                 </v-chip-group>
 
                 <!-- SORT -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_DESC')" :title="$t('assess.tooltip.sort.date.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.DESC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_ASC')" :title="$t('assess.tooltip.sort.date.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.ASC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
                     </v-chip>
 
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('RELEVANCE_DESC')" :title="$t('assess.tooltip.sort.relevance.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.LIKE }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.DESC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.LIKE }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('RELEVANCE_ASC')" :title="$t('assess.tooltip.sort.relevance.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.UNLIKE }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.ASC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.UNLIKE }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
                     </v-chip>
                 </v-chip-group>
             </v-col>

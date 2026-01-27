@@ -26,25 +26,25 @@
 
                 <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
 
-                <!-- FAVORITES -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterCompleted">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('publish.tooltip.filter_completed')">{{ UI.ICON.COMPLETED }}</v-icon>
+                <!-- FILTER -->
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_ONE">
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterPublished">
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('publish.tooltip.filter_published')">{{ UI.ICON.COMPLETED }}</v-icon>
                     </v-chip>
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterIncompleted">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('publish.tooltip.filter_incomplete')">{{ UI.ICON.INCOMPLETED }}</v-icon>
+                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterUnpublished">
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('publish.tooltip.filter_unpublished')">{{ UI.ICON.INCOMPLETED }}</v-icon>
                     </v-chip>
                 </v-chip-group>
 
                 <!-- SORT -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_DESC')" :title="$t('publish.tooltip.sort.date.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.DESC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_ASC')" :title="$t('publish.tooltip.sort.date.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.ASC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
                     </v-chip>
                 </v-chip-group>
             </v-col>
@@ -87,23 +87,23 @@
             filter: {
                 search: "",
                 range: "ALL",
-                completed: false,
-                incompleted: false,
+                published: false,
+                unpublished: false,
                 sort: "DATE_DESC"
             },
             timeout: null
         }),
         mixins: [AuthMixin],
         methods: {
-            filterCompleted() {
-                this.filter.completed = !this.filter.completed;
-                this.filter.incompleted = false;
+            filterPublished() {
+                this.filter.published = !this.filter.published;
+                this.filter.unpublished = false;
                 this.$root.$emit('update-products-filter', this.filter);
             },
 
-            filterIncompleted() {
-                this.filter.incompleted = !this.filter.incompleted;
-                this.filter.completed = false;
+            filterUnpublished() {
+                this.filter.unpublished = !this.filter.unpublished;
+                this.filter.published = false;
                 this.$root.$emit('update-products-filter', this.filter);
             },
 
