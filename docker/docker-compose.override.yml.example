@@ -1,0 +1,39 @@
+# Docker Compose Override File - ACME/Let's Encrypt Configuration
+#
+# This file enables the ACME storage volume for automatic HTTPS certificates.
+# Docker Compose automatically uses docker-compose.override.yml if present.
+#
+# Usage:
+#   1. Copy this file: cp docker-compose.override.yml.example docker-compose.override.yml
+#   2. Edit traefik/traefik.yml and uncomment the certificatesResolvers section
+#   3. Start normally: docker compose up -d
+#
+# Note: docker-compose.override.yml is gitignored, so your ACME configuration
+#       won't be tracked or cause merge conflicts. The .example file serves as
+#       documentation and template.
+#
+# Requirements:
+#   - TARANIS_NG_HOSTNAME must be publicly accessible
+#   - Ports 80/443 must be open for ACME challenge validation
+#   - ACME config must be in traefik/traefik.yml (not in dynamic/ files)
+
+services:
+  core:
+    labels:
+      # Enable ACME cert resolver for API endpoint
+      traefik.http.routers.taranis-api-443.tls.certresolver: "myresolver"
+      # Enable ACME cert resolver for SSE endpoint
+      traefik.http.routers.taranis-sse-443.tls.certresolver: "myresolver"
+
+  gui:
+    labels:
+      # Enable ACME cert resolver for GUI endpoint
+      traefik.http.routers.taranis-gui-443.tls.certresolver: "myresolver"
+
+  traefik:
+    volumes:
+      # Enable ACME storage volume for Let's Encrypt certificates
+      - "acme_storage:/letsencrypt"
+
+volumes:
+  acme_storage:
