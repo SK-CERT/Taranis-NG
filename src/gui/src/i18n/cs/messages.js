@@ -890,6 +890,7 @@ const messages_cs = {
             dislike_item: "To se mi nelíbí",
             delete_item: "Smazat novinku",
             remove_item: "Odstranit novinku",
+            show_reports: "Zobrazit reporty obsahující tuto položku",
         },
         shortcuts: {
             enter_filter_mode:
@@ -898,6 +899,11 @@ const messages_cs = {
             default_mode: "Mód zkratek 'původní'.",
             aggregate_no_group:
                 "Nelze otevřít neagregovanou novinku, funguje pouze se skupinou novinek.",
+        },
+        reports_dialog: {
+            title: "Reporty obsahující tuto položku",
+            no_reports: "Tato položka není v žádných reportech",
+            error_loading: "Chyba při načítání reportů",
         },
     },
 

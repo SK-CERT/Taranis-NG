@@ -883,6 +883,11 @@
                 this.$root.$emit('first-dialog', 'push');
             });
 
+            this.$root.$on('show-report-item', (report) => {
+                this.showDetail(report);
+                this.$root.$emit('first-dialog', 'push');
+            });
+
             this.$root.$on('report-item-locked', this.report_item_locked);
             this.$root.$on('report-item-unlocked', this.report_item_unlocked);
             this.$root.$on('report-item-updated', this.report_item_updated);
@@ -891,6 +896,7 @@
         beforeDestroy() {
             this.$root.$off('attachments-uploaded')
             this.$root.$off('new-report')
+            this.$root.$off('show-report-item')
             this.$root.$off('show-edit') // ???
 
             this.$root.$off('report-item-locked', this.report_item_locked);

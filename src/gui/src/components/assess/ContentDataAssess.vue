@@ -9,6 +9,7 @@
                    @show-aggregate-detail="showAggregateDetail(news_item)"
                    @show-item-detail="showItemDetail"
                    @aggregate-open="setAggregateOpen"
+                   @show-reports-for-item="showReportsForItem"
                    ref="card"
                    :aggregate_opened="aggregateOpen(news_item)"
                    @check-focus="checkFocus">
@@ -17,6 +18,7 @@
         <NewsItemSingleDetail ref="newsItemSingleDetail" />
         <NewsItemDetail ref="newsItemDetail" />
         <NewsItemAggregateDetail ref="newsItemAggregateDetail" />
+        <ReportsListDialog ref="reportsListDialog" />
     </v-container>
 
 </template>
@@ -26,6 +28,7 @@
     import NewsItemSingleDetail from "@/components/assess/NewsItemSingleDetail";
     import NewsItemDetail from "@/components/assess/NewsItemDetail";
     import NewsItemAggregateDetail from "@/components/assess/NewsItemAggregateDetail";
+    import ReportsListDialog from "@/components/assess/ReportsListDialog";
 
     export default {
         name: "ContentDataAssess",
@@ -34,6 +37,7 @@
             NewsItemSingleDetail,
             NewsItemDetail,
             NewsItemAggregateDetail,
+            ReportsListDialog,
         },
         props: {
             analyze_selector: Boolean,
@@ -92,6 +96,10 @@
             showItemDetail(news_item) {
                 this.$root.$emit('change-state', 'SHOW_ITEM');
                 this.$refs.newsItemDetail.open(news_item)
+            },
+
+            showReportsForItem(card) {
+                this.$refs.reportsListDialog.open(card);
             },
 
             updateData(append, reload_all) {

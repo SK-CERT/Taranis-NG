@@ -452,6 +452,29 @@ class ReportItemLlmGenerate(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+class ReportItemsByAggregate(Resource):
+    """Report items by aggregate API endpoint."""
+
+    @auth_required("ANALYZE_ACCESS")
+    def get(self, aggregate_id: int) -> tuple[dict, int]:
+        """Get all report items for a specific news item aggregate.
+
+        Args:
+            aggregate_id (int): News item aggregate ID
+
+        Returns:
+            (dict): list of report items containing this aggregate
+            (int): status code
+        """
+        try:
+            report_items = ReportItem.get_by_aggregate(aggregate_id, auth_manager.get_user_from_jwt())
+            return {"data": report_items}, HTTPStatus.OK
+        except Exception as ex:
+            msg = "Get ReportItems by aggregate failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
 def initialize(api: Api) -> None:
     """Initialize API endpoints.
 
@@ -461,6 +484,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ReportItemTypes, "/api/v1/analyze/report-item-types")
     api.add_resource(ReportItemGroups, "/api/v1/analyze/report-item-groups")
     api.add_resource(ReportItems, "/api/v1/analyze/report-items")
+    api.add_resource(ReportItemsByAggregate, "/api/v1/analyze/report-items-by-aggregate/<int:aggregate_id>")
     api.add_resource(ReportItemResource, "/api/v1/analyze/report-items/<int:report_item_id>")
     api.add_resource(ReportItemData, "/api/v1/analyze/report-items/<int:report_item_id>/data")
     api.add_resource(ReportItemLocks, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks")

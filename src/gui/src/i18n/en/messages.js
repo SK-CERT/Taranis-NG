@@ -891,6 +891,7 @@ const messages_en = {
             dislike_item: "Dislike news item",
             delete_item: "Delete news item",
             remove_item: "Remove news item",
+            show_reports: "Show reports containing this item",
         },
         shortcuts: {
             enter_filter_mode: 'Entered shortcut mode "filter". Exit with Escape.',
@@ -898,6 +899,11 @@ const messages_en = {
             default_mode: 'Back in shortcut mode "default".',
             aggregate_no_group:
                 "Cannot open unaggregated news item, only works with news item groups.",
+        },
+        reports_dialog: {
+            title: "Reports Containing This Item",
+            no_reports: "This item is not in any reports",
+            error_loading: "Error loading reports",
         },
     },
 
