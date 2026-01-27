@@ -66,26 +66,27 @@ vim docker/.env
 _Finally_, either deploy the ready-made images from Docker hub with:
 
 ```bash
-docker-compose -f docker/docker-compose.yml pull
-docker-compose -f docker/docker-compose.yml up --no-build
+cd Taranis-NG/docker
+docker compose pull
+docker compose up --no-build
 ```
 or
 ```bash
-docker compose -f docker/docker-compose.yml pull
-docker compose -f docker/docker-compose.yml up --no-build
+cd Taranis-NG/docker
+docker compose pull
+docker compose up --no-build
 ```
 
 or, alternatively, build and run the containers with:
 
 ```bash
-TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml build --pull
-TARANIS_NG_TAG=build docker-compose -f docker/docker-compose.yml up
+cd Taranis-NG/docker
+TARANIS_NG_TAG=build docker compose build --pull
+TARANIS_NG_TAG=build docker compose up
 ```
-or
-```bash
-TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml build --pull
-TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml up
-```
+
+**Important:** If you have `docker-compose.override.yml` configured (for ACME), the override file is automatically loaded when running from the docker/ directory. Do NOT use explicit `-f docker-compose.yml` flags as this disables automatic override loading.
+
 (`--pull` updates the base images)
 
 **Voila, Taranis NG is up and running. Visit your instance by navigating to
@@ -95,6 +96,53 @@ TARANIS_NG_TAG=build docker compose -f docker/docker-compose.yml up
 
 For initial configuration instructions, please continue to the main
 [README](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
+
+## Enabling ACME/Let's Encrypt for automatic HTTPS certificates
+
+Taranis NG supports automatic HTTPS certificate provisioning via Let's Encrypt using ACME protocol. This requires your instance to be publicly accessible on the internet.
+
+**Step 1:** Copy the Docker Compose override file to enable the ACME storage volume:
+
+```bash
+cp docker/docker-compose.override.yml.example docker/docker-compose.override.yml
+```
+
+**Step 2:** Edit `docker/traefik/traefik.yml` and uncomment the ACME configuration section according to your certificate provider.
+
+**Step 3:** Restart Traefik:
+
+```bash
+cd docker
+docker compose restart traefik
+```
+
+**Important notes:**
+- ACME configuration must be in `traefik.yml` (static config), not in the `dynamic/` directory
+- `docker-compose.override.yml` is gitignored, so it won't be tracked
+- **Always run commands from the `docker/` directory** or the override file won't be loaded automatically
+- If you use `-f docker/docker-compose.yml` explicitly, you must also specify `-f docker/docker-compose.override.yml`
+- Changes to `traefik.yml` will show as modified in git - avoid committing your personal ACME settings
+- For testing, use Let's Encrypt staging server: `caServer: https://acme-staging-v02.api.letsencrypt.org/directory`
+- Ensure your `TARANIS_NG_HOSTNAME` is publicly accessible and ports 80/443 are open
+
+**Advanced ACME options:**
+
+For custom Certificate Authorities like ZeroSSL or HARICA that require External Account Binding (EAB):
+
+```yaml
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: your-email@example.com
+      storage: /letsencrypt/acme.json
+      caServer: https://your-ca-server.com/acme/directory
+      keyType: EC384  # or RSA4096
+      eab:
+        kid: your-eab-key-id
+        hmacEncoded: your-eab-hmac-key
+      httpChallenge:
+        entryPoint: web
+```
 
 ## Advanced build methods
 
