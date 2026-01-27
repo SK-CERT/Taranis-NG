@@ -16,22 +16,22 @@
         <v-divider></v-divider>
         <v-row v-bind="UI.TOOLBAR.ROW">
             <v-col class="py-0">
-                <!-- FAVORITES -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FAVORITES">
+                <!-- FILTER -->
+                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_ONE">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterVulnerable">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.FAVORITES_CHIP" :title="$t('assets.tooltip.filter_vulnerable')">{{ UI.ICON.VULNERABLE }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assets.tooltip.filter_vulnerable')">{{ UI.ICON.VULNERABLE }}</v-icon>
                     </v-chip>
                 </v-chip-group>
 
                 <!-- SORT -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('ALPHABETICAL')" :title="$t('assets.tooltip.sort.alphabetical.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.ALPHABETICAL }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.ASC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.ALPHABETICAL }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('VULNERABILITY')" :title="$t('assets.tooltip.sort.vulnerability.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_A">{{ UI.ICON.VULNERABLE }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.SORT_CHIP_B">{{ UI.ICON.DESC }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.VULNERABLE }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
                     </v-chip>
                 </v-chip-group>
             </v-col>

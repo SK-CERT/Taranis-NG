@@ -7,14 +7,14 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.product import Product
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import sqlalchemy
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.report_item import ReportItem
-from model.state import StateDefinition
+from model.state import StateDefinition, StateEnum
 from sqlalchemy import and_, func, or_, orm
 from sqlalchemy.sql.expression import cast
 
@@ -209,6 +209,16 @@ class Product(db.Model):
             search_string = "%" + filter["search"] + "%"
             query = query.filter(or_(Product.title.ilike(search_string), Product.description.ilike(search_string)))
 
+        if filter.get("published", "").lower() == "true":
+            published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+            if published_state:
+                query = query.filter(Product.state_id == published_state.id)
+
+        if filter.get("unpublished", "").lower() == "true":
+            published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+            if published_state:
+                query = query.filter(or_(Product.state_id != published_state.id, Product.state_id.is_(None)))
+
         if "range" in filter and filter["range"] != "ALL":
             date_limit = datetime.now(tz=TZ)
             if filter["range"] == "TODAY":
@@ -219,6 +229,12 @@ class Product(db.Model):
 
             if filter["range"] == "MONTH":
                 date_limit = date_limit.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+            if filter["range"] == "LAST_7_DAYS":
+                date_limit = date_limit - timedelta(days=7)
+
+            if filter["range"] == "LAST_31_DAYS":
+                date_limit = date_limit - timedelta(days=31)
 
             if filter["range"] == "DATE":
                 date_limit = datetime.fromisoformat(filter["date_from"])
