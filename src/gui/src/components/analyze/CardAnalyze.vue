@@ -20,7 +20,8 @@
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ card.report_type_name }}</div>
-                                    <span>{{ card.title }}</span>
+                                    <span>{{ card.title_prefix ? card.title_prefix + ' - ' : '' }}{{ card.title }}</span>
+                                    <span v-if="card.news_items_count">&nbsp;&nbsp;({{ card.news_items_count }})</span>
                                 </v-col>
                                 <v-col>
                                     <div v-if="card.state" class="d-flex align-center">
@@ -35,8 +36,9 @@
                                     </div>
                                 </v-col>
                                 <v-col>
-                                    <div class="grey--text">{{ $t('card_item.created') }}</div>
-                                    <span>{{ card.created }}</span>
+                                    <div class="grey--text">{{ $t('card_item.updated') }}</div>
+                                    <span>{{ card.last_updated }}</span>
+                                    <span v-if="card.updated_by">&nbsp;&nbsp;&nbsp;&nbsp;{{ card.updated_by }}</span>
                                 </v-col>
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <!--TOOLBAR-->

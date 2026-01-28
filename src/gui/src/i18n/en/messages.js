@@ -141,6 +141,7 @@ const messages_en = {
     card_item: {
         title: "Title",
         created: "Created",
+        updated: "Updated",
         collected: "Collected",
         published: "Published",
         source: "Source",

@@ -13,6 +13,7 @@
                                 <v-col>
                                     <div class="grey--text">{{ card.product_type_name }}</div>
                                     <span>{{ card.title }}</span>
+                                    <span v-if="card.report_items_count">&nbsp;&nbsp;({{ card.report_items_count }})</span>
                                 </v-col>
                                 <v-col>
                                     <div v-if="card.state" class="d-flex align-center">
@@ -29,6 +30,11 @@
                                 <v-col>
                                     <div class="grey--text">{{ $t('card_item.description') }}</div>
                                     <span>{{ card.subtitle }}</span>
+                                </v-col>
+                                <v-col>
+                                    <div class="grey--text">{{ $t('card_item.updated') }}</div>
+                                    <span>{{ card.updated_at }}</span>
+                                    <span v-if="card.updated_by">&nbsp;&nbsp;&nbsp;&nbsp;{{ card.updated_by }}</span>
                                 </v-col>
 
                                 <!--TOOLBAR-->

@@ -19,7 +19,8 @@ class ProductSchemaBase(Schema):
     id = fields.Int()
     title = fields.Str()
     description = fields.Str()
-    created = fields.DateTime()
+    created = fields.DateTime("%d.%m.%Y - %H:%M")
+    updated_at = fields.DateTime("%d.%m.%Y - %H:%M")
     product_type_id = fields.Int()
     state_id = fields.Int(allow_none=True)
 
@@ -31,6 +32,15 @@ class ProductSchema(ProductSchemaBase):
 
 
 class ProductPresentationSchema(ProductSchema, ACLEntryStatusSchema, PresentationSchema):
-    """Product presentation schema."""
+    """Product presentation schema.
+
+    Attributes:
+        state: State associated with the product.
+        report_items_count: The count of report items in this product.
+        user: User who created the product.
+        updated_by: User who last updated the product.
+    """
 
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
+    report_items_count = fields.Int()
+    updated_by = fields.Str()

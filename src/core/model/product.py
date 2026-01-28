@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model.product import Product
+    from model.user import User
 
 from datetime import datetime, timedelta
 
@@ -68,12 +69,14 @@ class Product(db.Model):
     description = db.Column(db.String())
 
     created = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now)
 
     product_type_id = db.Column(db.Integer, db.ForeignKey("product_type.id"))
     product_type = db.relationship("ProductType")
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    user = db.relationship("User")
+    user = db.relationship("User", foreign_keys=[user_id])
+    updated_by = db.Column(db.String)
 
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"), nullable=True)
     state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
@@ -174,7 +177,7 @@ class Product(db.Model):
         return products_schema.dump(product)
 
     @classmethod
-    def get(cls, filter: dict, offset: int, limit: int, user: object) -> tuple[list, int]:  # noqa: A002
+    def get(cls, filter: dict, offset: int, limit: int, user: User) -> tuple[list, int]:  # noqa: A002
         """Get products.
 
         Args:
@@ -253,7 +256,7 @@ class Product(db.Model):
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
-    def get_json(cls, filter: dict, offset: int, limit: int, user: object) -> dict:  # noqa: A002
+    def get_json(cls, filter: dict, offset: int, limit: int, user: User) -> dict:  # noqa: A002
         """Get products.
 
         Args:
@@ -271,6 +274,7 @@ class Product(db.Model):
             product.see = True
             product.access = result.access > 0 or result.acls == 0
             product.modify = result.modify > 0 or result.acls == 0
+            product.report_items_count = len(product.report_items)
             products.append(product)
 
             for report_item in product.report_items:
@@ -282,31 +286,33 @@ class Product(db.Model):
         return {"total_count": count, "items": products_schema.dump(products)}
 
     @classmethod
-    def add_product(cls, product_data: dict, user_id: int) -> Product:
+    def add_product(cls, product_data: dict, user: User) -> Product:
         """Add a product.
 
         Args:
             product_data: Product data
-            user_id: User id
+            user: User
         Returns:
             Product: New product
         """
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
 
-        product.user_id = user_id
+        product.user_id = user.id
+        product.updated_by = user.name
         db.session.add(product)
         db.session.commit()
 
         return product
 
     @classmethod
-    def update_product(cls, product_id: int, product_data: dict) -> None:
+    def update_product(cls, product_id: int, product_data: dict, user: User) -> None:
         """Update a product.
 
         Args:
             product_id: Product id
             product_data: Product data
+            user: User of who is updating
         """
         product_schema = NewProductSchema()
         product = product_schema.load(product_data)
@@ -318,6 +324,8 @@ class Product(db.Model):
         original_product.state_id = product.state_id
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
+        original_product.updated_at = datetime.now(TZ)
+        original_product.updated_by = user.name
 
         db.session.commit()
 

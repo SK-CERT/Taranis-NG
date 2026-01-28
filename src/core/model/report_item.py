@@ -242,8 +242,9 @@ class ReportItem(db.Model):
     last_updated = db.Column(db.DateTime, default=datetime.now)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
-    user = db.relationship("User", viewonly=True)
+    user = db.relationship("User", foreign_keys=[user_id], viewonly=True)
     remote_user = db.Column(db.String())
+    updated_by = db.Column(db.String, nullable=True)
 
     report_item_type_id = db.Column(db.Integer, db.ForeignKey("report_item_type.id"), nullable=True)
     report_item_type = db.relationship("ReportItemType", viewonly=True)
@@ -550,6 +551,7 @@ class ReportItem(db.Model):
                 report_item.see = True
                 report_item.access = True
                 report_item.modify = False
+                report_item.news_items_count = len(report_item.news_item_aggregates)
                 report_items.append(report_item)
         else:
             for result in results:
@@ -557,6 +559,7 @@ class ReportItem(db.Model):
                 report_item.see = True
                 report_item.access = result.access > 0 or result.acls == 0
                 report_item.modify = result.modify > 0 or result.acls == 0
+                report_item.news_items_count = len(report_item.news_item_aggregates)
                 report_items.append(report_item)
 
         report_items_schema = ReportItemPresentationSchema(many=True)
@@ -617,6 +620,7 @@ class ReportItem(db.Model):
             return "Unauthorized access to report item type", HTTPStatus.UNAUTHORIZED
 
         report_item.user_id = user.id
+        report_item.updated_by = user.name
         for attribute in report_item.attributes:
             attribute.user_id = user.id
 
@@ -774,6 +778,7 @@ class ReportItem(db.Model):
 
             if modified:
                 report_item.last_updated = datetime.now(TZ)
+                report_item.updated_by = user.name
                 data["user_id"] = user.id
                 data["report_item_id"] = int(id)
                 report_item.update_cpes()

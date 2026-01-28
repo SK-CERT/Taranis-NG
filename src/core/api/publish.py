@@ -74,7 +74,7 @@ class Products(Resource):
             The ID of the newly created product.
         """
         user = auth_manager.get_user_from_jwt()
-        new_product = product.Product.add_product(request.json, user.id)
+        new_product = product.Product.add_product(request.json, user)
         return new_product.id
 
 
@@ -104,7 +104,8 @@ class Product(Resource):
         Args:
             product_id (int): The ID of the product to be updated.
         """
-        product.Product.update_product(product_id, request.json)
+        user = auth_manager.get_user_from_jwt()
+        product.Product.update_product(product_id, request.json, user)
 
     @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_TYPE_MODIFY)
     def delete(self, product_id: int) -> None:
