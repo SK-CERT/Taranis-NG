@@ -35,14 +35,9 @@
                                     </div>
                                 </v-col>
                                 <v-col>
-                                    <div class="grey--text">{{ $t('card_item.created') }}</div>
-                                    <span>{{ card.created }}</span>
-                                    <span v-if="card.user"> - {{ card.user.name }}</span>
-                                </v-col>
-                                <v-col>
                                     <div class="grey--text">{{ $t('card_item.updated') }}</div>
                                     <span>{{ card.last_updated }}</span>
-                                    <span v-if="card.updated_by"> - {{ card.updated_by.name }}</span>
+                                    <span v-if="card.updated_by">&nbsp;&nbsp;&nbsp;&nbsp;{{ card.updated_by }}</span>
                                 </v-col>
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
                                     <!--TOOLBAR-->

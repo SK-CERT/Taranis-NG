@@ -235,8 +235,7 @@ class ReportItemPresentationSchema(ReportItemBaseSchema, ACLEntryStatusSchema, P
     remote_user = fields.Str(allow_none=True)
     state = fields.Nested(StateDefinitionSchema, allow_none=True)
     news_items_count = fields.Int()
-    user = fields.Nested(UserSchemaBase, allow_none=True)
-    updated_by = fields.Nested(UserSchemaBase, allow_none=True)
+    updated_by = fields.Str(allow_none=True)
 
 
 class ReportItem:
