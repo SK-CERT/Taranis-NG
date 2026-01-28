@@ -20,7 +20,8 @@
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ card.report_type_name }}</div>
-                                    <span>{{ card.title_prefix ? card.title_prefix + ' - ' : '' }}{{ card.title }} ({{ card.news_items_count || 0 }})</span>
+                                    <span>{{ card.title_prefix ? card.title_prefix + ' - ' : '' }}{{ card.title }}</span>
+                                    <span v-if="card.news_items_count">&nbsp;&nbsp;({{ card.news_items_count }})</span>
                                 </v-col>
                                 <v-col>
                                     <div v-if="card.state" class="d-flex align-center">

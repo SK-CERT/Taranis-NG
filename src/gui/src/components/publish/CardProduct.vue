@@ -12,7 +12,8 @@
                                 </v-col>
                                 <v-col>
                                     <div class="grey--text">{{ card.product_type_name }}</div>
-                                    <span>{{ card.title }} ({{ card.report_items_count || 0 }})</span>
+                                    <span>{{ card.title }}</span>
+                                    <span v-if="card.report_items_count">&nbsp;&nbsp;({{ card.report_items_count }})</span>
                                 </v-col>
                                 <v-col>
                                     <div v-if="card.state" class="d-flex align-center">
