@@ -781,9 +781,19 @@ const messages_en = {
         preview: "Show product preview",
         publish: "Publish product",
         publish_confirmation: "Are you sure you want to publish following product?",
+        publish_successful: "Product was successfully published",
+        publish_failed: "Failed to publish product",
+        publish_error: "An error occurred while publishing the product",
         total_count: "Products count: ",
         confirm_close: {
             message: "You have unsaved changes. Are you sure you want to close this product without saving your changes?",
+        },
+        publish_unsaved: {
+            title: "Publish Unsaved Product",
+            message: "This product has unsaved changes. How would you like to proceed?",
+            close: "Close",
+            save_and_publish: "Save and Publish",
+            publish_only: "Publish without Saving",
         },
     },
 

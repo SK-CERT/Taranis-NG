@@ -390,6 +390,123 @@ class ProductsPreview(Resource):
             return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class PublishProductDirect(Resource):
+    """A resource class for publishing a product directly without saving to database.
+
+    This class handles the POST request for generating and publishing a product in-memory.
+    The product is created in-memory only and not persisted to the database.
+    Similar to ProductsPreview but publishes instead of caching.
+
+    Attributes:
+        Resource (class): The base class for creating API resources.
+    """
+
+    @auth_required("PUBLISH_PRODUCT")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Generate and publish product directly without saving to database.
+
+        Returns:
+            tuple: A JSON response with publishing results and HTTPStatus.
+        """
+        user = auth_manager.get_user_from_jwt()
+
+        try:
+            request_data = request.json
+            product_data = request_data.get("product")
+            publisher_ids = request_data.get("publisher_ids", [])
+
+            if not publisher_ids:
+                return {"error": "No publishers specified"}, HTTPStatus.BAD_REQUEST
+
+            # Load product type
+            product_type_id = product_data.get("product_type_id")
+            prod_type = db.session.get(product_type.ProductType, product_type_id)
+
+            if not prod_type:
+                return {"error": "Product type not found"}, HTTPStatus.NOT_FOUND
+
+            # Load report items from database
+            report_items_list = []
+            for item in product_data.get("report_items", []):
+                loaded_item = report_item.ReportItem.find(item["id"])
+                if loaded_item:
+                    report_items_list.append(loaded_item)
+
+            # Generate unique token for temporary ID
+            token = str(uuid.uuid4())
+
+            # Create temporary product object (not saved to database)
+            temp_product = product.Product(
+                id=-1,
+                title=product_data.get("title", ""),
+                description=product_data.get("description", ""),
+                product_type_id=product_type_id,
+                state_id=product_data.get("state_id"),
+                report_items=report_items_list,
+            )
+
+            # Use the token as temporary ID for the presenter
+            temp_product.id = token
+            temp_product.product_type = prod_type
+            temp_product.user = user
+
+            # Validate presenter configuration
+            if not prod_type.presenter:
+                return {"error": "Product type has no presenter configured"}, HTTPStatus.BAD_REQUEST
+            if not prod_type.presenter.node:
+                return {"error": "Presenter has no node configured"}, HTTPStatus.BAD_REQUEST
+
+            presenter = prod_type.presenter
+            node = presenter.node
+
+            input_data = PresenterInput(presenter.type, temp_product)
+            input_schema = PresenterInputSchema()
+
+            # Generate product
+            generated_data, status_code = PresentersApi(node.api_url, node.api_key).generate(input_schema.dump(input_data))
+
+            if status_code != HTTPStatus.OK:
+                err_msg = f"Failed to generate product (status: {status_code})"
+                logger.error(f"{err_msg}, data: {generated_data}")
+                return {"error": err_msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+            # Publish to all selected publishers
+            results = []
+            for publisher_id in publisher_ids:
+                preset = publisher_preset.PublisherPreset.find(publisher_id)
+                if not preset:
+                    results.append({"publisher_id": publisher_id, "success": False, "error": "Publisher preset not found"})
+                    continue
+
+                publish_result, publish_status = publishers_manager.publish(preset, generated_data, None, None, None)
+
+                results.append(
+                    {
+                        "publisher_id": publisher_id,
+                        "success": publish_status == HTTPStatus.OK,
+                        "status_code": publish_status,
+                        "result": publish_result,
+                    },
+                )
+
+                if publish_status == HTTPStatus.OK:
+                    logger.info(f"Published product '{product_data.get('title')}' to publisher {publisher_id} (in-memory)")
+
+            # Check if any publication succeeded
+            any_success = any(r["success"] for r in results)
+
+            return {
+                "message": "Publication completed",
+                "results": results,
+                "overall_success": any_success,
+            }, HTTPStatus.OK if any_success else HTTPStatus.INTERNAL_SERVER_ERROR
+
+        except Exception as ex:
+            msg = f"Direct publication failed: {ex}"
+            logger.exception(msg)
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 def initialize(api: Api) -> None:
     """Initialize the publish module.
 
@@ -402,6 +519,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ProductsPreview, "/api/v1/publish/products/preview")
     api.add_resource(ProductsPreviewView, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/<int:product_id>/publishers/<string:publisher_id>")
+    api.add_resource(PublishProductDirect, "/api/v1/publish/products/publish")
 
     Permission.add("PUBLISH_ACCESS", "Publish access", "Access to publish module")
     Permission.add("PUBLISH_CREATE", "Publish create", "Create product")

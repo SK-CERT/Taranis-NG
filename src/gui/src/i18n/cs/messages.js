@@ -780,9 +780,19 @@ const messages_cs = {
         preview: "Zobrazit náhled publikace",
         publish: "Zveřejnit publikaci",
         publish_confirmation: "Opravdu chcete zveřejnit tuto publikaci?",
+        publish_successful: "Publikace byla úspěšně zveřejněna",
+        publish_failed: "Zveřejnění publikace selhalo",
+        publish_error: "Při zveřejňování publikace došlo k chybě",
         total_count: "Počet typů publikací: ",
         confirm_close: {
             message: "Máte neuložené změny. Opravdu chcete zavřít tuto publikaci?",
+        },
+        publish_unsaved: {
+            title: "Zveřejnit neuloženou publikaci",
+            message: "Tato publikace má neuložené změny. Jak chcete pokračovat?",
+            close: "Zavřít",
+            save_and_publish: "Uložit a zveřejnit",
+            publish_only: "Zveřejnit bez uložení",
         },
     },
 
