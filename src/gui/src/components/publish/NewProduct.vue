@@ -232,6 +232,11 @@ export default {
         },
 
         publishConfirmation() {
+            // Check if at least one publisher is selected
+            if (!this.validatePublisherSelection()) {
+                return;
+            }
+
             // Check if there are unsaved changes (only for new products, not editing)
             if (!this.edit && this.hasUnsavedChanges()) {
                 this.showPublishWithUnsavedConfirmation = true;
@@ -254,6 +259,21 @@ export default {
                     }
                 )
             }
+        },
+
+        getSelectedPublisherIds() {
+            return this.publisher_presets
+                .filter(preset => preset.selected)
+                .map(preset => preset.id);
+        },
+
+        validatePublisherSelection() {
+            const selectedIds = this.getSelectedPublisherIds();
+            if (selectedIds.length === 0) {
+                this.$root.$emit('notification', { type: 'error', loc: 'product.no_publisher_selected' });
+                return false;
+            }
+            return true;
         },
 
         validateAndSave() {
@@ -298,14 +318,7 @@ export default {
                 if (!this.$validator.errors.any()) {
                     this.prepareProduct();
 
-                    // Collect selected publisher IDs
-                    const selectedPublisherIds = [];
-                    for (let i = 0; i < this.publisher_presets.length; i++) {
-                        if (this.publisher_presets[i].selected) {
-                            selectedPublisherIds.push(this.publisher_presets[i].id);
-                        }
-                    }
-
+                    const selectedPublisherIds = this.getSelectedPublisherIds();
                     if (selectedPublisherIds.length === 0) {
                         return;
                     }
@@ -352,14 +365,7 @@ export default {
                 if (!this.$validator.errors.any()) {
                     this.prepareProduct();
 
-                    // Collect selected publisher IDs
-                    const selectedPublisherIds = [];
-                    for (let i = 0; i < this.publisher_presets.length; i++) {
-                        if (this.publisher_presets[i].selected) {
-                            selectedPublisherIds.push(this.publisher_presets[i].id);
-                        }
-                    }
-
+                    const selectedPublisherIds = this.getSelectedPublisherIds();
                     if (selectedPublisherIds.length === 0) {
                         return;
                     }
@@ -465,22 +471,19 @@ export default {
         this.validateAndSave().then((ok) => {
             if (!ok) return;
 
-            // Check if at least one publisher is selected
-            const hasSelectedPublisher = this.publisher_presets.some(preset => preset.selected);
-            if (!hasSelectedPublisher) {
-                this.$root.$emit('notification', { type: 'error', loc: 'product.no_publisher_selected' });
+            if (!this.validatePublisherSelection()) {
                 return;
             }
 
-            for (const preset of this.publisher_presets) {
-                if (!preset.selected) continue;
-                publishProductAPI(this.product.id, preset.id).then(() => {
+            const selectedPublisherIds = this.getSelectedPublisherIds();
+            selectedPublisherIds.forEach(publisherId => {
+                publishProductAPI(this.product.id, publisherId).then(() => {
                     this.$root.$emit('notification', { type: 'success', loc: 'product.publish_successful' });
                 }).catch((error) => {
                     console.error('Publish failed:', error);
                     this.$root.$emit('notification', { type: 'error', loc: 'product.publish_failed' });
                 });
-            }
+            });
         });
     },
 
