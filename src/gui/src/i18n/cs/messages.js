@@ -781,8 +781,9 @@ const messages_cs = {
         publish: "Zveřejnit publikaci",
         publish_confirmation: "Opravdu chcete zveřejnit tuto publikaci?",
         publish_successful: "Publikace byla úspěšně zveřejněna",
-        publish_failed: "Zveřejnění publikace selhalo",
+        publish_failed: "Nepodařilo se zveřejnit publikaci",
         publish_error: "Při zveřejňování publikace došlo k chybě",
+        no_publisher_selected: "Vyberte alespoň jednoho vydavatele",
         total_count: "Počet typů publikací: ",
         confirm_close: {
             message: "Máte neuložené změny. Opravdu chcete zavřít tuto publikaci?",

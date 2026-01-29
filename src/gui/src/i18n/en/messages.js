@@ -784,6 +784,7 @@ const messages_en = {
         publish_successful: "Product was successfully published",
         publish_failed: "Failed to publish product",
         publish_error: "An error occurred while publishing the product",
+        no_publisher_selected: "Please select at least one publisher",
         total_count: "Products count: ",
         confirm_close: {
             message: "You have unsaved changes. Are you sure you want to close this product without saving your changes?",

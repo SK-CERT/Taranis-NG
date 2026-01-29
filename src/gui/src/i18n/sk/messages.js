@@ -160,7 +160,8 @@ const messages_sk = {
         publish_confirmation: "Ste si istý, že chcete publikovať tento produkt?",
         publish_successful: "Produkt bol úspešne publikovaný",
         publish_failed: "Publikovanie produktu zlyhalo",
-        publish_error: "Vyskytla sa chyba pri publikovaní produktu",
+        publish_error: "Pri publikovaní produktu nastala chyba",
+        no_publisher_selected: "Vyberte aspoň jedného vydavateľa",
         total_count: "Počet produktov: ",
         confirm_close: {
             message: "Máte neuložené zmeny. Naozaj chcete zavrieť tento produkt bez uloženia zmien?",
