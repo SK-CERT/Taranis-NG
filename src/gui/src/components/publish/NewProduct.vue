@@ -466,146 +466,146 @@ export default {
             });
         },
 
-    publishProduct() {
-        this.msgbox_visible = false;
-        this.validateAndSave().then((ok) => {
-            if (!ok) return;
+        publishProduct() {
+            this.msgbox_visible = false;
+            this.validateAndSave().then((ok) => {
+                if (!ok) return;
 
-            if (!this.validatePublisherSelection()) {
+                if (!this.validatePublisherSelection()) {
+                    return;
+                }
+
+                const selectedPublisherIds = this.getSelectedPublisherIds();
+                selectedPublisherIds.forEach(publisherId => {
+                    publishProductAPI(this.product.id, publisherId).then(() => {
+                        this.$root.$emit('notification', { type: 'success', loc: 'product.publish_successful' });
+                    }).catch((error) => {
+                        console.error('Publish failed:', error);
+                        this.$root.$emit('notification', { type: 'error', loc: 'product.publish_failed' });
+                    });
+                });
+            });
+        },
+
+        createRecord() {
+            this.validateAndSave().then((ok) => {
+                if (!ok) return;
+
+                this.visible = false;
+            });
+        },
+
+        updateRecord() {
+            if (!this.edit && this.product.id === -1) return;
+            this.validateAndSave().then((ok) => {
+                if (!ok) return;
+            });
+        },
+
+        resetValidation() {
+            this.$validator.reset();
+            this.show_validation_error = false;
+            this.initialFormState = this.snapshotForm()
+        },
+
+        async loadAvailableStates() {
+            try {
+                const response = await getEntityTypeStates('product');
+                this.available_states = response.data.states;
+
+            } catch (error) {
+                console.error('Failed to load available states for PRODUCT:', error);
+                this.available_states = [];
+            }
+        },
+
+        selectDefaultState() {
+            if (!this.available_states) return;
+
+            const defaultState = this.available_states.find(state => state.is_default);
+            if (defaultState) {
+                this.product.state_id = defaultState.id;
+            }
+        },
+
+        snapshotForm() {
+            return JSON.stringify({
+                product: this.product,
+                selected_type: this.selected_type,
+                report_items: this.report_items,
+            })
+        },
+
+        hasUnsavedChanges() {
+            if (this.initialFormState !== null) {
+                return this.snapshotForm() !== this.initialFormState
+            }
+            return false
+        },
+
+    },
+
+    mounted() {
+        this.loadAvailableStates();
+
+        this.$root.$on('new-product', (data) => {
+            this.visible = true;
+            this.selected_type = null;
+            this.report_items = data;
+            this.product.id = -1;
+        });
+
+        this.$store.dispatch('getAllUserProductTypes', { search: '' }).then(() => {
+            this.product_types = this.$store.getters.getProductTypes.items
+        });
+
+        this.$store.dispatch('getAllUserPublishersPresets', { search: '' }).then(() => {
+            this.publisher_presets = this.$store.getters.getProductsPublisherPresets.items;
+            for (let i = 0; i < this.publisher_presets.length; i++) {
+                this.publisher_presets[i].selected = false
+            }
+        });
+
+        this.$root.$on('show-product-edit', (data) => {
+            // Prevent race condition during dialog animation
+            if (this.isLoading) {
                 return;
             }
 
-            const selectedPublisherIds = this.getSelectedPublisherIds();
-            selectedPublisherIds.forEach(publisherId => {
-                publishProductAPI(this.product.id, publisherId).then(() => {
-                    this.$root.$emit('notification', { type: 'success', loc: 'product.publish_successful' });
-                }).catch((error) => {
-                    console.error('Publish failed:', error);
-                    this.$root.$emit('notification', { type: 'error', loc: 'product.publish_failed' });
-                });
+            this.isLoading = true;
+            this.initialFormState = null;
+            this.visible = true;
+            this.edit = true;
+            this.modify = data.modify;
+            this.access = data.access;
+            this.show_error = false;
+
+            this.selected_type = null;
+            this.report_items = data.report_items;
+
+            this.product.id = data.id;
+            this.product.title = data.title;
+            this.product.description = data.description;
+            this.product.product_type_id = data.product_type_id;
+            this.product.state_id = data.state_id;
+
+            for (let i = 0; i < this.product_types.length; i++) {
+                if (this.product_types[i].id === this.product.product_type_id) {
+                    this.selected_type = this.product_types[i];
+                    break;
+                }
+            }
+
+            // Use nextTick to ensure data is fully loaded before allowing new interactions
+            this.$nextTick(() => {
+                this.isLoading = false;
             });
         });
     },
 
-    createRecord() {
-        this.validateAndSave().then((ok) => {
-            if (!ok) return;
-
-            this.visible = false;
-        });
+    beforeDestroy() {
+        this.$root.$off('new-product')
+        this.$root.$off('show-product-edit')
     },
-
-    updateRecord() {
-        if (!this.edit && this.product.id === -1) return;
-        this.validateAndSave().then((ok) => {
-            if (!ok) return;
-        });
-    },
-
-    resetValidation() {
-        this.$validator.reset();
-        this.show_validation_error = false;
-        this.initialFormState = this.snapshotForm()
-    },
-
-    async loadAvailableStates() {
-        try {
-            const response = await getEntityTypeStates('product');
-            this.available_states = response.data.states;
-
-        } catch (error) {
-            console.error('Failed to load available states for PRODUCT:', error);
-            this.available_states = [];
-        }
-    },
-
-    selectDefaultState() {
-        if (!this.available_states) return;
-
-        const defaultState = this.available_states.find(state => state.is_default);
-        if (defaultState) {
-            this.product.state_id = defaultState.id;
-        }
-    },
-
-    snapshotForm() {
-        return JSON.stringify({
-            product: this.product,
-            selected_type: this.selected_type,
-            report_items: this.report_items,
-        })
-    },
-
-    hasUnsavedChanges() {
-        if (this.initialFormState !== null) {
-            return this.snapshotForm() !== this.initialFormState
-        }
-        return false
-    },
-
-},
-
-mounted() {
-    this.loadAvailableStates();
-
-    this.$root.$on('new-product', (data) => {
-        this.visible = true;
-        this.selected_type = null;
-        this.report_items = data;
-        this.product.id = -1;
-    });
-
-    this.$store.dispatch('getAllUserProductTypes', { search: '' }).then(() => {
-        this.product_types = this.$store.getters.getProductTypes.items
-    });
-
-    this.$store.dispatch('getAllUserPublishersPresets', { search: '' }).then(() => {
-        this.publisher_presets = this.$store.getters.getProductsPublisherPresets.items;
-        for (let i = 0; i < this.publisher_presets.length; i++) {
-            this.publisher_presets[i].selected = false
-        }
-    });
-
-    this.$root.$on('show-product-edit', (data) => {
-        // Prevent race condition during dialog animation
-        if (this.isLoading) {
-            return;
-        }
-
-        this.isLoading = true;
-        this.initialFormState = null;
-        this.visible = true;
-        this.edit = true;
-        this.modify = data.modify;
-        this.access = data.access;
-        this.show_error = false;
-
-        this.selected_type = null;
-        this.report_items = data.report_items;
-
-        this.product.id = data.id;
-        this.product.title = data.title;
-        this.product.description = data.description;
-        this.product.product_type_id = data.product_type_id;
-        this.product.state_id = data.state_id;
-
-        for (let i = 0; i < this.product_types.length; i++) {
-            if (this.product_types[i].id === this.product.product_type_id) {
-                this.selected_type = this.product_types[i];
-                break;
-            }
-        }
-
-        // Use nextTick to ensure data is fully loaded before allowing new interactions
-        this.$nextTick(() => {
-            this.isLoading = false;
-        });
-    });
-},
-
-beforeDestroy() {
-    this.$root.$off('new-product')
-    this.$root.$off('show-product-edit')
-},
-    }
+}
 </script>
