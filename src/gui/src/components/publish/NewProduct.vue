@@ -104,6 +104,11 @@
                                     :title="$t('product.publish_confirmation')" :message="product.title"
                                     :icon="{ name: 'mdi-help-circle', color: 'primary' }">
                         </MessageBox>
+
+                        <MessageBox v-model="showPublishWithUnsavedConfirmation" :title="$t('product.publish_unsaved.title')"
+                                    :message="$t('product.publish_unsaved.message')" :buttons="confirmPublishButtons"
+                                    :icon="{ name: 'mdi-alert-circle', color: 'warning' }" :max-width="600"
+                                    @close="showPublishWithUnsavedConfirmation = false" @save="saveAndPublish" @publish="publishDirect" />
                     </v-row>
 
                     <v-row no-gutters class="pt-2">
@@ -125,7 +130,7 @@
 
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
-    import { createProduct, publishProduct, updateProduct, previewProduct } from "@/api/publish";
+    import { createProduct, publishProduct, publishProductDirect, updateProduct, previewProduct } from "@/api/publish";
     import { getEntityTypeStates } from "@/api/state";
     import ReportItemSelector from "@/components/publish/ReportItemSelector";
     import Permissions from "@/services/auth/permissions";
@@ -143,12 +148,18 @@
             modify: false,
             access: false,
             showCloseConfirmation: false,
+            showPublishWithUnsavedConfirmation: false,
             isLoading: false,
             initialFormState: null,
             confirmCloseButtons: [
                 { label: 'confirm_close.continue', color: '', action: 'continue', text: true },
                 { label: 'confirm_close.save_and_close', color: 'primary', action: 'save', text: true },
                 { label: 'confirm_close.close', color: 'error', action: 'close', text: true }
+            ],
+            confirmPublishButtons: [
+                { label: 'product.publish_unsaved.close', color: '', action: 'close', text: true },
+                { label: 'product.publish_unsaved.save_and_publish', color: 'primary', action: 'save', text: true },
+                { label: 'product.publish_unsaved.publish_only', color: 'error', action: 'publish', text: true }
             ],
             product_types: [],
             publisher_presets: [],
@@ -213,7 +224,12 @@
             },
 
             publishConfirmation() {
-                this.msgbox_visible = true;
+                // Check if there are unsaved changes (only for new products, not editing)
+                if (!this.edit && this.hasUnsavedChanges()) {
+                    this.showPublishWithUnsavedConfirmation = true;
+                } else {
+                    this.msgbox_visible = true;
+                }
             },
 
             prepareProduct() {
@@ -264,6 +280,113 @@
                         })
                     }
                 }
+            },
+
+            saveAndPublish() {
+                // Save to database first, then publish using traditional method
+                this.showPublishWithUnsavedConfirmation = false;
+
+                this.$validator.validateAll().then(() => {
+                    if (!this.$validator.errors.any()) {
+                        this.prepareProduct();
+
+                        // Collect selected publisher IDs
+                        const selectedPublisherIds = [];
+                        for (let i = 0; i < this.publisher_presets.length; i++) {
+                            if (this.publisher_presets[i].selected) {
+                                selectedPublisherIds.push(this.publisher_presets[i].id);
+                            }
+                        }
+
+                        if (selectedPublisherIds.length === 0) {
+                            return;
+                        }
+
+                        // Save product to database
+                        createProduct(this.product).then((response) => {
+                            this.product.id = response.data;
+                            this.resetValidation();
+
+                            // Switch to edit mode to enable autosaving and hide save button
+                            this.edit = true;
+                            this.modify = true;
+                            this.access = true;
+
+                            // Update initial form state to reflect saved state
+                            this.initialFormState = this.snapshotForm();
+
+                            this.$root.$emit('notification', { type: 'success', loc: 'product.successful' });
+
+                            // Publish to each selected publisher
+                            selectedPublisherIds.forEach(publisherId => {
+                                publishProduct(this.product.id, publisherId).then(() => {
+                                    this.$root.$emit('notification', { type: 'success', loc: 'product.publish_successful' });
+                                }).catch((error) => {
+                                    console.error('Publish failed:', error);
+                                    this.$root.$emit('notification', { type: 'error', loc: 'product.publish_failed' });
+                                });
+                            });
+                        }).catch(() => {
+                            this.show_error = true;
+                        });
+
+                    } else {
+                        this.show_validation_error = true;
+                    }
+                });
+            },
+
+            publishDirect() {
+                // Publish directly without saving to database (in-memory using Redis)
+                this.showPublishWithUnsavedConfirmation = false;
+
+                this.$validator.validateAll().then(() => {
+                    if (!this.$validator.errors.any()) {
+                        this.prepareProduct();
+
+                        // Collect selected publisher IDs
+                        const selectedPublisherIds = [];
+                        for (let i = 0; i < this.publisher_presets.length; i++) {
+                            if (this.publisher_presets[i].selected) {
+                                selectedPublisherIds.push(this.publisher_presets[i].id);
+                            }
+                        }
+
+                        if (selectedPublisherIds.length === 0) {
+                            return;
+                        }
+
+                        // Use direct publish (in-memory, no database save)
+                        publishProductDirect(this.product, selectedPublisherIds)
+                            .then((response) => {
+                                this.resetValidation();
+
+                                // Check results and show appropriate notifications
+                                if (response.data.overall_success) {
+                                    this.$root.$emit('notification', {
+                                        type: 'success',
+                                        loc: 'product.publish_successful'
+                                    });
+                                } else {
+                                    this.$root.$emit('notification', {
+                                        type: 'error',
+                                        loc: 'product.publish_failed'
+                                    });
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Direct publish failed:', error);
+                                this.show_error = true;
+                                this.$root.$emit('notification', {
+                                    type: 'error',
+                                    loc: 'product.publish_error'
+                                });
+                            });
+
+                    } else {
+                        this.show_validation_error = true;
+                    }
+                });
             },
 
             productSelected() {
