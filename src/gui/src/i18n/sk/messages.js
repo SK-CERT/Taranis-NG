@@ -150,6 +150,7 @@ const messages_sk = {
         name: "Názov",
         description: "Popis",
         report_type: "Typ produktu",
+        state: "Stav",
         successful: "Nový produk bol úspešne vytvorený",
         successful_edit: "Produkt bol úspešne uložený",
         removed: "Produkt bol úspešne zmazaný",
@@ -157,7 +158,21 @@ const messages_sk = {
         preview: "Náhľad produktu",
         publish: "Publikovať produkt",
         publish_confirmation: "Ste si istý, že chcete publikovať tento produkt?",
-        total_count: "Počet produktov: "
+        publish_successful: "Produkt bol úspešne publikovaný",
+        publish_failed: "Publikovanie produktu zlyhalo",
+        publish_error: "Pri publikovaní produktu nastala chyba",
+        no_publisher_selected: "Vyberte aspoň jedného vydavateľa",
+        total_count: "Počet produktov: ",
+        confirm_close: {
+            message: "Máte neuložené zmeny. Naozaj chcete zavrieť tento produkt bez uloženia zmien?",
+        },
+        publish_unsaved: {
+            title: "Publikovať neuložený produkt",
+            message: "Tento produkt má neuložené zmeny. Ako chcete pokračovať?",
+            close: "Zavrieť",
+            save_and_publish: "Uložiť a publikovať",
+            publish_only: "Publikovať bez uloženia",
+        },
     },
 
     assess: {

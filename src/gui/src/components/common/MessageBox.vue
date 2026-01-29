@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialogVisible" max-width="550" :persistent="!cancelable">
+    <v-dialog v-model="dialogVisible" :max-width="maxWidth" :persistent="!cancelable">
         <v-card outlined>
             <v-card-title class="justify-center" style="text-align: center;">
                 <div style="display: inline-flex; align-items: center; max-width: 100%;">
@@ -34,6 +34,7 @@
         props: {
             value: { type: Boolean, default: false },
             cancelable: { type: Boolean, default: true },
+            maxWidth: { type: [String, Number], default: 550 },
             title: String,
             message: String,
             icon: {
