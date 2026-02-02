@@ -4,7 +4,7 @@ version = "v25.12.1"
 description = "Taranis-NG Core service."
 requires-python = ">=3.10"
 dependencies = [
-    "alembic==1.18.1",
+    "alembic==1.18.3",
     "beautifulsoup4==4.14.3",
     "Flask==3.1.2",
     "Flask-Cors==6.0.2",
