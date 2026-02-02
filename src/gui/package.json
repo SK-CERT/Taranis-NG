@@ -40,7 +40,7 @@
         "vue2-editor": "^2.10.3",
         "vuetify": "^2.7.2",
         "vuetify-datetime-picker": "^2.1.1",
-        "vuex": "^3.6.2"
+        "vuex": "^4.1.0"
     },
     "devDependencies": {
         "@babel/helper-compilation-targets": "^7.25.9",
