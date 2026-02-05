@@ -20,7 +20,7 @@ dependencies = [
     "marshmallow==4.2.1",
     "psycopg[binary]==3.3.2",
     "pycryptodomex==3.23.0",
-    "PyJWT==2.10.1",
+    "PyJWT==2.11.0",
     "python-dotenv==1.2.1",
     "python-keycloak==7.0.3",
     "redis==7.1.0",
