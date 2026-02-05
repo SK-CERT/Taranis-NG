@@ -36,7 +36,12 @@ def cascade_delete(enable):
         ondelete=cascade_str,
     )
     create_constraint(
-        "user_organization_organization_id_fkey", "user_organization", "organization", ["organization_id"], ["id"], ondelete=cascade_str
+        "user_organization_organization_id_fkey",
+        "user_organization",
+        "organization",
+        ["organization_id"],
+        ["id"],
+        ondelete=cascade_str,
     )
     # address
     create_constraint("organization_address_id_fkey", "organization", "address", ["address_id"], ["id"], ondelete=setnull_str)  # keep
@@ -46,7 +51,12 @@ def cascade_delete(enable):
     create_constraint("news_item_vote_user_id_fkey", "news_item_vote", "user", ["user_id"], ["id"], ondelete=cascade_str)
     create_constraint("product_user_id_fkey", "product", "user", ["user_id"], ["id"], ondelete=setnull_str)  # keep
     create_constraint(
-        "report_item_attribute_user_id_fkey", "report_item_attribute", "user", ["user_id"], ["id"], ondelete=setnull_str  # keep
+        "report_item_attribute_user_id_fkey",
+        "report_item_attribute",
+        "user",
+        ["user_id"],
+        ["id"],
+        ondelete=setnull_str,  # keep
     )
     create_constraint("report_item_user_id_fkey", "report_item", "user", ["user_id"], ["id"], ondelete=setnull_str)  # keep
     create_constraint("user_organization_user_id_fkey", "user_organization", "user", ["user_id"], ["id"], ondelete=cascade_str)
@@ -65,13 +75,28 @@ def cascade_delete(enable):
     create_constraint("user_profile_id_fkey", "user", "user_profile", ["profile_id"], ["id"], ondelete=setnull_str)  # keep
     # word_list
     create_constraint(
-        "user_profile_word_list_word_list_id_fkey", "user_profile_word_list", "word_list", ["word_list_id"], ["id"], ondelete=cascade_str
+        "user_profile_word_list_word_list_id_fkey",
+        "user_profile_word_list",
+        "word_list",
+        ["word_list_id"],
+        ["id"],
+        ondelete=cascade_str,
     )
     create_constraint(
-        "osint_source_word_list_word_list_id_fkey", "osint_source_word_list", "word_list", ["word_list_id"], ["id"], ondelete=cascade_str
+        "osint_source_word_list_word_list_id_fkey",
+        "osint_source_word_list",
+        "word_list",
+        ["word_list_id"],
+        ["id"],
+        ondelete=cascade_str,
     )
     create_constraint(
-        "word_list_category_word_list_id_fkey", "word_list_category", "word_list", ["word_list_id"], ["id"], ondelete=cascade_str
+        "word_list_category_word_list_id_fkey",
+        "word_list_category",
+        "word_list",
+        ["word_list_id"],
+        ["id"],
+        ondelete=cascade_str,
     )
     # word_list_category
     create_constraint(
@@ -89,9 +114,15 @@ def cascade_delete(enable):
 
 
 def create_constraint(
-    constraint_name: str, source_table: str, referent_table: str, local_cols: list[str], remote_cols: list[str], ondelete: str
+    constraint_name: str,
+    source_table: str,
+    referent_table: str,
+    local_cols: list[str],
+    remote_cols: list[str],
+    ondelete: str,
 ):
     """Create a foreign key constraint.
+
     Args:
         constraint_name (str): The name of the constraint.
         source_table (str): The name of the source table.

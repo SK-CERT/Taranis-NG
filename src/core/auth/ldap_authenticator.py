@@ -10,14 +10,15 @@ Classes:
 
 """
 
-from managers import log_manager
-from auth.base_authenticator import BaseAuthenticator
-from flask import request
-from ldap3 import Server, Connection, ALL, Tls
+import os
+import random
 import ssl
 import time
-import random
-import os
+
+from auth.base_authenticator import BaseAuthenticator
+from flask import request
+from ldap3 import ALL, Connection, Server, Tls
+from managers import log_manager
 
 
 class LDAPAuthenticator(BaseAuthenticator):
@@ -55,12 +56,13 @@ class LDAPAuthenticator(BaseAuthenticator):
 
         Args:
             credentials (dict): The user's credentials.
+
         Returns:
             dict: The authentication result.
         """
         tls = Tls(ca_certs_file=self.LDAP_CA_CERT_PATH, validate=ssl.CERT_REQUIRED, version=ssl.PROTOCOL_TLSv1_2)
         server = Server(self.LDAP_SERVER, use_ssl=True, tls=tls, get_info=ALL)
-        conn = Connection(server, user=f'uid={credentials["username"]},{self.LDAP_BASE_DN}', password=credentials["password"], read_only=True)
+        conn = Connection(server, user=f"uid={credentials['username']},{self.LDAP_BASE_DN}", password=credentials["password"], read_only=True)
 
         if not conn.bind():
             data = request.get_json()

@@ -7,12 +7,12 @@ Create Date: 2024-02-08 12:53:03.830779
 """
 
 from enum import Enum, auto
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy import orm
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.dialects.postgresql import ENUM
 
+import sqlalchemy as sa
+from alembic import op
+from sqlalchemy import orm
+from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 

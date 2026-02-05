@@ -1,8 +1,9 @@
-from marshmallow import fields, post_load
 import uuid
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.parameter import NewParameterSchema
+
 from shared.schema.presenter import PresenterSchema
 
 
@@ -21,12 +22,12 @@ class Presenter(db.Model):
 
     type = db.Column(db.String(), nullable=False)
 
-    parameters = db.relationship('Parameter', secondary='presenter_parameter')
+    parameters = db.relationship("Parameter", secondary="presenter_parameter")
 
-    node_id = db.Column(db.String, db.ForeignKey('presenters_node.id'))
+    node_id = db.Column(db.String, db.ForeignKey("presenters_node.id"))
     node = db.relationship("PresentersNode", back_populates="presenters")
 
-    product_types = db.relationship('ProductType', back_populates="presenter")
+    product_types = db.relationship("ProductType", back_populates="presenter")
 
     def __init__(self, name, description, type, parameters):
         self.id = str(uuid.uuid4())
@@ -42,5 +43,5 @@ class Presenter(db.Model):
 
 
 class PresenterParameter(db.Model):
-    presenter_id = db.Column(db.String, db.ForeignKey('presenter.id'), primary_key=True)
-    parameter_id = db.Column(db.Integer, db.ForeignKey('parameter.id'), primary_key=True)
+    presenter_id = db.Column(db.String, db.ForeignKey("presenter.id"), primary_key=True)
+    parameter_id = db.Column(db.Integer, db.ForeignKey("parameter.id"), primary_key=True)

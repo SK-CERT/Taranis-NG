@@ -1,6 +1,5 @@
-from flask_restful import Api
-
 from api import *
+from flask_restful import Api
 
 
 def initialize(app):

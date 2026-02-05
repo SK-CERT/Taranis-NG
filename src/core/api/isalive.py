@@ -1,13 +1,11 @@
 from flask_restful import Resource
-
 from managers.auth_manager import no_auth
 
 
 class IsAlive(Resource):
-
     @no_auth
     def get(self):
-        return {'isalive': True}
+        return {"isalive": True}
 
 
 def initialize(api):

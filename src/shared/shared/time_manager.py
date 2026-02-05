@@ -1,8 +1,9 @@
 """This module provides functions to schedule jobs at specific intervals using the schedule library."""
 
 import threading
-import schedule
 import time
+
+import schedule
 
 
 def schedule_job_every_day(interval, job_func, *args, **kwargs):

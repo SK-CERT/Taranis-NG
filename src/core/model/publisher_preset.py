@@ -1,12 +1,13 @@
 """Publisher preset model."""
 
-from marshmallow import post_load, fields
-from sqlalchemy import or_, orm
 import uuid
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.parameter_value import NewParameterValueSchema
-from shared.schema.publisher_preset import PublisherPresetSchema, PublisherPresetPresentationSchema
+from sqlalchemy import or_, orm
+
+from shared.schema.publisher_preset import PublisherPresetPresentationSchema, PublisherPresetSchema
 
 
 class NewPublisherPresetSchema(PublisherPresetSchema):
@@ -140,6 +141,7 @@ class PublisherPreset(db.Model):
         Args:
             publisher_node (PublisherNode): Publisher node object.
             publisher_type (str): Publisher type.
+
         Returns:
             dict: Publisher presets
         """

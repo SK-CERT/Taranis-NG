@@ -6,8 +6,8 @@ about registered bots, and process events using the registered bots.
 
 import threading
 
-from bots.grouping_bot import GroupingBot
 from bots.analyst_bot import AnalystBot
+from bots.grouping_bot import GroupingBot
 from bots.wordlist_updater_bot import WordlistUpdaterBot
 
 bots = {}

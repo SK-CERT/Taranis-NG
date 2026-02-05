@@ -2,17 +2,20 @@
 
 import re
 
-from .base_bot import BaseBot
+from remote.core_api import CoreApi
+
+from shared.common import ignore_exceptions
 from shared.config_bot import ConfigBot
 from shared.schema import news_item
-from shared.common import ignore_exceptions
-from remote.core_api import CoreApi
+
+from .base_bot import BaseBot
 
 
 class AnalystBot(BaseBot):
     """AnalystBot class.
 
     This class represents a bot for news items analysis.
+
     Attributes:
         type (str): The type of the bot.
         name (str): The name of the bot.
@@ -22,6 +25,7 @@ class AnalystBot(BaseBot):
         attr_name (list): The list of attribute names for extracted data.
         news_items (list): The list of news items.
         news_items_data (list): The list of news items data.
+
     Methods:
         execute(preset): Executes the bot with the given preset.
         execute_on_event(preset, event_type, data): Executes the bot on an event with the given preset, event type, and data.
@@ -58,7 +62,7 @@ class AnalystBot(BaseBot):
             elif len(attr_name) > len(regexp):
                 attr_name = attr_name[: len(regexp)]
 
-            bots_params = dict(zip(attr_name, regexp))
+            bots_params = dict(zip(attr_name, regexp, strict=False))
             limit = BaseBot.history(interval)
             news_items_data, code = CoreApi.get_news_items_data(limit)
             if code == 200 and news_items_data is not None:
@@ -97,7 +101,7 @@ class AnalystBot(BaseBot):
                             CoreApi.update_news_item_attributes(news_item_id, news_item_attributes_schema.dump(attributes))
             else:
                 self.preset.logger.error(
-                    f"News items not received, Code: {code}" f"{', response: ' + str(news_items_data) if news_items_data is not None else ''}"
+                    f"News items not received, Code: {code}{', response: ' + str(news_items_data) if news_items_data is not None else ''}",
                 )
 
         except Exception as error:
@@ -110,6 +114,7 @@ class AnalystBot(BaseBot):
             preset (Preset): The preset to execute.
             event_type (str): The type of the event.
             data (dict): The data associated with the event.
+
         Raises:
             Exception: If there is an error while executing the preset.
         """

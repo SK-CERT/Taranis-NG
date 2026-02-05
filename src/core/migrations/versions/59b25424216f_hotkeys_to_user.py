@@ -6,10 +6,9 @@ Create Date: 2025-04-22 10:15:21.508666
 
 """
 
+import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import inspect
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision = "59b25424216f"
@@ -34,8 +33,8 @@ def upgrade():
                 SELECT "user".id FROM "user"
                 JOIN user_profile ON user_profile.id = "user".profile_id
                 WHERE user_profile.id = hotkey.user_profile_id)
-            """
-        )
+            """,
+        ),
     )  # Remap
     op.drop_constraint("hotkey_user_profile_id_fkey", "hotkey", type_="foreignkey")  # Drop old constraint
     op.drop_column("hotkey", "user_profile_id")  # Drop old column

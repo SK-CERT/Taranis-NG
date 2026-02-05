@@ -1,9 +1,10 @@
 """This module contains the bot manager."""
 
-from model.bots_node import BotsNode
 from model.bot import Bot
 from model.bot_preset import BotPreset
+from model.bots_node import BotsNode
 from remote.bots_api import BotsApi
+
 from shared.schema.bots_node import BotsNode as BotsNodeSchema
 
 

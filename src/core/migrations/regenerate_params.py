@@ -1,26 +1,26 @@
 """Create, update and delete Collector, Bot, Presenter and Publisher parameters."""
 
-from model.collectors_node import CollectorsNode
-from model.collector import Collector, CollectorParameter
-from model.presenters_node import PresentersNode
-from model.presenter import Presenter, PresenterParameter
-from model.publishers_node import PublishersNode
-from model.publisher import Publisher, PublisherParameter
-from model.bots_node import BotsNode
+from model import attribute  # noqa: F401  Don't remove this line otherwise relationship problems
 from model.bot import Bot, BotParameter
+from model.bot_preset import BotPreset, BotPresetParameterValue
+from model.bots_node import BotsNode
+from model.collector import Collector, CollectorParameter
+from model.collectors_node import CollectorsNode
+from model.osint_source import OSINTSource, OSINTSourceParameterValue
 from model.parameter import Parameter
 from model.parameter_value import ParameterValue
-from model.osint_source import OSINTSource, OSINTSourceParameterValue
-from model.bot_preset import BotPreset, BotPresetParameterValue
+from model.presenter import Presenter, PresenterParameter
+from model.presenters_node import PresentersNode
 from model.product_type import ProductType, ProductTypeParameterValue
+from model.publisher import Publisher, PublisherParameter
 from model.publisher_preset import PublisherPreset, PublisherPresetParameterValue
-from shared.config_collector import ConfigCollector
+from model.publishers_node import PublishersNode
+from sqlalchemy.orm import Session, declarative_base
+
 from shared.config_bot import ConfigBot
+from shared.config_collector import ConfigCollector
 from shared.config_presenter import ConfigPresenter
 from shared.config_publisher import ConfigPublisher
-from model import attribute  # noqa: F401  Don't remove this line otherwise relationship problems
-from sqlalchemy.orm import declarative_base, Session
-
 
 Base = declarative_base()
 
@@ -42,8 +42,7 @@ def regenerate_all(connection):
 # this allow us add new module/parameters to nodes without deleting and manually recreating it (we don't loose existing data)
 # existing objects like OSINT sources, Bots presets... that depend on these parameters stay untouched and need to be updated/recrated manually
 def RegenerateParameters(type, session):
-    """
-    Create new, update existing, and delete old Collector, Bot, Presenter and Publisher parameters.
+    """Create new, update existing, and delete old Collector, Bot, Presenter and Publisher parameters.
 
     Args:
         type (str): The type of module to regenerate. Valid values are "collectors", "bots", "presenters", and "publishers".
@@ -222,8 +221,7 @@ def RegenerateParameters(type, session):
 
 
 def get_new_mod_param(type, module_id, parameter_id):
-    """
-    Create a new module parameter based on the type.
+    """Create a new module parameter based on the type.
 
     Args:
         type (str): The type of module. Valid values are "collectors", "bots", "presenters", and "publishers".

@@ -1,9 +1,10 @@
 """API Key Model."""
 
 from datetime import datetime
-from marshmallow import post_load
 
 from managers.db_manager import db
+from marshmallow import post_load
+
 from shared.schema.apikey import ApiKeySchema
 
 
@@ -16,6 +17,7 @@ class NewApiKeySchema(ApiKeySchema):
 
         Args:
             data (dict): Data to create the new API Key.
+
         Returns:
             ApiKey: New API Key object.
         """
@@ -58,6 +60,7 @@ class ApiKey(db.Model):
 
         Args:
             apikey_id (int): API Key ID.
+
         Returns:
             ApiKey: API Key object.
         """
@@ -70,6 +73,7 @@ class ApiKey(db.Model):
 
         Args:
             apikey_name (str): API Key name.
+
         Returns:
             ApiKey: API Key object.
         """
@@ -82,6 +86,7 @@ class ApiKey(db.Model):
 
         Args:
             key_str (str): API Key key.
+
         Returns:
             ApiKey: API Key object.s
         """
@@ -103,6 +108,7 @@ class ApiKey(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             list: List of API Keys.
         """
@@ -120,6 +126,7 @@ class ApiKey(db.Model):
 
         Args:
             data (dict): Data to create the new API Key.
+
         Returns:
             ApiKey: New API Key object.
         """

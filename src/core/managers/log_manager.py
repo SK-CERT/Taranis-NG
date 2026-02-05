@@ -1,18 +1,19 @@
 """Module containing functions to log the activities of the core."""
 
+import hashlib
 import logging.handlers
 import os
 import re
-from shared.log import TaranisLogger
-import hashlib
+from base64 import b64decode, b64encode
 from logging import getLogger
+
+from Cryptodome.Cipher import AES
+from Cryptodome.Random import get_random_bytes
 from flask import request
 from managers.db_manager import db
 from model.log_record import LogRecord
-from base64 import b64encode, b64decode
-from Cryptodome.Cipher import AES
-from Cryptodome.Random import get_random_bytes
 
+from shared.log import TaranisLogger
 
 # setup logger level
 taranis_logging_level_str = os.environ.get("TARANIS_LOG_LEVEL", "DEBUG")
@@ -42,6 +43,7 @@ def sensitive_value(value):
 
     Args:
         value (str): The sensitive data to be encrypted or masked.
+
     Returns:
         (str): The encrypted string if logging mode is set to 'encrypt', the masked string if logging mode is set to 'no',
           or the original value if logging mode is set to 'yes'.
@@ -49,7 +51,7 @@ def sensitive_value(value):
     logging_mode = os.environ.get("LOG_SENSITIVE_DATA", "no")
     if logging_mode.lower() == "yes":
         return value
-    elif logging_mode.startswith("encrypt:"):
+    if logging_mode.startswith("encrypt:"):
         key = logging_mode.split(":")[1]
         salt = get_random_bytes(AES.block_size)
         private_key = hashlib.scrypt(key.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
@@ -63,8 +65,7 @@ def sensitive_value(value):
         }
         encryptedString = f"{encryptedDict['cipher_text']}*{encryptedDict['salt']}*{encryptedDict['nonce']}*{encryptedDict['tag']}"
         return encryptedString
-    else:
-        return "•••••"
+    return "•••••"
 
 
 # source: https://github.com/gdavid7/cryptocode/blob/main/cryptocode.py
@@ -75,6 +76,7 @@ def decrypt(enc_dict, password):
     Args:
         enc_dict (str): The encrypted dictionary in the format "cipher_text*salt*nonce*tag".
         password (str): The password used to generate the private key.
+
     Returns:
         (str): The decrypted text.
     """
@@ -114,6 +116,7 @@ def generate_escaped_data(request_data):
 
     Args:
         request_data: The request data to generate escaped data from.
+
     Returns:
         data (str): The generated escaped data.
     """
@@ -158,8 +161,7 @@ def resolve_resource():
     fp_len = len(request.full_path)
     if request.full_path[fp_len - 1] == "?":
         return request.full_path[: fp_len - 1]
-    else:
-        return request.full_path
+    return request.full_path
 
 
 def store_activity(activity_type, activity_detail, request_data=None):

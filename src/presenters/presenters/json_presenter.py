@@ -4,11 +4,12 @@ Returns:
     _type_: _description_
 """
 
-from base64 import b64encode
 import json
+from base64 import b64encode
+
+from shared.config_presenter import ConfigPresenter
 
 from .base_presenter import BasePresenter
-from shared.config_presenter import ConfigPresenter
 
 
 class JSONPresenter(BasePresenter):

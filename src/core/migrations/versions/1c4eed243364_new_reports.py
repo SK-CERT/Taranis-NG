@@ -6,9 +6,10 @@ Create Date: 2023-08-30 08:53:19.704085
 
 """
 
-from alembic import op
 from datetime import datetime
-from sqlalchemy import orm, Column, ForeignKey, String, Integer, DateTime, Boolean, Enum, text
+
+from alembic import op
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, orm, text
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -202,11 +203,21 @@ def upgrade():
     op.create_foreign_key("attribute_enum_attribute_id_fkey", "attribute_enum", "attribute", ["attribute_id"], ["id"], ondelete="CASCADE")
     # attribute -> attribute_group_item
     op.create_foreign_key(
-        "attribute_group_item_attribute_id_fkey", "attribute_group_item", "attribute", ["attribute_id"], ["id"], ondelete="CASCADE"
+        "attribute_group_item_attribute_id_fkey",
+        "attribute_group_item",
+        "attribute",
+        ["attribute_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     # report_item_type -> attribute_group -> attribute_group_item
     op.create_foreign_key(
-        "attribute_group_report_item_type_id_fkey", "attribute_group", "report_item_type", ["report_item_type_id"], ["id"], ondelete="CASCADE"
+        "attribute_group_report_item_type_id_fkey",
+        "attribute_group",
+        "report_item_type",
+        ["report_item_type_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     op.create_foreign_key(
         "attribute_group_item_attribute_group_id_fkey",
@@ -1387,7 +1398,7 @@ def upgrade():
                             value3["max"],
                             ag.id,
                             value3["aid"],
-                        )
+                        ),
                     )
                     session.commit()
     else:
@@ -1398,7 +1409,11 @@ def downgrade():
     delete_previous()
     # product_type -> product_type_parameter_value
     op.create_foreign_key(
-        "product_type_parameter_value_product_type_id_fkey", "product_type_parameter_value", "product_type", ["product_type_id"], ["id"]
+        "product_type_parameter_value_product_type_id_fkey",
+        "product_type_parameter_value",
+        "product_type",
+        ["product_type_id"],
+        ["id"],
     )
     # parameter -> parameter_value -> product_type_parameter_value
     op.create_foreign_key("parameter_value_parameter_id_fkey", "parameter_value", "parameter", ["parameter_id"], ["id"])
@@ -1416,11 +1431,14 @@ def downgrade():
     # report_item_type -> attribute_group -> attribute_group_item
     op.create_foreign_key("attribute_group_report_item_type_id_fkey", "attribute_group", "report_item_type", ["report_item_type_id"], ["id"])
     op.create_foreign_key(
-        "attribute_group_item_attribute_group_id_fkey", "attribute_group_item", "attribute_group", ["attribute_group_id"], ["id"]
+        "attribute_group_item_attribute_group_id_fkey",
+        "attribute_group_item",
+        "attribute_group",
+        ["attribute_group_id"],
+        ["id"],
     )
 
     # other things can be complicated when already exists data joined with these records
-    pass
 
 
 def delete_previous():

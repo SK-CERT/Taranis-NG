@@ -1,6 +1,6 @@
 """Schema for Bot preset, used for serialization and deserialization of bot preset data."""
 
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.parameter_value import ParameterValueSchema
 from shared.schema.presentation import PresentationSchema
@@ -31,6 +31,7 @@ class BotPresetSchemaBase(Schema):
         Args:
             data (dict): The deserialized data containing bot preset attributes.
             **kwargs: Additional keyword arguments.
+
         Returns:
             BotPreset: An instance of BotPreset initialized with the provided data.
         """

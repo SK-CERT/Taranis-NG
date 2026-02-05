@@ -29,7 +29,12 @@ def upgrade():
     )
     # remote_node
     op.create_foreign_key(
-        "remote_node_osint_source_group_id_fkey", "remote_node", "osint_source_group", ["osint_source_group_id"], ["id"], ondelete="SET NULL"
+        "remote_node_osint_source_group_id_fkey",
+        "remote_node",
+        "osint_source_group",
+        ["osint_source_group_id"],
+        ["id"],
+        ondelete="SET NULL",
     )
     # news_item
     op.create_foreign_key(
@@ -46,7 +51,11 @@ def downgrade():
     delete_previous()
     # news_item_aggregate
     op.create_foreign_key(
-        "news_item_aggregate_osint_source_group_id_fkey", "news_item_aggregate", "osint_source_group", ["osint_source_group_id"], ["id"]
+        "news_item_aggregate_osint_source_group_id_fkey",
+        "news_item_aggregate",
+        "osint_source_group",
+        ["osint_source_group_id"],
+        ["id"],
     )
     # remote_node
     op.create_foreign_key("remote_node_osint_source_group_id_fkey", "remote_node", "osint_source_group", ["osint_source_group_id"], ["id"])

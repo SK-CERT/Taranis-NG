@@ -1,10 +1,10 @@
 """This module contains the API for handling collectors."""
 
-from flask_restful import Resource
 from flask import request
-
+from flask_restful import Resource
 from managers import collectors_manager
 from managers.auth_manager import api_key_required
+
 from shared.log_manager import logger
 
 

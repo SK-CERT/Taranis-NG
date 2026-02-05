@@ -1,8 +1,9 @@
 """Module for Manual collector."""
 
-from .base_collector import BaseCollector
-from shared.config_collector import ConfigCollector
 from shared.common import ignore_exceptions
+from shared.config_collector import ConfigCollector
+
+from .base_collector import BaseCollector
 
 
 class ManualCollector(BaseCollector):
@@ -17,4 +18,3 @@ class ManualCollector(BaseCollector):
     @ignore_exceptions
     def collect(self):
         """Collect data from source."""
-        pass

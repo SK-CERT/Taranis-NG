@@ -1,6 +1,6 @@
 """Schema for Product Type, used for serialization and deserialization of product type data."""
 
-from marshmallow import Schema, fields, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields
 
 from shared.schema.parameter_value import ParameterValueSchema
 from shared.schema.presentation import PresentationSchema

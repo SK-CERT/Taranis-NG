@@ -6,13 +6,14 @@ Returns:
 
 import os
 from xml.etree.ElementTree import iterparse
+
+from managers.db_manager import db
+from managers.log_manager import logger
 from marshmallow import fields, post_load
-from sqlalchemy import orm, func, or_, and_
+from sqlalchemy import and_, func, or_, orm
 from tqdm import tqdm
 
-from managers.log_manager import logger
-from managers.db_manager import db
-from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, AttributeType, AttributeValidator, AttributePresentationSchema
+from shared.schema.attribute import AttributeBaseSchema, AttributeEnumSchema, AttributePresentationSchema, AttributeType, AttributeValidator
 
 
 class NewAttributeEnumSchema(AttributeEnumSchema):
@@ -70,8 +71,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def count_for_attribute(cls, attribute_id):
-        """
-        Count the number of attribute enums for an attribute.
+        """Count the number of attribute enums for an attribute.
 
         Args:
             attribute_id (int): ID of the attribute.
@@ -95,8 +95,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def get_for_attribute(cls, attribute_id, search, offset, limit):
-        """
-        Get attribute enums for an attribute.
+        """Get attribute enums for an attribute.
 
         This method retrieves attribute enums for a given attribute ID, with optional search, offset, and limit parameters.
 
@@ -122,8 +121,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def find_by_value(cls, attribute_id, value):
-        """
-        Find an attribute enum by value.
+        """Find an attribute enum by value.
 
         Args:
             attribute_id (int): ID of the attribute.
@@ -136,8 +134,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def get_for_attribute_json(cls, attribute_id, search, offset, limit):
-        """
-        Retrieve attribute enums in JSON format for a given attribute ID.
+        """Retrieve attribute enums in JSON format for a given attribute ID.
 
         Args:
             attribute_id (int): The ID of the attribute.
@@ -154,8 +151,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def delete_for_attribute(cls, attribute_id):
-        """
-        Delete all records associated with the given attribute ID.
+        """Delete all records associated with the given attribute ID.
 
         Args:
             attribute_id (int): The ID of the attribute.
@@ -168,8 +164,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def delete_imported_for_attribute(cls, attribute_id):
-        """
-        Delete imported attributes for a given attribute ID.
+        """Delete imported attributes for a given attribute ID.
 
         Args:
             attribute_id (int): The ID of the attribute.
@@ -182,8 +177,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def add(cls, attribute_id, data):
-        """
-        Add attribute enums to the database.
+        """Add attribute enums to the database.
 
         Args:
             attribute_id (int): The ID of the attribute.
@@ -216,8 +210,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def update(cls, enum_id, data):
-        """
-        Update the attribute enum with the given enum_id using the provided data.
+        """Update the attribute enum with the given enum_id using the provided data.
 
         Args:
             enum_id (int): The ID of the attribute enum to update.
@@ -238,8 +231,7 @@ class AttributeEnum(db.Model):
 
     @classmethod
     def delete(cls, attribute_enum_id):
-        """
-        Delete an attribute by its enum ID.
+        """Delete an attribute by its enum ID.
 
         Args:
             attribute_enum_id (int): The enum ID of the attribute to be deleted.
@@ -503,6 +495,7 @@ class Attribute(db.Model):
         Args:
             file_path (str): The path to the XML file.
             tag (str): The tag name of the elements to count.
+
         Returns:
             int: The number of elements with the specified tag.
         """
@@ -623,8 +616,7 @@ class Attribute(db.Model):
 
     @classmethod
     def load_dictionaries(cls, dict_type):
-        """
-        Load dictionaries based on the specified dict_type.
+        """Load dictionaries based on the specified dict_type.
 
         Args:
             dict_type (str): The type of dictionary to load.

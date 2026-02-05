@@ -17,7 +17,6 @@ def upgrade():
     """This has been removed because it caused issues with the migration.
     Now the regeneration is done automatically after the migration.
     """
-    pass
 
 
 def downgrade():

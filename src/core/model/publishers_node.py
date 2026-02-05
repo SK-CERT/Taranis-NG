@@ -1,11 +1,12 @@
 """PublishersNode model."""
 
-from marshmallow import post_load
-from sqlalchemy import or_, orm
 import uuid
 
 from managers.db_manager import db
-from shared.schema.publishers_node import PublishersNodeSchema, PublishersNodePresentationSchema
+from marshmallow import post_load
+from sqlalchemy import or_, orm
+
+from shared.schema.publishers_node import PublishersNodePresentationSchema, PublishersNodeSchema
 
 
 class NewPublishersNodeSchema(PublishersNodeSchema):
@@ -17,6 +18,7 @@ class NewPublishersNodeSchema(PublishersNodeSchema):
 
         Args:
             data (dict): Data to create a new PublishersNode object.
+
         Returns:
             PublishersNode: New PublishersNode object.
         """
@@ -68,6 +70,7 @@ class PublishersNode(db.Model):
 
         Args:
             api_key (str): API key.
+
         Returns:
             PublishersNode: Publisher node object.
         """
@@ -88,6 +91,7 @@ class PublishersNode(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             tuple: Publisher nodes and count.
         """
@@ -105,6 +109,7 @@ class PublishersNode(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             dict: Publisher nodes in JSON format.
         """

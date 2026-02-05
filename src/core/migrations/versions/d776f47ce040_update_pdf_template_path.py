@@ -7,9 +7,8 @@ Create Date: 2023-11-24 12:58:32.377642
 """
 
 from alembic import op
-from sqlalchemy import orm, Column, ForeignKey, String, Integer, Boolean, text
+from sqlalchemy import Column, ForeignKey, Integer, String, orm, text
 from sqlalchemy.orm import declarative_base
-import sqlalchemy as sa
 
 Base = declarative_base()
 
@@ -55,7 +54,12 @@ def upgrade():
     delete_previous()
     # parameter -> presenter_parameter
     op.create_foreign_key(
-        "presenter_parameter_parameter_id_fkey", "presenter_parameter", "parameter", ["parameter_id"], ["id"], ondelete="CASCADE"
+        "presenter_parameter_parameter_id_fkey",
+        "presenter_parameter",
+        "parameter",
+        ["parameter_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
 
     # Correct old presenter template details

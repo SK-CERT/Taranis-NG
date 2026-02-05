@@ -6,9 +6,9 @@ Create Date: 2025-01-07 10:19:53.355554
 
 """
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import inspect, table, column, select
+from alembic import op
+from sqlalchemy import column, inspect, select, table
 
 # revision identifiers, used by Alembic.
 revision = "4cd4c4758a81"
@@ -58,7 +58,11 @@ def upgrade():
 
             # Map parameters
             parameter_mapping = {}
-            for atom_collector_parameter_id, rss_collector_parameter_id in zip(atom_collector_parameter_ids, rss_collector_parameter_ids):
+            for atom_collector_parameter_id, rss_collector_parameter_id in zip(
+                atom_collector_parameter_ids,
+                rss_collector_parameter_ids,
+                strict=False,
+            ):
                 parameter_mapping[atom_collector_parameter_id] = rss_collector_parameter_id
 
             # change parameter_id in parameter_value table

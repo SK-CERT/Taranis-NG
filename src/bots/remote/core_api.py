@@ -1,9 +1,11 @@
 """This module provides a class to interact with the Taranis-NG Core API."""
 
 import os
-import requests
 import urllib
+
+import requests
 from config import Config
+
 from shared.log_manager import logger
 
 
@@ -27,8 +29,7 @@ class CoreApi:
     """
 
     api_url = os.getenv("TARANIS_NG_CORE_URL")
-    if api_url.endswith("/"):
-        api_url = api_url[:-1]
+    api_url = api_url.removesuffix("/")
     headers = {"Authorization": f"Bearer {Config.API_KEY}"}
 
     @classmethod
@@ -133,7 +134,9 @@ class CoreApi:
         """
         try:
             response = requests.put(
-                cls.api_url + "/api/v1/bots/word-list-categories/" + id + "/entries/" + name, json=entries, headers=cls.headers
+                cls.api_url + "/api/v1/bots/word-list-categories/" + id + "/entries/" + name,
+                json=entries,
+                headers=cls.headers,
             )
             return response.status_code
         except Exception as ex:
@@ -207,7 +210,9 @@ class CoreApi:
         """
         try:
             response = requests.get(
-                cls.api_url + "/api/v1/bots/news-item-aggregates-by-group/" + source_group, json={"limit": limit}, headers=cls.headers
+                cls.api_url + "/api/v1/bots/news-item-aggregates-by-group/" + source_group,
+                json={"limit": limit},
+                headers=cls.headers,
             )
             return response.json()
         except Exception as ex:

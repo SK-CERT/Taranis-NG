@@ -15,12 +15,11 @@ Each class contains methods to handle HTTP requests (GET, POST, PUT, DELETE) for
 The methods are decorated with authentication and authorization requirements to ensure proper access control.
 """
 
-from flask_restful import Resource, reqparse
 from flask import request
-
+from flask_restful import Resource, reqparse
 from managers import publishers_manager
-from managers.auth_manager import auth_required, api_key_required
-from model import publishers_node, publisher_preset
+from managers.auth_manager import api_key_required, auth_required
+from model import publisher_preset, publishers_node
 from model.permission import Permission
 
 
@@ -33,6 +32,7 @@ class AddPublishersNode(Resource):
 
         This method processes the incoming JSON data from the request and
         uses the publishers_manager to add a new publisher node.
+
         Returns:
             tuple: An empty string and the result of the add_publishers_node method.
         """
@@ -48,11 +48,12 @@ class PublisherPresets(Resource):
 
         If a "search" parameter is provided in the request arguments, it will be used
         to filter the publisher presets.
+
         Returns:
             JSON response containing the list of publisher presets, optionally filtered by the search term.
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return publisher_preset.PublisherPreset.get_all_json(search)
 
@@ -62,6 +63,7 @@ class PublisherPresets(Resource):
 
         This method parses the request arguments to extract the API key and collector type,
         and then retrieves the corresponding publisher presets in JSON format.
+
         Returns:
             dict: A dictionary containing all publisher presets for the specified publisher in JSON format.
         """
@@ -80,6 +82,7 @@ class AddPublisherPreset(Resource):
 
         This method retrieves JSON data from the request and passes it to the
         publishers_manager to add a new publisher preset.
+
         Raises:
             Exception: If there is an issue with adding the publisher preset.
         """
@@ -95,6 +98,7 @@ class PublisherPreset(Resource):
 
         Args:
             id (int): The ID of the publisher preset to update.
+
         Returns:
             Response: The response object indicating the result of the update operation.
         """
@@ -106,6 +110,7 @@ class PublisherPreset(Resource):
 
         Args:
             id (int): The ID of the publisher preset to delete.
+
         Returns:
             bool: True if the deletion was successful, False otherwise.
         """
@@ -121,11 +126,12 @@ class PublisherNodes(Resource):
 
         If a "search" parameter is provided in the request arguments, it will be used
         to filter the publisher data.
+
         Returns:
             JSON response containing the publisher data, optionally filtered by the search term.
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return publishers_node.PublishersNode.get_all_json(search)
 
@@ -148,6 +154,7 @@ class PublishersNode(Resource):
 
         Args:
             id (int): The ID of the publisher to delete.
+
         Returns:
             bool: True if the deletion was successful, False otherwise.
         """
@@ -160,6 +167,7 @@ def initialize(api):
     This function adds various publisher-related resources to the provided API
     instance and sets up the necessary permissions for accessing, creating,
     updating, and deleting publisher nodes and presets.
+
     Args:
         api: The API instance to which the resources and permissions will be added.
     Resources:

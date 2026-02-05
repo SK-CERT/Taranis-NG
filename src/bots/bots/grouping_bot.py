@@ -3,10 +3,12 @@
 import json
 import re
 
-from .base_bot import BaseBot
-from shared.config_bot import ConfigBot
-from shared.common import ignore_exceptions
 from remote.core_api import CoreApi
+
+from shared.common import ignore_exceptions
+from shared.config_bot import ConfigBot
+
+from .base_bot import BaseBot
 
 
 class GroupingBot(BaseBot):
@@ -14,6 +16,7 @@ class GroupingBot(BaseBot):
 
     It applies a regular expression to find specific patterns in the content, and
     groups news items based on the findings.
+
     Attributes:
         type (str): The type of the bot, set to "GROUPING_BOT".
         config (Config): Configuration object for the bot.
@@ -46,15 +49,12 @@ class GroupingBot(BaseBot):
             data = json.loads(data)
 
             if data:
-
                 data_findings = []  # noqa F841
 
                 for aggregate in data:
-
                     findings = []
 
                     for news_item in aggregate["news_items"]:
-
                         content = news_item["news_item_data"]["content"]
 
                         analyzed_content = "".join(content).split()
@@ -64,7 +64,6 @@ class GroupingBot(BaseBot):
                         analyzed_content = set(analyzed_content)
 
                         for element in analyzed_content:
-
                             finding = re.search("(" + regexp + ")", element)
 
                             if finding:
@@ -75,14 +74,11 @@ class GroupingBot(BaseBot):
                     # IT WILL GROUP NEWS_ITEMS TOGETHER FROM ONE AGGREGATE
 
                     if findings:
-
                         grouped_ids = []
                         values = {}
 
                         for k, val in findings:
-
                             if val in values:
-
                                 grouped = [x for x in grouped_ids if len(x) != 1]
                                 x_flat = [k for sublist in grouped for k in sublist]
 
@@ -108,7 +104,6 @@ class GroupingBot(BaseBot):
                                 corrected_grouped_ids.append(sublist)
 
                         for sublist in corrected_grouped_ids:
-
                             items = []
 
                             for element in sublist:
@@ -187,6 +182,7 @@ class GroupingBot(BaseBot):
             preset (object): The preset configuration containing parameter values.
             event_type (str): The type of event that triggered this execution.
             data (dict): Additional data related to the event.
+
         Raises:
             Exception: If there is an error accessing the parameter values in the preset.
         """

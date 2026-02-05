@@ -6,9 +6,10 @@ Returns:
 
 import os
 import ssl
+from functools import wraps
+
 from config import Config
 from flask import request
-from functools import wraps
 
 if os.getenv("SSL_VERIFICATION") == "False":
     try:
@@ -33,7 +34,6 @@ def api_key_required(fn):
     def wrapper(*args, **kwargs):
         if "Authorization" not in request.headers or request.headers["Authorization"] != (f"Bearer {Config.API_KEY}"):
             return {"error": "not authorized"}, 401
-        else:
-            return fn(*args, **kwargs)
+        return fn(*args, **kwargs)
 
     return wrapper

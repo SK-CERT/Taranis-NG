@@ -2,9 +2,8 @@ from flask_restful import Resource
 
 
 class IsAlive(Resource):
-
     def get(self):
-        return {'isalive': True}
+        return {"isalive": True}
 
 
 def initialize(api):

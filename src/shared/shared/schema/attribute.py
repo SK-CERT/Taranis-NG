@@ -3,8 +3,9 @@
 This module contains classes and schemas related to attributes, including enums, validators, and presentation information.
 """
 
-from marshmallow import Schema, fields, post_load, EXCLUDE
 from enum import Enum, auto
+
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.presentation import PresentationSchema
 

@@ -2,15 +2,16 @@
 
 import uuid as uuid_generator
 from datetime import datetime
-from marshmallow import post_load, fields
-from sqlalchemy import orm, or_, and_
 
 from managers.db_manager import db
 from managers.log_manager import logger
+from marshmallow import fields, post_load
 from model.osint_source import OSINTSource
 from model.report_item_type import ReportItemType
+from sqlalchemy import and_, or_, orm
+
 from shared.schema.osint_source import OSINTSourceIdSchema
-from shared.schema.remote import RemoteAccessSchema, RemoteAccessPresentationSchema, RemoteNodeSchema, RemoteNodePresentationSchema
+from shared.schema.remote import RemoteAccessPresentationSchema, RemoteAccessSchema, RemoteNodePresentationSchema, RemoteNodeSchema
 from shared.schema.report_item_type import ReportItemTypeIdSchema
 
 
@@ -19,6 +20,7 @@ class NewRemoteAccessSchema(RemoteAccessSchema):
 
     Args:
         RemoteAccessSchema: Base schema for Remote Access.
+
     Attributes:
         osint_sources: List of OSINT sources.
         report_item_types: List of report item types.
@@ -33,6 +35,7 @@ class NewRemoteAccessSchema(RemoteAccessSchema):
 
         Args:
             data: Schema data.
+
         Returns:
             RemoteAccess: New Remote Access object.
         """
@@ -122,6 +125,7 @@ class RemoteAccess(db.Model):
 
         Args:
             search: Search string.
+
         Returns:
             list: List of Remote Accesses.
             int: Number of Remote Accesses.
@@ -140,6 +144,7 @@ class RemoteAccess(db.Model):
 
         Args:
             search: Search string.
+
         Returns:
             dict: JSON object containing Remote Accesses.
         """
@@ -153,6 +158,7 @@ class RemoteAccess(db.Model):
 
         Args:
             osint_source_ids: List of OSINT source IDs.
+
         Returns:
             list: List of Remote Access IDs.
         """
@@ -174,6 +180,7 @@ class RemoteAccess(db.Model):
 
         Args:
             report_type_id: Report item type ID.
+
         Returns:
             list: List of Remote Access IDs.
         """
@@ -222,6 +229,7 @@ class RemoteAccess(db.Model):
         Args:
             remote_access_id: ID of the Remote Access to update.
             data: Data to update the Remote Access with.
+
         Returns:
             str: Event ID of the Remote Access.
             bool: Whether the Remote Access should be disconnected.
@@ -274,8 +282,7 @@ class RemoteAccess(db.Model):
                     "news_items_provided": len(self.osint_sources) > 0,
                     "report_items_provided": len(self.report_item_types) > 0,
                 }
-            else:
-                return {"error": "unauthorized"}, 401
+            return {"error": "unauthorized"}, 401
 
         except Exception as ex:
             msg = f"Remote Access connecting failed: {ex}"
@@ -341,6 +348,7 @@ class NewRemoteNodeSchema(RemoteNodeSchema):
 
         Args:
             data: Schema data.
+
         Returns:
             RemoteNode: New Remote Node object.
         """
@@ -384,7 +392,17 @@ class RemoteNode(db.Model):
     last_synced_report_items = db.Column(db.DateTime)
 
     def __init__(
-        self, id, name, description, enabled, remote_url, events_url, api_key, sync_news_items, sync_report_items, osint_source_group_id
+        self,
+        id,
+        name,
+        description,
+        enabled,
+        remote_url,
+        events_url,
+        api_key,
+        sync_news_items,
+        sync_report_items,
+        osint_source_group_id,
     ):
         """Initialize a new Remote Node object."""
         self.id = None
@@ -419,6 +437,7 @@ class RemoteNode(db.Model):
 
         Args:
             node_id: ID of the Remote Node to find.
+
         Returns:
             RemoteNode: Remote Node object.
         """
@@ -430,6 +449,7 @@ class RemoteNode(db.Model):
 
         Args:
             search: Search string.
+
         Returns:
             list: List of Remote Nodes.
             int: Number of Remote Nodes.
@@ -448,6 +468,7 @@ class RemoteNode(db.Model):
 
         Args:
             search: Search string.
+
         Returns:
             dict: JSON object containing Remote Nodes.
         """
@@ -485,6 +506,7 @@ class RemoteNode(db.Model):
         Args:
             remote_node_id: ID of the Remote Node to update.
             data: Data to update the Remote Node with.
+
         Returns:
             bool: Whether the Remote Node is enabled.
         """

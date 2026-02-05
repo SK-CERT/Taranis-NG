@@ -1,8 +1,9 @@
-from marshmallow import fields, post_load
 import uuid
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.parameter import NewParameterSchema
+
 from shared.schema.bot import BotSchema
 
 
@@ -21,12 +22,12 @@ class Bot(db.Model):
 
     type = db.Column(db.String(64), nullable=False)
 
-    parameters = db.relationship('Parameter', secondary='bot_parameter')
+    parameters = db.relationship("Parameter", secondary="bot_parameter")
 
-    node_id = db.Column(db.String, db.ForeignKey('bots_node.id'))
+    node_id = db.Column(db.String, db.ForeignKey("bots_node.id"))
     node = db.relationship("BotsNode", back_populates="bots")
 
-    presets = db.relationship('BotPreset', back_populates="bot")
+    presets = db.relationship("BotPreset", back_populates="bot")
 
     def __init__(self, name, description, type, parameters):
         self.id = str(uuid.uuid4())
@@ -42,5 +43,5 @@ class Bot(db.Model):
 
 
 class BotParameter(db.Model):
-    bot_id = db.Column(db.String, db.ForeignKey('bot.id'), primary_key=True)
-    parameter_id = db.Column(db.Integer, db.ForeignKey('parameter.id'), primary_key=True)
+    bot_id = db.Column(db.String, db.ForeignKey("bot.id"), primary_key=True)
+    parameter_id = db.Column(db.Integer, db.ForeignKey("parameter.id"), primary_key=True)

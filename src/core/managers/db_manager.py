@@ -2,8 +2,8 @@
 
 import socket
 import time
-from flask_sqlalchemy import SQLAlchemy
 
+from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
@@ -13,6 +13,7 @@ def initialize(app):
 
     This function sets up the database connection for the provided Flask app
     by initializing the database extension with the app instance.
+
     Args:
         app (Flask): The Flask application instance to initialize the database with.
     """
@@ -36,10 +37,12 @@ def wait_for_db(app, retries=5, delay=1):
     This function attempts to connect to the database specified in the app's configuration.
     It will retry the connection a specified number of times with an exponential backoff delay
     between attempts.
+
     Args:
         app: The application instance containing the configuration with the database URL.
         retries (int, optional): The number of times to retry the connection. Defaults to 5.
         delay (int, optional): The initial delay between retries in seconds. Defaults to 1.
+
     Raises:
         ConnectionError: If the database is not ready after the specified number of retries.
     """
@@ -52,7 +55,7 @@ def wait_for_db(app, retries=5, delay=1):
             db_socket.connect((app.config.get("DB_URL"), 5432))
             db_socket.close()
             return
-        except socket.error as error:
+        except OSError as error:
             attempt += 1
             logger.warning(f"Waiting for database: {error}. Attempt {attempt} of {retries}.")
             time.sleep(delay)

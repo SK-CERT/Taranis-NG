@@ -6,8 +6,8 @@ Create Date: 2025-07-22 17:04:29.412888
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
 

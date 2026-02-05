@@ -1,7 +1,6 @@
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.user import UserSchemaBase
-from shared.schema.presentation import PresentationSchema
 
 
 class ApiKeyBaseSchema(Schema):
@@ -10,7 +9,7 @@ class ApiKeyBaseSchema(Schema):
 
     id = fields.Int()
     name = fields.Str()
-    key = fields.Str() # length 40
+    key = fields.Str()  # length 40
     created_at = fields.DateTime("%d.%m.%Y %H:%M:%S", load_default=None, allow_none=True)
     user_id = fields.Int(load_default=None, allow_none=True)
     expires_at = fields.DateTime("%Y-%m-%d %H:%M", load_default=None, allow_none=True)
@@ -27,12 +26,12 @@ class ApiKeySchema(ApiKeyBaseSchema):
 class ApiKey:
     def __init__(
         self,
-        #id,
+        # id,
         name,
         key,
         created_at,
         user_id,
-        expires_at
+        expires_at,
     ):
         self.id = id
         self.name = name

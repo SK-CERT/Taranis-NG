@@ -6,11 +6,11 @@ Authentication is enforced using decorators from the `auth_manager`.
 
 from flask import request
 from flask_restful import Resource
-
 from managers import auth_manager
 from managers.auth_manager import auth_required
-from model import asset, notification_template, attribute
+from model import asset, attribute, notification_template
 from model.permission import Permission
+
 from shared.schema.attribute import AttributeType
 
 
@@ -19,8 +19,7 @@ class AssetGroups(Resource):
 
     @auth_required("MY_ASSETS_ACCESS")
     def get(self):
-        """
-        Retrieve all asset groups for the authenticated user.
+        """Retrieve all asset groups for the authenticated user.
 
         Query Parameters:
             search (str): Optional search term to filter asset groups.
@@ -29,14 +28,13 @@ class AssetGroups(Resource):
             list: JSON representation of asset groups.
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return asset.AssetGroup.get_all_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
     def post(self):
-        """
-        Create a new asset group.
+        """Create a new asset group.
 
         Request Body:
             JSON: Data for the new asset group.
@@ -52,8 +50,7 @@ class AssetGroup(Resource):
 
     @auth_required("MY_ASSETS_CONFIG")
     def put(self, group_id):
-        """
-        Update an existing asset group.
+        """Update an existing asset group.
 
         Args:
             group_id (str): ID of the asset group to update.
@@ -65,8 +62,7 @@ class AssetGroup(Resource):
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, group_id):
-        """
-        Delete an asset group.
+        """Delete an asset group.
 
         Args:
             group_id (str): ID of the asset group to delete.
@@ -82,8 +78,7 @@ class NotificationTemplates(Resource):
 
     @auth_required("MY_ASSETS_CONFIG")
     def get(self):
-        """
-        Retrieve all notification templates for the authenticated user.
+        """Retrieve all notification templates for the authenticated user.
 
         Query Parameters:
             search (str): Optional search term to filter templates.
@@ -92,14 +87,13 @@ class NotificationTemplates(Resource):
             list: JSON representation of notification templates.
         """
         search = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
         return notification_template.NotificationTemplate.get_all_json(auth_manager.get_user_from_jwt(), search)
 
     @auth_required("MY_ASSETS_CONFIG")
     def post(self):
-        """
-        Create a new notification template.
+        """Create a new notification template.
 
         Request Body:
             JSON: Data for the new notification template.
@@ -115,8 +109,7 @@ class NotificationTemplate(Resource):
 
     @auth_required("MY_ASSETS_CONFIG")
     def put(self, template_id):
-        """
-        Update an existing notification template.
+        """Update an existing notification template.
 
         Args:
             template_id (int): ID of the notification template to update.
@@ -128,8 +121,7 @@ class NotificationTemplate(Resource):
 
     @auth_required("MY_ASSETS_CONFIG")
     def delete(self, template_id):
-        """
-        Delete a notification template.
+        """Delete a notification template.
 
         Args:
             template_id (int): ID of the notification template to delete.
@@ -145,8 +137,7 @@ class Assets(Resource):
 
     @auth_required("MY_ASSETS_ACCESS")
     def get(self, group_id):
-        """
-        Retrieve all assets in a group for the authenticated user.
+        """Retrieve all assets in a group for the authenticated user.
 
         Args:
             group_id (str): ID of the asset group.
@@ -162,18 +153,17 @@ class Assets(Resource):
         search = None
         sort = None
         vulnerable = None
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        if "sort" in request.args and request.args["sort"]:
+        if request.args.get("sort"):
             sort = request.args["sort"]
-        if "vulnerable" in request.args and request.args["vulnerable"]:
+        if request.args.get("vulnerable"):
             vulnerable = request.args["vulnerable"]
         return asset.Asset.get_all_json(auth_manager.get_user_from_jwt(), group_id, search, sort, vulnerable)
 
     @auth_required("MY_ASSETS_CREATE")
     def post(self, group_id):
-        """
-        Create a new asset in a group.
+        """Create a new asset in a group.
 
         Args:
             group_id (str): ID of the asset group.
@@ -192,8 +182,7 @@ class Asset(Resource):
 
     @auth_required("MY_ASSETS_CREATE")
     def put(self, group_id, asset_id):
-        """
-        Update an existing asset.
+        """Update an existing asset.
 
         Args:
             group_id (str): ID of the asset group.
@@ -206,8 +195,7 @@ class Asset(Resource):
 
     @auth_required("MY_ASSETS_CREATE")
     def delete(self, group_id, asset_id):
-        """
-        Delete an asset.
+        """Delete an asset.
 
         Args:
             group_id (str): ID of the asset group.
@@ -224,8 +212,7 @@ class AssetVulnerability(Resource):
 
     @auth_required("MY_ASSETS_CREATE")
     def put(self, group_id, asset_id, vulnerability_id):
-        """
-        Mark a vulnerability as solved for an asset.
+        """Mark a vulnerability as solved for an asset.
 
         Args:
             group_id (str): ID of the asset group.
@@ -246,8 +233,7 @@ class GetAttributeCPE(Resource):
 
     @auth_required("MY_ASSETS_CREATE")
     def get(self):
-        """
-        Retrieve the CPE attribute.
+        """Retrieve the CPE attribute.
 
         Returns:
             int: ID of the CPE attribute.
@@ -261,8 +247,7 @@ class AttributeCPEEnums(Resource):
 
     @auth_required("MY_ASSETS_CREATE")
     def get(self):
-        """
-        Retrieve enums for the CPE attribute.
+        """Retrieve enums for the CPE attribute.
 
         Query Parameters:
             search (str): Optional search term to filter enums.
@@ -276,18 +261,17 @@ class AttributeCPEEnums(Resource):
         search = None
         offset = 0
         limit = 10
-        if "search" in request.args and request.args["search"]:
+        if request.args.get("search"):
             search = request.args["search"]
-        if "offset" in request.args and request.args["offset"]:
+        if request.args.get("offset"):
             offset = request.args["offset"]
-        if "limit" in request.args and request.args["limit"]:
+        if request.args.get("limit"):
             limit = request.args["limit"]
         return attribute.AttributeEnum.get_for_attribute_json(cpe.id, search, offset, limit)
 
 
 def initialize(api):
-    """
-    Initialize the API with the defined resources and permissions.
+    """Initialize the API with the defined resources and permissions.
 
     Args:
         api (Api): Flask-RESTful API instance.
@@ -302,7 +286,8 @@ def initialize(api):
     api.add_resource(Asset, "/api/v1/my-assets/asset-groups/<string:group_id>/assets/<int:asset_id>")
 
     api.add_resource(
-        AssetVulnerability, "/api/v1/my-assets/asset-groups/<string:group_id>/assets/<int:asset_id>/vulnerabilities/<int:vulnerability_id>"
+        AssetVulnerability,
+        "/api/v1/my-assets/asset-groups/<string:group_id>/assets/<int:asset_id>/vulnerabilities/<int:vulnerability_id>",
     )
 
     api.add_resource(GetAttributeCPE, "/api/v1/my-assets/attributes/cpe")

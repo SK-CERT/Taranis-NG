@@ -1,7 +1,7 @@
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
-from shared.schema.presenter import PresenterSchema
 from shared.schema.presentation import PresentationSchema
+from shared.schema.presenter import PresenterSchema
 
 
 class PresentersNodeSchema(Schema):

@@ -1,11 +1,11 @@
 """Remote manager, Server-Sent Events (SSE) handling."""
 
-import requests
-import sseclient
+import json
 import threading
 import time
-import json
 
+import requests
+import sseclient
 from managers import sse_manager
 from managers.log_manager import logger
 from model.news_item import NewsItemAggregate
@@ -22,8 +22,7 @@ class EventThread(threading.Thread):
     app = None
 
     def __init__(self, remote_node, event_handler):
-        """
-        Initialize the EventThread.
+        """Initialize the EventThread.
 
         Args:
             remote_node (RemoteNode): The remote node to connect to.
@@ -45,7 +44,7 @@ class EventThread(threading.Thread):
                     if response is not None and response.text:
                         response_text = " ".join(response.text.strip().splitlines())[:200]
                     logger.error(
-                        f"SSE connection to '{self.remote_node.events_url}' failed, Code: {response.status_code}, Response: {response_text}"
+                        f"SSE connection to '{self.remote_node.events_url}' failed, Code: {response.status_code}, Response: {response_text}",
                     )
                     return
                 client = sseclient.SSEClient(response)
@@ -67,11 +66,13 @@ class EventThread(threading.Thread):
                                         with EventThread.app.app_context():
                                             # print("NEWS", data["news_items"], flush=True)
                                             NewsItemAggregate.add_remote_news_items(
-                                                data["news_items"], self.remote_node, self.remote_node.osint_source_group_id
+                                                data["news_items"],
+                                                self.remote_node,
+                                                self.remote_node.osint_source_group_id,
                                             )
 
                                         RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).confirm_news_items_sync(
-                                            {"last_sync_time": data["last_sync_time"]}
+                                            {"last_sync_time": data["last_sync_time"]},
                                         )
 
                                         with EventThread.app.app_context():
@@ -88,7 +89,7 @@ class EventThread(threading.Thread):
                                             ReportItem.add_remote_report_items(data["report_items"], self.remote_node.name)
 
                                         RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).confirm_report_items_sync(
-                                            {"last_sync_time": data["last_sync_time"]}
+                                            {"last_sync_time": data["last_sync_time"]},
                                         )
 
                                         with EventThread.app.app_context():
@@ -109,8 +110,7 @@ class EventThread(threading.Thread):
 
 
 def connect_to_events(remote_node):
-    """
-    Connect to SSE events for a given remote node.
+    """Connect to SSE events for a given remote node.
 
     Args:
         remote_node (RemoteNode): The remote node to connect to.
@@ -122,8 +122,7 @@ def connect_to_events(remote_node):
 
 
 def disconnect_from_events(remote_node):
-    """
-    Disconnect from SSE events for a given remote node.
+    """Disconnect from SSE events for a given remote node.
 
     Args:
         remote_node (RemoteNode): The remote node to disconnect from.
@@ -133,8 +132,7 @@ def disconnect_from_events(remote_node):
 
 
 def connect_to_node(node_id):
-    """
-    Connect to a remote node by its ID.
+    """Connect to a remote node by its ID.
 
     Args:
         node_id (int): The ID of the remote node to connect to.
@@ -156,8 +154,7 @@ def connect_to_node(node_id):
 
 
 def disconnect_from_node(node_id):
-    """
-    Disconnect from a remote node by its ID.
+    """Disconnect from a remote node by its ID.
 
     Args:
         node_id (int): The ID of the remote node to disconnect from.
@@ -167,8 +164,7 @@ def disconnect_from_node(node_id):
 
 
 def initialize(app):
-    """
-    Initialize the remote manager with the given application context.
+    """Initialize the remote manager with the given application context.
 
     Args:
         app: The application context to use.

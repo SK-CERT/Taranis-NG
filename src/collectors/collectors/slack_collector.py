@@ -2,16 +2,17 @@
 
 import datetime
 import hashlib
-import uuid
-import time
 import socket
+import time
+import uuid
 
 from slack import WebClient
 
-from .base_collector import BaseCollector
 from shared.common import ignore_exceptions, smart_truncate
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+
+from .base_collector import BaseCollector
 
 
 # the slackclient project is in maintenance mode now, "slack_sdk" is successor: https://pypi.org/project/slack-sdk/
@@ -23,6 +24,7 @@ class SlackCollector(BaseCollector):
         name (str): Name of the collector.
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
+
     Methods:
         collect(): Collects data from Slack source.
     """
@@ -40,7 +42,6 @@ class SlackCollector(BaseCollector):
         proxy_server = self.source.param_key_values["PROXY_SERVER"]
 
         if proxy_server:
-
             server = "https://slack.com"
             port = 443
 

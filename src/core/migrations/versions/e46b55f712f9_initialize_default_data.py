@@ -7,11 +7,11 @@ Create Date: 2022-06-03 11:08:51.663784
 """
 
 from enum import Enum, auto
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
-
 
 Base = declarative_base()
 
@@ -214,7 +214,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="CVSS").first():
         print("Adding default CVSS attribute.", flush=True)
         attr_cvss = AttributeREVe46b55f712f9(
-            "CVSS", "Common Vulnerability Scoring System element", AttributeTypeREVe46b55f712f9.CVSS, None, None, None
+            "CVSS",
+            "Common Vulnerability Scoring System element",
+            AttributeTypeREVe46b55f712f9.CVSS,
+            None,
+            None,
+            None,
         )
         session.add(attr_cvss)
         session.commit()
@@ -222,7 +227,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="CVE").first():
         print("Adding default CVE attribute.", flush=True)
         attr_cve = AttributeREVe46b55f712f9(
-            "CVE", "Common Vulnerabilities and Exposures element", AttributeTypeREVe46b55f712f9.CVE, None, None, None
+            "CVE",
+            "Common Vulnerabilities and Exposures element",
+            AttributeTypeREVe46b55f712f9.CVE,
+            None,
+            None,
+            None,
         )
         session.add(attr_cve)
         session.commit()
@@ -236,7 +246,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="Confidentiality").first():
         print("Adding default Confidentiality attribute.", flush=True)
         attr_conf = AttributeREVe46b55f712f9(
-            "Confidentiality", "Radio box for confidentiality level", AttributeTypeREVe46b55f712f9.RADIO, None, None, None
+            "Confidentiality",
+            "Radio box for confidentiality level",
+            AttributeTypeREVe46b55f712f9.RADIO,
+            None,
+            None,
+            None,
         )
         session.add(attr_conf)
         session.commit()
@@ -254,8 +269,11 @@ def upgrade():
         session.commit()
         session.add(
             AttributeEnumREVe46b55f712f9(
-                0, "Malicious code execution affecting overall confidentiality, integrity, and availability of the system", "", attr_impact.id
-            )
+                0,
+                "Malicious code execution affecting overall confidentiality, integrity, and availability of the system",
+                "",
+                attr_impact.id,
+            ),
         )
         session.add(AttributeEnumREVe46b55f712f9(1, "Malicious code execution", "", attr_impact.id))
         session.add(AttributeEnumREVe46b55f712f9(2, "Denial of service", "", attr_impact.id))
@@ -268,7 +286,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="Additional Data").first():
         print("Adding default Additional Data attribute.", flush=True)
         attr_attribute_data = AttributeREVe46b55f712f9(
-            "Additional Data", "Radio box for MISP additional data", AttributeTypeREVe46b55f712f9.RADIO, None, None, None
+            "Additional Data",
+            "Radio box for MISP additional data",
+            AttributeTypeREVe46b55f712f9.RADIO,
+            None,
+            None,
+            None,
         )
         session.add(attr_attribute_data)
         session.commit()
@@ -279,7 +302,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="MISP Event Distribution").first():
         print("Adding default MISP Event Distribution attribute.", flush=True)
         attr_event_distribution = AttributeREVe46b55f712f9(
-            "MISP Event Distribution", "Combo box for MISP event distribution", AttributeTypeREVe46b55f712f9.ENUM, None, None, None
+            "MISP Event Distribution",
+            "Combo box for MISP event distribution",
+            AttributeTypeREVe46b55f712f9.ENUM,
+            None,
+            None,
+            None,
         )
         session.add(attr_event_distribution)
         session.commit()
@@ -292,7 +320,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="MISP Event Threat Level").first():
         print("Adding default MISP Event Threat Level attribute.", flush=True)
         attr_event_threat_level = AttributeREVe46b55f712f9(
-            "MISP Event Threat Level", "Combo box for MISP event threat level", AttributeTypeREVe46b55f712f9.ENUM, None, None, None
+            "MISP Event Threat Level",
+            "Combo box for MISP event threat level",
+            AttributeTypeREVe46b55f712f9.ENUM,
+            None,
+            None,
+            None,
         )
         session.add(attr_event_threat_level)
         session.commit()
@@ -305,7 +338,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="MISP Event Analysis").first():
         print("Adding default MISP Event Analysis attribute.", flush=True)
         attr_event_analysis = AttributeREVe46b55f712f9(
-            "MISP Event Analysis", "Combo box for MISP event analysis", AttributeTypeREVe46b55f712f9.ENUM, None, None, None
+            "MISP Event Analysis",
+            "Combo box for MISP event analysis",
+            AttributeTypeREVe46b55f712f9.ENUM,
+            None,
+            None,
+            None,
         )
         session.add(attr_event_analysis)
         session.commit()
@@ -317,7 +355,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="MISP Attribute Category").first():
         print("Adding default MISP Attribute Category attribute.", flush=True)
         attr_attribute_category = AttributeREVe46b55f712f9(
-            "MISP Attribute Category", "Combo box for MISP attribute category", AttributeTypeREVe46b55f712f9.ENUM, None, None, None
+            "MISP Attribute Category",
+            "Combo box for MISP attribute category",
+            AttributeTypeREVe46b55f712f9.ENUM,
+            None,
+            None,
+            None,
         )
         session.add(attr_attribute_category)
         session.commit()
@@ -342,7 +385,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="MISP Attribute Type").first():
         print("Adding default MISP Attribute Type attribute.", flush=True)
         attr_attribute_type = AttributeREVe46b55f712f9(
-            "MISP Attribute Type", "Combo box for MISP attribute type", AttributeTypeREVe46b55f712f9.ENUM, None, None, None
+            "MISP Attribute Type",
+            "Combo box for MISP attribute type",
+            AttributeTypeREVe46b55f712f9.ENUM,
+            None,
+            None,
+            None,
         )
         session.add(attr_attribute_type)
         session.commit()
@@ -509,7 +557,12 @@ def upgrade():
     if not session.query(AttributeREVe46b55f712f9).filter_by(name="MISP Attribute Distribution").first():
         print("Adding default MISP Attribute Distribution attribute.", flush=True)
         attr_attribute_distribution = AttributeREVe46b55f712f9(
-            "MISP Attribute Distribution", "Combo box for MISP attribute type", AttributeTypeREVe46b55f712f9.ENUM, None, None, None
+            "MISP Attribute Distribution",
+            "Combo box for MISP attribute type",
+            AttributeTypeREVe46b55f712f9.ENUM,
+            None,
+            None,
+            None,
         )
         session.add(attr_attribute_distribution)
         session.commit()
@@ -537,13 +590,25 @@ def upgrade():
 
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "CVSS", "", 0, 1, 1, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="CVSS").first().id
-            )
+                "CVSS",
+                "",
+                0,
+                1,
+                1,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="CVSS").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "TLP", "", 1, 1, 1, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="TLP").first().id
-            )
+                "TLP",
+                "",
+                1,
+                1,
+                1,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="TLP").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
@@ -554,56 +619,110 @@ def upgrade():
                 1,
                 group1.id,
                 session.query(AttributeREVe46b55f712f9).filter_by(name="Confidentiality").first().id,
-            )
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Description", "", 3, 1, 1, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text Area").first().id
-            )
+                "Description",
+                "",
+                3,
+                1,
+                1,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text Area").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Exposure Date", "", 4, 1, 1, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id
-            )
+                "Exposure Date",
+                "",
+                4,
+                1,
+                1,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Update Date", "", 5, 1, 1, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id
-            )
+                "Update Date",
+                "",
+                5,
+                1,
+                1,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "CVE", "", 6, 0, 1000, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="CVE").first().id
-            )
+                "CVE",
+                "",
+                6,
+                0,
+                1000,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="CVE").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Impact", "", 7, 0, 1000, group1.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Impact").first().id
-            )
+                "Impact",
+                "",
+                7,
+                0,
+                1000,
+                group1.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Impact").first().id,
+            ),
         )
         session.commit()
 
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Affected systems", "", 0, 0, 1000, group2.id, session.query(AttributeREVe46b55f712f9).filter_by(name="CPE").first().id
-            )
+                "Affected systems",
+                "",
+                0,
+                0,
+                1000,
+                group2.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="CPE").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "IOC", "", 1, 0, 1000, group2.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "IOC",
+                "",
+                1,
+                0,
+                1000,
+                group2.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Recommendations", "", 2, 1, 1, group2.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text Area").first().id
-            )
+                "Recommendations",
+                "",
+                2,
+                1,
+                1,
+                group2.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text Area").first().id,
+            ),
         )
         session.commit()
 
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Links", "", 0, 0, 1000, group3.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Links",
+                "",
+                0,
+                0,
+                1000,
+                group3.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.commit()
 
@@ -621,45 +740,93 @@ def upgrade():
 
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Event distribution", "", 0, 1, 1, group4.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Event distribution",
+                "",
+                0,
+                1,
+                1,
+                group4.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Event threat level", "", 1, 1, 1, group4.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Event threat level",
+                "",
+                1,
+                1,
+                1,
+                group4.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Event analysis", "", 2, 1, 1, group4.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Event analysis",
+                "",
+                2,
+                1,
+                1,
+                group4.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Event info", "", 2, 1, 1, group4.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Event info",
+                "",
+                2,
+                1,
+                1,
+                group4.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.commit()
 
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Attribute category", "", 0, 1, 1, group5.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Attribute category",
+                "",
+                0,
+                1,
+                1,
+                group5.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Attribute type", "", 1, 1, 1, group5.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Attribute type",
+                "",
+                1,
+                1,
+                1,
+                group5.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Attribute distribution", "", 2, 1, 1, group5.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id
-            )
+                "Attribute distribution",
+                "",
+                2,
+                1,
+                1,
+                group5.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Attribute value", "", 3, 1, 1, group5.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Text Area").first().id
-            )
+                "Attribute value",
+                "",
+                3,
+                1,
+                1,
+                group5.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Text Area").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
@@ -670,7 +837,7 @@ def upgrade():
                 1,
                 group5.id,
                 session.query(AttributeREVe46b55f712f9).filter_by(name="Text").first().id,
-            )
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
@@ -681,17 +848,29 @@ def upgrade():
                 1,
                 group5.id,
                 session.query(AttributeREVe46b55f712f9).filter_by(name="Additional Data").first().id,
-            )
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "First seen date", "", 6, 1, 1, group5.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id
-            )
+                "First seen date",
+                "",
+                6,
+                1,
+                1,
+                group5.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id,
+            ),
         )
         session.add(
             AttributeGroupItemREVe46b55f712f9(
-                "Last seen date", "", 7, 1, 1, group5.id, session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id
-            )
+                "Last seen date",
+                "",
+                7,
+                1,
+                1,
+                group5.id,
+                session.query(AttributeREVe46b55f712f9).filter_by(name="Date").first().id,
+            ),
         )
         session.commit()
 

@@ -6,10 +6,10 @@ Create Date: 2023-02-10 11:01:49.783544
 
 """
 
+import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
-import sqlalchemy as sa
 
 Base = declarative_base()
 

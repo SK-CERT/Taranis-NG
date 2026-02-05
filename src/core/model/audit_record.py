@@ -19,8 +19,7 @@ class AuditRecord(db.Model):
     activity_resource = db.Column(db.String())
     activity_detail = db.Column(db.String())
 
-    def __init__(self, ip_address, user_id, user_name, system_id, system_name, activity_type, activity_resource,
-                 activity_detail):
+    def __init__(self, ip_address, user_id, user_name, system_id, system_name, activity_type, activity_resource, activity_detail):
         self.id = None
         self.ip_address = ip_address
         self.user_id = user_id
@@ -32,9 +31,7 @@ class AuditRecord(db.Model):
         self.activity_detail = activity_detail
 
     @classmethod
-    def store(cls, ip_address, user_id, user_name, system_id, system_name, activity_type, activity_resource,
-              activity_detail):
-        audit_record = AuditRecord(ip_address, user_id, user_name, system_id, system_name, activity_type,
-                                   activity_resource, activity_detail)
+    def store(cls, ip_address, user_id, user_name, system_id, system_name, activity_type, activity_resource, activity_detail):
+        audit_record = AuditRecord(ip_address, user_id, user_name, system_id, system_name, activity_type, activity_resource, activity_detail)
         db.session.add(audit_record)
         db.session.commit()
