@@ -1,15 +1,15 @@
 """Implement SSE functionality."""
 
-from sse.sse import SSE
 from datetime import datetime
 
-from shared import time_manager
 from model.remote import RemoteAccess
+from sse.sse import SSE
+
+from shared import time_manager
 
 
 class SSEManager:
-    """
-    Manages Server-Sent Events (SSE) for various application events.
+    """Manages Server-Sent Events (SSE) for various application events.
 
     Attributes:
         report_item_locks (dict): A dictionary to track locks on report items.
@@ -32,8 +32,7 @@ class SSEManager:
         self.sse.publish({}, event="report-items-updated")
 
     def report_item_updated(self, data):
-        """
-        Publish an event for a specific report item update.
+        """Publish an event for a specific report item update.
 
         Args:
             data (dict): Data related to the updated report item.
@@ -41,8 +40,7 @@ class SSEManager:
         self.sse.publish(data, event="report-item-updated")
 
     def remote_access_disconnect(self, data):
-        """
-        Publish an event for remote access disconnection.
+        """Publish an event for remote access disconnection.
 
         Args:
             data (dict): Data related to the remote access disconnection.
@@ -50,8 +48,7 @@ class SSEManager:
         self.sse.publish(data, event="remote_access_disconnect", channel="remote")
 
     def remote_access_news_items_updated(self, osint_source_ids):
-        """
-        Publish an event for updated news items in remote access.
+        """Publish an event for updated news items in remote access.
 
         Args:
             osint_source_ids (list): List of OSINT source IDs.
@@ -60,8 +57,7 @@ class SSEManager:
         self.sse.publish(remote_access_event_ids, event="remote_access_news_items_updated", channel="remote")
 
     def remote_access_report_items_updated(self, report_item_type_id):
-        """
-        Publish an event for updated report items in remote access.
+        """Publish an event for updated report items in remote access.
 
         Args:
             report_item_type_id (int): ID of the report item type.
@@ -70,8 +66,7 @@ class SSEManager:
         self.sse.publish(remote_access_event_ids, event="remote_access_report_items_updated", channel="remote")
 
     def report_item_lock(self, report_item_id, field_id, user_id):
-        """
-        Lock a specific field of a report item for a user.
+        """Lock a specific field of a report item for a user.
 
         Args:
             report_item_id (int): ID of the report item.
@@ -89,8 +84,7 @@ class SSEManager:
             self.sse.publish({"report_item_id": int(report_item_id), "field_id": field_id, "user_id": user_id}, event="report-item-locked")
 
     def report_item_unlock(self, report_item_id, field_id, user_id):
-        """
-        Unlock a specific field of a report item.
+        """Unlock a specific field of a report item.
 
         Args:
             report_item_id (int): ID of the report item.
@@ -106,8 +100,7 @@ class SSEManager:
         self.sse.publish({"report_item_id": int(report_item_id), "field_id": field_id, "user_id": user_id}, event="report-item-unlocked")
 
     def report_item_hold_lock(self, report_item_id, field_id, user_id):
-        """
-        Extend the lock time for a specific field of a report item.
+        """Extend the lock time for a specific field of a report item.
 
         Args:
             report_item_id (int): ID of the report item.
@@ -121,8 +114,7 @@ class SSEManager:
                     report_item[field_id]["lock_time"] = datetime.now()
 
     def check_report_item_locks(self, app):
-        """
-        Check and releases expired locks on report items.
+        """Check and releases expired locks on report items.
 
         Args:
             app: The application context for publishing events.
@@ -142,8 +134,7 @@ sse_manager = SSEManager()
 
 
 def initialize(app):
-    """
-    Initialize the SSEManager and schedules periodic lock checks.
+    """Initialize the SSEManager and schedules periodic lock checks.
 
     Args:
         app: The application instance.

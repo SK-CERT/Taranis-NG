@@ -2,10 +2,12 @@
 
 import datetime
 import time
-from shared import time_manager
-from shared.log_manager import logger, create_logger
-from shared.schema import bot, bot_preset
+
 from remote.core_api import CoreApi
+
+from shared import time_manager
+from shared.log_manager import create_logger, logger
+from shared.schema import bot, bot_preset
 
 
 class BaseBot:
@@ -53,6 +55,7 @@ class BaseBot:
         Parameters:
             interval (str or int): The interval to calculate the limit from. It can be a string representing a time interval in
                 the format "X:Y" (where X is a number and Y is a unit of time) or an integer representing the number of minutes.
+
         Returns:
             (str): The timestamp limit in the format "%d.%m.%Y - %H:%M".
         """
@@ -62,15 +65,14 @@ class BaseBot:
         elif interval[0].isalpha():
             limit = datetime.datetime.now() - datetime.timedelta(weeks=1)
             limit = limit.strftime("%d.%m.%Y - %H:%M")
+        elif int(interval) > 60:
+            hours = int(interval) // 60
+            minutes = int(interval) - hours * 60
+            limit = datetime.datetime.now() - datetime.timedelta(days=0, hours=hours, minutes=minutes)
+            limit = limit.strftime("%d.%m.%Y - %H:%M")
         else:
-            if int(interval) > 60:
-                hours = int(interval) // 60
-                minutes = int(interval) - hours * 60
-                limit = datetime.datetime.now() - datetime.timedelta(days=0, hours=hours, minutes=minutes)
-                limit = limit.strftime("%d.%m.%Y - %H:%M")
-            else:
-                limit = datetime.datetime.now() - datetime.timedelta(days=0, hours=0, minutes=int(interval))
-                limit = limit.strftime("%d.%m.%Y - %H:%M")
+            limit = datetime.datetime.now() - datetime.timedelta(days=0, hours=0, minutes=int(interval))
+            limit = limit.strftime("%d.%m.%Y - %H:%M")
 
         return limit
 
@@ -126,7 +128,7 @@ class BaseBot:
                         preset.logger.debug(f"Scheduling for {preset.scheduler_job.next_run} (in {interval} minutes)")
 
         else:
-            logger.error(f"Bots presets not received, Code: {code}" f"{', response: ' + str(response) if response is not None else ''}")
+            logger.error(f"Bots presets not received, Code: {code}{', response: ' + str(response) if response is not None else ''}")
 
     def run_preset(self, preset) -> None:
         """Run the bot on the given preset.

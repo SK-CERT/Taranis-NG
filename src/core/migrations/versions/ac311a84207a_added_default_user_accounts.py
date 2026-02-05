@@ -6,8 +6,8 @@ Create Date: 2022-07-01 20:12:38.716047
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
 
@@ -178,7 +178,10 @@ def upgrade():
     PermissionREVac311a84207a.add(session, "CONFIG_ACL_UPDATE", "Config acl update", "Update acl configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_ACL_DELETE", "Config acl delete", "Delete acl configuration")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRODUCT_TYPE_ACCESS", "Config product types access", "Access to product types configuration"
+        session,
+        "CONFIG_PRODUCT_TYPE_ACCESS",
+        "Config product types access",
+        "Access to product types configuration",
     )
     PermissionREVac311a84207a.add(session, "CONFIG_PRODUCT_TYPE_CREATE", "Config product type create", "Create product type configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_PRODUCT_TYPE_UPDATE", "Config product type update", "Update product type configuration")
@@ -188,53 +191,95 @@ def upgrade():
     PermissionREVac311a84207a.add(session, "CONFIG_ATTRIBUTE_UPDATE", "Config attribute update", "Update attribute configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_ATTRIBUTE_DELETE", "Config attribute delete", "Delete attribute configuration")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_REPORT_TYPE_ACCESS", "Config report item types access", "Access to report item types configuration"
+        session,
+        "CONFIG_REPORT_TYPE_ACCESS",
+        "Config report item types access",
+        "Access to report item types configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_REPORT_TYPE_CREATE", "Config report item type create", "Create report item type configuration"
+        session,
+        "CONFIG_REPORT_TYPE_CREATE",
+        "Config report item type create",
+        "Create report item type configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_REPORT_TYPE_UPDATE", "Config report item type update", "Update report item type configuration"
+        session,
+        "CONFIG_REPORT_TYPE_UPDATE",
+        "Config report item type update",
+        "Update report item type configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_REPORT_TYPE_DELETE", "Config report item type delete", "Delete report item type configuration"
+        session,
+        "CONFIG_REPORT_TYPE_DELETE",
+        "Config report item type delete",
+        "Delete report item type configuration",
     )
     PermissionREVac311a84207a.add(session, "CONFIG_WORD_LIST_ACCESS", "Config word lists access", "Access to word lists configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_WORD_LIST_CREATE", "Config word list create", "Create word list configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_WORD_LIST_UPDATE", "Config word list update", "Update word list configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_WORD_LIST_DELETE", "Config word list delete", "Delete word list configuration")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_COLLECTORS_NODE_ACCESS", "Config collectors nodes access", "Access to collectors nodes configuration"
+        session,
+        "CONFIG_COLLECTORS_NODE_ACCESS",
+        "Config collectors nodes access",
+        "Access to collectors nodes configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_COLLECTORS_NODE_CREATE", "Config collectors node create", "Create collectors node configuration"
+        session,
+        "CONFIG_COLLECTORS_NODE_CREATE",
+        "Config collectors node create",
+        "Create collectors node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_COLLECTORS_NODE_UPDATE", "Config collectors node update", "Update collectors node configuration"
+        session,
+        "CONFIG_COLLECTORS_NODE_UPDATE",
+        "Config collectors node update",
+        "Update collectors node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_COLLECTORS_NODE_DELETE", "Config collectors node delete", "Delete collectors node configuration"
+        session,
+        "CONFIG_COLLECTORS_NODE_DELETE",
+        "Config collectors node delete",
+        "Delete collectors node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_OSINT_SOURCE_ACCESS", "Config OSINT source access", "Access to OSINT sources configuration"
+        session,
+        "CONFIG_OSINT_SOURCE_ACCESS",
+        "Config OSINT source access",
+        "Access to OSINT sources configuration",
     )
     PermissionREVac311a84207a.add(session, "CONFIG_OSINT_SOURCE_CREATE", "Config OSINT source create", "Create OSINT source configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_OSINT_SOURCE_UPDATE", "Config OSINT source update", "Update OSINT source configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_OSINT_SOURCE_DELETE", "Config OSINT source delete", "Delete OSINT source configuration")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_OSINT_SOURCE_GROUP_ACCESS", "Config OSINT source group access", "Access to OSINT sources groups configuration"
+        session,
+        "CONFIG_OSINT_SOURCE_GROUP_ACCESS",
+        "Config OSINT source group access",
+        "Access to OSINT sources groups configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_OSINT_SOURCE_GROUP_CREATE", "Config OSINT source group create", "Create OSINT source group configuration"
+        session,
+        "CONFIG_OSINT_SOURCE_GROUP_CREATE",
+        "Config OSINT source group create",
+        "Create OSINT source group configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_OSINT_SOURCE_GROUP_UPDATE", "Config OSINT source group update", "Update OSINT source group configuration"
+        session,
+        "CONFIG_OSINT_SOURCE_GROUP_UPDATE",
+        "Config OSINT source group update",
+        "Update OSINT source group configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_OSINT_SOURCE_GROUP_DELETE", "Config OSINT source group delete", "Delete OSINT source group configuration"
+        session,
+        "CONFIG_OSINT_SOURCE_GROUP_DELETE",
+        "Config OSINT source group delete",
+        "Delete OSINT source group configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_REMOTE_ACCESS_ACCESS", "Config remote access access", "Access to remote access configuration"
+        session,
+        "CONFIG_REMOTE_ACCESS_ACCESS",
+        "Config remote access access",
+        "Access to remote access configuration",
     )
     PermissionREVac311a84207a.add(session, "CONFIG_REMOTE_ACCESS_CREATE", "Config remote access create", "Create remote access configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_REMOTE_ACCESS_UPDATE", "Config remote access update", "Update remote access configuration")
@@ -244,40 +289,76 @@ def upgrade():
     PermissionREVac311a84207a.add(session, "CONFIG_REMOTE_NODE_UPDATE", "Config remote node update", "Update remote node configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_REMOTE_NODE_DELETE", "Config remote node delete", "Delete remote node configuration")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_ACCESS", "Config presenters nodes access", "Access to presenters nodes configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_ACCESS",
+        "Config presenters nodes access",
+        "Access to presenters nodes configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_CREATE", "Config presenters node create", "Create presenters node configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_CREATE",
+        "Config presenters node create",
+        "Create presenters node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_UPDATE", "Config presenters node update", "Update presenters node configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_UPDATE",
+        "Config presenters node update",
+        "Update presenters node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_DELETE", "Config presenters node delete", "Delete presenters node configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_DELETE",
+        "Config presenters node delete",
+        "Delete presenters node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_ACCESS", "Config publishers nodes access", "Access to publishers nodes configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_ACCESS",
+        "Config publishers nodes access",
+        "Access to publishers nodes configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_CREATE", "Config publishers node create", "Create publishers node configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_CREATE",
+        "Config publishers node create",
+        "Create publishers node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_UPDATE", "Config publishers node update", "Update publishers node configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_UPDATE",
+        "Config publishers node update",
+        "Update publishers node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_DELETE", "Config publishers node delete", "Delete publishers node configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_DELETE",
+        "Config publishers node delete",
+        "Delete publishers node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_ACCESS", "Config publisher presets access", "Access to publisher presets configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_ACCESS",
+        "Config publisher presets access",
+        "Access to publisher presets configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_CREATE", "Config publisher preset create", "Create publisher preset configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_CREATE",
+        "Config publisher preset create",
+        "Create publisher preset configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_UPDATE", "Config publisher preset update", "Update publisher preset configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_UPDATE",
+        "Config publisher preset update",
+        "Update publisher preset configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_DELETE", "Config publisher preset delete", "Delete publisher preset configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_DELETE",
+        "Config publisher preset delete",
+        "Delete publisher preset configuration",
     )
     PermissionREVac311a84207a.add(session, "CONFIG_BOTS_NODE_ACCESS", "Config bots nodes access", "Access to bots nodes configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_BOTS_NODE_CREATE", "Config bots node create", "Create bots node configuration")
@@ -288,16 +369,28 @@ def upgrade():
     PermissionREVac311a84207a.add(session, "CONFIG_BOT_PRESET_UPDATE", "Config bot preset update", "Update bot preset configuration")
     PermissionREVac311a84207a.add(session, "CONFIG_BOT_PRESET_DELETE", "Config bot preset delete", "Delete bot preset configuration")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_ACCESS", "Config presenters nodes access", "Access to presenters nodes configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_ACCESS",
+        "Config presenters nodes access",
+        "Access to presenters nodes configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_CREATE", "Config presenters node create", "Create presenters node configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_CREATE",
+        "Config presenters node create",
+        "Create presenters node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_UPDATE", "Config presenters node update", "Update presenters node configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_UPDATE",
+        "Config presenters node update",
+        "Update presenters node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PRESENTERS_NODE_DELETE", "Config presenters node delete", "Delete presenters node configuration"
+        session,
+        "CONFIG_PRESENTERS_NODE_DELETE",
+        "Config presenters node delete",
+        "Delete presenters node configuration",
     )
     PermissionREVac311a84207a.add(session, "PUBLISH_ACCESS", "Publish access", "Access to publish module")
     PermissionREVac311a84207a.add(session, "PUBLISH_CREATE", "Publish create", "Create product")
@@ -305,28 +398,52 @@ def upgrade():
     PermissionREVac311a84207a.add(session, "PUBLISH_DELETE", "Publish delete", "Delete product")
     PermissionREVac311a84207a.add(session, "PUBLISH_PRODUCT", "Publish product", "Publish product")
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_ACCESS", "Config publishers nodes access", "Access to publishers nodes configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_ACCESS",
+        "Config publishers nodes access",
+        "Access to publishers nodes configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_CREATE", "Config publishers node create", "Create publishers node configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_CREATE",
+        "Config publishers node create",
+        "Create publishers node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_UPDATE", "Config publishers node update", "Update publishers node configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_UPDATE",
+        "Config publishers node update",
+        "Update publishers node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHERS_NODE_DELETE", "Config publishers node delete", "Delete publishers node configuration"
+        session,
+        "CONFIG_PUBLISHERS_NODE_DELETE",
+        "Config publishers node delete",
+        "Delete publishers node configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_ACCESS", "Config publisher presets access", "Access to publisher presets configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_ACCESS",
+        "Config publisher presets access",
+        "Access to publisher presets configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_CREATE", "Config publisher preset create", "Create publisher preset configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_CREATE",
+        "Config publisher preset create",
+        "Create publisher preset configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_UPDATE", "Config publisher preset update", "Update publisher preset configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_UPDATE",
+        "Config publisher preset update",
+        "Update publisher preset configuration",
     )
     PermissionREVac311a84207a.add(
-        session, "CONFIG_PUBLISHER_PRESET_DELETE", "Config publisher preset delete", "Delete publisher preset configuration"
+        session,
+        "CONFIG_PUBLISHER_PRESET_DELETE",
+        "Config publisher preset delete",
+        "Delete publisher preset configuration",
     )
     session.commit()
 
@@ -347,7 +464,9 @@ def upgrade():
         session.commit()
 
         organization = OrganizationREVac311a84207a(
-            "The Earth", "Earth is the third planet from the Sun and the only astronomical object known to harbor life.", address.id
+            "The Earth",
+            "Earth is the third planet from the Sun and the only astronomical object known to harbor life.",
+            address.id,
         )
         session.add(organization)
         session.commit()
@@ -396,7 +515,9 @@ def upgrade():
         session.commit()
 
         organization = OrganizationREVac311a84207a(
-            "The Clacks", "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.", address.id
+            "The Clacks",
+            "A network infrastructure of Semaphore Towers, that operate in a similar fashion to telegraph.",
+            address.id,
         )
         session.add(organization)
         session.commit()

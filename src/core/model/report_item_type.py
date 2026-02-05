@@ -1,17 +1,17 @@
 """Report item type model."""
 
-from marshmallow import fields, post_load
-from sqlalchemy import orm, or_, and_
 import sqlalchemy
-from sqlalchemy.sql.expression import cast
-
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.ai_provider import AiProvider
+from sqlalchemy import and_, or_, orm
+from sqlalchemy.sql.expression import cast
+
 from shared.schema.acl_entry import ItemType
 from shared.schema.report_item_type import (
-    AttributeGroupItemSchema,
     AttributeGroupBaseSchema,
+    AttributeGroupItemSchema,
     ReportItemTypeBaseSchema,
     ReportItemTypePresentationSchema,
 )
@@ -32,6 +32,7 @@ class NewAttributeGroupItemSchema(AttributeGroupItemSchema):
 
         Args:
             data (dict): Data.
+
         Returns:
             AttributeGroupItem: Attribute group item.
         """
@@ -97,6 +98,7 @@ class AttributeGroupItem(db.Model):
 
         Args:
             id (int): Id.
+
         Returns:
             AttributeGroupItem: Attribute group item.
         """
@@ -118,6 +120,7 @@ class NewAttributeGroupSchema(AttributeGroupBaseSchema):
 
         Args:
             data (dict): Data.
+
         Returns:
             AttributeGroup: Attribute group.
         """
@@ -151,7 +154,11 @@ class AttributeGroup(db.Model):
     report_item_type = db.relationship("ReportItemType")
 
     attribute_group_items = db.relationship(
-        "AttributeGroupItem", back_populates="attribute_group", cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroupItem.index
+        "AttributeGroupItem",
+        back_populates="attribute_group",
+        cascade="all, delete-orphan",
+        lazy="joined",
+        order_by=AttributeGroupItem.index,
     )
 
     def __init__(self, id, title, description, section, section_title, index, attribute_group_items):
@@ -225,6 +232,7 @@ class NewReportItemTypeSchema(ReportItemTypeBaseSchema):
 
         Args:
             data (dict): Data.
+
         Returns:
             ReportItemType: Report item type.
         """
@@ -248,7 +256,11 @@ class ReportItemType(db.Model):
     description = db.Column(db.String())
 
     attribute_groups = db.relationship(
-        "AttributeGroup", back_populates="report_item_type", cascade="all, delete-orphan", lazy="joined", order_by=AttributeGroup.index
+        "AttributeGroup",
+        back_populates="report_item_type",
+        cascade="all, delete-orphan",
+        lazy="joined",
+        order_by=AttributeGroup.index,
     )
 
     def __init__(self, id, title, description, attribute_groups):
@@ -272,6 +284,7 @@ class ReportItemType(db.Model):
 
         Args:
             id (int): Id.
+
         Returns:
             ReportItemType: Report item type.
         """
@@ -296,13 +309,15 @@ class ReportItemType(db.Model):
             see (bool): See.
             access (bool): Access.
             modify (bool): Modify.
+
         Returns:
             bool: True if allowed, False otherwise.
         """
         query = db.session.query(ReportItemType.id).distinct().group_by(ReportItemType.id).filter(ReportItemType.id == report_item_type_id)
 
         query = query.outerjoin(
-            ACLEntry, and_(cast(ReportItemType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE)
+            ACLEntry,
+            and_(cast(ReportItemType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE),
         )
 
         query = ACLEntry.apply_query(query, user, see, access, modify)
@@ -317,6 +332,7 @@ class ReportItemType(db.Model):
             search (str): Search.
             user (User): User.
             acl_check (bool): Acl check.
+
         Returns:
             list: Report item types.
         """
@@ -343,6 +359,7 @@ class ReportItemType(db.Model):
             search (str): Search.
             user (User): User.
             acl_check (bool): Acl check.
+
         Returns:
             dict: Report item types.
         """

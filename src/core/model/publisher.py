@@ -1,8 +1,9 @@
-from marshmallow import fields, post_load
 import uuid
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.parameter import NewParameterSchema
+
 from shared.schema.publisher import PublisherSchema
 
 
@@ -21,12 +22,12 @@ class Publisher(db.Model):
 
     type = db.Column(db.String(), nullable=False)
 
-    parameters = db.relationship('Parameter', secondary='publisher_parameter')
+    parameters = db.relationship("Parameter", secondary="publisher_parameter")
 
-    node_id = db.Column(db.String, db.ForeignKey('publishers_node.id'))
+    node_id = db.Column(db.String, db.ForeignKey("publishers_node.id"))
     node = db.relationship("PublishersNode", back_populates="publishers")
 
-    presets = db.relationship('PublisherPreset', back_populates="publisher")
+    presets = db.relationship("PublisherPreset", back_populates="publisher")
 
     def __init__(self, name, description, type, parameters):
         self.id = str(uuid.uuid4())
@@ -42,5 +43,5 @@ class Publisher(db.Model):
 
 
 class PublisherParameter(db.Model):
-    publisher_id = db.Column(db.String, db.ForeignKey('publisher.id'), primary_key=True)
-    parameter_id = db.Column(db.Integer, db.ForeignKey('parameter.id'), primary_key=True)
+    publisher_id = db.Column(db.String, db.ForeignKey("publisher.id"), primary_key=True)
+    parameter_id = db.Column(db.Integer, db.ForeignKey("parameter.id"), primary_key=True)

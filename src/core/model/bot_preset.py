@@ -1,12 +1,13 @@
 """BotPreset model."""
 
-from marshmallow import post_load, fields
 import uuid
-from sqlalchemy import or_, orm
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.parameter_value import NewParameterValueSchema
-from shared.schema.bot_preset import BotPresetSchema, BotPresetPresentationSchema
+from sqlalchemy import or_, orm
+
+from shared.schema.bot_preset import BotPresetPresentationSchema, BotPresetSchema
 
 
 class NewBotPresetSchema(BotPresetSchema):
@@ -24,6 +25,7 @@ class NewBotPresetSchema(BotPresetSchema):
 
         Args:
             data: Data from the schema.
+
         Returns:
             BotPreset object.
         """
@@ -75,6 +77,7 @@ class BotPreset(db.Model):
 
         Args:
             preset_id: Identifier of the preset.
+
         Returns:
             BotPreset object.
         """
@@ -96,6 +99,7 @@ class BotPreset(db.Model):
 
         Args:
             search: Search string.
+
         Returns:
             List of BotPreset objects.
         """
@@ -113,6 +117,7 @@ class BotPreset(db.Model):
 
         Args:
             search: Search string.
+
         Returns:
             JSON object with the total count and a list of BotPreset objects.
         """
@@ -127,6 +132,7 @@ class BotPreset(db.Model):
         Args:
             bots_node: Bots Node.
             bot_type: Bot type.
+
         Returns:
             JSON object with a list of BotPreset objects.
         """

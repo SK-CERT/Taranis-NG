@@ -7,10 +7,8 @@ Create Date: 2024-01-31 13:35:10.639848
 """
 
 from alembic import op
-from datetime import datetime
-from sqlalchemy import orm, Column, ForeignKey, String, Integer, DateTime, Boolean, Enum, text
+from sqlalchemy import Column, ForeignKey, Integer, String, orm, text
 from sqlalchemy.orm import declarative_base
-import sqlalchemy as sa
 
 Base = declarative_base()
 

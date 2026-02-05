@@ -1,8 +1,10 @@
 """Local AI model Model."""
 
 from datetime import datetime
-from marshmallow import post_load
+
 from managers.db_manager import db
+from marshmallow import post_load
+
 from shared.schema.ai_provider import AiProviderSchema
 
 
@@ -15,6 +17,7 @@ class NewAiProviderSchema(AiProviderSchema):
 
         Args:
             data (dict): Data to create the new local AI model.
+
         Returns:
             AiProvider: New local AI model object.
         """
@@ -61,6 +64,7 @@ class AiProvider(db.Model):
 
         Args:
             id (int): Local AI model ID.
+
         Returns:
             AiProvider: Local AI model object.
         """
@@ -82,6 +86,7 @@ class AiProvider(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             list: List of local AI models.
         """
@@ -94,8 +99,7 @@ class AiProvider(db.Model):
 
     @classmethod
     def get_all_json(cls, search):
-        """
-        Get all local AI models in JSON format based on a search query.
+        """Get all local AI models in JSON format based on a search query.
 
         Args:
             search (str): Search query.
@@ -113,6 +117,7 @@ class AiProvider(db.Model):
 
         Args:
             data (dict): Data to create the new local AI model.
+
         Returns:
             AiProvider: New local AI model object.
         """
@@ -126,8 +131,7 @@ class AiProvider(db.Model):
 
     @classmethod
     def update(cls, id, data, user_name):
-        """
-        Update an existing local AI model.
+        """Update an existing local AI model.
 
         Args:
             id (int): ID of the local AI model to update.

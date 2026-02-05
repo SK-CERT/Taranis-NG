@@ -1,7 +1,7 @@
 """Base definition for module types."""
 
 from dataclasses import dataclass
-from typing import List
+
 from shared.schema.parameter import ParameterType
 
 
@@ -37,7 +37,7 @@ class module_type:
     type: str
     name: str
     description: str
-    parameters: List[param_type]
+    parameters: list[param_type]
 
     def __init__(self, type, name, description):
         """Initialize module type."""
@@ -54,6 +54,7 @@ class ConfigBase:
 
         Args:
             type (str): Module type.
+
         Returns:
             module_type | None: Module configuration or None if not found.
         """

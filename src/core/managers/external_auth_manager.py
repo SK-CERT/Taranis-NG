@@ -16,8 +16,10 @@ Functions:
 """
 
 import os
-from keycloak import KeycloakAdmin
+
 from config import Config
+
+from keycloak import KeycloakAdmin
 
 
 def keycloak_user_management_enabled():
@@ -28,8 +30,7 @@ def keycloak_user_management_enabled():
     """
     if "KEYCLOAK_USER_MANAGEMENT" in os.environ:
         return os.getenv("KEYCLOAK_USER_MANAGEMENT").lower() == "true"
-    else:
-        return False
+    return False
 
 
 def get_keycloak_client_secret_key():
@@ -84,7 +85,7 @@ def create_user(user_data):
     if keycloak_user_management_enabled():
         keycloak_admin = get_keycloak_admin()
         keycloak_admin.create_user(
-            {"username": user_data["username"], "credentials": [{"value": user_data["password"], "type": "password"}], "enabled": True}
+            {"username": user_data["username"], "credentials": [{"value": user_data["password"], "type": "password"}], "enabled": True},
         )
 
 
@@ -98,14 +99,14 @@ def update_user(user_data, original_username):
         original_username (str): The original username of the user.
     """
     if keycloak_user_management_enabled():
-        if "password" in user_data and user_data["password"] or original_username != user_data["username"]:
+        if user_data.get("password") or original_username != user_data["username"]:
             keycloak_admin = get_keycloak_admin()
             keycloak_user_id = keycloak_admin.get_user_id(original_username)
             if keycloak_user_id is not None:
                 if original_username != user_data["username"]:
                     keycloak_admin.update_user(user_id=keycloak_user_id, payload={"username": user_data["username"]})
 
-                if "password" in user_data and user_data["password"]:
+                if user_data.get("password"):
                     keycloak_admin.set_user_password(user_id=keycloak_user_id, password=user_data["password"], temporary=False)
 
 

@@ -2,7 +2,6 @@
 
 from flask import request
 from flask_restful import Resource
-
 from managers.auth_manager import api_key_required
 from model import news_item, report_item
 
@@ -100,7 +99,8 @@ class RemoteSyncReportItems(Resource):
             A dictionary containing the last sync time and the report items.
         """
         report_items, last_sync_time = report_item.ReportItem.get_for_sync(
-            remote_node.last_synced_report_items, remote_node.report_item_types
+            remote_node.last_synced_report_items,
+            remote_node.report_item_types,
         )
         return {"last_sync_time": format(last_sync_time), "report_items": report_items}
 

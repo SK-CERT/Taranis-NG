@@ -1,10 +1,10 @@
-from marshmallow import Schema, fields, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields
 
-from shared.schema.presentation import PresentationSchema
-from shared.schema.report_item import ReportItemBaseSchema, ReportItemAttributeSchema
-from shared.schema.user import UserSchemaBase
 from shared.schema.notification_template import NotificationTemplateSchema
+from shared.schema.presentation import PresentationSchema
+from shared.schema.report_item import ReportItemAttributeSchema, ReportItemBaseSchema
 from shared.schema.report_item_type import ReportItemTypeSchema
+from shared.schema.user import UserSchemaBase
 
 
 class AssetCpeSchema(Schema):

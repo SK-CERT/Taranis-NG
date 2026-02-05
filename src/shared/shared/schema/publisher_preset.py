@@ -1,6 +1,6 @@
 """Schema for Publisher Preset, used for serialization and deserialization of publisher preset data."""
 
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.parameter_value import ParameterValueSchema
 from shared.schema.presentation import PresentationSchema

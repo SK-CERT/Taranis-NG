@@ -4,8 +4,9 @@ This module implements Server-Sent Events (SSE) functionality and
 schedules a daily job to manage the tag cloud.
 """
 
-from shared import time_manager
 from model.tag_cloud import TagCloud
+
+from shared import time_manager
 
 
 def job(app):

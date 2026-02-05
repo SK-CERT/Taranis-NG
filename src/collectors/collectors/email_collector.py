@@ -1,19 +1,20 @@
 """Module for email collector."""
 
 import datetime
-import hashlib
-import uuid
-import imaplib
-import poplib
-from email import policy
 import email.header
 import email.utils
+import hashlib
+import imaplib
+import poplib
 import socket
+import uuid
+from email import policy
+
+from shared.common import ignore_exceptions, read_int_parameter, smart_truncate
+from shared.config_collector import ConfigCollector
+from shared.schema.news_item import NewsItemAttribute, NewsItemData
 
 from .base_collector import BaseCollector
-from shared.common import ignore_exceptions, smart_truncate, read_int_parameter
-from shared.config_collector import ConfigCollector
-from shared.schema.news_item import NewsItemData, NewsItemAttribute
 
 
 class EmailCollector(BaseCollector):
@@ -24,6 +25,7 @@ class EmailCollector(BaseCollector):
         name (str): Name of the collector.
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
+
     Methods:
         collect(): Collect data from email source.
     """

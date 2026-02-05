@@ -5,7 +5,7 @@ import re
 from os import environ
 
 import requests
-from flask import request, Response
+from flask import Response, request
 from flask_restful import Resource
 from managers.auth_manager import no_auth
 from managers.log_manager import logger
@@ -32,7 +32,7 @@ class Keycloak(Resource):
             + (
                 r"\/protocol\/openid-connect\/auth\?(response_type\=code)\&(client_id\=taranis_ng)\&(redirect_uri\="
                 r"(https?%3[aA]\/\/[a-z0-9A-Z%\/\.\-_]*|https?%3[aA]%2[fF]%2[fF][a-z0-9A-Z%\/\.\-_]*))$"
-            )
+            ),
         ),
         # login submit url
         re.compile(
@@ -44,7 +44,7 @@ class Keycloak(Resource):
             + (
                 r"\/login-actions\/authenticate(\??session_code\=[a-zA-Z0-9\-_]+)?(\&?\??execution\="
                 r"[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})?(\&?\??client_id\=taranis_ng)?(\&?\??tab_id=[a-zA-Z0-9\-_]+)?$"
-            )
+            ),
         ),
         # logout url
         re.compile(
@@ -56,7 +56,7 @@ class Keycloak(Resource):
             + (
                 r"\/protocol\/openid-connect\/logout\?(redirect_uri\="
                 r"(https?%3[aA]\/\/[a-z0-9A-Z%\/\.\-_]*|https?%3[aA]%2[fF]%2[fF][a-z0-9A-Z%\/\.\-_]*))$"
-            )
+            ),
         ),
         # resources url
         re.compile(r"^" + keycloak_url + auth_path + r"/resources\/([^\.]*|[^\.]*\.[^\.]*|[^\.]*\.[^\.]*\.[^\.]*)$"),
@@ -70,7 +70,7 @@ class Keycloak(Resource):
             + (
                 r"\/login-actions\/required-action(\??session_code\=[a-zA-Z0-9\-_]+)?(\??\&?execution\="
                 r"(UPDATE_PASSWORD))(\&?\??client_id\=taranis_ng)?(\&?\??tab_id=[a-zA-Z0-9\-_]+)?$"
-            )
+            ),
         ),
     ]
 
@@ -91,7 +91,9 @@ class Keycloak(Resource):
             resp = requests.request(
                 method=request.method,
                 url=request.url.replace(
-                    str(environ["TARANIS_NG_KEYCLOAK_URL"]) + "/", os.getenv("TARANIS_NG_KEYCLOAK_INTERNAL_URL") + "/", 1
+                    str(environ["TARANIS_NG_KEYCLOAK_URL"]) + "/",
+                    os.getenv("TARANIS_NG_KEYCLOAK_INTERNAL_URL") + "/",
+                    1,
                 ),
                 headers={key: value for (key, value) in request.headers if key != "Host"},
                 data=request.get_data(),

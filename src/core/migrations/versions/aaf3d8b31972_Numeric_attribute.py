@@ -6,11 +6,11 @@ Create Date: 2023-03-24 09:56:46.885407
 
 """
 
+import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import text
-import sqlalchemy as sa
 
 Base = declarative_base()
 
@@ -42,7 +42,7 @@ def upgrade():
     session = orm.Session(bind=bind)
     session.execute(
         text(
-            "INSERT INTO attribute (name, description, type, validator) VALUES (:name, :description, CAST(:type AS attributetype), :validator)"
+            "INSERT INTO attribute (name, description, type, validator) VALUES (:name, :description, CAST(:type AS attributetype), :validator)",
         ),
         {"name": "Number", "description": "Numeric value", "type": "NUMBER", "validator": "NONE"},
     )

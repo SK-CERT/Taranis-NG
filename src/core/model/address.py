@@ -1,11 +1,10 @@
+from managers.db_manager import db
 from marshmallow import post_load
 
-from managers.db_manager import db
 from shared.schema.address import AddressSchema
 
 
 class NewAddressSchema(AddressSchema):
-
     @post_load
     def make(self, data, **kwargs):
         return Address(**data)

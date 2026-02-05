@@ -1,16 +1,17 @@
 """Module for Asset model."""
 
 import uuid
-from marshmallow import fields, post_load
-from sqlalchemy import orm, or_, text
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
+from model.notification_template import NotificationTemplate
 from model.report_item import ReportItem
 from model.user import User
-from model.notification_template import NotificationTemplate
-from shared.schema.asset import AssetCpeSchema, AssetSchema, AssetPresentationSchema, AssetGroupSchema, AssetGroupPresentationSchema
-from shared.schema.user import UserIdSchema
+from sqlalchemy import or_, orm, text
+
+from shared.schema.asset import AssetCpeSchema, AssetGroupPresentationSchema, AssetGroupSchema, AssetPresentationSchema, AssetSchema
 from shared.schema.notification_template import NotificationTemplateIdSchema
+from shared.schema.user import UserIdSchema
 
 
 class NewAssetCpeSchema(AssetCpeSchema):
@@ -151,8 +152,7 @@ class Asset(db.Model):
             asset_ids = [row[0] for row in result]
 
             return [db.session.get(cls, pk) for pk in asset_ids]
-        else:
-            return []
+        return []
 
     @classmethod
     def remove_vulnerability(cls, report_item_id):
@@ -255,7 +255,7 @@ class Asset(db.Model):
                     Asset.description.ilike(search_string),
                     Asset.serial.ilike(search_string),
                     AssetCpe.value.ilike(search_string),
-                )
+                ),
             )
 
         if sort is not None:
@@ -466,8 +466,7 @@ class AssetGroup(db.Model):
 
     @classmethod
     def access_allowed(cls, user, group_id):
-        """
-        Check if the access is allowed for a user in a specific group.
+        """Check if the access is allowed for a user in a specific group.
 
         Args:
             user: The user object representing the user.
@@ -481,8 +480,7 @@ class AssetGroup(db.Model):
 
     @classmethod
     def get(cls, search, organization):
-        """
-        Get assets based on search criteria and organization.
+        """Get assets based on search criteria and organization.
 
         Args:
             search (str): A string representing the search criteria.

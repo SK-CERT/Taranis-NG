@@ -1,8 +1,9 @@
-from marshmallow import fields, post_load
 import uuid
 
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.parameter import NewParameterSchema
+
 from shared.schema.collector import CollectorSchema
 
 
@@ -21,12 +22,12 @@ class Collector(db.Model):
 
     type = db.Column(db.String(), nullable=False)
 
-    parameters = db.relationship('Parameter', secondary='collector_parameter')
+    parameters = db.relationship("Parameter", secondary="collector_parameter")
 
-    node_id = db.Column(db.String, db.ForeignKey('collectors_node.id'))
+    node_id = db.Column(db.String, db.ForeignKey("collectors_node.id"))
     node = db.relationship("CollectorsNode", back_populates="collectors")
 
-    sources = db.relationship('OSINTSource', back_populates="collector")
+    sources = db.relationship("OSINTSource", back_populates="collector")
 
     def __init__(self, name, description, type, parameters):
         self.id = str(uuid.uuid4())
@@ -42,5 +43,5 @@ class Collector(db.Model):
 
 
 class CollectorParameter(db.Model):
-    collector_id = db.Column(db.String, db.ForeignKey('collector.id'), primary_key=True)
-    parameter_id = db.Column(db.Integer, db.ForeignKey('parameter.id'), primary_key=True)
+    collector_id = db.Column(db.String, db.ForeignKey("collector.id"), primary_key=True)
+    parameter_id = db.Column(db.Integer, db.ForeignKey("parameter.id"), primary_key=True)

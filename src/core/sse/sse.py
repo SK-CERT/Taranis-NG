@@ -1,7 +1,8 @@
 """Server-Sent Events (SSE) class for publishing events."""
 
-import socket
 import json
+import socket
+
 from managers.log_manager import logger
 
 
@@ -32,6 +33,7 @@ class SSE:
         Args:
             data (dict): The data to be formatted.
             event (str, optional): The event name. Defaults to None.
+
         Returns:
             str: The formatted SSE message.
         """

@@ -3,12 +3,14 @@
 import datetime
 import hashlib
 import uuid
+
 import tweepy
 
-from .base_collector import BaseCollector
+from shared.common import ignore_exceptions
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
-from shared.common import ignore_exceptions
+
+from .base_collector import BaseCollector
 
 
 class TwitterCollector(BaseCollector):
@@ -19,8 +21,10 @@ class TwitterCollector(BaseCollector):
         name (str): Name of the collector.
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
+
     Methods:
         collect(): Collect data from a Twitter source.
+
     Raises:
         Exception: If an error occurs during the collection process.
     """
@@ -77,7 +81,6 @@ class TwitterCollector(BaseCollector):
             limit = self.history(interval)
 
             for tweet in public_tweets:
-
                 time_to_collect = tweet.created_at
 
                 if time_to_collect > limit:

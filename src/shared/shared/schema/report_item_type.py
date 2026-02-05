@@ -1,9 +1,9 @@
 """This module defines Marshmallow schemas and data models for report item types and their related attribute groups and items."""
 
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
-from shared.schema.presentation import PresentationSchema
 from shared.schema.attribute import AttributeSchema
+from shared.schema.presentation import PresentationSchema
 
 
 class AttributeGroupItemSchema(Schema):
@@ -26,11 +26,11 @@ class AttributeGroupItemSchema(Schema):
 
     @post_load
     def make_attribute_group_item(self, data, **kwargs):
-        """
-        Create an AttributeGroupItem instance from deserialized data.
+        """Create an AttributeGroupItem instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+
         Returns:
             AttributeGroupItem: An instance of AttributeGroupItem.
         """
@@ -41,8 +41,7 @@ class AttributeGroupItem:
     """Data model representing an item in an attribute group."""
 
     def __init__(self, id, title, description, index, min_occurrence, max_occurrence, attribute, ai_provider_id, ai_prompt):
-        """
-        Initialize an AttributeGroupItem instance.
+        """Initialize an AttributeGroupItem instance.
 
         Args:
             id (int): Unique identifier for the item.
@@ -83,11 +82,11 @@ class AttributeGroupBaseSchema(Schema):
 
     @post_load
     def make_attribute_group(self, data, **kwargs):
-        """
-        Create an AttributeGroup instance from deserialized data.
+        """Create an AttributeGroup instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+
         Returns:
             AttributeGroup: An instance of AttributeGroup.
         """
@@ -113,8 +112,7 @@ class AttributeGroup:
         index,
         attribute_group_items,
     ):
-        """
-        Initialize an AttributeGroup instance.
+        """Initialize an AttributeGroup instance.
 
         Args:
             id (int): Unique identifier for the group.
@@ -154,11 +152,11 @@ class ReportItemTypeSchema(ReportItemTypeBaseSchema):
 
     @post_load
     def make(self, data, **kwargs):
-        """
-        Create a ReportItemType instance from deserialized data.
+        """Create a ReportItemType instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+
         Returns:
             ReportItemType: An instance of ReportItemType.
         """
@@ -168,15 +166,12 @@ class ReportItemTypeSchema(ReportItemTypeBaseSchema):
 class ReportItemTypePresentationSchema(ReportItemTypeSchema, PresentationSchema):
     """Extended schema for report item types, including presentation fields."""
 
-    pass
-
 
 class ReportItemType:
     """Data model representing a report item type."""
 
     def __init__(self, id, title, description, attribute_groups):
-        """
-        Initialize a ReportItemType instance.
+        """Initialize a ReportItemType instance.
 
         Args:
             id (int): Unique identifier for the report item type.
@@ -202,11 +197,11 @@ class ReportItemTypeIdSchema(Schema):
 
     @post_load
     def make(self, data, **kwargs):
-        """
-        Create a ReportItemTypeId instance from deserialized data.
+        """Create a ReportItemTypeId instance from deserialized data.
 
         Args:
             data (dict): The deserialized data.
+
         Returns:
             ReportItemTypeId: An instance of ReportItemTypeId.
         """
@@ -217,8 +212,7 @@ class ReportItemTypeId:
     """Data model representing only the report item type ID."""
 
     def __init__(self, id):
-        """
-        Initialize a ReportItemTypeId instance.
+        """Initialize a ReportItemTypeId instance.
 
         Args:
             id (int): Unique identifier for the report item type.

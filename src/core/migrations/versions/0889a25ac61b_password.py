@@ -6,11 +6,10 @@ Create Date: 2023-02-23 08:55:28.292917
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import orm
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.dialects import postgresql
 from werkzeug.security import generate_password_hash
 
 # revision identifiers, used by Alembic.

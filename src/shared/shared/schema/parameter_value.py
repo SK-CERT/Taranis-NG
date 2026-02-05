@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, post_load
 
-from shared.schema.parameter import ParameterSchema, ParameterExportSchema
+from shared.schema.parameter import ParameterExportSchema, ParameterSchema
 
 
 class ParameterValueSchema(Schema):

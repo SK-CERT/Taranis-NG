@@ -1,8 +1,8 @@
 """Permission model module."""
 
+from managers.db_manager import db
 from sqlalchemy import or_
 
-from managers.db_manager import db
 from shared.schema.role import PermissionSchema
 
 
@@ -25,6 +25,7 @@ class Permission(db.Model):
 
         Args:
             permission_id (int): The ID of the permission to retrieve.
+
         Returns:
             Permission: The permission object if found, otherwise None.
         """
@@ -67,6 +68,7 @@ class Permission(db.Model):
 
         Args:
             search (str): The search string to filter the permissions by.
+
         Returns:
             list: A list of all permissions in the database.
         """
@@ -84,6 +86,7 @@ class Permission(db.Model):
 
         Args:
             search (str): The search string to filter the permissions by.
+
         Returns:
             dict: A dictionary containing the total count of permissions and a list of permissions.
         """

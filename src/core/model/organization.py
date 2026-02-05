@@ -1,11 +1,11 @@
 """Organization model."""
 
-from marshmallow import post_load, fields
+from managers.db_manager import db
+from marshmallow import fields, post_load
+from model.address import NewAddressSchema
 from sqlalchemy import or_, orm
 
-from managers.db_manager import db
-from model.address import NewAddressSchema
-from shared.schema.organization import OrganizationSchema, OrganizationPresentationSchema
+from shared.schema.organization import OrganizationPresentationSchema, OrganizationSchema
 
 
 class NewOrganizationSchema(OrganizationSchema):
@@ -23,6 +23,7 @@ class NewOrganizationSchema(OrganizationSchema):
 
         Args:
             data (dict): The data to create the organization object.
+
         Returns:
             Organization: The new organization object.
         """
@@ -70,6 +71,7 @@ class Organization(db.Model):
 
         Args:
             organization_id (int): The organization id.
+
         Returns:
             Organization: The organization object.
         """
@@ -91,6 +93,7 @@ class Organization(db.Model):
 
         Args:
             search (str): The search string.
+
         Returns:
             tuple: The list of organizations and the count of organizations.
         """
@@ -108,6 +111,7 @@ class Organization(db.Model):
 
         Args:
             search (str): The search string.
+
         Returns:
             dict: The organizations in JSON format.
         """

@@ -21,12 +21,12 @@ Dependencies:
 """
 
 import urllib
-from flask import redirect, make_response
-from flask_restful import Resource, reqparse, request, ResponseBase
 
 from config import Config
+from flask import make_response, redirect
+from flask_restful import Resource, ResponseBase, reqparse, request
 from managers import auth_manager
-from managers.auth_manager import no_auth, jwt_required
+from managers.auth_manager import jwt_required, no_auth
 
 
 class Login(Resource):
@@ -60,6 +60,7 @@ class Login(Resource):
 
         This method parses the required credentials from the JSON payload of the request,
         and then attempts to authenticate the user using these credentials.
+
         Returns:
             Response: The result of the authentication attempt.
         """
@@ -80,6 +81,7 @@ class Refresh(Resource):
 
         This method retrieves the current user from the JWT (JSON Web Token) and
         refreshes their authentication token using the auth_manager.
+
         Returns:
             dict: A dictionary containing the refreshed authentication token.
         """
@@ -98,6 +100,7 @@ class Logout(Resource):
         If the logout is successful and a "gotoUrl" is provided in the request arguments,
         it redirects the user to the specified URL. If an OpenID logout URL is configured,
         it replaces "GOTO_URL" in the OpenID logout URL with the encoded "gotoUrl" and redirects to it.
+
         Returns:
             ResponseBase: The response from the auth_manager.logout method.
             Redirect: A redirect response to the specified "gotoUrl" or OpenID logout URL if applicable.
@@ -114,8 +117,7 @@ class Logout(Resource):
                 if Config.OPENID_LOGOUT_URL:
                     url = Config.OPENID_LOGOUT_URL.replace("GOTO_URL", urllib.parse.quote(request.args["gotoUrl"]))
                     return redirect(url)
-                else:
-                    return redirect(request.args["gotoUrl"])
+                return redirect(request.args["gotoUrl"])
 
         return response
 

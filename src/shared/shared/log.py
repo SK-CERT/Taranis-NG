@@ -1,10 +1,9 @@
 """This module contains the TaranisLogger class."""
 
-import logging.handlers
-import sys
-import socket
 import logging
-from typing import Optional
+import logging.handlers
+import socket
+import sys
 
 
 class TaranisLogger:
@@ -28,7 +27,7 @@ class TaranisLogger:
         critical(message): Log a critical message.
     """
 
-    def __init__(self, taranis_logging_level_str: str, modules_logging_level_str: str, colored: bool, syslog_address: Optional[tuple]):
+    def __init__(self, taranis_logging_level_str: str, modules_logging_level_str: str, colored: bool, syslog_address: tuple | None):
         """Initialize a Log object.
 
         Parameters:
@@ -157,6 +156,7 @@ class TaranisLogFormatter(logging.Formatter):
     Parameters:
         format_string (str): The format string for log messages.
         FORMATS (dict): A dictionary mapping log levels to format strings.
+
     Methods:
         format(record): Formats the log record.
     """
@@ -184,6 +184,7 @@ class TaranisLogFormatter(logging.Formatter):
 
         Parameters:
             record (logging.LogRecord): The log record to be formatted.
+
         Returns:
             str: The formatted log record.
         """

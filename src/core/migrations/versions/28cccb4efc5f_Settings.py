@@ -6,10 +6,9 @@ Create Date: 2025-02-21 13:04:59.332013
 
 """
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import orm
-from sqlalchemy import inspect
+from alembic import op
+from sqlalchemy import inspect, orm
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import declarative_base
 
@@ -123,11 +122,21 @@ def upgrade():
     delete_previous()
     # role_permission
     op.create_foreign_key(
-        "role_permission_permission_id_fkey", "role_permission", "permission", ["permission_id"], ["id"], ondelete="CASCADE"
+        "role_permission_permission_id_fkey",
+        "role_permission",
+        "permission",
+        ["permission_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     # user_permission
     op.create_foreign_key(
-        "user_permission_permission_id_fkey", "user_permission", "permission", ["permission_id"], ["id"], ondelete="CASCADE"
+        "user_permission_permission_id_fkey",
+        "user_permission",
+        "permission",
+        ["permission_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
 
 

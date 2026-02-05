@@ -4,12 +4,12 @@ Returns:
     _description_
 """
 
-from presenters.pdf_presenter import PDFPresenter
 from presenters.html_presenter import HTMLPresenter
-from presenters.text_presenter import TEXTPresenter
-from presenters.misp_presenter import MISPPresenter
 from presenters.json_presenter import JSONPresenter
 from presenters.message_presenter import MESSAGEPresenter
+from presenters.misp_presenter import MISPPresenter
+from presenters.pdf_presenter import PDFPresenter
+from presenters.text_presenter import TEXTPresenter
 from shared.schema.presenter import PresenterInputSchema, PresenterOutputSchema
 
 presenters = {}
@@ -63,5 +63,4 @@ def generate(presenter_input_json):
     if presenter_output is not None:
         presenter_output_schema = PresenterOutputSchema()
         return presenter_output_schema.dump(presenter_output)
-    else:
-        return "Generating presenter output failed", 500
+    return "Generating presenter output failed", 500

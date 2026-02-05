@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, EXCLUDE, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.presentation import PresentationSchema
 

@@ -1,11 +1,11 @@
 """Role model."""
 
+from managers.db_manager import db
 from marshmallow import fields, post_load
+from model.permission import Permission
 from sqlalchemy import or_, orm
 
-from managers.db_manager import db
-from model.permission import Permission
-from shared.schema.role import RoleSchemaBase, PermissionIdSchema, RolePresentationSchema
+from shared.schema.role import PermissionIdSchema, RolePresentationSchema, RoleSchemaBase
 
 
 class NewRoleSchema(RoleSchemaBase):
@@ -23,6 +23,7 @@ class NewRoleSchema(RoleSchemaBase):
 
         Args:
             data (dict): Data to create a new Role object.
+
         Returns:
             Role: New Role object.
         """
@@ -71,6 +72,7 @@ class Role(db.Model):
 
         Args:
             role_id (int): Role ID.
+
         Returns:
             Role: Role object.
         """
@@ -83,6 +85,7 @@ class Role(db.Model):
 
         Args:
             role_name (str): Role name.
+
         Returns:
             Role: Role object.
         """
@@ -104,6 +107,7 @@ class Role(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             tuple: Roles and count.
         """
@@ -121,6 +125,7 @@ class Role(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             dict: Roles in JSON format.
         """

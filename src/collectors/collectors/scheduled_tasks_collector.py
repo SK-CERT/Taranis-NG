@@ -7,10 +7,11 @@ import random
 import string
 import uuid
 
-from .base_collector import BaseCollector
+from shared.common import ignore_exceptions
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
-from shared.common import ignore_exceptions
+
+from .base_collector import BaseCollector
 
 
 class ScheduledTasksCollector(BaseCollector):

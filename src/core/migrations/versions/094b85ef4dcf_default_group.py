@@ -11,7 +11,7 @@ from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy import orm, and_
+from sqlalchemy import and_, orm
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

@@ -1,10 +1,10 @@
 """Module for NotificationTemplate model."""
 
-from sqlalchemy import orm, or_
-from marshmallow import post_load, fields
-
 from managers.db_manager import db
-from shared.schema.notification_template import NotificationTemplatePresentationSchema, NotificationTemplateSchema, EmailRecipientSchema
+from marshmallow import fields, post_load
+from sqlalchemy import or_, orm
+
+from shared.schema.notification_template import EmailRecipientSchema, NotificationTemplatePresentationSchema, NotificationTemplateSchema
 
 
 class NewEmailRecipientSchema(EmailRecipientSchema):
@@ -12,6 +12,7 @@ class NewEmailRecipientSchema(EmailRecipientSchema):
 
     Attributes:
         Inherits EmailRecipientSchema.
+
     Returns:
         An instance of EmailRecipient.
     """
@@ -23,6 +24,7 @@ class NewEmailRecipientSchema(EmailRecipientSchema):
         Args:
             data (dict): A dictionary containing the data for creating the EmailRecipient instance.
             **kwargs: Additional keyword arguments.
+
         Returns:
             EmailRecipient: An instance of EmailRecipient created using the provided data.
         """
@@ -68,6 +70,7 @@ class NewNotificationTemplateSchema(NotificationTemplateSchema):
         Args:
             data (dict): A dictionary containing the data for the notification template.
             **kwargs: Additional keyword arguments.
+
         Returns:
             NotificationTemplate: A new `NotificationTemplate` object.
         """
@@ -123,6 +126,7 @@ class NotificationTemplate(db.Model):
         Args:
             cls: The class object.
             id: The ID of the notification template.
+
         Returns:
             The notification template with the specified ID.
         """
@@ -136,6 +140,7 @@ class NotificationTemplate(db.Model):
         Args:
             search (str): The search string to filter notification templates by name or description.
             organization (str): The organization to filter notification templates.
+
         Returns:
             tuple: A tuple containing:
                 A list of notification templates matching the search criteria and organization.
@@ -145,7 +150,8 @@ class NotificationTemplate(db.Model):
 
         if organization is not None:
             query = query.join(
-                NotificationTemplateOrganization, NotificationTemplate.id == NotificationTemplateOrganization.notification_template_id
+                NotificationTemplateOrganization,
+                NotificationTemplate.id == NotificationTemplateOrganization.notification_template_id,
             )
 
         if search is not None:
@@ -154,7 +160,7 @@ class NotificationTemplate(db.Model):
                 or_(
                     NotificationTemplate.name.ilike(search_string),
                     NotificationTemplate.description.ilike(search_string),
-                )
+                ),
             )
 
         return query.order_by(db.asc(NotificationTemplate.name)).all(), query.count()
@@ -167,6 +173,7 @@ class NotificationTemplate(db.Model):
             cls (class): The class itself.
             user (User): The user object.
             search (str): The search query.
+
         Returns:
             dict: A dictionary containing the total count and a list of template items in JSON format.
         """

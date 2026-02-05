@@ -19,7 +19,12 @@ def upgrade():
     delete_previous()
     # report_item_attribute
     op.create_foreign_key(
-        "report_item_attribute_report_item_id_fkey", "report_item_attribute", "report_item", ["report_item_id"], ["id"], ondelete="CASCADE"
+        "report_item_attribute_report_item_id_fkey",
+        "report_item_attribute",
+        "report_item",
+        ["report_item_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     # report_item_remote_report_item
     op.create_foreign_key(
@@ -40,15 +45,30 @@ def upgrade():
     )
     # asset_vulnerability
     op.create_foreign_key(
-        "asset_vulnerability_report_item_id_fkey", "asset_vulnerability", "report_item", ["report_item_id"], ["id"], ondelete="CASCADE"
+        "asset_vulnerability_report_item_id_fkey",
+        "asset_vulnerability",
+        "report_item",
+        ["report_item_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     # product_report_item
     op.create_foreign_key(
-        "product_report_item_report_item_id_fkey", "product_report_item", "report_item", ["report_item_id"], ["id"], ondelete="CASCADE"
+        "product_report_item_report_item_id_fkey",
+        "product_report_item",
+        "report_item",
+        ["report_item_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     # report_item_cpe
     op.create_foreign_key(
-        "report_item_cpe_report_item_id_fkey", "report_item_cpe", "report_item", ["report_item_id"], ["id"], ondelete="CASCADE"
+        "report_item_cpe_report_item_id_fkey",
+        "report_item_cpe",
+        "report_item",
+        ["report_item_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
     # report_item_news_item_aggregate
     op.create_foreign_key(
@@ -67,7 +87,11 @@ def downgrade():
     op.create_foreign_key("report_item_attribute_report_item_id_fkey", "report_item_attribute", "report_item", ["report_item_id"], ["id"])
     # report_item_remote_report_item
     op.create_foreign_key(
-        "report_item_remote_report_item_report_item_id_fkey", "report_item_remote_report_item", "report_item", ["report_item_id"], ["id"]
+        "report_item_remote_report_item_report_item_id_fkey",
+        "report_item_remote_report_item",
+        "report_item",
+        ["report_item_id"],
+        ["id"],
     )
     op.create_foreign_key(
         "report_item_remote_report_item_remote_report_item_id_fkey",
@@ -84,7 +108,11 @@ def downgrade():
     op.create_foreign_key("report_item_cpe_report_item_id_fkey", "report_item_cpe", "report_item", ["report_item_id"], ["id"])
     # report_item_news_item_aggregate
     op.create_foreign_key(
-        "report_item_news_item_aggregate_report_item_id_fkey", "report_item_news_item_aggregate", "report_item", ["report_item_id"], ["id"]
+        "report_item_news_item_aggregate_report_item_id_fkey",
+        "report_item_news_item_aggregate",
+        "report_item",
+        ["report_item_id"],
+        ["id"],
     )
 
 

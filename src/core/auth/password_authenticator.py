@@ -1,12 +1,13 @@
 """Password authenticator module."""
 
-from managers import log_manager
+import random
+import time
+
 from auth.base_authenticator import BaseAuthenticator
 from flask import request
-from werkzeug.security import check_password_hash
+from managers import log_manager
 from model.user import User
-import time
-import random
+from werkzeug.security import check_password_hash
 
 
 class PasswordAuthenticator(BaseAuthenticator):
@@ -25,6 +26,7 @@ class PasswordAuthenticator(BaseAuthenticator):
 
         Args:
             credentials (dict): The user's credentials.
+
         Returns:
             (dict): The authentication
         """

@@ -1,20 +1,21 @@
 """ACL Entry Model."""
 
-from sqlalchemy import or_, orm, and_
-from marshmallow import fields, post_load
-
 from managers.db_manager import db
+from marshmallow import fields, post_load
 from model.role import Role
 from model.user import User
+from sqlalchemy import and_, or_, orm
+
+from shared.schema.acl_entry import ACLEntryPresentationSchema, ACLEntrySchema, ItemType
 from shared.schema.role import RoleIdSchema
 from shared.schema.user import UserIdSchema
-from shared.schema.acl_entry import ACLEntrySchema, ACLEntryPresentationSchema, ItemType
 
 
 class NewACLEntrySchema(ACLEntrySchema):
     """New ACL Entry Schema.
 
     This schema is used to create a new ACL Entry.
+
     Attributes:
         users (list): List of users that have access to the ACL Entry.
         roles (list): List of roles that have access to the ACL Entry.
@@ -29,6 +30,7 @@ class NewACLEntrySchema(ACLEntrySchema):
 
         Args:
             data (dict): Data to create the new ACL Entry.
+
         Returns:
             ACLEntry: New ACL Entry object.
         """
@@ -106,6 +108,7 @@ class ACLEntry(db.Model):
 
         Args:
             id (int): ACL Entry ID.
+
         Returns:
             ACLEntry: ACL Entry object.
         """
@@ -127,6 +130,7 @@ class ACLEntry(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             list: List of ACL Entries.
         """
@@ -144,6 +148,7 @@ class ACLEntry(db.Model):
 
         Args:
             search (str): Search string.
+
         Returns:
             dict: JSON object with the ACL Entries.
         """
@@ -209,6 +214,7 @@ class ACLEntry(db.Model):
             see (bool): See flag.
             access (bool): Access flag.
             modify (bool): Modify flag.
+
         Returns:
             Query: Query with the applied ACL Entry.
         """
@@ -222,7 +228,7 @@ class ACLEntry(db.Model):
 
         if see is False and access is False and modify is False:
             return query.filter(
-                or_(ACLEntry.id.is_(None), ACLEntry.everyone.is_(True), ACLEntryUser.user_id == user.id, ACLEntryRole.role_id.in_(roles))
+                or_(ACLEntry.id.is_(None), ACLEntry.everyone.is_(True), ACLEntryUser.user_id == user.id, ACLEntryRole.role_id.in_(roles)),
             )
 
         if see:
@@ -233,7 +239,7 @@ class ACLEntry(db.Model):
                         ACLEntry.see.is_(True),
                         or_(ACLEntry.everyone.is_(True), ACLEntryUser.user_id == user.id, ACLEntryRole.role_id.in_(roles)),
                     ),
-                )
+                ),
             )
         if access:
             return query.filter(
@@ -243,7 +249,7 @@ class ACLEntry(db.Model):
                         ACLEntry.access.is_(True),
                         or_(ACLEntry.everyone.is_(True), ACLEntryUser.user_id == user.id, ACLEntryRole.role_id.in_(roles)),
                     ),
-                )
+                ),
             )
 
         if modify:
@@ -254,7 +260,7 @@ class ACLEntry(db.Model):
                         ACLEntry.modify.is_(True),
                         or_(ACLEntry.everyone.is_(True), ACLEntryUser.user_id == user.id, ACLEntryRole.role_id.in_(roles)),
                     ),
-                )
+                ),
             )
 
 

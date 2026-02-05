@@ -1,15 +1,15 @@
 """Keycloak authenticator module."""
 
 from os import environ
+
 import jwt
+from auth.base_authenticator import BaseAuthenticator
 from flask_restful import request
+from managers import external_auth_manager, log_manager
+from managers.log_manager import logger
+from packaging import version
 from requests import post
 from requests.auth import HTTPBasicAuth
-
-from managers import log_manager, external_auth_manager
-from managers.log_manager import logger
-from auth.base_authenticator import BaseAuthenticator
-from packaging import version
 
 
 class KeycloakAuthenticator(BaseAuthenticator):

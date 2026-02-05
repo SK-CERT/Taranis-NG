@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.data_provider import DataProvider
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 from managers.db_manager import db
 from marshmallow import post_load

@@ -6,8 +6,8 @@ Create Date: 2021-11-18 10:48:53.156339
 
 """
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy import orm
 
 # revision identifiers, used by Alembic.
@@ -17,6 +17,7 @@ branch_labels = None
 depends_on = None
 
 from datetime import datetime
+
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

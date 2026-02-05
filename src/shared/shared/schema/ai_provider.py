@@ -1,6 +1,6 @@
 """This module defines the schema and data model for local AI models using Marshmallow for serialization and deserialization."""
 
-from marshmallow import Schema, fields, post_load, EXCLUDE
+from marshmallow import EXCLUDE, Schema, fields, post_load
 
 
 class AiProviderSchema(Schema):
@@ -27,6 +27,7 @@ class AiProviderSchema(Schema):
         Args:
             data (dict): The deserialized data containing local AI modelr attributes.
             **kwargs: Additional keyword arguments.
+
         Returns:
             AiProvider: An instance of AiProvider initialized with the provided data.
         """

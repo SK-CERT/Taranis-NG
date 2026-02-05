@@ -1,12 +1,13 @@
 """Wordlist updater bot."""
 
 import requests
+from remote.core_api import CoreApi
 
-from .base_bot import BaseBot
+from shared.common import ignore_exceptions
 from shared.config_bot import ConfigBot
 from shared.schema import word_list
-from shared.common import ignore_exceptions
-from remote.core_api import CoreApi
+
+from .base_bot import BaseBot
 
 
 class WordlistUpdaterBot(BaseBot):
@@ -32,6 +33,7 @@ class WordlistUpdaterBot(BaseBot):
         Args:
             source (str): The path to the file or URL to load the word list from.
             word_list_format (str): The format of the word list. Currently supports 'txt'.
+
         Returns:
             list: A list of words loaded from the specified source.
         """
@@ -64,7 +66,6 @@ class WordlistUpdaterBot(BaseBot):
             categories = CoreApi.get_categories(word_list_id)
 
             if not any(category["name"] == word_list_category_name for category in categories):
-
                 name = word_list_category_name
                 description = "Stop word list category created by Updater Bot."
                 entries = []
@@ -80,7 +81,6 @@ class WordlistUpdaterBot(BaseBot):
             entries = []
 
             for word in source_word_list:
-
                 value = word
                 description = ""
 
@@ -100,6 +100,7 @@ class WordlistUpdaterBot(BaseBot):
             preset (object): The preset configuration object containing parameters.
             event_type (str): The type of event that triggered this action.
             data (dict): Additional data associated with the event.
+
         Raises:
             Exception: If there is an error accessing the parameters in the preset.
         """
