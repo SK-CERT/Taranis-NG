@@ -1,12 +1,14 @@
 """Publisher for Twiter."""
 
 from base64 import b64decode
+from http import HTTPStatus
+
 import tweepy
 
-from .base_publisher import BasePublisher
+from shared.config_publisher import ConfigPublisher
 from shared.log_manager import logger
 
-from shared.config_publisher import ConfigPublisher
+from .base_publisher import BasePublisher
 
 
 class TWITTERPublisher(BasePublisher):
@@ -26,11 +28,12 @@ class TWITTERPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input):
+    def publish(self, publisher_input: dict) -> tuple[dict, HTTPStatus]:
         """Publish data.
 
         Args:
             publisher_input (PublisherInput): Publisher input.
+
         Raises:
             Exception: If an error occurs.
         """
@@ -51,7 +54,14 @@ class TWITTERPublisher(BasePublisher):
 
             bytes_data = b64decode(data, validate=True)
 
-            if len(bytes_data) <= 240:
+            max_size = 240
+            if len(bytes_data) <= max_size:
                 api.update_status(bytes_data)
+                return {}, HTTPStatus.OK
+            msg = f"Data size exceeds Twitter's character limit ({len(bytes_data)} > {max_size})."
+            self.logger.error(msg)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
         except Exception as error:
-            self.logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR

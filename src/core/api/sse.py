@@ -116,7 +116,7 @@ class SseResource(Resource):
 
         except Exception as ex:
             msg = "SSE: Error in streaming response"
-            logger.exception(msg, ex)
+            logger.exception(f"{msg}: {ex}")
             return msg, HTTPStatus.INTERNAL_SERVER_ERROR
 
 

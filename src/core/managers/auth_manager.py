@@ -1,58 +1,66 @@
 """This module contains the authentication manager."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import Flask
+
 import os
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
-import jwt
-from flask import request
-from flask_jwt_extended import JWTManager, get_jwt_identity, verify_jwt_in_request, get_jwt
-from flask_jwt_extended.exceptions import JWTExtendedException
+from http import HTTPStatus
 
-from managers import log_manager
-from shared import time_manager
+import jwt
 from auth.keycloak_authenticator import KeycloakAuthenticator
+from auth.ldap_authenticator import LDAPAuthenticator
 from auth.openid_authenticator import OpenIDAuthenticator
 from auth.password_authenticator import PasswordAuthenticator
-from auth.ldap_authenticator import LDAPAuthenticator
-from model.collectors_node import CollectorsNode
-from model.publishers_node import PublishersNode
+from config import Config
+from flask import request
+from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended.exceptions import JWTExtendedException
+from managers import log_manager
+from model.apikey import ApiKey
 from model.bots_node import BotsNode
-from model.remote import RemoteAccess
+from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 from model.product_type import ProductType
+from model.publishers_node import PublishersNode
+from model.remote import RemoteAccess
 from model.report_item import ReportItem
 from model.token_blacklist import TokenBlacklist
 from model.user import User
-from model.apikey import ApiKey
-from config import Config
+
+from shared import time_manager
+from shared.common import TZ
 
 current_authenticator = None
 
 
-def cleanup_token_blacklist(app):
-    """
-    Clean up the token blacklist by deleting tokens older than one day.
+def cleanup_token_blacklist(app: Flask) -> None:
+    """Clean up the token blacklist by deleting tokens older than one day.
 
     Args:
-        app -- The Flask application object.
+        app: The Flask application object.
     """
     with app.app_context():
-        TokenBlacklist.delete_older(datetime.today() - timedelta(days=1))
+        TokenBlacklist.delete_older(datetime.now(TZ) - timedelta(days=1))
 
 
-def initialize(app):
-    """
-    Initialize the authentication manager.
+def initialize(app: Flask) -> None:
+    """Initialize the authentication manager.
 
     This function sets up the authentication manager based on the configured authenticator.
 
     Args:
         app: The Flask application object.
     """
-    global current_authenticator
+    global current_authenticator  # noqa: PLW0603
 
     JWTManager(app)
 
@@ -75,7 +83,7 @@ def initialize(app):
     time_manager.schedule_job_every_day("00:00", cleanup_token_blacklist, app)
 
 
-def get_required_credentials():
+def get_required_credentials() -> list:
     """Get the required credentials.
 
     This function returns the required credentials for the current authenticator.
@@ -86,11 +94,11 @@ def get_required_credentials():
     return current_authenticator.get_required_credentials()
 
 
-def authenticate(credentials):
+def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
     """Authenticate the user using the provided credentials.
 
     Args:
-        credentials -- The user's credentials.
+        credentials: The user's credentials.
 
     Returns:
         The result of the authentication process.
@@ -98,11 +106,11 @@ def authenticate(credentials):
     return current_authenticator.authenticate(credentials)
 
 
-def refresh(user):
+def refresh(user: User) -> tuple[dict, HTTPStatus]:
     """Refresh the authentication token for the given user.
 
     Args:
-        user -- The user object for which the authentication token needs to be refreshed.
+        user: The user object for which the authentication token needs to be refreshed.
 
     Returns:
         The refreshed authentication token.
@@ -110,7 +118,7 @@ def refresh(user):
     return current_authenticator.refresh(user)
 
 
-def logout(token):
+def logout(token: str) -> None:
     """Logout the user.
 
     This function logs out the user by calling the `logout` method of the current authenticator.
@@ -121,7 +129,7 @@ def logout(token):
     Returns:
         None: This function does not return any value.
     """
-    return current_authenticator.logout(token)
+    current_authenticator.logout(token)
 
 
 class ACLCheck(Enum):
@@ -148,7 +156,7 @@ class ACLCheck(Enum):
     PRODUCT_TYPE_MODIFY = auto()
 
 
-def check_acl(item_id, acl_check, user):
+def check_acl(item_id: str, acl_check: str, user: User) -> bool:
     """Check the access control list (ACL) for the given item.
 
     This function determines whether the user has the necessary permissions to perform the specified ACL check on the item.
@@ -181,7 +189,7 @@ def check_acl(item_id, acl_check, user):
 
     if acl_check in [ACLCheck.PRODUCT_TYPE_ACCESS, ACLCheck.PRODUCT_TYPE_MODIFY]:
         item_type = "Product Type"
-        allowed = ProductType.allowed_with_acl(item_id, user, check_see, check_access, check_modify)
+        allowed = ProductType.allowed_product_with_acl(item_id, user, check_see, check_access, check_modify)
 
     if not allowed:
         if check_access:
@@ -192,7 +200,7 @@ def check_acl(item_id, acl_check, user):
     return allowed
 
 
-def no_auth(fn):
+def no_auth(fn):  # noqa: ANN001, ANN201
     """Allow access to the decorated function without authentication.
 
     Args:
@@ -203,35 +211,45 @@ def no_auth(fn):
     """
 
     @wraps(fn)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        """Wrapper that permits unauthenticated access and logs the access.
+
+        Args:
+            *args: Positional arguments forwarded to the wrapped function.
+            **kwargs: Keyword arguments forwarded to the wrapped function.
+
+        Returns:
+            Any: The result returned by the wrapped function.
+        """
         log_manager.store_activity("API_ACCESS", None)
         return fn(*args, **kwargs)
 
     return wrapper
 
 
-def get_id_name_by_acl(acl):
+def get_id_name_by_acl(acl: ACLCheck) -> str:
     """Get the ID name based on the ACL.
 
     This function takes an ACL object and returns the corresponding ID name based on the ACL's name.
 
     Args:
-        acl -- The ACL object.
+        acl: The ACL object.
 
     Returns:
         The ID name corresponding to the ACL's name.
     """
     if "NEWS_ITEM" in acl.name:
         return "item_id"
-    elif "REPORT_ITEM" in acl.name:
+    if "REPORT_ITEM" in acl.name:
         return "report_item_id"
-    elif "OSINT_SOURCE_GROUP" in acl.name:
+    if "OSINT_SOURCE_GROUP" in acl.name:
         return "group_id"
-    elif "PRODUCT" in acl.name:
+    if "PRODUCT" in acl.name:
         return "product_id"
+    return None
 
 
-def get_user_from_api_key():
+def get_user_from_api_key() -> User:
     """Try to authenticate the user by API key.
 
     Returns:
@@ -244,14 +262,14 @@ def get_user_from_api_key():
         apikey = ApiKey.find_by_key(api_key)
         if not apikey:
             return None
-        user = User.find_by_id(apikey.user_id)
-        return user
+        return User.find_by_id(apikey.user_id)
+
     except Exception as ex:
         log_manager.store_auth_error_activity("API key check presence error", ex)
         return None
 
 
-def get_perm_from_user(user):
+def get_perm_from_user(user: User) -> set:
     """Get user permissions.
 
     Args:
@@ -265,7 +283,7 @@ def get_perm_from_user(user):
         for perm in user.permissions:
             all_users_perms.add(perm.id)
         for role in user.roles:
-            role_perms = set(perm.id for perm in role.permissions)
+            role_perms = {perm.id for perm in role.permissions}
             all_users_perms = all_users_perms.union(role_perms)
         return all_users_perms
     except Exception as ex:
@@ -273,7 +291,7 @@ def get_perm_from_user(user):
         return None
 
 
-def get_user_from_jwt_token():
+def get_user_from_jwt_token() -> User:
     """Try to authenticate the user by API key.
 
     This function verifies the JWT token in the request and retrieves the user object associated with the token's identity.
@@ -300,7 +318,7 @@ def get_user_from_jwt_token():
     return user
 
 
-def get_perm_from_jwt_token(user):
+def get_perm_from_jwt_token(user: User) -> set:
     """Get user permissions from JWT token.
 
     Args:
@@ -320,14 +338,14 @@ def get_perm_from_jwt_token(user):
             log_manager.store_user_auth_error_activity(user, "Missing user permissions in JWT")
             return None
 
-        all_users_perms = set(jwt_data["permissions"])
-        return all_users_perms
+        return set(jwt_data["permissions"])
+
     except Exception as ex:
         log_manager.store_auth_error_activity("Get permission from JWT error", ex)
         return None
 
 
-def auth_required(required_permissions, *acl_args):
+def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tuple[dict, HTTPStatus]:
     """Check if the user has the required permissions and ACL access.
 
     Args:
@@ -338,15 +356,21 @@ def auth_required(required_permissions, *acl_args):
         The decorated function.
     """
 
-    def auth_required_wrap(fn):
+    def auth_required_wrap(fn):  # noqa: ANN001, ANN202
         @wraps(fn)
-        def wrapper(*args, **kwargs):
-            error = ({"error": "not authorized"}, 401)
+        def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+            """Wrapper for checking permmisions.
 
-            if isinstance(required_permissions, list):
-                required_permissions_set = set(required_permissions)
-            else:
-                required_permissions_set = {required_permissions}
+            Args:
+                *args: Positional arguments forwarded to the wrapped function.
+                **kwargs: Keyword arguments forwarded to the wrapped function.
+
+            Returns:
+                Any: The result returned by the wrapped function.
+            """
+            error = ({"error": "not authorized"}, HTTPStatus.UNAUTHORIZED)
+
+            required_permissions_set = set(required_permissions) if isinstance(required_permissions, list) else {required_permissions}
 
             # obtain the identity and current permissions of that identity
             user = get_user_from_api_key()
@@ -378,20 +402,20 @@ def auth_required(required_permissions, *acl_args):
     return auth_required_wrap
 
 
-def api_key_required(key_type=None):
+def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
     """Enforce API key authentication with additional resource type parameter.
 
     Args:
-        resource_type: The type of resource being accessed.
+        key_type: The type of resource being accessed.
 
     Returns:
         function: The decorated function.
     """
 
-    def decorator(fn):
+    def decorator(fn):  # noqa: ANN001, ANN202
         @wraps(fn)
-        def wrapper(*args, **kwargs):
-            error = ({"error": "not authorized"}, 401)
+        def wrapper(*args, **kwargs) -> tuple[dict, HTTPStatus]:  # noqa: ANN002, ANN003
+            error = ({"error": "not authorized"}, HTTPStatus.UNAUTHORIZED)
 
             # do we have the authorization header?
             if "Authorization" not in request.headers:
@@ -419,18 +443,17 @@ def api_key_required(key_type=None):
                 log_manager.store_auth_error_activity(f"Incorrect validation type: {key_type}")
                 return error
 
+            # keep for debugging
             # import inspect
             # for frame in inspect.stack():
             #     if 'self' in frame.frame.f_locals:
             #         class_name = frame.frame.f_locals['self'].__class__.__name__
             #         break
             # print(f"api_key_required: {key_type},  {class_name}.{fn.__name__}", flush=True)
-            if master_id:
-                # in case the same api_key is used for different nodes, we also need to check the node ID (if available)
-                validated_object = master_class.get_by_api_key_id(api_key, master_id)
-            else:
-                # return first node with valid api_key
-                validated_object = master_class.get_by_api_key(api_key)
+
+            # in case the same api_key is used for different nodes, we also need to check the node ID (if available)
+            # otherwise return first node with valid api_key
+            validated_object = master_class.get_by_api_key_id(api_key, master_id) if master_id else master_class.get_by_api_key(api_key)
             if not validated_object:
                 api_key = log_manager.sensitive_value(api_key)
                 log_manager.store_auth_error_activity(f"Incorrect api key: {api_key} for external access with type '{key_type}'")
@@ -445,33 +468,33 @@ def api_key_required(key_type=None):
     return decorator
 
 
-def jwt_required(fn):
+def jwt_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
     """Check if a valid JWT is present in the request headers.
 
     Args:
-        fn -- The function to be decorated.
+        fn: The function to be decorated.
 
     Returns:
         The decorated function.
     """
 
     @wraps(fn)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> tuple[dict, HTTPStatus]:  # noqa: ANN002, ANN003
         try:
             verify_jwt_in_request()
         except JWTExtendedException as ex:
             log_manager.store_auth_error_activity("Missing JWT", ex)
-            return {"error": "authorization required"}, 401
+            return {"error": "authorization required"}, HTTPStatus.UNAUTHORIZED
 
         identity = get_jwt_identity()
         if not identity:
             log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
-            return {"error": "authorization failed"}, 401
+            return {"error": "authorization failed"}, HTTPStatus.UNAUTHORIZED
 
         user = User.find(identity)
         if user is None:
             log_manager.store_auth_error_activity(f"Unknown identity: {identity}")
-            return {"error": "authorization failed"}, 401
+            return {"error": "authorization failed"}, HTTPStatus.UNAUTHORIZED
 
         log_manager.store_user_activity(user, "API_ACCESS", "Access permitted")
         return fn(*args, **kwargs)
@@ -479,7 +502,7 @@ def jwt_required(fn):
     return wrapper
 
 
-def get_api_key():
+def get_api_key() -> str:
     """Get the API key from the request headers.
 
     This function retrieves the API key from the "Authorization" header of the request.
@@ -491,7 +514,7 @@ def get_api_key():
     return request.headers["Authorization"].replace("Bearer ", "")
 
 
-def get_user_from_jwt():
+def get_user_from_jwt() -> User:
     """Obtain the identity and current permissions.
 
     This function retrieves the user information from the JWT token. If the user information
@@ -507,7 +530,7 @@ def get_user_from_jwt():
     return user
 
 
-def decode_user_from_jwt(jwt_token):
+def decode_user_from_jwt(jwt_token: str) -> User:
     """Decode the user from a JWT token.
 
     Args:
@@ -526,12 +549,12 @@ def decode_user_from_jwt(jwt_token):
     return User.find(decoded["sub"])
 
 
-def get_external_permissions_ids():
+def get_external_permissions_ids() -> list[str]:
     """Get the external permissions IDs."""
     return ["MY_ASSETS_ACCESS", "MY_ASSETS_CREATE", "MY_ASSETS_CONFIG", "CONFIG_ACCESS"]
 
 
-def get_external_permissions():
+def get_external_permissions() -> list[Permission]:
     """Get the external permissions.
 
     This function retrieves a list of external permissions by calling the `get_external_permissions_ids` function
@@ -540,8 +563,4 @@ def get_external_permissions():
     Returns:
         A list of external permission objects.
     """
-    permissions = []
-    for permission_id in get_external_permissions_ids():
-        permissions.append(Permission.find(permission_id))
-
-    return permissions
+    return [Permission.find(pid) for pid in get_external_permissions_ids()]

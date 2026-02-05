@@ -3,6 +3,7 @@
 import mimetypes
 from base64 import b64decode
 from datetime import datetime
+from http import HTTPStatus
 from pathlib import Path
 
 from envelope import Envelope
@@ -33,7 +34,7 @@ class EMAILPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input: dict) -> None:
+    def publish(self, publisher_input: dict) -> tuple[dict, HTTPStatus]:
         """Publish an email using the provided publisher input.
 
         Parameters:
@@ -125,10 +126,18 @@ class EMAILPublisher(BasePublisher):
             sent = envelope.send()
             success = bool(sent)
             if success:
-                self.logger.info("Email sent successfully")
+                msg = "Email sent successfully"
+                status = HTTPStatus.OK
+                self.logger.info(msg)
                 Envelope.smtp_quit()
             else:
-                self.logger.critical("Email sending failed")
+                msg = "Email sending failed, see publisher logs"
+                status = HTTPStatus.INTERNAL_SERVER_ERROR
+                self.logger.critical(msg)
+
+            type_msg = "message" if status == HTTPStatus.OK else "error"
+            return {type_msg: msg}, status
 
         except Exception as error:
-            self.logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR

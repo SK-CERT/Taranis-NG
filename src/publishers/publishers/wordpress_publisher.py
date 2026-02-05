@@ -3,11 +3,15 @@
 import base64
 from base64 import b64decode
 from datetime import datetime
+from http import HTTPStatus
+
 import requests
 
-from .base_publisher import BasePublisher
-from shared.log_manager import logger
+from shared.common import TZ
 from shared.config_publisher import ConfigPublisher
+from shared.log_manager import logger
+
+from .base_publisher import BasePublisher
 
 
 class WORDPRESSPublisher(BasePublisher):
@@ -27,11 +31,12 @@ class WORDPRESSPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input):
+    def publish(self, publisher_input: dict) -> tuple[dict, HTTPStatus]:
         """Publish data.
 
         Args:
             publisher_input (PublisherInput): Publisher input.
+
         Raises:
             Exception: If an error occurs
         """
@@ -52,11 +57,14 @@ class WORDPRESSPublisher(BasePublisher):
 
             bytes_data = b64decode(data, validate=True).decode("utf-8")
 
-            now = datetime.now()
+            now = datetime.now(TZ)
             title = "Report from TaranisNG on " + now.strftime("%d.%m.%Y") + " at " + now.strftime("%H:%M")
 
             post = {"title": title, "status": "publish", "content": bytes_data}
 
-            requests.post(main_wp_url + "/index.php/wp-json/wp/v2/posts", headers=headers, json=post)
+            requests.post(main_wp_url + "/index.php/wp-json/wp/v2/posts", headers=headers, json=post, timeout=30)
+            return {}, HTTPStatus.OK
+
         except Exception as error:
-            self.logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR

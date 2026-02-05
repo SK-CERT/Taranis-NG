@@ -24,6 +24,18 @@ export function deleteProduct(product) {
     return ApiService.delete('/publish/products/' + product.id)
 }
 
-export function publishProduct(product_id, publisher_id) {
-    return ApiService.post('/publish/products/' + product_id + '/publishers/' + publisher_id, {})
+export function publishProduct(product, publisher_ids) {
+    return ApiService.post('/publish/products/publish', {
+        product: product,
+        publisher_ids: publisher_ids
+    })
+}
+
+export function previewProduct(data, ctrl_key, jwt) {
+    // return a token
+    return ApiService.post('/publish/products/preview', {
+        product: data,
+        ctrl: ctrl_key,
+        jwt: jwt
+    })
 }

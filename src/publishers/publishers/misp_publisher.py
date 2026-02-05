@@ -2,12 +2,15 @@
 
 import json
 from base64 import b64decode
+from http import HTTPStatus
+
 import urllib3
-from pymisp import PyMISP, MISPEvent
+from pymisp import MISPEvent, PyMISP
+
+from shared.config_publisher import ConfigPublisher
+from shared.log_manager import logger
 
 from .base_publisher import BasePublisher
-from shared.log_manager import logger
-from shared.config_publisher import ConfigPublisher
 
 
 class MISPPublisher(BasePublisher):
@@ -27,11 +30,12 @@ class MISPPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input):
+    def publish(self, publisher_input: dict) -> tuple[dict, HTTPStatus]:
         """Publish data to MISP.
 
         Args:
             publisher_input (PublisherInput): Publisher input.
+
         Raises:
             Exception: If an error occurs while publishing data.
         """
@@ -54,5 +58,8 @@ class MISPPublisher(BasePublisher):
             event = MISPEvent()
             event.load(event_json)
             misp.add_event(event)
+            return {}, HTTPStatus.OK
+
         except Exception as error:
-            self.logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR

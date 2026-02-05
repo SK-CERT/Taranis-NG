@@ -1,15 +1,25 @@
 """ProductType model."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.parameter_value import ParameterValue
+    from model.user import User
+
+
 import datetime
-from marshmallow import post_load, fields
-from sqlalchemy import or_, orm, and_
+
 import sqlalchemy
+from managers.db_manager import db
+from marshmallow import fields, post_load
+from model.acl_entry import ACLEntry
+from model.parameter_value import NewParameterValueSchema
+from model.product import Product
+from sqlalchemy import and_, or_, orm
 from sqlalchemy.sql.expression import cast
 
-from managers.db_manager import db
-from model.product import Product
-from model.parameter_value import NewParameterValueSchema
-from model.acl_entry import ACLEntry
 from shared.schema.acl_entry import ItemType
 from shared.schema.product_type import ProductTypePresentationSchema, ProductTypeSchema
 
@@ -24,11 +34,13 @@ class NewProductTypeSchema(ProductTypeSchema):
     parameter_values = fields.List(fields.Nested(NewParameterValueSchema))
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> ProductType:  # noqa: ARG002, ANN003
         """Create a new product type.
 
         Args:
             data: Product type data
+            **kwargs: Additional arguments.
+
         Returns:
             ProductType: New product type
         """
@@ -43,7 +55,7 @@ class ProductType(db.Model):
         title: Product type title
         description: Product type description
         created: Product type creation date
-        presenter_id: Presenter id
+        presenter_id: Presenter GUID
         presenter: Presenter
         parameter_values: List of parameter values
     """
@@ -59,7 +71,14 @@ class ProductType(db.Model):
 
     parameter_values = db.relationship("ParameterValue", secondary="product_type_parameter_value", cascade="all")
 
-    def __init__(self, id, title, description, presenter_id, parameter_values):
+    def __init__(
+        self,
+        id: int,  # noqa: A002, ARG002
+        title: str,
+        description: str,
+        presenter_id: str,
+        parameter_values: list[ParameterValue],
+    ) -> None:
         """Initialize product type."""
         self.id = None
         self.title = title
@@ -70,13 +89,13 @@ class ProductType(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct product type."""
         self.subtitle = self.description
         self.tag = "mdi-file-document-outline"
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[ProductType]:
         """Get all product types.
 
         Returns:
@@ -85,8 +104,32 @@ class ProductType(db.Model):
         return cls.query.order_by(db.asc(ProductType.title)).all()
 
     @classmethod
-    def allowed_with_acl(cls, product_id, user, see, access, modify):
+    def allowed_with_acl(cls, product_type_id: int, user: User, see: bool, access: bool, modify: bool) -> bool:
         """Check if user is allowed to access product type.
+
+        Args:
+            product_type_id: Product id
+            user: User
+            see: See permission
+            access: Access permission
+            modify: Modify permission
+        Returns:
+            bool: True if user is allowed to access product type
+        """
+        query = db.session.query(ProductType.id).distinct().group_by(ProductType.id).filter(ProductType.id == product_type_id)
+
+        query = query.outerjoin(
+            ACLEntry,
+            and_(cast(ProductType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE),
+        )
+
+        query = ACLEntry.apply_query(query, user, see, access, modify)
+
+        return query.scalar() is not None
+
+    @classmethod
+    def allowed_product_with_acl(cls, product_id: int, user: User, see: bool, access: bool, modify: bool) -> bool:
+        """Check if user is allowed to access product's product type.
 
         Args:
             product_id: Product id
@@ -95,24 +138,16 @@ class ProductType(db.Model):
             access: Access permission
             modify: Modify permission
         Returns:
-            bool: True if user is allowed to access product type
+            bool: True if user is allowed to access product's product type
         """
         product = db.session.query(Product).filter_by(id=product_id).first()
         if not product:
             return False
 
-        query = db.session.query(ProductType.id).distinct().group_by(ProductType.id).filter(ProductType.id == product.product_type_id)
-
-        query = query.outerjoin(
-            ACLEntry, and_(cast(ProductType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE)
-        )
-
-        query = ACLEntry.apply_query(query, user, see, access, modify)
-
-        return query.scalar() is not None
+        return cls.allowed_with_acl(product.product_type_id, user, see, access, modify)
 
     @classmethod
-    def get(cls, search, user, acl_check):
+    def get(cls, search: str, user: User, acl_check: bool) -> tuple[list[ProductType], int]:
         """Get product types.
 
         Args:
@@ -125,11 +160,12 @@ class ProductType(db.Model):
         """
         query = cls.query.distinct().group_by(ProductType.id)
 
-        if acl_check is True:
+        if acl_check:
             query = query.outerjoin(
-                ACLEntry, and_(cast(ProductType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE)
+                ACLEntry,
+                and_(cast(ProductType.id, sqlalchemy.String) == ACLEntry.item_id, ACLEntry.item_type == ItemType.PRODUCT_TYPE),
             )
-            query = ACLEntry.apply_query(query, user, True, False, False)
+            query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
         if search is not None:
             search_string = f"%{search}%"
@@ -138,7 +174,7 @@ class ProductType(db.Model):
         return query.order_by(db.asc(ProductType.title)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search, user, acl_check):
+    def get_all_json(cls, search: str, user: User, acl_check: bool) -> dict:
         """Get all product types as JSON.
 
         Args:
@@ -153,7 +189,7 @@ class ProductType(db.Model):
         return {"total_count": count, "items": product_type_schema.dump(product_types)}
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new product type.
 
         Args:
@@ -165,27 +201,27 @@ class ProductType(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, id):
+    def delete(cls, product_type_id: int) -> None:
         """Delete a product type.
 
         Args:
-            id: Product type id
+            product_type_id: Product type id
         """
-        product_type = db.session.get(cls, id)
+        product_type = db.session.get(cls, product_type_id)
         db.session.delete(product_type)
         db.session.commit()
 
     @classmethod
-    def update(cls, preset_id, data):
+    def update(cls, product_type_id: int, data: dict) -> None:
         """Update a product type.
 
         Args:
-            preset_id: Product type id
+            product_type_id: Product type id
             data: Product type data
         """
         new_product_type_schema = NewProductTypeSchema()
         updated_product_type = new_product_type_schema.load(data)
-        product_type = db.session.get(cls, preset_id)
+        product_type = db.session.get(cls, product_type_id)
         product_type.title = updated_product_type.title
         product_type.description = updated_product_type.description
 

@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialogVisible" max-width="550" :persistent="!cancelable">
+    <v-dialog v-model="dialogVisible" min-width2="450" max-width="650" content-class="auto-size-dialog" :persistent="!cancelable">
         <v-card outlined>
             <v-card-title class="justify-center" style="text-align: center;">
                 <div style="display: inline-flex; align-items: center; max-width: 100%;">
