@@ -24,8 +24,20 @@ class LogRecord(db.Model):
     activity_method = db.Column(db.String(8))
     activity_data = db.Column(db.String(4096))
 
-    def __init__(self, ip_address, user_id, user_name, system_id, system_name, module_id, activity_type,
-                 activity_resource, activity_detail, activity_method, activity_data):
+    def __init__(
+        self,
+        ip_address,
+        user_id,
+        user_name,
+        system_id,
+        system_name,
+        module_id,
+        activity_type,
+        activity_resource,
+        activity_detail,
+        activity_method,
+        activity_data,
+    ):
         self.id = None
         self.ip_address = ip_address
         self.user_id = user_id
@@ -40,9 +52,32 @@ class LogRecord(db.Model):
         self.activity_data = activity_data
 
     @classmethod
-    def store(cls, ip_address, user_id, user_name, system_id, system_name, module_id, activity_type, activity_resource,
-              activity_detail, activity_method, activity_data):
-        log_record = LogRecord(ip_address, user_id, user_name, system_id, system_name, module_id, activity_type,
-                               activity_resource, activity_detail, activity_method, activity_data)
+    def store(
+        cls,
+        ip_address,
+        user_id,
+        user_name,
+        system_id,
+        system_name,
+        module_id,
+        activity_type,
+        activity_resource,
+        activity_detail,
+        activity_method,
+        activity_data,
+    ):
+        log_record = LogRecord(
+            ip_address,
+            user_id,
+            user_name,
+            system_id,
+            system_name,
+            module_id,
+            activity_type,
+            activity_resource,
+            activity_detail,
+            activity_method,
+            activity_data,
+        )
         db.session.add(log_record)
         db.session.commit()
