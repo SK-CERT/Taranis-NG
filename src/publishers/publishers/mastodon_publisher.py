@@ -1,6 +1,7 @@
 """Publisher for Mastodon."""
 
 from base64 import b64decode
+from http import HTTPStatus
 
 from mastodon import Mastodon
 
@@ -28,7 +29,7 @@ class MASTODONPublisher(BasePublisher):
     description = config.description
     parameters = config.parameters
 
-    def publish(self, publisher_input: dict) -> None:
+    def publish(self, publisher_input: dict) -> tuple[dict, HTTPStatus]:
         """Publish data.
 
         Args:
@@ -54,8 +55,9 @@ class MASTODONPublisher(BasePublisher):
                 status = b64decode(publisher_input.message_body, validate=True).decode("UTF-8")
 
             if not status:
-                self.logger.warning("Status is empty, publication skipped.")
-                return
+                msg = "Status is empty, publication skipped."
+                self.logger.warning(msg)
+                return {"error": msg}, HTTPStatus.BAD_REQUEST
 
             if spoiler_text in ["", "None"]:
                 spoiler_text = None
@@ -68,6 +70,9 @@ class MASTODONPublisher(BasePublisher):
 
             mastodon = Mastodon(access_token=access_token, api_base_url=api_base_url)
             mastodon.status_post(status=status, sensitive=sensitive, visibility=visibility, spoiler_text=spoiler_text)
+            # some status return?
+            return {}, HTTPStatus.OK
 
         except Exception as error:
-            self.logger.exception(f"Publishing fail: {error}")
+            self.logger.exception(f"Error: {error}")
+            return {"error": str(error)}, HTTPStatus.INTERNAL_SERVER_ERROR

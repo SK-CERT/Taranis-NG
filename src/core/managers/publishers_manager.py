@@ -15,7 +15,7 @@ from shared.schema.publisher import PublisherInput, PublisherInputSchema
 from shared.schema.publishers_node import PublishersNode as PublishersNodeSchema
 
 
-def add_publishers_node(data: dict) -> int:
+def add_publishers_node(data: dict) -> HTTPStatus:
     """Add publishers node.
 
     Args:
@@ -33,7 +33,7 @@ def add_publishers_node(data: dict) -> int:
     return status_code
 
 
-def update_publishers_node(node_id: int, data: dict) -> int:
+def update_publishers_node(node_id: int, data: dict) -> HTTPStatus:
     """Update publishers node.
 
     Args:
@@ -61,7 +61,7 @@ def add_publisher_preset(data: dict) -> None:
     PublisherPreset.add_new(data)
 
 
-def publish(preset: PublisherPreset, data: dict, message_title: str, message_body: str, recipients: list) -> tuple[dict, int]:
+def publish(preset: PublisherPreset, data: dict, message_title: str, message_body: str, recipients: list) -> tuple[dict, HTTPStatus]:
     """Publish.
 
     Args:

@@ -1,33 +1,27 @@
 """PresentersNode model."""
 
-from marshmallow import post_load
-from sqlalchemy import or_, orm
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.presenter import Presenter
+    from model.presenters_node import PresentersNode
+
 import uuid
 
 from managers.db_manager import db
-from shared.schema.presenters_node import PresentersNodeSchema, PresentersNodePresentationSchema
+from marshmallow import post_load
+from sqlalchemy import or_, orm
 
-
-class NewPresentersNodeSchema(PresentersNodeSchema):
-    """NewPresentersNodeSchema class."""
-
-    @post_load
-    def make(self, data, **kwargs):
-        """Make method.
-
-        Args:
-            data (dict): Data.
-        Returns:
-            PresentersNode: PresentersNode object.
-        """
-        return PresentersNode(**data)
+from shared.schema.presenters_node import PresentersNodePresentationSchema, PresentersNodeSchema
 
 
 class PresentersNode(db.Model):
     """PresentersNode class.
 
     Attributes:
-        id (str): ID.
+        id (str): GUID.
         name (str): Name.
         description (str): Description.
         api_url (str): API URL.
@@ -44,7 +38,14 @@ class PresentersNode(db.Model):
 
     presenters = db.relationship("Presenter", back_populates="node", cascade="all")
 
-    def __init__(self, id, name, description, api_url, api_key):
+    def __init__(
+        self,
+        id: str,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        api_url: str,
+        api_key: str,
+    ) -> None:
         """Initilize PresentersNode."""
         self.id = str(uuid.uuid4())
         self.name = name
@@ -56,25 +57,26 @@ class PresentersNode(db.Model):
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct method."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-server-network"
 
     @classmethod
-    def get_by_api_key(cls, api_key):
+    def get_by_api_key(cls, api_key: str) -> PresentersNode:
         """Get by API key.
 
         Args:
             api_key (str): API key.
+
         Returns:
             PresentersNode: PresentersNode object.
         """
         return cls.query.filter_by(api_key=api_key).first()
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[PresentersNode]:
         """Get all.
 
         Returns:
@@ -83,11 +85,12 @@ class PresentersNode(db.Model):
         return cls.query.order_by(db.asc(PresentersNode.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str) -> tuple[list[PresentersNode], int]:
         """Get.
 
         Args:
             search (str): Search.
+
         Returns:
             list: List of PresentersNode objects.
         """
@@ -100,11 +103,12 @@ class PresentersNode(db.Model):
         return query.order_by(db.asc(PresentersNode.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str) -> dict:
         """Get all JSON.
 
         Args:
             search (str): Search.
+
         Returns:
             dict: Dictionary.
         """
@@ -113,7 +117,7 @@ class PresentersNode(db.Model):
         return {"total_count": count, "items": node_schema.dump(nodes)}
 
     @classmethod
-    def add_new(cls, node_data, presenters):
+    def add_new(cls, node_data: dict, presenters: list[Presenter]) -> None:
         """Add new.
 
         Args:
@@ -127,11 +131,11 @@ class PresentersNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, node_id, node_data, presenters):
+    def update(cls, node_id: str, node_data: dict, presenters: list[Presenter]) -> None:
         """Update.
 
         Args:
-            node_id (str): Node ID.
+            node_id (str): Node GUID.
             node_data (dict): Node data.
             presenters (list): Presenters.
         """
@@ -155,16 +159,34 @@ class PresentersNode(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, node_id):
+    def delete(cls, node_id: str) -> None:
         """Delete.
 
         Args:
-            node_id (str): Node ID.
+            node_id (str): Node GUID.
         """
         node = db.session.get(cls, node_id)
         for presenter in node.presenters:
             if len(presenter.product_types) > 0:
-                raise Exception("Presenters has mapped product types")
+                msg = "Presenters has mapped product types"
+                raise Exception(msg)  # noqa: TRY002
 
         db.session.delete(node)
         db.session.commit()
+
+
+class NewPresentersNodeSchema(PresentersNodeSchema):
+    """NewPresentersNodeSchema class."""
+
+    @post_load
+    def make(self, data: dict, **kwargs) -> PresentersNode:  # noqa: ARG002, ANN003
+        """Make method.
+
+        Args:
+            data (dict): Data.
+            **kwargs: Additional arguments.
+
+        Returns:
+            PresentersNode: PresentersNode object.
+        """
+        return PresentersNode(**data)

@@ -1,28 +1,20 @@
-"""This module provides functionality for managing publishers in Taranis-NG.
+"""This module provides functionality for managing publishers in Taranis-NG."""
 
-The publishers manager is responsible for registering publishers, retrieving information about registered publishers,
-and publishing data using the appropriate publisher based on the input.
+from http import HTTPStatus
 
-The module defines the following functions:
-- initialize(): Initializes the publishers by registering them.
-- register_publisher(publisher): Registers a publisher.
-- get_registered_publishers_info(): Retrieves information about the registered publishers.
-- publish(publisher_input_json): Publishes the given input using the appropriate publisher.
-"""
-
-from publishers.ftp_publisher import FTPPublisher
-from publishers.sftp_publisher import SFTPPublisher
 from publishers.email_publisher import EMAILPublisher
+from publishers.ftp_publisher import FTPPublisher
 from publishers.mastodon_publisher import MASTODONPublisher
+from publishers.misp_publisher import MISPPublisher
+from publishers.sftp_publisher import SFTPPublisher
 from publishers.twitter_publisher import TWITTERPublisher
 from publishers.wordpress_publisher import WORDPRESSPublisher
-from publishers.misp_publisher import MISPPublisher
 from shared.schema.publisher import PublisherInputSchema
 
 publishers = {}
 
 
-def initialize():
+def initialize() -> None:
     """Initialize the publishers by registering them."""
     register_publisher(FTPPublisher())
     register_publisher(SFTPPublisher())
@@ -33,7 +25,7 @@ def initialize():
     register_publisher(MISPPublisher())
 
 
-def register_publisher(publisher):
+def register_publisher(publisher) -> None:  # noqa: ANN001
     """Register a publisher.
 
     Arguments:
@@ -42,20 +34,16 @@ def register_publisher(publisher):
     publishers[publisher.type] = publisher
 
 
-def get_registered_publishers_info():
+def get_registered_publishers_info() -> list[dict]:
     """Retrieve information about the registered publishers.
 
     Returns:
        (list): A list of dictionaries containing information about each registered publisher.
     """
-    publishers_info = []
-    for key in publishers:
-        publishers_info.append(publishers[key].get_info())
-
-    return publishers_info
+    return [pub.get_info() for pub in publishers.values()]
 
 
-def publish(publisher_input_json):
+def publish(publisher_input_json: dict) -> tuple[dict, HTTPStatus]:
     """Publish the given input using the appropriate publisher.
 
     Arguments:
@@ -66,4 +54,4 @@ def publish(publisher_input_json):
     """
     publisher_input_schema = PublisherInputSchema()
     publisher_input = publisher_input_schema.load(publisher_input_json)
-    publishers[publisher_input.type].publish(publisher_input)
+    return publishers[publisher_input.type].publish(publisher_input)

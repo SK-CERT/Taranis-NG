@@ -1,5 +1,7 @@
 """Base abstract type for all publishers."""
 
+from typing import ClassVar
+
 from shared.schema.publisher import PublisherSchema
 
 
@@ -11,6 +13,7 @@ class BasePublisher:
         name (str): The name of the publisher.
         description (str): The description of the publisher.
         parameters (list): The list of parameters for the publisher.
+
     Methods:
         get_info(): Returns the information schema of the publisher.
     """
@@ -18,9 +21,9 @@ class BasePublisher:
     type = "BASE_PUBLISHER"
     name = "Base Publisher"
     description = "Base abstract type for all publishers"
-    parameters = []
+    parameters: ClassVar[list] = []
 
-    def get_info(self):
+    def get_info(self) -> dict:
         """Return the information of the publisher.
 
         Returns:

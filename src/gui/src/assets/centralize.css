@@ -700,3 +700,8 @@ button.ql-publish:hover {
     height: 100%;
     width: 100%;
 }
+
+.auto-size-dialog {
+    width: fit-content;
+    max-width: 100%;
+}
