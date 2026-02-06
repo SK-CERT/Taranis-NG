@@ -1,5 +1,4 @@
 /* GLOBAL LAYOUT CONFiGURATOR */
-/* !!! WORK iN PROGRESS - PLEASE, DON'T EDiT THiS FilE, WHiLE THiS COMMENT EXiSTS !!! */
 
 const dialogs = {
     FULLSCREEN: {
@@ -248,7 +247,7 @@ const icons = {
     CLOCK: "mdi-clock-outline",
     CLOSE: "mdi-close-circle",
     COMPLETED: "mdi-progress-check",
-    DELETE: "mdi-delete",
+    DELETE: "mdi-delete-outline",
     DESC: "mdi-sort-descending",
     EXPORT: "mdi-export",
     GROUP: "mdi-group",

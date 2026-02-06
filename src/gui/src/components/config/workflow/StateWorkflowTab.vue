@@ -84,7 +84,7 @@
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
                             <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? 'error' : 'warning'">
-                                {{ item.editable ? 'mdi-delete-outline' : 'mdi-lock-outline' }}
+                                {{ item.editable ? UI.ICON.DELETE : 'mdi-lock-outline' }}
                             </v-icon>
                         </template>
                         <span>

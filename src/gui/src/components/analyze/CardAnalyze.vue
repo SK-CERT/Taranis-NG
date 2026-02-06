@@ -53,7 +53,7 @@
                                                 <v-btn v-if="canDelete" icon
                                                        @click.stop="showMsgBox('delete')"
                                                        :title="$t('analyze.tooltip.delete_item')">
-                                                    <v-icon color="error">mdi-delete-outline</v-icon>
+                                                    <v-icon color="error">{{ UI.ICON.DELETE }}</v-icon>
                                                 </v-btn>
                                             </v-col>
                                         </v-row>

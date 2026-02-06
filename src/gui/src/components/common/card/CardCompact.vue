@@ -19,12 +19,12 @@
                                     <span>{{card.subtitle}}</span>
                                 </v-col>
 
-                                <!--HOVER TOOLBAR-->
+                                <!--TOOLBAR-->
                                 <v-col :style="UI.STYLE.card_hover_toolbar">
-                                    <v-row v-if="hover" v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
+                                    <v-row v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
-                                            <v-btn v-if="checkPermission(deletePermission)" icon class="red" @click.stop="showMsgBox">
-                                                <v-icon color="white">{{ UI.ICON.DELETE }}</v-icon>
+                                            <v-btn v-if="checkPermission(deletePermission)" icon @click.stop="showMsgBox">
+                                                <v-icon color="error">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
                                     </v-row>
