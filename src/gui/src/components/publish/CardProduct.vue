@@ -43,7 +43,7 @@
                                         <v-col v-bind="UI.CARD.COL.TOOLS">
                                             <v-btn v-if="canDelete" icon @click.stop="showMsgBox"
                                                    :title="$t('publish.tooltip.delete_item')">
-                                                <v-icon color="error">mdi-delete-outline</v-icon>
+                                                <v-icon color="error">{{ UI.ICON.DELETE }}</v-icon>
                                             </v-btn>
                                         </v-col>
                                     </v-row>

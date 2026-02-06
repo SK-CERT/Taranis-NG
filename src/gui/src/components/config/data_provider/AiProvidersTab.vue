@@ -60,7 +60,7 @@
                 <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
                         <v-icon small v-bind="attrs" v-on="on" @click="deleteItem(item)" color="error">
-                            mdi-delete-outline
+                            {{ UI.ICON.DELETE }}
                         </v-icon>
                     </template>
                     <span> {{ $t('common.delete') }} </span>
