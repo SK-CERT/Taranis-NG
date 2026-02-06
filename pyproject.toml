@@ -44,7 +44,7 @@ classifiers = [
 required-version = "0.8.14"
 
 [tool.ruff]
-required-version = ">=0.12.10"
+required-version = ">=0.15.0"
 line-length = 142
 target-version = "py313"
 fix = true
