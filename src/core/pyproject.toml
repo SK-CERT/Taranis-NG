@@ -1,6 +1,6 @@
 [project]
 name = "TARANIS-NG-core"
-version = "v25.12.1"
+version = "25.12.1"
 description = "Taranis-NG Core service."
 requires-python = ">=3.10"
 dependencies = [
