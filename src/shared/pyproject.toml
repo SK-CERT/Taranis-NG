@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taranis-ng_shared"
-version = "v25.12.1"
+version = "25.12.1"
 description = "Taranis-NG Shared Classes"
 requires-python = ">=3.10"
 dependencies = [
