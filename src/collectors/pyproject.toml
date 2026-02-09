@@ -5,14 +5,14 @@ description = "Taranis-NG Collectors service."
 requires-python = ">=3.10"
 dependencies = [
     "beautifulsoup4==4.14.3",
-    "dateparser==1.2.2",
+    "dateparser==1.3.0",
     "feedparser==6.0.12",
     "Flask==3.1.2",
     "Flask-Cors==6.0.2",
     "Flask-RESTful==0.3.10",
     "gevent==25.9.1",
     "gunicorn==25.0.1",
-    "marshmallow==4.2.1",
+    "marshmallow==4.2.2",
     "PySocks==1.7.1",
     "python-dateutil==2.9.0.post0",
     "python-dotenv==1.2.1",
