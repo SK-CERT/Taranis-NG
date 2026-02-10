@@ -1,6 +1,6 @@
 [project]
 name = "TARANIS-NG-collectors"
-version = "25.12.1"
+version = "26.02.1"
 description = "Taranis-NG Collectors service."
 requires-python = ">=3.10"
 dependencies = [

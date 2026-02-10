@@ -1,6 +1,6 @@
 [project]
 name = "TARANIS-NG-presenters"
-version = "25.12.1"
+version = "26.02.1"
 description = "Taranis-NG Presenters service."
 requires-python = ">=3.10"
 dependencies = [
