@@ -1,6 +1,6 @@
 [project]
 name = "TARANIS-NG"
-version = "25.12.1"
+version = "26.02.1"
 description = "OSINT gathering and analysis tool for CSIRT teams and organisations."
 readme = "README.md"
 requires-python = ">=3.10"
