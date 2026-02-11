@@ -1,23 +1,4 @@
-"""This module contains schemas and classes for representing report items and their attributes.
-
-The module includes the following classes:
-- ReportItemAttributeBaseSchema: Schema for representing a report item attribute.
-- ReportItemAttributeSchema: Schema for representing a report item attribute with additional fields.
-- ReportItemAttribute: Class representing an attribute of a report item.
-- ReportItemBaseSchema: Schema for the base report item.
-- RemoteReportItemSchema: Schema for remote report items.
-- ReportItemSchema: Schema for serializing and deserializing ReportItem objects.
-- ReportItemAttributeRemoteSchema: Schema for representing a remote attribute of a report item.
-- ReportItemRemoteSchema: Schema for representing a remote report item.
-- ReportItemPresentationSchema: Schema for presenting a report item.
-- ReportItem: Class representing a report item.
-
-The module also imports schemas from other modules:
-- PresentationSchema: Schema for presentation.
-- NewsItemAggregateSchema: Schema for representing news item aggregates.
-- ACLEntryStatusSchema: Schema for the ACL entry status.
-- UserSchemaBase: Schema for representing user data.
-"""
+"""This module contains schemas and classes for representing report items and their attributes."""
 
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
