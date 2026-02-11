@@ -4,6 +4,8 @@ on:
   push:
     paths:
     - 'src/shared/**'
+    branches:
+    - main
 
 permissions:
   packages: write
