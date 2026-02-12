@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 import base64
 import json
+import mimetypes
 import uuid
 from http import HTTPStatus
 
@@ -25,7 +26,6 @@ from model.product_type import ProductType
 from model.publisher_preset import PublisherPreset
 from model.report_item import ReportItem
 from remote.presenters_api import PresentersApi
-
 from shared.schema.presenter import PresenterInput, PresenterInputSchema
 
 
@@ -224,7 +224,7 @@ class ProductGetPreview(Resource):
         # Retrieve and immediately delete cached data from Redis (one-time use)
         cache_key = f"preview:{token}"
         try:
-            cached_bytes = redis_client.getdel(cache_key)
+            cached_bytes = redis_client.get(cache_key)
             if not cached_bytes:
                 err_msg = "Preview token not found, expired, or already processed."
                 log_manager.store_auth_error_activity(err_msg)
@@ -232,10 +232,13 @@ class ProductGetPreview(Resource):
 
             cached_data = json.loads(cached_bytes)
             preview_data = base64.b64decode(cached_data["data"])
-            preview_mime = cached_data["mime_type"]
+            preview_mime = cached_data["mime"]
+            preview_filename = cached_data.get("filename")
 
             logger.info(f"Preview token processed: {token}")
-            return Response(preview_data, mimetype=preview_mime)
+            response = Response(preview_data, mimetype=preview_mime)
+            response.headers["Content-Disposition"] = f'filename="{preview_filename}"'
+            return response
 
         except Exception as ex:
             err_msg = "Preview failed to retrieve from Redis"
@@ -262,7 +265,7 @@ class ProductSetPreview(Resource):
         """
         err_msg = None
         user = None
-        preview_cache_ttl = 60  # Cache expiration time in seconds
+        cache_ttl = 3600  # 1 hour, Expiration time in seconds (time-to-live)
 
         jwt = request.json.get("jwt")
         if not jwt:
@@ -297,12 +300,14 @@ class ProductSetPreview(Resource):
             else:
                 return {"error": "No data available for preview!"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
+            filename = product_data.get("title", "report")
+            extension = mimetypes.guess_extension(preview_mime)
             # Store preview in Redis with automatic expiration (works across multiple workers)
             cache_key = f"preview:{token}"
             cache_value = json.dumps(
-                {"data": base64.b64encode(preview_data).decode("utf-8"), "mime_type": preview_mime},
+                {"data": base64.b64encode(preview_data).decode("utf-8"), "mime": preview_mime, "filename": filename + extension},
             )
-            redis_client.setex(cache_key, preview_cache_ttl, cache_value)
+            redis_client.setex(cache_key, cache_ttl, cache_value)
 
             logger.debug(f"Preview token generated: {token}")
             return {"token": token}, HTTPStatus.OK
