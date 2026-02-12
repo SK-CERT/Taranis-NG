@@ -31,9 +31,11 @@
                         v-for="report in reports"
                         :key="report.id"
                         :card="report"
-                        :show_remove_action="false"
+                        :show_remove_action="true"
                         :preselected="false"
+                        :remove_tooltip="'assess.tooltip.remove_from_report'"
                         @show-report-item-detail="openReportItemDialog"
+                        @remove-report-item-from-selector="removeAggregateFromReport"
                     />
                 </div>
             </v-card-text>
@@ -42,7 +44,7 @@
 </template>
 
 <script>
-    import { getReportItemsByAggregate, deleteReportItem } from "@/api/analyze";
+    import { getReportItemsByAggregate, deleteReportItem, updateReportItem } from "@/api/analyze";
     import CardAnalyze from "@/components/analyze/CardAnalyze";
 
     export default {
@@ -142,6 +144,39 @@
                 this.$root.$emit('show-report-item', report);
                 // Close this dialog after emitting the event
                 this.close();
+            },
+
+            removeAggregateFromReport(report) {
+                // Remove the aggregate from this specific report item
+                const data = {
+                    delete: true,
+                    aggregate_id: this.currentCard.id
+                };
+
+                updateReportItem(report.id, data).then(() => {
+                    // Remove the report from the list since the aggregate was removed
+                    this.reports = this.reports.filter(r => r.id !== report.id);
+
+                    // Update the in_reports_count on the original card
+                    if (this.currentCard && this.currentCard.in_reports_count > 0) {
+                        this.currentCard.in_reports_count--;
+                    }
+
+                    // If no reports left, close the dialog
+                    if (this.reports.length === 0) {
+                        this.close();
+                    }
+
+                    this.$root.$emit('notification', {
+                        type: 'success',
+                        loc: 'report_item.removed_from_report'
+                    });
+                }).catch(() => {
+                    this.$root.$emit('notification', {
+                        type: 'error',
+                        loc: 'report_item.removed_error'
+                    });
+                });
             },
 
             handleDeleteReportItem(item) {

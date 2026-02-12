@@ -65,7 +65,7 @@
                             <v-btn depressed x-small color="orange lighten-2"
                                    @click.stop="showInReports"
                                    :title="$t('assess.tooltip.show_reports')">
-                                {{ $t('card_item.in_analyze') }} ({{ card.in_reports_count }})
+                                {{ $t('card_item.in_analyze') }}<span v-if="card.in_reports_count > 1"> ({{ card.in_reports_count }})</span>
                             </v-btn>
                         </span>
 

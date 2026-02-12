@@ -747,6 +747,7 @@ const messages_en = {
         successful_edit: "Report item was successfully saved",
         removed: "Report item was successfully deleted",
         removed_error: "Report item is in use and could not be deleted",
+        removed_from_report: "News item was successfully removed from report",
         select: "Select Report Items",
         select_remote: "Select Report Items from Remote Nodes",
         attributes: "Attributes",
@@ -891,6 +892,7 @@ const messages_en = {
             dislike_item: "Dislike news item",
             delete_item: "Delete news item",
             remove_item: "Remove news item",
+            remove_from_report: "Remove from report item",
             show_reports: "Show reports containing this item",
         },
         shortcuts: {
