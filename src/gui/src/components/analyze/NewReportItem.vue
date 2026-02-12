@@ -206,6 +206,7 @@
     import Permissions from "@/services/auth/permissions";
     import { createNewReportItem, updateReportItem, lockReportItem, unlockReportItem, holdLockReportItem, getReportItem, getReportItemData, getReportItemLocks, aiGenerate } from "@/api/analyze";
     import { getEntityTypeStates } from "@/api/state";
+    import { getReportItemsByAggregate } from "@/api/analyze";
     import AttributeContainer from "@/components/common/attribute/AttributeContainer";
     import NewsItemSelector from "@/components/analyze/NewsItemSelector";
     import RemoteReportItemSelector from "@/components/analyze/RemoteReportItemSelector";
@@ -385,6 +386,11 @@
                     this.resetValidation();
                     this.visible = false;
                     this.$root.$emit('first-dialog', '');
+
+                    // Refresh news items to update report counts if we were editing
+                    if (this.edit) {
+                        this.$root.$emit('news-items-updated');
+                    }
                 }, 150);
             },
 
@@ -466,6 +472,9 @@
                             } else {
                                 this.$root.$emit('attachments-uploaded', {});
                             }
+
+                            // Refresh news items to update report counts
+                            this.$root.$emit('news-items-updated');
 
                         }).catch(() => {
                             this.show_error = true;
@@ -591,6 +600,9 @@
                     this.attribute_groups = [];
                     this.news_item_aggregates = data.news_item_aggregates;
                     this.remote_report_items = data.remote_report_items;
+
+                    // Fetch in_reports_count for each aggregate
+                    this.updateAggregatesReportCounts();
 
                     this.report_item.id = data.id;
                     this.report_item.uuid = data.uuid;
@@ -839,6 +851,21 @@
                 }
             },
 
+            updateAggregatesReportCounts() {
+                // Fetch in_reports_count for each aggregate
+                for (let aggregate of this.news_item_aggregates) {
+                    getReportItemsByAggregate(aggregate.id)
+                        .then((response) => {
+                            const reportItems = response.data.data || response.data;
+                            this.$set(aggregate, 'in_reports_count', reportItems ? reportItems.length : 0);
+                        })
+                        .catch((error) => {
+                            console.error('Error fetching in_reports_count:', error);
+                            this.$set(aggregate, 'in_reports_count', 0);
+                        });
+                }
+            },
+
             snapshotForm() {
                 return JSON.stringify({
                     report_item: this.report_item,
@@ -866,6 +893,8 @@
                     this.visible = false;
                     this.overlay = false
                     this.$root.$emit('notification', { type: 'success', loc: 'report_item.successful' });
+                    // Refresh news items to update report counts
+                    this.$root.$emit('news-items-updated');
                 }
             });
 

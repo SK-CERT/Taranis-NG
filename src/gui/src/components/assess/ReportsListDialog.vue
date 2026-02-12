@@ -157,11 +157,6 @@
                     // Remove the report from the list since the aggregate was removed
                     this.reports = this.reports.filter(r => r.id !== report.id);
 
-                    // Update the in_reports_count on the original card
-                    if (this.currentCard && this.currentCard.in_reports_count > 0) {
-                        this.currentCard.in_reports_count--;
-                    }
-
                     // If no reports left, close the dialog
                     if (this.reports.length === 0) {
                         this.close();
@@ -171,6 +166,9 @@
                         type: 'success',
                         loc: 'report_item.removed_from_report'
                     });
+
+                    // Refresh the news items list to update the in_reports_count
+                    this.$root.$emit('news-items-updated');
                 }).catch(() => {
                     this.$root.$emit('notification', {
                         type: 'error',
