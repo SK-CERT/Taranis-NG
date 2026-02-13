@@ -108,3 +108,7 @@ export function removeAttachment(data) {
 export function aiGenerate(attribute_id, news_item_agreggate_ids) {
     return ApiService.post('/analyze/report-item-attributes/' + attribute_id + '/llm-generate', { news_item_agreggate_ids })
 }
+
+export function getReportItemsByAggregate(aggregate_id) {
+    return ApiService.get('/analyze/report-items-by-aggregate/' + aggregate_id)
+}
