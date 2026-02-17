@@ -22,12 +22,9 @@ import sqlalchemy
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
-from model.news_item import NewsItemAggregate
+from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
 from model.state import StateDefinition, StateEnum
-from sqlalchemy import and_, func, or_, orm, text
-from sqlalchemy.sql.expression import cast
-
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -42,6 +39,8 @@ from shared.schema.report_item import (
     ReportItemRemoteSchema,
     ReportItemSchema,
 )
+from sqlalchemy import and_, func, or_, orm, text
+from sqlalchemy.sql.expression import cast
 
 
 class ReportItemAttribute(db.Model):
@@ -82,10 +81,14 @@ class ReportItemAttribute(db.Model):
     current = db.Column(db.Boolean, default=True)
 
     attribute_group_item_id = db.Column(db.Integer, db.ForeignKey("attribute_group_item.id"))
-    """for nice output there should be order_by also for AttributeGroup.index
-     but there is problem reference sub table: AttributeGroupItem.attribute_group.index
-    """
-    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True, lazy="joined", order_by=[AttributeGroupItem.index, id])
+    # for nice output there should be order_by also for AttributeGroup.index
+    # but there is problem reference sub table: AttributeGroupItem.attribute_group.index so we use .id
+    attribute_group_item = db.relationship(
+        "AttributeGroupItem",
+        viewonly=True,
+        lazy="joined",
+        order_by=lambda: [AttributeGroupItem.index, ReportItemAttribute.id],
+    )
     attribute_group_item_title = db.Column(db.String)
 
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), nullable=True)
@@ -257,8 +260,8 @@ class ReportItem(db.Model):
     remote_report_items = db.relationship(
         "ReportItem",
         secondary="report_item_remote_report_item",
-        primaryjoin=ReportItemRemoteReportItem.report_item_id == id,
-        secondaryjoin=ReportItemRemoteReportItem.remote_report_item_id == id,
+        primaryjoin=lambda: ReportItemRemoteReportItem.report_item_id == ReportItem.id,
+        secondaryjoin=lambda: ReportItemRemoteReportItem.remote_report_item_id == ReportItem.id,
     )
 
     attributes = db.relationship("ReportItemAttribute", back_populates="report_item", cascade="all, delete-orphan", lazy="joined")
@@ -576,6 +579,9 @@ class ReportItem(db.Model):
             The detailed JSON representation of the report item.
         """
         report_item = db.session.get(cls, id)
+        for nia in report_item.news_item_aggregates:
+            nia.in_reports_count = ReportItemNewsItemAggregate.count(nia.id)
+
         report_item_schema = ReportItemSchema()
         return report_item_schema.dump(report_item)
 
@@ -598,6 +604,68 @@ class ReportItem(db.Model):
             groups.add(row[0])
 
         return list(groups)
+
+    @classmethod
+    def get_by_aggregate(cls, aggregate_id: int, user: User) -> list[dict]:
+        """Get report items that contain a specific news item aggregate.
+
+        Args:
+            aggregate_id (int): The ID of the news item aggregate.
+            user (User): The user requesting the report items.
+
+        Returns:
+            list[dict]: A list of report items containing the aggregate.
+        """
+        # Build query with ACL checking similar to the get() method
+        query = (
+            db.session.query(
+                cls,
+                func.count().filter(ACLEntry.id > 0).label("acls"),
+                func.count().filter(ACLEntry.access.is_(True)).label("access"),
+                func.count().filter(ACLEntry.modify.is_(True)).label("modify"),
+            )
+            .distinct()
+            .group_by(cls.id)
+        )
+
+        # Join with the aggregate relationship table
+        query = query.join(ReportItemNewsItemAggregate, cls.id == ReportItemNewsItemAggregate.report_item_id)
+        query = query.filter(ReportItemNewsItemAggregate.news_item_aggregate_id == aggregate_id)
+
+        # Filter for local report items (not remote)
+        query = query.filter(cls.remote_user.is_(None))
+
+        # Join with ACL entries
+        query = query.outerjoin(
+            ACLEntry,
+            and_(
+                cast(cls.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
+                ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
+            ),
+        )
+
+        # Apply ACL filtering
+        query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
+
+        # Execute query
+        results = query.all()
+
+        report_items = []
+        for result in results:
+            report_item = result.ReportItem
+            has_access = result.access > 0 or result.acls == 0
+            has_modify = result.modify > 0 or result.acls == 0
+
+            # Only include if user has access
+            if has_access:
+                report_item.see = True
+                report_item.access = has_access
+                report_item.modify = has_modify
+                report_items.append(report_item)
+
+        # Use the same presentation schema as get_json for consistency
+        report_items_schema = ReportItemPresentationSchema(many=True)
+        return report_items_schema.dump(report_items)
 
     @classmethod
     def add_report_item(cls, report_item_data: dict, user: User) -> tuple[ReportItem, HTTPStatus]:

@@ -746,6 +746,7 @@ const messages_cs = {
         successful_edit: "Analýza byla uložena",
         removed: "Analýza byla smazána",
         removed_error: "Analýza se používá a nelze ji smazat",
+        removed_from_report: "Novinka byla úspěšně odstraněna z analýzy",
         select: "Vybrat analýzy",
         select_remote: "Vybrat novinky ze vzdálených instancí",
         attributes: "Atributy",
@@ -890,6 +891,8 @@ const messages_cs = {
             dislike_item: "To se mi nelíbí",
             delete_item: "Smazat novinku",
             remove_item: "Odstranit novinku",
+            remove_from_report: "Odstranit z reportu",
+            show_reports: "Zobrazit reporty obsahující tuto položku",
         },
         shortcuts: {
             enter_filter_mode:
@@ -898,6 +901,11 @@ const messages_cs = {
             default_mode: "Mód zkratek 'původní'.",
             aggregate_no_group:
                 "Nelze otevřít neagregovanou novinku, funguje pouze se skupinou novinek.",
+        },
+        reports_dialog: {
+            title: "Reporty obsahující tuto položku",
+            no_reports: "Tato položka není v žádných reportech",
+            error_loading: "Chyba při načítání reportů",
         },
     },
 

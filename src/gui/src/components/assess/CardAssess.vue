@@ -62,8 +62,12 @@
                                         </span>
 
                                         <span v-if="card.in_reports_count > 0" class="pl-2">
-                                            <v-btn depressed x-small color="orange lighten-2">
+                                            <v-btn depressed x-small color="orange lighten-2"
+                                                   @click.stop="showInReports"
+                                                   :disabled="disable_reports_button"
+                                                   :title="$t('assess.tooltip.show_reports')">
                                                 {{ $t('card_item.in_analyze') }}
+                                                <span v-if="card.in_reports_count > 1">&nbsp;&nbsp;({{ card.in_reports_count }})</span>
                                             </v-btn>
                                         </span>
 
@@ -192,7 +196,8 @@
             preselected: Boolean,
             word_list_regex: String,
             aggregate_opened: Boolean,
-            data_set: String
+            data_set: String,
+            disable_reports_button: Boolean
         },
         mixins: [AuthMixin, CardMixin],
         components: { CardAssessItem, MessageBox },
@@ -268,6 +273,10 @@
                     });
                 }
                 this.stateChange();
+            },
+
+            showInReports() {
+                this.$emit('show-reports-for-item', this.card);
             },
 
             cardItemToolbar(action) {

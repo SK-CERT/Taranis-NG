@@ -74,7 +74,7 @@ class ReportItems(Resource):
         except Exception as ex:
             msg = "Get ReportItems failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         return ReportItem.get_json(group, report_filter, offset, limit, auth_manager.get_user_from_jwt())
 
@@ -177,7 +177,7 @@ class ReportItemData(Resource):
         except Exception as ex:
             msg = "Get ReportItemData failed"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         user = auth_manager.get_user_from_jwt()
         if not auth_manager.check_acl(report_item_id, ACLCheck.REPORT_ITEM_ACCESS, user):
@@ -289,7 +289,7 @@ class ReportItemAddAttachment(Resource):
             sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
 
             return data
-        return {"error": "No file provided"}, HTTPStatus.BAD_REQUEST
+        return {"error": "No file provided"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 class ReportItemRemoveAttachment(Resource):
@@ -441,7 +441,7 @@ class ReportItemLlmGenerate(Resource):
             except Exception as ex:
                 msg = f"Connect to LLM failed: {ex}"
                 logger.error(msg)
-                return {"error": msg}, HTTPStatus.BAD_REQUEST
+                return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
             else:
                 logger.debug(f"_____ LLM output: _____\n{result.content}\n_______________________")
                 return {"message": result.content}
@@ -449,7 +449,30 @@ class ReportItemLlmGenerate(Resource):
         except Exception as ex:
             msg = "LLM prompt construction failed (see logs)"
             logger.exception(f"{msg}: {ex}")
-            return {"error": msg}, HTTPStatus.BAD_REQUEST
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+class ReportItemsByAggregate(Resource):
+    """Report items by aggregate API endpoint."""
+
+    @auth_required("ANALYZE_ACCESS")
+    def get(self, aggregate_id: int) -> tuple[dict, int]:
+        """Get all report items for a specific news item aggregate.
+
+        Args:
+            aggregate_id (int): News item aggregate ID
+
+        Returns:
+            (dict): list of report items containing this aggregate
+            (int): status code
+        """
+        try:
+            report_items = ReportItem.get_by_aggregate(aggregate_id, auth_manager.get_user_from_jwt())
+            return {"data": report_items}, HTTPStatus.OK
+        except Exception as ex:
+            msg = "Get ReportItems by aggregate failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 def initialize(api: Api) -> None:
@@ -461,6 +484,7 @@ def initialize(api: Api) -> None:
     api.add_resource(ReportItemTypes, "/api/v1/analyze/report-item-types")
     api.add_resource(ReportItemGroups, "/api/v1/analyze/report-item-groups")
     api.add_resource(ReportItems, "/api/v1/analyze/report-items")
+    api.add_resource(ReportItemsByAggregate, "/api/v1/analyze/report-items-by-aggregate/<int:aggregate_id>")
     api.add_resource(ReportItemResource, "/api/v1/analyze/report-items/<int:report_item_id>")
     api.add_resource(ReportItemData, "/api/v1/analyze/report-items/<int:report_item_id>/data")
     api.add_resource(ReportItemLocks, "/api/v1/analyze/report-items/<int:report_item_id>/field-locks")

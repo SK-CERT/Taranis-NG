@@ -180,6 +180,12 @@ const messages_sk = {
             hide_review: 'Skryť náhľady noviniek',
             hide_source_link: 'Skryť odkazy na zdroje v novinkách',
             highlight_wordlist: "Zvýrazniť slová zo zoznamov slov",
+            show_reports: "Zobraziť reporty obsahujúce túto položku",
+        },
+        reports_dialog: {
+            title: "Reporty obsahujúce túto položku",
+            no_reports: "Táto položka nie je v žiadnych reportoch",
+            error_loading: "Chyba pri načítavaní reportov",
         },
     },
 

@@ -55,6 +55,7 @@
                                :analyze_can_modify="canModify"
                                :card="value"
                                :showToolbar="true"
+                               :disable_reports_button="true"
                                data_set="assess_report_item"
                                @remove-item-from-selector="showMsgBox(value)"
                                @show-single-aggregate-detail="showSingleAggregateDetail(value)"
@@ -176,11 +177,13 @@
                 if (this.edit === true) {
                     updateReportItem(this.report_item_id, data).then(() => {
                         for (let i = 0; i < added_values.length; i++) {
+                            added_values[i].in_reports_count += 1;
                             this.values.push(added_values[i])
                         }
                     })
                 } else {
                     for (let i = 0; i < added_values.length; i++) {
+                        added_values[i].in_reports_count += 1;
                         this.values.push(added_values[i])
                     }
                 }
@@ -256,6 +259,7 @@
                 this.msgbox_visible = true;
                 this.to_delete = aggregate;
             },
+
         },
 
         updated() {
@@ -271,11 +275,11 @@
                     this.links = [...this.groups]
                 });
 
-            this.$root.$on('report-item-updated', this.report_item_updated)
+            this.$root.$on('report-item-updated', this.report_item_updated);
         },
 
         beforeDestroy() {
-            this.$root.$off('report-item-updated', this.report_item_updated)
+            this.$root.$off('report-item-updated', this.report_item_updated);
         }
     }
 </script>
