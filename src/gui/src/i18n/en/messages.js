@@ -1006,14 +1006,15 @@ const messages_en = {
 
     settings_enum: {
         DARK_THEME: "Dark Theme",
-        DATE_FORMAT: "Date format",
-        HOTKEYS: "Enable hotkeys",
-        LANGUAGE: "Language",
+        DATE_FORMAT: "Date Format",
+        HOTKEYS: "Enable Hotkeys",
+        UI_LANGUAGE: "User Interface Language",
+        R_P_DEFAULT_LANGUAGE: "Default language for reports/products",
         REPORT_SELECTOR_READ_ONLY:
-            "Open the Report Item selector in Read-Only mode",
+            "Open the Report Item Selector in Read-Only Mode",
         SPELLCHECK: "Spellcheck",
-        TAG_COLOR: "Colorful tag cloud",
-        TIME_FORMAT: "Time format",
+        TAG_COLOR: "Colorful Tag Cloud",
+        TIME_FORMAT: "Time Format",
     },
 
     word_list: {

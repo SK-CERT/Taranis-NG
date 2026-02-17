@@ -43,7 +43,7 @@
                 <v-select v-model="item.value"
                           @change="val => { setting = { ...item, value: val }; save(item); }"
                           :value="item.value"
-                          :items="JSON.parse(item.options)"
+                          :items="getDisplayOptions(item)"
                           item-value="id"
                           item-text="txt"></v-select>
             </template>
@@ -79,7 +79,8 @@
         <template v-slot:item.description="{ item }">
             <v-tooltip bottom>
                 <template v-slot:activator="{ on, attrs }">
-                    <span v-bind="attrs" v-on="on" style="cursor: pointer;">
+                    <span v-bind="attrs" v-on="on"
+                          style="cursor: pointer; white-space: normal; word-wrap: break-word; word-break: break-word;">
                         {{ $t('settings_enum.' + item.key) !== 'settings_enum.' + item.key ? $t('settings_enum.' + item.key) : item.description }}
                     </span>
                 </template>
@@ -98,6 +99,7 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import { format } from "date-fns";
     import Settings, { getSetting, getSettingBoolean } from "@/services/settings";
+    import * as ISO6391 from "iso-639-1";
 
     export default {
         name: "SettingsTable",
@@ -126,7 +128,7 @@
             headers() {
                 const headers = [
                     // { text: 'Key', value: 'key' },
-                    { text: this.$t('settings.description'), value: 'description' },
+                    { text: this.$t('settings.description'), value: 'description', width: '200px', cellClass: 'wrap-text-cell' },
                     { text: this.$t('settings.value'), value: 'value' },
                     // { text: 'Type', value: 'type' },
                 ];
@@ -145,6 +147,46 @@
 
             formatDate(dateString) {
                 return dateString ? format(new Date(dateString), this.date_format) : "";
+            },
+
+            getDisplayOptions(item) {
+                try {
+                    const options = JSON.parse(item.options);
+
+                    // For language settings, translate language names to current UI language
+                    if (item.key === 'UI_LANGUAGE' || item.key === 'R_P_DEFAULT_LANGUAGE') {
+                        return options.map(opt => ({
+                            ...opt,
+                            txt: this.getLanguageName(opt.id, opt.txt),
+                        }));
+                    }
+
+                    return options;
+                } catch (e) {
+                    return [];
+                }
+            },
+
+            getLanguageName(code, defaultName) {
+                try {
+                    const currentLang = getSetting(Settings.UI_LANGUAGE, 'en');
+
+                    // Try to use Intl.DisplayNames for multilingual support (modern browsers)
+                    if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
+                        try {
+                            const displayNames = new Intl.DisplayNames([currentLang, 'en'], { type: 'language' });
+                            return displayNames.of(code);
+                        } catch (e) {
+                            // Fallback if Intl.DisplayNames fails
+                        }
+                    }
+
+                    // Fallback to iso-639-1 library for English name
+                    const langName = ISO6391.getName(code);
+                    return langName || defaultName || code;
+                } catch (e) {
+                    return defaultName || code;
+                }
             },
 
             initRecords() {
@@ -186,8 +228,8 @@
                     // Some special settings require immediate application
                     if (this.setting.key === Settings.DARK_THEME) {
                         this.$vuetify.theme.dark = getSettingBoolean(Settings.DARK_THEME);
-                    } else if (this.setting.key === Settings.LANGUAGE) {
-                        this.$i18n.locale = getSetting(Settings.LANGUAGE);
+                    } else if (this.setting.key === Settings.UI_LANGUAGE) {
+                        this.$i18n.locale = getSetting(Settings.UI_LANGUAGE);
                     } else if (this.setting.key === Settings.SPELLCHECK) {
                         this.$store.state.settings.spellcheck = getSettingBoolean(Settings.SPELLCHECK);
                     }

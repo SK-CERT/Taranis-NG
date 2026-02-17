@@ -8,7 +8,8 @@ const Settings = {
     // user settings
     DARK_THEME: 'DARK_THEME',
     HOTKEYS: 'HOTKEYS',
-    LANGUAGE: 'LANGUAGE',
+    UI_LANGUAGE: 'UI_LANGUAGE',
+    R_P_DEFAULT_LANGUAGE: 'R_P_DEFAULT_LANGUAGE',
     SPELLCHECK: 'SPELLCHECK',
     TAG_COLOR: 'TAG_COLOR',
 };
