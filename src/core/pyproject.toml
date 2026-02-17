@@ -4,7 +4,7 @@ version = "26.02.1"
 description = "Taranis-NG Core service."
 requires-python = ">=3.10"
 dependencies = [
-    "alembic==1.18.3",
+    "alembic==1.18.4",
     "beautifulsoup4==4.14.3",
     "Flask==3.1.2",
     "Flask-Cors==6.0.2",
@@ -14,7 +14,7 @@ dependencies = [
     "Flask-RESTful==0.3.10",
     "Flask-SQLAlchemy==3.1.1",
     "gevent==25.9.1",
-    "gunicorn==25.0.1",
+    "gunicorn==25.1.0",
     "Jinja2==3.1.6",
     "ldap3 @ git+https://github.com/cannatag/ldap3.git@refs/pull/983/head",
     "marshmallow==4.2.1",
@@ -22,7 +22,7 @@ dependencies = [
     "pycryptodomex==3.23.0",
     "PyJWT==2.11.0",
     "python-dotenv==1.2.1",
-    "python-keycloak==7.0.3",
+    "python-keycloak==7.1.1",
     "redis==7.1.0",
     "requests==2.32.5",
     "schedule==1.2.2",
@@ -30,8 +30,8 @@ dependencies = [
     "SQLAlchemy==2.0.46",
     "tqdm==4.67.1",
     "Werkzeug==3.1.5",
-    "langchain==1.2.8",
-    "langchain-openai==1.1.7"
+    "langchain==1.2.10",
+    "langchain-openai==1.1.9"
 ]
 
 [build-system]

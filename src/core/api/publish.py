@@ -12,6 +12,7 @@ import json
 import mimetypes
 import uuid
 from http import HTTPStatus
+from urllib.parse import quote
 
 from flask import Response, request
 from flask_restful import Api, Resource
@@ -237,7 +238,14 @@ class ProductGetPreview(Resource):
 
             logger.info(f"Preview token processed: {token}")
             response = Response(preview_data, mimetype=preview_mime)
-            response.headers["Content-Disposition"] = f'filename="{preview_filename}"'
+
+            # Determine if content should be displayed inline or downloaded
+            inline_types = ("text/", "application/pdf", "application/json")
+            disposition = "inline" if any(preview_mime.startswith(itype) for itype in inline_types) else "attachment"
+
+            # RFC 5987 encoding for non-ASCII filenames
+            encoded_filename = quote(preview_filename)
+            response.headers["Content-Disposition"] = f"{disposition}; filename*=UTF-8''{encoded_filename}"
             return response
 
         except Exception as ex:
