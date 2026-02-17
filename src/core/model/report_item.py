@@ -25,9 +25,6 @@ from model.acl_entry import ACLEntry
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
 from model.state import StateDefinition, StateEnum
-from sqlalchemy import and_, func, or_, orm, text
-from sqlalchemy.sql.expression import cast
-
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -42,6 +39,8 @@ from shared.schema.report_item import (
     ReportItemRemoteSchema,
     ReportItemSchema,
 )
+from sqlalchemy import and_, func, or_, orm, text
+from sqlalchemy.sql.expression import cast
 
 
 class ReportItemAttribute(db.Model):
@@ -82,10 +81,14 @@ class ReportItemAttribute(db.Model):
     current = db.Column(db.Boolean, default=True)
 
     attribute_group_item_id = db.Column(db.Integer, db.ForeignKey("attribute_group_item.id"))
-    """for nice output there should be order_by also for AttributeGroup.index
-     but there is problem reference sub table: AttributeGroupItem.attribute_group.index
-    """
-    attribute_group_item = db.relationship("AttributeGroupItem", viewonly=True, lazy="joined", order_by=[AttributeGroupItem.index, id])
+    # for nice output there should be order_by also for AttributeGroup.index
+    # but there is problem reference sub table: AttributeGroupItem.attribute_group.index so we use .id
+    attribute_group_item = db.relationship(
+        "AttributeGroupItem",
+        viewonly=True,
+        lazy="joined",
+        order_by=lambda: [AttributeGroupItem.index, ReportItemAttribute.id],
+    )
     attribute_group_item_title = db.Column(db.String)
 
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), nullable=True)
@@ -257,8 +260,8 @@ class ReportItem(db.Model):
     remote_report_items = db.relationship(
         "ReportItem",
         secondary="report_item_remote_report_item",
-        primaryjoin=ReportItemRemoteReportItem.report_item_id == id,
-        secondaryjoin=ReportItemRemoteReportItem.remote_report_item_id == id,
+        primaryjoin=lambda: ReportItemRemoteReportItem.report_item_id == ReportItem.id,
+        secondaryjoin=lambda: ReportItemRemoteReportItem.remote_report_item_id == ReportItem.id,
     )
 
     attributes = db.relationship("ReportItemAttribute", back_populates="report_item", cascade="all, delete-orphan", lazy="joined")
@@ -576,6 +579,9 @@ class ReportItem(db.Model):
             The detailed JSON representation of the report item.
         """
         report_item = db.session.get(cls, id)
+        for nia in report_item.news_item_aggregates:
+            nia.in_reports_count = ReportItemNewsItemAggregate.count(nia.id)
+
         report_item_schema = ReportItemSchema()
         return report_item_schema.dump(report_item)
 

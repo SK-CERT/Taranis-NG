@@ -91,7 +91,6 @@
     import NewsItemDetail from "@/components/assess/NewsItemDetail";
     import NewsItemAggregateDetail from "@/components/assess/NewsItemAggregateDetail";
     import { getReportItemData, updateReportItem } from "@/api/analyze";
-    import { getReportItemsByAggregate } from "@/api/analyze";
     import MessageBox from "@/components/common/MessageBox.vue";
 
     export default {
@@ -178,13 +177,13 @@
                 if (this.edit === true) {
                     updateReportItem(this.report_item_id, data).then(() => {
                         for (let i = 0; i < added_values.length; i++) {
+                            added_values[i].in_reports_count += 1;
                             this.values.push(added_values[i])
                         }
-                        // Update report counts for newly added aggregates
-                        this.updateAggregatesReportCounts();
                     })
                 } else {
                     for (let i = 0; i < added_values.length; i++) {
+                        added_values[i].in_reports_count += 1;
                         this.values.push(added_values[i])
                     }
                 }
@@ -215,8 +214,6 @@
                     updateReportItem(this.report_item_id, data).then(() => {
                         const i = this.values.indexOf(aggregate)
                         this.values.splice(i, 1)
-                        // Emit event to refresh the news items list in the assess view
-                        this.$root.$emit('news-items-updated');
                     })
                 } else {
                     const i = this.values.indexOf(aggregate)
@@ -263,19 +260,6 @@
                 this.to_delete = aggregate;
             },
 
-            updateAggregatesReportCounts() {
-                // Fetch in_reports_count for each displayed aggregate
-                for (let aggregate of this.values) {
-                    getReportItemsByAggregate(aggregate.id)
-                        .then((response) => {
-                            const reportItems = response.data.data || response.data;
-                            this.$set(aggregate, 'in_reports_count', reportItems ? reportItems.length : 0);
-                        })
-                        .catch((error) => {
-                            console.error('Error fetching in_reports_count:', error);
-                        });
-                }
-            },
         },
 
         updated() {
@@ -292,12 +276,10 @@
                 });
 
             this.$root.$on('report-item-updated', this.report_item_updated);
-            this.$root.$on('news-items-updated', this.updateAggregatesReportCounts);
         },
 
         beforeDestroy() {
             this.$root.$off('report-item-updated', this.report_item_updated);
-            this.$root.$off('news-items-updated', this.updateAggregatesReportCounts);
         }
     }
 </script>

@@ -62,18 +62,19 @@
                                         </span>
 
                                         <span v-if="card.in_reports_count > 0" class="pl-2">
-                            <v-btn depressed x-small color="orange lighten-2"
-                                   @click.stop="showInReports"
-                                   :disabled="disable_reports_button"
-                                   :title="$t('assess.tooltip.show_reports')">
-                                {{ $t('card_item.in_analyze') }}<span v-if="card.in_reports_count > 1"> ({{ card.in_reports_count }})</span>
-                            </v-btn>
-                        </span>
+                                            <v-btn depressed x-small color="orange lighten-2"
+                                                   @click.stop="showInReports"
+                                                   :disabled="disable_reports_button"
+                                                   :title="$t('assess.tooltip.show_reports')">
+                                                {{ $t('card_item.in_analyze') }}
+                                                <span v-if="card.in_reports_count > 1">&nbsp;&nbsp;({{ card.in_reports_count }})</span>
+                                            </v-btn>
+                                        </span>
 
-                        <v-icon v-if="card.comments != ''" class="pl-2"
-                                color="orange lighten-2">mdi-comment</v-icon>
-                    </v-col>
-                    <v-col cols="4">
+                                        <v-icon v-if="card.comments != ''" class="pl-2"
+                                                color="orange lighten-2">mdi-comment</v-icon>
+                                    </v-col>
+                                    <v-col cols="4">
                                         <!--TOOLBAR-->
                                         <div>
                                             <v-row v-if="!multiSelectActive && !analyze_selector"

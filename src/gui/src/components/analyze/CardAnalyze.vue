@@ -61,7 +61,7 @@
                                                v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
                                             <v-col v-bind="UI.CARD.COL.TOOLS">
                                                 <v-btn v-if="canModify" icon @click.stop="showMsgBox('remove')"
-                                                       :title="$t(remove_tooltip)">
+                                                       :title="$t('analyze.tooltip.remove_item')">
                                                     <v-icon color="accent">mdi-minus-circle-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
@@ -98,10 +98,6 @@
             card: Object,
             show_remove_action: Boolean,
             preselected: Boolean,
-            remove_tooltip: {
-                type: String,
-                default: 'analyze.tooltip.remove_item'
-            }
         },
         mixins: [AuthMixin],
         data: () => ({

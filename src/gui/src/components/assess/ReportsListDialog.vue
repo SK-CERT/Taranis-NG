@@ -78,6 +78,7 @@
                             }
                         })
                         .catch((error) => {
+                            // eslint-disable-next-line no-console
                             console.error('Error fetching report:', error);
                             this.showDialog(card);
                         });
@@ -100,6 +101,7 @@
                         this.loading = false;
                     })
                     .catch((error) => {
+                        // eslint-disable-next-line no-console
                         console.error('Error fetching reports:', error);
                         this.error = this.$t('assess.reports_dialog.error_loading');
                         this.loading = false;
@@ -156,6 +158,7 @@
                 updateReportItem(report.id, data).then(() => {
                     // Remove the report from the list since the aggregate was removed
                     this.reports = this.reports.filter(r => r.id !== report.id);
+                    this.currentCard.in_reports_count -= 1;
 
                     // If no reports left, close the dialog
                     if (this.reports.length === 0) {
@@ -167,8 +170,6 @@
                         loc: 'report_item.removed_from_report'
                     });
 
-                    // Refresh the news items list to update the in_reports_count
-                    this.$root.$emit('news-items-updated');
                 }).catch(() => {
                     this.$root.$emit('notification', {
                         type: 'error',
