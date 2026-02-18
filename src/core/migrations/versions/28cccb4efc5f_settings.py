@@ -22,6 +22,8 @@ depends_on = None
 
 
 class PermissionS1(Base):
+    """ORM helper for `permission` used by this migration."""
+
     __tablename__ = "permission"
     id = sa.Column(sa.String, primary_key=True)
     name = sa.Column(sa.String(), unique=True, nullable=False)
@@ -33,6 +35,13 @@ class PermissionS1(Base):
         name: str,
         description: str,
     ) -> None:
+        """Initialize permission.
+
+        Args:
+            id (int): Permission identifier.
+            name (str): Permission name.
+            description (str): Permission description.
+        """
         self.id = id
         self.name = name
         self.description = description
@@ -44,6 +53,17 @@ class PermissionS1(Base):
         name: str,
         description: str,
     ) -> None:
+        """Add permission if not exists.
+
+        Args:
+            session (Session): DB session bound to migration connection.
+            id (int): Permission identifier.
+            name (str): Permission name.
+            description (str): Permission description.
+
+        Returns:
+            None
+        """
         perm = session.query(PermissionS1).filter_by(id=id).first()
         if not perm:
             session.add(PermissionS1(id, name, description))
@@ -53,13 +73,24 @@ class PermissionS1(Base):
         session: Session,
         id: int,  # noqa: A002
     ) -> None:
+        """Delete permission by id.
+
+        Args:
+            session (Session): DB session bound to migration connection.
+            id (int): Permission identifier to delete.
+
+        Returns:
+            None
+        """
         perm = session.query(PermissionS1).filter_by(id=id).first()
         if perm:
             session.delete(perm)
-            print(f"Permission {perm.id} deleted...", flush=True)   # noqa: T201
+            print(f"Permission {perm.id} deleted...", flush=True)  # noqa: T201
 
 
 class RoleS1(Base):
+    """ORM helper for `role` used by this migration."""
+
     __tablename__ = "role"
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(64), unique=True, nullable=False)
@@ -67,12 +98,16 @@ class RoleS1(Base):
 
 
 class RolePermissionS1(Base):
+    """ORM helper for `role_permission` used by this migration."""
+
     __tablename__ = "role_permission"
     role_id = sa.Column(sa.Integer, sa.ForeignKey("role.id"), primary_key=True)
     permission_id = sa.Column(sa.String, sa.ForeignKey("permission.id"), primary_key=True)
 
 
 class SettingS1(Base):
+    """ORM helper for `settings` used by this migration."""
+
     __tablename__ = "settings"
     id = sa.Column(sa.Integer, primary_key=True)
     key = sa.Column(sa.String(40), unique=True, nullable=False)
@@ -82,6 +117,14 @@ class SettingS1(Base):
     description = sa.Column(sa.String(), nullable=False)
 
     def __init__(self, key: str, sett_type: str, value: str, description: str) -> None:
+        """Initialize setting.
+
+        Args:
+            key (str): Setting key.
+            sett_type (str): Setting type code.
+            value (str): Setting value.
+            description (str): Setting description.
+        """
         self.id = None
         self.key = key
         self.type = sett_type
@@ -91,12 +134,25 @@ class SettingS1(Base):
 
     @staticmethod
     def add(session: Session, key: str, sett_type: str, value: str, description: str) -> None:
+        """Add setting if not exists.
+
+        Args:
+            session (Session): DB session bound to migration connection.
+            key (str): Setting key.
+            sett_type (str): Setting type code.
+            value (str): Setting value.
+            description (str): Setting description.
+
+        Returns:
+            None
+        """
         setting = session.query(SettingS1).filter_by(key=key).first()
         if not setting:
             session.add(SettingS1(key, sett_type, value, description))
 
 
 def upgrade() -> None:
+    """Upgrade process."""
     conn = op.get_bind()
     session = orm.Session(bind=conn)
 
@@ -154,6 +210,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """Downgrade process."""
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
@@ -169,7 +226,7 @@ def downgrade() -> None:
     session.commit()
 
     delete_previous()
-    print("creating old reference rules...", flush=True)  # noqa: T201
+    print("creating old reference rules...", flush=True)  #  noqa: T201
     # role_permission
     op.create_foreign_key("role_permission_permission_id_fkey", "role_permission", "permission", ["permission_id"], ["id"])
     # user_permission
@@ -177,6 +234,7 @@ def downgrade() -> None:
 
 
 def delete_previous() -> None:
+    """Delete previous reference rules."""
     print("deleting previous reference rules...", flush=True)  # noqa: T201
     # role_permission
     op.drop_constraint("role_permission_permission_id_fkey", "role_permission", type_="foreignkey")
