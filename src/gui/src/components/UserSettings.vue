@@ -99,7 +99,7 @@
                               v-on:keydown="pressKey">
                         <v-card color="primary" dark>
                             <v-card-text class="white--text">
-                                {{$t('settings.press_key')}}<span class="font-weight-bold">{{$t('settings.' + hotkeyAlias)}}</span>
+                                {{$t('settings.press_key')}}<span class="font-weight-bold">{{$te('settings.' + hotkeyAlias) ? $t('settings.' + hotkeyAlias) : hotkeyAlias}}</span>
                                 <v-progress-linear indeterminate
                                                    color="white"
                                                    class="mb-0"></v-progress-linear>
@@ -150,6 +150,7 @@
                 ]).then(() => {
                     this.visible = false;
                 }).catch(error => {
+                    // eslint-disable-next-line no-console
                     console.error('Save user profile error:', error);
                 });
             },

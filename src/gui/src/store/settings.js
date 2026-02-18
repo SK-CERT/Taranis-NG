@@ -159,7 +159,7 @@ const getters = {
     },
 
     getProfileLanguage() {
-        let lng = getSetting(Settings.LANGUAGE);
+        let lng = getSetting(Settings.UI_LANGUAGE);
         if (!lng) {
             lng = navigator.language.split('-')[0];
         }

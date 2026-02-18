@@ -372,6 +372,7 @@
                             this.show_validation_error = false;
                         })
                         .catch((error) => {
+                            // eslint-disable-next-line no-console
                             console.error("Preview failed:", error);
                             this.show_error = true;
                         });
@@ -467,6 +468,7 @@
                     const response = await getEntityTypeStates("product");
                     this.available_states = response.data.states;
                 } catch (error) {
+                    // eslint-disable-next-line no-console
                     console.error("Failed to load available states for PRODUCT:", error);
                     this.available_states = [];
                 }

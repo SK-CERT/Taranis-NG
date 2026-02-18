@@ -51,6 +51,7 @@ bind = use_bind
 keepalive = 120
 errorlog = "-"
 limit_request_line = 8192
+control_socket_disable = True
 print(f"Starting Gunicorn with {workers_count} workers", flush=True)  # noqa: T201
 
 

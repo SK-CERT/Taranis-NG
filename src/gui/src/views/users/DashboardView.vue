@@ -181,6 +181,7 @@ export default {
     }),
     methods: {
         wordClickHandler(name, value) {
+            // eslint-disable-next-line no-console
             console.log('Word:', name, ', Quantity:', value);
         },
 

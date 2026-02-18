@@ -34,7 +34,8 @@ const ApiService = {
             signal: abortControllers[resType].signal
         }).catch(function (e) {
             if (axios.isCancel(e)) {
-                console.debug("request canceled:", resource);
+                // eslint-disable-next-line no-console
+                console.debug("Request canceled:", resource);
             } else {
                 throw e;
             }
