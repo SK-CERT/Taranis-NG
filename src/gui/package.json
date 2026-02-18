@@ -52,7 +52,7 @@
         "babel-eslint": "^10.1.0",
         "cache-loader": "^4.1.0",
         "eslint": "^5.16.0",
-        "eslint-plugin-vue": "^5.2.3",
+        "eslint-plugin-vue": "^10.7.0",
         "sass": "^1.80.4",
         "vue-cli-plugin-vuetify": "^0.6.3",
         "vue-template-compiler": "^2.7.16",
