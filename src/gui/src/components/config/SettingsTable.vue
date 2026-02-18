@@ -81,7 +81,7 @@
                 <template v-slot:activator="{ on, attrs }">
                     <span v-bind="attrs" v-on="on"
                           style="cursor: pointer; white-space: normal; word-wrap: break-word; word-break: break-word;">
-                        {{ $t('settings_enum.' + item.key) !== 'settings_enum.' + item.key ? $t('settings_enum.' + item.key) : item.description }}
+                        {{ $te('settings_enum.' + item.key) ? $t('settings_enum.' + item.key) : item.description }}
                     </span>
                 </template>
                 <span>{{$t('settings.default_value')}}: {{ item.default_val }}</span>
@@ -99,7 +99,7 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import { format } from "date-fns";
     import Settings, { getSetting, getSettingBoolean } from "@/services/settings";
-    import * as ISO6391 from "iso-639-1";
+    import ISO6391 from "iso-639-1";
 
     export default {
         name: "SettingsTable",
@@ -128,7 +128,7 @@
             headers() {
                 const headers = [
                     // { text: 'Key', value: 'key' },
-                    { text: this.$t('settings.description'), value: 'description', width: '200px', cellClass: 'wrap-text-cell' },
+                    { text: this.$t('settings.description'), value: 'description', cellClass: 'wrap-text-cell' },
                     { text: this.$t('settings.value'), value: 'value' },
                     // { text: 'Type', value: 'type' },
                 ];
@@ -154,7 +154,7 @@
                     const options = JSON.parse(item.options);
 
                     // For language settings, translate language names to current UI language
-                    if (item.key === 'UI_LANGUAGE' || item.key === 'R_P_DEFAULT_LANGUAGE') {
+                    if (item.key === 'UI_LANGUAGE' || item.key === 'CONTENT_DEFAULT_LANGUAGE') {
                         return options.map(opt => ({
                             ...opt,
                             txt: this.getLanguageName(opt.id, opt.txt),

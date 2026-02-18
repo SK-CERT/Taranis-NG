@@ -1009,7 +1009,7 @@ const messages_cs = {
         DATE_FORMAT: "Formát data",
         HOTKEYS: "Povolit klávesové zkratky",
         UI_LANGUAGE: "Jazyk uživatelského rozhraní",
-        R_P_DEFAULT_LANGUAGE: "Výchozí jazyk pro reporty/produkty",
+        CONTENT_DEFAULT_LANGUAGE: "Výchozí jazyk pro reporty/produkty",
         REPORT_SELECTOR_READ_ONLY: "Otevřít výběr reportů v režimu pouze pro čtení",
         SPELLCHECK: "Kontrolovat pravopis",
         TAG_COLOR: "Barevný mrak štítků",

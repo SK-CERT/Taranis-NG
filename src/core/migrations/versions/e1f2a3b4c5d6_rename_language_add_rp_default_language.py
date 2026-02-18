@@ -1,4 +1,4 @@
-"""Rename LANGUAGE to UI_LANGUAGE and add R_P_DEFAULT_LANGUAGE with ISO 639-1 support.
+"""Rename LANGUAGE to UI_LANGUAGE and add CONTENT_DEFAULT_LANGUAGE with ISO 639-1 support.
 
 Revision ID: e1f2a3b4c5d6
 Revises: d1e2f3a4b5c6
@@ -80,7 +80,7 @@ class SettingS5(Base):
 
 
 def upgrade() -> None:
-    """Rename LANGUAGE to UI_LANGUAGE and add R_P_DEFAULT_LANGUAGE setting."""
+    """Rename LANGUAGE to UI_LANGUAGE and add CONTENT_DEFAULT_LANGUAGE setting."""
     conn = op.get_bind()
     session = Session(bind=conn)
 
@@ -96,7 +96,7 @@ def upgrade() -> None:
             "UI_LANGUAGE",
             "S",
             "en",
-            "UI Language",
+            "User interface language",
             is_global=False,
             options=options,
         )
@@ -133,14 +133,14 @@ def upgrade() -> None:
     # Sort by language name for better UX
     iso_languages.sort(key=lambda x: x["txt"])
 
-    # Step 6: Add R_P_DEFAULT_LANGUAGE setting with full ISO 639-1 support
+    # Step 6: Add CONTENT_DEFAULT_LANGUAGE setting with full ISO 639-1 support
     rp_language_options = json.dumps(iso_languages)
     SettingS5.add(
         session,
-        "R_P_DEFAULT_LANGUAGE",
+        "CONTENT_DEFAULT_LANGUAGE",
         "S",
         "en",
-        "Report/Product Default Language",
+        "Default language for reports/products",
         is_global=False,
         options=rp_language_options,
     )
@@ -149,7 +149,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Revert rename LANGUAGE to UI_LANGUAGE and remove R_P_DEFAULT_LANGUAGE setting."""
+    """Revert rename LANGUAGE to UI_LANGUAGE and remove CONTENT_DEFAULT_LANGUAGE setting."""
     conn = op.get_bind()
     session = Session(bind=conn)
 
@@ -188,7 +188,7 @@ def downgrade() -> None:
         # Step 4: Delete UI_LANGUAGE setting
         session.delete(ui_language_setting)
 
-    # Step 5: Delete R_P_DEFAULT_LANGUAGE setting
-    SettingS5.delete(session, "R_P_DEFAULT_LANGUAGE")
+    # Step 5: Delete CONTENT_DEFAULT_LANGUAGE setting
+    SettingS5.delete(session, "CONTENT_DEFAULT_LANGUAGE")
 
     session.commit()

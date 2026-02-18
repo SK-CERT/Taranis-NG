@@ -1005,16 +1005,15 @@ const messages_en = {
     },
 
     settings_enum: {
-        DARK_THEME: "Dark Theme",
-        DATE_FORMAT: "Date Format",
-        HOTKEYS: "Enable Hotkeys",
-        UI_LANGUAGE: "User Interface Language",
-        R_P_DEFAULT_LANGUAGE: "Default language for reports/products",
-        REPORT_SELECTOR_READ_ONLY:
-            "Open the Report Item Selector in Read-Only Mode",
+        DARK_THEME: "Dark theme",
+        DATE_FORMAT: "Date format",
+        HOTKEYS: "Enable hotkeys",
+        UI_LANGUAGE: "User interface language",
+        CONTENT_DEFAULT_LANGUAGE: "Default language for reports/products",
+        REPORT_SELECTOR_READ_ONLY: "Open the report item selector in read-only mode",
         SPELLCHECK: "Spellcheck",
-        TAG_COLOR: "Colorful Tag Cloud",
-        TIME_FORMAT: "Time Format",
+        TAG_COLOR: "Colorful tag cloud",
+        TIME_FORMAT: "Time format",
     },
 
     word_list: {

@@ -1,4 +1,4 @@
-"""add Settings functionality
+"""Add Settings functionality.
 
 Revision ID: 28cccb4efc5f
 Revises: 7a9592790a2e
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import inspect, orm
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import Session, declarative_base
 
 Base = declarative_base()
 
@@ -21,45 +21,58 @@ branch_labels = None
 depends_on = None
 
 
-class Permission_S1(Base):
+class PermissionS1(Base):
     __tablename__ = "permission"
     id = sa.Column(sa.String, primary_key=True)
     name = sa.Column(sa.String(), unique=True, nullable=False)
     description = sa.Column(sa.String())
 
-    def __init__(self, id, name, description):
+    def __init__(
+        self,
+        id: int,  # noqa: A002
+        name: str,
+        description: str,
+    ) -> None:
         self.id = id
         self.name = name
         self.description = description
 
     @staticmethod
-    def add(session, id, name, description):
-        perm = session.query(Permission_S1).filter_by(id=id).first()
+    def add(
+        session: Session,
+        id: int,  # noqa: A002
+        name: str,
+        description: str,
+    ) -> None:
+        perm = session.query(PermissionS1).filter_by(id=id).first()
         if not perm:
-            session.add(Permission_S1(id, name, description))
+            session.add(PermissionS1(id, name, description))
 
     @staticmethod
-    def delete(session, id):
-        perm = session.query(Permission_S1).filter_by(id=id).first()
+    def delete(
+        session: Session,
+        id: int,  # noqa: A002
+    ) -> None:
+        perm = session.query(PermissionS1).filter_by(id=id).first()
         if perm:
             session.delete(perm)
-            print(f"Permission {perm.id} deleted...", flush=True)
+            print(f"Permission {perm.id} deleted...", flush=True)   # noqa: T201
 
 
-class Role_S1(Base):
+class RoleS1(Base):
     __tablename__ = "role"
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(64), unique=True, nullable=False)
-    permissions = orm.relationship(Permission_S1, secondary="role_permission")
+    permissions = orm.relationship(PermissionS1, secondary="role_permission")
 
 
-class RolePermission_S1(Base):
+class RolePermissionS1(Base):
     __tablename__ = "role_permission"
     role_id = sa.Column(sa.Integer, sa.ForeignKey("role.id"), primary_key=True)
     permission_id = sa.Column(sa.String, sa.ForeignKey("permission.id"), primary_key=True)
 
 
-class Setting_S1(Base):
+class SettingS1(Base):
     __tablename__ = "settings"
     id = sa.Column(sa.Integer, primary_key=True)
     key = sa.Column(sa.String(40), unique=True, nullable=False)
@@ -68,22 +81,22 @@ class Setting_S1(Base):
     default_val = sa.Column(sa.String(), nullable=False)
     description = sa.Column(sa.String(), nullable=False)
 
-    def __init__(self, key, type, value, description):
+    def __init__(self, key: str, sett_type: str, value: str, description: str) -> None:
         self.id = None
         self.key = key
-        self.type = type
+        self.type = sett_type
         self.value = value
         self.default_val = value
         self.description = description
 
     @staticmethod
-    def add(session, key, type, value, description):
-        setting = session.query(Setting_S1).filter_by(key=key).first()
+    def add(session: Session, key: str, sett_type: str, value: str, description: str) -> None:
+        setting = session.query(SettingS1).filter_by(key=key).first()
         if not setting:
-            session.add(Setting_S1(key, type, value, description))
+            session.add(SettingS1(key, sett_type, value, description))
 
 
-def upgrade():
+def upgrade() -> None:
     conn = op.get_bind()
     session = orm.Session(bind=conn)
 
@@ -104,18 +117,18 @@ def upgrade():
         sa.PrimaryKeyConstraint("id", name="settings_pkey"),
         sa.UniqueConstraint("key", name="settings_key_key"),
     )
-    Permission_S1.add(session, "CONFIG_SETTINGS_ACCESS", "Config settings access", "Access to settings configuration")
-    Permission_S1.add(session, "CONFIG_SETTINGS_CREATE", "Config setting create", "Create setting configuration")
-    Permission_S1.add(session, "CONFIG_SETTINGS_UPDATE", "Config setting update", "Update setting configuration")
-    Permission_S1.add(session, "CONFIG_SETTINGS_DELETE", "Config setting delete", "Delete setting configuration")
-    Setting_S1.add(session, "DATE_FORMAT", "S", "dd.MM.yyyy", "Date format")
-    Setting_S1.add(session, "TIME_FORMAT", "S", "HH:mm", "Time format")
-    Setting_S1.add(session, "REPORT_SELECTOR_READ_ONLY", "B", "true", "Open the Report Item selector in Read-Only mode")
+    PermissionS1.add(session, "CONFIG_SETTINGS_ACCESS", "Config settings access", "Access to settings configuration")
+    PermissionS1.add(session, "CONFIG_SETTINGS_CREATE", "Config setting create", "Create setting configuration")
+    PermissionS1.add(session, "CONFIG_SETTINGS_UPDATE", "Config setting update", "Update setting configuration")
+    PermissionS1.add(session, "CONFIG_SETTINGS_DELETE", "Config setting delete", "Delete setting configuration")
+    SettingS1.add(session, "DATE_FORMAT", "S", "dd.MM.yyyy", "Date format")
+    SettingS1.add(session, "TIME_FORMAT", "S", "HH:mm", "Time format")
+    SettingS1.add(session, "REPORT_SELECTOR_READ_ONLY", "B", "true", "Open the report item selector in read-only mode")
     session.commit()
 
-    role = session.query(Role_S1).filter_by(name="Admin").first()
+    role = session.query(RoleS1).filter_by(name="Admin").first()
     if role:
-        role.permissions = session.query(Permission_S1).all()
+        role.permissions = session.query(PermissionS1).all()
         session.add(role)
         session.commit()
 
@@ -140,31 +153,31 @@ def upgrade():
     )
 
 
-def downgrade():
+def downgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
-    print("deleting table 'settings'...", flush=True)
+    print("deleting table 'settings'...", flush=True)  # noqa: T201
     op.drop_table("settings")
 
-    print("deleting 'settings' permissions...", flush=True)
+    print("deleting 'settings' permissions...", flush=True)  # noqa: T201
     # this delete also role_permission, user_permission records
-    Permission_S1.delete(session, "CONFIG_SETTINGS_ACCESS")
-    Permission_S1.delete(session, "CONFIG_SETTINGS_CREATE")
-    Permission_S1.delete(session, "CONFIG_SETTINGS_UPDATE")
-    Permission_S1.delete(session, "CONFIG_SETTINGS_DELETE")
+    PermissionS1.delete(session, "CONFIG_SETTINGS_ACCESS")
+    PermissionS1.delete(session, "CONFIG_SETTINGS_CREATE")
+    PermissionS1.delete(session, "CONFIG_SETTINGS_UPDATE")
+    PermissionS1.delete(session, "CONFIG_SETTINGS_DELETE")
     session.commit()
 
     delete_previous()
-    print("creating old reference rules...", flush=True)
+    print("creating old reference rules...", flush=True)  # noqa: T201
     # role_permission
     op.create_foreign_key("role_permission_permission_id_fkey", "role_permission", "permission", ["permission_id"], ["id"])
     # user_permission
     op.create_foreign_key("user_permission_permission_id_fkey", "user_permission", "permission", ["permission_id"], ["id"])
 
 
-def delete_previous():
-    print("deleting previous reference rules...", flush=True)
+def delete_previous() -> None:
+    print("deleting previous reference rules...", flush=True)  # noqa: T201
     # role_permission
     op.drop_constraint("role_permission_permission_id_fkey", "role_permission", type_="foreignkey")
     # user_permission
