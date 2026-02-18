@@ -37,7 +37,10 @@
             <v-row v-for="(value, index) in values" :key="value.index"
                    class="valueHolder"
             >
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
+                <span v-if="read_only || values[index].remote" class="numbered-string-value">
+                    <span class="string-number">{{ index + 1 }}.</span>
+                    <span class="string-content">{{values[index].value}}</span>
+                </span>
                 <AttributeValueLayout
                         v-if="!read_only && canModify && !values[index].remote"
                         :del_button="delButtonVisible"
@@ -46,6 +49,9 @@
                         :values="values"
                         :val_index="index"
                 >
+                    <template v-slot:col_left>
+                        <span class="string-number">{{ index + 1 }}.</span>
+                    </template>
                     <template v-slot:col_middle>
                         <v-text-field v-if="!read_only && !values[index].remote"
                                       v-model="values[index].value" dense
@@ -79,3 +85,29 @@
         mixins: [AttributesMixin]
     }
 </script>
+
+<style scoped>
+    .string-number {
+        color: #757575;
+        font-weight: 500;
+        margin-right: 8px;
+        user-select: none;
+        min-width: 24px;
+        display: inline-block;
+    }
+
+    .numbered-string-value {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .string-content {
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .col-left .string-number {
+        padding-top: 8px;
+    }
+</style>
