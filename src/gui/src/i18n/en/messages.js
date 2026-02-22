@@ -803,6 +803,7 @@ const messages_en = {
         from: "From",
         to: "To",
         total_count: "Report item count: ",
+        select_all_success: "{count} items selected",
         tooltip: {
             filter_completed: "Show completed report items",
             filter_incomplete: "Show incomplete report items",
@@ -821,6 +822,8 @@ const messages_en = {
                 },
             },
             toggle_selection: "Toggle report items selection mode",
+            select_all: "Select All",
+            unselect_all: "Unselect All",
             delete_items: "Delete report items",
             publish_items: "Create product from report items",
             delete_item: "Delete report item",
@@ -847,10 +850,14 @@ const messages_en = {
         download: "Download",
         total_count: "News item count: ",
         selected_count: "Selected news item count: ",
+        select_all_success: "{count} items selected",
         tooltip: {
-            filter_read: "Show unread news items",
+            filter_read: "Show read news items",
+            filter_unread: "Show unread news items",
             filter_important: "Show important news items",
+            filter_unimportant: "Show unimportant news items",
             filter_relevant: "Show relevant news items",
+            filter_irrelevant: "Show irrelevant news items",
             filter_in_analyze: "Show/hide news items in analysis",
             range: {
                 ALL: "Show all news items",
@@ -874,6 +881,8 @@ const messages_en = {
             hide_source_link: "Hide source links on news items",
             highlight_wordlist: "Highlight words using word lists",
             toggle_selection: "Toggle news items selection mode",
+            select_all: "Select All",
+            unselect_all: "Unselect All",
             group_items: "Group news items into aggregate",
             ungroup_items: "Ungroup news items from aggregate",
             analyze_items: "Create analysis report from news items",
@@ -1253,6 +1262,7 @@ const messages_en = {
             "Some of selected aggregates or news items are already assigned to a report item",
         server_error: "Unknown server error...",
         validation: "Please fill in all required fields",
+        select_all_failed: "Failed to select all items",
     },
 
     confirm_close: {

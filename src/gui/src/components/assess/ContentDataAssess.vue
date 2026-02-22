@@ -48,7 +48,7 @@
             filter: {
                 search: "",
                 range: "ALL",
-                read: true,
+                read: 'unread',
                 important: false,
                 relevant: false,
                 sort: "DATE_DESC"

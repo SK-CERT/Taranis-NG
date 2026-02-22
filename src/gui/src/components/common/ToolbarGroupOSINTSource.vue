@@ -21,7 +21,8 @@ import Permissions from "@/services/auth/permissions";
 export default {
     name: "ToolbarGroupOSINTSource",
     data: () => ({
-        multi_select: false
+        multi_select: false,
+        all_selected: false
     }),
     mixins: [AuthMixin],
     computed: {
@@ -38,9 +39,12 @@ export default {
         },
 
         actions() {
+            const selectAction = this.all_selected
+                ? { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('osint_source.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
+                : { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('osint_source.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
+
             return [
-                { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('osint_source.tooltip.select_all'), ui_icon: 'SELECT_ALL' },
-                { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('osint_source.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' },
+                selectAction,
             ]
         }
     },
@@ -49,6 +53,10 @@ export default {
         multiSelect() {
             this.multi_select = !this.multi_select
             this.$store.dispatch('multiSelectOSINTSource', this.multi_select);
+            if (this.multi_select === false) {
+                this.all_selected = false;
+                this.$root.$emit('uncheck-osint-source-card');
+            }
         },
 
         action(type) {
@@ -56,9 +64,11 @@ export default {
                 this.$root.$emit('uncheck-osint-source-card');
                 setTimeout(() => {
                     this.$root.$emit('check-osint-source-card');
+                    this.all_selected = true;
                 }, 50);
             } else if(type === 'UNSELECT_ALL') {
                 this.$root.$emit('uncheck-osint-source-card');
+                this.all_selected = false;
             }
         },
 

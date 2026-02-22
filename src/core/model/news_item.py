@@ -19,11 +19,10 @@ from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.osint_source import OSINTSource, OSINTSourceGroup
 from model.tag_cloud import TagCloud
-from sqlalchemy import and_, func, or_, orm
-
 from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
 from shared.schema.acl_entry import ItemType
 from shared.schema.news_item import NewsItemAggregateSchema, NewsItemAttributeSchema, NewsItemDataSchema, NewsItemRemoteSchema, NewsItemSchema
+from sqlalchemy import and_, func, or_, orm
 
 
 class NewsItemAttribute(db.Model):
@@ -814,13 +813,22 @@ class NewsItemAggregate(db.Model):
             ).filter(NewsItemAggregateSearchIndex.data.like(search_string))
 
         if "read" in filters and filters["read"].lower() == "true":
+            query = query.filter(NewsItemAggregate.read.is_(True))
+
+        if "unread" in filters and filters["unread"].lower() == "true":
             query = query.filter(NewsItemAggregate.read.is_(False))
 
         if "important" in filters and filters["important"].lower() == "true":
             query = query.filter(NewsItemAggregate.important.is_(True))
 
+        if "unimportant" in filters and filters["unimportant"].lower() == "true":
+            query = query.filter(NewsItemAggregate.important.is_(False))
+
         if "relevant" in filters and filters["relevant"].lower() == "true":
             query = query.filter(NewsItemAggregate.likes > 0)
+
+        if "irrelevant" in filters and filters["irrelevant"].lower() == "true":
+            query = query.filter(NewsItemAggregate.dislikes > 0)
 
         if "in_analyze" in filters and filters["in_analyze"].lower() == "true":
             query = query.join(ReportItemNewsItemAggregate, NewsItemAggregate.id == ReportItemNewsItemAggregate.news_item_aggregate_id)

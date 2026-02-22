@@ -1,10 +1,6 @@
 import ApiService from "@/services/api_service";
 
-export function getAllReportItemGroups() {
-    return ApiService.get('/analyze/report-item-groups')
-}
-
-export function getAllReportItems(filter_data) {
+function buildFilterQueryString(filter_data) {
     let filter = "?search=" + encodeURIComponent(filter_data.filter.search)
     filter += "&completed=" + encodeURIComponent(filter_data.filter.completed)
     filter += "&incompleted=" + encodeURIComponent(filter_data.filter.incompleted)
@@ -13,10 +9,21 @@ export function getAllReportItems(filter_data) {
     if (filter_data.group !== null) {
         filter += "&group=" + encodeURIComponent(filter_data.group)
     }
-    filter += "&offset=" + encodeURIComponent(filter_data.offset)
-    filter += "&limit=" + encodeURIComponent(filter_data.limit)
+    filter += "&offset=" + encodeURIComponent(filter_data.offset || 0)
+    filter += "&limit=" + encodeURIComponent(filter_data.limit || 50)
+    return filter
+}
 
-    return ApiService.getWithCancel('screenData', '/analyze/report-items' + filter)
+export function getAllReportItemGroups() {
+    return ApiService.get('/analyze/report-item-groups')
+}
+
+export function getAllReportItems(filter_data) {
+    return ApiService.getWithCancel('screenData', '/analyze/report-items' + buildFilterQueryString(filter_data))
+}
+
+export function getAllReportItemsUnpaginated(filter_data) {
+    return ApiService.get('/analyze/report-items' + buildFilterQueryString(filter_data))
 }
 
 export function getReportItem(report_item_id) {
