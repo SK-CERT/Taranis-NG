@@ -1,4 +1,4 @@
-import {getAllReportItems} from "@/api/analyze";
+import {getAllReportItems, getAllReportItemsUnpaginated} from "@/api/analyze";
 import {getAllReportItemTypes} from "@/api/analyze";
 import {getAllReportItemGroups} from "@/api/analyze";
 
@@ -52,7 +52,54 @@ const actions = {
 
     changeCurrentReportItemGroup(context, data) {
         context.commit('setCurrentReportItemGroup', data);
-    }
+    },
+
+    selectAllReportItems(context, data) {
+        // Fetch items in batches due to backend limit of 200 items per request
+        const fetchBatch = (offset) => {
+            const batchData = {
+                group: data.group,
+                filter: data.filter,
+                offset: offset,
+                limit: 200
+            };
+
+            return getAllReportItemsUnpaginated(batchData)
+                .then(response => {
+                    if (response && response.data && response.data.items) {
+                        const items = response.data.items;
+                        const totalCount = response.data.total_count;
+
+                        // Add items to selection
+                        items.forEach(item => {
+                            context.commit('addSelectionReport', {
+                                'id': item.id,
+                                'item': item
+                            });
+                        });
+
+                        // Check if we need to fetch more
+                        const nextOffset = offset + items.length;
+                        if (nextOffset < totalCount) {
+                            // Fetch next batch
+                            return fetchBatch(nextOffset);
+                        }
+
+                        // Return total count when done
+                        return totalCount;
+                    }
+                    return 0;
+                });
+        };
+
+        // Clear existing selection and start fetching from offset 0
+        context.commit('clearSelectionReport');
+        return fetchBatch(0);
+    },
+
+    deselectAllReport(context) {
+        context.commit('clearSelectionReport');
+    },
 };
 
 const mutations = {
@@ -89,7 +136,11 @@ const mutations = {
                 break
             }
         }
-    }
+    },
+
+    clearSelectionReport(state) {
+        state.selection_report = []
+    },
 };
 
 const getters = {

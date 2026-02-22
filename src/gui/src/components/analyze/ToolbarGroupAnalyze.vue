@@ -22,7 +22,8 @@ import Permissions from "@/services/auth/permissions";
 export default {
     name: "ToolbarGroupAnalyze",
     data: () => ({
-        multi_select: false
+        multi_select: false,
+        all_selected: false
     }),
     mixins: [AuthMixin],
     computed: {
@@ -34,7 +35,12 @@ export default {
             return this.checkPermission(Permissions.PUBLISH_CREATE)
         },
         actions() {
+            const selectAction = this.all_selected
+                ? { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('analyze.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
+                : { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('analyze.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
+
             return [
+                selectAction,
                 { can: this.canCreateProduct, disabled: !this.multi_select, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('analyze.tooltip.publish_items'), ui_icon: 'ANALYZE' },
                 { can: this.canDelete, disabled: !this.multi_select, action: 'DELETE', data_btn: 'delete', title: this.$t('analyze.tooltip.delete_items'), ui_icon: 'DELETE' }
             ]
@@ -45,6 +51,8 @@ export default {
             this.multi_select = !this.multi_select
             this.$store.dispatch("multiSelectReport", this.multi_select)
             if (this.multi_select === false) {
+                this.all_selected = false;
+                this.$store.dispatch('deselectAllReport');
                 this.$root.$emit('multi-select-off');
             }
         },
@@ -66,6 +74,10 @@ export default {
         action(type) {
             if (type === 'ANALYZE') {
                 this.analyze();
+            } else if (type === 'SELECT_ALL') {
+                this.selectAll();
+            } else if (type === 'UNSELECT_ALL') {
+                this.unselectAll();
             } else {
                 let selection = this.$store.getters.getSelectionReport
                 let items = []
@@ -89,6 +101,42 @@ export default {
                     }
                 }
             }
+        },
+
+        selectAll() {
+            // Use default filter structure matching ContentDataAnalyze
+            const filter = {
+                search: '',
+                completed: false,
+                incompleted: false,
+                range: 'ALL',
+                sort: 'DATE_DESC'
+            };
+            const group = this.$store.getters.getCurrentReportItemGroup;
+
+            this.$store.dispatch('selectAllReportItems', {
+                group: group,
+                filter: filter
+            }).then((count) => {
+                this.all_selected = true;
+                this.$root.$emit('sync-analyze-selection');
+                this.$root.$emit('notification', {
+                    type: 'success',
+                    loc: 'analyze.select_all_success',
+                    params: { count: count }
+                });
+            }).catch(() => {
+                this.$root.$emit('notification', {
+                    type: 'error',
+                    loc: 'error.select_all_failed'
+                });
+            });
+        },
+
+        unselectAll() {
+            this.all_selected = false;
+            this.$store.dispatch('deselectAllReport');
+            this.$root.$emit('sync-analyze-selection');
         },
 
         disableMultiSelect() {

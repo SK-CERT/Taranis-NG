@@ -1,4 +1,4 @@
-import {getManualOSINTSources, getNewsItemsByGroup} from "@/api/assess";
+import {getManualOSINTSources, getNewsItemsByGroup, getAllNewsItemsByGroup} from "@/api/assess";
 
 const state = {
     newsitems: {total_count: 0, items: []},
@@ -47,6 +47,56 @@ const actions = {
     filter(context, data) {
         context.commit('setFilter', data);
     },
+
+    selectAllItems(context, data) {
+        // Fetch items in batches due to backend limit of 200 items per request
+        const fetchBatch = (offset) => {
+            const batchData = {
+                group_id: data.group_id,
+                data: {
+                    filter: data.data.filter,
+                    offset: offset,
+                    limit: 200
+                }
+            };
+
+            return getAllNewsItemsByGroup(batchData.group_id, batchData.data)
+                .then(response => {
+                    if (response && response.data && response.data.items) {
+                        const items = response.data.items;
+                        const totalCount = response.data.total_count;
+
+                        // Add items to selection
+                        items.forEach(item => {
+                            context.commit('addSelection', {
+                                'type': 'AGGREGATE',
+                                'id': item.id,
+                                'item': item
+                            });
+                        });
+
+                        // Check if we need to fetch more
+                        const nextOffset = offset + items.length;
+                        if (nextOffset < totalCount) {
+                            // Fetch next batch
+                            return fetchBatch(nextOffset);
+                        }
+
+                        // Return total count when done
+                        return totalCount;
+                    }
+                    return 0;
+                });
+        };
+
+        // Clear existing selection and start fetching from offset 0
+        context.commit('clearSelection');
+        return fetchBatch(0);
+    },
+
+    deselectAll(context) {
+        context.commit('clearSelection');
+    },
 };
 
 const mutations = {
@@ -83,6 +133,10 @@ const mutations = {
 
     setFilter(state, data) {
         state.filter = data
+    },
+
+    clearSelection(state) {
+        state.selection = []
     },
 };
 

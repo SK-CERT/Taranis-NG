@@ -24,7 +24,8 @@
         components: {
         },
         data: () => ({
-            multi_select: false
+            multi_select: false,
+            all_selected: false
         }),
         mixins: [AuthMixin],
         computed: {
@@ -41,7 +42,12 @@
             },
 
             actions() {
+                const selectAction = this.all_selected
+                    ? { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('assess.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
+                    : { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('assess.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
+
                 return [
+                    selectAction,
                     { can: this.canModify, disabled: !this.multi_select, action: 'GROUP', data_btn: 'group', title: this.$t('assess.tooltip.group_items'), ui_icon: 'GROUP' },
                     { can: this.canModify, disabled: !this.multi_select, action: 'UNGROUP', data_btn: 'ungroup', title: this.$t('assess.tooltip.ungroup_items'), ui_icon: 'UNGROUP' },
                     { can: this.canCreateReport, disabled: !this.multi_select, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('assess.tooltip.analyze_items'), ui_icon: 'ANALYZE' },
@@ -68,6 +74,8 @@
                 this.multi_select = !this.multi_select
                 this.$store.dispatch("multiSelect", this.multi_select)
                 if (this.multi_select === false) {
+                    this.all_selected = false;
+                    this.$store.dispatch('deselectAll');
                     this.$root.$emit('multi-select-off');
                 }
             },
@@ -91,6 +99,10 @@
             action(type) {
                 if (type === 'ANALYZE') {
                     this.analyze();
+                } else if (type === 'SELECT_ALL') {
+                    this.selectAll();
+                } else if (type === 'UNSELECT_ALL') {
+                    this.unselectAll();
                 } else {
                     let selection = this.$store.getters.getSelection
                     let items = []
@@ -114,6 +126,47 @@
                         });
                     }
                 }
+            },
+
+            selectAll() {
+                let filter = this.$store.getters.getFilter;
+                const group_id = this.getGroupId();
+
+                // If filter is empty or doesn't have required properties, use default
+                if (!filter || !filter.hasOwnProperty('search')) {
+                    filter = {
+                        search: "",
+                        range: "ALL",
+                        read: 'unread',
+                        important: false,
+                        relevant: false,
+                        sort: "DATE_DESC"
+                    };
+                }
+
+                this.$store.dispatch('selectAllItems', {
+                    group_id: group_id,
+                    data: { filter: filter }
+                }).then((count) => {
+                    this.all_selected = true;
+                    this.$root.$emit('sync-assess-selection');
+                    this.$root.$emit('notification', {
+                        type: 'success',
+                        loc: 'assess.select_all_success',
+                        params: { count: count }
+                    });
+                }).catch(() => {
+                    this.$root.$emit('notification', {
+                        type: 'error',
+                        loc: 'error.select_all_failed'
+                    });
+                });
+            },
+
+            unselectAll() {
+                this.all_selected = false;
+                this.$store.dispatch('deselectAll');
+                this.$root.$emit('sync-assess-selection');
             },
 
             disableMultiSelect() {

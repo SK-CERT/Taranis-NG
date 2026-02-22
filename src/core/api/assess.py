@@ -68,10 +68,16 @@ class NewsItemsByGroup(Resource):
                 filters["search"] = request.args["search"]
             if request.args.get("read"):
                 filters["read"] = request.args["read"]
+            if request.args.get("unread"):
+                filters["unread"] = request.args["unread"]
             if request.args.get("important"):
                 filters["important"] = request.args["important"]
+            if request.args.get("unimportant"):
+                filters["unimportant"] = request.args["unimportant"]
             if request.args.get("relevant"):
                 filters["relevant"] = request.args["relevant"]
+            if request.args.get("irrelevant"):
+                filters["irrelevant"] = request.args["irrelevant"]
             if request.args.get("range"):
                 filters["range"] = request.args["range"]
             if request.args.get("sort"):

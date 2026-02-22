@@ -254,6 +254,7 @@ const icons = {
     HELP: "mdi-help-circle-outline",
     IMPORT: "mdi-import",
     IMPORTANT: "mdi-star",
+    UNIMPORTANT: "mdi-star-off",
     IN_ANALYZE: "mdi-file-cog-outline",
     INCOMPLETED: "mdi-progress-close",
     LIKE: "mdi-thumb-up",
