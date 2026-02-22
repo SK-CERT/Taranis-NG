@@ -176,10 +176,28 @@ const messages_sk = {
     },
 
     assess: {
+        select_all_success: "{count} položiek vybraných",
+        select_all_success: "{count} položiek vybraných",
         tooltip: {
             hide_review: 'Skryť náhľady noviniek',
             hide_source_link: 'Skryť odkazy na zdroje v novinkách',
             highlight_wordlist: "Zvýrazniť slová zo zoznamov slov",
+            toggle_selection: "Režim výberu noviniek",
+            select_all: "Vybrať všetko",
+            unselect_all: "Zrušiť výber",
+            filter_read: "Zobraziť prečítané novinky",
+            filter_unread: "Zobraziť neprečítané novinky",
+            filter_unimportant: "Zobraziť nedôležité novinky",
+            filter_irrelevant: "Zobraziť irelevantné novinky",
+        },
+    },
+
+    analyze: {
+        select_all_success: "{count} položiek vybraných",
+        tooltip: {
+            toggle_selection: "Režim výberu položiek reportu",
+            select_all: "Vybrať všetko",
+            unselect_all: "Zrušiť výber",
             show_reports: "Zobraziť reporty obsahujúce túto položku",
         },
         reports_dialog: {
@@ -271,8 +289,7 @@ const messages_sk = {
     error: {
         aggregate_in_use: "Niektoré vybrané novinky alebo zlúčené novinky sú už pripojené k analýze",
         server_error: "Neznámá chyba serveru...",
-        validation: "Prosím vyplnte všetky povinné polia",
-    },
+        validation: "Prosím vyplnte všetky povinné polia",        select_all_failed: "Zlyhalo vybratie všetkých položiek",    },
 
     common: {
         add: "Pridať",

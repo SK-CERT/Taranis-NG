@@ -169,6 +169,11 @@
                 }
             },
 
+            syncSelection() {
+                const selection = this.$store.getters.getSelectionReport;
+                this.selected = selection.some(s => s.id === this.card.id);
+            },
+
             itemClicked(data) {
                 if (this.checkPermission(Permissions.ANALYZE_ACCESS) && (this.card.access === true || data.remote_user !== null)) {
                     if (data.remote_user === null) {
@@ -226,9 +231,11 @@
         },
         mounted() {
             this.$root.$on('multi-select-off', this.multiSelectOff);
+            this.$root.$on('sync-analyze-selection', this.syncSelection);
         },
         beforeDestroy() {
             this.$root.$off('multi-select-off', this.multiSelectOff);
+            this.$root.$off('sync-analyze-selection', this.syncSelection);
         }
     }
 </script>

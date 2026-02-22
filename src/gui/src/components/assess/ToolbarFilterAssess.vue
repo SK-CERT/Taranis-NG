@@ -30,13 +30,13 @@
                 <!-- FILTER -->
                 <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_MULTI" v-model="activeFilters">
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRead" id="button_filter_read" value="read">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assess.tooltip.filter_read')">{{ UI.ICON.UNREAD }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="readFilterTooltip">{{ readFilterIcon }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterImportant" id="button_filter_important" value="important">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assess.tooltip.filter_important')">{{ UI.ICON.IMPORTANT }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="importantFilterTooltip">{{ importantFilterIcon }}</v-icon>
                     </v-chip>
                     <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterRelevant" id="button_filter_relevant" value="relevant">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="$t('assess.tooltip.filter_relevant')">{{ UI.ICON.RELEVANT }}</v-icon>
+                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="relevantFilterTooltip">{{ relevantFilterIcon }}</v-icon>
                     </v-chip>
                 </v-chip-group>
 
@@ -131,14 +131,48 @@
             activeFilters: {
                 get() {
                     const result = []
-                    if (this.filter.read) result.push('read')
-                    if (this.filter.important) result.push('important')
-                    if (this.filter.relevant) result.push('relevant')
+                    if (this.filter.read === true || this.filter.read === 'unread') result.push('read')
+                    if (this.filter.important === true || this.filter.important === 'unimportant') result.push('important')
+                    if (this.filter.relevant === true || this.filter.relevant === 'irrelevant') result.push('relevant')
                     return result
                 },
                 set() {
                     // Chip-group requires a setter, but we handle clicks manually
                 }
+            },
+
+            readFilterIcon() {
+                if (this.filter.read === true) return this.UI.ICON.READ
+                return this.UI.ICON.UNREAD
+            },
+
+            readFilterTooltip() {
+                if (this.filter.read === true) return this.$t('assess.tooltip.filter_read')
+                return this.$t('assess.tooltip.filter_unread')
+            },
+
+            importantFilterIcon() {
+                if (this.filter.important === true) return this.UI.ICON.IMPORTANT
+                if (this.filter.important === 'unimportant') return this.UI.ICON.UNIMPORTANT
+                return this.UI.ICON.IMPORTANT
+            },
+
+            importantFilterTooltip() {
+                if (this.filter.important === true) return this.$t('assess.tooltip.filter_important')
+                if (this.filter.important === 'unimportant') return this.$t('assess.tooltip.filter_unimportant')
+                return this.$t('assess.tooltip.filter_important')
+            },
+
+            relevantFilterIcon() {
+                if (this.filter.relevant === true) return this.UI.ICON.LIKE
+                if (this.filter.relevant === 'irrelevant') return this.UI.ICON.UNLIKE
+                return this.UI.ICON.LIKE
+            },
+
+            relevantFilterTooltip() {
+                if (this.filter.relevant === true) return this.$t('assess.tooltip.filter_relevant')
+                if (this.filter.relevant === 'irrelevant') return this.$t('assess.tooltip.filter_irrelevant')
+                return this.$t('assess.tooltip.filter_relevant')
             }
         },
         data: () => ({
@@ -155,7 +189,7 @@
             filter: {
                 search: "",
                 range: "ALL",
-                read: true,
+                read: 'unread',
                 important: false,
                 relevant: false,
                 sort: "DATE_DESC"
@@ -172,7 +206,14 @@
             },
 
             filterRead() {
-                this.filter.read = !this.filter.read;
+                // Cycle through three states: false (off) -> true (read) -> 'unread' -> false
+                if (this.filter.read === false) {
+                    this.filter.read = true;
+                } else if (this.filter.read === true) {
+                    this.filter.read = 'unread';
+                } else {
+                    this.filter.read = false;
+                }
                 this.$emit('update-news-items-filter', this.filter);
                 if (this.analyze_selector === false) {
                     this.$refs.toolbarGroupAssess.disableMultiSelect()
@@ -180,7 +221,14 @@
             },
 
             filterImportant() {
-                this.filter.important = !this.filter.important;
+                // Cycle through three states: false (off) -> true (important) -> 'unimportant' -> false
+                if (this.filter.important === false) {
+                    this.filter.important = true;
+                } else if (this.filter.important === true) {
+                    this.filter.important = 'unimportant';
+                } else {
+                    this.filter.important = false;
+                }
                 this.$emit('update-news-items-filter', this.filter);
                 if (this.analyze_selector === false) {
                     this.$refs.toolbarGroupAssess.disableMultiSelect()
@@ -188,7 +236,14 @@
             },
 
             filterRelevant() {
-                this.filter.relevant = !this.filter.relevant;
+                // Cycle through three states: false (off) -> true (relevant/thumbs up) -> 'irrelevant' (thumbs down) -> false
+                if (this.filter.relevant === false) {
+                    this.filter.relevant = true;
+                } else if (this.filter.relevant === true) {
+                    this.filter.relevant = 'irrelevant';
+                } else {
+                    this.filter.relevant = false;
+                }
                 this.$emit('update-news-items-filter', this.filter);
                 if (this.analyze_selector === false) {
                     this.$refs.toolbarGroupAssess.disableMultiSelect()
