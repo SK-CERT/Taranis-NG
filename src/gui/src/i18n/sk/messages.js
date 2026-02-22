@@ -177,6 +177,7 @@ const messages_sk = {
 
     assess: {
         select_all_success: "{count} položiek vybraných",
+        select_all_success: "{count} položiek vybraných",
         tooltip: {
             hide_review: 'Skryť náhľady noviniek',
             hide_source_link: 'Skryť odkazy na zdroje v novinkách',
