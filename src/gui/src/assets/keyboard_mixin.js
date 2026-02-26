@@ -25,7 +25,7 @@ const keyboardMixin = targetId => ({
 
     computed: {
         multiSelectActive() {
-            return this.$store.getters.getMultiSelect;
+            return this.$store.getters.getMultiSelectNews;
         },
 
         state() {
@@ -91,7 +91,7 @@ const keyboardMixin = targetId => ({
             let dialog = this.card_items[this.pos].dataset.type;
 
             // Multi Select Button
-            card.multi_select = document.querySelector(".multiselect button[data-btn='multi_select']");
+            card.multi_select_button = document.querySelector(".multiselect button[data-btn='multi_select_button']");
 
             // - - -
             card.aggregate = this.card_items[this.pos].querySelector("button[data-button='aggregate']");
@@ -268,7 +268,7 @@ const keyboardMixin = targetId => ({
 
                         case 'selection':
                             if (!this.multiSelectActive) {
-                                this.card.multi_select.click();
+                                this.card.multi_select_button.click();
                                 setTimeout(() => {
                                     this.keyRemaper();
                                 }, 1);
@@ -280,7 +280,7 @@ const keyboardMixin = targetId => ({
                                 this.card.select.click();
                                 setTimeout(() => {
                                     if (!document.querySelectorAll("#selector_assess input[type='checkbox'][aria-checked='true']").length) {
-                                        this.card.multi_select.click();
+                                        this.card.multi_select_button.click();
                                     }
                                 }, 155);
 

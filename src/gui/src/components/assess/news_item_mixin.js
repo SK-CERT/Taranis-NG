@@ -11,7 +11,7 @@ export default {
         },
 
         multiSelectActive() {
-            return this.$store.getters.getMultiSelect
+            return this.$store.getters.getMultiSelectNews
         },
     },
 

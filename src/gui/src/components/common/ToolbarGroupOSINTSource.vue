@@ -1,7 +1,7 @@
 <template>
     <div :class="UI.CLASS.multiselect">
-        <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR" :style="multi_select ? UI.STYLE.multiselect_active : ''"
-               @click.stop="multiSelect" data-btn="multi_select" :title="$t('assess.tooltip.toggle_selection')">
+        <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR" :style="multiSelectActive ? UI.STYLE.multiselect_active : ''"
+               @click.stop="multiSelect" data-btn="multi_select_button" :title="$t('assess.tooltip.toggle_selection')">
             <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR">{{ UI.ICON.MULTISELECT }}</v-icon>
         </v-btn>
         <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
@@ -21,7 +21,6 @@ import Permissions from "@/services/auth/permissions";
 export default {
     name: "ToolbarGroupOSINTSource",
     data: () => ({
-        multi_select: false,
         all_selected: false
     }),
     mixins: [AuthMixin],
@@ -40,20 +39,23 @@ export default {
 
         actions() {
             const selectAction = this.all_selected
-                ? { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('osint_source.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
-                : { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('osint_source.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
+                ? { can: true, disabled: !this.multiSelectActive, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('osint_source.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
+                : { can: true, disabled: !this.multiSelectActive, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('osint_source.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
 
             return [
                 selectAction,
             ]
-        }
+        },
+
+        multiSelectActive() {
+            return this.$store.getters.getMultiSelectOSINTSource;
+        },
     },
     methods: {
 
         multiSelect() {
-            this.multi_select = !this.multi_select
-            this.$store.dispatch('multiSelectOSINTSource', this.multi_select);
-            if (this.multi_select === false) {
+            this.$store.dispatch('multiSelectOSINTSource', !this.multiSelectActive);
+            if (this.multiSelectActive === false) {
                 this.all_selected = false;
                 this.$root.$emit('uncheck-osint-source-card');
             }
@@ -73,7 +75,7 @@ export default {
         },
 
         disableMultiSelect() {
-            if (this.multi_select === true) {
+            if (this.multiSelectActive) {
                 this.multiSelect()
             }
         }

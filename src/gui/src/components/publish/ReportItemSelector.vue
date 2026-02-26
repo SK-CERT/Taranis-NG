@@ -15,7 +15,7 @@
                 </v-toolbar>
                 <v-container fluid class="pa-0 ma-0">
                     <div :style="UI.STYLE.sticky_filter_toolbar">
-                        <ToolbarFilterAnalyze :multi_select="false"
+                        <ToolbarFilterAnalyze :show_group_toolbar="false"
                                               total_count_title="analyze.total_count"
                                               @update-report-items-filter="updateFilter"
                                               ref="toolbarFilter" />

@@ -138,7 +138,7 @@
 
         computed: {
             multiSelectActive() {
-                return this.$store.getters.getMultiSelect;
+                return this.$store.getters.getMultiSelectReport;
             }
         },
 

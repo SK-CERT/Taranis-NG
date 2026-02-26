@@ -76,7 +76,7 @@
             title: String,
             dialog: String,
             total_count_title: String,
-            multi_select: Boolean,
+            show_group_toolbar: Boolean,
         },
         data: () => ({
             local_reports: true,
@@ -104,7 +104,7 @@
             },
 
             showGroupToolbar() {
-                return this.multi_select && this.local_reports
+                return this.show_group_toolbar && this.local_reports
             },
 
             activeFilters: {
@@ -133,6 +133,7 @@
                     return this.$t('analyze.tooltip.filter_incomplete')
                 }
             },
+
         },
         methods: {
             updateDataCount(count) {
@@ -149,7 +150,7 @@
                     this.filter.completed = "ALL";
                 }
                 this.$emit('update-report-items-filter', this.filter);
-                if (this.multi_select) {
+                if (this.show_group_toolbar) {
                     this.$refs.toolbarGroupAnalyze.disableMultiSelect()
                 }
             },
@@ -158,7 +159,7 @@
             filterSort(sort) {
                 this.filter.sort = sort;
                 this.$emit('update-report-items-filter', this.filter);
-                if (this.multi_select) {
+                if (this.show_group_toolbar) {
                     this.$refs.toolbarGroupAnalyze.disableMultiSelect()
                 }
             },
@@ -166,7 +167,7 @@
             filterRange(range) {
                 this.filter.range = range;
                 this.$emit('update-report-items-filter', this.filter);
-                if (this.multi_select) {
+                if (this.show_group_toolbar) {
                     this.$refs.toolbarGroupAnalyze.disableMultiSelect()
                 }
             },
@@ -177,7 +178,7 @@
                 let self = this;
                 this.timeout = setTimeout(function () {
                     self.$emit('update-report-items-filter', self.filter)
-                    if (this.multi_select) {
+                    if (this.show_group_toolbar) {
                         this.$refs.toolbarGroupAnalyze.disableMultiSelect()
                     }
                 }, 300);
@@ -187,11 +188,12 @@
                 this.chips.splice(this.chips.indexOf(item), 1);
                 this.chips = [...this.chips]
             },
+
             cancel() {
             },
+
             add() {
             }
-
         },
         mounted() {
             this.local_reports = !window.location.pathname.includes('/group/');
