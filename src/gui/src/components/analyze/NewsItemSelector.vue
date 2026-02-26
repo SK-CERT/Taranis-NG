@@ -146,7 +146,7 @@
                     this.$store.dispatch("changeCurrentGroup", this.selected_group_id);
                 }
                 this.$root.$emit('multi-select-off'); // deselect previous selections
-                this.$store.dispatch("multiSelect", true);
+                this.$store.dispatch("multiSelectNews", true);
                 this.dialog = true;
             },
 
@@ -192,7 +192,7 @@
             },
 
             close() {
-                this.$store.dispatch("multiSelect", false)
+                this.$store.dispatch("multiSelectNews", false)
                 this.dialog = false;
             },
 

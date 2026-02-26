@@ -49,7 +49,7 @@
         mixins: [KeyboardMixin('assess')],
         computed: {
             multiSelectActive() {
-                return this.$store.getters.getMultiSelect;
+                return this.$store.getters.getMultiSelectNews;
             }
         },
         methods: {

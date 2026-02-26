@@ -132,9 +132,11 @@
             totalCount() {
                 return this.$store.getters[this.total_count_getter].total_count
             },
+
             multiSelectActive() {
-                return this.$store.getters.getOSINTSourcesMultiSelect;
+                return this.$store.getters.getMultiSelectOSINTSource;
             },
+
             selected() {
                 if (!this.$store.getters.getOSINTSourcesSelection.length) {
                     return {};
@@ -142,6 +144,7 @@
                     return { selection: this.$store.getters.getOSINTSourcesSelection };
                 }
             },
+
             isFile() {
                 return Object.entries(this.import_file).length !== 0;
             }
@@ -200,6 +203,7 @@
                     }
                 })
             },
+
             cancel() {
                 this.$validator.reset();
                 this.dialog_import = false;
@@ -208,6 +212,7 @@
             exportSources() {
                 exportOSINTSources(this.selected);
             },
+
             filterSearch: function () {
                 clearTimeout(this.timeout);
 
@@ -216,10 +221,12 @@
                     self.$root.$emit('update-items-filter', self.filter)
                 }, 800);
             },
+
             remove(item) {
                 this.chips.splice(this.chips.indexOf(item), 1);
                 this.chips = [...this.chips]
             },
+
             openImportDialog() {
                 this.dialog_import = true;
                 this.$nextTick(() => {
@@ -231,6 +238,7 @@
                 this.$validator.reset();
             }
         },
+
         mounted() {
             this.$store.dispatch('getAllCollectorsNodes', { search: '' })
                 .then(() => {
@@ -238,8 +246,9 @@
                 });
 
         },
+
         beforeDestroy() {
-            this.$store.commit("setMultiSelect", false);
+            this.$store.dispatch("multiSelectOSINTSource", false);
         }
     }
 </script>

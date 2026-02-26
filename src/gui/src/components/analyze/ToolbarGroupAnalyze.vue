@@ -1,7 +1,7 @@
 <template>
     <div :class="UI.CLASS.multiselect">
-        <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR" :style="multi_select ? UI.STYLE.multiselect_active : ''"
-               @click.stop="multiSelect" data-btn="multi_select" :title="$t('assess.tooltip.toggle_selection')">
+        <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR" :style="multiSelectActive ? UI.STYLE.multiselect_active : ''"
+               @click.stop="multiSelect" data-btn="multi_select_button" :title="$t('assess.tooltip.toggle_selection')">
             <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR">{{ UI.ICON.MULTISELECT }}</v-icon>
         </v-btn>
         <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
@@ -22,7 +22,6 @@ import Permissions from "@/services/auth/permissions";
 export default {
     name: "ToolbarGroupAnalyze",
     data: () => ({
-        multi_select: false,
         all_selected: false
     }),
     mixins: [AuthMixin],
@@ -34,23 +33,27 @@ export default {
         canCreateProduct() {
             return this.checkPermission(Permissions.PUBLISH_CREATE)
         },
+
         actions() {
             const selectAction = this.all_selected
-                ? { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('analyze.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
-                : { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('analyze.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
+                ? { can: true, disabled: !this.multiSelectActive, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('analyze.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
+                : { can: true, disabled: !this.multiSelectActive, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('analyze.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
 
             return [
                 selectAction,
-                { can: this.canCreateProduct, disabled: !this.multi_select, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('analyze.tooltip.publish_items'), ui_icon: 'ANALYZE' },
-                { can: this.canDelete, disabled: !this.multi_select, action: 'DELETE', data_btn: 'delete', title: this.$t('analyze.tooltip.delete_items'), ui_icon: 'DELETE' }
+                { can: this.canCreateProduct, disabled: !this.multiSelectActive, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('analyze.tooltip.publish_items'), ui_icon: 'ANALYZE' },
+                { can: this.canDelete, disabled: !this.multiSelectActive, action: 'DELETE', data_btn: 'delete', title: this.$t('analyze.tooltip.delete_items'), ui_icon: 'DELETE' }
             ]
-        }
+        },
+
+        multiSelectActive() {
+            return this.$store.getters.getMultiSelectReport;
+        },
     },
     methods: {
         multiSelect() {
-            this.multi_select = !this.multi_select
-            this.$store.dispatch("multiSelectReport", this.multi_select)
-            if (this.multi_select === false) {
+            this.$store.dispatch("multiSelectReport", !this.multiSelectActive)
+            if (this.multiSelectActive === false) {
                 this.all_selected = false;
                 this.$store.dispatch('deselectAllReport');
                 this.$root.$emit('multi-select-off');
@@ -64,8 +67,7 @@ export default {
                 items.push(selection[i].item)
             }
             if (items.length > 0) {
-                this.multi_select = false
-                this.$store.dispatch("multiSelectReport", this.multi_select)
+                this.$store.dispatch("multiSelectReport", false)
                 this.$root.$emit('multi-select-off');
                 this.$root.$emit('new-product', items);
             }
@@ -139,7 +141,7 @@ export default {
         },
 
         disableMultiSelect() {
-            if (this.multi_select === true) {
+            if (this.multiSelectActive) {
                 this.multiSelect()
             }
         }

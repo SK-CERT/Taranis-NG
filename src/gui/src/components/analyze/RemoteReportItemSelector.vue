@@ -37,7 +37,7 @@
                         </v-list-item>
                     </v-col>
                     <v-col class="cs-content">
-                        <ToolbarFilterAnalyze :multi_select="false"
+                        <ToolbarFilterAnalyze :show_group_toolbar="false"
                                               total_count_title="analyze.total_count"
                                               @update-report-items-filter="updateFilter"
                                               ref="toolbarFilter"></ToolbarFilterAnalyze>

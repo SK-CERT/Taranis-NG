@@ -1,7 +1,7 @@
 <template>
     <div :class="UI.CLASS.multiselect">
-        <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR" :style="multi_select ? UI.STYLE.multiselect_active : ''"
-               @click.stop="multiSelect" data-btn="multi_select" :title="$t('assess.tooltip.toggle_selection')">
+        <v-btn v-bind="UI.TOOLBAR.BUTTON.SELECTOR" :style="multiSelectActive ? UI.STYLE.multiselect_active : '' "
+               @click.stop="multiSelect" data-btn="multi_select_button" :title="$t('assess.tooltip.toggle_selection')">
             <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR">{{ UI.ICON.MULTISELECT }}</v-icon>
         </v-btn>
         <v-icon v-bind="UI.TOOLBAR.ICON.SELECTOR_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
@@ -24,7 +24,6 @@
         components: {
         },
         data: () => ({
-            multi_select: false,
             all_selected: false
         }),
         mixins: [AuthMixin],
@@ -43,21 +42,25 @@
 
             actions() {
                 const selectAction = this.all_selected
-                    ? { can: true, disabled: !this.multi_select, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('assess.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
-                    : { can: true, disabled: !this.multi_select, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('assess.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
+                    ? { can: true, disabled: !this.multiSelectActive, action: 'UNSELECT_ALL', data_btn: 'unselect_all', title: this.$t('assess.tooltip.unselect_all'), ui_icon: 'UNSELECT_ALL' }
+                    : { can: true, disabled: !this.multiSelectActive, action: 'SELECT_ALL', data_btn: 'select_all', title: this.$t('assess.tooltip.select_all'), ui_icon: 'SELECT_ALL' };
 
                 return [
                     selectAction,
-                    { can: this.canModify, disabled: !this.multi_select, action: 'GROUP', data_btn: 'group', title: this.$t('assess.tooltip.group_items'), ui_icon: 'GROUP' },
-                    { can: this.canModify, disabled: !this.multi_select, action: 'UNGROUP', data_btn: 'ungroup', title: this.$t('assess.tooltip.ungroup_items'), ui_icon: 'UNGROUP' },
-                    { can: this.canCreateReport, disabled: !this.multi_select, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('assess.tooltip.analyze_items'), ui_icon: 'ANALYZE' },
-                    { can: this.canModify, disabled: !this.multi_select, action: 'READ', data_btn: 'read', title: this.$t('assess.tooltip.read_items'), ui_icon: 'READ' },
-                    { can: this.canModify, disabled: !this.multi_select, action: 'IMPORTANT', data_btn: 'important', title: this.$t('assess.tooltip.important_items'), ui_icon: 'IMPORTANT' },
-                    { can: this.canModify, disabled: !this.multi_select, action: 'LIKE', data_btn: 'like', title: this.$t('assess.tooltip.like_items'), ui_icon: 'LIKE' },
-                    { can: this.canModify, disabled: !this.multi_select, action: 'DISLIKE', data_btn: 'dislike', title: this.$t('assess.tooltip.dislike_items'), ui_icon: 'UNLIKE' },
-                    { can: this.canDelete, disabled: !this.multi_select, action: 'DELETE', data_btn: 'delete', title: this.$t('assess.tooltip.delete_items'), ui_icon: 'DELETE' }
+                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'GROUP', data_btn: 'group', title: this.$t('assess.tooltip.group_items'), ui_icon: 'GROUP' },
+                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'UNGROUP', data_btn: 'ungroup', title: this.$t('assess.tooltip.ungroup_items'), ui_icon: 'UNGROUP' },
+                    { can: this.canCreateReport, disabled: !this.multiSelectActive, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('assess.tooltip.analyze_items'), ui_icon: 'ANALYZE' },
+                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'READ', data_btn: 'read', title: this.$t('assess.tooltip.read_items'), ui_icon: 'READ' },
+                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'IMPORTANT', data_btn: 'important', title: this.$t('assess.tooltip.important_items'), ui_icon: 'IMPORTANT' },
+                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'LIKE', data_btn: 'like', title: this.$t('assess.tooltip.like_items'), ui_icon: 'LIKE' },
+                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'DISLIKE', data_btn: 'dislike', title: this.$t('assess.tooltip.dislike_items'), ui_icon: 'UNLIKE' },
+                    { can: this.canDelete, disabled: !this.multiSelectActive, action: 'DELETE', data_btn: 'delete', title: this.$t('assess.tooltip.delete_items'), ui_icon: 'DELETE' }
                 ]
-            }
+            },
+
+            multiSelectActive() {
+                return this.$store.getters.getMultiSelectNews;
+            },
         },
         methods: {
             getGroupId() {
@@ -71,9 +74,8 @@
             },
 
             multiSelect() {
-                this.multi_select = !this.multi_select
-                this.$store.dispatch("multiSelect", this.multi_select)
-                if (this.multi_select === false) {
+                this.$store.dispatch("multiSelectNews", !this.multiSelectActive)
+                if (this.multiSelectActive === false) {
                     this.all_selected = false;
                     this.$store.dispatch('deselectAll');
                     this.$root.$emit('multi-select-off');
@@ -89,8 +91,7 @@
                     }
                 }
                 if (items.length > 0) {
-                    this.multi_select = false
-                    this.$store.dispatch("multiSelect", this.multi_select)
+                    this.$store.dispatch("multiSelectNews", false)
                     this.$root.$emit('multi-select-off');
                     this.$root.$emit('new-report', items);
                 }
@@ -170,7 +171,7 @@
             },
 
             disableMultiSelect() {
-                if (this.multi_select === true) {
+                if (this.multiSelectActive) {
                     this.multiSelect()
                 }
             }

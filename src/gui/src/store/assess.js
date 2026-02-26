@@ -2,7 +2,7 @@ import {getManualOSINTSources, getNewsItemsByGroup, getAllNewsItemsByGroup} from
 
 const state = {
     newsitems: {total_count: 0, items: []},
-    multi_select: false,
+    multi_select_news: false,
     selection: [],
     current_group_id: "",
     manual_osint_sources: [],
@@ -20,8 +20,8 @@ const actions = {
             })
     },
 
-    multiSelect(context, data) {
-        context.commit('setMultiSelect', data);
+    multiSelectNews(context, data) {
+        context.commit('setMultiSelectNews', data);
     },
 
     select(context, data) {
@@ -105,8 +105,8 @@ const mutations = {
         state.newsitems = news_items
     },
 
-    setMultiSelect(state, enable) {
-        state.multi_select = enable
+    setMultiSelectNews(state, enable) {
+        state.multi_select_news = enable
         state.selection = []
     },
 
@@ -146,8 +146,8 @@ const getters = {
         return state.newsitems
     },
 
-    getMultiSelect(state) {
-        return state.multi_select
+    getMultiSelectNews(state) {
+        return state.multi_select_news
     },
 
     getSelection(state) {

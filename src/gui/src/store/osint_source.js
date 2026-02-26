@@ -6,7 +6,7 @@ const state = {
 
 const actions = {
     multiSelectOSINTSource(context, data) {
-        context.commit('setMultiSelect', data);
+        context.commit('setMultiSelectOSINTSource', data);
     },
 
     selectOSINTSource(context, data) {
@@ -19,7 +19,7 @@ const actions = {
 };
 
 const mutations = {
-    setMultiSelect(state, enable) {
+    setMultiSelectOSINTSource(state, enable) {
         state.multi_select_osint_source = enable;
         state.selection = [];
         state.select_all = false;
@@ -44,7 +44,7 @@ const getters = {
         return state.newsitems;
     },
 
-    getOSINTSourcesMultiSelect(state) {
+    getMultiSelectOSINTSource(state) {
         return state.multi_select_osint_source;
     },
 

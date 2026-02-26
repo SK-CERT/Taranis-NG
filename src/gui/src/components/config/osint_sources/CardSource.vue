@@ -89,7 +89,7 @@
             },
 
             multiSelect() {
-                return this.$store.getters.getOSINTSourcesMultiSelect;
+                return this.$store.getters.getMultiSelectOSINTSource;
             },
 
             selectedColor() {

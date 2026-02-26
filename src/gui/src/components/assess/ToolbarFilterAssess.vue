@@ -149,7 +149,7 @@
             },
 
             multiSelectActive() {
-                return this.$store.getters.getMultiSelect;
+                return this.$store.getters.getMultiSelectNews;
             },
 
             // this exists only because we want initialise selection on start
@@ -211,6 +211,7 @@
                 }
             }
         },
+
         methods: {
             updateDataCount(count) {
                 this.data_count = count
@@ -288,12 +289,15 @@
                     }
                 }, 300);
             },
+
             remove(item) {
                 this.chips.splice(this.chips.indexOf(item), 1);
                 this.chips = [...this.chips]
             },
+
             cancel() {
             },
+
             add() {
             },
 
@@ -324,11 +328,13 @@
             },
 
         },
+
         created() {
             this.review_toggle = getLocalStorageBoolean('review-hide', false);
             this.source_link_toggle = getLocalStorageBoolean('source-link-hide', false);
             this.word_list_toggle = getLocalStorageBoolean('word-list-hide', false);
         },
+
         mounted() {
             this.setHideStyle("review-hide", "hide-review", this.review_toggle, false);
             this.setHideStyle("source-link-hide", "hide-source-link", this.source_link_toggle, false);

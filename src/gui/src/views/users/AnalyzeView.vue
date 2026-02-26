@@ -1,7 +1,7 @@
 <template>
     <ViewLayout>
         <template v-slot:panel>
-            <ToolbarFilterAnalyze :multi_select="true" title='nav_menu.report_items' total_count_title="analyze.total_count"
+            <ToolbarFilterAnalyze :show_group_toolbar="true" title='nav_menu.report_items' total_count_title="analyze.total_count"
                                   @update-report-items-filter="updateFilter"
                                   ref="toolbarFilter">
                 <template v-slot:addbutton>
