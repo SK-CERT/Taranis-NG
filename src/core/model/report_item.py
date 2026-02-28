@@ -953,16 +953,15 @@ class ReportItem(db.Model):
         new_attribute.user = user
         new_attribute.binary_data = file_data
         report_item.attributes.append(new_attribute)
-
         report_item.last_updated = datetime.now(TZ)
+
+        db.session.commit()
 
         data = {}
         data["add"] = True
         data["user_id"] = user.id
         data["report_item_id"] = int(id)
         data["attribute_id"] = new_attribute.id
-
-        db.session.commit()
 
         return data
 

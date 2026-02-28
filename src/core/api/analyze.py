@@ -335,9 +335,9 @@ class ReportItemDownloadAttachment(Resource):
                         and ReportItem.allowed_with_acl(
                             report_item_attribute.report_item.id,
                             user,
-                            read_access=False,
-                            write_access=True,
-                            delete_access=False,
+                            see=False,
+                            access=True,
+                            modify=False,
                         )
                     ):
                         log_manager.store_user_activity(user, "ANALYZE_ACCESS", str({"file": report_item_attribute.value}))
