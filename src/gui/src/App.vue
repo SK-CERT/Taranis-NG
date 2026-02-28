@@ -29,7 +29,6 @@
         },
         data: () => ({
             visible: null,
-            isDark: true,
             sseConnection: null,
         }),
         mixins: [AuthMixin],

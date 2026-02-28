@@ -1,18 +1,15 @@
 <template>
     <div class="dropzone-wrapper-div">
-        <vue-dropzone
-                ref="myVueDropzone"
-                id="dropzone"
-                v-on:vdropzone-file-added="fileAdded"
-                v-on:vdropzone-sending="sendingEvent"
-                v-on:vdropzone-success="uploadSuccess"
-                :options="getOptions"
-                :include-styling="false"
-                :useCustomSlot="true"
-        >
-            <div v-if="!read_only" class="subtitle-2 text-center pt-5 grey--text">{{
-                    $t('drop_zone.default_message')
-                }}
+        <vue-dropzone ref="myVueDropzone"
+                      id="dropzone"
+                      v-on:vdropzone-file-added="fileAdded"
+                      v-on:vdropzone-sending="sendingEvent"
+                      v-on:vdropzone-success="uploadSuccess"
+                      :options="getOptions"
+                      :include-styling="false"
+                      :useCustomSlot="true">
+            <div v-if="!read_only" class="subtitle-2 text-center pt-5 grey--text">
+                {{ $t('drop_zone.default_message') }}
             </div>
         </vue-dropzone>
 
@@ -78,7 +75,8 @@
                         {{ $t('drop_zone.download') }}
                         <v-icon right dark>mdi-cloud-download</v-icon>
                     </v-btn>
-                    <v-btn v-if="!read_only" color="primary" dark @click="removeDetail">{{ $t('common.delete') }}
+                    <v-btn v-if="!read_only" color="primary" dark @click="removeDetail">
+                        {{ $t('common.delete') }}
                         <v-icon right dark>mdi-delete</v-icon>
                     </v-btn>
                     <v-btn color="primary" text @click="closeDetail">{{ $t('common.cancel') }}</v-btn>
@@ -90,16 +88,16 @@
 </template>
 
 <script>
-import vue2Dropzone from 'vue2-dropzone';
-import 'vue2-dropzone/dist/vue2Dropzone.min.css';
-import {removeAttachment} from "@/api/analyze";
-import {vm} from "@/main.js";
-import AttributesMixin from "@/components/common/attribute/attributes_mixin";
+    import vue2Dropzone from 'vue2-dropzone';
+    import 'vue2-dropzone/dist/vue2Dropzone.min.css';
+    import { removeAttachment } from "@/api/analyze";
+    // import { vm } from "@/main.js";
+    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
 
-const getTemplate = () => `
+    const getTemplate = (isDark) => `
          <div cs class="dz-preview dz-file-preview">
          <div onclick="window.dispatchEvent(new CustomEvent('attachment-click', {detail: {file_id: 'FILE_ID', attribute_id: ATTR_ID}}))">
-            <div class="v-icon mdi mdi-file-document-outline theme--light"></div>
+            <div class="v-icon mdi mdi-file-document-outline ${isDark ? 'theme--dark' : 'theme--light'}"></div>
             <div class="dz-image">
                 <div data-dz-thumbnail-bg></div>
             </div>
@@ -114,316 +112,300 @@ const getTemplate = () => `
         </div>
     `;
 
-export default {
-    name: "AttributeAttachment",
-    components: {
-        vueDropzone: vue2Dropzone
-    },
-    mixins: [AttributesMixin],
-    data: () => ({
-        renameDialog: false,
-        detailDialog: false,
-        description: "",
-        last_updated: "",
-        files: [],
-        download_link: "",
-        new_report_item: null,
-        selected_attachment: {
-            id: "",
-            file_name: "",
-            size: -1,
-            mime_type: "",
-            user_name: "",
-            last_updated: "",
-            description: ""
+    export default {
+        name: "AttributeAttachment",
+        components: {
+            vueDropzone: vue2Dropzone
         },
-
-        dropzoneOptions: {
-            url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/report-items',
-            thumbnailWidth: 64,
-            thumbnailHeight: 96,
-            previewTemplate: getTemplate(),
-            addRemoveLinks: false,
-            autoProcessQueue: false,
-            clickable: true
-        }
-    }),
-    computed: {
-        getOptions() {
-            if (this.read_only) {
+        mixins: [AttributesMixin],
+        data: () => ({
+            renameDialog: false,
+            detailDialog: false,
+            description: "",
+            last_updated: "",
+            files: [],
+            download_link: "",
+            selected_attachment: {
+                id: "",
+                file_name: "",
+                size: -1,
+                mime_type: "",
+                user_name: "",
+                last_updated: "",
+                description: ""
+            },
+        }),
+        computed: {
+            getOptions() {
                 return {
-                    url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                            ? "$VUE_APP_TARANIS_NG_CORE_API"
-                            : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/report-items/' + this.report_item_id + '/file-attributes',
-                            thumbnailWidth: 64,
-                            thumbnailHeight: 96,
-                            previewTemplate: getTemplate(),
-                            addRemoveLinks: false,
-                            autoProcessQueue: false,
-                            clickable: false
-                }
-            } else {
-                return {
-                    url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                            ? "$VUE_APP_TARANIS_NG_CORE_API"
-                            : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                        + '/analyze/report-items/' + this.report_item_id + '/file-attributes',
+                    url: this.baseUrl(),
                     thumbnailWidth: 64,
                     thumbnailHeight: 96,
-                    previewTemplate: getTemplate(),
+                    previewTemplate: getTemplate(this.$vuetify.theme.dark),
                     addRemoveLinks: false,
                     autoProcessQueue: false,
-                    clickable: true
+                    clickable: !this.read_only
                 }
-            }
-        }
-    },
-    methods: {
-        sendingEvent(file, xhr, formData) {
-            xhr.setRequestHeader("Authorization", "Bearer " + localStorage.ACCESS_TOKEN)
-            formData.append('attribute_group_item_id', this.attribute_group.id);
-            if (this.report_item_id === null) {
-                formData.append('description', file.description);
-            } else {
-                formData.append('description', this.description);
-            }
+            },
         },
-        uploadSuccess(file, response) {
-            file.id = response;
-            if (this.report_item_id === null) {
-                if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
-                    this.$refs.myVueDropzone.removeAllFiles();
-                    this.files = [];
-                    this.values = [];
-                    this.$root.$emit('attachments-uploaded', {});
-                }
-            } else {
-                file.description = this.description;
-                let previewHTML = file.previewTemplate.innerHTML;
-                previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
-                file.previewTemplate.innerHTML = previewHTML;
-            }
-        },
-        fileAdded(file) {
-            if (this.read_only) {
-                this.$refs.myVueDropzone.removeFile(file)
-                return
-            }
+        methods: {
+            baseUrl(report_id = this.report_item_id) {
+                return (typeof process.env.VUE_APP_TARANIS_NG_CORE_API === "undefined"
+                    ? "$VUE_APP_TARANIS_NG_CORE_API"
+                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
+                    + `/analyze/report-items/${report_id}/file-attributes`
+            },
 
-            if (this.report_item_id === null) {
-                this.renameDialog = true;
-                file.id = this.files.length;
-                let previewHTML = file.previewTemplate.innerHTML;
-                previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
-                file.previewTemplate.innerHTML = previewHTML;
-                this.values.push({
-                    id: file.id,
-                    value: file.name
-                })
-            } else {
-                if (typeof file.id === 'undefined') {
-                    this.description = "";
-                    this.renameDialog = true;
+            getLink(file_id) {
+                return this.baseUrl() + `/${file_id}/file?jwt=${this.$store.getters.getJWT}`;
+            },
+
+            sendingEvent(file, xhr, formData) {
+                xhr.setRequestHeader("Authorization", "Bearer " + localStorage.ACCESS_TOKEN)
+                formData.append('attribute_group_item_id', this.attribute_group.id);
+                if (this.report_item_id === null) {
+                    formData.append('description', file.description);
                 } else {
+                    formData.append('description', this.description);
+                }
+            },
+
+            uploadSuccess(file, response) {
+                file.id = response.attribute_id;
+                if (this.report_item_id === null) {
+                    if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
+                        this.$refs.myVueDropzone.removeAllFiles();
+                        this.files = [];
+                        this.values = [];
+                        this.$root.$emit('attachments-uploaded', {});
+                    }
+                } else {
+                    file.description = this.description;
                     let previewHTML = file.previewTemplate.innerHTML;
                     previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
                     file.previewTemplate.innerHTML = previewHTML;
                 }
-            }
-            this.files.push(file);
-        },
-        save() {
-            if (this.report_item_id === null) {
+            },
+
+            fileAdded(file) {
+                if (this.read_only) {
+                    this.$refs.myVueDropzone.removeFile(file)
+                    return
+                }
+
+                if (this.report_item_id === null) {
+                    this.renameDialog = true;
+                    file.id = this.files.length;
+                    let previewHTML = file.previewTemplate.innerHTML;
+                    previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
+                    file.previewTemplate.innerHTML = previewHTML;
+                    this.values.push({
+                        id: file.id,
+                        value: file.name
+                    })
+                } else {
+                    if (typeof file.id === 'undefined') {
+                        this.description = "";
+                        this.renameDialog = true;
+                    } else {
+                        let previewHTML = file.previewTemplate.innerHTML;
+                        previewHTML = previewHTML.replace('FILE_ID', file.id).replace('ATTR_ID', this.attribute_group.id);
+                        file.previewTemplate.innerHTML = previewHTML;
+                    }
+                }
+                this.files.push(file);
+            },
+
+            save() {
+                if (this.report_item_id === null) {
+                    let files = this.$refs.myVueDropzone.getQueuedFiles();
+                    for (let i = 0; i < files.length; i++) {
+                        if (typeof files[i].description === 'undefined') {
+                            files[i].description = this.description
+                        }
+                    }
+                    this.description = ""
+                } else {
+                    this.$refs.myVueDropzone.processQueue()
+                }
+                this.renameDialog = false;
+            },
+
+            close() {
+                this.description = "";
+                this.renameDialog = false;
                 let files = this.$refs.myVueDropzone.getQueuedFiles();
                 for (let i = 0; i < files.length; i++) {
-                    if (typeof files[i].description === 'undefined') {
-                        files[i].description = this.description
-                    }
-                }
-                this.description = ""
-            } else {
-                this.$refs.myVueDropzone.processQueue()
-            }
-            this.renameDialog = false;
-        },
-        close() {
-            this.description = "";
-            this.renameDialog = false;
-            let files = this.$refs.myVueDropzone.getQueuedFiles();
-            for (let i = 0; i < files.length; i++) {
-                if (this.report_item_id === null) {
-                    if (typeof files[i].description === 'undefined') {
+                    if (this.report_item_id === null) {
+                        if (typeof files[i].description === 'undefined') {
+                            this.$refs.myVueDropzone.removeFile(files[i])
+                        }
+                    } else {
                         this.$refs.myVueDropzone.removeFile(files[i])
                     }
-                } else {
-                    this.$refs.myVueDropzone.removeFile(files[i])
                 }
-            }
-        },
-        saveDetail() {
-            if (this.report_item_id === null) {
-                this.detailDialog = false;
-                this.selected_attachment.file.description = this.selected_attachment.description
-            }
-            this.detailDialog = false;
-        },
-        closeDetail() {
-            this.detailDialog = false;
-        },
-        removeDetail() {
-            if (this.report_item_id === null) {
-                this.detailDialog = false;
-                for (let i = 0; i < this.values.length; i++) {
-                    if (this.values[i].id === this.selected_attachment.file.id) {
-                        this.values.splice(i, 1);
-                        break;
-                    }
+            },
+
+            saveDetail() {
+                if (this.report_item_id === null) {
+                    this.detailDialog = false;
+                    this.selected_attachment.file.description = this.selected_attachment.description
                 }
-                this.$refs.myVueDropzone.removeFile(this.selected_attachment.file);
-            } else {
-                removeAttachment({
-                    report_item_id: this.report_item_id,
-                    attribute_id: this.selected_attachment.id,
-                }).then(() => {
-                    this.$refs.myVueDropzone.removeFile(this.selected_attachment.file);
+                this.detailDialog = false;
+            },
+
+            closeDetail() {
+                this.detailDialog = false;
+            },
+
+            removeDetail() {
+                if (this.report_item_id === null) {
+                    this.detailDialog = false;
                     for (let i = 0; i < this.values.length; i++) {
-                        if (this.values[i].id === this.selected_attachment.id) {
+                        if (this.values[i].id === this.selected_attachment.file.id) {
                             this.values.splice(i, 1);
                             break;
                         }
                     }
-                    this.detailDialog = false;
-                });
-            }
-        },
-        addFile(value) {
-            let file = {
-                id: value.id,
-                size: value.binary_size,
-                name: value.value,
-                type: value.binary_mime_type,
-                description: value.binary_description,
-                last_updated: value.last_updated + " " + value.user.name,
-            };
-            let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/report-items/' + this.report_item_id + '/file-attributes/'
-                    + value.id + "/file?jwt=" + this.$store.getters.getJWT;
-            this.$refs.myVueDropzone.manuallyAddFile(file, url);
-        },
-        removeFile(file_id) {
-            for (let i = 0; i < this.files.length; i++) {
-                if (this.files[i].id.toString() === file_id) {
-                    this.$refs.myVueDropzone.removeFile(this.files[i]);
-                    this.files.splice(i, 1);
-                    break;
+                    this.$refs.myVueDropzone.removeFile(this.selected_attachment.file);
+                } else {
+                    removeAttachment({
+                        report_item_id: this.report_item_id,
+                        attribute_id: this.selected_attachment.id,
+                    }).then(() => {
+                        this.$refs.myVueDropzone.removeFile(this.selected_attachment.file);
+                        for (let i = 0; i < this.values.length; i++) {
+                            if (this.values[i].id === this.selected_attachment.id) {
+                                this.values.splice(i, 1);
+                                break;
+                            }
+                        }
+                        this.detailDialog = false;
+                    });
                 }
+            },
+
+            addFile(value) {
+                let file = {
+                    id: value.id,
+                    size: value.binary_size,
+                    name: value.value,
+                    type: value.binary_mime_type,
+                    description: value.binary_description,
+                    last_updated: value.last_updated + " " + value.user.name,
+                };
+                let url = this.getLink(value.id);
+                this.$refs.myVueDropzone.manuallyAddFile(file, url);
+            },
+
+            removeFile(file_id) {
+                for (let i = 0; i < this.files.length; i++) {
+                    if (this.files[i].id.toString() === file_id) {
+                        this.$refs.myVueDropzone.removeFile(this.files[i]);
+                        this.files.splice(i, 1);
+                        break;
+                    }
+                }
+            },
+
+            initDropzone() {
+                this.$refs.myVueDropzone.removeAllFiles();
+                this.files = [];
+                for (let i = 0; i < this.values.length; i++) {
+                    let file = {
+                        id: this.values[i].id,
+                        size: this.values[i].binary_size,
+                        name: this.values[i].value,
+                        type: this.values[i].binary_mime_type,
+                        description: this.values[i].binary_description,
+                        last_updated: this.values[i].last_updated + " " + this.values[i].user.name,
+                    };
+                    let url = this.getLink(this.values[i].id);
+                    this.$refs.myVueDropzone.manuallyAddFile(file, url);
+                }
+            },
+            onAttachmentClick(e) {
+                this.$root.$emit("attachment-clicked", {
+                    attachment_id: e.detail.file_id,
+                    attribute_id: e.detail.attribute_id
+                })
             }
         },
-        initDropzone() {
-            this.$refs.myVueDropzone.removeAllFiles();
-            this.files = [];
-            for (let i = 0; i < this.values.length; i++) {
-                let file = {
-                    id: this.values[i].id,
-                    size: this.values[i].binary_size,
-                    name: this.values[i].value,
-                    type: this.values[i].binary_mime_type,
-                    description: this.values[i].binary_description,
-                    last_updated: this.values[i].last_updated + " " + this.values[i].user.name,
-                };
-                let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                        ? "$VUE_APP_TARANIS_NG_CORE_API"
-                        : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                        + '/analyze/report-items/' + this.report_item_id + '/file-attributes/'
-                        + this.values[i].id + "/file?jwt=" + this.$store.getters.getJWT;
-                this.$refs.myVueDropzone.manuallyAddFile(file, url);
-            }
-        }
-    },
-    mounted() {
-        this.$root.$on('attachment-clicked', (data) => {
-            if (this.report_item_id === null) {
-                if (this.attribute_group.id === data.attribute_id) {
+        mounted() {
+            this.$root.$on('attachment-clicked', (data) => {
+                if (this.report_item_id === null) {
+                    if (this.attribute_group.id === data.attribute_id) {
+                        for (let i = 0; i < this.files.length; i++) {
+                            if (this.files[i].id.toString() === data.attachment_id) {
+                                this.selected_attachment = {
+                                    id: this.files[i].id,
+                                    file_name: this.files[i].name,
+                                    description: this.files[i].description,
+                                    file: this.files[i],
+                                    last_updated: null
+                                };
+                                this.detailDialog = true;
+                                break;
+                            }
+                        }
+                    }
+                } else {
                     for (let i = 0; i < this.files.length; i++) {
                         if (this.files[i].id.toString() === data.attachment_id) {
                             this.selected_attachment = {
                                 id: this.files[i].id,
                                 file_name: this.files[i].name,
+                                mime_type: this.files[i].type,
+                                file_size: this.files[i].size,
                                 description: this.files[i].description,
-                                file: this.files[i],
-                                last_updated: null
+                                last_updated: this.files[i].last_updated,
+                                file: this.files[i]
                             };
+                            this.download_link = this.getLink(this.selected_attachment.id);
                             this.detailDialog = true;
                             break;
                         }
                     }
                 }
-            } else {
-                for (let i = 0; i < this.files.length; i++) {
-                    if (this.files[i].id.toString() === data.attachment_id) {
-                        this.selected_attachment = {
-                            id: this.files[i].id,
-                            file_name: this.files[i].name,
-                            mime_type: this.files[i].type,
-                            file_size: this.files[i].size,
-                            description: this.files[i].description,
-                            last_updated: this.files[i].last_updated,
-                            file: this.files[i]
-                        };
-                        this.download_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                                ? "$VUE_APP_TARANIS_NG_CORE_API"
-                                : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                                + '/analyze/report-items/' + this.report_item_id + '/file-attributes/'
-                                + this.selected_attachment.id + "/file?jwt=" + this.$store.getters.getJWT;
-                        this.detailDialog = true;
-                        break;
+            });
+
+            this.$root.$on('dropzone-new-process', (data) => {
+                if (this.report_item_id === null) {
+                    this.$refs.myVueDropzone.setOption('url', this.baseUrl(data.report_item_id))
+                    if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
+                        this.$root.$emit('attachments-uploaded', {});
+                    } else {
+                        this.$refs.myVueDropzone.processQueue()
                     }
                 }
+            });
+
+            if (this.$vuetify.theme.dark) {
+                const dz = this.$refs.myVueDropzone.$el;
+                dz.classList.add('dz-dark');
             }
-        });
 
-        this.$root.$on('dropzone-new-process', (data) => {
-            if (this.report_item_id === null) {
-                this.$refs.myVueDropzone.setOption('url', ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                        ? "$VUE_APP_TARANIS_NG_CORE_API"
-                        : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                        + '/analyze/report-items/' + data.report_item_id + '/file-attributes')
-
-                if (this.$refs.myVueDropzone.getQueuedFiles().length === 0) {
-                    this.$root.$emit('attachments-uploaded', {});
-                } else {
-                    this.$refs.myVueDropzone.processQueue()
-                }
+            if (this.report_item_id !== null) {
+                this.$refs.myVueDropzone.setOption('url', this.baseUrl())
             }
-        });
 
-        if (this.report_item_id !== null) {
-            this.$refs.myVueDropzone.setOption('url', ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/report-items/' + this.report_item_id + '/file-attributes')
+            this.initDropzone()
+        },
+        created() {
+            window.addEventListener('attachment-click', this.onAttachmentClick, false);
+        },
+        beforeDestroy() {
+            window.removeEventListener("attachment-click", this.onAttachmentClick);
+            this.$root.$off('attachment-clicked')
+            this.$root.$off('dropzone-new-process')
         }
-
-        this.initDropzone()
-    },
-    created() {
-        window.addEventListener('attachment-click', function (e) {
-            vm.$emit("attachment-clicked", {
-                attachment_id: e.detail.file_id,
-                attribute_id: e.detail.attribute_id
-            })
-
-        }, false);
-    },
-    beforeDestroy() {
-        this.$root.$off('attachment-clicked')
-        this.$root.$off('dropzone-new-process')
     }
-}
 </script>
+
+<style>
+    /* Dark theme support, dropzone doesn’t support it natively */
+    #dropzone.dz-dark {
+        background-color: #272727;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
