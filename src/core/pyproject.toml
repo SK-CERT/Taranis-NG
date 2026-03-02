@@ -27,7 +27,7 @@ dependencies = [
     "requests==2.32.5",
     "schedule==1.2.2",
     "sseclient-py==1.9.0",
-    "SQLAlchemy==2.0.46",
+    "SQLAlchemy==2.0.48",
     "tqdm==4.67.3",
     "Werkzeug==3.1.6",
     "langchain==1.2.10",
