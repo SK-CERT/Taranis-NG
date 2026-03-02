@@ -3,11 +3,16 @@ name: Docker image - GUI
 on:
   push:
     paths:
-    - 'src/gui/**'
-    - 'docker/Dockerfile.gui'
-    - 'VERSION.md'
+      - 'src/gui/**'
+      - 'docker/Dockerfile.gui'
+      - 'VERSION.md'
     branches:
-    - main
+      - main
+
+  workflow_run:
+    workflows: ["Update git_version.txt"]  # must match your version_file.yaml name
+    types:
+      - completed
 
 permissions:
   packages: write
@@ -16,17 +21,23 @@ jobs:
   build:
     name: build docker
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: get ghcr owner repository
+
+      - name: Get GHCR owner repository
         run: |
           echo "GHCR_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
-      - name: Build and push gui
+
+      - name: Build and push GUI
         uses: docker/build-push-action@v6
         with:
           file: docker/Dockerfile.gui

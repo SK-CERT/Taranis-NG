@@ -157,8 +157,14 @@
                                     mdi-information-outline
                                 </v-icon>
                                 <span class="caption grey--text">{{ $t('dashboard.version') }}
-                                    <b>{{ appVersion }} {{ formattedBuildDate }}</b>
-                                    &nbsp;&nbsp;{{ commitHash }}
+                                    <b>{{ appVersion }}</b> {{ formattedBuildDate }}
+                                </span>
+                                <v-divider class="my-2"></v-divider>
+                                <v-icon class="mr-2" color="blue">
+                                    mdi-source-branch
+                                </v-icon>
+                                <span class="caption grey--text">Commit
+                                    <b>{{ commitHash }}</b> {{ commitDate }}
                                 </span>
                             </v-card-text>
                         </v-card>
@@ -190,6 +196,7 @@
             appVersion: pkg.version,
             buildDate: pkg.buildDate,
             commit: pkg.commit,
+            commited: pkg.commited,
         }),
         computed: {
             getData() {
@@ -202,6 +209,10 @@
 
             commitHash() {
                 return this.commit ? this.commit : '';
+            },
+
+            commitDate() {
+                return this.commited ? `(${this.commited})` : '';
             },
         },
         methods: {
