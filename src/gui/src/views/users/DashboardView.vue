@@ -16,8 +16,8 @@
 
                                 <v-sheet class="mx-auto" elevation="4" max-width="calc(100% - 32px)">
                                     <wordcloud :data="tag_cloud" nameKey="word" valueKey="word_quantity"
-                                        :color="myColors" :showTooltip="false" :rotate="myRotate" :fontSize="fontSize"
-                                        :wordClick="wordClickHandler">
+                                               :color="myColors" :showTooltip="false" :rotate="myRotate" :fontSize="fontSize"
+                                               :wordClick="wordClickHandler">
                                     </wordcloud>
                                 </v-sheet>
 
@@ -25,8 +25,9 @@
                                 <v-icon class="mr-2" color="primary">
                                     mdi-email-multiple
                                 </v-icon>
-                                <span class="caption grey--text"><strong>{{ getData.total_news_items }}</strong> {{
-                                    $t('dashboard.assess.total') }}</span>
+                                <span class="caption grey--text">
+                                    <strong>{{ getData.total_news_items }}</strong> {{ $t('dashboard.assess.total') }}
+                                </span>
                             </v-card-text>
                         </v-card>
                     </template>
@@ -72,10 +73,11 @@
                                             </v-icon>
                                             <span class="caption grey--text">
                                                 <b>{{ stateData.count }}</b>
-                                                {{($te('workflow.states.' + stateData.display_name)
+                                                {{ ($te('workflow.states.' + stateData.display_name)
                                                     ? $t('workflow.states.' + stateData.display_name)
                                                     : stateData.display_name
-                                                  ).toLowerCase()}}
+                                                  ).toLowerCase()
+                                                }}
                                                 {{ $t('dashboard.analyze.report_items') }}
                                             </span>
                                         </div>
@@ -112,10 +114,11 @@
                                             </v-icon>
                                             <span class="caption grey--text">
                                                 <b>{{ stateData.count }}</b>
-                                                {{($te('workflow.states.' + stateData.display_name)
+                                                {{ ($te('workflow.states.' + stateData.display_name)
                                                     ? $t('workflow.states.' + stateData.display_name)
                                                     : stateData.display_name
-                                                  ).toLowerCase()}}
+                                                  ).toLowerCase()
+                                                }}
                                                 {{ $t('dashboard.publish.products') }}
                                             </span>
                                         </div>
@@ -145,8 +148,18 @@
                                 <v-icon class="mr-2" color="blue">
                                     mdi-database
                                 </v-icon>
-                                <span class="caption grey--text"><b>{{ getData.total_database_items }}</b> {{
-                                    $t('dashboard.database.total') }}</span>
+                                <span class="caption grey--text">
+                                    <b>{{ getData.total_database_items }}</b> {{ $t('dashboard.database.total') }}
+                                </span>
+
+                                <v-divider class="my-2"></v-divider>
+                                <v-icon class="mr-2" color="blue">
+                                    mdi-information-outline
+                                </v-icon>
+                                <span class="caption grey--text">{{ $t('dashboard.version') }}
+                                    <b>{{ appVersion }} {{ formattedBuildDate }}</b>
+                                    &nbsp;&nbsp;{{ commitHash }}
+                                </span>
                             </v-card-text>
                         </v-card>
                     </template>
@@ -158,62 +171,74 @@
 </template>
 
 <script>
-import wordcloud from 'vue-wordcloud'
-import ViewLayout from "../../components/layouts/ViewLayout";
-import Settings, { getSettingBoolean, isInitializedSetting } from "@/services/settings";
+    import wordcloud from 'vue-wordcloud'
+    import ViewLayout from "../../components/layouts/ViewLayout";
+    import Settings, { getSettingBoolean, isInitializedSetting } from "@/services/settings";
+    import pkg from '../../../package.json';
 
-export default {
-    name: "DashboardView",
-    components: {
-        wordcloud,
-        ViewLayout,
-    },
-    computed: {
-        getData() {
-            return this.$store.getters.getDashboardData
-        }
-    },
-    data: () => ({
-        myColors: [],
-        myRotate: { "from": 0, "to": 0, "numOfOrientation": 0 },
-        fontSize: [14, 50],
-        tag_cloud: [],
-    }),
-    methods: {
-        wordClickHandler(name, value) {
-            // eslint-disable-next-line no-console
-            console.log('Word:', name, ', Quantity:', value);
+    export default {
+        name: "DashboardView",
+        components: {
+            wordcloud,
+            ViewLayout,
         },
+        data: () => ({
+            myColors: [],
+            myRotate: { "from": 0, "to": 0, "numOfOrientation": 0 },
+            fontSize: [14, 50],
+            tag_cloud: [],
+            appVersion: pkg.version,
+            buildDate: pkg.buildDate,
+            commit: pkg.commit,
+        }),
+        computed: {
+            getData() {
+                return this.$store.getters.getDashboardData
+            },
 
-        refreshTagCloud() {
-            this.$store.dispatch('getAllDashboardData')
-                .then(() => {
-                    this.tag_cloud = this.$store.getters.getDashboardData.tag_cloud
-                });
+            formattedBuildDate() {
+                return this.buildDate ? `(${this.buildDate.slice(0, 10)})` : '';
+            },
+
+            commitHash() {
+                return this.commit ? this.commit : '';
+            },
         },
+        methods: {
+            wordClickHandler(name, value) {
+                // eslint-disable-next-line no-console
+                console.log('Word:', name, ', Quantity:', value);
+            },
 
-        initSetting() {
-            if (getSettingBoolean(Settings.TAG_COLOR)) {
-                this.myColors = 'Category10';
-            } else {
-                this.myColors = ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'];
-            }
-        }
-    },
-    mounted() {
-        if (isInitializedSetting()) {
-            this.initSetting();
-        } else {
-            this.$root.$on('settings-loaded', () => {
+            refreshTagCloud() {
+                this.$store.dispatch('getAllDashboardData')
+                    .then(() => {
+                        this.tag_cloud = this.$store.getters.getDashboardData.tag_cloud
+                    });
+            },
+
+            initSetting() {
+                if (getSettingBoolean(Settings.TAG_COLOR)) {
+                    this.myColors = 'Category10';
+                } else {
+                    this.myColors = ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'];
+                }
+            },
+        },
+        mounted() {
+            if (isInitializedSetting()) {
                 this.initSetting();
-            });
-        }
+            } else {
+                this.$root.$on('settings-loaded', () => {
+                    this.initSetting();
+                });
+            }
 
-        this.refreshTagCloud()
-
-        setInterval(function () {
             this.refreshTagCloud()
-        }.bind(this), 600000);
+
+            setInterval(function () {
+                this.refreshTagCloud()
+            }.bind(this), 600000);
+        }
     }
-}
 </script>
