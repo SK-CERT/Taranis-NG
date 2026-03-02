@@ -85,6 +85,7 @@ const messages_en = {
             status: "Data summary",
             total: "records in total",
         },
+        version: "Version",
     },
 
     nav_menu: {
@@ -753,7 +754,7 @@ const messages_en = {
         attributes: "Attributes",
         confirm_close: {
             message:
-            "You have unsaved changes. Are you sure you want to close this report item?",
+                "You have unsaved changes. Are you sure you want to close this report item?",
         },
         tooltip: {
             sort_time: "Sort values from newest",

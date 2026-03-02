@@ -5,12 +5,13 @@ RUN npm install -g @vue/cli-service
 
 WORKDIR /app
 COPY ./src/gui/package*.json ./
+# Add build date and commit hash to package.json
+COPY .git/refs/heads/main git-commit.txt
+RUN node -e 'const fs = require("fs"); const pkg = JSON.parse(fs.readFileSync("package.json")); pkg.buildDate = new Date().toISOString(); pkg.commit = fs.readFileSync("git-commit.txt","utf8").trim().slice(0,7); fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));'
 RUN npm install
 COPY ./src/gui/public /app/public
 COPY ./src/gui/src /app/src
 COPY ./src/gui/babel.config.js .
-COPY ./src/gui/package.json .
-COPY ./src/gui/package-lock.json .
 
 ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm run build

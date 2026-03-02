@@ -85,6 +85,7 @@ const messages_cs = {
             status: "Souhrn dat",
             total: "záznamů celkem",
         },
+        version: "Verze",
     },
 
     nav_menu: {
