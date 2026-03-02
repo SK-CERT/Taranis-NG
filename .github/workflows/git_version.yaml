@@ -2,6 +2,8 @@ name: Update git_version.txt
 
 on:
   push:
+    paths:
+      - 'src/**'
     branches:
       - main
   workflow_dispatch:
