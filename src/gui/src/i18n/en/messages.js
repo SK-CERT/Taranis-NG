@@ -903,7 +903,6 @@ const messages_en = {
             dislike_item: "Dislike news item",
             delete_item: "Delete news item",
             remove_item: "Remove news item",
-            remove_from_report: "Remove from report item",
             show_reports: "Show reports containing this item",
         },
         shortcuts: {

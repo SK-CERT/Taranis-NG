@@ -902,7 +902,6 @@ const messages_cs = {
             dislike_item: "To se mi nelíbí",
             delete_item: "Smazat novinku",
             remove_item: "Odstranit novinku",
-            remove_from_report: "Odstranit z reportu",
             show_reports: "Zobrazit reporty obsahující tuto položku",
         },
         shortcuts: {

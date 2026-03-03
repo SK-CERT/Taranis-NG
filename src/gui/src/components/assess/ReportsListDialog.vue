@@ -33,7 +33,6 @@
                         :card="report"
                         :show_remove_action="true"
                         :preselected="false"
-                        :remove_tooltip="'assess.tooltip.remove_from_report'"
                         @show-report-item-detail="openReportItemDialog"
                         @remove-report-item-from-selector="removeAggregateFromReport"
                     />
