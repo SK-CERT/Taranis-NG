@@ -24,7 +24,7 @@ Taranis supports **team-to-team collaboration**, and includes a light weight
 **self service asset management** which automatically links to the advisories
 that mention vulnerabilities in the software.
 
-# Deploying Taranis NG with docker-compose
+# Deploying Taranis NG with Docker
 
 Taranis NG supports deployment in Docker containers. [The docker/ folder on
 GitHub repository](https://github.com/SK-CERT/Taranis-NG/tree/main/docker)
@@ -43,10 +43,9 @@ entrypoint, and the [gunicorn](https://gunicorn.org/) configuration file.
 - (Optional) [Vim](https://www.vim.org/) or other text editor - for configuration and development
 - (Optional) [Notepad++](https://notepad-plus-plus.org/) text editor for Windows users
 
-Please note it is important to use the latest version of
-`docker-compose`, otherwise the build and deploy can fail.
+Please note it is important to use the latest version of Docker, otherwise the build and deploy can fail.
 
-## Quickly build and run Taranis NG using `docker-compose` or `docker compose`
+## Quickly build and run Taranis NG using `docker compose`
 
 _First_, you need to clone the source code repository:
 
@@ -65,12 +64,6 @@ vim docker/.env
 
 _Finally_, either deploy the ready-made images from Docker hub with:
 
-```bash
-cd Taranis-NG/docker
-docker compose pull
-docker compose up --no-build
-```
-or
 ```bash
 cd Taranis-NG/docker
 docker compose pull

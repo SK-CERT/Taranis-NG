@@ -90,7 +90,7 @@ VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/pro
 ```
 
 You can use and modify the existing `docker-compose-keycloak.yml` example in the repository and
-run with ```docker-compose -f docker-compose.yml -f docker-compose-keycloak.yml```
+run with ```docker compose -f docker-compose.yml -f docker-compose-keycloak.yml```
 
 
 # **LDAP setup**
