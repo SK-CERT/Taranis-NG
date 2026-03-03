@@ -142,29 +142,30 @@
                     <template>
                         <v-card class="mt-4 mx-auto" max-width="100%">
                             <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('dashboard.database.title') }}</div>
-                                <div class="subheading grey--text">{{ $t('dashboard.database.status') }}</div>
-                                <v-divider class="my-2"></v-divider>
-                                <v-icon class="mr-2" color="blue">
-                                    mdi-database
-                                </v-icon>
-                                <span class="caption grey--text">
-                                    <b>{{ getData.total_database_items }}</b> {{ $t('dashboard.database.total') }}
-                                </span>
+                                <div class="title mb-2">{{ $t('dashboard.about.title') }}</div>
 
                                 <v-divider class="my-2"></v-divider>
                                 <v-icon class="mr-2" color="blue">
                                     mdi-information-outline
                                 </v-icon>
-                                <span class="caption grey--text">{{ $t('dashboard.version') }}
+                                <span class="caption grey--text">{{ $t('dashboard.about.version') }}
                                     <b>{{ appVersion }}</b> {{ formattedBuildDate }}
                                 </span>
-                                <v-divider class="my-2"></v-divider>
+
+                                <v-divider inset class="mt-2 mb-2"></v-divider>
                                 <v-icon class="mr-2" color="blue">
                                     mdi-source-branch
                                 </v-icon>
                                 <span class="caption grey--text">Commit
                                     <b>{{ commitHash }}</b> {{ commitDate }}
+                                </span>
+
+                                <v-divider inset class="mt-2 mb-2"></v-divider>
+                                <v-icon class="mr-2" color="blue">
+                                    mdi-database
+                                </v-icon>
+                                <span class="caption grey--text">
+                                    <b>{{ getData.total_database_items }}</b> {{ $t('dashboard.about.total') }}
                                 </span>
                             </v-card-text>
                         </v-card>
