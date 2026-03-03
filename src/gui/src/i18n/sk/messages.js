@@ -80,12 +80,11 @@ const messages_sk = {
             products: "",
             total: "publikácií celkom",
         },
-        database: {
-            title: "Databáza",
-            status: "Súhrn dát",
+        about: {
+            title: "O aplikácii",
             total: "záznamov celkom",
+            version: "Verzia",
         },
-        version: "Verzia",
     },
 
     nav_menu: {

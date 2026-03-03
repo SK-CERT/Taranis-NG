@@ -80,12 +80,11 @@ const messages_en = {
             products: "products",
             total: "products in total",
         },
-        database: {
-            title: "Database",
-            status: "Data summary",
+        about: {
+            title: "About",
             total: "records in total",
+            version: "Version",
         },
-        version: "Version",
     },
 
     nav_menu: {
