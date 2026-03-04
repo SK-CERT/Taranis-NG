@@ -91,23 +91,22 @@
     import vue2Dropzone from 'vue2-dropzone';
     import 'vue2-dropzone/dist/vue2Dropzone.min.css';
     import { removeAttachment } from "@/api/analyze";
-    // import { vm } from "@/main.js";
     import AttributesMixin from "@/components/common/attribute/attributes_mixin";
 
     const getTemplate = (isDark) => `
          <div cs class="dz-preview dz-file-preview">
-         <div onclick="window.dispatchEvent(new CustomEvent('attachment-click', {detail: {file_id: 'FILE_ID', attribute_id: ATTR_ID}}))">
-            <div class="v-icon mdi mdi-file-document-outline ${isDark ? 'theme--dark' : 'theme--light'}"></div>
-            <div class="dz-image">
-                <div data-dz-thumbnail-bg></div>
-            </div>
-            <div class="dz-details">
-                <div class="dz-filename"><span data-dz-name></span></div>
-            </div>
-            <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-            <div class="dz-error-message"><span data-dz-errormessage></span></div>
-            <div class="dz-success-mark"><i class="fa fa-check"></i></div>
-            <div class="dz-error-mark"><i class="fa fa-close"></i></div>
+            <div class="attachment-preview" data-file-id="FILE_ID" data-attr-id="ATTR_ID">
+                <div class="v-icon mdi mdi-file-document-outline ${isDark ? 'theme--dark' : 'theme--light'}"></div>
+                <div class="dz-image">
+                    <div data-dz-thumbnail-bg></div>
+                </div>
+                <div class="dz-details">
+                    <div class="dz-filename"><span data-dz-name></span></div>
+                </div>
+                <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                <div class="dz-error-message"><span data-dz-errormessage></span></div>
+                <div class="dz-success-mark"><i class="fa fa-check"></i></div>
+                <div class="dz-error-mark"><i class="fa fa-close"></i></div>
             </div>
         </div>
     `;
@@ -324,11 +323,15 @@
                     this.$refs.myVueDropzone.manuallyAddFile(file, url);
                 }
             },
+
             onAttachmentClick(e) {
-                this.$root.$emit("attachment-clicked", {
-                    attachment_id: e.detail.file_id,
-                    attribute_id: e.detail.attribute_id
-                })
+                const el = e.target.closest('.attachment-preview');
+                if (!el) return;
+                // do i need again emit event? i can directly call the function here
+                this.$root.$emit('attachment-clicked', {
+                    attachment_id: el.dataset.fileId,
+                    attribute_id: el.dataset.attrId
+                });
             }
         },
         mounted() {
@@ -385,17 +388,16 @@
                 dz.classList.add('dz-dark');
             }
 
+            this.$refs.myVueDropzone.$el.addEventListener('click', this.onAttachmentClick);
+
             if (this.report_item_id !== null) {
                 this.$refs.myVueDropzone.setOption('url', this.baseUrl())
             }
 
             this.initDropzone()
         },
-        created() {
-            window.addEventListener('attachment-click', this.onAttachmentClick, false);
-        },
         beforeDestroy() {
-            window.removeEventListener("attachment-click", this.onAttachmentClick);
+            this.$refs.myVueDropzone.$el.removeEventListener('click', this.onAttachmentClick);
             this.$root.$off('attachment-clicked')
             this.$root.$off('dropzone-new-process')
         }
