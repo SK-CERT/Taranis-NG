@@ -47,8 +47,8 @@
 
                 return [
                     selectAction,
-                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'GROUP', data_btn: 'group', title: this.$t('assess.tooltip.group_items'), ui_icon: 'GROUP' },
-                    { can: this.canModify, disabled: !this.multiSelectActive, action: 'UNGROUP', data_btn: 'ungroup', title: this.$t('assess.tooltip.ungroup_items'), ui_icon: 'UNGROUP' },
+                    { can: this.canModify && this.canGroupActions, disabled: !this.multiSelectActive, action: 'GROUP', data_btn: 'group', title: this.$t('assess.tooltip.group_items'), ui_icon: 'GROUP' },
+                    { can: this.canModify && this.canGroupActions, disabled: !this.multiSelectActive, action: 'UNGROUP', data_btn: 'ungroup', title: this.$t('assess.tooltip.ungroup_items'), ui_icon: 'UNGROUP' },
                     { can: this.canCreateReport, disabled: !this.multiSelectActive, action: 'ANALYZE', data_btn: 'analyze', title: this.$t('assess.tooltip.analyze_items'), ui_icon: 'ANALYZE' },
                     { can: this.canModify, disabled: !this.multiSelectActive, action: 'READ', data_btn: 'read', title: this.$t('assess.tooltip.read_items'), ui_icon: 'READ' },
                     { can: this.canModify, disabled: !this.multiSelectActive, action: 'IMPORTANT', data_btn: 'important', title: this.$t('assess.tooltip.important_items'), ui_icon: 'IMPORTANT' },
@@ -61,18 +61,21 @@
             multiSelectActive() {
                 return this.$store.getters.getMultiSelectNews;
             },
-        },
-        methods: {
-            getGroupId() {
-                if (window.location.pathname.includes("/group/")) {
-                    let i = window.location.pathname.indexOf("/group/");
-                    let len = window.location.pathname.length;
-                    return window.location.pathname.substring(i + 7, len);
-                } else {
-                    return null;
+
+            currentGroupId() {
+                if (this.$route && this.$route.path && this.$route.path.includes('/group/')) {
+                    const i = this.$route.path.indexOf('/group/');
+                    return this.$route.path.substring(i + 7);
                 }
+                return null;
             },
 
+            canGroupActions() {
+                // Disable group actions when the current group is exactly "all"
+                return (this.currentGroupId != "all");
+            },
+        },
+        methods: {
             multiSelect() {
                 this.$store.dispatch("multiSelectNews", !this.multiSelectActive)
                 if (this.multiSelectActive === false) {
@@ -114,7 +117,7 @@
                         })
                     }
                     if (items.length > 0) {
-                        groupAction({ 'group': this.getGroupId(), 'action': type, 'items': items }).then(() => {
+                        groupAction({ 'group': this.currentGroupId, 'action': type, 'items': items }).then(() => {
                             this.multiSelect()
                             this.$root.$emit('news-items-updated');
                         }).catch((error) => {
@@ -131,7 +134,6 @@
 
             selectAll() {
                 let filter = this.$store.getters.getFilter;
-                const group_id = this.getGroupId();
 
                 // If filter is empty or doesn't have required properties, use default
                 if (!filter || !filter.hasOwnProperty('search')) {
@@ -146,7 +148,7 @@
                 }
 
                 this.$store.dispatch('selectAllItems', {
-                    group_id: group_id,
+                    group_id: this.currentGroupId,
                     data: { filter: filter }
                 }).then((count) => {
                     this.all_selected = true;
