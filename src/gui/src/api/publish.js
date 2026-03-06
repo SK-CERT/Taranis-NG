@@ -39,7 +39,7 @@ export function publishProduct(product, publisher_ids) {
 
 export function previewProduct(data, ctrl_key, jwt) {
     // return a token
-    return ApiService.post('/publish/products/preview', {
+    return ApiService.post('/publish/products/preview-ticket', {
         product: data,
         ctrl: ctrl_key,
         jwt: jwt

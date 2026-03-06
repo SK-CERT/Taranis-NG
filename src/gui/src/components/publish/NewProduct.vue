@@ -161,8 +161,10 @@
 
 <script>
     import AuthMixin from "../../services/auth/auth_mixin";
-    import { createProduct, publishProduct as publishProductAPI,
-             updateProduct, previewProduct as previewProductAPI } from "@/api/publish";
+    import {
+        createProduct, publishProduct as publishProductAPI,
+        updateProduct, previewProduct as previewProductAPI
+    } from "@/api/publish";
     import { getEntityTypeStates } from "@/api/state";
     import ReportItemSelector from "@/components/publish/ReportItemSelector";
     import Permissions from "@/services/auth/permissions";
@@ -362,10 +364,23 @@
                                 typeof process.env.VUE_APP_TARANIS_NG_CORE_API == "undefined"
                                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                                     : process.env.VUE_APP_TARANIS_NG_CORE_API;
-                            const previewUrl = `${apiBase}/publish/products/preview/${token}?jwt=${this.$store.getters.getJWT}`;
+                            const previewUrl = `${apiBase}/publish/products/preview/${token}`;
 
-                            // Open the preview URL in a new tab
-                            window.open(previewUrl, "_blank");
+                            // hide JWT from URL by creating a form and submitting it as POST, also solve window.open() issue
+                            const form = document.createElement("form");
+                            form.method = "POST";
+                            form.action = previewUrl;
+                            form.target = "_blank"; // open in a new tab - window.open() replacement
+
+                            const input = document.createElement("input");
+                            input.type = "hidden";
+                            input.name = "jwt";
+                            input.value = this.$store.getters.getJWT;
+
+                            form.appendChild(input);
+                            document.body.appendChild(form);
+                            form.submit();
+                            document.body.removeChild(form);
 
                             // Reset validation errors but preserve initial form state for unsaved changes detection
                             this.$validator.reset();

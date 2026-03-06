@@ -192,13 +192,13 @@ def prepare_product(product_data: dict, user: User, token: str) -> tuple[dict, H
 class ProductGetPreview(Resource):
     """A resource class for serving cached preview data.
 
-    This class handles the GET request for retrieving a cached preview by token.
+    This class handles the POST request for retrieving a cached preview by token.
 
     Attributes:
         Resource (class): The base class for creating API resources.
     """
 
-    def get(self, token: str) -> Response:
+    def post(self, token: str) -> Response:
         """Retrieve and serve cached preview data.
 
         Args:
@@ -209,10 +209,11 @@ class ProductGetPreview(Resource):
         """
         err_msg = None
 
-        if "jwt" not in request.args:
+        jwt = request.form.get("jwt")
+        if not jwt:
             err_msg = "Missing JWT"
         else:
-            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
+            user = auth_manager.decode_user_from_jwt(jwt)
             if user is None:
                 err_msg = "Invalid JWT"
 
@@ -220,7 +221,6 @@ class ProductGetPreview(Resource):
             log_manager.store_auth_error_activity(err_msg)
             return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
 
-        # Retrieve and immediately delete cached data from Redis (one-time use)
         cache_key = f"preview:{token}"
         try:
             cached_bytes = redis_client.get(cache_key)
@@ -398,7 +398,7 @@ def initialize(api: Api) -> None:
     """
     api.add_resource(ProductsResource, "/api/v1/publish/products")
     api.add_resource(ProductResource, "/api/v1/publish/products/<int:product_id>")
-    api.add_resource(ProductSetPreview, "/api/v1/publish/products/preview")
+    api.add_resource(ProductSetPreview, "/api/v1/publish/products/preview-ticket")
     api.add_resource(ProductGetPreview, "/api/v1/publish/products/preview/<string:token>")
     api.add_resource(PublishProduct, "/api/v1/publish/products/publish")
 
