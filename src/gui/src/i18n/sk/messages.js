@@ -432,7 +432,7 @@ const messages_sk = {
         attribute_constants: "Konštanty atribútu",
         import_from_csv: "Import z CSV",
         new_constant: "Nová konštanta",
-        attribute: "atribút",
+        attribute: "Typ atribútu",
         attributes: "Atribúty",
         new_attribute: "Nový atribút",
         min_occurrence: "Minimálny výskyt",

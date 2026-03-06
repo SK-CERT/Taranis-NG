@@ -431,7 +431,7 @@ const messages_cs = {
         attribute_constants: "Konstanty atributu",
         import_from_csv: "Importovat z CSV",
         new_constant: "Nová konstanta",
-        attribute: "Atribut",
+        attribute: "Typ atributu",
         attributes: "Atributy",
         new_attribute: "Nový atribut",
         min_occurrence: "Minimální výskyt",
