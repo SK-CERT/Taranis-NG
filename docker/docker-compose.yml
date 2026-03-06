@@ -271,7 +271,7 @@ services:
       - "gui"
       - "core"
     restart: unless-stopped
-    image: "traefik:3.6.7"
+    image: "traefik:3.6.9"
     environment:
       TZ: "${TZ}"
     ports:
