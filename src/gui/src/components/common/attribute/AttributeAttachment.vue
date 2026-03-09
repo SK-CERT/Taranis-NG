@@ -38,14 +38,6 @@
                 </v-card-title>
 
                 <v-card-text>
-                    <v-row v-if="selected_attachment.last_updated !== null">
-                        <v-col style="flex-grow: 0;" cols="2">
-                            <span class="text--primary">{{ $t('drop_zone.last_updated') }}:</span>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.last_updated }}</div>
-                        </v-col>
-                    </v-row>
                     <v-row>
                         <v-col style="flex-grow: 0">
                             <v-icon class="text--primary">mdi-file-document</v-icon>
@@ -55,11 +47,19 @@
                         </v-col>
                     </v-row>
                     <v-row v-if="read_only || report_item_id !== null">
-                        <v-col style="flex-grow: 0;" cols="2">
+                        <v-col style="flex-grow: 0;" cols="3">
                             <span class="text--primary">{{ $t('drop_zone.file_description') }}:</span>
                         </v-col>
                         <v-col>
                             <div>{{ selected_attachment.description }}</div>
+                        </v-col>
+                    </v-row>
+                    <v-row v-if="selected_attachment.last_updated !== null">
+                        <v-col style="flex-grow: 0;" cols="3">
+                            <span class="text--primary">{{ $t('drop_zone.last_updated') }}:</span>
+                        </v-col>
+                        <v-col>
+                            <div>{{ selected_attachment.last_updated }}</div>
                         </v-col>
                     </v-row>
                     <v-textarea v-if="!read_only && report_item_id === null" v-model="selected_attachment.description"
@@ -71,11 +71,11 @@
                     <v-btn v-if="!read_only && report_item_id === null" color="primary" dark @click="saveDetail">
                         {{ $t('common.save') }}
                     </v-btn>
-                    <v-btn v-if="report_item_id !== null" color="primary" dark :href="download_link">
+                    <v-btn v-if="report_item_id !== null" color="primary" dark @click="downloadFile">
                         {{ $t('drop_zone.download') }}
                         <v-icon right dark>mdi-cloud-download</v-icon>
                     </v-btn>
-                    <v-btn v-if="!read_only" color="primary" dark @click="removeDetail">
+                    <v-btn v-if="!read_only" color="error" dark @click="removeDetail">
                         {{ $t('common.delete') }}
                         <v-icon right dark>mdi-delete</v-icon>
                     </v-btn>
@@ -90,7 +90,7 @@
 <script>
     import vue2Dropzone from 'vue2-dropzone';
     import 'vue2-dropzone/dist/vue2Dropzone.min.css';
-    import { removeAttachment } from "@/api/analyze";
+    import { removeAttachment, downloadAttachment } from "@/api/analyze";
     import AttributesMixin from "@/components/common/attribute/attributes_mixin";
 
     const getTemplate = (isDark) => `
@@ -156,7 +156,7 @@
             },
 
             getLink(file_id) {
-                return this.baseUrl() + `/${file_id}/file?jwt=${this.$store.getters.getJWT}`;
+                return `/analyze/report-items/${this.report_item_id}/file-attributes/${file_id}/file`;
             },
 
             sendingEvent(file, xhr, formData) {
@@ -332,6 +332,10 @@
                     attachment_id: el.dataset.fileId,
                     attribute_id: el.dataset.attrId
                 });
+            },
+
+            downloadFile() {
+                downloadAttachment(this.download_link, this.selected_attachment.file_name);
             }
         },
         mounted() {
