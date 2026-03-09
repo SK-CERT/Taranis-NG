@@ -8,7 +8,7 @@ from flask_restful import Api, Resource
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
-from managers import asset_manager, auth_manager, log_manager
+from managers import asset_manager, auth_manager
 from managers.auth_manager import ACLCheck, auth_required
 from managers.log_manager import logger
 from managers.sse_manager import sse_manager
@@ -314,7 +314,12 @@ class ReportItemRemoveAttachment(Resource):
 class ReportItemDownloadAttachment(Resource):
     """Download a report item attachment."""
 
-    def get(self, report_item_id: int, attribute_id: int) -> object | None:
+    @auth_required("ANALYZE_ACCESS", ACLCheck.REPORT_ITEM_ACCESS)
+    def post(
+        self,
+        report_item_id: int,  # noqa: ARG002, it's used in auth_required
+        attribute_id: int,
+    ) -> object | None:
         """Download a report item attachment.
 
         Args:
@@ -323,39 +328,15 @@ class ReportItemDownloadAttachment(Resource):
         Returns:
             (file): report item attachment
         """
-        if "jwt" in request.args:
-            user = auth_manager.decode_user_from_jwt(request.args["jwt"])
-            if user is not None:
-                permissions = user.get_permissions()
-                if "ANALYZE_ACCESS" in permissions:
-                    report_item_attribute = ReportItemAttribute.find(attribute_id)
-                    if (
-                        report_item_attribute is not None
-                        and report_item_attribute.report_item.id == report_item_id
-                        and ReportItem.allowed_with_acl(
-                            report_item_attribute.report_item.id,
-                            user,
-                            see=False,
-                            access=True,
-                            modify=False,
-                        )
-                    ):
-                        log_manager.store_user_activity(user, "ANALYZE_ACCESS", str({"file": report_item_attribute.value}))
-
-                        return send_file(
-                            io.BytesIO(report_item_attribute.binary_data),
-                            download_name=report_item_attribute.value,
-                            mimetype=report_item_attribute.binary_mime_type,
-                            as_attachment=True,
-                        )
-                    log_manager.store_auth_error_activity("Unauthorized access attempt to Report Item Attribute")
-                else:
-                    log_manager.store_auth_error_activity("Insufficient permissions")
-            else:
-                log_manager.store_auth_error_activity("Invalid JWT")
-        else:
-            log_manager.store_auth_error_activity("Missing JWT")
-        return None
+        report_item_attribute = ReportItemAttribute.find(attribute_id)
+        response = send_file(
+            io.BytesIO(report_item_attribute.binary_data),
+            download_name=report_item_attribute.value,
+            mimetype=report_item_attribute.binary_mime_type,
+            as_attachment=True,
+        )
+        response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+        return response
 
 
 class ReportItemLlmGenerate(Resource):

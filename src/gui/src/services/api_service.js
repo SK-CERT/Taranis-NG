@@ -64,21 +64,43 @@ const ApiService = {
         });
     },
 
-    download(resource, data, file_name) {
-        axios({
-            url: resource,
-            method: 'POST',
-            responseType: 'blob',
-            data: data
-        }).then((response) => {
-            let fileURL = window.URL.createObjectURL(new Blob([response.data]))
-            let fileLink = document.createElement('a')
-            fileLink.href = fileURL
-            fileLink.setAttribute('download', file_name)
-            document.body.appendChild(fileLink)
-            fileLink.click()
-            document.body.removeChild(fileLink)
-        });
+    async download(resource, data = {}, fileName = "download") {
+        try {
+            // Make the Axios request
+            const config = {
+                url: resource,          // full API path
+                method: "POST",         // matches backend post()
+                responseType: "blob",   // get raw data
+                data: data,
+            };
+
+            const response = await axios(config);
+
+            // Determine filename from header
+            let filename = fileName;
+            const disposition = response.headers["content-disposition"];
+            if (disposition) {
+                // handles: attachment; filename = report.pdf  filename = "report.pdf"  filename*=UTF-8''my%20report.pdf
+                const match = disposition.match(/filename\*?=(?:UTF-8'')?["]?([^";\r\n]+)["]?/i);
+                if (match) filename = match[1];
+            }
+
+            // Wrap in Blob for download
+            const blob = new Blob([response.data]);
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error("Download failed:", err);
+        }
     },
 };
 

@@ -125,3 +125,7 @@ export function aiGenerate(attribute_id, news_item_agreggate_ids) {
 export function getReportItemsByAggregate(aggregate_id) {
     return ApiService.get('/analyze/report-items-by-aggregate/' + aggregate_id)
 }
+
+export function downloadAttachment(download_link, optional_file_name) {
+    return ApiService.download(download_link, null, optional_file_name)
+}
