@@ -42,7 +42,7 @@
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn v-if="report_item_id !== null" color="primary" dark :href="download_link">
+                    <v-btn v-if="report_item_id !== null" color="primary" dark @click="downloadFile">
                         {{ $t('drop_zone.download') }}
                         <v-icon right dark>mdi-cloud-download</v-icon>
                     </v-btn>
@@ -57,8 +57,10 @@
 <script>
     import vue2Dropzone from 'vue2-dropzone';
     import 'vue2-dropzone/dist/vue2Dropzone.min.css';
+    import { downloadAttachment } from "@/api/analyze";
     import AttributesMixin from "@/components/common/attribute/attributes_mixin";
 
+    // TODO: remove onclick (Content-Security-Policy), inspire in AttributeAttachment
     const getTemplate = () => `
          <div cs class="dz-preview dz-file-preview">
          <div onclick="window.dispatchEvent(new CustomEvent('attachment-click', {detail: 'FILE_ID'}))">
@@ -100,10 +102,7 @@
             },
 
             dropzoneOptions: {
-                url: ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/attribute/addattachment/',
+                url: this.baseUrl + this.getLinkAdd,
                 thumbnailWidth: 64,
                 thumbnailHeight: 96,
                 previewTemplate: getTemplate(),
@@ -113,6 +112,22 @@
             }
         }),
         methods: {
+            baseUrl() {
+                return (typeof process.env.VUE_APP_TARANIS_NG_CORE_API === "undefined"
+                    ? "$VUE_APP_TARANIS_NG_CORE_API"
+                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
+            },
+
+            getLinkAdd() {
+                // TODO: non existing endpoint? probaly old code, should be same as in AttributeAttachment
+                return "/analyze/attribute/addattachment/";
+            },
+
+            getLinkDown(file_id) {
+                // TODO: non existing endpoint? probaly old code, should be same as in AttributeAttachment
+                return `/analyze/attribute/download/${file_id}`;
+            },
+
             fileAdded(file) {
                 let previewHTML = file.previewTemplate.innerHTML;
                 previewHTML = previewHTML.replace('FILE_ID', file.id);
@@ -136,11 +151,7 @@
                         description: this.values[i].binary_description,
                         last_updated: this.values[i].last_updated + " " + this.values[i].user.name,
                     };
-                    let url = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                        ? "$VUE_APP_TARANIS_NG_CORE_API"
-                        : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                        + '/analyze/attribute/download/'
-                        + this.values[i].id + "?jwt=" + this.$store.getters.getJWT;
+                    let url = this.getLinkDown(this.values[i].id);
                     this.$refs.myVueDropzone.manuallyAddFile(file, url);
                 }
             },
@@ -150,6 +161,10 @@
                     attachment_id: e.detail,
                 })
             },
+
+            downloadFile() {
+                downloadAttachment(this.download_link, this.selected_attachment.file_name);
+            }
         },
         mounted() {
             this.$root.$on('attachment-clicked', (data) => {
@@ -164,11 +179,7 @@
                             last_updated: this.files[i].last_updated,
                             file: this.files[i]
                         };
-                        this.download_link = ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                            ? "$VUE_APP_TARANIS_NG_CORE_API"
-                            : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                            + '/analyze/attribute/download/'
-                            + this.selected_attachment.id + "?jwt=" + this.$store.getters.getJWT;
+                        this.download_link = this.getLinkDown(this.selected_attachment.id);
                         this.detailDialog = true;
                         break;
                     }
@@ -176,10 +187,7 @@
             });
 
             if (this.report_item_id !== null) {
-                this.$refs.myVueDropzone.setOption('url', ((typeof (process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined")
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/analyze/attribute/addattachment/' + this.report_item_id)
+                this.$refs.myVueDropzone.setOption('url', this.baseUrl + this.getLinkAdd + this.report_item_id)
             }
 
             this.initDropzone()
