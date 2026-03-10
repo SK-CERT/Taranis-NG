@@ -12,7 +12,7 @@
                     <div>{{attribute.value}}</div>
                 </v-col>
                 <v-col>
-                    <v-btn small :href="getDownloadLink">{{$t('assess.download')}}
+                    <v-btn small @click="downloadFile">{{$t('assess.download')}}
                         <v-icon right dark>mdi-cloud-download</v-icon>
                     </v-btn>
                 </v-col>
@@ -23,6 +23,8 @@
 </template>
 
 <script>
+    import { downloadAttachment } from "@/api/assess";
+
     export default {
         name: "NewsItemAttribute",
         props: {
@@ -31,9 +33,8 @@
         },
         data: () => ({}),
         methods: {
-            getDownloadLink() {
-                return ((typeof(process.env.VUE_APP_TARANIS_NG_CORE_API) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_API" : process.env.VUE_APP_TARANIS_NG_CORE_API)
-                    + '/assess/news-item-data/' + this.news_item_data.id + '/attributes/' + this.attribute.id + '/file?jwt=' + this.$store.getters.getJWT
+            downloadFile() {
+                downloadAttachment(`/assess/news-item-data/${this.news_item_data.id}/attributes/${this.attribute.id}/file`);
             }
         }
     }

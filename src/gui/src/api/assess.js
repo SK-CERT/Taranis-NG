@@ -94,3 +94,7 @@ export function deleteNewsItem(group_id, news_item_id) {
 export function importantNewsItem(group_id, news_item_id) {
     return ApiService.put('/assess/news-items/' + news_item_id, {group_id: group_id, important: true})
 }
+
+export function downloadAttachment(download_link) {
+    return ApiService.download(download_link)
+}
