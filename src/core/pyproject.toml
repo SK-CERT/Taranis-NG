@@ -31,7 +31,7 @@ dependencies = [
     "tqdm==4.67.3",
     "Werkzeug==3.1.6",
     "langchain==1.2.10",
-    "langchain-openai==1.1.10",
+    "langchain-openai==1.1.11",
     "pycountry==26.2.16"
 ]
 
