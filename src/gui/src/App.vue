@@ -1,17 +1,17 @@
 <template>
     <v-app class="taranis">
 
-        <MainMenu v-if="isAuthenticated()"/>
+        <MainMenu v-if="isAuthenticated()" />
 
         <v-navigation-drawer v-model="visible" width="96px" app clipped color="cx-drawer-bg" v-if="isAuthenticated()">
             <router-view name="nav"></router-view>
         </v-navigation-drawer>
 
         <v-main>
-            <router-view/>
+            <router-view />
         </v-main>
 
-        <Notification v-if="isAuthenticated()"/>
+        <Notification v-if="isAuthenticated()" />
     </v-app>
 </template>
 
@@ -20,6 +20,7 @@
     import AuthMixin from "./services/auth/auth_mixin";
     import Notification from "./components/common/Notification";
     import Settings, { getSettingBoolean } from "@/services/settings";
+    import { initSSE } from "@/api/auth";
 
     export default {
         name: 'App',
@@ -130,8 +131,10 @@
             });
 
             this.$root.$on('logged-in', () => {
+                initSSE().then(() => {
+                    this.connectSSE();
+                })
                 this.initUserSettings();
-                this.connectSSE()
             });
 
         },

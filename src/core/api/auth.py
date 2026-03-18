@@ -1,6 +1,5 @@
 """This module provides authentication resources for the Taranis-NG application."""
 
-import secrets
 import urllib
 from http import HTTPStatus
 
@@ -15,24 +14,6 @@ from managers.log_manager import logger
 
 class Login(Resource):
     """A resource for handling user login."""
-
-    SSE_TOKEN_TTL = 86400  # 1 day
-
-    @staticmethod
-    def create_sse_token(jwt_token: str) -> str:
-        """Generate a secure random token for SSE authentication and store it in Redis with the associated JWT token.
-
-        Args: jwt_token (str): The JWT to associate with the generated SSE token.
-
-        Returns: str: The generated SSE reference token.
-        """
-        # We have problem store JWT token as cookie because of the size limit, so we store it in Redis and
-        # set a small size cookie with a reference token. Not always we can use Authorization header,
-        # for example in SSE authentication - it's not possible do it with vue-sse component. If we use in future
-        # some custom SSE client, we can switch to header authentication and remove this workaround.
-        token = secrets.token_urlsafe(32)
-        redis_client.setex(f"sse:{token}", Login.SSE_TOKEN_TTL, jwt_token)
-        return token
 
     @no_auth
     def get(self) -> Response:
@@ -69,33 +50,7 @@ class Login(Resource):
             parser.add_argument(credential, location="json")
         credentials = parser.parse_args()
 
-        auth_response = auth_manager.authenticate(credentials)
-
-        # if auth_response has access_token, set cookie
-        if isinstance(auth_response, tuple):
-            body, status = auth_response
-        else:
-            body, status = auth_response, HTTPStatus.OK
-
-        access_token = None
-        if not isinstance(body, ResponseBase):
-            access_token = body.get("access_token")
-        if access_token:
-            sse_token = self.create_sse_token(access_token)
-            resp = make_response(body, status)  # send JSON back too
-            resp.set_cookie(
-                "sse_token",
-                sse_token,
-                httponly=True,  # invisible to JS
-                secure=True,  # HTTPS only
-                samesite="None",  # cross-origin support
-                path="/sse",
-                max_age=Login.SSE_TOKEN_TTL,
-            )
-            logger.debug("SSE: Token created, cookie set")
-            return resp
-
-        return auth_response
+        return auth_manager.authenticate(credentials)
 
 
 class Refresh(Resource):

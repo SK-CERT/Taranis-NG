@@ -76,6 +76,7 @@
                     });
                 }
             },
+
             validate_authentication(req) {
                 req.then(() => {
                     if (this.isAuthenticated()) {
@@ -87,6 +88,7 @@
                     }
                 });
             },
+
             validation_failed() {
                 if (this.$store.getters.hasExternalLogoutUrl) {
                     window.location = this.$store.getters.getLogoutURL; // plain redirect without gotoUrl

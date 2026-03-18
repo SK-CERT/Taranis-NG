@@ -8,12 +8,14 @@ if TYPE_CHECKING:
     from flask_restful import Api
 
 import json
+import secrets
 import socket
 from http import HTTPStatus
 
-from flask import Response, request, stream_with_context
+from flask import Response, make_response, request, stream_with_context
 from flask_restful import Resource
 from managers import auth_manager
+from managers.auth_manager import jwt_required
 from managers.cache_manager import redis_client
 from managers.log_manager import logger, sensitive_value
 from model.bots_node import BotsNode
@@ -95,7 +97,7 @@ class SseResource(Resource):
                 else:
                     msg = "SSE: invalid or expired sse_token."
 
-            elif api_key is not None:
+            elif api_key != "":
                 auth_type = "API key"
                 api_type = request.args.get("channel")
                 if api_type == "remote":
@@ -125,6 +127,58 @@ class SseResource(Resource):
             return msg, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+class SseInitResource(Resource):
+    """SSE API init endpoint."""
+
+    SSE_TOKEN_TTL = 86400  # 1 day
+
+    @staticmethod
+    def create_sse_token(jwt_token: str) -> str:
+        """Generate a secure random token for SSE authentication and store it in Redis with the associated JWT token.
+
+        Args: jwt_token (str): The JWT to associate with the generated SSE token.
+
+        Returns: str: The generated SSE reference token.
+        """
+        # We have problem store JWT token as cookie because of the size limit, so we store it in Redis and
+        # set a small size cookie with a reference token. Not always we can use Authorization header,
+        # for example in SSE authentication - it's not possible do it with vue-sse component. If we use in future
+        # some custom SSE client, we can switch to header authentication and remove this workaround.
+        token = secrets.token_urlsafe(32)
+        redis_client.setex(f"sse:{token}", SseInitResource.SSE_TOKEN_TTL, jwt_token)
+        return token
+
+    @jwt_required
+    def post(self) -> Response:
+        """Post Response."""
+        try:
+            access_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+            if access_token:
+                sse_token = self.create_sse_token(access_token)
+                resp = make_response("", HTTPStatus.OK)
+                resp.set_cookie(
+                    "sse_token",
+                    sse_token,
+                    httponly=True,  # invisible to JS
+                    secure=True,  # HTTPS only
+                    samesite="None",  # cross-origin support
+                    path="/sse",
+                    max_age=SseInitResource.SSE_TOKEN_TTL,
+                )
+                logger.debug("SSE: Token created, cookie set")
+                return resp
+
+            msg = "SSE: missing Authorization"
+            logger.error(msg)
+            return make_response(msg, HTTPStatus.UNAUTHORIZED)
+
+        except Exception as ex:
+            msg = "SSE: Init failed"
+            logger.exception(f"{msg}: {ex}")
+            return make_response(msg, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
 def initialize(api: Api) -> None:
     """Initialize API endpoints."""
     api.add_resource(SseResource, "/sse")
+    api.add_resource(SseInitResource, "/api/v1/sse-init")

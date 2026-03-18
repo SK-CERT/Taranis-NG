@@ -1,5 +1,12 @@
 """Module containing functions to log the activities of the core."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.user import User
+
 import hashlib
 import logging.handlers
 import os
@@ -12,14 +19,14 @@ from Cryptodome.Random import get_random_bytes
 from flask import request
 from managers.db_manager import db
 from model.log_record import LogRecord
-
 from shared.log import TaranisLogger
 
 # setup logger level
 taranis_logging_level_str = os.environ.get("TARANIS_LOG_LEVEL", "DEBUG")
 modules_logging_level_str = os.environ.get("MODULES_LOG_LEVEL", "WARNING")
+syslog_addr = os.environ.get("SYSLOG_ADDRESS")
 
-logger = TaranisLogger(taranis_logging_level_str, modules_logging_level_str, True, os.environ.get("SYSLOG_ADDRESS"))
+logger = TaranisLogger(taranis_logging_level_str, modules_logging_level_str, colored=True, syslog_address=syslog_addr)
 
 logging_level = getattr(logging, taranis_logging_level_str.upper(), logging.INFO)
 # setup Flask logger
@@ -38,7 +45,7 @@ if os.getenv("DEBUG_SQL", "false").lower() == "true":
 # LOG_SENSITIVE_DATA=no (or undefined) - remove sensitive data
 # LOG_SENSITIVE_DATA=encrypt:abcdefg - encrypt the sensitive data with supplied passphrase
 # LOG_SENSITIVE_DATA=yes - log all data as-is
-def sensitive_value(value):
+def sensitive_value(value: str) -> str:
     """Encrypt or mask sensitive data based on the logging mode.
 
     Args:
@@ -57,20 +64,20 @@ def sensitive_value(value):
         private_key = hashlib.scrypt(key.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
         cipher_config = AES.new(private_key, AES.MODE_GCM)
         cipher_text, tag = cipher_config.encrypt_and_digest(bytes(value, "utf-8"))
-        encryptedDict = {
+        encrypted_dict = {
             "cipher_text": b64encode(cipher_text).decode("utf-8"),
             "salt": b64encode(salt).decode("utf-8"),
             "nonce": b64encode(cipher_config.nonce).decode("utf-8"),
             "tag": b64encode(tag).decode("utf-8"),
         }
-        encryptedString = f"{encryptedDict['cipher_text']}*{encryptedDict['salt']}*{encryptedDict['nonce']}*{encryptedDict['tag']}"
-        return encryptedString
+        return f"{encrypted_dict['cipher_text']}*{encrypted_dict['salt']}*{encrypted_dict['nonce']}*{encrypted_dict['tag']}"
+
     return "•••••"
 
 
 # source: https://github.com/gdavid7/cryptocode/blob/main/cryptocode.py
-# TODO: add a command line wrapper around this function
-def decrypt(enc_dict, password):
+# TODO (*): add a command line wrapper around this function
+def decrypt(enc_dict: str, password: str) -> str:
     """Decrypt the given encrypted dictionary using the provided password.
 
     Args:
@@ -104,12 +111,12 @@ def decrypt(enc_dict, password):
         # decrypt the cipher text
         decrypted = cipher.decrypt_and_verify(cipher_text, tag)
     except:  # noqa: E722
-        return False
+        return ""
 
     return decrypted.decode("UTF-8")
 
 
-def generate_escaped_data(request_data):
+def generate_escaped_data(request_data: dict) -> str:
     """Generate escaped data from the given request data.
 
     Prepare the "data" argument for logging: use request.body or supplied parameter, strip whitespace, truncate to 4k of text
@@ -128,22 +135,20 @@ def generate_escaped_data(request_data):
 
     data = str(request_data)[:4096]
     data = re.sub(r"\s+", " ", data)
-    data = re.sub(r"(^\s+)|(\s+$)", "", data)
-    return data
+    return re.sub(r"(^\s+)|(\s+$)", "", data)
 
 
-def resolve_ip_address():
+def resolve_ip_address() -> str:
     """Resolve the IP address of the client making the request.
 
     Returns:
         ip_address (str): The IP address of the client.
     """
     headers_list = request.headers.getlist("X-Forwarded-For")
-    ip_address = headers_list[0] if headers_list else request.remote_addr
-    return ip_address
+    return headers_list[0] if headers_list else request.remote_addr
 
 
-def resolve_method():
+def resolve_method() -> str:
     """Return the HTTP method of the current request.
 
     Returns:
@@ -152,7 +157,7 @@ def resolve_method():
     return request.method
 
 
-def resolve_resource():
+def resolve_resource() -> str:
     """Resolve the resource path by removing any trailing question mark from the request's full path.
 
     Returns:
@@ -164,7 +169,7 @@ def resolve_resource():
     return request.full_path
 
 
-def store_activity(activity_type, activity_detail, request_data=None):
+def store_activity(activity_type: str, activity_detail: str, request_data: dict | None = None) -> None:
     """Store an activity record in the log.
 
     Args:
@@ -175,7 +180,7 @@ def store_activity(activity_type, activity_detail, request_data=None):
     store_record(None, None, None, None, None, None, activity_type, activity_detail, request_data)
 
 
-def store_user_activity(user, activity_type, activity_detail, request_data=None):
+def store_user_activity(user: User, activity_type: str, activity_detail: str, request_data: dict | None = None) -> None:
     """Store a user activity record in the log.
 
     Args:
@@ -187,7 +192,7 @@ def store_user_activity(user, activity_type, activity_detail, request_data=None)
     store_record(None, user.id, user.name, None, None, None, activity_type, activity_detail, request_data)
 
 
-def store_access_error_activity(user, activity_detail, request_data=None):
+def store_access_error_activity(user: User, activity_detail: str, request_data: dict | None = None) -> None:
     """Store an access error activity record in the log.
 
     Args:
@@ -203,19 +208,20 @@ def store_access_error_activity(user, activity_detail, request_data=None):
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
-        except Exception() as ex:
+        except Exception as ex:
             logger.exception(f"Storing access error failed: {ex}")
 
     db.session.rollback()
     store_record(ip, user.id, user.name, None, None, None, "ACCESS_ERROR", activity_detail, request_data)
 
 
-def store_data_error_activity(user, activity_detail, exception=None, request_data=None):
+def store_data_error_activity(user: User, activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
     """Store a data error activity record in the log.
 
     Args:
         user (User): The user associated with the activity.
         activity_detail (str): The details of the activity.
+        exception (Exception): Exception object.
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
@@ -229,17 +235,18 @@ def store_data_error_activity(user, activity_detail, exception=None, request_dat
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
-        except Exception() as ex:
+        except Exception as ex:
             logger.exception(f"Storing data error failed: {ex}")
 
     store_record(ip, user.id, user.name, None, None, None, "DATA_ERROR", activity_detail, request_data)
 
 
-def store_data_error_activity_no_user(activity_detail, exception=None, request_data=None):
+def store_data_error_activity_no_user(activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
     """Store a data error activity record in the log without a user.
 
     Args:
         activity_detail (str): The details of the activity.
+        exception (Exception): Exception object.
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
@@ -253,17 +260,18 @@ def store_data_error_activity_no_user(activity_detail, exception=None, request_d
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
-        except Exception() as ex:
+        except Exception as ex:
             logger.exception(f"Storing data error (no user) failed: {ex}")
 
     store_record(ip, None, None, None, None, None, "PUBLIC_ACCESS_DATA_ERROR", activity_detail, request_data)
 
 
-def store_auth_error_activity(activity_detail, exception=None, request_data=None):
+def store_auth_error_activity(activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
     """Store an authentication error activity record in the log.
 
     Args:
         activity_detail (str): The details of the activity.
+        exception (Exception): Exception object.
         request_data (dict, optional): The data associated with the request.
     """
     if exception:
@@ -276,13 +284,13 @@ def store_auth_error_activity(activity_detail, exception=None, request_data=None
     if sys_logger is not None:
         try:
             sys_logger.error(log_text)
-        except Exception() as ex:
+        except Exception as ex:
             logger.exception(f"Storing authentication error failed: {ex}")
 
     store_record(None, None, None, None, None, None, "AUTH_ERROR", activity_detail, request_data)
 
 
-def store_user_auth_error_activity(user, activity_detail, request_data=None):
+def store_user_auth_error_activity(user: User, activity_detail: str, request_data: dict | None = None) -> None:
     """Store a user authentication error activity record in the log.
 
     Args:
@@ -299,13 +307,19 @@ def store_user_auth_error_activity(user, activity_detail, request_data=None):
     if sys_logger is not None:
         try:
             sys_logger.error(log_text)
-        except Exception() as ex:
+        except Exception as ex:
             logger.exception(f"Storing user authentication error failed: {ex}")
 
     store_record(ip, user.id, user.name, None, None, None, "AUTH_ERROR", activity_detail, request_data)
 
 
-def store_system_activity(system_id, system_name, activity_type, activity_detail, request_data=None):
+def store_system_activity(
+    system_id: int,
+    system_name: str,
+    activity_type: str,
+    activity_detail: str,
+    request_data: dict | None = None,
+) -> None:
     """Store a system activity record in the log.
 
     Args:
@@ -318,7 +332,13 @@ def store_system_activity(system_id, system_name, activity_type, activity_detail
     store_record(None, None, None, system_id, system_name, None, activity_type, activity_detail, request_data)
 
 
-def store_system_error_activity(system_id, system_name, activity_type, activity_detail, request_data=None):
+def store_system_error_activity(
+    system_id: int,
+    system_name: str,
+    activity_type: str,
+    activity_detail: str,
+    request_data: dict | None = None,
+) -> None:
     """Store a system error activity record in the log.
 
     Args:
@@ -338,13 +358,23 @@ def store_system_error_activity(system_id, system_name, activity_type, activity_
     if sys_logger is not None:
         try:
             sys_logger.critical(log_text)
-        except Exception() as ex:
+        except Exception as ex:
             logger.exception(f"Storing system error failed: {ex}")
 
     store_record(ip, None, None, system_id, system_name, None, activity_type, activity_detail, request_data)
 
 
-def store_record(ip_address, user_id, user_name, system_id, system_name, module_id, activity_type, activity_detail, request_data):
+def store_record(
+    ip_address: str,
+    user_id: int,
+    user_name: str,
+    system_id: int,
+    system_name: str,
+    module_id: str,
+    activity_type: str,
+    activity_detail: str,
+    request_data: dict,
+) -> None:
     """Store a system activity record in the log.
 
     Args:
