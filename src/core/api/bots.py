@@ -94,7 +94,7 @@ class NewsItemAttributesResource(Resource):
         """Update news item attributes.
 
         Args:
-            news_item_data_id (str): The news item data ID
+            news_item_data_id (int): The news item data ID
             bots_node (BotsNode): The bots node
 
         Returns:

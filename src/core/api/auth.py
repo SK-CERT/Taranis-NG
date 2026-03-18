@@ -1,39 +1,41 @@
-"""This module provides authentication resources for the Taranis-NG application.
+"""This module provides authentication resources for the Taranis-NG application."""
 
-Classes:
-    Login(Resource): A resource for handling user login.
-    Refresh(Resource): A resource for handling token refresh requests.
-    Logout(Resource): A resource for handling user logout requests.
-
-Functions:
-    initialize(api): Initialize the authentication routes for the given API.
-
-Usage:
-    - Login: Handles GET and POST requests for user authentication.
-    - Refresh: Handles GET requests to refresh authentication tokens.
-    - Logout: Handles GET requests for logging out users.
-
-Dependencies:
-    - flask: For creating redirect responses and handling requests.
-    - flask_restful: For creating RESTful resources.
-    - config: For accessing application configuration.
-    - managers.auth_manager: For handling authentication logic.
-"""
-
+import secrets
 import urllib
+from http import HTTPStatus
 
 from config import Config
-from flask import make_response, redirect
-from flask_restful import Resource, ResponseBase, reqparse, request
+from flask import Response, make_response, redirect
+from flask_restful import Api, Resource, ResponseBase, reqparse, request
 from managers import auth_manager
 from managers.auth_manager import jwt_required, no_auth
+from managers.cache_manager import redis_client
+from managers.log_manager import logger
 
 
 class Login(Resource):
     """A resource for handling user login."""
 
+    SSE_TOKEN_TTL = 86400  # 1 day
+
+    @staticmethod
+    def create_sse_token(jwt_token: str) -> str:
+        """Generate a secure random token for SSE authentication and store it in Redis with the associated JWT token.
+
+        Args: jwt_token (str): The JWT to associate with the generated SSE token.
+
+        Returns: str: The generated SSE reference token.
+        """
+        # We have problem store JWT token as cookie because of the size limit, so we store it in Redis and
+        # set a small size cookie with a reference token. Not always we can use Authorization header,
+        # for example in SSE authentication - it's not possible do it with vue-sse component. If we use in future
+        # some custom SSE client, we can switch to header authentication and remove this workaround.
+        token = secrets.token_urlsafe(32)
+        redis_client.setex(f"sse:{token}", Login.SSE_TOKEN_TTL, jwt_token)
+        return token
+
     @no_auth
-    def get(self):
+    def get(self) -> Response:
         """Handle GET requests for authentication.
 
         This method attempts to authenticate a user using the `auth_manager`.
@@ -46,16 +48,14 @@ class Login(Resource):
                       otherwise the original response from `auth_manager.authenticate`.
         """
         response = auth_manager.authenticate(None)
-
-        if not isinstance(response, ResponseBase):
-            if "gotoUrl" in request.args and "access_token" in response:
-                redirect_response = make_response(redirect(request.args["gotoUrl"]))
-                redirect_response.set_cookie("jwt", response["access_token"])
-                return redirect_response
+        if not isinstance(response, ResponseBase) and "gotoUrl" in request.args and "access_token" in response:
+            redirect_response = make_response(redirect(request.args["gotoUrl"]))
+            redirect_response.set_cookie("jwt", response["access_token"])
+            return redirect_response
 
         return response
 
-    def post(self):
+    def post(self) -> Response:
         """Handle POST requests for authentication.
 
         This method parses the required credentials from the JSON payload of the request,
@@ -69,14 +69,40 @@ class Login(Resource):
             parser.add_argument(credential, location="json")
         credentials = parser.parse_args()
 
-        return auth_manager.authenticate(credentials)
+        auth_response = auth_manager.authenticate(credentials)
+
+        # if auth_response has access_token, set cookie
+        if isinstance(auth_response, tuple):
+            body, status = auth_response
+        else:
+            body, status = auth_response, HTTPStatus.OK
+
+        access_token = None
+        if not isinstance(body, ResponseBase):
+            access_token = body.get("access_token")
+        if access_token:
+            sse_token = self.create_sse_token(access_token)
+            resp = make_response(body, status)  # send JSON back too
+            resp.set_cookie(
+                "sse_token",
+                sse_token,
+                httponly=True,  # invisible to JS
+                secure=True,  # HTTPS only
+                samesite="None",  # cross-origin support
+                path="/sse",
+                max_age=Login.SSE_TOKEN_TTL,
+            )
+            logger.debug("SSE: Token created, cookie set")
+            return resp
+
+        return auth_response
 
 
 class Refresh(Resource):
     """A resource for handling token refresh requests."""
 
     @jwt_required
-    def get(self):
+    def get(self) -> tuple[dict, HTTPStatus]:
         """Handle GET request to refresh the authentication token.
 
         This method retrieves the current user from the JWT (JSON Web Token) and
@@ -91,13 +117,11 @@ class Refresh(Resource):
 class Logout(Resource):
     """A resource for handling user logout requests."""
 
-    @no_auth
-    def get(self):
-        """Handle the GET request for logging out a user.
+    @jwt_required
+    def post(self) -> Response:
+        """Handle the POST request for logging out a user.
 
-        This method checks for a JWT token in the request arguments and attempts to decode it.
-        If the token is valid, it proceeds to log out the user using the auth_manager.
-        If the logout is successful and a "gotoUrl" is provided in the request arguments,
+        If a "gotoUrl" is provided in the request arguments,
         it redirects the user to the specified URL. If an OpenID logout URL is configured,
         it replaces "GOTO_URL" in the OpenID logout URL with the encoded "gotoUrl" and redirects to it.
 
@@ -105,24 +129,43 @@ class Logout(Resource):
             ResponseBase: The response from the auth_manager.logout method.
             Redirect: A redirect response to the specified "gotoUrl" or OpenID logout URL if applicable.
         """
-        token = None
-        if "jwt" in request.args:
-            if auth_manager.decode_user_from_jwt(request.args["jwt"]) is not None:
-                token = request.args["jwt"]
+        try:
+            token = request.headers.get("Authorization", "").replace("Bearer ", "")
 
-        response = auth_manager.logout(token)
+            # there is problem receive sse_token 1) path: /sse, 2) we don't want send cookies all the time,
+            # 3) httponly flag (we can't read it from JS and put it to body). We know JWT so delete it by value
+            for key in redis_client.scan_iter("sse:*"):
+                if redis_client.get(key).decode("utf-8") == token:
+                    redis_client.delete(key)
+                    logger.debug("SSE: Token deleted")
+                    break
 
-        if not isinstance(response, ResponseBase):
-            if "gotoUrl" in request.args:
-                if Config.OPENID_LOGOUT_URL:
-                    url = Config.OPENID_LOGOUT_URL.replace("GOTO_URL", urllib.parse.quote(request.args["gotoUrl"]))
-                    return redirect(url)
-                return redirect(request.args["gotoUrl"])
+            response = auth_manager.logout(token)
 
-        return response
+            if not isinstance(response, ResponseBase) and "gotoUrl" in request.args:
+                url = (
+                    Config.OPENID_LOGOUT_URL.replace("GOTO_URL", urllib.parse.quote(request.args["gotoUrl"]))
+                    if Config.OPENID_LOGOUT_URL
+                    else request.args["gotoUrl"]
+                )
+                resp = redirect(url)
+            else:
+                resp = make_response({}, HTTPStatus.OK) if response is None else response
+
+            # Delete cookie if resp is a Response object
+            if hasattr(resp, "delete_cookie"):
+                resp.delete_cookie("sse_token", path="/sse")
+                logger.debug("SSE: Cookie deleted")
+
+            return resp
+
+        except Exception as ex:
+            msg = "Logout failed"
+            logger.exception(f"{msg}: {ex}")
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def initialize(api):
+def initialize(api: Api) -> None:
     """Initialize the authentication routes for the given API.
 
     This function adds the following resources to the API:

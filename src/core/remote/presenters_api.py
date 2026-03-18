@@ -18,7 +18,7 @@ class PresentersApi:
         self.api_url = api_url
         self.api_url = self.api_url.removesuffix("/")
         self.api_key = api_key
-        self.headers = {"Authorization": "Bearer " + self.api_key}
+        self.headers = {"Authorization": "ApiKey " + self.api_key}
 
     def get_presenters_info(self) -> tuple[dict, HTTPStatus]:
         """Return presenters JSON and HTTP status.

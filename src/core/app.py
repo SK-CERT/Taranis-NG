@@ -24,7 +24,7 @@ def create_app() -> Flask:
     app.config.from_object("config.Config")
 
     with app.app_context():
-        CORS(app)
+        CORS(app, supports_credentials=True)
 
         db_manager.initialize(app)
         db_manager.create_tables()

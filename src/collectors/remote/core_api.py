@@ -7,27 +7,15 @@ from pathlib import Path
 
 import requests
 from config import Config
-
 from shared.log_manager import logger
 
 
 class CoreApi:
-    """The CoreApi class provides methods for interacting with the Taranis-NG API.
-
-    Attributes:
-        api_url (str): The URL of the Taranis-NG API.
-        headers (dict): The headers to be included in API requests.
-
-    Methods:
-        get_osint_sources(collector_type): Retrieves the OSINT sources for a given collector type.
-        update_collector_status(): Updates the status of the collector.
-        add_news_items(news_items): Adds news items to the collector.
-        update_collector_last_attempt(source_id): Updates the last attempt time for a given source.
-    """
+    """The CoreApi class provides methods for interacting with the Taranis-NG API."""
 
     api_url = os.getenv("TARANIS_NG_CORE_URL")
     api_url = api_url.removesuffix("/")
-    headers = {"Authorization": f"Bearer {Config.API_KEY}"}  # noqa: RUF012
+    headers = {"Authorization": f"ApiKey {Config.API_KEY}"}  # noqa: RUF012
 
     def read_collector_config_id() -> dict:
         """Read the collector configuration ID from the configuration file.
@@ -61,8 +49,8 @@ class CoreApi:
 
         try:
             response = requests.get(
-                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/osint-sources?api_key={urllib.parse.quote(Config.API_KEY)}"
-                f"&collector_type={urllib.parse.quote(collector_type)}",
+                f"{cls.api_url}/api/v1/collectors/{urllib.parse.quote(collector_id)}/osint-sources"
+                f"?collector_type={urllib.parse.quote(collector_type)}",
                 headers=cls.headers,
                 timeout=10,
             )

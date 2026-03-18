@@ -29,10 +29,6 @@ const actions = {
         context.commit("setUser", userData)
     },
 
-    logout(context) {
-        context.commit('clearJwtToken');
-    },
-
     setVerticalView(context, data) {
         context.commit('setVerticalView', data)
     },

@@ -31,7 +31,7 @@
                     </v-list-item-content>
                 </v-list-item>
 
-                <v-list-item @click="logout">
+                <v-list-item @click="deauthenticate">
                     <v-list-item-icon>
                         <v-icon>mdi-logout</v-icon>
                     </v-list-item-icon>
@@ -42,39 +42,45 @@
             </v-list>
         </v-menu>
 
-        <UserSettings/>
+        <UserSettings />
 
     </div>
 </template>
 
 <script>
-import AuthMixin from "@/services/auth/auth_mixin";
-import UserSettings from "./UserSettings";
+    import AuthMixin from "@/services/auth/auth_mixin";
+    import UserSettings from "./UserSettings";
 
-export default {
-    name: "UserMenu",
-    mixins: [AuthMixin],
-    components: {
-        UserSettings
-    },
-    data: () => ({
-        darkTheme: false
-    }),
-    computed: {
-        username() {
-            return this.$store.getters.getUserName
+    export default {
+        name: "UserMenu",
+        mixins: [AuthMixin],
+        components: {
+            UserSettings
         },
-        organizationName() {
-            return this.$store.getters.getOrganizationName
-        }
-    },
-    methods: {
-        settings() {
-            this.$root.$emit('show-user-settings');
+        data: () => ({
+            darkTheme: false
+        }),
+        computed: {
+            username() {
+                return this.$store.getters.getUserName
+            },
+
+            organizationName() {
+                return this.$store.getters.getOrganizationName
+            }
         },
-        darkToggle() {
-            this.$vuetify.theme.dark = this.darkTheme
+        methods: {
+            deauthenticate() {
+                this.$store.dispatch('logout');
+            },
+
+            settings() {
+                this.$root.$emit('show-user-settings');
+            },
+
+            darkToggle() {
+                this.$vuetify.theme.dark = this.darkTheme
+            }
         }
     }
-}
 </script>

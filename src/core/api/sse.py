@@ -14,6 +14,7 @@ from http import HTTPStatus
 from flask import Response, request, stream_with_context
 from flask_restful import Resource
 from managers import auth_manager
+from managers.cache_manager import redis_client
 from managers.log_manager import logger, sensitive_value
 from model.bots_node import BotsNode
 from model.remote import RemoteAccess
@@ -80,16 +81,20 @@ class SseResource(Resource):
     def get(self) -> tuple[str, HTTPStatus]:
         """Get Response."""
         try:
-            jwt_token = request.args.get("jwt")
-            api_key = request.args.get("api_key")
+            sse_token = request.cookies.get("sse_token")
+            api_key = request.headers.get("Authorization", "").replace("ApiKey ", "")
 
             auth_type = ""
-            if jwt_token is not None:
-                auth_type = "JWT"
-                if auth_manager.decode_user_from_jwt(jwt_token) is None:
-                    msg = "SSE: decoding user from jwt failed."
-                    logger.warning(msg)
-                    return msg, HTTPStatus.FORBIDDEN
+            msg = ""
+            if sse_token is not None:
+                auth_type = "SSE token"
+                jwt_token = redis_client.get(f"sse:{sse_token}")
+                if jwt_token:
+                    if auth_manager.decode_user_from_jwt(jwt_token) is None:
+                        msg = "SSE: decoding user from jwt failed."
+                else:
+                    msg = "SSE: invalid or expired sse_token."
+
             elif api_key is not None:
                 auth_type = "API key"
                 api_type = request.args.get("channel")
@@ -103,11 +108,11 @@ class SseResource(Resource):
                 if not validated_object:
                     api_key = sensitive_value(api_key)
                     msg = f"SSE: invalid {auth_type}: '{api_key}'"
-                    logger.warning(msg)
-                    return msg, HTTPStatus.FORBIDDEN
 
             else:
                 msg = "SSE: missing authentication credentials."
+
+            if msg:
                 logger.warning(msg)
                 return msg, HTTPStatus.FORBIDDEN
 
