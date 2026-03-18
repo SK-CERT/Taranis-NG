@@ -544,7 +544,7 @@ def decode_user_from_jwt(jwt_token: str) -> User:
     try:
         decoded = jwt.decode(jwt_token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
     except Exception as ex:  # e.g. "Signature has expired"
-        log_manager.store_auth_error_activity("Invalid JWT", ex)
+        log_manager.store_auth_error_activity(f"Invalid JWT: {ex!s}")
     if decoded is None:
         return None
     return User.find(decoded["sub"])

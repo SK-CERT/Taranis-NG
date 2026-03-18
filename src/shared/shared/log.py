@@ -13,7 +13,7 @@ class TaranisLogger:
         taranis_logging_level_str (str): The logging level for the Taranis logger as a string.
         modules_logging_level_str (str): The logging level for other modules as a string.
         colored (bool): Whether to use colored output.
-        syslog_address (Optional[tuple]): The address of the syslog server (optional).
+        syslog_address (str): The address of the syslog server (optional).
 
     Attributes:
         logger (logging.Logger): The logger object.
@@ -27,7 +27,7 @@ class TaranisLogger:
         critical(message): Log a critical message.
     """
 
-    def __init__(self, taranis_logging_level_str: str, modules_logging_level_str: str, colored: bool, syslog_address: tuple | None):
+    def __init__(self, taranis_logging_level_str: str, modules_logging_level_str: str, colored: bool, syslog_address: str | None) -> None:
         """Initialize a Log object.
 
         Parameters:
@@ -56,7 +56,7 @@ class TaranisLogger:
             try:
                 sys_log_handler = logging.handlers.SysLogHandler(address=syslog_address, socktype=socket.SOCK_STREAM)
             except Exception as ex:
-                print(f"Unable to connect to syslog server: {ex}")
+                print(f"Unable to connect to syslog server: {ex}")  # noqa: T201
 
         # Configure the root logger for all other modules
         module_logger = logging.getLogger()
@@ -84,18 +84,14 @@ class TaranisLogger:
 
     def _format_message(self, message: str) -> str:
         """Format the log message to include the log_prefix attribute."""
-        if self.log_prefix:
-            whole_message = f"{self.log_prefix}: {message}"
-        else:
-            whole_message = message
-        return whole_message
+        return f"{self.log_prefix}: {message}" if self.log_prefix else message
 
-    def _store_message(self, level: str, message: str):
+    def _store_message(self, level: str, message: str) -> None:
         # Only store if this level is configured in store_messages
         if level.lower() in self.stored_message_levels:
             self.stored_message = message
 
-    def debug(self, message):
+    def debug(self, message: str) -> None:
         """Log a debug message.
 
         Parameters:
@@ -104,7 +100,7 @@ class TaranisLogger:
         self._store_message("debug", message)
         self.logger.debug(self._format_message(message))
 
-    def error(self, message):
+    def error(self, message: str) -> None:
         """Log an error message.
 
         Parameters:
@@ -113,7 +109,7 @@ class TaranisLogger:
         self._store_message("error", message)
         self.logger.error(self._format_message(message))
 
-    def exception(self, message="Traceback:"):
+    def exception(self, message: str = "Traceback:") -> None:
         """Log an exception with an optional message.
 
         Parameters:
@@ -122,7 +118,7 @@ class TaranisLogger:
         self._store_message("exception", message)
         self.logger.exception(self._format_message(message))
 
-    def info(self, message):
+    def info(self, message: str) -> None:
         """Log an info message.
 
         Parameters:
@@ -131,7 +127,7 @@ class TaranisLogger:
         self._store_message("info", message)
         self.logger.info(self._format_message(message))
 
-    def warning(self, message):
+    def warning(self, message: str) -> None:
         """Log a warning message.
 
         Parameters:
@@ -140,7 +136,7 @@ class TaranisLogger:
         self._store_message("warning", message)
         self.logger.warning(self._format_message(message))
 
-    def critical(self, message):
+    def critical(self, message: str) -> None:
         """Log a critical message.
 
         Parameters:
@@ -161,7 +157,7 @@ class TaranisLogFormatter(logging.Formatter):
         format(record): Formats the log record.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a TaranisLogFormatter object."""
         # same colors are used in gunicorn_conf.py
         grey_bold = "\x1b[1;38;5;246m"
@@ -179,7 +175,7 @@ class TaranisLogFormatter(logging.Formatter):
             logging.CRITICAL: white_bold_on_red + self.format_string + reset,
         }
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         """Format the log record using the specified formatter.
 
         Parameters:
