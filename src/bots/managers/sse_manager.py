@@ -9,7 +9,6 @@ import requests
 import sseclient
 from config import Config
 from managers import bots_manager
-
 from shared.log_manager import logger
 
 
@@ -25,7 +24,14 @@ def initialize() -> None:
             while True:  # Keep the thread running
                 try:
                     logger.info(f"SSE: Connecting to Core: {url}")
-                    response = requests.get(f"{url}?api_key={Config.API_KEY}", stream=True, timeout=10)
+                    response = requests.get(
+                        url,
+                        headers={
+                            "Authorization": f"ApiKey {Config.API_KEY}",
+                        },
+                        stream=True,
+                        timeout=10,
+                    )
                     if response.status_code != HTTPStatus.OK:
                         response_text = ""
                         if response is not None and response.text:

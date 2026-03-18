@@ -35,9 +35,9 @@ from model.remote import RemoteAccess
 from model.report_item import ReportItem
 from model.token_blacklist import TokenBlacklist
 from model.user import User
+from shared.common import TZ
 
 from shared import time_manager
-from shared.common import TZ
 
 current_authenticator = None
 
@@ -129,7 +129,8 @@ def logout(token: str) -> None:
     Returns:
         None: This function does not return any value.
     """
-    current_authenticator.logout(token)
+    if token is not None:
+        current_authenticator.logout(token)
 
 
 class ACLCheck(Enum):
@@ -256,7 +257,7 @@ def get_user_from_api_key() -> User:
         user (User object or None): The authenticated user object, or None if authentication fails.
     """
     try:
-        if "Authorization" not in request.headers or not request.headers["Authorization"].__contains__("Bearer "):
+        if "Authorization" not in request.headers or not request.headers["Authorization"].__contains__("ApiKey "):
             return None
         api_key = get_api_key()
         apikey = ApiKey.find_by_key(api_key)
@@ -424,8 +425,8 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
 
             # is it properly encoded?
             auth_header = request.headers["Authorization"]
-            if not auth_header.startswith("Bearer"):
-                log_manager.store_auth_error_activity("Missing Authorization Bearer for external access")
+            if not auth_header.startswith("ApiKey"):
+                log_manager.store_auth_error_activity("Missing Authorization ApiKey for external access")
                 return error
             api_key = get_api_key()
 
@@ -506,12 +507,12 @@ def get_api_key() -> str:
     """Get the API key from the request headers.
 
     This function retrieves the API key from the "Authorization" header of the request.
-    The API key is expected to be in the format "Bearer <api_key>".
+    The API key is expected to be in the format "ApiKey <api_key>".
 
     Returns:
         The API key extracted from the request headers.
     """
-    return request.headers["Authorization"].replace("Bearer ", "")
+    return request.headers.get("Authorization", "").replace("ApiKey ", "")
 
 
 def get_user_from_jwt() -> User:

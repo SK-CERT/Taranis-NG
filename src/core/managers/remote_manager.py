@@ -1,8 +1,16 @@
 """Remote manager, Server-Sent Events (SSE) handling."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import Flask
+
 import json
 import threading
 import time
+from http import HTTPStatus
 
 import requests
 import sseclient
@@ -21,7 +29,7 @@ class EventThread(threading.Thread):
 
     app = None
 
-    def __init__(self, remote_node, event_handler):
+    def __init__(self, remote_node: RemoteNode, event_handler: threading.Event) -> None:
         """Initialize the EventThread.
 
         Args:
@@ -32,14 +40,21 @@ class EventThread(threading.Thread):
         self.remote_node = remote_node
         self.event_handler = event_handler
 
-    def run(self):
+    def run(self) -> None:
         """Run the thread to listen for SSE events and handle them accordingly."""
         attempt = 1
         retries = 3
         while not self.event_handler.is_set() and attempt <= retries:
             try:
-                response = requests.get(self.remote_node.events_url + "?channel=remote&api_key=" + self.remote_node.api_key, stream=True)
-                if response.status_code != 200:
+                response = requests.get(
+                    self.remote_node.events_url + "?channel=remote",
+                    headers={
+                        "Authorization": f"ApiKey {self.remote_node.api_key}",
+                    },
+                    stream=True,
+                    timeout=10,
+                )
+                if response.status_code != HTTPStatus.OK:
                     response_text = ""
                     if response is not None and response.text:
                         response_text = " ".join(response.text.strip().splitlines())[:200]
@@ -58,44 +73,49 @@ class EventThread(threading.Thread):
                                     self.remote_node.disconnect()
                                 return
 
-                        elif event.event == "remote_access_news_items_updated":
-                            if self.remote_node.sync_news_items and self.remote_node.osint_source_group_id is not None:
-                                if self.remote_node.event_id in data:
-                                    data, status_code = RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).get_news_items()
-                                    if status_code == 200:
-                                        with EventThread.app.app_context():
-                                            # print("NEWS", data["news_items"], flush=True)
-                                            NewsItemAggregate.add_remote_news_items(
-                                                data["news_items"],
-                                                self.remote_node,
-                                                self.remote_node.osint_source_group_id,
-                                            )
+                        elif (
+                            event.event == "remote_access_news_items_updated"
+                            and self.remote_node.sync_news_items
+                            and self.remote_node.osint_source_group_id is not None
+                            and self.remote_node.event_id in data
+                        ):
+                            data, status_code = RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).get_news_items()
+                            if status_code == HTTPStatus.OK:
+                                with EventThread.app.app_context():
+                                    # print("NEWS", data["news_items"], flush=True)
+                                    NewsItemAggregate.add_remote_news_items(
+                                        data["news_items"],
+                                        self.remote_node,
+                                        self.remote_node.osint_source_group_id,
+                                    )
 
-                                        RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).confirm_news_items_sync(
-                                            {"last_sync_time": data["last_sync_time"]},
-                                        )
+                                RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).confirm_news_items_sync(
+                                    {"last_sync_time": data["last_sync_time"]},
+                                )
 
-                                        with EventThread.app.app_context():
-                                            sse_manager.sse_manager.news_items_updated()
-                                    else:
-                                        logger.error(f"Get remote news items failed. Code: {status_code}")
+                                with EventThread.app.app_context():
+                                    sse_manager.sse_manager.news_items_updated()
+                            else:
+                                logger.error(f"Get remote news items failed. Code: {status_code}")
 
-                        elif event.event == "remote_access_report_items_updated":
-                            if self.remote_node.sync_report_items:
-                                if self.remote_node.event_id in data:
-                                    data, status_code = RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).get_report_items()
-                                    if status_code == 200:
-                                        with EventThread.app.app_context():
-                                            ReportItem.add_remote_report_items(data["report_items"], self.remote_node.name)
+                        elif (
+                            event.event == "remote_access_report_items_updated"
+                            and self.remote_node.sync_report_items
+                            and self.remote_node.event_id in data
+                        ):
+                            data, status_code = RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).get_report_items()
+                            if status_code == HTTPStatus.OK:
+                                with EventThread.app.app_context():
+                                    ReportItem.add_remote_report_items(data["report_items"], self.remote_node.name)
 
-                                        RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).confirm_report_items_sync(
-                                            {"last_sync_time": data["last_sync_time"]},
-                                        )
+                                RemoteApi(self.remote_node.remote_url, self.remote_node.api_key).confirm_report_items_sync(
+                                    {"last_sync_time": data["last_sync_time"]},
+                                )
 
-                                        with EventThread.app.app_context():
-                                            sse_manager.sse_manager.report_items_updated()
-                                    else:
-                                        logger.error(f"Get remote report items failed. Code: {status_code}")
+                                with EventThread.app.app_context():
+                                    sse_manager.sse_manager.report_items_updated()
+                            else:
+                                logger.error(f"Get remote report items failed. Code: {status_code}")
 
                     except Exception as ex:
                         logger.exception(f"SSE processing failed: {ex}")
@@ -109,7 +129,7 @@ class EventThread(threading.Thread):
         logger.error("Could not connect to SSE.")
 
 
-def connect_to_events(remote_node):
+def connect_to_events(remote_node: RemoteNode) -> None:
     """Connect to SSE events for a given remote node.
 
     Args:
@@ -121,7 +141,7 @@ def connect_to_events(remote_node):
     event_thread.start()
 
 
-def disconnect_from_events(remote_node):
+def disconnect_from_events(remote_node: RemoteNode) -> None:
     """Disconnect from SSE events for a given remote node.
 
     Args:
@@ -131,7 +151,7 @@ def disconnect_from_events(remote_node):
         event_handlers[remote_node.id].set()
 
 
-def connect_to_node(node_id):
+def connect_to_node(node_id: int) -> tuple[dict, HTTPStatus]:
     """Connect to a remote node by its ID.
 
     Args:
@@ -142,7 +162,7 @@ def connect_to_node(node_id):
     """
     remote_node = RemoteNode.find(node_id)
     access_info, status_code = RemoteApi(remote_node.remote_url, remote_node.api_key).connect()
-    if status_code == 200:
+    if status_code == HTTPStatus.OK:
         remote_node.connect(access_info)
         connect_to_events(remote_node)
     else:
@@ -153,7 +173,7 @@ def connect_to_node(node_id):
     return access_info, status_code
 
 
-def disconnect_from_node(node_id):
+def disconnect_from_node(node_id: int) -> None:
     """Disconnect from a remote node by its ID.
 
     Args:
@@ -163,14 +183,14 @@ def disconnect_from_node(node_id):
     RemoteApi(remote_node.remote_url, remote_node.api_key).disconnect()
 
 
-def initialize(app):
+def initialize(app: Flask) -> None:
     """Initialize the remote manager with the given application context.
 
     Args:
         app: The application context to use.
     """
     EventThread.app = app
-    remote_nodes, count = RemoteNode.get(None)
+    remote_nodes, _count = RemoteNode.get(None)
     for remote_node in remote_nodes:
         if remote_node.enabled:
             connect_to_node(remote_node.id)

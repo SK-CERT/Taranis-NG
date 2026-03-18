@@ -34,12 +34,14 @@
         mixins: [AuthMixin],
         methods: {
             connectSSE() {
-                this.$sse(((typeof (process.env.VUE_APP_TARANIS_NG_CORE_SSE) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_SSE" : process.env.VUE_APP_TARANIS_NG_CORE_SSE) + "?jwt=" + this.$store.getters.getJWT, { format: 'json' })
+                this.$sse(((typeof (process.env.VUE_APP_TARANIS_NG_CORE_SSE) == "undefined") ? "$VUE_APP_TARANIS_NG_CORE_SSE" : process.env.VUE_APP_TARANIS_NG_CORE_SSE), { format: 'json', withCredentials: true })
                     .then(sse => {
                         this.sseConnection = sse
                         sse.onError(() => {
                             if (this.$store.getters.getJWT != '') {
                                 this.reconnectSSE()
+                            } else {
+                                this.closeSSE()
                             }
                         });
                         sse.subscribe('news-items-updated', (data) => {
@@ -57,17 +59,23 @@
                         sse.subscribe('report-item-unlocked', (data) => {
                             this.$root.$emit('report-item-unlocked', data)
                         });
-                    }).catch(event => {
-                        this.sseConnection = event.currentTarget
+                    }).catch(() => {
+                        // eslint-disable-next-line no-console
+                        // console.error("SSE connection failed", err)
+                        this.sseConnection = null;
                     })
             },
 
             reconnectSSE() {
+                this.closeSSE();
+                this.connectSSE()
+            },
+
+            closeSSE() {
                 if (this.sseConnection !== null) {
                     this.sseConnection.close()
                     this.sseConnection = null
                 }
-                this.connectSSE()
             },
 
             initUserSettings() {
@@ -85,9 +93,6 @@
             this.$root.$emit('app-updated');
         },
         mounted() {
-            if (typeof (process.env.VUE_APP_TARANIS_NG_TESTING_TOKEN) == "string") {
-                this.$cookies.set('jwt', process.env.VUE_APP_TARANIS_NG_TESTING_TOKEN);
-            }
             if (this.$cookies.isKey('jwt')) {
                 this.$store.dispatch('setToken', this.$cookies.get('jwt')).then(() => {
                     this.$cookies.remove("jwt")
@@ -131,9 +136,7 @@
 
         },
         beforeDestroy() {
-            if (this.sseConnection !== null) {
-                this.sseConnection.close()
-            }
+            this.closeSSE();
         }
     };
 </script>

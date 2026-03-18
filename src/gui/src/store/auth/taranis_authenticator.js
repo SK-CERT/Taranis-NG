@@ -1,4 +1,4 @@
-import {authenticate, refresh} from "@/api/auth";
+import { login as loginApi, logout as logoutApi, refresh } from "@/api/auth";
 import ApiService from "@/services/api_service";
 
 const state = {
@@ -8,8 +8,7 @@ const state = {
 const actions = {
 
     login(context, userData) {
-
-        return authenticate(userData, userData.method)
+        return loginApi(userData, userData.method)
             .then(response => {
                 context.commit('setJwtToken', response.data.access_token);
                 context.dispatch('setUser', context.getters.getUserData);
@@ -17,6 +16,17 @@ const actions = {
             .catch(() => {
                 context.commit('clearJwtToken')
             })
+    },
+
+    logout(context) {
+        logoutApi().then(() => {
+            context.commit('clearJwtToken');
+            if (context.getters.hasExternalLogoutUrl) {
+                window.location = context.getters.getLogoutURL;
+            } else {
+                window.location.reload();
+            }
+        });
     },
 
     refresh(context) {
@@ -45,6 +55,7 @@ const mutations = {
         ApiService.setHeader();
         state.jwt = access_token;
     },
+
     clearJwtToken(state) {
         localStorage.ACCESS_TOKEN = '';
         state.jwt = ''

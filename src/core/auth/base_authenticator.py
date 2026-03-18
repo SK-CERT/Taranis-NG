@@ -1,5 +1,14 @@
 """BaseAuthenticator class provides methods for handling authentication processes."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import Flask
+
+from http import HTTPStatus
+
 from flask_jwt_extended import create_access_token
 from managers import log_manager
 from model.token_blacklist import TokenBlacklist
@@ -9,7 +18,7 @@ from model.user import User
 class BaseAuthenticator:
     """BaseAuthenticator class provides methods for handling authentication processes."""
 
-    def get_required_credentials(self):
+    def get_required_credentials(self) -> list:
         """Retrieve the list of required credentials for authentication.
 
         Returns:
@@ -17,7 +26,7 @@ class BaseAuthenticator:
         """
         return []
 
-    def authenticate(self, credentials):
+    def authenticate(self, credentials: dict) -> tuple[dict, HTTPStatus]:  # noqa: ARG002
         """Authenticate the provided credentials.
 
         Args:
@@ -28,7 +37,7 @@ class BaseAuthenticator:
         """
         return BaseAuthenticator.generate_error()
 
-    def refresh(self, user):
+    def refresh(self, user: User) -> tuple[dict, HTTPStatus]:
         """Refresh the JWT token for the given user.
 
         Args:
@@ -40,17 +49,16 @@ class BaseAuthenticator:
         return BaseAuthenticator.generate_jwt(user.username)
 
     @staticmethod
-    def logout(token):
+    def logout(token: str) -> None:
         """Log out a user by adding their token to the blacklist.
 
         Args:
-            token (str): The token to be blacklisted. If None, no action is taken.
+            token (str): The token to be blacklisted.
         """
-        if token is not None:
-            TokenBlacklist.add(token)
+        TokenBlacklist.add(token)
 
     @staticmethod
-    def initialize(app):
+    def initialize(app: Flask) -> None:
         """Initialize the authenticator with the given application.
 
         Args:
@@ -58,22 +66,17 @@ class BaseAuthenticator:
         """
 
     @staticmethod
-    def generate_error():
+    def generate_error() -> tuple[dict, HTTPStatus]:
         """Generate an error response for authentication failure.
 
         Returns:
             tuple: A dictionary containing the error message and the HTTP status code 401.
         """
-        return {"error": "Authentication failed"}, 401
+        return {"error": "Authentication failed"}, HTTPStatus.UNAUTHORIZED
 
     @staticmethod
-    def generate_jwt(username):
+    def generate_jwt(username: str) -> tuple[dict, HTTPStatus]:
         """Generate a JSON Web Token (JWT) for a given username.
-
-        This function retrieves the user associated with the provided username,
-        logs the authentication activity, and generates a JWT containing user
-        information and permissions if the user exists. If the user does not
-        exist, it logs an error and returns an error response.
 
         Args:
             username (str): The username of the user for whom the JWT is to be generated.
@@ -99,4 +102,4 @@ class BaseAuthenticator:
             },
         )
 
-        return {"access_token": access_token}, 200
+        return {"access_token": access_token}, HTTPStatus.OK
