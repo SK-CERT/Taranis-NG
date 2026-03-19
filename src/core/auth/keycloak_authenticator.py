@@ -1,5 +1,6 @@
 """Keycloak authenticator module."""
 
+from http import HTTPStatus
 from os import environ
 
 import jwt
@@ -15,7 +16,7 @@ from requests.auth import HTTPBasicAuth
 class KeycloakAuthenticator(BaseAuthenticator):
     """Keycloak authenticator class."""
 
-    def authenticate(self, credentials):
+    def authenticate(self, credentials: dict) -> tuple[dict, HTTPStatus]:  # noqa: ARG002
         """Authenticate the user using Keycloak.
 
         Args:
@@ -23,7 +24,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
         """
         # check if code and session_state are present in keycloak callback
         if "code" not in request.args or "session_state" not in request.args:
-            return {"error": "Missing code or session_state parameters"}, 400
+            return {"error": "Missing code or session_state parameters"}, HTTPStatus.BAD_REQUEST
 
         link = environ.get("TARANIS_NG_KEYCLOAK_INTERNAL_URL")
         old_keycloak = version.parse(environ.get("KEYCLOAK_VERSION")) < version.parse("17.0.0")
@@ -45,7 +46,8 @@ class KeycloakAuthenticator(BaseAuthenticator):
             # do not forget credentials
             proxies={"http": None, "https": None},
             allow_redirects=False,
-            verify=False,
+            verify=False,  # noqa: S501
+            timeout=10,
         )
 
         data = None
@@ -53,11 +55,11 @@ class KeycloakAuthenticator(BaseAuthenticator):
         try:
             # get json data from response
             data = response.json()
-            logger.debug(f"Keycloak authentication response: {data}")
+            logger.debug("Keycloak response received")
         except Exception as ex:
             msg = "Keycloak returned an unexpected response"
             log_manager.store_auth_error_activity(msg, ex)
-            return {"error": msg}, 500
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         try:
             # decode token to get user data
@@ -66,7 +68,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
         except Exception as ex:
             msg = "Keycloak returned invalid access_token"
             log_manager.store_auth_error_activity(msg, ex)
-            return {"error": msg}, 500
+            return {"error": msg}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         # generate custom token
         return BaseAuthenticator.generate_jwt(data["preferred_username"])
