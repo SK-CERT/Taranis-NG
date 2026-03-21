@@ -30,7 +30,11 @@
 
                     <v-spacer></v-spacer>
 
-                    <v-switch style="padding-top:25px" v-model="verticalView" label="Side-by-side view"></v-switch>
+                    <v-switch v-model="verticalView"
+                              :label="$t('report_item.side_by_side')"
+                              class="ml-4 mt-0"
+                              color="white"
+                              ></v-switch>
 
                     <v-spacer></v-spacer>
 

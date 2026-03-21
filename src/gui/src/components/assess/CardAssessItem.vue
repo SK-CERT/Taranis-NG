@@ -8,7 +8,7 @@
             </v-col>
             <v-col :class="UI.CLASS.card_offset">
                 <v-hover v-slot="{ hover }">
-                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar"
+                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="itemClicked(news_item)"
                             @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus"
                             :color="selectedColor">
                         <!--CONTENT-->
@@ -162,10 +162,8 @@
         },
         methods: {
             itemClicked(data) {
-                if (this.checkPermission(Permissions.ASSESS_ACCESS) && this.news_item.access === true) {
-                    this.$emit('show-item-detail', data);
-                    this.stateChange();
-                }
+                this.$emit('show-item-detail', data);
+                this.stateChange();
             },
 
             selectionChanged() {
