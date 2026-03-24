@@ -30,7 +30,7 @@ dependencies = [
     "SQLAlchemy==2.0.48",
     "tqdm==4.67.3",
     "Werkzeug==3.1.6",
-    "langchain==1.2.12",
+    "langchain==1.2.13",
     "langchain-openai==1.1.11",
     "pycountry==26.2.16"
 ]
