@@ -1,13 +1,48 @@
 """State management API endpoints."""
 
+import contextlib
 from http import HTTPStatus
 
 from flask import request
 from flask_restful import Resource
 from managers import log_manager
 from managers.auth_manager import auth_required, get_user_from_jwt
-from managers.state_manager import StateManagementUtilities
+from managers.db_manager import db
+from model.product import Product
+from model.report_item import ReportItem
 from model.state import StateDefinition
+from shared.log_manager import logger
+
+
+def get_state_statistics() -> dict:
+    """Get statistics about the current state system.
+
+    Returns:
+        dict: State system statistics
+    """
+    try:
+        # Get count of entities with states
+        report_items_with_states = 0
+        products_with_states = 0
+
+        with contextlib.suppress(Exception):
+            report_items_with_states = db.session.query(ReportItem).filter(ReportItem.state_id.isnot(None)).count()
+
+        with contextlib.suppress(Exception):
+            products_with_states = db.session.query(Product).filter(Product.state_id.isnot(None)).count()
+
+        return {
+            "total_report_items_with_states": report_items_with_states,
+            "total_products_with_states": products_with_states,
+            "total_entities_with_states": report_items_with_states + products_with_states,
+        }
+    except Exception as error:
+        logger.exception(f"Failed to get state statistics: {error}")
+        return {
+            "total_report_items_with_states": 0,
+            "total_products_with_states": 0,
+            "total_entities_with_states": 0,
+        }
 
 
 class StateStatisticsResource(Resource):
@@ -20,7 +55,7 @@ class StateStatisticsResource(Resource):
         Returns:
             dict: State statistics
         """
-        return StateManagementUtilities.get_state_statistics()
+        return get_state_statistics()
 
 
 class EntityTypeStatesResource(Resource):

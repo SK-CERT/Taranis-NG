@@ -14,10 +14,9 @@ from http import HTTPStatus
 
 from managers.db_manager import db
 from marshmallow import post_load
-from sqlalchemy import Enum
-
 from shared.common import TZ
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
+from sqlalchemy import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +79,27 @@ class StateDefinition(db.Model):
     def get_by_name(cls, display_name: str) -> StateDefinition | None:
         """Get state definition by display name."""
         return cls.query.filter_by(display_name=display_name).first()
+
+    @classmethod
+    def get_initial_state(cls, entity_type: str) -> StateDefinition | None:
+        """Get the initial state for an entity type.
+
+        Args:
+            entity_type: The entity type (e.g., "report_item", "product")
+
+        Returns:
+            StateDefinition: The initial state for the entity type, or None if not found
+        """
+        return (
+            db.session.query(StateDefinition)
+            .join(StateEntityType, StateEntityType.state_id == StateDefinition.id)
+            .filter(
+                StateEntityType.entity_type == entity_type,
+                StateEntityType.state_type == StateTypeEnum.INITIAL.value,
+                StateEntityType.is_active.is_(True),
+            )
+            .first()
+        )
 
     @classmethod
     def get_all_json(cls, search: str | None = None) -> tuple[dict, HTTPStatus]:
