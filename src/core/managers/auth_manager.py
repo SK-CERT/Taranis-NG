@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import Flask
+    from shared.time_manager import SchedulerManager
 
 import os
 from datetime import datetime, timedelta
@@ -36,8 +37,6 @@ from model.report_item import ReportItem
 from model.token_blacklist import TokenBlacklist
 from model.user import User
 from shared.common import TZ
-
-from shared import time_manager
 
 current_authenticator = None
 
@@ -80,7 +79,15 @@ def initialize(app: Flask) -> None:
 
     current_authenticator.initialize(app)
 
-    time_manager.schedule_job_every_day("00:00", cleanup_token_blacklist, app)
+
+def schedule(manager: SchedulerManager, app: Flask) -> None:
+    """Schedule token blacklist cleanup.
+
+    Args:
+        manager: time manager class.
+        app: The Flask application instance.
+    """
+    manager.schedule_job_every_day("00:00", cleanup_token_blacklist, "Token blacklist cleanup", app)
 
 
 def get_required_credentials() -> list:

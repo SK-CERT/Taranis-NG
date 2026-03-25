@@ -8,7 +8,6 @@ from typing import ClassVar
 
 import feedparser
 from bs4 import BeautifulSoup
-
 from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, text_to_simple_html
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
@@ -23,8 +22,8 @@ class RSSCollector(BaseCollector):
         BaseCollector: Base collector class.
     """
 
-    type = "RSS_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "RSS_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
@@ -202,7 +201,7 @@ class RSSCollector(BaseCollector):
         )
 
     def _get_review_and_content(self, summary: str, content_rss: list[dict]) -> tuple[str, str]:
-        review = summary if summary else ""
+        review = summary or ""
         content = ""
         if content_rss:
             content = content_rss[0].get("value", "")
