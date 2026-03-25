@@ -1,5 +1,12 @@
 """Module for email collector."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from email.message import Message
+
 import datetime
 import email.header
 import email.utils
@@ -10,7 +17,7 @@ import socket
 import uuid
 from email import policy
 
-from shared.common import ignore_exceptions, read_int_parameter, smart_truncate
+from shared.common import TZ, ignore_exceptions, read_int_parameter, smart_truncate
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemAttribute, NewsItemData
 
@@ -21,7 +28,7 @@ class EmailCollector(BaseCollector):
     """Collector for gathering data from emails.
 
     Attributes:
-        type (str): Type of the collector.
+        collector_type (str): Type of the collector.
         name (str): Name of the collector.
         description (str): Description of the collector.
         parameters (list): List of parameters required for the collector.
@@ -30,13 +37,13 @@ class EmailCollector(BaseCollector):
         collect(): Collect data from email source.
     """
 
-    type = "EMAIL_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "EMAIL_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
 
-    def __proxy_tunnel(self, email_server_hostname, email_server_port):
+    def __proxy_tunnel(self, email_server_hostname: str, email_server_port: str) -> None:
         self.source.logger.debug("Establishing proxy tunnel")
         server = f"{email_server_hostname.lower()}"
         port = email_server_port
@@ -49,7 +56,7 @@ class EmailCollector(BaseCollector):
             s.send(str.encode(con))
             s.recv(4096)
 
-    def __fetch_emails_imap(self):
+    def __fetch_emails_imap(self) -> None:
         self.source.logger.debug("Fetching emails using IMAP")
         try:
             if self.source.parsed_proxy:
@@ -86,7 +93,7 @@ class EmailCollector(BaseCollector):
         except Exception as error:
             self.source.logger.exception(f"Failed to fetch emails using IMAP: {error}")
 
-    def __fetch_emails_pop3(self):
+    def __fetch_emails_pop3(self) -> None:
         self.source.logger.debug("Fetching emails using POP3")
         try:
             if self.source.parsed_proxy:
@@ -119,10 +126,12 @@ class EmailCollector(BaseCollector):
         except Exception as error:
             self.source.logger.exception(f"Failed to fetch emails using POP3: {error}")
 
-    def __process_email(self, email_message):
+    def __process_email(self, email_message: Message) -> None:
+        preview_size = 3000
+
         email_string = email_message.as_string()
-        if len(email_string) > 3000:
-            email_string = f"{email_string[:3000]}\n..."
+        if len(email_string) > preview_size:
+            email_string = f"{email_string[:preview_size]}\n..."
         self.source.logger.debug(f"Processing email: {email_string}")
         review = ""
         content = ""
@@ -136,8 +145,10 @@ class EmailCollector(BaseCollector):
         author = str(email.header.make_header(email.header.decode_header(email_message["From"])))
         address = email.utils.parseaddr(email_message["From"])[1]
         message_id = str(email.header.make_header(email.header.decode_header(email_message["Message-ID"])))
-        date_tuple = email.utils.parsedate_tz(email_message["Date"])
-        published = datetime.datetime.fromtimestamp(email.utils.mktime_tz(date_tuple)).strftime("%d.%m.%Y - %H:%M")
+        dt = email.utils.parsedate_to_datetime(email_message["Date"])
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=TZ)
+        published = dt.astimezone(TZ).strftime("%d.%m.%Y - %H:%M")
 
         for part in email_message.walk():
             if part.get_content_type() == "text/plain":
@@ -160,7 +171,7 @@ class EmailCollector(BaseCollector):
                     link,
                     published,
                     author,
-                    datetime.datetime.now(),
+                    datetime.datetime.now(TZ),
                     content,
                     self.source.id,
                     attributes,
@@ -175,10 +186,7 @@ class EmailCollector(BaseCollector):
                     case "message/rfc822":
                         self.source.logger.debug("Found an attached email")
                         attached = part.get_payload()
-                        if isinstance(attached, list):
-                            attached_email = attached[0]
-                        else:
-                            attached_email = attached
+                        attached_email = attached[0] if isinstance(attached, list) else attached
                         # Process .eml file as an email
                         self.__process_email(attached_email)
 
@@ -208,7 +216,7 @@ class EmailCollector(BaseCollector):
             self.news_items.append(news_item)
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect data from email source."""
         self.news_items = []
         self.email_server_type = self.source.param_key_values["EMAIL_SERVER_TYPE"]

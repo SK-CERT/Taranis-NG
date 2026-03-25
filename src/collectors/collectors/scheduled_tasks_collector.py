@@ -3,11 +3,12 @@
 import datetime
 import hashlib
 import os
-import random
-import string
+import secrets
+import shlex
+import subprocess
 import uuid
 
-from shared.common import ignore_exceptions
+from shared.common import TZ, ignore_exceptions
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -18,46 +19,51 @@ class ScheduledTasksCollector(BaseCollector):
     """ScheduledTasksCollector is a class that collects data from scheduled tasks.
 
     Attributes:
-        type (str): The type of the collector.
+        collector_type (str): The type of the collector.
         config (Config): Configuration object for the collector.
         name (str): Name of the collector.
         description (str): Description of the collector.
         parameters (dict): Parameters for the collector.
     """
 
-    type = "SCHEDULED_TASKS_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "SCHEDULED_TASKS_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect data from scheduled tasks.
 
         Raises:
             Exception: If the collection fails for any reason.
         """
         news_items = []
-        head, tail = os.path.split(self.source.param_key_values["TASK_COMMAND"])
+        cmd = self.source.param_key_values["TASK_COMMAND"]
+        head, _tail = os.path.split(cmd)
         task_title = self.source.param_key_values["TASK_TITLE"]
 
         try:
             if head == "":
-                task_command = self.source.param_key_values["TASK_COMMAND"]
+                task_command = cmd
             else:
-                task_command = os.popen("." + self.source.param_key_values["TASK_COMMAND"]).read()
+                result = subprocess.run(  # noqa: S603
+                    shlex.split(cmd),
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                task_command = result.stdout
 
             review = self.source.param_key_values["TASK_DESCRIPTION"]
             author = ""
             osint_source = "TaranisNG System"
             link = ""
             content = task_command
-            collected = datetime.datetime.now()
-            published = datetime.datetime.now()
-
-            letters = string.ascii_lowercase
-            random_string = "".join(random.choice(letters) for i in range(10))
+            collected = datetime.datetime.now(TZ)
+            published = datetime.datetime.now(TZ)
+            random_string = secrets.token_urlsafe(10)
 
             news_item = NewsItemData(
                 uuid.uuid4(),
