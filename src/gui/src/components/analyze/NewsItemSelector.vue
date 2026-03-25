@@ -65,8 +65,8 @@
             </v-row>
 
             <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" :verticalView="verticalView" />
-            <NewsItemDetail ref="newsItemDetail" :attach="attach" />
-            <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" :verticalView="verticalView" @show-item-detail="showItemDetail" />
+            <NewsItemDetail ref="newsItemDetail" :attach="attach" :verticalView="verticalView" />
+            <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" :verticalView="verticalView" />
         </v-row>
         <v-row>
             <MessageBox v-model="msgbox_visible"
@@ -230,16 +230,7 @@
             },
 
             showItemDetail(news_item) {
-                if (this.verticalView) {
-                    // In vertical view, wrap the item in the expected structure for NewsItemSingleDetail
-                    const wrappedItem = {
-                        ...news_item,
-                        news_items: [news_item]
-                    };
-                    this.$refs.newsItemSingleDetail.open(wrappedItem);
-                } else {
-                    this.$refs.newsItemDetail.open(news_item);
-                }
+                this.$refs.newsItemDetail.open(news_item);
             },
 
             report_item_updated(data_info) {

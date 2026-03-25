@@ -228,10 +228,6 @@
                         break;
                 }
             },
-
-            showItemDetail(item) {
-                this.$emit('show-item-detail', item);
-            },
         }
     }
 </script>
