@@ -5,8 +5,7 @@ import hashlib
 import uuid
 
 import tweepy
-
-from shared.common import ignore_exceptions
+from shared.common import TZ, ignore_exceptions
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
 
@@ -14,29 +13,16 @@ from .base_collector import BaseCollector
 
 
 class TwitterCollector(BaseCollector):
-    """Collector for gathering data from Twitter.
+    """Collector for gathering data from Twitter."""
 
-    Attributes:
-        type (str): Type of the collector.
-        name (str): Name of the collector.
-        description (str): Description of the collector.
-        parameters (list): List of parameters required for the collector.
-
-    Methods:
-        collect(): Collect data from a Twitter source.
-
-    Raises:
-        Exception: If an error occurs during the collection process.
-    """
-
-    type = "TWITTER_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "TWITTER_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect data from X source."""
         try:
             news_items = []
@@ -104,7 +90,7 @@ class TwitterCollector(BaseCollector):
                         link,
                         published,
                         author,
-                        datetime.datetime.now(),
+                        datetime.datetime.now(TZ),
                         content,
                         self.source.id,
                         attributes,

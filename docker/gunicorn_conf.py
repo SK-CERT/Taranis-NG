@@ -37,7 +37,8 @@ from gunicorn.glogging import Logger
 try:
     workers_count = int(os.getenv("GUNICORN_WORKERS", "1"))
 except ValueError:
-    workers_count = multiprocessing.cpu_count()
+    workers_count = min(max(4, multiprocessing.cpu_count() * 2), 32)  # scale 2xCPU, min 4, max 32
+
 host = os.getenv("HOST", "0.0.0.0")
 port = os.getenv("PORT", "80")
 bind_env = os.getenv("BIND", None)

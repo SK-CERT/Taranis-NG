@@ -1,8 +1,16 @@
 """Wordlist updater bot."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from shared.schema.bot_preset import BotPreset
+
+from pathlib import Path
+
 import requests
 from remote.core_api import CoreApi
-
 from shared.common import ignore_exceptions
 from shared.config_bot import ConfigBot
 from shared.schema import word_list
@@ -11,23 +19,18 @@ from .base_bot import BaseBot
 
 
 class WordlistUpdaterBot(BaseBot):
-    """A bot that updates word lists based on a given preset configuration.
+    """A bot that updates word lists based on a given preset configuration."""
 
-    Attributes:
-        type (str): The type of the bot, set to "WORDLIST_UPDATER_BOT".
-        config (Config): The configuration object for the bot.
-        name (str): The name of the bot.
-        description (str): The description of the bot.
-        parameters (dict): The parameters for the bot.
-    """
+    bot_type = "WORDLIST_UPDATER_BOT"
 
-    type = "WORDLIST_UPDATER_BOT"
-    config = ConfigBot().get_config_by_type(type)
-    name = config.name
-    description = config.description
-    parameters = config.parameters
+    def __init__(self) -> None:
+        """Initialize the class."""
+        self.config = ConfigBot().get_config_by_type(self.bot_type)
+        self.name = self.config.name
+        self.description = self.config.description
+        self.parameters = self.config.parameters
 
-    def __load_file(self, source, word_list_format):
+    def __load_file(self, source: str, word_list_format: str) -> list[str]:
         """Load a word list from a given source.
 
         Args:
@@ -38,17 +41,16 @@ class WordlistUpdaterBot(BaseBot):
             list: A list of words loaded from the specified source.
         """
         if "http" in source and word_list_format == "txt":
-            response = requests.get(source)
-            content = response.text.strip().split("\r\n")
-            content = [word for word in content]
+            response = requests.get(source, timeout=10)
+            content = response.text.strip().splitlines()
         else:
-            with open(source) as file:
+            with Path(source).open() as file:
                 content = [line.rstrip() for line in file]
 
         return content
 
     @ignore_exceptions
-    def execute(self):
+    def execute(self) -> None:
         """Execute the word list updater bot with the given preset.
 
         Raises:
@@ -93,11 +95,11 @@ class WordlistUpdaterBot(BaseBot):
         except Exception as error:
             self.preset.logger.exception(f"Word list updater failed: {error}")
 
-    def execute_on_event(self, preset, event_type, data):
+    def execute_on_event(self, preset: BotPreset, event_type: str, data: dict) -> None:  # noqa: ARG002
         """Execute an action based on the given event.
 
         Args:
-            preset (object): The preset configuration object containing parameters.
+            preset (BotPreset): The preset configuration object containing parameters.
             event_type (str): The type of event that triggered this action.
             data (dict): Additional data associated with the event.
 
@@ -105,8 +107,8 @@ class WordlistUpdaterBot(BaseBot):
             Exception: If there is an error accessing the parameters in the preset.
         """
         try:
-            data_url = preset.param_key_values["DATA_URL"]  # noqa F841
-            format = preset.param_key_values["FORMAT"]  # noqa F841
+            data_url = preset.param_key_values["DATA_URL"]  # noqa: F841
+            data_format = preset.param_key_values["FORMAT"]  # noqa: F841
 
         except Exception as error:
             self.preset.logger.exception(f"Execute on event failed: {error}")

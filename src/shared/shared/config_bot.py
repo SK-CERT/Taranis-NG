@@ -21,7 +21,7 @@ class ConfigBot(ConfigBase):
             ),
         ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize bot modules."""
         self.modules: list[module_type] = []
 
@@ -29,7 +29,7 @@ class ConfigBot(ConfigBase):
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect", ParameterType.STRING, "Default"),
+                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect (not used)", ParameterType.STRING, "Default"),
                 param_type(
                     "REGULAR_EXPRESSION",
                     "Regular Expression",
@@ -46,7 +46,7 @@ class ConfigBot(ConfigBase):
         mod.parameters = self.add_default()
         mod.parameters.extend(
             [
-                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group to inspect", ParameterType.STRING),
+                param_type("SOURCE_GROUP", "Source Group", "OSINT Source group GUID to inspect", ParameterType.STRING),
                 param_type("REGULAR_EXPRESSION", "Regular Expression", "Regular expression for items matching", ParameterType.STRING),
             ],
         )

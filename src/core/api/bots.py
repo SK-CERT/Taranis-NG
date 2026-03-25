@@ -107,17 +107,17 @@ class NewsItemAggregatesResource(Resource):
     """Get news items aggregate API endpoint."""
 
     @api_key_required("bots")
-    def get(self, group_id: int, bots_node: BotsNode = None) -> dict:  # noqa: ARG002
+    def get(self, source_group_id: str, bots_node: BotsNode = None) -> dict:  # noqa: ARG002
         """Get news items aggregate.
 
         Args:
-            group_id (int): The group ID
+            source_group_id (str): The group GUID
             bots_node (BotsNode): The bots node
 
         Returns:
             (dict): The news items aggregate
         """
-        return news_item.NewsItemAggregate.get_news_items_aggregate(group_id, request.json)
+        return news_item.NewsItemAggregate.get_news_items_aggregate(source_group_id, request.json)
 
 
 class CategoriesResource(Resource):
@@ -183,6 +183,6 @@ def initialize(api: Api) -> None:
     api.add_resource(NewsItemDataResource, "/api/v1/bots/news-item-data")
     api.add_resource(NewsItemAttributesResource, "/api/v1/bots/news-item-data/<string:news_item_data_id>/attributes")
     api.add_resource(GroupActionResource, "/api/v1/bots/news-item-aggregates-group-action")
-    api.add_resource(NewsItemAggregatesResource, "/api/v1/bots/news-item-aggregates-by-group/<string:group_id>")
+    api.add_resource(NewsItemAggregatesResource, "/api/v1/bots/news-item-aggregates-by-group/<string:source_group_id>")
     api.add_resource(CategoriesResource, "/api/v1/bots/word-list-categories/<int:category_id>")
     api.add_resource(EntriesResource, "/api/v1/bots/word-list-categories/<int:category_id>/entries/<string:entry_name>")

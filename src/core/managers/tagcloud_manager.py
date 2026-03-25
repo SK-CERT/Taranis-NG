@@ -1,34 +1,43 @@
-"""Provide functionality for managing the tag cloud.
+"""Provide functionality for managing the tag cloud."""
 
-This module implements Server-Sent Events (SSE) functionality and
-schedules a daily job to manage the tag cloud.
-"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import Flask
+    from shared.time_manager import SchedulerManager
+
 
 from model.tag_cloud import TagCloud
 
-from shared import time_manager
 
-
-def job(app):
+def job(app: Flask) -> None:
     """Delete words from the tag cloud.
 
     This function runs within the application context and deletes
     words from the tag cloud.
 
-    Parameters:
+    Args:
         app: The Flask application instance.
     """
     with app.app_context():
         TagCloud.delete_words()
 
 
-def initialize(app):
+def initialize(app: Flask) -> None:
     """Initialize the tag cloud manager.
 
-    This function schedules a daily job to delete words from the
-    tag cloud at a specified time.
-
-    Parameters:
+    Args:
         app: The Flask application instance.
     """
-    time_manager.schedule_job_every_day("00:01", job, app)
+
+
+def schedule(manager: SchedulerManager, app: Flask) -> None:
+    """Schedule tag cloud words cleanup.
+
+    Args:
+        manager: time manager class.
+        app: The Flask application instance.
+    """
+    manager.schedule_job_every_day("00:01", job, "Tag cloud words cleanup", app)

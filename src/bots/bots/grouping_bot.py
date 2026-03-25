@@ -1,10 +1,17 @@
 """Grouping bot."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from shared.schema.bot_preset import BotPreset
+
 import json
 import re
+from http import HTTPStatus
 
 from remote.core_api import CoreApi
-
 from shared.common import ignore_exceptions
 from shared.config_bot import ConfigBot
 
@@ -12,27 +19,19 @@ from .base_bot import BaseBot
 
 
 class GroupingBot(BaseBot):
-    """GroupingBot is a bot that processes news items from a specified source group.
+    """GroupingBot is a bot that processes news items from a specified source group."""
 
-    It applies a regular expression to find specific patterns in the content, and
-    groups news items based on the findings.
+    bot_type = "GROUPING_BOT"
 
-    Attributes:
-        type (str): The type of the bot, set to "GROUPING_BOT".
-        config (Config): Configuration object for the bot.
-        name (str): The name of the bot.
-        description (str): The description of the bot.
-        parameters (dict): The parameters for the bot.
-    """
-
-    type = "GROUPING_BOT"
-    config = ConfigBot().get_config_by_type(type)
-    name = config.name
-    description = config.description
-    parameters = config.parameters
+    def __init__(self) -> None:
+        """Initialize the class."""
+        self.config = ConfigBot().get_config_by_type(self.bot_type)
+        self.name = self.config.name
+        self.description = self.config.description
+        self.parameters = self.config.parameters
 
     @ignore_exceptions
-    def execute(self):
+    def execute(self) -> None:
         """Execute the grouping bot with the given preset.
 
         Raises:
@@ -45,11 +44,16 @@ class GroupingBot(BaseBot):
 
             limit = BaseBot.history(interval)
 
-            data = CoreApi.get_news_items_aggregate(source_group, limit)
-            data = json.loads(data)
+            data, code = CoreApi.get_news_items_aggregate(source_group, limit)
+            if code != HTTPStatus.OK or data is None:
+                self.preset.logger.error(
+                    f"News items aggregate not received, Code: {code}{', response: ' + str(data) if data is not None else ''}",
+                )
+                return
 
+            data = json.loads(data)
             if data:
-                data_findings = []  # noqa F841
+                data_findings = []  # noqa: F841
 
                 for aggregate in data:
                     findings = []
@@ -175,11 +179,11 @@ class GroupingBot(BaseBot):
         except Exception as error:
             self.preset.logger.exception(f"Grouping failed: {error}")
 
-    def execute_on_event(self, preset, event_type, data):
+    def execute_on_event(self, preset: BotPreset, event_type: str, data: dict) -> None:  # noqa: ARG002
         """Execute actions based on the given event.
 
         Args:
-            preset (object): The preset configuration containing parameter values.
+            preset (BotPreset): The preset configuration containing parameter values.
             event_type (str): The type of event that triggered this execution.
             data (dict): Additional data related to the event.
 
@@ -187,8 +191,8 @@ class GroupingBot(BaseBot):
             Exception: If there is an error accessing the parameter values in the preset.
         """
         try:
-            source_group = preset.param_key_values["SOURCE_GROUP"]  # noqa F841
-            regexp = preset.param_key_values["REGULAR_EXPRESSION"]  # noqa F841
+            source_group = preset.param_key_values["SOURCE_GROUP"]  # noqa: F841
+            regexp = preset.param_key_values["REGULAR_EXPRESSION"]  # noqa: F841
 
         except Exception as error:
             self.preset.logger.exception(f"Execute on event failed: {error}")

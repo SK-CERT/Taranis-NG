@@ -212,7 +212,7 @@ class CoreApi:
                 cls.api_url + "/api/v1/bots/news-item-aggregates-by-group/" + source_group,
                 json={"limit": limit},
                 headers=cls.headers,
-                timeout=10,
+                timeout=30,
             )
             return response.json(), response.status_code
         except Exception as ex:
