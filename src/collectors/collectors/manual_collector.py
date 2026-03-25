@@ -9,12 +9,12 @@ from .base_collector import BaseCollector
 class ManualCollector(BaseCollector):
     """Manual collector class."""
 
-    type = "MANUAL_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "MANUAL_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect data from source."""

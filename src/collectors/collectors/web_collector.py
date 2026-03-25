@@ -28,7 +28,6 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
-
 from shared.common import TZ, ignore_exceptions, read_bool_parameter, read_int_parameter, smart_truncate, strip_html
 from shared.config_collector import ConfigCollector
 from shared.log_manager import logger
@@ -41,7 +40,7 @@ class WebCollector(BaseCollector):
     """Collector for gathering data from web page.
 
     Attributes:
-        type (str): The type of the collector.
+        collector_type (str): The type of the collector.
         name (str): The name of the collector.
         description (str): The description of the collector.
         parameters (list): The list of parameters for the collector.
@@ -63,8 +62,8 @@ class WebCollector(BaseCollector):
         proxy_host (str): The proxy
     """
 
-    type = "WEB_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "WEB_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
@@ -220,7 +219,7 @@ class WebCollector(BaseCollector):
         """
         try:
             elements = self.__find_elements_by(driver, element_selector)
-            return elements if elements else None
+            return elements or None
         except NoSuchElementException:
             return None
 

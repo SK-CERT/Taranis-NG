@@ -6,37 +6,26 @@ import socket
 import time
 import uuid
 
-from slack import WebClient
-
-from shared.common import ignore_exceptions, smart_truncate
+from shared.common import TZ, ignore_exceptions, smart_truncate
 from shared.config_collector import ConfigCollector
 from shared.schema.news_item import NewsItemData
+from slack import WebClient
 
 from .base_collector import BaseCollector
 
 
 # the slackclient project is in maintenance mode now, "slack_sdk" is successor: https://pypi.org/project/slack-sdk/
 class SlackCollector(BaseCollector):
-    """Collector for gathering data from Slack.
+    """Collector for gathering data from Slack."""
 
-    Attributes:
-        type (str): Type of the collector.
-        name (str): Name of the collector.
-        description (str): Description of the collector.
-        parameters (list): List of parameters required for the collector.
-
-    Methods:
-        collect(): Collects data from Slack source.
-    """
-
-    type = "SLACK_COLLECTOR"
-    config = ConfigCollector().get_config_by_type(type)
+    collector_type = "SLACK_COLLECTOR"
+    config = ConfigCollector().get_config_by_type(collector_type)
     name = config.name
     description = config.description
     parameters = config.parameters
 
     @ignore_exceptions
-    def collect(self):
+    def collect(self) -> None:
         """Collect data from Slack source."""
         news_items = []
         proxy_server = self.source.param_key_values["PROXY_SERVER"]
@@ -110,7 +99,7 @@ class SlackCollector(BaseCollector):
                         link,
                         published,
                         author,
-                        datetime.datetime.now(),
+                        datetime.datetime.now(TZ),
                         content,
                         self.source.id,
                         [],

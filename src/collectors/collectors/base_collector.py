@@ -12,25 +12,24 @@ from urllib.parse import urlparse
 import socks
 from dateutil.parser import parse as date_parse
 from remote.core_api import CoreApi
-from sockshandler import SocksiPyHandler
-
-from shared import time_manager
 from shared.common import TZ, remove_empty_html_tags, simplify_html_text, smart_truncate, strip_html
 from shared.log_manager import create_logger, logger
 from shared.schema import collector, news_item, osint_source
+from shared.time_manager import SchedulerManager
+from sockshandler import SocksiPyHandler
 
 
 class BaseCollector:
     """Base abstract type for all collectors.
 
     Attributes:
-        type (str): The type of the collector.
+        collector_type (str): The type of the collector.
         name (str): The name of the collector.
         description (str): The description of the collector.
         parameters (list): A list of parameters for the collector.
     """
 
-    type = "BASE_COLLECTOR"
+    collector_type = "BASE_COLLECTOR"
     name = "Base Collector"
     description = "Base abstract type for all collectors"
     parameters: ClassVar[list] = []
@@ -188,10 +187,9 @@ class BaseCollector:
         time.sleep(20)  # wait for the CORE
         logger.info(f"Core API requested a refresh of OSINT sources for {self.name}...")
 
-        time_manager.cancel_all_jobs()
         self.osint_sources = []
 
-        response, code = CoreApi.get_osint_sources(self.type)
+        response, code = CoreApi.get_osint_sources(self.collector_type)
         try:
             if code != HTTPStatus.OK or response is None:
                 logger.error(f"OSINT sources not received, Code: {code}{', response: ' + str(response) if response is not None else ''}")
@@ -221,8 +219,7 @@ class BaseCollector:
     def _schedule_source(self, source: object, interval: str) -> None:
         # run task every day at XY
         if interval[0].isdigit() and ":" in interval:
-            source.logger.debug(f"Scheduling for {interval} daily")
-            source.scheduler_job = time_manager.schedule_job_every_day(interval, self.run_collector, source)
+            source.scheduler_job = SchedulerManager.schedule_job_every_day(interval, self.run_collector, source.name, source)
             return
 
         # run task at a specific day (XY, ZZ:ZZ:ZZ)
@@ -233,18 +230,17 @@ class BaseCollector:
                 source.logger.warning(f"Invalid interval format: {interval}")
                 return
             day_map = {
-                "Monday": time_manager.schedule_job_on_monday,
-                "Tuesday": time_manager.schedule_job_on_tuesday,
-                "Wednesday": time_manager.schedule_job_on_wednesday,
-                "Thursday": time_manager.schedule_job_on_thursday,
-                "Friday": time_manager.schedule_job_on_friday,
-                "Saturday": time_manager.schedule_job_on_saturday,
-                "Sunday": time_manager.schedule_job_on_sunday,
+                "Monday": SchedulerManager.schedule_job_on_monday,
+                "Tuesday": SchedulerManager.schedule_job_on_tuesday,
+                "Wednesday": SchedulerManager.schedule_job_on_wednesday,
+                "Thursday": SchedulerManager.schedule_job_on_thursday,
+                "Friday": SchedulerManager.schedule_job_on_friday,
+                "Saturday": SchedulerManager.schedule_job_on_saturday,
+                "Sunday": SchedulerManager.schedule_job_on_sunday,
             }
             schedule_func = day_map.get(day)
             if schedule_func:
-                source.logger.debug(f"Scheduling for {day} {at}")
-                source.scheduler_job = schedule_func(at, self.run_collector, source)
+                source.scheduler_job = schedule_func(at, self.run_collector, source.name, source)
             else:
                 source.logger.warning(f"Unknown day for scheduling: {day}")
             return
@@ -252,8 +248,7 @@ class BaseCollector:
         # run task every XY minutes
         try:
             minutes = int(interval)
-            source.scheduler_job = time_manager.schedule_job_minutes(minutes, self.run_collector, source)
-            source.logger.debug(f"Scheduling for {source.scheduler_job.next_run} (in {interval} minutes)")
+            source.scheduler_job = SchedulerManager.schedule_job_minutes(minutes, self.run_collector, source.name, source)
         except Exception:
             source.logger.warning(f"Invalid interval value: {interval}")
 

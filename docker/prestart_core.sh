@@ -26,4 +26,7 @@ if [ "$(python ./manage.py bot --list | grep 'Total:' | cut -d ' ' -f2)" == 0 ];
     ) &
 fi
 
+echo "Starting scheduler..."
+python ./scheduler.py &
+
 echo "prestart.sh finished."

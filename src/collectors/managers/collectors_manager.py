@@ -7,6 +7,7 @@ from http import HTTPStatus
 from pathlib import Path
 
 from remote.core_api import CoreApi
+from shared.log_manager import logger
 
 from collectors.email_collector import EmailCollector
 from collectors.manual_collector import ManualCollector
@@ -15,7 +16,6 @@ from collectors.scheduled_tasks_collector import ScheduledTasksCollector
 from collectors.slack_collector import SlackCollector
 from collectors.twitter_collector import TwitterCollector
 from collectors.web_collector import WebCollector
-from shared.log_manager import logger
 
 collectors = {}
 status_report_thread = None
@@ -62,7 +62,7 @@ def register_collector(collector: object) -> None:
     Parameters:
         collector: The collector object to register.
     """
-    collectors[collector.type] = collector
+    collectors[collector.collector_type] = collector
 
     class InitializeThread(threading.Thread):
         """A thread class for initializing the collector."""
