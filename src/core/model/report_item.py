@@ -24,7 +24,7 @@ from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
-from model.state import StateDefinition, StateEnum
+from model.state import StateDefinition, StateEntityTypeEnum, StateEnum, StateManager
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -546,6 +546,8 @@ class ReportItem(db.Model):
         """
         results, count = cls.get(group, filter, offset, limit, user)
         report_items = []
+        initial_state = StateDefinition.get_initial_state(StateEntityTypeEnum.REPORT_ITEM.value)
+
         if group:
             for result in results:
                 report_item = result
@@ -553,6 +555,9 @@ class ReportItem(db.Model):
                 report_item.access = True
                 report_item.modify = False
                 report_item.news_items_count = len(report_item.news_item_aggregates)
+                # Assign initial state if not present
+                if not report_item.state and initial_state:
+                    report_item.state = initial_state
                 report_items.append(report_item)
         else:
             for result in results:
@@ -561,6 +566,9 @@ class ReportItem(db.Model):
                 report_item.access = result.access > 0 or result.acls == 0
                 report_item.modify = result.modify > 0 or result.acls == 0
                 report_item.news_items_count = len(report_item.news_item_aggregates)
+                # Assign initial state if not present
+                if not report_item.state and initial_state:
+                    report_item.state = initial_state
                 report_items.append(report_item)
 
         report_items_schema = ReportItemPresentationSchema(many=True)
@@ -690,6 +698,12 @@ class ReportItem(db.Model):
         for attribute in report_item.attributes:
             attribute.user_id = user.id
 
+        # Assign initial state if not provided
+        if not report_item.state_id:
+            initial_state = StateDefinition.get_initial_state(StateEntityTypeEnum.REPORT_ITEM.value)
+            if initial_state:
+                report_item.state_id = initial_state.id
+
         report_item.update_cpes()
 
         db.session.add(report_item)
@@ -717,12 +731,16 @@ class ReportItem(db.Model):
         # TODO(Jan): this needs to be finished if we have enough source data
         # or create way to correctly display data with our internal definition based on name matching (performance)
         schema = NewReportItemSchema()
+        initial_state = StateDefinition.get_initial_state(StateEntityTypeEnum.REPORT_ITEM.value)
         for item_data in report_item_data:
             new_report_item = schema.load(item_data)  # this create new record!
             existing_report_item = cls.find_by_uuid(new_report_item.uuid)
             if existing_report_item is None:
                 # print("New report item:", vars(new_report_item), flush=True)
                 new_report_item.remote_user = remote_node_name
+                # Assign initial state if not provided
+                if not new_report_item.state_id and initial_state:
+                    new_report_item.state_id = initial_state.id
                 db.session.add(new_report_item)
             else:
                 # print("Updating existing report item:", vars(existing_report_item), flush=True)
@@ -744,6 +762,41 @@ class ReportItem(db.Model):
         db.session.commit()
 
     @classmethod
+    def _cascade_mark_news_items_read_status(cls, report_item_id: int, new_state_id: int, user: User) -> None:
+        """Cascade mark news items as read/unread based on report state transition.
+
+        When a report transitions to a FINAL state, mark all its news items as READ.
+        When a report transitions to a non-FINAL state, mark all its news items as UNREAD.
+
+        Args:
+            report_item_id: The report item ID
+            new_state_id: The new state ID
+            user: The user performing the update
+
+        Returns:
+            None
+        """
+        try:
+            # Check if cascade states feature is enabled
+            if not StateManager.is_cascade_states_enabled(user):
+                return
+
+            # Determine if news items should be marked as read
+            should_mark_read = StateManager.should_mark_as_read(new_state_id, StateEntityTypeEnum.REPORT_ITEM.value)
+
+            # Mark all news items as read or unread
+            report_item = cls.find(report_item_id)
+            if report_item and report_item.news_item_aggregates:
+                for news_item_aggregate in report_item.news_item_aggregates:
+                    news_item_aggregate.read = should_mark_read
+                db.session.commit()
+
+        except Exception as error:
+            logger.exception(f"Failed to cascade mark news items read status: {error}")
+            # Rollback on error to maintain data consistency
+            db.session.rollback()
+
+    @classmethod
     def update_report_item(cls, id: int, data: dict, user: User) -> tuple[bool, dict]:  # noqa: A002
         """Update a report item with the given data.
 
@@ -757,6 +810,8 @@ class ReportItem(db.Model):
         """
         modified = False
         new_attribute = None
+        state_id_changed = False
+        new_state_id = None
         report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data:
@@ -770,6 +825,8 @@ class ReportItem(db.Model):
                     data["title_prefix"] = ""
                 if "state_id" in data and report_item.state_id != data["state_id"]:
                     modified = True
+                    state_id_changed = True
+                    new_state_id = data["state_id"]
                     report_item.state_id = data["state_id"]
                     data["state_id"] = ""
                 if "attribute_id" in data:
@@ -850,6 +907,10 @@ class ReportItem(db.Model):
                 report_item.update_cpes()
 
             db.session.commit()
+
+            # Handle cascade state changes for news items if state changed
+            if state_id_changed and new_state_id and user:
+                cls._cascade_mark_news_items_read_status(id, new_state_id, user)
 
             if new_attribute is not None:
                 data["attribute_id"] = new_attribute.id

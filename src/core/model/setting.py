@@ -12,10 +12,9 @@ if TYPE_CHECKING:
 from datetime import datetime
 
 from managers.db_manager import db
-from sqlalchemy import case, func, or_
-
 from shared.common import TZ
 from shared.schema.setting import SettingSchema, SettingValueSchema
+from sqlalchemy import case, func, or_
 
 
 class SettingUser(db.Model):
@@ -328,7 +327,7 @@ class Setting(db.Model):
         Returns:
             str: Value of the setting or default value if not found.
         """
-        query = cls._get_main_query(user, None, None, key)
+        query = cls._get_main_query(user, None, None, None, key)
         record = query.first()
         if not record:
             return default_value

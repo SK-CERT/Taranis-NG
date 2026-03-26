@@ -15,7 +15,12 @@ from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.report_item import ReportItem
-from model.state import StateDefinition, StateEnum
+from model.state import (
+    StateDefinition,
+    StateEntityTypeEnum,
+    StateEnum,
+    StateManager,
+)
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -283,6 +288,52 @@ class Product(db.Model):
         return {"total_count": count, "items": products_schema.dump(products)}
 
     @classmethod
+    def _auto_complete_reports_on_publish(cls, product_id: int, new_state_id: int, user: User) -> None:
+        """Auto-complete non-FINAL reports when product is published.
+
+        When a product transitions to a FINAL state (e.g., "published"), this method
+        automatically marks all non-FINAL reports in that product as FINAL (e.g., "completed").
+        This cascades the completion state to mark associated news items as read.
+
+        Args:
+            product_id: The product ID being updated
+            new_state_id: The new state ID of the product
+            user: The user performing the state change
+
+        Returns:
+            None
+        """
+        try:
+            # Check if cascade states feature is enabled
+            if not StateManager.is_cascade_states_enabled(user):
+                return
+
+            # Check if product is transitioning to a FINAL state
+            if not StateManager.is_final_state(new_state_id, StateEntityTypeEnum.PRODUCT.value):
+                return
+
+            # Get all reports in this product
+            product = Product.find(product_id)
+            if not product or not product.report_items:
+                return
+
+            # Get the FINAL state for REPORT_ITEM
+            final_state = StateDefinition.get_final_state(StateEntityTypeEnum.REPORT_ITEM.value)
+            if not final_state:
+                return
+
+            # Auto-complete all non-FINAL reports
+            for report_item in product.report_items:
+                # Check if this report is in a non-FINAL state
+                if not StateManager.is_final_state(report_item.state_id, StateEntityTypeEnum.REPORT_ITEM.value):
+                    # Update the report to FINAL state
+                    update_data = {"update": True, "state_id": final_state.id}
+                    ReportItem.update_report_item(report_item.id, update_data, user)
+
+        except Exception as error:
+            logger.exception(f"Failed to auto-complete reports on product publish: {error}")
+
+    @classmethod
     def add_product(cls, product_data: dict, user: User) -> Product:
         """Add a product.
 
@@ -315,6 +366,7 @@ class Product(db.Model):
         product = product_schema.load(product_data)
 
         original_product = Product.find(product_id)
+        old_state_id = original_product.state_id
         original_product.title = product.title
         original_product.description = product.description
         original_product.product_type_id = product.product_type_id
@@ -325,6 +377,10 @@ class Product(db.Model):
         original_product.updated_by = user.name
 
         db.session.commit()
+
+        # Handle cascade state changes for reports if product is published
+        if user and old_state_id != product.state_id:
+            cls._auto_complete_reports_on_publish(product_id, product.state_id, user)
 
     @classmethod
     def delete(cls, id: int) -> None:  # noqa: A002

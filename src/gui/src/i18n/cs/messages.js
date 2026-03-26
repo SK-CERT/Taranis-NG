@@ -1024,6 +1024,7 @@ const messages_cs = {
     },
 
     settings_enum: {
+        CASCADE_STATES_ENABLED: "Automatické kaskádové změny stavů",
         DARK_THEME: "Tmavý motiv",
         DATE_FORMAT: "Formát data",
         HOTKEYS: "Povolit klávesové zkratky",

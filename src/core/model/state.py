@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model.state import StateDefinition
+    from model.user import User
 
 import logging
 from datetime import datetime
@@ -14,10 +15,10 @@ from http import HTTPStatus
 
 from managers.db_manager import db
 from marshmallow import post_load
-from sqlalchemy import Enum
-
+from model.setting import Setting
 from shared.common import TZ
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
+from sqlalchemy import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,62 @@ class StateDefinition(db.Model):
     def get_by_name(cls, display_name: str) -> StateDefinition | None:
         """Get state definition by display name."""
         return cls.query.filter_by(display_name=display_name).first()
+
+    @classmethod
+    def get_initial_state(cls, entity_type: str) -> StateDefinition | None:
+        """Get the initial state for an entity type.
+
+        Args:
+            entity_type: The entity type (e.g., "report_item", "product")
+
+        Returns:
+            StateDefinition: The initial state for the entity type, or None if not found
+        """
+        return cls.get_state_for_entity_type(entity_type, StateTypeEnum.INITIAL.value)
+
+    @classmethod
+    def get_final_state(cls, entity_type: str) -> StateDefinition | None:
+        """Get the FINAL state definition for an entity type.
+
+        Retrieves the state marked as FINAL for the given entity type (e.g., REPORT_ITEM, PRODUCT).
+        This is used when cascading state changes to automatically transition entities to completion.
+
+        Args:
+            entity_type: The entity type (e.g., "report_item", "product")
+
+        Returns:
+            StateDefinition: The FINAL state for the entity type, or None if not found
+        """
+        return cls.get_state_for_entity_type(entity_type, StateTypeEnum.FINAL.value)
+
+    @classmethod
+    def get_state_for_entity_type(cls, entity_type: str, state_type: StateTypeEnum) -> StateDefinition | None:
+        """Get the state definition for an entity type.
+
+        Retrieves the state for the given entity type (e.g., REPORT_ITEM, PRODUCT).
+
+        Args:
+            entity_type: The entity type (e.g., "report_item", "product")
+            state_type: The state type (e.g., StateTypeEnum.FINAL.value)
+
+        Returns:
+            StateDefinition: The state for the entity type, or None if not found
+        """
+        try:
+            return (
+                db.session.query(StateDefinition)
+                .join(StateEntityType, StateEntityType.state_id == StateDefinition.id)
+                .filter(
+                    StateEntityType.entity_type == entity_type,
+                    StateEntityType.state_type == state_type,
+                    StateEntityType.is_active.is_(True),
+                )
+                .order_by(db.asc(StateEntityType.sort_order))
+                .first()
+            )
+        except Exception as error:
+            logger.exception(f"Failed to get state for entity type {entity_type} and state type {state_type}: {error}")
+            return None
 
     @classmethod
     def get_all_json(cls, search: str | None = None) -> tuple[dict, HTTPStatus]:
@@ -266,5 +323,86 @@ class StateManager:
             return state and state.id == state_id
 
         except Exception as exc:
-            logger.exception(f"Error in is_this_state_same_as: {exc}")
+            logger.exception(f"Failed to check if state {state_id} is same as {state_enum}: {exc}")
             return False
+
+    @staticmethod
+    def is_final_state(state_id: int, entity_type: str) -> bool:
+        """Check if a given state is a FINAL state for an entity type.
+
+        Args:
+            state_id: The state ID to check
+            entity_type: The entity type (e.g., "REPORT_ITEM" or "PRODUCT")
+
+        Returns:
+            bool: True if the state is a FINAL state, False otherwise
+        """
+        try:
+            if not state_id:
+                return False
+
+            state_entity = (
+                db.session.query(StateEntityType)
+                .filter_by(
+                    entity_type=entity_type,
+                    state_id=state_id,
+                )
+                .first()
+            )
+
+            if not state_entity:
+                return False
+            return state_entity.state_type == StateTypeEnum.FINAL.value
+
+        except Exception as error:
+            logger.exception(f"Failed to check if state {state_id} for {entity_type} is final: {error}")
+            return False
+
+    @staticmethod
+    def should_mark_as_read(state_id: int, entity_type: str) -> bool:
+        """Determine if news items should be marked as READ for this state.
+
+        A news item should be marked as read when transitioning to a FINAL state.
+
+        Args:
+            state_id: The new state ID
+            entity_type: The entity type (e.g., "REPORT_ITEM")
+
+        Returns:
+            bool: True if news items should be marked as read, False otherwise
+        """
+        return StateManager.is_final_state(state_id, entity_type)
+
+    @staticmethod
+    def should_mark_as_unread(state_id: int, entity_type: str) -> bool:
+        """Determine if news items should be marked as UNREAD for this state.
+
+        A news item should be marked as unread when transitioning to a non-FINAL state.
+
+        Args:
+            state_id: The new state ID
+            entity_type: The entity type (e.g., "REPORT_ITEM")
+
+        Returns:
+            bool: True if news items should be marked as unread, False otherwise
+        """
+        return not StateManager.is_final_state(state_id, entity_type)
+
+    @staticmethod
+    def is_cascade_states_enabled(user: User) -> bool:
+        """Check if cascade states feature is enabled for the given user.
+
+        The CASCADE_STATES_ENABLED setting is global, so all users see the same value.
+        This method uses the global setting with a default of True (enabled).
+
+        Args:
+            user: The user to check the setting for
+
+        Returns:
+            bool: True if cascade states is enabled, False otherwise
+        """
+        try:
+            return Setting.get_setting_bool(user, "CASCADE_STATES_ENABLED", default_value=True)
+        except Exception as error:
+            logger.exception(f"Failed to check if cascade states is enabled: {error}")
+            return True  # Default enabled
