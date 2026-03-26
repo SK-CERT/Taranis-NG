@@ -750,6 +750,7 @@ const messages_cs = {
         select: "Vybrat analýzy",
         select_remote: "Vybrat novinky ze vzdálených instancí",
         attributes: "Atributy",
+        side_by_side: "Zobrazení na 2 sloupce",
         confirm_close: {
             message:
             "Máte neuložené změny. Opravdu chcete zavřít tuto analýzu?",
