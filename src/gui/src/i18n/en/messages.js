@@ -751,6 +751,7 @@ const messages_en = {
         select: "Select Report Items",
         select_remote: "Select Report Items from Remote Nodes",
         attributes: "Attributes",
+        side_by_side: "Side-by-side view",
         confirm_close: {
             message:
                 "You have unsaved changes. Are you sure you want to close this report item?",

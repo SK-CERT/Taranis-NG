@@ -65,7 +65,7 @@
             </v-row>
 
             <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" :verticalView="verticalView" />
-            <NewsItemDetail ref="newsItemDetail" :attach="attach" />
+            <NewsItemDetail ref="newsItemDetail" :attach="attach" :verticalView="verticalView" />
             <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" :verticalView="verticalView" />
         </v-row>
         <v-row>
@@ -230,7 +230,7 @@
             },
 
             showItemDetail(news_item) {
-                this.$refs.newsItemDetail.open(news_item)
+                this.$refs.newsItemDetail.open(news_item);
             },
 
             report_item_updated(data_info) {

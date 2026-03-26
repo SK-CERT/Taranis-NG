@@ -2,8 +2,8 @@
     <v-container>
         <v-row v-bind="UI.DIALOG.ROW.WINDOW">
             <v-dialog v-bind="verticalView ? UI.DIALOG.WINDOW : UI.DIALOG.FULLSCREEN"
-                      :content-class="verticalView ? 'side-dialog' : ''" v-model="visible" @keydown.esc="close($event)"
-                      :attach="attach">
+                      :content-class="verticalView ? 'side-dialog' : ''" v-model="visible"
+                      @keydown.esc="close($event)" :attach="attach">
                 <v-card>
                     <v-toolbar v-bind="UI.DIALOG.TOOLBAR" data-dialog="single-detail">
                         <v-btn icon dark @click="close()" data-btn="close">

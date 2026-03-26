@@ -1,7 +1,9 @@
 <template>
     <v-container>
         <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-            <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="close" :attach="attach">
+            <v-dialog v-bind="verticalView ? UI.DIALOG.WINDOW : UI.DIALOG.FULLSCREEN"
+                      :content-class="verticalView ? 'side-dialog' : ''" v-model="visible"
+                      @keydown.esc="close($event)" :attach="attach">
                 <v-card>
                     <v-toolbar v-bind="UI.DIALOG.TOOLBAR" data-dialog="item-detail">
                         <v-btn icon dark @click="close()" data-btn="close">
@@ -149,7 +151,8 @@
         mixins: [AuthMixin, NewsItemMixin],
         props: {
             analyze_selector: Boolean,
-            attach: undefined
+            attach: undefined,
+            verticalView: Boolean,
         },
         data: () => ({
             visible: false,
@@ -176,7 +179,8 @@
                 this.$root.$emit('first-dialog', 'push');
             },
 
-            close() {
+            close(event) {
+                if (event) event.stopPropagation();  // prevent the ESC to close also parent window in side-view mode
                 this.visible = false;
                 this.$root.$emit('change-state', 'DEFAULT');
                 this.$root.$emit('first-dialog', '');
