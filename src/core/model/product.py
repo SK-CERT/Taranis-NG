@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 
 import sqlalchemy
 from managers.db_manager import db
-from managers.state_manager import StateManagementUtilities
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.report_item import ReportItem
@@ -20,6 +19,7 @@ from model.state import (
     StateDefinition,
     StateEntityTypeEnum,
     StateEnum,
+    StateManager,
 )
 from shared.common import TZ
 from shared.log_manager import logger
@@ -305,11 +305,11 @@ class Product(db.Model):
         """
         try:
             # Check if cascade states feature is enabled
-            if not StateManagementUtilities.is_cascade_states_enabled(user):
+            if not StateManager.is_cascade_states_enabled(user):
                 return
 
             # Check if product is transitioning to a FINAL state
-            if not StateManagementUtilities.is_final_state(new_state_id, StateEntityTypeEnum.PRODUCT.value):
+            if not StateManager.is_final_state(new_state_id, StateEntityTypeEnum.PRODUCT.value):
                 return
 
             # Get all reports in this product
@@ -318,14 +318,14 @@ class Product(db.Model):
                 return
 
             # Get the FINAL state for REPORT_ITEM
-            final_state = StateManagementUtilities.get_final_state_for_entity_type(StateEntityTypeEnum.REPORT_ITEM.value)
+            final_state = StateDefinition.get_final_state(StateEntityTypeEnum.REPORT_ITEM.value)
             if not final_state:
                 return
 
             # Auto-complete all non-FINAL reports
             for report_item in product.report_items:
                 # Check if this report is in a non-FINAL state
-                if not StateManagementUtilities.is_final_state(report_item.state_id, StateEntityTypeEnum.REPORT_ITEM.value):
+                if not StateManager.is_final_state(report_item.state_id, StateEntityTypeEnum.REPORT_ITEM.value):
                     # Update the report to FINAL state
                     update_data = {"update": True, "state_id": final_state.id}
                     ReportItem.update_report_item(report_item.id, update_data, user)

@@ -20,12 +20,11 @@ from http import HTTPStatus
 
 import sqlalchemy
 from managers.db_manager import db
-from managers.state_manager import StateManagementUtilities
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
 from model.news_item import NewsItemAggregate, ReportItemNewsItemAggregate
 from model.report_item_type import AttributeGroupItem, ReportItemType
-from model.state import StateDefinition, StateEntityTypeEnum, StateEnum
+from model.state import StateDefinition, StateEntityTypeEnum, StateEnum, StateManager
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.acl_entry import ItemType
@@ -763,26 +762,6 @@ class ReportItem(db.Model):
         db.session.commit()
 
     @classmethod
-    def _update_news_items_read_status(cls, report_item_id: int, should_mark_read: bool) -> None:
-        """Update read status of all news items in a report item.
-
-        Marks all associated news item aggregates as read or unread.
-
-        Args:
-            report_item_id: The report item ID
-            should_mark_read: If True, mark items as read; if False, mark as unread
-
-        Returns:
-            None
-        """
-        report_item = cls.find(report_item_id)
-        if not report_item or not report_item.news_item_aggregates:
-            return
-
-        for news_item_aggregate in report_item.news_item_aggregates:
-            news_item_aggregate.read = should_mark_read
-
-    @classmethod
     def _cascade_mark_news_items_read_status(cls, report_item_id: int, new_state_id: int, user: User) -> None:
         """Cascade mark news items as read/unread based on report state transition.
 
@@ -799,16 +778,18 @@ class ReportItem(db.Model):
         """
         try:
             # Check if cascade states feature is enabled
-            if not StateManagementUtilities.is_cascade_states_enabled(user):
+            if not StateManager.is_cascade_states_enabled(user):
                 return
 
             # Determine if news items should be marked as read
-            should_mark_read = StateManagementUtilities.should_mark_as_read(new_state_id, StateEntityTypeEnum.REPORT_ITEM.value)
+            should_mark_read = StateManager.should_mark_as_read(new_state_id, StateEntityTypeEnum.REPORT_ITEM.value)
 
             # Mark all news items as read or unread
-            cls._update_news_items_read_status(report_item_id, should_mark_read)
-
-            db.session.commit()
+            report_item = cls.find(report_item_id)
+            if report_item and report_item.news_item_aggregates:
+                for news_item_aggregate in report_item.news_item_aggregates:
+                    news_item_aggregate.read = should_mark_read
+                db.session.commit()
 
         except Exception as error:
             logger.exception(f"Failed to cascade mark news items read status: {error}")

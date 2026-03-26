@@ -1024,6 +1024,7 @@ const messages_en = {
     },
 
     settings_enum: {
+        CASCADE_STATES_ENABLED: "Automatic cascade state changes",
         DARK_THEME: "Dark theme",
         DATE_FORMAT: "Date format",
         HOTKEYS: "Enable hotkeys",
