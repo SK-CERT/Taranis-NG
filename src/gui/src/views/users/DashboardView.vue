@@ -149,7 +149,7 @@
                                     mdi-information-outline
                                 </v-icon>
                                 <span class="caption grey--text">{{ $t('dashboard.about.version') }}
-                                    <b>{{ appVersion }}</b> {{ formattedBuildDate }}
+                                    <b>{{ appVersion }}</b> {{ built }}
                                 </span>
 
                                 <v-divider inset class="mt-2 mb-2"></v-divider>
@@ -157,7 +157,7 @@
                                     mdi-source-branch
                                 </v-icon>
                                 <span class="caption grey--text">Commit
-                                    <b>{{ commit }}</b> {{ commited }} [{{ branchDisplay }}]
+                                    <b>{{ commit }}</b> {{ commited }} {{ branchDisplay }}
                                 </span>
 
                                 <v-divider inset class="mt-2 mb-2"></v-divider>
@@ -181,7 +181,7 @@
     import wordcloud from 'vue-wordcloud'
     import ViewLayout from "../../components/layouts/ViewLayout";
     import Settings, { getSettingBoolean, isInitializedSetting } from "@/services/settings";
-    import pkg from '../../../package.json';
+    import gitMeta from '../../../git-info.json';
 
     export default {
         name: "DashboardView",
@@ -194,19 +194,19 @@
             myRotate: { "from": 0, "to": 0, "numOfOrientation": 0 },
             fontSize: [14, 50],
             tag_cloud: [],
-            appVersion: pkg.version,
-            buildDate: pkg.buildDate,
-            commitHash: pkg.commit,
-            commitDate: pkg.commitDate,
-            branchName: pkg.branchName,
+            appVersion: require('../../../package.json').version,
+            buildDate: gitMeta.buildDate,
+            commitHash: gitMeta.commit,
+            commitDate: gitMeta.commitDate,
+            branchName: gitMeta.branchName,
         }),
         computed: {
             getData() {
                 return this.$store.getters.getDashboardData
             },
 
-            formattedBuildDate() {
-                return this.buildDate ? `(${this.buildDate.slice(0, 10)})` : '';
+            built() {
+                return this.buildDate ? `(${this.buildDate})` : '';
             },
 
             commit() {
@@ -218,7 +218,7 @@
             },
 
             branchDisplay() {
-                return this.branchName ? this.branchName : '';
+                return this.branchName ? `[${this.branchName}]` : '';
             },
         },
         methods: {

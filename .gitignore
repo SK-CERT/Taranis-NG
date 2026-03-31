@@ -11,6 +11,8 @@ build/
 *.egg
 .pytest_cache/
 .ruff_cache/
+src/gui/git-info.json
+
 
 # temporary files of editors
 .DS_Store
