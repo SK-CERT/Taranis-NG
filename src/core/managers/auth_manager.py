@@ -125,19 +125,19 @@ def refresh(user: User) -> tuple[dict, HTTPStatus]:
     return current_authenticator.refresh(user)
 
 
-def logout(token: str) -> None:
+def logout(jwt_id: str) -> None:
     """Logout the user.
 
     This function logs out the user by calling the `logout` method of the current authenticator.
 
     Args:
-        token (str): The authentication token of the user.
+        jwt_id (str): The authentication token of the user.
 
     Returns:
         None: This function does not return any value.
     """
-    if token is not None:
-        current_authenticator.logout(token)
+    if jwt_id is not None:
+        current_authenticator.logout(jwt_id)
 
 
 class ACLCheck(Enum):
@@ -326,18 +326,18 @@ def get_user_from_jwt_token() -> User:
     return user
 
 
-def get_perm_from_jwt_token(user: User) -> set:
+def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set:
     """Get user permissions from JWT token.
 
     Args:
         user: The user object.
+        jwt_data: The decoded JWT data containing user claims.
 
     Returns:
         A set of user's permissions or None if permissions are missing or an error occurs.
 
     """
     try:
-        jwt_data = get_jwt()
         if not jwt_data or "user_claims" not in jwt_data:
             log_manager.store_user_auth_error_activity(user, "Missing user data in JWT")
             return None
@@ -381,15 +381,24 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tupl
             required_permissions_set = set(required_permissions) if isinstance(required_permissions, list) else {required_permissions}
 
             # obtain the identity and current permissions of that identity
-            user = get_user_from_api_key()
-            if user is None:
-                user = get_user_from_jwt_token()
-                active_permissions_set = get_perm_from_jwt_token(user)
+            user = get_user_from_jwt_token()
+            if user:
+                jwt_data = get_jwt()
+                jwt_id = jwt_data.get("jti")
+                if TokenBlacklist.is_blacklisted(jwt_id):
+                    log_manager.store_auth_error_activity(f"Unauthorized API call acces (blacklisted token: {jwt_id})")
+                    return error
+
+                active_permissions_set = get_perm_from_jwt_token(user, jwt_data)
+
             else:
+                # Fallback: check API key if JWT fails
+                user = get_user_from_api_key()
+                if not user:
+                    log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
+                    return error
+
                 active_permissions_set = get_perm_from_user(user)
-            if user is None:
-                log_manager.store_auth_error_activity("Unauthorized API call access (invalid user)")
-                return error
 
             # is there at least one match with the permissions required by the call?
             if not required_permissions_set.intersection(active_permissions_set):
@@ -476,7 +485,7 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
     return decorator
 
 
-def jwt_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
+def jwt_token_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
     """Check if a valid JWT is present in the request headers.
 
     Args:
@@ -493,6 +502,12 @@ def jwt_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
         except JWTExtendedException as ex:
             log_manager.store_auth_error_activity("Missing JWT", ex)
             return {"error": "authorization required"}, HTTPStatus.UNAUTHORIZED
+
+        jwt_data = get_jwt()
+        jwt_id = jwt_data.get("jti")
+        if TokenBlacklist.is_blacklisted(jwt_id):
+            log_manager.store_auth_error_activity(f"Blacklisted token: {jwt_id}")
+            return {"error": "token revoked"}, HTTPStatus.UNAUTHORIZED
 
         identity = get_jwt_identity()
         if not identity:

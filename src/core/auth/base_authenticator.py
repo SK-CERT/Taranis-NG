@@ -49,13 +49,13 @@ class BaseAuthenticator:
         return BaseAuthenticator.generate_jwt(user.username)
 
     @staticmethod
-    def logout(token: str) -> None:
+    def logout(jwt_id: str) -> None:
         """Log out a user by adding their token to the blacklist.
 
         Args:
-            token (str): The token to be blacklisted.
+            jwt_id (str): The token to be blacklisted.
         """
-        TokenBlacklist.add(token)
+        TokenBlacklist.add(jwt_id)
 
     @staticmethod
     def initialize(app: Flask) -> None:
