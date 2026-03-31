@@ -8,7 +8,7 @@ export function login(userData, method = 'post') {
 }
 
 export function logout() {
-    return ApiService.post('/auth/logout', null, { withCredentials: true });  // allow delete sse_token cookie
+    return ApiService.post('/auth/logout', null, { withCredentials: true });  // allow delete jwt_id cookie
 }
 
 export function refresh() {
@@ -16,5 +16,5 @@ export function refresh() {
 }
 
 export function initSSE() {
-    return ApiService.post('/sse-init', null, { withCredentials: true });  // allow save sse_token cookie
+    return ApiService.post('/sse-init', null, { withCredentials: true });  // allow save jwt_id cookie
 }

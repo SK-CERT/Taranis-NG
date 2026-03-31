@@ -5,9 +5,10 @@ from http import HTTPStatus
 
 from config import Config
 from flask import Response, make_response, redirect
+from flask_jwt_extended import get_jwt
 from flask_restful import Api, Resource, ResponseBase, reqparse, request
 from managers import auth_manager
-from managers.auth_manager import jwt_required, no_auth
+from managers.auth_manager import jwt_token_required, no_auth
 from managers.cache_manager import redis_client
 from managers.log_manager import logger
 
@@ -56,7 +57,7 @@ class Login(Resource):
 class Refresh(Resource):
     """A resource for handling token refresh requests."""
 
-    @jwt_required
+    @jwt_token_required
     def get(self) -> tuple[dict, HTTPStatus]:
         """Handle GET request to refresh the authentication token.
 
@@ -72,7 +73,7 @@ class Refresh(Resource):
 class Logout(Resource):
     """A resource for handling user logout requests."""
 
-    @jwt_required
+    @jwt_token_required
     def post(self) -> Response:
         """Handle the POST request for logging out a user.
 
@@ -85,17 +86,16 @@ class Logout(Resource):
             Redirect: A redirect response to the specified "gotoUrl" or OpenID logout URL if applicable.
         """
         try:
-            token = request.headers.get("Authorization", "").replace("Bearer ", "")
+            jwt_data = get_jwt()
+            jwt_id = jwt_data.get("jti")
+            if jwt_id:
+                deleted_count = redis_client.delete(f"jwt:{jwt_id}")
+                if deleted_count:
+                    logger.debug("JWT token deleted from Redis")
+                else:
+                    logger.warning(f"JWT token {jwt_id} not found in Redis")
 
-            # there is problem receive sse_token 1) path: /sse, 2) we don't want send cookies all the time,
-            # 3) httponly flag (we can't read it from JS and put it to body). We know JWT so delete it by value
-            for key in redis_client.scan_iter("sse:*"):
-                if redis_client.get(key).decode("utf-8") == token:
-                    redis_client.delete(key)
-                    logger.debug("SSE: Token deleted")
-                    break
-
-            response = auth_manager.logout(token)
+            response = auth_manager.logout(jwt_id)
 
             if not isinstance(response, ResponseBase) and "gotoUrl" in request.args:
                 url = (
@@ -109,8 +109,8 @@ class Logout(Resource):
 
             # Delete cookie if resp is a Response object
             if hasattr(resp, "delete_cookie"):
-                resp.delete_cookie("sse_token", path="/sse")
-                logger.debug("SSE: Cookie deleted")
+                resp.delete_cookie("jwt_id", path="/sse")
+                logger.debug("JWT cookie deleted")
 
             return resp
 

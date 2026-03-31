@@ -8,14 +8,14 @@ if TYPE_CHECKING:
     from flask_restful import Api
 
 import json
-import secrets
 import socket
 from http import HTTPStatus
 
 from flask import Response, make_response, request, stream_with_context
+from flask_jwt_extended import get_jwt
 from flask_restful import Resource
 from managers import auth_manager
-from managers.auth_manager import jwt_required
+from managers.auth_manager import jwt_token_required
 from managers.cache_manager import redis_client
 from managers.log_manager import logger, sensitive_value
 from model.bots_node import BotsNode
@@ -83,19 +83,21 @@ class SseResource(Resource):
     def get(self) -> tuple[str, HTTPStatus]:
         """Get Response."""
         try:
-            sse_token = request.cookies.get("sse_token")
+            # SSE-VUE component can transfer JWT info only by cookie. We don't want send it as url parameter due of security reasons
+            # JWT token is also big to fit in cookie, so we use JWT guid.
+            jwt_id = request.cookies.get("jwt_id")
             api_key = request.headers.get("Authorization", "").replace("ApiKey ", "")
 
             auth_type = ""
             msg = ""
-            if sse_token is not None:
-                auth_type = "SSE token"
-                jwt_token = redis_client.get(f"sse:{sse_token}")
+            if jwt_id is not None:
+                auth_type = "JWT token"
+                jwt_token = redis_client.get(f"jwt:{jwt_id}")
                 if jwt_token:
                     if auth_manager.decode_user_from_jwt(jwt_token) is None:
                         msg = "SSE: decoding user from jwt failed."
                 else:
-                    msg = "SSE: invalid or expired sse_token."
+                    msg = "SSE: invalid or expired jwt_id."
 
             elif api_key != "":
                 auth_type = "API key"
@@ -132,40 +134,26 @@ class SseInitResource(Resource):
 
     SSE_TOKEN_TTL = 86400  # 1 day
 
-    @staticmethod
-    def create_sse_token(jwt_token: str) -> str:
-        """Generate a secure random token for SSE authentication and store it in Redis with the associated JWT token.
-
-        Args: jwt_token (str): The JWT to associate with the generated SSE token.
-
-        Returns: str: The generated SSE reference token.
-        """
-        # We have problem store JWT token as cookie because of the size limit, so we store it in Redis and
-        # set a small size cookie with a reference token. Not always we can use Authorization header,
-        # for example in SSE authentication - it's not possible do it with vue-sse component. If we use in future
-        # some custom SSE client, we can switch to header authentication and remove this workaround.
-        token = secrets.token_urlsafe(32)
-        redis_client.setex(f"sse:{token}", SseInitResource.SSE_TOKEN_TTL, jwt_token)
-        return token
-
-    @jwt_required
+    @jwt_token_required
     def post(self) -> Response:
         """Post Response."""
         try:
-            access_token = request.headers.get("Authorization", "").replace("Bearer ", "")
-            if access_token:
-                sse_token = self.create_sse_token(access_token)
+            jwt_data = get_jwt()
+            jwt_id = jwt_data.get("jti")
+            jwt_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+            if jwt_token:
+                redis_client.setex(f"jwt:{jwt_id}", SseInitResource.SSE_TOKEN_TTL, jwt_token)
                 resp = make_response("", HTTPStatus.OK)
                 resp.set_cookie(
-                    "sse_token",
-                    sse_token,
+                    "jwt_id",
+                    jwt_id,
                     httponly=True,  # invisible to JS
                     secure=True,  # HTTPS only
                     samesite="None",  # cross-origin support
                     path="/sse",
                     max_age=SseInitResource.SSE_TOKEN_TTL,
                 )
-                logger.debug("SSE: Token created, cookie set")
+                logger.debug("JWT token created in Redis, cookie set")
                 return resp
 
             msg = "SSE: missing Authorization"
