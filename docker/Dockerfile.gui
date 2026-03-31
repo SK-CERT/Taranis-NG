@@ -5,9 +5,19 @@ RUN npm install -g @vue/cli-service
 
 WORKDIR /app
 COPY ./src/gui/package*.json ./
-# Add commit hash and build date to package.json
-COPY ./git_version.txt .
-RUN node -e 'const fs = require("fs"); const pkg = JSON.parse(fs.readFileSync("package.json")); const [commit, commited] = fs.readFileSync("git_version.txt","utf8").trim().split("\n"); pkg.commit = commit; pkg.commited = commited; pkg.buildDate = new Date().toISOString(); fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));'
+# Copy .git directory to extract version info during build
+COPY ./.git ./.git
+
+# Install git, extract metadata from git, then clean up
+RUN apk add --no-cache git && \
+    COMMIT_HASH=$(git rev-parse --short HEAD) && \
+    COMMIT_DATE=$(git log -1 --format=%ci HEAD | cut -d' ' -f1) && \
+    BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD) && \
+    BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+    node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('package.json')); pkg.commit = '$COMMIT_HASH'; pkg.commitDate = '$COMMIT_DATE'; pkg.branchName = '$BRANCH_NAME'; pkg.buildDate = '$BUILD_DATE'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));" && \
+    apk del git && \
+    rm -rf ./.git
+
 RUN npm install
 COPY ./src/gui/public /app/public
 COPY ./src/gui/src /app/src

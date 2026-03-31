@@ -9,11 +9,6 @@ on:
     branches:
       - main
 
-  workflow_run:
-    workflows: ["Update git_version.txt"]  # must match your version_file.yaml name
-    types:
-      - completed
-
 permissions:
   packages: write
 

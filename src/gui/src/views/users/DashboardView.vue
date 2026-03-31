@@ -157,7 +157,7 @@
                                     mdi-source-branch
                                 </v-icon>
                                 <span class="caption grey--text">Commit
-                                    <b>{{ commitHash }}</b> {{ commitDate }}
+                                    <b>{{ commit }}</b> {{ commited }} [{{ branchDisplay }}]
                                 </span>
 
                                 <v-divider inset class="mt-2 mb-2"></v-divider>
@@ -196,8 +196,9 @@
             tag_cloud: [],
             appVersion: pkg.version,
             buildDate: pkg.buildDate,
-            commit: pkg.commit,
-            commited: pkg.commited,
+            commitHash: pkg.commit,
+            commitDate: pkg.commitDate,
+            branchName: pkg.branchName,
         }),
         computed: {
             getData() {
@@ -208,12 +209,16 @@
                 return this.buildDate ? `(${this.buildDate.slice(0, 10)})` : '';
             },
 
-            commitHash() {
-                return this.commit ? this.commit : '';
+            commit() {
+                return this.commitHash ? this.commitHash : '';
             },
 
-            commitDate() {
-                return this.commited ? `(${this.commited})` : '';
+            commited() {
+                return this.commitDate ? `(${this.commitDate})` : '';
+            },
+
+            branchDisplay() {
+                return this.branchName ? this.branchName : '';
             },
         },
         methods: {
