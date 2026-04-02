@@ -149,7 +149,7 @@
                                     mdi-information-outline
                                 </v-icon>
                                 <span class="caption grey--text">{{ $t('dashboard.about.version') }}
-                                    <b>{{ appVersion }}</b> {{ formattedBuildDate }}
+                                    <b>{{ appVersion }}</b> {{ built }}
                                 </span>
 
                                 <v-divider inset class="mt-2 mb-2"></v-divider>
@@ -157,7 +157,7 @@
                                     mdi-source-branch
                                 </v-icon>
                                 <span class="caption grey--text">Commit
-                                    <b>{{ commitHash }}</b> {{ commitDate }}
+                                    <b>{{ commit }}</b> {{ commited }} {{ branchDisplay }}
                                 </span>
 
                                 <v-divider inset class="mt-2 mb-2"></v-divider>
@@ -181,7 +181,9 @@
     import wordcloud from 'vue-wordcloud'
     import ViewLayout from "../../components/layouts/ViewLayout";
     import Settings, { getSettingBoolean, isInitializedSetting } from "@/services/settings";
-    import pkg from '../../../package.json';
+    import { format } from 'date-fns';
+    import gitMeta from '../../../git-info.json';
+    import package_json from '../../../package.json';
 
     export default {
         name: "DashboardView",
@@ -194,29 +196,39 @@
             myRotate: { "from": 0, "to": 0, "numOfOrientation": 0 },
             fontSize: [14, 50],
             tag_cloud: [],
-            appVersion: pkg.version,
-            buildDate: pkg.buildDate,
-            commit: pkg.commit,
-            commited: pkg.commited,
+            appVersion: package_json.version,
+            buildDate: gitMeta.buildDate,
+            commitHash: gitMeta.commit,
+            commitDate: gitMeta.commitDate,
+            branchName: gitMeta.branchName,
         }),
         computed: {
             getData() {
                 return this.$store.getters.getDashboardData
             },
 
-            formattedBuildDate() {
-                return this.buildDate ? `(${this.buildDate.slice(0, 10)})` : '';
+            built() {
+                return this.buildDate ? `(${this.formatToLocal(this.buildDate)})` : '';
             },
 
-            commitHash() {
-                return this.commit ? this.commit : '';
+            commit() {
+                return this.commitHash ? this.commitHash : '';
             },
 
-            commitDate() {
-                return this.commited ? `(${this.commited})` : '';
+            commited() {
+                return this.commitDate ? `(${this.formatToLocal(this.commitDate)})` : '';
+            },
+
+            branchDisplay() {
+                return this.branchName ? `[${this.branchName}]` : '';
             },
         },
         methods: {
+
+            formatToLocal(dateString) {
+                return format(new Date(dateString), "yyyy-MM-dd HH:mm");
+            },
+
             wordClickHandler(name, value) {
                 // eslint-disable-next-line no-console
                 console.log('Word:', name, ', Quantity:', value);

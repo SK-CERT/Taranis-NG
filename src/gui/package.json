@@ -3,6 +3,7 @@
     "version": "26.02.1",
     "private": true,
     "scripts": {
+        "prebuild": "node ./git-info.js",
         "serve": "vue-cli-service serve",
         "build": "vue-cli-service build",
         "lint": "vue-cli-service lint",
