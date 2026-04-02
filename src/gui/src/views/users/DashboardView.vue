@@ -181,7 +181,9 @@
     import wordcloud from 'vue-wordcloud'
     import ViewLayout from "../../components/layouts/ViewLayout";
     import Settings, { getSettingBoolean, isInitializedSetting } from "@/services/settings";
+    import { format } from 'date-fns';
     import gitMeta from '../../../git-info.json';
+    import package_json from '../../../package.json';
 
     export default {
         name: "DashboardView",
@@ -194,7 +196,7 @@
             myRotate: { "from": 0, "to": 0, "numOfOrientation": 0 },
             fontSize: [14, 50],
             tag_cloud: [],
-            appVersion: require('../../../package.json').version,
+            appVersion: package_json.version,
             buildDate: gitMeta.buildDate,
             commitHash: gitMeta.commit,
             commitDate: gitMeta.commitDate,
@@ -206,7 +208,7 @@
             },
 
             built() {
-                return this.buildDate ? `(${this.buildDate})` : '';
+                return this.buildDate ? `(${this.formatToLocal(this.buildDate)})` : '';
             },
 
             commit() {
@@ -214,7 +216,7 @@
             },
 
             commited() {
-                return this.commitDate ? `(${this.commitDate})` : '';
+                return this.commitDate ? `(${this.formatToLocal(this.commitDate)})` : '';
             },
 
             branchDisplay() {
@@ -222,6 +224,11 @@
             },
         },
         methods: {
+
+            formatToLocal(dateString) {
+                return format(new Date(dateString), "yyyy-MM-dd HH:mm");
+            },
+
             wordClickHandler(name, value) {
                 // eslint-disable-next-line no-console
                 console.log('Word:', name, ', Quantity:', value);
