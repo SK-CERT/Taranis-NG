@@ -12,7 +12,7 @@ dependencies = [
     "gevent==25.9.1",
     "gunicorn==25.3.0",
     "Jinja2==3.1.6",
-    "marshmallow==4.2.3",
+    "marshmallow==4.3.0",
     "python-dotenv==1.2.2",
     "weasyprint==68.1"
 ]
