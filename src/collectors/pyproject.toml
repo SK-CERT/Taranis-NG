@@ -18,7 +18,7 @@ dependencies = [
     "python-dotenv==1.2.2",
     "requests==2.33.1",
     "schedule==1.2.2",
-    "selenium==4.41.0",
+    "selenium==4.43.0",
     "slackclient==2.9.4",
     "tweepy==4.16.0"
 ]
