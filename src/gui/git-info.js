@@ -12,7 +12,7 @@ function safeGit(cmd, fallback = '') {
 }
 
 function toUTCISOString(dateString) {
-  // Parse any date string and return UTC ISO string
+  // Parse date string and return UTC ISO string
   const d = new Date(dateString);
   return d.toISOString();
 }
