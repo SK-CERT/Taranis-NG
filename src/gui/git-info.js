@@ -26,4 +26,5 @@ const meta = {
 
 const metaPath = path.resolve(__dirname, 'git-info.json');
 fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+// eslint-disable-next-line no-console
 console.log('Wrote git info to git-info.json:', meta);
