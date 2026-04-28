@@ -12,6 +12,7 @@ build/
 .pytest_cache/
 .ruff_cache/
 src/gui/git-info.json
+src/gui-v3/git-info.json
 
 
 # temporary files of editors
