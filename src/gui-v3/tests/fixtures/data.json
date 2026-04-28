@@ -1,0 +1,79 @@
+{
+  "cvss": {
+    "vectors": {
+      "v2_base": "AV:N/AC:L/Au:N/C:C/I:C/A:C",
+      "v2_temporal": "AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C",
+      "v2_full": "AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:H/IR:H/AR:H",
+      "v31_base": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "v31_temporal": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H/E:F/RL:O/RC:C",
+      "v31_medium": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
+      "v30_base": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "v40_base": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+      "v40_with_threat": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:A",
+      "v40_low": "CVSS:4.0/AV:N/AC:H/AT:P/PR:H/UI:A/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+    },
+    "scores": {
+      "v2_base": 10.0,
+      "v31_base": 10.0,
+      "v31_medium_base": 3.7,
+      "v30_base": 10.0
+    }
+  },
+  "roles": {
+    "admin": {
+      "id": 1,
+      "name": "Admin",
+      "description": "Full administrative access",
+      "permissions": ["ASSESS_ACCESS", "ASSESS_CREATE", "ASSESS_UPDATE", "ASSESS_DELETE", "ANALYZE_ACCESS", "ANALYZE_CREATE", "ANALYZE_UPDATE", "ANALYZE_DELETE", "PUBLISH_ACCESS", "PUBLISH_CREATE", "PUBLISH_UPDATE", "PUBLISH_DELETE", "CONFIG_ACCESS"]
+    },
+    "analyst": {
+      "id": 2,
+      "name": "Analyst",
+      "description": "Analyze and publish reports",
+      "permissions": ["ASSESS_ACCESS", "ANALYZE_ACCESS", "ANALYZE_CREATE", "ANALYZE_UPDATE"]
+    },
+    "viewer": {
+      "id": 3,
+      "name": "Viewer",
+      "description": "Read-only access",
+      "permissions": ["ASSESS_ACCESS", "ANALYZE_ACCESS"]
+    }
+  },
+  "organizations": {
+    "default": {
+      "id": 1,
+      "name": "Test Organization",
+      "description": "Default test organization",
+      "address": { "street": "123 Test St", "city": "Testville", "zip": "12345", "country": "SK" }
+    }
+  },
+  "users": {
+    "admin": {
+      "id": 1,
+      "username": "admin",
+      "name": "Admin User",
+      "organization": { "id": 1, "name": "Test Organization" },
+      "roles": [{ "id": 1, "name": "Admin" }],
+      "permissions": ["ASSESS_ACCESS", "ASSESS_CREATE", "ASSESS_UPDATE", "ASSESS_DELETE", "ANALYZE_ACCESS", "ANALYZE_CREATE", "ANALYZE_UPDATE", "ANALYZE_DELETE", "PUBLISH_ACCESS", "PUBLISH_CREATE", "PUBLISH_UPDATE", "PUBLISH_DELETE", "CONFIG_ACCESS"]
+    }
+  },
+  "news_items": {
+    "sample": {
+      "id": "ni-001",
+      "title": "Test News Item",
+      "content": "This is a test news item for automated testing.",
+      "collected": "2026-01-15T10:30:00Z",
+      "source": "Test Source",
+      "link": "https://example.com/article/1",
+      "attributes": []
+    }
+  },
+  "report_items": {
+    "sample": {
+      "id": "ri-001",
+      "title": "Test Report Item",
+      "completed": false,
+      "attributes": []
+    }
+  }
+}
