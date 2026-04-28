@@ -1,0 +1,23 @@
+<template>
+  <v-container>
+    <v-card class="pa-6">
+      <v-card-title class="text-h5">
+        {{ t('workflow.tags') }}
+      </v-card-title>
+      <v-card-text>
+        <v-alert type="info" variant="outlined">
+          {{ t('workflow.tags_coming_soon') }}
+        </v-alert>
+        <p class="mt-4">
+          {{ t('workflow.tags_description') }}
+        </p>
+      </v-card-text>
+    </v-card>
+  </v-container>
+</template>
+
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
