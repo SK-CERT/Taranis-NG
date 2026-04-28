@@ -1,0 +1,87 @@
+/* ============================================================= */
+/* PROJECT COLOR SYSTEM - Centralized Color Definitions         */
+/* ============================================================= */
+
+:root {
+  /* ===== LIGHT THEME (Default) ===== */
+  --color-light-bg-primary: #c7c7c7;
+  --color-light-bg-secondary: #ffffff;
+
+  --color-light-surface-primary: rgba(0, 0, 0, 0.03);
+  --color-light-surface-secondary: rgba(255, 255, 255, 0.1);
+  --color-light-surface-interactive: rgba(0, 0, 0, 0.3);
+  --color-light-surface-interactive-hover: rgba(0, 0, 0, 0.5);
+
+  --color-light-border-primary: rgba(0, 0, 0, 0.08);
+  --color-light-border-secondary: rgba(0, 0, 0, 0.1);
+
+  --color-light-text-primary: #000000;
+  --color-light-text-muted: rgba(0, 0, 0, 0.54);
+  --color-light-text-placeholder: rgba(0, 0, 0, 0.38);
+
+  --color-light-icon-primary: rgba(0, 0, 0, 0.54);
+  --color-light-icon-interactive: rgba(0, 0, 0, 0.54);
+
+  --color-light-field-bg: transparent;
+
+  --color-light-shadow-small: 0 0 2px rgba(0, 0, 0, 0.1);
+
+  /* ===== DRAWER & NAVIGATION (Light Theme) ===== */
+  --color-light-drawer-bg: #f5f5f5;
+  --color-light-drawer-text: #000000;
+  --color-light-drawer-icon: rgba(0, 0, 0, 0.54);
+  --color-light-drawer-divider: rgba(0, 0, 0, 0.12);
+
+  /* ===== DARK THEME ===== */
+  --color-dark-bg-primary: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  --color-dark-bg-overlay: #1a1a1a;
+
+  --color-dark-surface-primary: rgba(255, 255, 255, 0.12);
+  --color-dark-surface-secondary: rgba(255, 255, 255, 0.1);
+  --color-dark-surface-interactive: rgba(255, 255, 255, 0.15);
+  --color-dark-surface-interactive-hover: rgba(255, 255, 255, 0.25);
+
+  --color-dark-border-primary: rgba(255, 255, 255, 0.2);
+  --color-dark-border-secondary: rgba(255, 255, 255, 0.3);
+
+  --color-dark-text-primary: #ffffff;
+  --color-dark-text-muted: rgba(255, 255, 255, 0.7);
+  --color-dark-text-placeholder: rgba(255, 255, 255, 0.5);
+
+  --color-dark-icon-primary: #ffffff;
+  --color-dark-icon-interactive: #ffffff;
+
+  --color-dark-field-bg: rgba(255, 255, 255, 0.1);
+
+  --color-dark-shadow-small: 0 0 2px rgba(255, 255, 255, 0.3);
+
+  /* ===== DRAWER & NAVIGATION (Dark Theme) ===== */
+  --color-dark-drawer-bg: #1e1e1e;
+  --color-dark-drawer-text: #ffffff;
+  --color-dark-drawer-icon: #ffffff;
+  --color-dark-drawer-divider: rgba(255, 255, 255, 0.2);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --color-drawer-bg: var(--color-light-drawer-bg);
+  --color-drawer-text: var(--color-light-drawer-text);
+  --color-drawer-icon: var(--color-light-drawer-icon);
+  --color-drawer-divider: var(--color-light-drawer-divider);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --color-drawer-bg: var(--color-dark-drawer-bg);
+  --color-drawer-text: var(--color-dark-drawer-text);
+  --color-drawer-icon: var(--color-dark-drawer-icon);
+  --color-drawer-divider: var(--color-dark-drawer-divider);
+}
+
+/* Default to dark (fallback) */
+:root {
+  --color-drawer-bg: var(--color-dark-drawer-bg);
+  --color-drawer-text: var(--color-dark-drawer-text);
+  --color-drawer-icon: var(--color-dark-drawer-icon);
+  --color-drawer-divider: var(--color-dark-drawer-divider);
+}

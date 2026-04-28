@@ -1,0 +1,6 @@
+// Vuetify SCSS Variables
+// You can customize Vuetify's default styles here
+
+@forward 'vuetify/settings' with (
+  $utilities: false
+);
