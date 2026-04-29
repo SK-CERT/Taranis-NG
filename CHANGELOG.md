@@ -1,7 +1,181 @@
 # Changelog
 
 ---
-## [v26.02.1] - 2026-02-10
+## [26.05.1] - 2026-04-29
+- Try fix "/.git": not found on github actions #1173
+    - Try fix github actions build check
+
+- Improve version info #1146
+    - removed git_version.txt and related GitHub workflows
+    - the commit hash, date and branch is now taken directly from git commands
+
+- Added JWT token blacklist check #1147
+    - added JWT token blacklist check, now you can't reuse tokens after logout
+    - check JWT token first instead of the API key - most of the calls are JWT based and this saves 1 useless database call on each API request (now it's little bit faster)
+    - store JWT ID instead of whole token in blacklist (more secure solution)
+    - use jwt_id as cookie instead sse_token (same functionality, just changed name)
+    - fix two same function names using in Taranis that are confusing:
+        - from flask_jwt_extended import jwt_required
+        - from managers.auth_manager import jwt_required
+    - ruff checks
+
+- Cascade state changes #1127
+    - when report item is set to final state, all news items in it are set as read
+    - when product is set to final state, all report items in it are set to final state
+
+- Improve Analyze SBS view #1124
+    - allow display of individual items inside of the news aggregate
+    - make the side by side switch more visible
+
+- Fix scheduler mess #1128
+    - fixed scheduler mess
+    - Core scheduler: no duplicity jobs running in each gunicorn worker
+    - scheduler: now you can see what is scheduled, what is run and when it's scheduled next run
+    - fix grouping bot start crash
+    - updated some help notes in GUI
+    - Core gunicorn workers: minimal: 4, maximal: 32, otherwise cpu count * 2
+    - and again a lot of ruff checks corrections
+
+- Remove Keycloak authentication response from logs #1123
+    - remove from logs received Keycloak authentication data
+    - ruff checks
+
+- Fix SSE authorization for external authentification type #1122
+    - fix SSE check for external authentication
+    - fix logging errors can cause crash in some cases
+    - ruff checks
+
+- Hide JWT token and API Keys in SSE actions #1121
+    - remove JWT token from SSE url parameters
+    - it's part of the changes for CESNET pentest: Access token in url (is saved to logs) #726
+    - fix missing logout call to backend
+    - remove also API_KEY from url parameters
+    - mixed Authorization split between Bearer and API key types.
+    - ruff checks
+
+- Hide JWT token in download action for news item attribute #1117
+    - hide JWT token in download action for news item attribute (no jwt token in Traefik, Core logs)
+    - it's part of the changes for CESNET pentest: Access token in url (is saved to logs) #726 (other changes solving this problem will come...)
+    - fixed bug in news items: Type check failed for prop "href". Expected String, Object, got Function
+    - fixed NewsItemData.allowed_with_acl() got an unexpected keyword argument 'delete'
+
+- Hide JWT token in download action for remote attributes #1116
+    - hide JWT token in download action for remote attributes (no jwt token in Traefik, Core logs)
+    - it's part of the changes for CESNET pentest: Access token in url (is saved to logs) #726 (other changes solving this problem will come...)
+    - it looks this is some old code that need to be analyzed deeper
+
+- Hide JWT token in download action #1111
+    - hide JWT token in download action (no jwt token in Traefik, Core logs)
+    - it's part of the changes for CESNET pentest: Access token in url (is saved to logs) #726 (other changes solving this problem will come...)
+    - red button on Delete action in attachment
+    - used build-in verification for attachment download (no code duplicity, simplified code)
+    - better global download function
+
+- Treafik increased to 3.6.9 #1110
+    - We recommend all users upgrade as soon as possible. CVE fixed:
+    - CVE-2026-26998 (Advisory GHSA-fw45-f5q2-2p4x)
+    - CVE-2026-26999 (Advisory GHSA-xw98-5q62-jx94)
+    - CVE-2026-29054 (Advisory GHSA-92mv-8f8w-wq52)
+    - CVE-2026-25949 (Advisory GHSA-89p3-4642-cr2w)
+    - CVE-2025-68121 (Advisory GHSA-gv8r-9rw9-9697)
+
+- Hide JWT token in preview action #1109
+    - hide JWT token in preview action
+    - no jwt token in Traefik, Core logs
+    - api name change preview-> preview-ticket, better overview what happening in logs
+    - it's part of the changes for CESNET pentest: Access token in url (is saved to logs) #726
+
+- Fix vertical align of screen fields in attribute edit window #1108
+    - fix vertical align of screen fields in attribute edit window
+    - some small grammar correction
+
+- Disable grouping actions on news item "all" group #1107
+    - this actions is not valid inside "all" group because we can't mix news items from various groups. This leads in loose of original OSINT group.
+
+- Fixed broken attachment download (Content-Security-Policy) #1106
+    - Fixed broken attachment download by Content-Security-Policy (Error: The page’s settings blocked an event handler (script-src-attr) from being executed because it violates the following directive: “default-src 'self'”.)
+
+- Better About section on Dashboard #1105
+    - Database caption changed to About
+    - Better info formatting
+
+- Slovak translation completed #1104
+    - finalized Slovak translation
+    - updated readme.md
+    - remove unused translation
+
+- Optimize git_version.yaml #1103
+    - don't run on files that aren't changing app functionality
+
+- Fix github build (git_version file) #1102
+    - github actions to create git_version file
+    - fix github build
+    - add to comit hash also commited date
+
+- Add version info to dashboard #1091
+    - add version number, build date and commit hash to dashboard
+
+- Attachment attribute fixes #1090
+    - fix crash on attachment download (bad parameter names)
+    - fixed bug when new saved attachment doesn't return attribute ID
+    - fixed delete of fresh attachments
+    - add dark theme to attachment attribute
+    - removed a lot of duplicity code
+    - optimized initialization
+    - added missing removeEventListener (after some time start Event hell)
+
+- Fixed multi_select initialization bug in Asses and Analyze screen #1089
+    - fixed bug multi_select initialization in Asses and Analyze screen
+    - fixed mess and mistakes in multi-select actions (wrong/mixed calls, copy paste errors)
+
+- Better filters and selection #1075
+    - added 2in1 "select all" and "unselect all" button
+    - filters now have three states: off, show all with the property, show all without the property
+    - fixed bug in OSINT sources selection: items stayed selected even when the selection toggle was clicked
+    - fixed and updated translations
+    - use filters in Asses/Analyze/Publish URL only if they exist
+
+- Fix new report item creation from assess #1088
+    - Unified way how new report item is created. Fixes issue when new report item was created from assess menu.
+
+- Fixed bug in news item selector #1087
+    - Fixed annoying bug in news item selector. When you add news items to report and you open here some news item -> all news items get focused (they change background color).
+
+- Add numbering to string attributes #1074
+    - added automatic numbering to individual strings of string attribute.
+
+- Report/Product default language user settings #1073
+    - LANGUAGE renamed to UI_LANGUAGE, now stored in settings_user
+    - added new user settings CONTENT_DEFAULT_LANGUAGE
+    - appropriate GUI changes
+    - Added control_socket_disable for disabling creation of gunicorn.ctl
+    - Remove warnings: no-console
+    - Remove warnings: [vue-i18n] Value of key ... is not a string or function !
+    - updated slovak language
+
+- Link to report items from news item #1059
+    - Added link to get to report items the news item is part of.
+    - Shows number of report items the news item is part of.
+    - Should react to changes immediately.
+
+- Hot fix: preview filename error #1061
+    - filename quoting for previews
+    - show text/[txt, html] and application/[pdf, json] inline, other (if there ever will be any other) offer to download (basically the behavior before the preview/publish changes)
+
+- Fix saving reports on Chrome, Brave... #1060
+    - don't delete preview after first download - some browsers like Chrome, Brave can't save result
+    - download with nice name not just some nasty GUID
+
+- Github actions: Build shared always on shared changes, not just on TAG releases #1058
+    - Build shared always on shared changes, not just on TAG releases
+    - small doc change to see if it works
+
+- Fixed error in github actions #1057
+    - Fixed error: No virtual environment found; run uv venv to create an environment, or pass --system to install into a non-virtual environment. Process completed with exit code 2.
+    - pre-commit hook increase ruff to v0.15.0
+    - ruff check
+
+## [26.02.1] - 2026-02-10
 
 - Fixed warning: The HMAC key is 11 bytes long #1055
     - If you use short JWT_SECRET_KEY (< 32 chars) you get by last update warning:
@@ -161,7 +335,7 @@
     - Fix high CPU load on failed verification (core, bots). Now try reconnect each 30 sec after failed connect
     - Add ruff checks
 
-## [v25.12.1] - 2025-12-16
+## [25.12.1] - 2025-12-16
 
 - Increase version to v25.12.1 + new Products API filter #950
     - version bump to 25.12.1
@@ -915,7 +1089,7 @@
 
 ---
 
-## [v24.11.1] - 2024-11-04
+## [24.11.1] - 2024-11-04
 
 ### Breaking Change! (Database migration from Postgres version 13 to 16)
 Please read `docker/MIGRATE_DB.md` documentation for migrate process.
@@ -1134,7 +1308,7 @@ Thanks for the contributions: @multiflexi, @Ximelele
 
 ---
 
-## [v23.12.1] - 2023-12-06
+## [23.12.1] - 2023-12-06
 
 ### Breaking Change! (Only for Docker users who use customized or new report templates)
 
@@ -1178,7 +1352,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v23.09.1] - 2023-09-27
+## [23.09.1] - 2023-09-27
 
 ### Added
 * New reports (OSINT, Disinfo, Offensive, Weekly)
@@ -1211,7 +1385,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v22.12.1] - 2022-12-16
+## [22.12.1] - 2022-12-16
 
 ### GUI
 * Analyze: new feature - side by side view
@@ -1240,7 +1414,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v22.05.1] - 2022-05-17
+## [22.05.1] - 2022-05-17
 
 ### Added
 * gui: keyboard shortcuts: use delete for deleting news items by @sebix in #46
@@ -1266,7 +1440,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.11.1] - 2021-11-19
+## [21.11.1] - 2021-11-19
 
 ### Added
 * Added collector management to manage.py
@@ -1279,7 +1453,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.10.6] - 2021-11-10
+## [21.10.6] - 2021-11-10
 
 ### Added
 - added sample word block list for tag cloud
@@ -1292,7 +1466,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.10.5] - 2021-11-09
+## [21.10.5] - 2021-11-09
 
 ### Added
 - authors of _Product templates_ may now use the new `Configuration -> Product types` help screen, which lists all the fields defined in a chosen _Report item type_. This simplifies the development of new product templates.
@@ -1302,7 +1476,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.10.4] - 2021-11-08
+## [21.10.4] - 2021-11-08
 
 ### Added
 - keycloak container (not enabled yet)
@@ -1315,7 +1489,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.10.3] - 2021-11-08
+## [21.10.3] - 2021-11-08
 
 ### Changed
 - minor fixes and improvements across the entire project
@@ -1327,7 +1501,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.10.2] - 2021-09-25
+## [21.10.2] - 2021-09-25
 
 ### Added
 - sample templates for products (PDF, HTML, TXT, MISP)
@@ -1337,7 +1511,7 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 
 ---
 
-## [v21.10.1] - 2021-09-25
+## [21.10.1] - 2021-09-25
 
 ### Added
 - Initial release of Taranis NG
@@ -1346,17 +1520,18 @@ Simply update the old template path in `Configuration / Product Types`: e.g., `/
 - Merged multiple Taranis NG repositories into one for easier understanding and management of the project
 
 
-[v26.02.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v26.02.1
-[v25.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v25.12.1
-[v24.11.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v24.11.1
-[v23.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v23.12.1
-[v23.09.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v23.09.1
-[v22.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v22.12.1
-[v22.05.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v22.05.1
-[v21.11.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.11.1
-[v21.10.6]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.6
-[v21.10.5]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.5
-[v21.10.4]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.4
-[v21.10.3]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.3
-[v21.10.2]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.2
-[v21.10.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.1
+[26.05.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/26.05.1
+[26.02.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v26.02.1
+[25.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v25.12.1
+[24.11.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v24.11.1
+[23.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v23.12.1
+[23.09.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v23.09.1
+[22.12.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v22.12.1
+[22.05.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v22.05.1
+[21.11.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.11.1
+[21.10.6]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.6
+[21.10.5]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.5
+[21.10.4]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.4
+[21.10.3]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.3
+[21.10.2]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.2
+[21.10.1]: https://github.com/SK-CERT/Taranis-NG/releases/tag/v21.10.1
