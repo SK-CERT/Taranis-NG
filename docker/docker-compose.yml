@@ -266,9 +266,60 @@ services:
         max-size: "200k"
         max-file: "10"
 
+  gui-v3:
+    depends_on:
+      - "core"
+    restart: unless-stopped
+    image: "skcert/taranis-ng-gui-v3:${TARANIS_NG_TAG}"
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.gui-v3
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+#    ports:
+#      - "8081:80"
+    environment:
+      NGINX_WORKERS: "4"
+      NGINX_CONNECTIONS: "16"
+      VUE_APP_TARANIS_NG_URL: "${TARANIS_NG_HTTPS_URI}"
+      VUE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
+      VUE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
+      VUE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
+      VUE_APP_VERSION: "3.0.0-beta"
+      TZ: "${TZ}"
+      NGINX_LOG_LEVEL: "warn"
+      NGINX_ACCESS_LOG: "on"
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.taranis-gui-v3.loadbalancer.server.port: "80"
+
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.scheme: "https"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.permanent: "true"
+
+      traefik.http.routers.taranis-gui-v3-80.entrypoints: "web"
+      traefik.http.routers.taranis-gui-v3-80.rule: "PathPrefix(`/v2`)"
+      traefik.http.routers.taranis-gui-v3-80.middlewares: "redirect-v2-to-443"
+
+      traefik.http.routers.taranis-gui-v3-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-gui-v3-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/v2`)"
+      traefik.http.routers.taranis-gui-v3-443.tls: "true"
+      traefik.http.routers.taranis-gui-v3-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-gui-v3-443.service: "taranis-gui-v3"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
   traefik:
     depends_on:
       - "gui"
+      - "gui-v3"
       - "core"
     restart: unless-stopped
     image: "traefik:3.6.9"
