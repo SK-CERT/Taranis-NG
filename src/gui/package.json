@@ -1,6 +1,6 @@
 {
     "name": "taranis-ng-ui",
-    "version": "26.02.1",
+    "version": "26.05.1",
     "private": true,
     "scripts": {
         "prebuild": "node ./git-info.js",
