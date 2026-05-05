@@ -20,8 +20,14 @@ const mockRoute = {
   params: {}
 }
 
+const mockRouter = {
+  push: vi.fn(),
+  replace: vi.fn()
+}
+
 vi.mock('vue-router', () => ({
-  useRoute: () => mockRoute
+  useRoute: () => mockRoute,
+  useRouter: () => mockRouter
 }))
 
 vi.mock('@/composables/useAuth', () => ({

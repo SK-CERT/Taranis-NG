@@ -19,7 +19,9 @@
               {{ t('card_item.source') }}:
               <strong>
                 {{ card.news_items[0].news_item_data?.osint_source_name || card.news_items[0].news_item_data?.source || 'Unknown' }}
-                <span v-if="card.news_items[0].news_item_data?.osint_source_type">({{ card.news_items[0].news_item_data.osint_source_type.split(' ')[0] }})</span>
+                <span v-if="card.news_items[0].news_item_data?.osint_source_type">
+                  ({{ card.news_items[0].news_item_data.osint_source_type.split(' ')[0] }})
+                </span>
               </strong>
             </span>
           </v-col>
@@ -39,7 +41,7 @@
       </div>
 
       <!-- Title -->
-      <h3 class="mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.35; color: rgba(255, 255, 255, 0.95);">
+      <h3 class="mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.35; color: rgba(255, 255, 255, 0.95)">
         {{ card.title }}
       </h3>
 
@@ -53,31 +55,15 @@
         <v-col class="d-flex align-center flex-wrap" style="gap: 12px">
           <!-- Source Link URL (non-clickable text) -->
           <span
-            v-if="
-              !hideSourceLinks &&
-                card.news_items &&
-                card.news_items.length > 0 &&
-                card.news_items[0].news_item_data?.link
-            "
+            v-if="!hideSourceLinks && card.news_items && card.news_items.length > 0 && card.news_items[0].news_item_data?.link"
             class="text-label-small text-primary"
-            style="
-              display: inline-block;
-              max-width: 300px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            "
+            style="display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
           >
             {{ card.news_items[0].news_item_data.link }}
           </span>
 
           <!-- Aggregate Badge -->
-          <v-chip
-            v-if="card.news_items && card.news_items.length > 1"
-            size="small"
-            color="primary"
-            variant="outlined"
-          >
+          <v-chip v-if="card.news_items && card.news_items.length > 1" size="small" color="primary" variant="outlined">
             <v-icon start>mdi-file-multiple</v-icon>
             {{ t('card_item.aggregated_items') }}: {{ card.news_items.length }}
           </v-chip>
@@ -102,12 +88,7 @@
         </v-col>
 
         <!-- Actions -->
-        <v-col
-          v-if="!multiSelectActive && !analyzeSelector"
-          cols="auto"
-          class="d-flex align-center"
-          style="gap: 4px"
-        >
+        <v-col v-if="!multiSelectActive && !analyzeSelector" cols="auto" class="d-flex align-center" style="gap: 4px">
           <AssessItemActions
             :item="card"
             size="small"
@@ -224,8 +205,14 @@ const handleDelete = async () => {
   } catch (error) {
     console.error('Error deleting news item aggregate:', error)
 
+    const responseData = error?.response?.data
+    const isAggregateInUse =
+      responseData === 'aggregate_in_use' ||
+      responseData?.error === 'aggregate_in_use' ||
+      (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
+
     // Check if it's an "in use" error
-    if (error.response?.data === 'aggregate_in_use' || error.response?.status === 500) {
+    if (isAggregateInUse) {
       window.dispatchEvent(
         new CustomEvent('notification', {
           detail: {
