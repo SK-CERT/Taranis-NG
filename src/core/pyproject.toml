@@ -18,7 +18,7 @@ dependencies = [
     "Jinja2==3.1.6",
     "ldap3 @ git+https://github.com/cannatag/ldap3.git@refs/pull/983/head",
     "marshmallow==4.3.0",
-    "psycopg[binary]==3.3.3",
+    "psycopg[binary]==3.3.4",
     "pycryptodomex==3.23.0",
     "PyJWT==2.12.1",
     "python-dotenv==1.2.2",
