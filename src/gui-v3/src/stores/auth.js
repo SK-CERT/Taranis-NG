@@ -32,21 +32,15 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const hasExternalLoginUrl = computed(() => {
-    if (typeof process !== 'undefined' && typeof process.env !== 'undefined')
-      return process.env.VUE_APP_TARANIS_NG_LOGIN_URL != null
-    return false
+    return import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL != null
   })
 
   const getLoginURL = computed(() => {
     const own_base_uri = document.URL.replace(/^([^:]*:\/*[^\/]*)\/.*/, '$1') //eslint-disable-line
     let login_uri = '/login'
 
-    if (
-      typeof process !== 'undefined' &&
-      typeof process.env !== 'undefined' &&
-      process.env.VUE_APP_TARANIS_NG_LOGIN_URL != null
-    ) {
-      login_uri = process.env.VUE_APP_TARANIS_NG_LOGIN_URL
+    if (import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL != null) {
+      login_uri = import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL
     }
 
     login_uri = login_uri.replace('TARANIS_GUI_URI', encodeURIComponent(own_base_uri + '/login'))
@@ -54,21 +48,15 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const hasExternalLogoutUrl = computed(() => {
-    if (typeof process !== 'undefined' && typeof process.env !== 'undefined')
-      return process.env.VUE_APP_TARANIS_NG_LOGOUT_URL != null
-    return false
+    return import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL != null
   })
 
   const getLogoutURL = computed(() => {
     const own_base_uri = document.URL.replace(/^([^:]*:\/*[^\/]*)\/.*/, '$1') //eslint-disable-line
     let logout_uri = '/logout'
 
-    if (
-      typeof process !== 'undefined' &&
-      typeof process.env !== 'undefined' &&
-      process.env.VUE_APP_TARANIS_NG_LOGOUT_URL != null
-    ) {
-      logout_uri = process.env.VUE_APP_TARANIS_NG_LOGOUT_URL
+    if (import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL != null) {
+      logout_uri = import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL
     }
 
     logout_uri = logout_uri.replace('TARANIS_GUI_URI', encodeURIComponent(own_base_uri + '/login'))
