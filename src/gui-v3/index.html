@@ -6,18 +6,25 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate" />
     <meta name="theme-color" content="#3f92dd" />
+    <meta name="description" content="Taranis NG - Open-Source Intelligence Platform" />
+    <meta name="keywords" content="OSINT, intelligence, analysis, threat intelligence" />
     <link rel="icon" href="favicon.ico">
     <link rel="manifest" href="manifest.json" id="manifest-link">
     <title>Taranis NG</title>
     <script>
       // Detect browser language and set correct manifest
       (function() {
-        const lang = (navigator.language || 'en').toLowerCase();
-        const manifestFile = lang.startsWith('cs') ? 'manifest-cs.json'
-                           : lang.startsWith('sk') ? 'manifest-sk.json'
-                           : 'manifest-en.json';
-        document.getElementById('manifest-link').href = manifestFile;
-        console.log('[Manifest] Loaded:', manifestFile, 'for language:', lang);
+        var lang = ((navigator.language || 'en').split('-')[0] || 'en').toLowerCase();
+        var manifestLink = document.getElementById('manifest-link');
+        var localizedManifest = 'manifest-' + lang + '.json';
+
+        fetch(localizedManifest, { method: 'HEAD' })
+          .then(function(response) {
+            manifestLink.href = response.ok ? localizedManifest : 'manifest-en.json';
+          })
+          .catch(function() {
+            manifestLink.href = 'manifest-en.json';
+          });
       })();
     </script>
      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900">

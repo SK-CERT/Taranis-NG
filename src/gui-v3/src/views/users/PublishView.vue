@@ -10,11 +10,7 @@
       />
     </template>
     <template #content>
-      <ContentDataPublish
-        ref="contentRef"
-        :selection="publishStore.getSelection"
-        @update-showing-count="updateShowingCount"
-      />
+      <ContentDataPublish ref="contentRef" :selection="publishStore.getSelection" @update-showing-count="updateShowingCount" />
     </template>
   </ViewLayout>
 
@@ -23,6 +19,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { usePublishStore } from '@/stores/publish'
 import { useAuth } from '@/composables/useAuth'
 import ViewLayout from '@/components/layouts/ViewLayout.vue'
@@ -58,5 +55,9 @@ onMounted(async () => {
     await nextTick()
     window.dispatchEvent(new CustomEvent('new-product', { detail: items }))
   }
+})
+
+onBeforeRouteLeave(() => {
+  publishStore.multiSelect(false)
 })
 </script>

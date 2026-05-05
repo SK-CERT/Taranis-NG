@@ -4,11 +4,19 @@ import { effectScope } from 'vue'
 import { useAttributes } from '@/components/common/attribute/useAttributes'
 
 // Mock dependencies
-const mockCheckPermission = vi.fn(() => true)
+const { mockHasPermission } = vi.hoisted(() => ({
+  mockHasPermission: vi.fn(() => true)
+}))
 
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({
-    checkPermission: mockCheckPermission
+vi.mock('@/services/auth_service', () => ({
+  default: {
+    hasPermission: mockHasPermission
+  }
+}))
+
+vi.mock('@/stores/user', () => ({
+  useUserStore: () => ({
+    userId: 101
   })
 }))
 
@@ -53,7 +61,7 @@ describe('useAttributes', () => {
   beforeEach(async () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    mockCheckPermission.mockReturnValue(true)
+    mockHasPermission.mockReturnValue(true)
     analyzeApi = await import('@/api/analyze')
   })
 
@@ -66,7 +74,7 @@ describe('useAttributes', () => {
     })
 
     it('should be true when edit=false, modify=true, and has permission', () => {
-      mockCheckPermission.mockReturnValue(true)
+      mockHasPermission.mockReturnValue(true)
       const { result, scope } = setupComposable(makeProps({ edit: false, modify: true }))
       expect(result.canModify.value).toBe(true)
       scope.stop()
@@ -79,7 +87,7 @@ describe('useAttributes', () => {
     })
 
     it('should be false when edit=false and permission denied', () => {
-      mockCheckPermission.mockReturnValue(false)
+      mockHasPermission.mockReturnValue(false)
       const { result, scope } = setupComposable(makeProps({ edit: false, modify: true }))
       expect(result.canModify.value).toBe(false)
       scope.stop()
@@ -89,9 +97,7 @@ describe('useAttributes', () => {
   // ── addButtonVisible ──────────────────────────
   describe('addButtonVisible', () => {
     it('should be true when under max_occurrence and canModify', () => {
-      const { result, scope } = setupComposable(
-        makeProps({ values: [{ id: 1, value: '' }], readOnly: false })
-      )
+      const { result, scope } = setupComposable(makeProps({ values: [{ id: 1, value: '' }], readOnly: false }))
       expect(result.addButtonVisible.value).toBe(true)
       scope.stop()
     })
@@ -118,7 +124,10 @@ describe('useAttributes', () => {
   // ── delButtonVisible ──────────────────────────
   describe('delButtonVisible', () => {
     it('should be true when values count exceeds min_occurrence', () => {
-      const values = [{ id: 1, value: '' }, { id: 2, value: '' }]
+      const values = [
+        { id: 1, value: '' },
+        { id: 2, value: '' }
+      ]
       const { result, scope } = setupComposable(
         makeProps({
           values,
@@ -369,10 +378,7 @@ describe('useAttributes', () => {
       const { result, scope } = setupComposable(props)
       await result.onEdit(0)
 
-      expect(analyzeApi.updateReportItem).toHaveBeenCalledWith(
-        'report-1',
-        expect.objectContaining({ attribute_value: 'cpe:2.3:%:vendor:%' })
-      )
+      expect(analyzeApi.updateReportItem).toHaveBeenCalledWith('report-1', expect.objectContaining({ attribute_value: 'cpe:2.3:%:vendor:%' }))
       scope.stop()
     })
 

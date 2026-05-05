@@ -873,7 +873,7 @@
       "compact_mode": "Toggle compact mode",
       "toggle_selection": "Toggle report items selection mode",
       "select_all": "Select All",
-      "unselect_all":  "Unselect All",
+      "unselect_all": "Unselect All",
       "delete_items": "Delete report items",
       "publish_items": "Create product from report items",
       "delete_item": "Delete report item",
@@ -1379,7 +1379,7 @@
     "error_updating": "Error updating",
     "error_deleting": "Error deleting",
     "loading_more": "Loading more items...",
-    "scroll_to_load_more": "Scroll to load more",
+    "end_of_list": "End of list",
     "messagebox": {
       "yes": "Yes",
       "no": "No",

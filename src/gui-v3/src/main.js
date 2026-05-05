@@ -67,12 +67,11 @@ async function waitForStylesReady() {
 }
 
 // Initialize API service with base URL
-const baseURL =
-  import.meta.env.VITE_APP_TARANIS_NG_CORE_API || window.VUE_APP_TARANIS_NG_CORE_API || '/api/v1'
+const baseURL = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
 ApiService.init(baseURL)
 
 // Get default locale from environment or browser
-let defaultLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE || window.VUE_APP_TARANIS_NG_LOCALE
+let defaultLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE
 if (!defaultLocale) {
   defaultLocale = navigator.language.split('-')[0] || 'en'
 }

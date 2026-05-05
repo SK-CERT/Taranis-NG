@@ -405,7 +405,7 @@
     "delete": "Zmazať",
     "cancel": "Zrušiť",
     "loading_more": "Načítavam ďalšie položky...",
-    "scroll_to_load_more": "Posuňte pre načítanie ďalších položiek",
+    "end_of_list": "Konec zoznamu",
     "messagebox": {
       "yes": "Áno",
       "no": "Nie",
