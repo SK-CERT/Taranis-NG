@@ -16,10 +16,7 @@ export function useSSE() {
    * Get SSE URL from environment
    */
   const getSSEUrl = () => {
-    const baseUrl =
-      import.meta.env.VITE_APP_TARANIS_NG_CORE_SSE ||
-      window.VUE_APP_TARANIS_NG_CORE_SSE ||
-      '/sse'
+    const baseUrl = import.meta.env.VITE_APP_TARANIS_NG_CORE_SSE || '/sse'
     return baseUrl
   }
 

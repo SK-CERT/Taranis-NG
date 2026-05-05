@@ -61,10 +61,10 @@ async function flushMicrotasks() {
 describe('useSSE', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllEnvs()
     initSSE.mockResolvedValue({})
     MockEventSource.instances = []
     global.EventSource = MockEventSource
-    delete window.VUE_APP_TARANIS_NG_CORE_SSE
   })
 
   afterEach(() => {
@@ -72,7 +72,7 @@ describe('useSSE', () => {
   })
 
   it('should initialize SSE and connect with credentials', async () => {
-    window.VUE_APP_TARANIS_NG_CORE_SSE = 'http://example.test/sse'
+    vi.stubEnv('VITE_APP_TARANIS_NG_CORE_SSE', 'http://example.test/sse')
     const { result, scope } = setupComposable()
 
     const connectPromise = result.connect()
@@ -103,10 +103,7 @@ describe('useSSE', () => {
     MockEventSource.instances[0].onopen()
     await connectPromise
 
-    MockEventSource.instances[0].emit(
-      'report-item-updated',
-      JSON.stringify({ report_item_id: 42, user_id: 7 })
-    )
+    MockEventSource.instances[0].emit('report-item-updated', JSON.stringify({ report_item_id: 42, user_id: 7 }))
 
     expect(handler).toHaveBeenCalledWith({ report_item_id: 42, user_id: 7 })
     scope.stop()
@@ -127,10 +124,7 @@ describe('useSSE', () => {
 
     result.unsubscribe('report-item-updated')
 
-    expect(connection.removeEventListener).toHaveBeenCalledWith(
-      'report-item-updated',
-      registeredListener
-    )
+    expect(connection.removeEventListener).toHaveBeenCalledWith('report-item-updated', registeredListener)
     scope.stop()
   })
 

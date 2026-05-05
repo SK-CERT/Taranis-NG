@@ -64,15 +64,22 @@ export default [
       'vue/no-template-shadow': 'off',
       'vue/prop-name-casing': 'off',
       'vue/no-required-prop-with-default': 'off',
-      'vue/max-attributes-per-line': ['warn', {
-        singleline: 3,
-        multiline: 1
-      }],
-      'vue/html-indent': ['warn', 2, {
-        attribute: 1,
-        baseIndent: 1,
-        closeBracket: 0
-      }],
+      'vue/max-attributes-per-line': [
+        'warn',
+        {
+          singleline: 3,
+          multiline: 1
+        }
+      ],
+      'vue/html-indent': [
+        'warn',
+        2,
+        {
+          attribute: 1,
+          baseIndent: 1,
+          closeBracket: 0
+        }
+      ],
       'vue/singleline-html-element-content-newline': 'off',
       'vue/multiline-html-element-content-newline': 'off',
 
@@ -100,25 +107,17 @@ export default [
       }
     },
     rules: {
-      '@intlify/vue-i18n/no-unused-keys': ['warn', {
-        extensions: ['.js', '.vue'],
-        ignores: [
-          'validations',
-          'cvss_calculator',
-          'cvss_calculator_tooltip'
-        ]
-      }],
-      '@intlify/vue-i18n/no-missing-keys': 'off'
+      '@intlify/vue-i18n/no-unused-keys': [
+        'warn',
+        {
+          extensions: ['.js', '.vue'],
+          ignores: ['validations', 'cvss_calculator', 'cvss_calculator_tooltip']
+        }
+      ],
+      '@intlify/vue-i18n/no-missing-keys': 'warn'
     }
   },
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      'coverage/**',
-      'playwright-report/**',
-      'test-results/**',
-      '*.min.js'
-    ]
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'playwright-report/**', 'test-results/**', '*.min.js']
   }
 ]
