@@ -1,12 +1,7 @@
 <template>
   <div class="toolbar-group">
     <!-- Multi-select toggle button -->
-    <v-btn
-      icon
-      size="small"
-      :color="multiSelectActive ? 'primary' : 'default'"
-      @click="toggleMultiSelect"
-    >
+    <v-btn icon size="small" :color="multiSelectActive ? 'primary' : 'default'" @click="toggleMultiSelect">
       <v-tooltip activator="parent" location="bottom">
         {{ t(`${view}.tooltip.toggle_selection`) }}
       </v-tooltip>
@@ -19,12 +14,7 @@
     <!-- Action Buttons (only visible when multi-select is active) -->
     <template v-if="multiSelectActive">
       <!-- Select All / Unselect All -->
-      <v-btn
-        icon
-        size="small"
-        :disabled="false"
-        @click="allSelected ? unselectAll() : selectAll()"
-      >
+      <v-btn icon size="small" :disabled="false" @click="allSelected ? unselectAll() : selectAll()">
         <v-tooltip activator="parent" location="bottom">
           {{ allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`) }}
         </v-tooltip>
@@ -34,13 +24,7 @@
       <!-- View-specific action buttons -->
       <template v-if="view === 'assess'">
         <!-- Group -->
-        <v-btn
-          v-if="canModify && canGroupActions"
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAction('GROUP')"
-        >
+        <v-btn v-if="canModify && canGroupActions" icon size="small" :disabled="selectedCount === 0" @click="handleAction('GROUP')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.group_items') }}
           </v-tooltip>
@@ -48,13 +32,7 @@
         </v-btn>
 
         <!-- Ungroup -->
-        <v-btn
-          v-if="canModify && canGroupActions"
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAction('UNGROUP')"
-        >
+        <v-btn v-if="canModify && canGroupActions" icon size="small" :disabled="selectedCount === 0" @click="handleAction('UNGROUP')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.ungroup_items') }}
           </v-tooltip>
@@ -62,12 +40,7 @@
         </v-btn>
 
         <!-- Mark as Read -->
-        <v-btn
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAction('READ')"
-        >
+        <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('READ')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.read_items') }}
           </v-tooltip>
@@ -75,12 +48,7 @@
         </v-btn>
 
         <!-- Mark as Important -->
-        <v-btn
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAction('IMPORTANT')"
-        >
+        <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('IMPORTANT')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.important_items') }}
           </v-tooltip>
@@ -88,12 +56,7 @@
         </v-btn>
 
         <!-- Give a Like -->
-        <v-btn
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAction('LIKE')"
-        >
+        <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('LIKE')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.like_items') }}
           </v-tooltip>
@@ -101,12 +64,7 @@
         </v-btn>
 
         <!-- Give a Dislike -->
-        <v-btn
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAction('DISLIKE')"
-        >
+        <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('DISLIKE')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.dislike_items') }}
           </v-tooltip>
@@ -114,13 +72,7 @@
         </v-btn>
 
         <!-- Analyze (Create Report) -->
-        <v-btn
-          v-if="canCreateReport"
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handleAnalyze"
-        >
+        <v-btn v-if="canCreateReport" icon size="small" :disabled="selectedCount === 0" @click="handleAnalyze">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.analyze_items') }}
           </v-tooltip>
@@ -128,14 +80,7 @@
         </v-btn>
 
         <!-- Delete -->
-        <v-btn
-          v-if="canDelete"
-          icon
-          size="small"
-          color="error"
-          :disabled="selectedCount === 0"
-          @click="handleAction('DELETE')"
-        >
+        <v-btn v-if="canDelete" icon size="small" color="error" :disabled="selectedCount === 0" @click="handleAction('DELETE')">
           <v-tooltip activator="parent" location="bottom">
             {{ t('assess.tooltip.delete_items') }}
           </v-tooltip>
@@ -145,13 +90,7 @@
 
       <template v-else-if="view === 'analyze'">
         <!-- Publish (Create Product) -->
-        <v-btn
-          v-if="canCreateProduct"
-          icon
-          size="small"
-          :disabled="selectedCount === 0"
-          @click="handlePublish"
-        >
+        <v-btn v-if="canCreateProduct" icon size="small" :disabled="selectedCount === 0" @click="handlePublish">
           <v-tooltip activator="parent" location="bottom">
             {{ t('analyze.tooltip.publish_items') }}
           </v-tooltip>
@@ -159,14 +98,7 @@
         </v-btn>
 
         <!-- Delete -->
-        <v-btn
-          v-if="canDelete"
-          icon
-          size="small"
-          color="error"
-          :disabled="selectedCount === 0"
-          @click="handleDelete"
-        >
+        <v-btn v-if="canDelete" icon size="small" color="error" :disabled="selectedCount === 0" @click="handleDelete">
           <v-tooltip activator="parent" location="bottom">
             {{ t('analyze.tooltip.delete_items') }}
           </v-tooltip>
@@ -176,14 +108,7 @@
 
       <template v-else-if="view === 'publish'">
         <!-- Delete -->
-        <v-btn
-          v-if="canDelete"
-          icon
-          size="small"
-          color="error"
-          :disabled="selectedCount === 0"
-          @click="handleDelete"
-        >
+        <v-btn v-if="canDelete" icon size="small" color="error" :disabled="selectedCount === 0" @click="handleDelete">
           <v-tooltip activator="parent" location="bottom">
             {{ t('publish.tooltip.delete_items') }}
           </v-tooltip>
@@ -539,9 +464,7 @@ const unselectAll = () => {
 // Assess-specific actions
 const handleAnalyze = () => {
   const selection = assessStore.getSelection
-  const items = selection
-    .filter((s) => s.type === 'AGGREGATE')
-    .map((s) => s.item)
+  const items = selection.filter((s) => s.type === 'news_item_aggregate').map((s) => s.item)
 
   if (items.length > 0) {
     assessStore.multiSelect(false)
@@ -577,7 +500,12 @@ const handleAction = async (type) => {
 
       window.dispatchEvent(
         new CustomEvent('notification', {
-          detail: { id: 'assess-action-progress', type: 'success', loc: 'common.action_completed', timeout: 2000 }
+          detail: {
+            id: 'assess-action-progress',
+            type: 'success',
+            loc: 'common.action_completed',
+            timeout: 2000
+          }
         })
       )
 
@@ -626,9 +554,7 @@ const handleDelete = async () => {
       )
 
       try {
-        const deletePromises = selection.map((s) =>
-          deleteReportItem({ id: s.id })
-        )
+        const deletePromises = selection.map((s) => deleteReportItem({ id: s.id }))
 
         await Promise.all(deletePromises)
 
@@ -636,7 +562,12 @@ const handleDelete = async () => {
 
         window.dispatchEvent(
           new CustomEvent('notification', {
-            detail: { id: 'analyze-delete-progress', type: 'success', loc: 'common.deleted_successfully', timeout: 2000 }
+            detail: {
+              id: 'analyze-delete-progress',
+              type: 'success',
+              loc: 'common.deleted_successfully',
+              timeout: 2000
+            }
           })
         )
 
@@ -668,9 +599,7 @@ const handleDelete = async () => {
       )
 
       try {
-        const deletePromises = selection.map((s) =>
-          deleteProduct(s.item)
-        )
+        const deletePromises = selection.map((s) => deleteProduct(s.item))
 
         await Promise.all(deletePromises)
 
@@ -678,7 +607,12 @@ const handleDelete = async () => {
 
         window.dispatchEvent(
           new CustomEvent('notification', {
-            detail: { id: 'publish-delete-progress', type: 'success', loc: 'common.deleted_successfully', timeout: 2000 }
+            detail: {
+              id: 'publish-delete-progress',
+              type: 'success',
+              loc: 'common.deleted_successfully',
+              timeout: 2000
+            }
           })
         )
 
