@@ -1187,7 +1187,7 @@
     "delete": "Smazat",
     "cancel": "Zrušit",
     "loading_more": "Načítám další položky...",
-    "scroll_to_load_more": "Posuňte pro načtení dalších položek",
+    "end_of_list": "Konec seznamu",
     "messagebox": {
       "yes": "Ano",
       "no": "Ne",
