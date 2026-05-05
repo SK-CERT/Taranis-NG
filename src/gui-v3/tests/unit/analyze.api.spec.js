@@ -31,6 +31,7 @@ describe('analyze api', () => {
     createNewReportItem(data)
 
     expect(ApiService.post).toHaveBeenCalledWith('/analyze/report-items', {
+      uuid: '9c6988d9-75b8-40b5-af23-6aff10f554d5',
       title: 'sseefsefs',
       title_prefix: '',
       report_item_type_id: 1,

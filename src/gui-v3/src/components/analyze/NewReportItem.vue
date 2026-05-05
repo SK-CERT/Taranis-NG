@@ -1,27 +1,31 @@
 <template>
   <v-row>
-    <v-btn
-      v-if="showButton && canCreate"
-      color="primary"
-      variant="elevated"
-      @click="addEmptyReportItem"
-    >
+    <v-btn v-if="showButton && canCreate" color="primary" variant="elevated" @click="addEmptyReportItem">
       <v-icon start>mdi-plus</v-icon>
       <span>{{ t('common.add_btn') }}</span>
     </v-btn>
 
-    <v-dialog
-      v-model="visible"
-      fullscreen
-      persistent
-      @keydown.esc="cancel"
-    >
-      <v-overlay
-        v-model="overlay"
-        contained
-        class="align-center justify-center"
-        z-index="50000"
-      >
+    <v-dialog v-model="visible" fullscreen persistent @keydown.esc="cancel">
+      <v-dialog v-model="showCloseConfirmation" max-width="500px" persistent>
+        <v-card>
+          <v-card-title class="text-h5">{{ t('confirm_close.title') }}</v-card-title>
+          <v-card-text>{{ t('report_item.confirm_close.message') }}</v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn color="" @click="showCloseConfirmation = false">
+              {{ t('confirm_close.continue') }}
+            </v-btn>
+            <v-btn color="primary" @click="saveAndClose">
+              {{ t('confirm_close.save_and_close') }}
+            </v-btn>
+            <v-btn color="error" @click="confirmClose">
+              {{ t('confirm_close.close') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-overlay v-model="overlay" contained class="align-center justify-center" z-index="50000">
         <v-progress-circular indeterminate size="64" />
       </v-overlay>
 
@@ -39,13 +43,7 @@
 
           <v-spacer />
 
-          <v-switch
-            v-model="verticalView"
-            hide-details
-            density="compact"
-            label="Side-by-side view"
-            class="mt-5"
-          />
+          <v-switch v-model="verticalView" hide-details density="compact" label="Side-by-side view" class="mt-5" />
 
           <v-spacer />
 
@@ -65,10 +63,7 @@
         </v-toolbar>
 
         <v-row no-gutters>
-          <v-col
-            :cols="verticalView ? 6 : 12"
-            :style="verticalView ? 'height: calc(100vh - 3em); overflow-y: auto;' : ''"
-          >
+          <v-col :cols="verticalView ? 6 : 12" :style="verticalView ? 'height: calc(100vh - 3em); overflow-y: auto;' : ''">
             <v-form ref="formRef" class="px-4" @submit.prevent="addReportItem">
               <v-row no-gutters>
                 <v-col v-if="edit" cols="12">
@@ -81,7 +76,7 @@
                     :items="report_types"
                     item-title="title"
                     :label="t('report_item.report_type')"
-                    :rules="[v => !!v || t('error.required')]"
+                    :rules="[(v) => !!v || t('error.required')]"
                     return-object
                     @update:model-value="reportSelected"
                   />
@@ -104,7 +99,7 @@
                     :label="t('report_item.title')"
                     :disabled="field_locks.title || !canModify"
                     :class="getLockedStyle('title')"
-                    :rules="[v => !!v || t('error.required')]"
+                    :rules="[(v) => !!v || t('error.required')]"
                     :spellcheck="spellcheck"
                     @focus="onFocus('title')"
                     @blur="saveReportItem('title')"
@@ -169,11 +164,7 @@
                         {{ attribute_group.title }}
                       </v-expansion-panel-title>
                       <v-expansion-panel-text>
-                        <v-expansion-panels
-                          v-model="expand_group_items[i].values"
-                          multiple
-                          class="items"
-                        >
+                        <v-expansion-panels v-model="expand_group_items[i].values" multiple class="items">
                           <v-expansion-panel
                             v-for="attribute_item in attribute_group.attribute_group_items"
                             :key="attribute_item.attribute_group_item.id"
@@ -182,6 +173,9 @@
                             <v-expansion-panel-title class="pa-2 font-weight-bold text-primary rounded-0">
                               <v-row>
                                 <span>{{ attribute_item.attribute_group_item.title }}</span>
+                                <span v-if="getAttributeMeta(attribute_item)" class="attribute-meta text-medium-emphasis ml-2">
+                                  {{ getAttributeMeta(attribute_item) }}
+                                </span>
                               </v-row>
                             </v-expansion-panel-title>
                             <v-expansion-panel-text class="pt-0">
@@ -220,20 +214,10 @@
 
               <v-row no-gutters class="pt-2">
                 <v-col cols="12">
-                  <v-alert
-                    v-if="show_validation_error"
-                    density="compact"
-                    type="error"
-                    variant="tonal"
-                  >
+                  <v-alert v-if="show_validation_error" density="compact" type="error" variant="tonal">
                     {{ t('error.validation') }}
                   </v-alert>
-                  <v-alert
-                    v-if="show_error"
-                    density="compact"
-                    type="error"
-                    variant="tonal"
-                  >
+                  <v-alert v-if="show_error" density="compact" type="error" variant="tonal">
                     {{ t('report_item.error') }}
                   </v-alert>
                 </v-col>
@@ -241,12 +225,7 @@
             </v-form>
           </v-col>
 
-          <v-col
-            v-if="verticalView"
-            :cols="6"
-            style="height: calc(100vh - 3em); overflow-y: auto"
-            class="pa-5 taranis-ng-vertical-view"
-          >
+          <v-col v-if="verticalView" :cols="6" style="height: calc(100vh - 3em); overflow-y: auto" class="pa-5 taranis-ng-vertical-view">
             <NewsItemSelector
               ref="newsItemSelectorRef"
               attach=".taranis-ng-vertical-view"
@@ -267,7 +246,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { ICONS } from '@/config/ui-constants'
 import { useAnalyzeStore } from '@/stores/analyze'
@@ -304,6 +283,7 @@ const emit = defineEmits(['data-updated'])
 
 const { t, te } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const { checkPermission, getUserId } = useAuth()
 const analyzeStore = useAnalyzeStore()
 const settingsStore = useSettingsStore()
@@ -317,6 +297,7 @@ const visible = ref(false)
 const edit = ref(false)
 const modify = ref(true)
 const overlay = ref(false)
+const showCloseConfirmation = ref(false)
 const verticalView = ref(false)
 const show_validation_error = ref(false)
 const show_error = ref(false)
@@ -427,16 +408,26 @@ const reportSelected = () => {
 
 const cancel = () => {
   if (!edit.value && hasUnsavedChanges()) {
-    // For now, just close. TODO: add confirmation dialog
-    closeDialog()
+    showCloseConfirmation.value = true
     return
   }
   closeDialog()
 }
 
+const confirmClose = () => {
+  showCloseConfirmation.value = false
+  closeDialog()
+}
+
+const saveAndClose = async () => {
+  showCloseConfirmation.value = false
+  await addReportItem()
+}
+
 const closeDialog = () => {
   setTimeout(() => {
     resetValidation()
+    showCloseConfirmation.value = false
     visible.value = false
   }, 150)
 }
@@ -446,7 +437,7 @@ const addReportItem = async () => {
   const { valid } = await formRef.value.validate()
   if (!valid) {
     show_validation_error.value = true
-    return
+    return false
   }
 
   show_validation_error.value = false
@@ -463,10 +454,8 @@ const addReportItem = async () => {
     for (let j = 0; j < attribute_groups.value[i].attribute_group_items.length; j++) {
       for (let k = 0; k < attribute_groups.value[i].attribute_group_items[j].values.length; k++) {
         let value = attribute_groups.value[i].attribute_group_items[j].values[k].value
-        const value_description =
-          attribute_groups.value[i].attribute_group_items[j].values[k].value_description
-        const attrType =
-          attribute_groups.value[i].attribute_group_items[j].attribute_group_item.attribute.type
+        const value_description = attribute_groups.value[i].attribute_group_items[j].values[k].value_description
+        const attrType = attribute_groups.value[i].attribute_group_items[j].attribute_group_item.attribute.type
 
         if (attrType === 'CPE') {
           value = value.replace('*', '%')
@@ -479,8 +468,7 @@ const addReportItem = async () => {
             id: -1,
             value: value,
             value_description: value_description,
-            attribute_group_item_id:
-              attribute_groups.value[i].attribute_group_items[j].attribute_group_item.id
+            attribute_group_item_id: attribute_groups.value[i].attribute_group_items[j].attribute_group_item.id
           })
         }
       }
@@ -493,10 +481,13 @@ const addReportItem = async () => {
     overlay.value = false
     closeDialog()
     emit('data-updated')
+    router.push('/analyze')
+    return true
   } catch (error) {
     console.error('Error creating report item:', error)
     show_error.value = true
     overlay.value = false
+    return false
   }
 }
 
@@ -583,11 +574,7 @@ const showDetail = async (report_item_data) => {
         expand_group_items.value = []
         for (let j = 0; j < selected_type.value.attribute_groups.length; j++) {
           expand_group_items.value.push({
-            values: Array.from(
-              Array(
-                selected_type.value.attribute_groups[j].attribute_group_items.length
-              ).keys()
-            )
+            values: Array.from(Array(selected_type.value.attribute_groups[j].attribute_group_items.length).keys())
           })
         }
         break
@@ -615,23 +602,15 @@ const showDetail = async (report_item_data) => {
           attribute_group_items: []
         }
 
-        for (
-          let j = 0;
-          j < selected_type.value.attribute_groups[i].attribute_group_items.length;
-          j++
-        ) {
+        for (let j = 0; j < selected_type.value.attribute_groups[i].attribute_group_items.length; j++) {
           const values = []
 
           // Local attributes
           for (let k = 0; k < data.attributes.length; k++) {
-            if (
-              data.attributes[k].attribute_group_item_id ===
-              selected_type.value.attribute_groups[i].attribute_group_items[j].id
-            ) {
+            if (data.attributes[k].attribute_group_item_id === selected_type.value.attribute_groups[i].attribute_group_items[j].id) {
               let value = data.attributes[k].value
               const value_description = data.attributes[k].value_description
-              const attrType =
-                selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
+              const attrType = selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
 
               if (attrType === 'CPE') {
                 value = value.replace('%', '*')
@@ -640,8 +619,7 @@ const showDetail = async (report_item_data) => {
               }
 
               const locked =
-                locks_data["'" + data.attributes[k].id + "'"] !== undefined &&
-                locks_data["'" + data.attributes[k].id + "'"] !== null
+                locks_data["'" + data.attributes[k].id + "'"] !== undefined && locks_data["'" + data.attributes[k].id + "'"] !== null
 
               values.push({
                 id: data.attributes[k].id,
@@ -667,10 +645,8 @@ const showDetail = async (report_item_data) => {
                 selected_type.value.attribute_groups[i].attribute_group_items[j].title
               ) {
                 let value = data.remote_report_items[l].attributes[k].value
-                const value_description =
-                  data.remote_report_items[l].attributes[k].value_description
-                const attrType =
-                  selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
+                const value_description = data.remote_report_items[l].attributes[k].value_description
+                const attrType = selected_type.value.attribute_groups[i].attribute_group_items[j].attribute.type
 
                 if (attrType === 'CPE') {
                   value = value.replace('%', '*')
@@ -686,8 +662,7 @@ const showDetail = async (report_item_data) => {
                   last_updated: data.remote_report_items[l].attributes[k].last_updated,
                   binary_mime_type: data.remote_report_items[l].attributes[k].binary_mime_type,
                   binary_size: data.remote_report_items[l].attributes[k].binary_size,
-                  binary_description:
-                    data.remote_report_items[l].attributes[k].binary_description,
+                  binary_description: data.remote_report_items[l].attributes[k].binary_description,
                   user: { name: data.remote_report_items[l].remote_user },
                   locked: false,
                   remote: true
@@ -697,8 +672,7 @@ const showDetail = async (report_item_data) => {
           }
 
           group.attribute_group_items.push({
-            attribute_group_item:
-              selected_type.value.attribute_groups[i].attribute_group_items[j],
+            attribute_group_item: selected_type.value.attribute_groups[i].attribute_group_items[j],
             values: values
           })
         }
@@ -716,11 +690,7 @@ const updateRemoteAttributes = () => {
   for (let i = 0; i < attribute_groups.value.length; i++) {
     for (let j = 0; j < attribute_groups.value[i].attribute_group_items.length; j++) {
       // Remove existing remote attributes
-      for (
-        let k = attribute_groups.value[i].attribute_group_items[j].values.length - 1;
-        k >= 0;
-        k--
-      ) {
+      for (let k = attribute_groups.value[i].attribute_group_items[j].values.length - 1; k >= 0; k--) {
         if (attribute_groups.value[i].attribute_group_items[j].values[k].remote === true) {
           attribute_groups.value[i].attribute_group_items[j].values.splice(k, 1)
         }
@@ -734,8 +704,7 @@ const updateRemoteAttributes = () => {
             attribute_groups.value[i].attribute_group_items[j].attribute_group_item.title
           ) {
             let value = remote_report_items.value[l].attributes[k].value
-            const attrType =
-              attribute_groups.value[i].attribute_group_items[j].attribute_group_item.attribute.type
+            const attrType = attribute_groups.value[i].attribute_group_items[j].attribute_group_item.attribute.type
 
             if (attrType === 'CPE') {
               value = value.replace('%', '*')
@@ -751,8 +720,7 @@ const updateRemoteAttributes = () => {
               last_updated: remote_report_items.value[l].attributes[k].last_updated,
               binary_mime_type: remote_report_items.value[l].attributes[k].binary_mime_type,
               binary_size: remote_report_items.value[l].attributes[k].binary_size,
-              binary_description:
-                remote_report_items.value[l].attributes[k].binary_description,
+              binary_description: remote_report_items.value[l].attributes[k].binary_description,
               user: { name: remote_report_items.value[l].remote_user },
               locked: false,
               remote: true
@@ -768,15 +736,41 @@ const updateNewsItemAggregates = (items) => {
   news_item_aggregates.value = Array.isArray(items) ? [...items] : []
 }
 
+const getAttributeMeta = (attributeItem) => {
+  const values = Array.isArray(attributeItem?.values) ? attributeItem.values : []
+  let latest = null
+
+  for (const value of values) {
+    const userName = value?.user?.name
+    if (!userName) continue
+
+    if (!latest) {
+      latest = value
+      continue
+    }
+
+    const currentTime = Date.parse(value?.last_updated || '')
+    const latestTime = Date.parse(latest?.last_updated || '')
+
+    if (!Number.isNaN(currentTime) && Number.isNaN(latestTime)) {
+      latest = value
+    } else if (!Number.isNaN(currentTime) && !Number.isNaN(latestTime) && currentTime > latestTime) {
+      latest = value
+    }
+  }
+
+  if (!latest?.user?.name) return ''
+  if (!latest?.last_updated) return latest.user.name
+
+  return `${latest.last_updated} ${latest.user.name}`
+}
+
 // AI generation
 const autoGenerate = async (attribute_group_item_id) => {
   if (!autoGenerateIcon[attribute_group_item_id]) {
     autoGenerateIcon[attribute_group_item_id] = 'mdi-creation'
   }
-  if (
-    autoGenerateIcon[attribute_group_item_id] &&
-    autoGenerateIcon[attribute_group_item_id].startsWith('mdi-timer-sand')
-  ) {
+  if (autoGenerateIcon[attribute_group_item_id] && autoGenerateIcon[attribute_group_item_id].startsWith('mdi-timer-sand')) {
     return
   }
 
@@ -795,10 +789,7 @@ const autoGenerate = async (attribute_group_item_id) => {
     }
     setAutoGenerateIcon(attribute_group_item_id, 'error')
   } catch (error) {
-    setAttributeGroupItemValue(
-      attribute_group_item_id,
-      JSON.stringify(error.response?.data || error.message)
-    )
+    setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(error.response?.data || error.message))
     setAutoGenerateIcon(attribute_group_item_id, 'error')
   }
 }
@@ -923,20 +914,10 @@ const reportItemUpdated = async (data_info) => {
         if (data.update !== undefined) {
           for (let i = 0; i < attribute_groups.value.length; i++) {
             for (let j = 0; j < attribute_groups.value[i].attribute_group_items.length; j++) {
-              for (
-                let k = 0;
-                k < attribute_groups.value[i].attribute_group_items[j].values.length;
-                k++
-              ) {
-                if (
-                  attribute_groups.value[i].attribute_group_items[j].values[k].id ===
-                  data.attribute_id
-                ) {
-                  attribute_groups.value[i].attribute_group_items[j].values[k].value =
-                    data.attribute_value
-                  attribute_groups.value[i].attribute_group_items[j].values[
-                    k
-                  ].value_description = data.attribute_value_description
+              for (let k = 0; k < attribute_groups.value[i].attribute_group_items[j].values.length; k++) {
+                if (attribute_groups.value[i].attribute_group_items[j].values[k].id === data.attribute_id) {
+                  attribute_groups.value[i].attribute_group_items[j].values[k].value = data.attribute_value
+                  attribute_groups.value[i].attribute_group_items[j].values[k].value_description = data.attribute_value_description
                   return
                 }
               }
@@ -1013,5 +994,11 @@ defineExpose({
 .locked-style :deep(input) {
   color: grey !important;
   font-style: italic;
+}
+
+.attribute-meta {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
 }
 </style>

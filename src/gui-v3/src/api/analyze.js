@@ -130,6 +130,7 @@ export function getReportItemData(report_item_id, data) {
 
 export function createNewReportItem(data) {
   const payload = {
+    uuid: data.uuid || null,
     title: data.title,
     title_prefix: data.title_prefix,
     report_item_type_id: data.report_item_type_id,
@@ -155,24 +156,15 @@ export function getReportItemLocks(report_item_id) {
 }
 
 export function lockReportItem(report_item_id, data) {
-  return ApiService.put(
-    '/analyze/report-items/' + report_item_id + '/field-locks/' + data.field_id + '/lock',
-    data
-  )
+  return ApiService.put('/analyze/report-items/' + report_item_id + '/field-locks/' + data.field_id + '/lock', data)
 }
 
 export function unlockReportItem(report_item_id, data) {
-  return ApiService.put(
-    '/analyze/report-items/' + report_item_id + '/field-locks/' + data.field_id + '/unlock',
-    data
-  )
+  return ApiService.put('/analyze/report-items/' + report_item_id + '/field-locks/' + data.field_id + '/unlock', data)
 }
 
 export function holdLockReportItem(report_item_id, data) {
-  return ApiService.put(
-    '/analyze/report-items/' + report_item_id + '/field-locks/' + data.field_id + '/hold',
-    data
-  )
+  return ApiService.put('/analyze/report-items/' + report_item_id + '/field-locks/' + data.field_id + '/hold', data)
 }
 
 export function getAllReportItemTypes() {
@@ -193,9 +185,7 @@ export function getAttributeEnums(filter) {
 }
 
 export function removeAttachment(data) {
-  return ApiService.delete(
-    '/analyze/report-items/' + data.report_item_id + '/file-attributes/' + data.attribute_id
-  )
+  return ApiService.delete('/analyze/report-items/' + data.report_item_id + '/file-attributes/' + data.attribute_id)
 }
 
 export function aiGenerate(attribute_id, news_item_agreggate_ids) {
