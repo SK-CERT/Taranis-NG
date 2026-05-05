@@ -10,8 +10,7 @@ repos:
     rev: v1.36.4
     hooks:
       - id: djlint
-        files: "^src/presenters/templates/.*\\.(html)$"
-        types_or: [html]
+        files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
         args: ["--ignore=H021"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -23,3 +22,12 @@ repos:
       - id: trailing-whitespace
       - id: mixed-line-ending
         args: [--fix=lf]
+
+  - repo: local
+    hooks:
+      - id: husky-gui-pre-commit
+        name: husky-gui-pre-commit
+        entry: bash -lc 'cd src/gui-v3 && ./.husky/pre-commit'
+        language: system
+        pass_filenames: false
+        always_run: true

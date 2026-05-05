@@ -1,10 +1,5 @@
 <template>
-  <v-dialog
-    v-model="visible"
-    fullscreen
-    persistent
-    @keydown.esc="handleCancel"
-  >
+  <v-dialog v-model="visible" fullscreen persistent @keydown.esc="handleCancel">
     <!-- Confirmation dialogs -->
     <v-dialog v-model="showCloseConfirmation" max-width="500px" persistent>
       <v-card>
@@ -118,13 +113,7 @@
           <!-- Report Items Section -->
           <v-row>
             <v-col cols="12">
-              <v-btn
-                v-if="canModify"
-                :prepend-icon="ICONS.PLUS"
-                variant="outlined"
-                class="mb-3"
-                @click="openReportItemSelector"
-              >
+              <v-btn v-if="canModify" :prepend-icon="ICONS.PLUS" variant="outlined" class="mb-3" @click="openReportItemSelector">
                 {{ $t('report_item.select') }}
               </v-btn>
 
@@ -347,7 +336,7 @@ function validatePublisherSelection() {
 
 async function handleSave() {
   const { valid } = await formRef.value.validate()
-  if (!valid) return
+  if (!valid) return false
 
   prepareProduct()
 
@@ -370,6 +359,7 @@ async function handleSave() {
     }
     window.dispatchEvent(new CustomEvent('product-updated'))
     initialFormState.value = snapshotForm()
+    return true
   } catch (error) {
     showError.value = true
     window.dispatchEvent(
@@ -377,6 +367,7 @@ async function handleSave() {
         detail: { type: 'error', loc: 'product.error' }
       })
     )
+    return false
   }
 }
 
@@ -412,8 +403,8 @@ function confirmClose() {
 
 async function saveAndClose() {
   showCloseConfirmation.value = false
-  await handleSave()
-  if (!showError.value) {
+  const saved = await handleSave()
+  if (saved) {
     closeDialog()
   }
 }
@@ -469,8 +460,8 @@ async function handlePublish() {
 
 async function saveAndPublish() {
   showPublishUnsavedConfirmation.value = false
-  await handleSave()
-  if (!showError.value) {
+  const saved = await handleSave()
+  if (saved) {
     isEditMode.value = true
     canModifyFlag.value = true
     canAccessFlag.value = true
@@ -494,10 +485,7 @@ async function handlePreview(event) {
     const response = await previewProduct(product.value, ctrl, authStore.jwt)
     const token = response.data.token
 
-    const apiBase =
-      import.meta.env.VITE_APP_TARANIS_NG_CORE_API ||
-      window.VUE_APP_TARANIS_NG_CORE_API ||
-      '/api/v1'
+    const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
     const previewUrl = `${apiBase}/publish/products/preview/${token}`
 
     // hide JWT from URL by creating a form and submitting it as POST, also solve window.open() issue
