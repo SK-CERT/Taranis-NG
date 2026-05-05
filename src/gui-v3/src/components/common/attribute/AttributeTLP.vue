@@ -4,10 +4,7 @@
       <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="tlp-holder">
         <!-- Read-only or remote -->
         <div v-if="readOnly || values[index].remote" class="tlp-display">
-          <div
-            class="tlp-badge"
-            :style="getTLPStyle(values[index].value)"
-          >
+          <div class="tlp-badge" :style="getTLPStyle(values[index].value)">
             {{ values[index].value || '—' }}
           </div>
           <span class="tlp-description">{{ getTLPDescription(values[index].value) }}</span>
@@ -28,11 +25,12 @@
                 <button
                   v-for="tlp in tlpOptions"
                   :key="tlp"
+                  type="button"
                   class="tlp-button"
                   :class="{ active: values[index].value === tlp }"
                   :style="getTLPStyle(tlp)"
                   :disabled="values[index].locked || !canModify"
-                  @click="values[index].value = tlp; onEdit(index)"
+                  @click="setTlpValue(index, tlp)"
                 >
                   {{ tlp }}
                 </button>
@@ -109,20 +107,20 @@ const tlpOptions = ['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED']
 
 // TLP color definitions
 const tlpColors = {
-  'CLEAR': { bg: '#ffffff', text: '#000000' },
-  'GREEN': { bg: '#33FF00', text: '#000000' },
-  'AMBER': { bg: '#FFC000', text: '#000000' },
+  CLEAR: { bg: '#ffffff', text: '#000000' },
+  GREEN: { bg: '#33FF00', text: '#000000' },
+  AMBER: { bg: '#FFC000', text: '#000000' },
   'AMBER+STRICT': { bg: '#FFC000', text: '#000000' },
-  'RED': { bg: '#FF2B2B', text: '#ffffff' }
+  RED: { bg: '#FF2B2B', text: '#ffffff' }
 }
 
 // TLP descriptions
 const tlpDescriptions = {
-  'CLEAR': 'Unrestricted - Information may be distributed without restriction',
-  'GREEN': 'Community - Information may be shared within communities',
-  'AMBER': 'Limited Sharing - Information should not be publicly disclosed',
+  CLEAR: 'Unrestricted - Information may be distributed without restriction',
+  GREEN: 'Community - Information may be shared within communities',
+  AMBER: 'Limited Sharing - Information should not be publicly disclosed',
   'AMBER+STRICT': 'Strictly Limited Sharing - Information should not be shared outside the organization',
-  'RED': 'Not for Sharing - Information may not be shared with anyone'
+  RED: 'Not for Sharing - Information may not be shared with anyone'
 }
 
 const getTLPStyle = (tlp) => {
@@ -141,6 +139,11 @@ const getTLPStyle = (tlp) => {
 
 const getTLPDescription = (tlp) => {
   return tlpDescriptions[tlp] || 'Unknown TLP level'
+}
+
+const setTlpValue = (index, tlp) => {
+  props.values[index].value = tlp
+  onEdit(index)
 }
 </script>
 

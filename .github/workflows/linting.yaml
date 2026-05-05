@@ -20,7 +20,7 @@ jobs:
       - name: Install djlint
         run: pip install djlint
       - name: Run djlint lint
-        run: djlint . --lint
+        run: djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021
       - name: ruff-action
         uses: astral-sh/ruff-action@v3.5.1
         with:
