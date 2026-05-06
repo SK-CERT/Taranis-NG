@@ -11,25 +11,21 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
 
-  reporter: [
-    ['html'],
-    ['list'],
-    ['json', { outputFile: 'test-results/results.json' }]
-  ],
+  reporter: [['html'], ['list'], ['json', { outputFile: 'test-results/results.json' }]],
 
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.BASE_URL || 'http://localhost:4444',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'on',
+    video: 'on'
   },
 
   /* Single browser for UI mode only */
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
+      use: { ...devices['Desktop Chrome'] }
+    }
   ],
 
   /* Start backend services and frontend dev server before UI tests */
@@ -37,13 +33,13 @@ export default defineConfig({
     {
       command: 'bash ../../scripts/test-setup.sh',
       reuseExistingServer: true,
-      timeout: 120 * 1000,
+      timeout: 120 * 1000
     },
     {
       command: 'npm run dev:remote',
-      url: 'http://localhost:5173',
+      url: 'http://localhost:4444',
       reuseExistingServer: true,
-      timeout: 120 * 1000,
-    },
-  ],
+      timeout: 120 * 1000
+    }
+  ]
 })

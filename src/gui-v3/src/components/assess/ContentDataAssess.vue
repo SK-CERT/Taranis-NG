@@ -22,17 +22,13 @@
     </TransitionGroup>
 
     <!-- Infinite Scroll Trigger -->
-    <div
-      v-intersect="onIntersect"
-      class="mt-4"
-      style="min-height: 100px; display: flex; align-items: center; justify-content: center;"
-    >
+    <div v-intersect="onIntersect" class="mt-4" style="min-height: 100px; display: flex; align-items: center; justify-content: center">
       <div v-if="loading" class="text-center text-grey">
         <v-progress-circular indeterminate size="small" />
         <p class="text-caption mt-2">{{ t('common.loading_more') }}</p>
       </div>
       <div v-else class="text-caption text-grey">
-        {{ t('common.scroll_to_load_more') }}
+        {{ t('common.end_of_list') }}
       </div>
     </div>
 
@@ -188,30 +184,18 @@ const handleDetailAction = async (payload) => {
         if (reportItemModalRef.value) {
           reportItemModalRef.value.openDialog([newsItem])
         }
-        break
+        return
       case 'ungroup':
         // Handle ungrouping
         // This would split the aggregate into individual items
         break
       case 'comment':
         // Save comment to aggregate
-        await assessStore.saveNewsItemAggregate(
-          group_id,
-          newsItem.id,
-          newsItem.title,
-          newsItem.description,
-          payload.comment
-        )
+        await assessStore.saveNewsItemAggregate(group_id, newsItem.id, newsItem.title, newsItem.description, payload.comment)
         break
       case 'update-aggregate':
         // Save aggregate metadata (title, description)
-        await assessStore.saveNewsItemAggregate(
-          group_id,
-          newsItem.id,
-          payload.title,
-          payload.description,
-          newsItem.comments
-        )
+        await assessStore.saveNewsItemAggregate(group_id, newsItem.id, payload.title, payload.description, newsItem.comments)
         break
     }
 
@@ -220,7 +204,7 @@ const handleDetailAction = async (payload) => {
 
     // Update the selected item in the dialog to show fresh data with updated colors
     if (selectedItem.value && action !== 'delete') {
-      const updatedItem = news_items_data.value.find(item => item.id === selectedItem.value.id)
+      const updatedItem = news_items_data.value.find((item) => item.id === selectedItem.value.id)
       if (updatedItem) {
         selectedItem.value = updatedItem
       }
@@ -258,6 +242,25 @@ const handleDetailDelete = async (newsItem) => {
     )
   } catch (error) {
     console.error('Error deleting item:', error)
+
+    const responseData = error?.response?.data
+    const isAggregateInUse =
+      responseData === 'aggregate_in_use' ||
+      responseData?.error === 'aggregate_in_use' ||
+      (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
+
+    if (isAggregateInUse) {
+      window.dispatchEvent(
+        new CustomEvent('notification', {
+          detail: {
+            type: 'error',
+            message: t('error.aggregate_in_use')
+          }
+        })
+      )
+      return
+    }
+
     window.dispatchEvent(
       new CustomEvent('notification', {
         detail: { type: 'error', loc: 'assess.error_deleting' }
@@ -325,7 +328,7 @@ const handleNewsItemsUpdated = () => {
 
 const handleSelectionChange = (itemId, isSelected) => {
   // Get the full item from news_items_data
-  const item = news_items_data.value.find(n => n.id === itemId)
+  const item = news_items_data.value.find((n) => n.id === itemId)
   if (item) {
     if (isSelected) {
       assessStore.select({ type: 'AGGREGATE', id: itemId, item: item })

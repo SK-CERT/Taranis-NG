@@ -5,6 +5,7 @@
 ## Overview
 
 The Vue3 GUI test suite lives under `src/gui-v3/tests/` and currently covers:
+
 - **E2E tests** with Playwright for end-to-end workflows and routing
 - **Unit tests** with Vitest for stores, composables, services, utilities, and selected components
 - **Component tests** with Vitest + Vue Test Utils
@@ -12,16 +13,18 @@ The Vue3 GUI test suite lives under `src/gui-v3/tests/` and currently covers:
 ## Tooling
 
 ### Unit / Component Tests
+
 - **Runner:** Vitest
 - **Vue support:** `@vue/test-utils`
 - **Environment:** `happy-dom`
 - **Config:** `vitest.config.js`
 
 ### E2E Tests
+
 - **Runner:** Playwright
 - **Configs:** `playwright.config.js`, `playwright.ui.config.js`
 - **Browsers:** Chromium, Firefox, WebKit
-- **Default base URL:** `http://localhost:5173`
+- **Default base URL:** `http://localhost:4444`
 
 ## Quick Start
 
@@ -114,13 +117,17 @@ tests/
 ## What Is Currently Covered
 
 ### E2E Coverage
+
 Current Playwright specs cover:
+
 - **Navigation and routing**
 - **Organizations CRUD flow**
 - **Roles CRUD flow**
 
 ### Unit / Component Coverage
+
 Current Vitest coverage includes:
+
 - **Stores:** auth, assess, config
 - **Composables:** useAuth, useAttributes, useSSE
 - **API/service layer:** analyze API, api_service
@@ -132,14 +139,18 @@ Current Vitest coverage includes:
 ## Configuration Notes
 
 ### Vitest
+
 `vitest.config.js` currently uses:
+
 - `happy-dom`
 - alias `@ -> ./src`
 - exclusion of `tests/e2e/**`
 - V8 coverage reporters: `text`, `json`, `html`
 
 ### Playwright
+
 `playwright.config.js` currently:
+
 - runs tests from `./tests/e2e`
 - uses Chromium, Firefox, and WebKit
 - writes HTML and JSON reports
@@ -155,6 +166,7 @@ Current Vitest coverage includes:
 ## Helper Utilities
 
 `tests/helpers/test-helpers.js` currently provides helpers such as:
+
 - `login(page, username, password)`
 - `logout(page)`
 - `navigateToConfig(page, section)`
@@ -187,6 +199,7 @@ npx playwright test tests/e2e/roles.spec.js
 ## Test Output
 
 Generated output directories/files:
+
 - `coverage/` — Vitest coverage output
 - `test-results/` — Playwright screenshots, videos, traces, and JSON output
 - Playwright HTML report — opened with `npm run test:e2e:report`

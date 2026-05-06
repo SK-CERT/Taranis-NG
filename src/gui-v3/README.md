@@ -38,7 +38,13 @@ npm install
 npm run dev
 ```
 
-The development server will start at `http://localhost:8080/v2/`
+The development server will start at `http://localhost:4444/v2/` by default.
+
+You can override the port if needed:
+
+```bash
+VITE_PORT=8082 npm run dev
+```
 
 ### Build for Production
 
@@ -63,6 +69,25 @@ The following environment variables are used (configured at Docker runtime):
 - `VUE_APP_TARANIS_NG_CORE_SSE` - Server-Sent Events endpoint
 - `VUE_APP_TARANIS_NG_LOCALE` - Default locale (en, cs, sk)
 - `VUE_APP_VERSION` - Application version
+
+### Env Precedence in Dev (`npm run dev`)
+
+Vite loads env files from two places, in this order:
+
+1. `docker/.env*`
+2. `src/gui-v3/.env*` (overrides same keys from `docker/.env*`)
+
+For backend proxying in `vite.config.js`, values are resolved with fallbacks:
+
+- Backend origin: `VITE_DEV_BACKEND_ORIGIN` -> `TARANIS_NG_HTTPS_URI` -> `http://127.0.0.1:8082`
+- API URL: `VITE_APP_TARANIS_NG_CORE_API` -> `VUE_APP_TARANIS_NG_CORE_API` -> `${backendOrigin}/api/v1`
+- SSE URL: `VITE_APP_TARANIS_NG_CORE_SSE` -> `VUE_APP_TARANIS_NG_CORE_SSE` -> `${backendOrigin}/sse`
+
+Notes:
+
+- `VITE_APP_*` is preferred for Vue 3.
+- `VUE_APP_*` is kept as compatibility fallback for existing Docker/runtime configuration.
+- Dev server default port is `4444` (override with `VITE_PORT` or `PORT`).
 
 ## Project Structure
 

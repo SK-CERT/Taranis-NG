@@ -30,7 +30,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useAnalyzeStore } from '@/stores/analyze'
 import { useAuth } from '@/composables/useAuth'
 import ViewLayout from '@/components/layouts/ViewLayout.vue'
@@ -84,4 +84,8 @@ const showReportItemDetail = (reportItem) => {
     newReportItemRef.value.showDetail(reportItem)
   }
 }
+
+onBeforeRouteLeave(() => {
+  analyzeStore.multiSelectReport(false)
+})
 </script>

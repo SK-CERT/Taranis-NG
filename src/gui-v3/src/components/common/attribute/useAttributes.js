@@ -1,6 +1,6 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
+import AuthService from '@/services/auth_service'
 import Permissions from '@/services/auth/permissions'
 import { getReportItemData, holdLockReportItem, lockReportItem, unlockReportItem, updateReportItem } from '@/api/analyze'
 
@@ -12,7 +12,6 @@ import { getReportItemData, holdLockReportItem, lockReportItem, unlockReportItem
  * @returns {Object} Methods and computed properties for attribute handling
  */
 export function useAttributes(props) {
-  const authStore = useAuthStore()
   const userStore = useUserStore()
   const keyTimeout = ref(null)
 
@@ -21,7 +20,7 @@ export function useAttributes(props) {
   // Computed properties
   const canModify = computed(() => {
     if (props?.edit === false) {
-      return authStore.checkPermission(Permissions.ANALYZE_UPDATE) && props?.modify === true
+      return AuthService.hasPermission(Permissions.ANALYZE_UPDATE) && props?.modify === true
     }
     return true
   })

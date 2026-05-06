@@ -34,17 +34,21 @@
     :manual-sources="assessStore.getManualOSINTSourcesList"
     @news-item-added="handleNewsItemAdded"
   />
+
+  <!-- New Report Item Dialog -->
+  <NewReportItem ref="newReportItem" />
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAssessStore } from '@/stores/assess'
 import ViewLayout from '@/components/layouts/ViewLayout.vue'
 import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess.vue'
 import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
 import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
+import NewReportItem from '@/components/analyze/NewReportItem.vue'
 
 const props = defineProps({
   analyze_selector: {
@@ -60,11 +64,10 @@ const { t } = useI18n()
 const toolbarFilter = ref(null)
 const contentData = ref(null)
 const showAddNewsItemDialog = ref(false)
+const newReportItem = ref(null)
 
 // Computed property to check if manual sources exist
-const hasManualSources = computed(
-  () => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0
-)
+const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
 
 const newDataLoaded = (count) => {
   if (toolbarFilter.value) {
@@ -100,6 +103,12 @@ const handleNewsItemAdded = () => {
   updateData()
 }
 
+const handleNewReport = (event) => {
+  if (newReportItem.value) {
+    newReportItem.value.openDialog(event.detail)
+  }
+}
+
 // Handle route changes
 const handleRouteChange = () => {
   if (contentData.value) {
@@ -116,5 +125,15 @@ onMounted(() => {
   if (route.path.includes('/group/')) {
     handleRouteChange()
   }
+
+  window.addEventListener('new-report', handleNewReport)
+})
+
+onBeforeRouteLeave(() => {
+  assessStore.multiSelect(false)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('new-report', handleNewReport)
 })
 </script>

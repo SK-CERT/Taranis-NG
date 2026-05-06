@@ -11,17 +11,13 @@
         @selection-change="handleSelectionChange(collection.id, $event)"
       />
     </TransitionGroup>
-    <div
-      v-intersect="infiniteScrolling"
-      class="mt-4"
-      style="min-height: 100px; display: flex; align-items: center; justify-content: center;"
-    >
+    <div v-intersect="infiniteScrolling" class="mt-4" style="min-height: 100px; display: flex; align-items: center; justify-content: center">
       <div v-if="!dataLoaded" class="text-center text-grey">
         <v-progress-circular indeterminate size="small" />
         <p class="text-caption mt-2">{{ t('common.loading_more') }}</p>
       </div>
       <div v-else class="text-caption text-grey">
-        {{ t('common.scroll_to_load_more') }}
+        {{ t('common.end_of_list') }}
       </div>
     </div>
   </v-container>
@@ -136,7 +132,7 @@ const handleFilterUpdate = (event) => {
 
 const handleSelectionChange = (itemId, isSelected) => {
   // Get the full item from collections
-  const item = collections.value.find(c => c.id === itemId)
+  const item = collections.value.find((c) => c.id === itemId)
   if (item) {
     if (isSelected) {
       publishStore.select({ id: itemId, item: item })

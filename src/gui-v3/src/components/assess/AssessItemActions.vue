@@ -54,13 +54,7 @@
         {{ showCounts && item.likes ? ICONS.LIKE : ICONS.LIKE_OUTLINE }}
       </v-icon>
     </v-btn>
-    <v-btn
-      v-if="showCounts && canModify && item.likes"
-      text
-      :size="size"
-      disabled
-      style="min-width: 16px; pointer-events: none"
-    >
+    <v-btn v-if="showCounts && canModify && item.likes" text :size="size" disabled style="min-width: 16px; pointer-events: none">
       {{ item.likes }}
     </v-btn>
 
@@ -78,13 +72,7 @@
         {{ showCounts && item.dislikes ? ICONS.UNLIKE : ICONS.UNLIKE_OUTLINE }}
       </v-icon>
     </v-btn>
-    <v-btn
-      v-if="showCounts && canModify && item.dislikes"
-      text
-      :size="size"
-      disabled
-      style="min-width: 16px; pointer-events: none"
-    >
+    <v-btn v-if="showCounts && canModify && item.dislikes" text :size="size" disabled style="min-width: 16px; pointer-events: none">
       {{ item.dislikes }}
     </v-btn>
 
@@ -94,11 +82,11 @@
       icon
       :size="size"
       :variant="item.important ? 'plain' : variant"
-      :color="item.important ? COLORS.ACTIVE : COLORS.PRIMARY"
+      :color="item.important ? 'amber-darken-1' : COLORS.PRIMARY"
       :title="t('assess.tooltip.important_item')"
       @click.stop="$emit('action', 'important')"
     >
-      <v-icon :size="iconSize">
+      <v-icon :size="iconSize" :color="item.important ? 'amber-darken-1' : undefined">
         {{ item.important ? ICONS.IMPORTANT : ICONS.IMPORTANT_OUTLINE }}
       </v-icon>
     </v-btn>
@@ -108,7 +96,7 @@
       v-if="canModify"
       icon
       :size="size"
-      :variant="item.read ? 'text' : 'plain'"
+      :variant="item.read ? 'plain' : variant"
       :color="item.read ? COLORS.ACTIVE : COLORS.PRIMARY"
       :title="t('assess.tooltip.read_item')"
       @click.stop="$emit('action', 'read')"
