@@ -16,6 +16,7 @@ playwright-report/
 node_modules
 dist
 dist-ssr
+obj
 *.local
 
 # Editor directories and files
@@ -25,6 +26,6 @@ dist-ssr
 .DS_Store
 *.suo
 *.ntvs*
-*.njsproj
+*.esproj
 *.sln
 *.sw?
