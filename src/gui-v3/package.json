@@ -16,14 +16,13 @@
         "test": "vitest",
         "test:unit": "vitest run",
         "test:ui": "vitest --ui",
-        "test:coverage": "vitest run --coverage",
+        "test:coverage": "vitest run",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui --config=playwright.ui.config.js",
         "test:e2e:ui:remote": "playwright test --ui --ui-host=127.0.0.1 --ui-port=9323 --config=playwright.ui.config.js",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:debug": "playwright test --debug",
-        "test:e2e:report": "playwright show-report",
-        "prepare": "husky"
+        "test:e2e:report": "playwright show-report"
     },
     "dependencies": {
         "@mdi/font": "^7.4.47",
@@ -52,7 +51,6 @@
         "eslint": "^10.0.1",
         "eslint-plugin-vue": "^10.8.0",
         "happy-dom": "^20.7.0",
-        "husky": "^9.1.7",
         "lint-staged": "^15.5.2",
         "prettier": "^3.8.1",
         "sass": "^1.83.2",
