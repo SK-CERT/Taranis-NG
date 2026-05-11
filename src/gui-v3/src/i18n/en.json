@@ -1369,6 +1369,8 @@
         "down": "Move Down",
         "remove": "Remove",
         "delete": "Delete",
+        "yes": "Yes",
+        "no": "No",
         "cancel": "Cancel",
         "no_data": "No data available",
         "notification_default": "Notification",
@@ -1384,8 +1386,6 @@
         "loading_more": "Loading more items...",
         "end_of_list": "End of list",
         "messagebox": {
-            "yes": "Yes",
-            "no": "No",
             "delete": "Are you sure you want to delete following item?",
             "remove": "Are you sure you want to remove following item?"
         }
