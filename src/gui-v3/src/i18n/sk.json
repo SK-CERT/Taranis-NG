@@ -1301,6 +1301,8 @@
         "up": "Presunúť vyššie",
         "down": "Presunúť nižšie",
         "delete": "Zmazať",
+        "yes": "Áno",
+        "no": "Nie",
         "cancel": "Zrušiť",
         "no_data": "Žiadne dáta k dispozícii",
         "notification_default": "Oznámenie",
@@ -1316,8 +1318,6 @@
         "loading_more": "Načítavam ďalšie položky...",
         "end_of_list": "Koniec zoznamu",
         "messagebox": {
-            "yes": "Áno",
-            "no": "Nie",
             "delete": "Ste si istý, že chcete zmazať túto položku?",
             "remove": "Ste si istý, že chcete odstrániť túto položku?"
         }
