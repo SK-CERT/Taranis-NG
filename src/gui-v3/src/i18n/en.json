@@ -850,8 +850,9 @@
         "to": "To",
         "total_count": "Report item count",
         "tooltip": {
-            "filter_completed": "Show completed report items",
-            "filter_incomplete": "Show incomplete report items",
+            "filter_all": "Currently showing: all",
+            "filter_completed": "Currently showing: completed",
+            "filter_incomplete": "Currently showing: incomplete",
             "range": {
                 "ALL": "Show all report items",
                 "TODAY": "Show today's report items",
@@ -1003,8 +1004,9 @@
     },
     "publish": {
         "tooltip": {
-            "filter_published": "Show published products",
-            "filter_unpublished": "Show unpublished products",
+            "filter_all": "Currently showing: all",
+            "filter_published": "Currently showing: published",
+            "filter_unpublished": "Currently showing: unpublished",
             "range": {
                 "ALL": "Show all products",
                 "TODAY": "Show today's products",
@@ -1348,6 +1350,7 @@
         "aggregate_in_use": "Some of selected aggregates or news items are already assigned to a report item",
         "server_error": "Unknown server error...",
         "validation": "Please fill in all required fields",
+        "select_all_failed": "Failed to select all items",
         "save_failed": "Failed to save",
         "loading_data": "Failed to load data",
         "delete_failed": "Failed to delete",
