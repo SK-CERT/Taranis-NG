@@ -7,6 +7,7 @@
 The toolbar filter components across Assess, Analyze, and Publish views have been unified using a base component architecture. This ensures consistency, reduces code duplication, and makes future maintenance easier.
 
 There are two notable exceptions:
+
 - **Assets** uses `ToolbarFilterAssets.vue`, a dedicated toolbar tailored to vulnerability filtering and alphabetical/vulnerability sorting
 - **Admin CRUD views** use `components/common/ToolbarFilter.vue`, a simpler search-and-count toolbar
 
@@ -17,25 +18,30 @@ There are two notable exceptions:
 The base component provides common functionality organized in three toolbars:
 
 **Toolbar 1 - Main Actions:**
+
 - Title and search bar
 - Add button slot
 
 **Toolbar 2 - Filtering & Sorting:**
+
 - Day range filters (optional, configurable)
 - Custom filter slots for view-specific filters
 - Sort buttons (optional, customizable via slot)
 
 **Toolbar 3 - Count Information:**
+
 - Total count display
 - Selected count display (optional)
 
 **Features:**
+
 - Separate toolbars for clean layout
 - No overlapping UI elements
 - Consistent layout and styling
 - Responsive design
 
 **Props:**
+
 - `title` - Toolbar title (i18n key)
 - `showAddButton` - Show the shared add button component (default: false)
 - `addButtonLabel` - I18n key for the shared add button label (default: 'common.add_btn')
@@ -53,11 +59,13 @@ The base component provides common functionality organized in three toolbars:
 - `searchDebounceMs` - Search debounce delay (default: 300ms)
 
 **Slots:**
+
 - `#addbutton` - Slot for add/action buttons in the top toolbar
 - `#custom-filters` - Slot for view-specific filters (in filter toolbar)
 - `#sort-buttons` - Slot to override default sort buttons (in filter toolbar)
 
 **Events:**
+
 - `@update-filter` - Emitted when filter changes
 
 ## Toolbar Layout
@@ -86,6 +94,7 @@ The base component provides common functionality organized in three toolbars:
 Basic toolbar alternative with simpler layout:
 
 **Features:**
+
 - Title
 - Search field with debounce
 - Total count display
@@ -101,15 +110,17 @@ Basic toolbar alternative with simpler layout:
 **Location:** `/components/assess/ToolbarFilterAssess.vue`
 
 **Custom Features:**
+
 - Three-state filters (read, important, relevant)
-  - States: ALL → true → false → ALL
-  - Visual indicators: outline icons for ALL, solid for active states
-  - Blue background when active
+    - States: ALL → true → false → ALL
+    - Visual indicators: outline icons for ALL, solid for active states
+    - Blue background when active
 - Relevance sort (in addition to date sort)
 - Compact mode toggle
 - Selection count display
 
 **Filter States:**
+
 ```javascript
 {
   search: '',
@@ -126,17 +137,21 @@ Basic toolbar alternative with simpler layout:
 **Location:** `/components/analyze/ToolbarFilterAnalyze.vue`
 
 **Custom Features:**
-- Completed/incompleted toggle filters (mutually exclusive)
+
+- Three-state filters (completed)
+    - States: ALL → true → false → ALL
+    - Visual indicators: outline icons for ALL, solid for active states
+    - Blue background when active
 - Date sort (ascending/descending)
 - Uses shared `ToolbarGroup.vue` for multi-select actions
 
 **Filter States:**
+
 ```javascript
 {
   search: '',
   range: 'ALL',
-  completed: false,
-  incompleted: true,
+  completed: 'ALL',   // or true, false
   sort: 'DATE_DESC'   // or 'DATE_ASC'
 }
 ```
@@ -146,18 +161,22 @@ Basic toolbar alternative with simpler layout:
 **Location:** `/components/publish/ToolbarFilterPublish.vue`
 
 **Custom Features:**
-- Published/unpublished toggle filters (mutually exclusive)
+
+- Three-state filters (published)
+    - States: ALL → true → false → ALL
+    - Visual indicators: outline icons for ALL, solid for active states
+    - Blue background when active
 - Date sort (ascending/descending)
 - Longer search debounce (800ms vs 300ms)
 - Uses shared `ToolbarGroup.vue` for multi-select actions
 
 **Filter States:**
+
 ```javascript
 {
   search: '',
   range: 'ALL',
-  published: false,
-  unpublished: true,
+  published: 'ALL',   // or true, false
   sort: 'DATE_DESC'   // or 'DATE_ASC'
 }
 ```
@@ -167,6 +186,7 @@ Basic toolbar alternative with simpler layout:
 **Location:** `/components/assets/ToolbarFilterAssets.vue`
 
 **Custom Features:**
+
 - Search field
 - Vulnerable-only chip filter
 - Sort toggle between alphabetical and vulnerability order
@@ -174,6 +194,7 @@ Basic toolbar alternative with simpler layout:
 - Separate add-button slot (`#add-button`)
 
 **Filter States:**
+
 ```javascript
 {
   search: '',
@@ -185,6 +206,7 @@ Basic toolbar alternative with simpler layout:
 ## Common Day Range Options
 
 All views use the same day range filters:
+
 - ALL - All time
 - TODAY - Today only
 - WEEK - This week
@@ -198,63 +220,60 @@ All views use the same day range filters:
 
 ```vue
 <template>
-  <BaseToolbarFilter
-    ref="baseFilter"
-    :title="'my_view.title'"
-    :total-count-title="'toolbar_filter.total_count'"
-    :total-count="totalCount"
-    :show-selected-count="multiSelectActive"
-    :selected-count-title="'toolbar_filter.selected_count'"
-    :selected-count="selectedCount"
-    :initial-filter="filter"
-    :show-day-ranges="true"
-    :show-sort="false"
-    @update-filter="handleFilterUpdate"
-  >
-    <!-- Add Button -->
-    <template #addbutton>
-      <v-btn color="primary" @click="addItem">Add Item</v-btn>
-    </template>
+    <BaseToolbarFilter
+        ref="baseFilter"
+        :title="'my_view.title'"
+        :total-count-title="'toolbar_filter.total_count'"
+        :total-count="totalCount"
+        :show-selected-count="multiSelectActive"
+        :selected-count-title="'toolbar_filter.selected_count'"
+        :selected-count="selectedCount"
+        :initial-filter="filter"
+        :show-day-ranges="true"
+        :show-sort="false"
+        @update-filter="handleFilterUpdate"
+    >
+        <!-- Add Button -->
+        <template #addbutton>
+            <v-btn color="primary" @click="addItem">Add Item</v-btn>
+        </template>
 
-    <!-- Custom Filters -->
-    <template #custom-filters>
-      <v-divider vertical />
+        <!-- Custom Filters -->
+        <template #custom-filters>
+            <v-divider vertical />
 
-      <div style="display: flex; gap: 4px;">
-        <v-chip
-          :color="filter.myCustomFilter ? 'primary' : 'default'"
-          @click="toggleCustomFilter"
-        >
-          <v-tooltip activator="parent">My Filter</v-tooltip>
-          <v-icon>mdi-filter</v-icon>
-        </v-chip>
-      </div>
-    </template>
-  </BaseToolbarFilter>
+            <div style="display: flex; gap: 4px;">
+                <v-chip :color="filter.myCustomFilter ? 'primary' : 'default'" @click="toggleCustomFilter">
+                    <v-tooltip activator="parent">My Filter</v-tooltip>
+                    <v-icon>mdi-filter</v-icon>
+                </v-chip>
+            </div>
+        </template>
+    </BaseToolbarFilter>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
+    import { ref } from 'vue'
+    import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
 
-const filter = ref({
-  search: '',
-  range: 'ALL',
-  myCustomFilter: false,
-  sort: 'DATE_DESC'
-})
+    const filter = ref({
+        search: '',
+        range: 'ALL',
+        myCustomFilter: false,
+        sort: 'DATE_DESC'
+    })
 
-const totalCount = ref(0)
+    const totalCount = ref(0)
 
-const handleFilterUpdate = (updatedFilter) => {
-  filter.value = { ...filter.value, ...updatedFilter }
-  // Emit or handle filter change
-}
+    const handleFilterUpdate = (updatedFilter) => {
+        filter.value = { ...filter.value, ...updatedFilter }
+        // Emit or handle filter change
+    }
 
-const toggleCustomFilter = () => {
-  filter.value.myCustomFilter = !filter.value.myCustomFilter
-  // Emit filter update
-}
+    const toggleCustomFilter = () => {
+        filter.value.myCustomFilter = !filter.value.myCustomFilter
+        // Emit filter update
+    }
 </script>
 ```
 
@@ -277,6 +296,7 @@ If you need to add a new filtered view:
 5. Handle filter updates in `@update-filter` or the view-specific event mechanism
 
 `BaseToolbarFilter` handles:
+
 - Search debouncing
 - Day range selection
 - Basic sort options
