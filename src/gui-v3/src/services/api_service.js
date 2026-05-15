@@ -3,102 +3,101 @@ import axios from 'axios'
 const abortControllers = {}
 
 const ApiService = {
-  init(baseURL) {
-    axios.defaults.baseURL = baseURL
-    ApiService.setHeader()
-  },
+    init(baseURL) {
+        axios.defaults.baseURL = baseURL
+        ApiService.setHeader()
+    },
 
-  setHeader() {
-    if (localStorage.ACCESS_TOKEN) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.ACCESS_TOKEN}`
-    } else {
-      axios.defaults.headers.common = {}
-    }
-  },
-
-  get(resource, data = {}) {
-    return axios.get(resource, data)
-  },
-
-  getWithCancel(resType, resource) {
-    // resType: cancel key that abort request (support for multiple cancels)
-    if (resType in abortControllers) {
-      abortControllers[resType].abort()
-    }
-
-    abortControllers[resType] = new AbortController()
-    const promise = axios
-      .get(resource, {
-        signal: abortControllers[resType].signal
-      })
-      .catch(function (e) {
-        if (axios.isCancel(e)) {
-          console.debug('Request canceled:', resource)
+    setHeader() {
+        if (localStorage.ACCESS_TOKEN) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.ACCESS_TOKEN}`
         } else {
-          throw e
+            axios.defaults.headers.common = {}
         }
-      })
-    return promise
-  },
+    },
 
-  post(resource, data) {
-    return axios.post(resource, data)
-  },
+    get(resource, data = {}) {
+        return axios.get(resource, data)
+    },
 
-  put(resource, data) {
-    return axios.put(resource, data)
-  },
+    getWithCancel(resType, resource) {
+        // resType: cancel key that abort request (support for multiple cancels)
+        if (resType in abortControllers) {
+            abortControllers[resType].abort()
+        }
 
-  delete(resource) {
-    return axios.delete(resource)
-  },
+        abortControllers[resType] = new AbortController()
+        const promise = axios
+            .get(resource, {
+                signal: abortControllers[resType].signal
+            })
+            .catch(function (e) {
+                if (axios.isCancel(e)) {
+                    console.debug('Request canceled:', resource)
+                } else {
+                    throw e
+                }
+            })
+        return promise
+    },
 
-  upload(resource, form_data) {
-    return axios.post(resource, form_data, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-  },
+    post(resource, data, config = {}) {
+        return axios.post(resource, data, config)
+    },
 
-  async download(resource, data = {}, fileName = 'download') {
-    try {
-      // Make the Axios request
-      const config = {
-        url: resource, // full API path
-        method: 'POST', // matches backend post()
-        responseType: 'blob', // get raw data
-        data: data
-      }
+    put(resource, data) {
+        return axios.put(resource, data)
+    },
 
-      const response = await axios(config)
+    delete(resource) {
+        return axios.delete(resource)
+    },
 
-      // Determine filename from header
-      let filename = fileName
-      const disposition = response.headers['content-disposition']
-      if (disposition) {
-        // handles: attachment; filename = report.pdf  filename = "report.pdf"  filename*=UTF-8''my%20report.pdf
-        const match = disposition.match(/filename\*?=(?:UTF-8'')?["]?([^";\r\n]+)["]?/i)
-        if (match) filename = match[1]
-      }
+    upload(resource, form_data) {
+        return axios.post(resource, form_data, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    },
 
-      // Wrap in Blob for download
-      const blob = new Blob([response.data])
-      const url = window.URL.createObjectURL(blob)
+    async download(resource, data = {}, fileName = 'download') {
+        try {
+            // Make the Axios request
+            const config = {
+                url: resource, // full API path
+                method: 'POST', // matches backend post()
+                responseType: 'blob', // get raw data
+                data: data
+            }
 
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
+            const response = await axios(config)
 
-      window.URL.revokeObjectURL(url)
-    } catch (err) {
+            // Determine filename from header
+            let filename = fileName
+            const disposition = response.headers['content-disposition']
+            if (disposition) {
+                // handles: attachment; filename = report.pdf  filename = "report.pdf"  filename*=UTF-8''my%20report.pdf
+                const match = disposition.match(/filename\*?=(?:UTF-8'')?["]?([^";\r\n]+)["]?/i)
+                if (match) filename = match[1]
+            }
 
-      console.error('Download failed:', err)
+            // Wrap in Blob for download
+            const blob = new Blob([response.data])
+            const url = window.URL.createObjectURL(blob)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = filename
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+
+            window.URL.revokeObjectURL(url)
+        } catch (err) {
+            console.error('Download failed:', err)
+        }
     }
-  }
 }
 
 export default ApiService

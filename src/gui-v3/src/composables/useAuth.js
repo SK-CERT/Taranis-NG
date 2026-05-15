@@ -9,78 +9,72 @@ import Permissions from '@/services/permissions'
  * Provides common auth methods and permission checking
  */
 export function useAuth() {
-  const authStore = useAuthStore()
-  const userStore = useUserStore()
+    const authStore = useAuthStore()
+    const userStore = useUserStore()
 
-  /**
-   * Logout user and redirect
-   */
-  const logout = () => {
-    return authStore.logout().then(() => {
-      if (authStore.hasExternalLogoutUrl) {
-        window.location.href = authStore.logoutURL
-      } else {
-        window.location.reload()
-      }
-    })
-  }
+    /**
+     * Logout user and redirect
+     */
+    const logout = () => {
+        return authStore.logout()
+    }
 
-  /**
-   * Check if user is authenticated
-   */
-  const isAuthenticated = () => {
-    return AuthService.isAuthenticated()
-  }
+    /**
+     * Check if user is authenticated
+     */
+    const isAuthenticated = () => {
+        return AuthService.isAuthenticated()
+    }
 
-  /**
-   * Check if token needs refresh
-   */
-  const needTokenRefresh = () => {
-    return AuthService.needTokenRefresh()
-  }
+    /**
+     * Check if token needs refresh
+     */
+    const needTokenRefresh = () => {
+        return AuthService.needTokenRefresh()
+    }
 
-  /**
-   * Check if user has specific permission
-   */
-  const checkPermission = (permission) => {
-    return AuthService.hasPermission(permission)
-  }
+    /**
+     * Check if user has specific permission
+     */
+    const checkPermission = (permission) => {
+        return AuthService.hasPermission(permission)
+    }
 
-  /**
-   * Check if user has any of the provided permissions
-   */
-  const checkAnyPermission = (permissions) => {
-    return AuthService.hasAnyPermission(permissions)
-  }
+    /**
+     * Check if user has any of the provided permissions
+     */
+    const checkAnyPermission = (permissions) => {
+        return AuthService.hasAnyPermission(permissions)
+    }
 
-  /**
-   * Check if user has all of the provided permissions
-   */
-  const checkAllPermissions = (permissions) => {
-    return AuthService.hasAllPermissions(permissions)
-  }
+    /**
+     * Check if user has all of the provided permissions
+     */
+    const checkAllPermissions = (permissions) => {
+        return AuthService.hasAllPermissions(permissions)
+    }
 
-  const getUserId = () => {
-    return userStore.userId
-  }
+    const getUserId = () => {
+        return userStore.userId
+    }
 
-  return {
-    // State
-    permissions: Permissions,
+    return {
+        // State
+        permissions: Permissions,
 
-    // Computed
-    user: computed(() => userStore.user),
-    isAuth: computed(() => authStore.isAuthenticated),
-    hasExternalLogin: computed(() => authStore.hasExternalLoginUrl),
-    hasExternalLogout: computed(() => authStore.hasExternalLogoutUrl),
+        // Computed
+        user: computed(() => userStore.user),
+        isAuth: computed(() => authStore.isAuthenticated),
+        hasExternalLogin: computed(() => authStore.hasExternalLoginUrl),
+        hasExternalLogout: computed(() => authStore.hasExternalLogoutUrl),
 
-    // Methods
-    logout,
-    isAuthenticated,
-    needTokenRefresh,
-    getUserId,
-    checkPermission,
-    checkAnyPermission,
-    checkAllPermissions
-  }
+        // Methods
+        logout,
+        isAuthenticated,
+        needTokenRefresh,
+        getUserId,
+        checkPermission,
+        checkAnyPermission,
+        checkAllPermissions
+    }
 }
