@@ -80,12 +80,9 @@
      */
     const initUserSettings = async () => {
         try {
-            console.log('[App] Initializing user settings...')
-
             // Load all settings
             await settingsStore.loadSettings({ search: '' })
-
-            console.log('[App] Settings loaded:', settingsStore.getSettings.length, 'items')
+            // console.log('[App] Settings loaded:', settingsStore.getSettings.length, 'items')
 
             // Defer UI updates to avoid forcing layout before styles load
             requestAnimationFrame(async () => {
@@ -93,10 +90,8 @@
 
                 // Apply dark theme setting
                 const darkThemeSetting = settingsStore.getSetting('DARK_THEME')
-                console.log('[App] Dark theme setting:', darkThemeSetting)
                 if (darkThemeSetting) {
                     const isDark = darkThemeSetting.value === 'true'
-                    console.log('[App] Setting theme to:', isDark ? 'dark' : 'light')
                     applyTheme(isDark ? 'dark' : 'light')
                 }
 
@@ -115,8 +110,7 @@
             // Load additional user data (non-blocking)
             await settingsStore.loadUserWordLists()
             await settingsStore.loadUserHotkeys()
-
-            console.log('[App] User settings initialized successfully')
+            // console.log('[App] User settings initialized successfully')
         } catch (error) {
             console.error('[App] Error initializing user settings:', error)
         }
@@ -187,6 +181,10 @@
         initializeAuthenticatedSession()
     }
 
+    const handleLoggedOut = () => {
+        disconnect()
+    }
+
     const handleNavClicked = () => {
         navVisible.value = !navVisible.value
     }
@@ -226,7 +224,6 @@
      * Component mount
      */
     onMounted(async () => {
-        console.log('[App] Taranis NG Vue 3')
         console.log('[App] API:', import.meta.env.VITE_APP_TARANIS_NG_CORE_API)
         console.log('[App] SSE:', import.meta.env.VITE_APP_TARANIS_NG_CORE_SSE)
 
@@ -250,6 +247,7 @@
         startTokenRefresh()
 
         window.addEventListener('logged-in', handleLoggedIn)
+        window.addEventListener('logged-out', handleLoggedOut)
         window.addEventListener('nav-clicked', handleNavClicked)
     })
 
