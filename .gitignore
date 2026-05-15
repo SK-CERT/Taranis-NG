@@ -47,10 +47,9 @@ local/
 .vs/
 *.suo
 *.ntvs*
-*.njsproj
 *.pyproj
 *.pyproj.user
-*.njsproj.user
+*.esproj
 *.sln
 *.sw?
 .editorconfig
