@@ -13,11 +13,10 @@ import re
 from managers.db_manager import db
 from marshmallow import post_load
 from model.word_list import WordListEntry
-from sqlalchemy import func
-from sqlalchemy.sql import label
-
 from shared.common import TZ
 from shared.schema.tag_cloud import GroupedWordsSchema, TagCloudSchema
+from sqlalchemy import func
+from sqlalchemy.sql import label
 
 
 class NewTagCloudSchema(TagCloudSchema):
@@ -82,7 +81,7 @@ class TagCloud(db.Model):
         stopwords = WordListEntry.stopwords_subquery()
         grouped_words = (
             db.session.query(TagCloud.word, label("word_quantity", func.sum(TagCloud.word_quantity)))
-            .filter(TagCloud.collected == day_filter)
+            .filter(TagCloud.collected >= day_filter)
             .filter(func.lower(TagCloud.word).notin_(stopwords))
             .group_by(TagCloud.word)
             .order_by(db.desc("word_quantity"))
