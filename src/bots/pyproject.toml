@@ -14,7 +14,7 @@ dependencies = [
     "oauthlib==3.3.1",
     "PySocks==1.7.1",
     "python-dotenv==1.2.2",
-    "requests==2.34.0",
+    "requests==2.34.2",
     "schedule==1.2.2",
     "sseclient-py==1.9.0"
 ]
