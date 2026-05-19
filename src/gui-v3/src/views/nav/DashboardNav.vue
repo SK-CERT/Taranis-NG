@@ -1,9 +1,9 @@
 <template>
-  <div>
-    <!-- Dashboard has no navigation sidebar -->
-  </div>
+    <div>
+        <!-- Dashboard has no navigation sidebar -->
+    </div>
 </template>
 
 <script setup>
-// Empty navigation component
+    // Empty navigation component
 </script>
