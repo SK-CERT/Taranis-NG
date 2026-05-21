@@ -49,3 +49,9 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies npm"
+  - package-ecosystem: "npm"
+    directory: "/src/gui-v3"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies npm"
