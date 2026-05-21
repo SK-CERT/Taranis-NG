@@ -1,139 +1,139 @@
 <template>
-  <ViewLayout>
-    <template #panel>
-      <ToolbarFilterAssess
-        ref="toolbarFilter"
-        title="nav_menu.newsitems"
-        total_count_title="toolbar_filter.total_count"
-        selected_count_title="toolbar_filter.selected_count"
-        :show-add-button="hasManualSources"
-        @update-filter="updateFilter"
-        @update-data="updateData"
-        @add-new="showAddNewsItemDialog = true"
-      />
-    </template>
+    <ViewLayout>
+        <template #panel>
+            <ToolbarFilterAssess
+                ref="toolbarFilter"
+                title="nav_menu.newsitems"
+                total_count_title="toolbar_filter.total_count"
+                selected_count_title="toolbar_filter.selected_count"
+                :show-add-button="hasManualSources"
+                @update-filter="updateFilter"
+                @update-data="updateData"
+                @add-new="showAddNewsItemDialog = true"
+            />
+        </template>
 
-    <template #content>
-      <ContentDataAssess
-        ref="contentData"
-        card-item="CardAssess"
-        self-i-d="selector_assess"
-        data_set="assess"
-        :analyze_selector="analyze_selector"
-        :selection="assessStore.getSelection"
-        @new-data-loaded="newDataLoaded"
-        @card-items-reindex="cardReindex"
-        @update-showing-count="updateShowingCount"
-      />
-    </template>
-  </ViewLayout>
+        <template #content>
+            <ContentDataAssess
+                ref="contentData"
+                card-item="CardAssess"
+                self-i-d="selector_assess"
+                data_set="assess"
+                :analyze_selector="analyze_selector"
+                :selection="assessStore.getSelection"
+                @new-data-loaded="newDataLoaded"
+                @card-items-reindex="cardReindex"
+                @update-showing-count="updateShowingCount"
+            />
+        </template>
+    </ViewLayout>
 
-  <!-- Add News Item Dialog -->
-  <AddNewsItemDialog
-    v-model="showAddNewsItemDialog"
-    :manual-sources="assessStore.getManualOSINTSourcesList"
-    @news-item-added="handleNewsItemAdded"
-  />
+    <!-- Add News Item Dialog -->
+    <AddNewsItemDialog
+        v-model="showAddNewsItemDialog"
+        :manual-sources="assessStore.getManualOSINTSourcesList"
+        @news-item-added="handleNewsItemAdded"
+    />
 
-  <!-- New Report Item Dialog -->
-  <NewReportItem ref="newReportItem" />
+    <!-- New Report Item Dialog -->
+    <NewReportItem ref="newReportItem" />
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute, onBeforeRouteLeave } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { useAssessStore } from '@/stores/assess'
-import ViewLayout from '@/components/layouts/ViewLayout.vue'
-import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess.vue'
-import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
-import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
-import NewReportItem from '@/components/analyze/NewReportItem.vue'
+    import { ref, onMounted, onUnmounted, computed } from 'vue'
+    import { useRoute, onBeforeRouteLeave } from 'vue-router'
+    import { useI18n } from 'vue-i18n'
+    import { useAssessStore } from '@/stores/assess'
+    import ViewLayout from '@/components/layouts/ViewLayout.vue'
+    import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess.vue'
+    import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
+    import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
+    import NewReportItem from '@/components/analyze/NewReportItem.vue'
 
-const props = defineProps({
-  analyze_selector: {
-    type: Boolean,
-    default: false
-  }
-})
+    const props = defineProps({
+        analyze_selector: {
+            type: Boolean,
+            default: false
+        }
+    })
 
-const route = useRoute()
-const assessStore = useAssessStore()
-const { t } = useI18n()
+    const route = useRoute()
+    const assessStore = useAssessStore()
+    const { t } = useI18n()
 
-const toolbarFilter = ref(null)
-const contentData = ref(null)
-const showAddNewsItemDialog = ref(false)
-const newReportItem = ref(null)
+    const toolbarFilter = ref(null)
+    const contentData = ref(null)
+    const showAddNewsItemDialog = ref(false)
+    const newReportItem = ref(null)
 
-// Computed property to check if manual sources exist
-const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
+    // Computed property to check if manual sources exist
+    const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
 
-const newDataLoaded = (count) => {
-  if (toolbarFilter.value) {
-    toolbarFilter.value.updateDataCount(count)
-  }
-}
+    const newDataLoaded = (count) => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateDataCount(count)
+        }
+    }
 
-const updateFilter = (filter) => {
-  if (contentData.value) {
-    contentData.value.updateFilter(filter)
-    assessStore.setFilter(filter)
-  }
-}
+    const updateFilter = (filter) => {
+        if (contentData.value) {
+            contentData.value.updateFilter(filter)
+            assessStore.setFilter(filter)
+        }
+    }
 
-const updateData = () => {
-  if (contentData.value) {
-    contentData.value.updateData(false, true)
-  }
-}
+    const updateData = () => {
+        if (contentData.value) {
+            contentData.value.updateData(false, true)
+        }
+    }
 
-const cardReindex = () => {
-  // Handle card reindexing (for keyboard navigation in future enhancement)
-}
+    const cardReindex = () => {
+        // Handle card reindexing (for keyboard navigation in future enhancement)
+    }
 
-const updateShowingCount = (count) => {
-  if (toolbarFilter.value) {
-    toolbarFilter.value.updateCurrentlyShowingCount(count)
-  }
-}
+    const updateShowingCount = (count) => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateCurrentlyShowingCount(count)
+        }
+    }
 
-const handleNewsItemAdded = () => {
-  // Refresh the data when a new news item is added
-  updateData()
-}
+    const handleNewsItemAdded = () => {
+        // Refresh the data when a new news item is added
+        updateData()
+    }
 
-const handleNewReport = (event) => {
-  if (newReportItem.value) {
-    newReportItem.value.openDialog(event.detail)
-  }
-}
+    const handleNewReport = (event) => {
+        if (newReportItem.value) {
+            newReportItem.value.openDialog(event.detail)
+        }
+    }
 
-// Handle route changes
-const handleRouteChange = () => {
-  if (contentData.value) {
-    contentData.value.updateData(false, false)
-  }
-}
+    // Handle route changes
+    const handleRouteChange = () => {
+        if (contentData.value) {
+            contentData.value.updateData(false, false)
+        }
+    }
 
-onMounted(() => {
-  // Load manual OSINT sources to show "Add New" button (non-blocking)
-  assessStore.loadManualOSINTSources().catch((error) => {
-    console.error('Error loading manual OSINT sources:', error)
-  })
+    onMounted(() => {
+        // Load manual OSINT sources to show "Add New" button (non-blocking)
+        assessStore.loadManualOSINTSources().catch((error) => {
+            console.error('Error loading manual OSINT sources:', error)
+        })
 
-  if (route.path.includes('/group/')) {
-    handleRouteChange()
-  }
+        if (route.path.includes('/group/')) {
+            handleRouteChange()
+        }
 
-  window.addEventListener('new-report', handleNewReport)
-})
+        window.addEventListener('new-report', handleNewReport)
+    })
 
-onBeforeRouteLeave(() => {
-  assessStore.multiSelect(false)
-})
+    onBeforeRouteLeave(() => {
+        assessStore.multiSelect(false)
+    })
 
-onUnmounted(() => {
-  window.removeEventListener('new-report', handleNewReport)
-})
+    onUnmounted(() => {
+        window.removeEventListener('new-report', handleNewReport)
+    })
 </script>
