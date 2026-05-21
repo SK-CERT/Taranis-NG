@@ -22,48 +22,48 @@ import sk from './i18n/sk.json'
 // Wait for stylesheets to be applied before mounting
 // This prevents "Layout was forced before page fully loaded" warnings
 async function waitForStylesReady() {
-  return new Promise((resolve) => {
-    if (document.readyState === 'complete') {
-      resolve()
-      return
-    }
+    return new Promise((resolve) => {
+        if (document.readyState === 'complete') {
+            resolve()
+            return
+        }
 
-    let attempts = 0
-    const maxAttempts = 100
+        let attempts = 0
+        const maxAttempts = 100
 
-    function checkStylesReady() {
-      attempts++
-      const appDiv = document.getElementById('app')
+        function checkStylesReady() {
+            attempts++
+            const appDiv = document.getElementById('app')
 
-      // Check if styles are applied by looking for computed styles
-      if (appDiv && document.fonts && document.fonts.ready) {
-        Promise.resolve(document.fonts.ready)
-          .then(() => {
-            // Wait for next frame to ensure paint has occurred
-            requestAnimationFrame(() => {
-              resolve()
+            // Check if styles are applied by looking for computed styles
+            if (appDiv && document.fonts && document.fonts.ready) {
+                Promise.resolve(document.fonts.ready)
+                    .then(() => {
+                        // Wait for next frame to ensure paint has occurred
+                        requestAnimationFrame(() => {
+                            resolve()
+                        })
+                    })
+                    .catch(() => resolve())
+                return
+            }
+
+            if (attempts < maxAttempts) {
+                requestAnimationFrame(checkStylesReady)
+            } else {
+                resolve()
+            }
+        }
+
+        // Also wait for DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                requestAnimationFrame(checkStylesReady)
             })
-          })
-          .catch(() => resolve())
-        return
-      }
-
-      if (attempts < maxAttempts) {
-        requestAnimationFrame(checkStylesReady)
-      } else {
-        resolve()
-      }
-    }
-
-    // Also wait for DOMContentLoaded
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        requestAnimationFrame(checkStylesReady)
-      })
-    } else {
-      requestAnimationFrame(checkStylesReady)
-    }
-  })
+        } else {
+            requestAnimationFrame(checkStylesReady)
+        }
+    })
 }
 
 // Initialize API service with base URL
@@ -73,55 +73,55 @@ ApiService.init(baseURL)
 // Get default locale from environment or browser
 let defaultLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE
 if (!defaultLocale) {
-  defaultLocale = navigator.language.split('-')[0] || 'en'
+    defaultLocale = navigator.language.split('-')[0] || 'en'
 }
 
 // Create Vuetify instance
 const vuetify = createVuetify({
-  components,
-  directives,
-  theme: {
-    defaultTheme: 'light',
-    themes: {
-      light: {
-        colors: {
-          primary: '#1976D2',
-          secondary: '#424242',
-          accent: '#82B1FF',
-          error: '#FF5252',
-          info: '#2196F3',
-          success: '#4CAF50',
-          warning: '#FFC107'
+    components,
+    directives,
+    theme: {
+        defaultTheme: 'light',
+        themes: {
+            light: {
+                colors: {
+                    primary: '#1976D2',
+                    secondary: '#424242',
+                    accent: '#82B1FF',
+                    error: '#FF5252',
+                    info: '#2196F3',
+                    success: '#4CAF50',
+                    warning: '#FFC107'
+                }
+            },
+            dark: {
+                colors: {
+                    primary: '#2196F3',
+                    secondary: '#424242',
+                    accent: '#FF4081',
+                    error: '#FF5252',
+                    info: '#2196F3',
+                    success: '#4CAF50',
+                    warning: '#FB8C00'
+                }
+            }
         }
-      },
-      dark: {
-        colors: {
-          primary: '#2196F3',
-          secondary: '#424242',
-          accent: '#FF4081',
-          error: '#FF5252',
-          info: '#2196F3',
-          success: '#4CAF50',
-          warning: '#FB8C00'
-        }
-      }
+    },
+    icons: {
+        defaultSet: 'mdi'
     }
-  },
-  icons: {
-    defaultSet: 'mdi'
-  }
 })
 
 // Create i18n instance
 const i18n = createI18n({
-  legacy: false,
-  locale: defaultLocale,
-  fallbackLocale: 'en',
-  messages: {
-    en,
-    cs,
-    sk
-  }
+    legacy: false,
+    locale: defaultLocale,
+    fallbackLocale: 'en',
+    messages: {
+        en,
+        cs,
+        sk
+    }
 })
 
 // Create Pinia store
@@ -135,25 +135,25 @@ app.use(router)
 app.use(vuetify)
 app.use(i18n)
 app.use(PrimeVue, {
-  theme: {
-    preset: Material,
-    options: {
-      darkModeSelector: '.dark-mode'
+    theme: {
+        preset: Material,
+        options: {
+            darkModeSelector: '.dark-mode'
+        }
     }
-  }
 })
 
 // Wait for styles to be ready, then mount
 waitForStylesReady().then(() => {
-  app.mount('#app')
+    app.mount('#app')
 
-  // Log environment info in development
-  if (import.meta.env.DEV) {
-    console.log('Environment:', {
-      mode: import.meta.env.MODE,
-      baseURL: import.meta.env.BASE_URL,
-      apiURL: baseURL,
-      locale: defaultLocale
-    })
-  }
+    // Log environment info in development
+    if (import.meta.env.DEV) {
+        console.log('Environment:', {
+            mode: import.meta.env.MODE,
+            baseURL: import.meta.env.BASE_URL,
+            apiURL: baseURL,
+            locale: defaultLocale
+        })
+    }
 })
