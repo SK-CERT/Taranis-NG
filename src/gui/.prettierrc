@@ -1,0 +1,7 @@
+{
+    "singleQuote": true,
+    "printWidth": 142,
+    "endOfLine": "lf",
+    "tabWidth": 4,
+    "vueIndentScriptAndStyle": true
+}

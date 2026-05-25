@@ -306,12 +306,18 @@ class ProductSetPreview(Resource):
             else:
                 return {"error": "No data available for preview!"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
-            filename = product_data.get("title", "report")
             extension = mimetypes.guess_extension(preview_mime)
+            file_name = generated_data.get("att_file_name")
+            if file_name:
+                file_name = base64.b64decode(file_name).decode("UTF-8").strip()
+            if not file_name:
+                file_name = product_data.get("title", "report")
+            file_name = f"{file_name}{extension}"
+
             # Store preview in Redis with automatic expiration (works across multiple workers)
             cache_key = f"preview:{token}"
             cache_value = json.dumps(
-                {"data": base64.b64encode(preview_data).decode("utf-8"), "mime": preview_mime, "filename": filename + extension},
+                {"data": base64.b64encode(preview_data).decode("utf-8"), "mime": preview_mime, "filename": file_name},
             )
             redis_client.setex(cache_key, cache_ttl, cache_value)
 

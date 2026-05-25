@@ -8,21 +8,21 @@ Returns:
 from __future__ import annotations
 
 import datetime
+import io
 import json
 import os
 import re
 import types
-from typing import TYPE_CHECKING, ClassVar
-
-if TYPE_CHECKING:
-    import jinja2
+from base64 import b64encode
 from pathlib import Path
+from typing import ClassVar
 
+import jinja2
 from cvss import CVSS2, CVSS3, CVSS4
-
 from shared.common import TZ
 from shared.log_manager import logger
 from shared.schema.presenter import PresenterSchema
+from weasyprint import HTML
 
 from . import jinja_filters
 
@@ -30,7 +30,7 @@ from . import jinja_filters
 class BasePresenter:
     """Base presenter class."""
 
-    type = "BASE_PRESENTER"
+    presenter_type = "BASE_PRESENTER"
     name = "Base Presenter"
     description = "Base abstract type for all presenters"
 
@@ -419,3 +419,55 @@ class BasePresenter:
             msg = f"Template path '{template_path}' is outside the allowed templates directory '{cls.JINJA_TEMPLATES_ROOT}'"
             raise ValueError(msg)
         return str(template_abs.parent), template_abs.name
+
+    @classmethod
+    def render_jinja(
+        cls,
+        presenter_input: dict,
+        template_path: str | None,
+        template_string: str | None = None,
+        escape_html: bool = False,
+        is_pdf: bool = False,
+    ) -> str:
+        """Render a Jinja2 template and return base64-encoded bytes.
+
+        Args:
+            presenter_input: Input data (dict-like) for templating.
+            template_path: Path to a template file or None.
+            template_string: Template source string to use instead of a file.
+            escape_html: Enable Jinja2 autoescaping for HTML output.
+            is_pdf: If True, render output to PDF and return PDF bytes.
+
+        Returns:
+            Base64-encoded UTF-8 string of rendered bytes.
+
+        Raises:
+            ValueError: If a template path is outside allowed templates root.
+        """
+        input_data = cls.generate_input_data(presenter_input)
+        if template_string:
+            env = jinja2.Environment(autoescape=False)  # noqa: S701 # safe for plaintext
+            cls.load_filters(env)
+            template = env.from_string(template_string)
+        else:
+            head, tail = cls.resolve_template_path(template_path)
+            env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=escape_html)  # noqa: S701
+            cls.load_filters(env)
+            template = env.get_template(tail)
+        func_dict = {
+            "vars": vars,
+        }
+        template.globals.update(func_dict)
+
+        if is_pdf:
+            output_text = template.render(data=input_data)
+            pdf_buffer = io.BytesIO()
+            # Restrict resource loading to the template directory
+            HTML(string=output_text, base_url=head).write_pdf(target=pdf_buffer)
+            pdf_buffer.seek(0)
+            byte_content = pdf_buffer.read()
+        else:
+            byte_content = template.render(data=input_data).encode()
+
+        base64_bytes = b64encode(byte_content)
+        return base64_bytes.decode("UTF-8")
