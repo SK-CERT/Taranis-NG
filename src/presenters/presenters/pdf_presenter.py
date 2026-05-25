@@ -5,14 +5,12 @@ Returns:
 
 """
 
-import io
 import os
 from base64 import b64encode
 
-import jinja2
-from weasyprint import HTML
-
 from shared.config_presenter import ConfigPresenter
+
+from shared import common
 
 from .base_presenter import BasePresenter
 
@@ -27,8 +25,8 @@ class PDFPresenter(BasePresenter):
 
     """
 
-    type = "PDF_PRESENTER"
-    config = ConfigPresenter().get_config_by_type(type)
+    presenter_type = "PDF_PRESENTER"
+    config = ConfigPresenter().get_config_by_type(presenter_type)
     name = config.name
     description = config.description
     parameters = config.parameters
@@ -45,23 +43,12 @@ class PDFPresenter(BasePresenter):
         """
         try:
             template_path = presenter_input.param_key_values["PDF_TEMPLATE_PATH"]
-            head, tail = BasePresenter.resolve_template_path(template_path)
+            pdf_file_name = common.read_str_parameter("PDF_FILE_NAME", None, presenter_input)
 
-            input_data = BasePresenter.generate_input_data(presenter_input)
-
-            env = jinja2.Environment(loader=jinja2.FileSystemLoader(head), autoescape=True)
-            BasePresenter.load_filters(env)
-            pdf = env.get_template(tail)
-            output_text = pdf.render(data=input_data)
-            pdf_buffer = io.BytesIO()
-            # Restrict resource loading to the template directory
-            HTML(string=output_text, base_url=head).write_pdf(target=pdf_buffer)
-            pdf_buffer.seek(0)
-
-            encoding = "UTF-8"
-            byte_content = pdf_buffer.read()
-            base64_bytes = b64encode(byte_content)
-            data = base64_bytes.decode(encoding)
+            data = BasePresenter.render_jinja(presenter_input, template_path, escape_html=True, is_pdf=True)
+            if pdf_file_name:
+                pdf_file_name = BasePresenter.render_jinja(presenter_input, None, pdf_file_name)
+            return {"mime_type": "application/pdf", "data": data, "att_file_name": pdf_file_name}
 
         except Exception as error:
             BasePresenter.print_exception(self, error)
@@ -69,5 +56,3 @@ class PDFPresenter(BasePresenter):
                 "mime_type": "text/plain",
                 "data": b64encode(("TEMPLATING ERROR\n" + str(error)).encode()).decode("UTF-8"),
             }
-        else:
-            return {"mime_type": "application/pdf", "data": data}

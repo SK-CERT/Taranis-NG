@@ -49,7 +49,7 @@ class ConfigPresenter(ConfigBase):
                 "ATTACHMENT_FILE_NAME",
                 "Attachment file name",
                 "Leave empty for default file name 'file_YYYYmmddHHMMSS'. Alternatively, you may specify a custom file name or "
-                "provide a template string (e.g., file_{{ data.product.title }}).",
+                "provide a template string. Example: my_report_{{ data.product.title }}",
                 ParameterType.STRING,
             ),
         ]
@@ -75,6 +75,13 @@ class ConfigPresenter(ConfigBase):
                 "Path to PDF template file",
                 ParameterType.STRING,
                 "/app/templates/pdf_template.html",
+            ),
+            param_type(
+                "PDF_FILE_NAME",
+                "Pdf file name",
+                "Leave empty for default file name 'product.title'. Alternatively, you may specify a custom file name or "
+                "provide a template string. Example: my_report_{{ data.product.title }}",
+                ParameterType.STRING,
             ),
         ]
         self.modules.append(mod)
