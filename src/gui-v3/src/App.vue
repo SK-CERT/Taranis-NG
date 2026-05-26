@@ -17,9 +17,8 @@
     </v-app>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-    import { useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
     import { useAuthStore } from '@/stores/auth'
@@ -30,7 +29,6 @@
     import MainMenu from '@/components/MainMenu.vue'
     import NotificationSnackbar from '@/components/common/NotificationSnackbar.vue'
 
-    const router = useRouter()
     const { locale } = useI18n()
     const theme = useTheme()
     const authStore = useAuthStore()
@@ -58,7 +56,7 @@
     // SSE connection
     const { connect, disconnect, reconnect, subscribe } = useSSE()
 
-    const applyTheme = (themeName) => {
+    const applyTheme = (themeName: string): void => {
         if (typeof theme.change === 'function') {
             theme.change(themeName)
         } else {
@@ -66,11 +64,11 @@
         }
     }
 
-    const initializeSSE = async () => {
+    const initializeSSE = async (): Promise<void> => {
         try {
             await connect()
             setupSSEListeners()
-        } catch (_error) {
+        } catch {
             console.info('[App] SSE not available - real-time updates disabled')
         }
     }
@@ -78,7 +76,7 @@
     /**
      * Initialize user settings after login
      */
-    const initUserSettings = async () => {
+    const initUserSettings = async (): Promise<void> => {
         try {
             // Load all settings
             await settingsStore.loadSettings({ search: '' })
@@ -116,7 +114,7 @@
         }
     }
 
-    const initializeAuthenticatedSession = async () => {
+    const initializeAuthenticatedSession = async (): Promise<void> => {
         await initUserSettings()
         await initializeSSE()
     }
@@ -124,7 +122,7 @@
     /**
      * Setup SSE event listeners
      */
-    const setupSSEListeners = () => {
+    const setupSSEListeners = (): void => {
         subscribe('news-items-updated', (data) => {
             console.log('[SSE] News items updated:', data)
             window.dispatchEvent(new CustomEvent('news-items-updated', { detail: data }))
@@ -154,20 +152,23 @@
     /**
      * Handle JWT from cookie (e.g., from external auth)
      */
-    const handleJWTFromCookie = async () => {
+    const handleJWTFromCookie = async (): Promise<boolean> => {
         const testingToken = import.meta.env.VITE_APP_TARANIS_NG_TESTING_TOKEN
         if (testingToken && typeof testingToken === 'string') {
             document.cookie = `jwt=${testingToken}; path=/`
         }
 
-        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+        const cookies = document.cookie.split(';').reduce<Record<string, string>>((acc, cookie) => {
             const [key, value] = cookie.trim().split('=')
-            acc[key] = value
+            if (!key) {
+                return acc
+            }
+            acc[key] = value ?? ''
             return acc
         }, {})
 
-        if (cookies.jwt) {
-            authStore.setToken(cookies.jwt)
+        if (cookies['jwt']) {
+            authStore.setToken(cookies['jwt'])
             document.cookie = 'jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
 
             await initializeAuthenticatedSession()
@@ -177,27 +178,27 @@
         return false
     }
 
-    const handleLoggedIn = () => {
+    const handleLoggedIn = (): void => {
         initializeAuthenticatedSession()
     }
 
-    const handleLoggedOut = () => {
+    const handleLoggedOut = (): void => {
         disconnect()
     }
 
-    const handleNavClicked = () => {
+    const handleNavClicked = (): void => {
         navVisible.value = !navVisible.value
     }
 
     /**
      * Token refresh interval
      */
-    let refreshInterval = null
+    let refreshInterval: ReturnType<typeof setInterval> | null = null
 
     /**
      * Start token refresh checking
      */
-    const startTokenRefresh = () => {
+    const startTokenRefresh = (): void => {
         refreshInterval = setInterval(() => {
             if (isAuthenticated()) {
                 if (needTokenRefresh()) {
@@ -262,6 +263,7 @@
         }
 
         window.removeEventListener('logged-in', handleLoggedIn)
+        window.removeEventListener('logged-out', handleLoggedOut)
         window.removeEventListener('nav-clicked', handleNavClicked)
     })
 </script>

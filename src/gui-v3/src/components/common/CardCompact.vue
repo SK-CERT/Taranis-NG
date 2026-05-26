@@ -20,14 +20,22 @@
 
                             <!-- Title -->
                             <v-col>
-                                <div class="text-label-small text-grey">{{ typeLabel }}</div>
-                                <div class="text-body-large">{{ typeValue }}</div>
+                                <div class="text-label-small text-grey">
+                                    {{ typeLabel }}
+                                </div>
+                                <div class="text-body-large">
+                                    {{ typeValue }}
+                                </div>
                             </v-col>
 
                             <!-- Description/Subtitle -->
                             <v-col v-if="card.subtitle || card.description">
-                                <div class="text-label-small text-grey">{{ t('card_item.description') }}</div>
-                                <div class="text-body-medium">{{ card.subtitle || card.description }}</div>
+                                <div class="text-label-small text-grey">
+                                    {{ t('card_item.description') }}
+                                </div>
+                                <div class="text-body-medium">
+                                    {{ card.subtitle || card.description }}
+                                </div>
                             </v-col>
 
                             <!-- Actions -->
@@ -63,31 +71,45 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import type { PermissionKey } from '@/types/permissions'
     import { ICONS } from '@/config/ui-constants'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
 
-    const props = defineProps({
-        card: {
-            type: Object,
-            required: true
-        },
-        deletePermission: {
-            type: String,
-            default: ''
-        },
-        multiSelectActive: {
-            type: Boolean,
-            default: false
-        },
-        preselected: {
-            type: Boolean,
-            default: false
+    type CardData = {
+        id?: string | number
+        title?: string
+        name?: string
+        subtitle?: string
+        description?: string
+        tag?: string
+        report_type_name?: string
+        product_type_name?: string
+        news_items?: Array<{
+            news_item_data?: {
+                osint_source_name?: string
+                source?: string
+                osint_source_type?: string
+            }
+        }>
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            card: CardData
+            deletePermission?: string
+            multiSelectActive?: boolean
+            preselected?: boolean
+        }>(),
+        {
+            deletePermission: '',
+            multiSelectActive: false,
+            preselected: false
         }
-    })
+    )
 
     const emit = defineEmits(['click', 'delete', 'edit', 'selection-change'])
 
@@ -95,19 +117,19 @@
     const { checkPermission } = useAuth()
 
     const deleteDialog = ref(false)
-    const internalSelected = ref(props.preselected)
+    const internalSelected = ref<boolean>(props.preselected)
 
     // Watch preselected prop and sync with internalSelected
     watch(
         () => props.preselected,
-        (newValue) => {
+        (newValue: boolean) => {
             internalSelected.value = newValue
         }
     )
 
     const canDelete = computed(() => {
         if (!props.deletePermission) return false
-        return checkPermission(props.deletePermission)
+        return checkPermission(props.deletePermission as PermissionKey)
     })
 
     const typeLabel = computed(() => {
@@ -130,20 +152,20 @@
         return props.card?.title || props.card?.name || ''
     })
 
-    const handleClick = () => {
-        emit('edit', props.card)
+    const handleClick = (): void => {
+        emit('edit', props.card as CardData)
     }
 
-    const showDeleteDialog = () => {
+    const showDeleteDialog = (): void => {
         deleteDialog.value = true
     }
 
-    const handleDelete = () => {
+    const handleDelete = (): void => {
         deleteDialog.value = false
-        emit('delete', props.card)
+        emit('delete', props.card as CardData)
     }
 
-    const emitSelectionChange = () => {
+    const emitSelectionChange = (): void => {
         emit('selection-change', internalSelected.value)
     }
 </script>

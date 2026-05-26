@@ -8,7 +8,9 @@
         <v-dialog v-model="visible" fullscreen persistent @keydown.esc="cancel">
             <v-dialog v-model="showCloseConfirmation" max-width="500px" persistent>
                 <v-card>
-                    <v-card-title class="text-h5">{{ t('confirm_close.title') }}</v-card-title>
+                    <v-card-title class="text-h5">
+                        {{ t('confirm_close.title') }}
+                    </v-card-title>
                     <v-card-text>{{ t('report_item.confirm_close.message') }}</v-card-text>
                     <v-card-actions>
                         <v-spacer />
@@ -254,7 +256,8 @@
     </v-row>
 </template>
 
-<script setup>
+<script setup lang="ts">
+    import type { AxiosError } from 'axios'
     import { ref, computed, watch, onMounted, onUnmounted, reactive } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute, useRouter } from 'vue-router'
@@ -279,6 +282,11 @@
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import StateSelector from '@/components/common/StateSelector.vue'
 
+    type FormRef = {
+        resetValidation?: () => void
+        validate?: () => Promise<{ valid: boolean }>
+    }
+
     const props = defineProps({
         showButton: {
             type: Boolean,
@@ -300,39 +308,39 @@
     const settingsStore = useSettingsStore()
 
     // Refs
-    const formRef = ref(null)
-    const newsItemSelectorRef = ref(null)
+    const formRef = ref<FormRef | null>(null)
+    const newsItemSelectorRef = ref<any>(null)
 
     // Dialog state
-    const visible = ref(false)
-    const edit = ref(false)
-    const modify = ref(true)
-    const overlay = ref(false)
-    const showCloseConfirmation = ref(false)
-    const verticalView = ref(false)
-    const show_validation_error = ref(false)
-    const show_error = ref(false)
-    const key_timeout = ref(null)
-    const initialFormState = ref(null)
+    const visible = ref<boolean>(false)
+    const edit = ref<boolean>(false)
+    const modify = ref<boolean>(true)
+    const overlay = ref<boolean>(false)
+    const showCloseConfirmation = ref<boolean>(false)
+    const verticalView = ref<boolean>(false)
+    const show_validation_error = ref<boolean>(false)
+    const show_error = ref<boolean>(false)
+    const key_timeout = ref<any>(null)
+    const initialFormState = ref<string | null>(null)
 
     // Data
-    const report_types = ref([])
-    const selected_type = ref(null)
-    const attribute_groups = ref([])
-    const news_item_aggregates = ref([])
-    const remote_report_items = ref([])
-    const available_states = ref([])
-    const expand_group_items = ref([])
-    const autoGenerateIcon = reactive({})
-    const autoGenerateIconTimer = reactive({})
-    const local_reports = ref(true)
+    const report_types = ref<any[]>([])
+    const selected_type = ref<any>(null)
+    const attribute_groups = ref<any[]>([])
+    const news_item_aggregates = ref<any[]>([])
+    const remote_report_items = ref<any[]>([])
+    const available_states = ref<any[]>([])
+    const expand_group_items = ref<any[]>([])
+    const autoGenerateIcon = reactive<Record<string | number, string>>({})
+    const autoGenerateIconTimer = reactive<Record<string | number, ReturnType<typeof setTimeout> | null>>({})
+    const local_reports = ref<boolean>(true)
 
     const field_locks = reactive({
         title_prefix: false,
         title: false
     })
 
-    const report_item = reactive({
+    const report_item = reactive<any>({
         id: null,
         uuid: null,
         title: '',
@@ -345,11 +353,11 @@
     })
 
     // Computed
-    const canCreate = computed(() => {
+    const canCreate = computed<boolean>(() => {
         return checkPermission('ANALYZE_CREATE') && local_reports.value === true
     })
 
-    const canModify = computed(() => {
+    const canModify = computed<boolean>(() => {
         return edit.value === false || (checkPermission('ANALYZE_UPDATE') && modify.value === true)
     })
 
@@ -397,7 +405,11 @@
         if (!selected_type.value?.attribute_groups) return
 
         for (let i = 0; i < selected_type.value.attribute_groups.length; i++) {
-            const group = {
+            const group: {
+                id: unknown
+                title: unknown
+                attribute_group_items: Array<{ attribute_group_item: unknown; values: unknown[] }>
+            } = {
                 id: selected_type.value.attribute_groups[i].id,
                 title: selected_type.value.attribute_groups[i].title,
                 attribute_group_items: []
@@ -444,7 +456,7 @@
     }
 
     const addReportItem = async () => {
-        if (!formRef.value) return
+        if (!formRef.value?.validate) return false
         const { valid } = await formRef.value.validate()
         if (!valid) {
             show_validation_error.value = true
@@ -502,10 +514,15 @@
         }
     }
 
-    const saveReportItem = (field_id) => {
+    const saveReportItem = (field_id: 'title' | 'title_prefix' | 'state_id') => {
         if (!edit.value) return
 
-        const data = { update: true }
+        const data: {
+            update: boolean
+            title?: string
+            title_prefix?: string
+            state_id?: number | string
+        } = { update: true }
         if (field_id === 'title') {
             data.title = report_item.title
         } else if (field_id === 'title_prefix') {
@@ -524,7 +541,9 @@
 
     const resetValidation = () => {
         show_validation_error.value = false
-        formRef.value?.resetValidation()
+        if (formRef.value?.resetValidation) {
+            formRef.value.resetValidation()
+        }
     }
 
     const getLockedStyle = (field_id) => {
@@ -607,14 +626,18 @@
 
             if (selected_type.value) {
                 for (let i = 0; i < selected_type.value.attribute_groups.length; i++) {
-                    const group = {
+                    const group: {
+                        id: unknown
+                        title: unknown
+                        attribute_group_items: Array<{ attribute_group_item: unknown; values: unknown[] }>
+                    } = {
                         id: selected_type.value.attribute_groups[i].id,
                         title: selected_type.value.attribute_groups[i].title,
                         attribute_group_items: []
                     }
 
                     for (let j = 0; j < selected_type.value.attribute_groups[i].attribute_group_items.length; j++) {
-                        const values = []
+                        const values: Array<Record<string, unknown>> = []
 
                         // Local attributes
                         for (let k = 0; k < data.attributes.length; k++) {
@@ -753,10 +776,11 @@
 
     const getAttributeMeta = (attributeItem) => {
         const values = Array.isArray(attributeItem?.values) ? attributeItem.values : []
-        let latest = null
+        let latest: Record<string, unknown> | null = null
 
         for (const value of values) {
-            const userName = value?.user?.name
+            const user = value?.user as { name?: string } | undefined
+            const userName = user?.name
             if (!userName) continue
 
             if (!latest) {
@@ -764,8 +788,8 @@
                 continue
             }
 
-            const currentTime = Date.parse(value?.last_updated || '')
-            const latestTime = Date.parse(latest?.last_updated || '')
+            const currentTime = Date.parse(String(value?.['last_updated'] || ''))
+            const latestTime = Date.parse(String(latest?.['last_updated'] || ''))
 
             if (!Number.isNaN(currentTime) && Number.isNaN(latestTime)) {
                 latest = value
@@ -774,10 +798,11 @@
             }
         }
 
-        if (!latest?.user?.name) return ''
-        if (!latest?.last_updated) return latest.user.name
+        const latestUserName = (latest?.['user'] as { name?: string } | undefined)?.name
+        if (!latestUserName) return ''
+        if (!latest?.['last_updated']) return latestUserName
 
-        return `${latest.last_updated} ${latest.user.name}`
+        return `${latest['last_updated']} ${latestUserName}`
     }
 
     // AI generation
@@ -804,7 +829,9 @@
             }
             setAutoGenerateIcon(attribute_group_item_id, 'error')
         } catch (error) {
-            setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(error.response?.data || error.message))
+            const axiosError = error as AxiosError
+            const fallbackMessage = error instanceof Error ? error.message : 'Unknown error'
+            setAttributeGroupItemValue(attribute_group_item_id, JSON.stringify(axiosError.response?.data ?? fallbackMessage))
             setAutoGenerateIcon(attribute_group_item_id, 'error')
         }
     }
@@ -826,7 +853,10 @@
 
     const setAutoGenerateIcon = (attribute_group_item_id, state) => {
         if (autoGenerateIconTimer[attribute_group_item_id]) {
-            clearTimeout(autoGenerateIconTimer[attribute_group_item_id])
+            const timer = autoGenerateIconTimer[attribute_group_item_id]
+            if (timer) {
+                clearTimeout(timer)
+            }
             autoGenerateIconTimer[attribute_group_item_id] = null
         }
         if (state === 'wait') {
@@ -851,7 +881,10 @@
     const resetAutoGenerate = () => {
         Object.keys(autoGenerateIcon).forEach((key) => delete autoGenerateIcon[key])
         Object.keys(autoGenerateIconTimer).forEach((key) => {
-            clearTimeout(autoGenerateIconTimer[key])
+            const timer = autoGenerateIconTimer[key]
+            if (timer) {
+                clearTimeout(timer)
+            }
             delete autoGenerateIconTimer[key]
         })
     }
@@ -875,7 +908,7 @@
     }
 
     const loadReportTypes = async () => {
-        await analyzeStore.loadReportItemTypes()
+        await analyzeStore.loadReportItemTypes({ search: '' })
         const types = analyzeStore.getReportItemTypes
         report_types.value = types?.items || []
     }

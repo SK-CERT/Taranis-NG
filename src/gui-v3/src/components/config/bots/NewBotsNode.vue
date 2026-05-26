@@ -82,37 +82,53 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewBotsNode, updateBotsNode } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        editItem: {
-            type: Object,
-            default: null
-        }
-    })
+    type BotsNodeItem = {
+        id: string | number | null
+        name: string
+        description: string
+        api_url: string
+        api_key: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'saved'])
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            editItem?: Record<string, unknown> | null
+        }>(),
+        {
+            modelValue: false,
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+        (e: 'saved'): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const saving = ref(false)
     const showValidationError = ref(false)
     const showError = ref(false)
     const showApiKey = ref(false)
 
-    const defaultItem = {
+    const defaultItem: BotsNodeItem = {
         id: null,
         name: '',
         description: '',
@@ -120,7 +136,7 @@
         api_key: ''
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<BotsNodeItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_BOTS_NODE_CREATE'))
@@ -129,7 +145,8 @@
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                localItem.value = { ...newVal }
+                const incoming = newVal as Partial<BotsNodeItem>
+                localItem.value = { ...defaultItem, ...incoming }
                 dialog.value = true
             }
         },
@@ -143,7 +160,7 @@
         emit('update:modelValue', newVal)
     })
 
-    const resetForm = () => {
+    const resetForm = (): void => {
         localItem.value = { ...defaultItem }
         showValidationError.value = false
         showError.value = false
@@ -153,15 +170,15 @@
         }
     }
 
-    const cancel = () => {
+    const cancel = (): void => {
         dialog.value = false
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
 
         if (!valid) {
             showValidationError.value = true

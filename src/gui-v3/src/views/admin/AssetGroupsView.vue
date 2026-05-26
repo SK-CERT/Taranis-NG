@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssetsStore } from '@/stores/assets'
@@ -37,11 +37,22 @@
     const { t } = useI18n()
     const assetsStore = useAssetsStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type FilterState = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type AssetGroupItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<AssetGroupItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await assetsStore.loadAssetGroups(filter.value)
@@ -52,12 +63,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: FilterState): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (group) => {
+    const handleDelete = async (group: AssetGroupItem): Promise<void> => {
         try {
             await deleteAssetGroup(group)
             console.log('Asset group deleted successfully')
@@ -67,11 +78,11 @@
         }
     }
 
-    const handleEdit = (item) => {
+    const handleEdit = (item: AssetGroupItem): void => {
         editItem.value = item
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

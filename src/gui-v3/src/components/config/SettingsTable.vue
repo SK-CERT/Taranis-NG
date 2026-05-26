@@ -110,25 +110,49 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
     import { useSettingsStore } from '@/stores/settings'
     import Settings from '@/services/settings'
+    import type { SettingEntry } from '@/types/settings'
 
-    const props = defineProps({
-        globalSetting: {
-            type: Boolean,
-            required: true
-        }
-    })
+    type SettingType = 'B' | 'I' | 'N' | string
+
+    type SettingOption = {
+        id: string | number
+        txt: string
+        [key: string]: unknown
+    }
+
+    type SettingsRecord = SettingEntry & {
+        id?: string | number
+        type?: SettingType
+        description?: string
+        default_val?: string
+        updated_by?: string
+        updated_at?: string
+        options?: string
+        is_global?: boolean
+        [key: string]: unknown
+    }
+
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
+
+    const props = defineProps<{
+        globalSetting: boolean
+    }>()
 
     const { t, te, locale } = useI18n()
     const theme = useTheme()
     const settingsStore = useSettingsStore()
 
-    const applyTheme = (themeName) => {
+    const applyTheme = (themeName: string): void => {
         if (typeof theme.change === 'function') {
             theme.change(themeName)
         } else {
@@ -137,15 +161,15 @@
     }
 
     const search = ref('')
-    const records = ref([])
+    const records = ref<SettingsRecord[]>([])
     const editDialog = ref(false)
     const editValue = ref('')
-    const editItem = ref(null)
+    const editItem = ref<SettingsRecord | null>(null)
 
-    const maxCharsRule = (v) => !v || v.length <= 150 || 'Input too long!'
+    const maxCharsRule = (value: string | null | undefined): true | string => !value || value.length <= 150 || 'Input too long!'
 
-    const headers = computed(() => {
-        const baseHeaders = [
+    const headers = computed<HeaderEntry[]>(() => {
+        const baseHeaders: HeaderEntry[] = [
             { title: t('settings.description'), key: 'description' },
             { title: t('settings.value'), key: 'value', sortable: false }
         ]
@@ -160,11 +184,11 @@
         return baseHeaders
     })
 
-    const getColor = (value, defaultValue) => {
+    const getColor = (value: string, defaultValue?: string): string => {
         return value === defaultValue ? 'grey' : 'success'
     }
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString?: string): string => {
         if (!dateString) return ''
         try {
             const date = new Date(dateString)
@@ -176,49 +200,49 @@
             const minutes = String(date.getMinutes()).padStart(2, '0')
             const seconds = String(date.getSeconds()).padStart(2, '0')
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-        } catch (e) {
+        } catch {
             return dateString
         }
     }
 
-    const getDisplayOptions = (item) => {
+    const getDisplayOptions = (item: SettingsRecord): SettingOption[] => {
         try {
-            const options = JSON.parse(item.options)
+            const options = JSON.parse(item.options || '[]') as SettingOption[]
 
             // For language settings, use language names
             if (item.key === 'UI_LANGUAGE' || item.key === 'CONTENT_DEFAULT_LANGUAGE') {
                 return options.map((opt) => ({
                     ...opt,
-                    txt: getLanguageName(opt.id, opt.txt)
+                    txt: getLanguageName(String(opt.id), opt.txt)
                 }))
             }
 
             return options
-        } catch (e) {
+        } catch {
             return []
         }
     }
 
-    const getLanguageName = (code, defaultName) => {
+    const getLanguageName = (code: string, defaultName?: string): string => {
         try {
             // Try to use Intl.DisplayNames for multilingual support
             if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
                 try {
                     const displayNames = new Intl.DisplayNames([locale.value, 'en'], { type: 'language' })
-                    return displayNames.of(code)
-                } catch (e) {
+                    return displayNames.of(code) || defaultName || code
+                } catch {
                     // Fallback
                 }
             }
 
             // Simple fallback - return default name or code
             return defaultName || code
-        } catch (e) {
+        } catch {
             return defaultName || code
         }
     }
 
-    const initRecords = () => {
+    const initRecords = (): void => {
         const allSettings = settingsStore.getSettings || []
         console.log('[SettingsTable] initRecords - globalSetting:', props.globalSetting)
         console.log('[SettingsTable] initRecords - allSettings:', allSettings)
@@ -230,16 +254,17 @@
             return
         }
 
-        const filtered = allSettings.filter((item) => {
-            console.log('[SettingsTable] item:', item.key, 'is_global:', item.is_global, 'checking against:', props.globalSetting)
-            return item.is_global === props.globalSetting
+        const filtered = allSettings.filter((item: SettingEntry) => {
+            const settingsItem = item as SettingsRecord
+            console.log('[SettingsTable] item:', item.key, 'is_global:', settingsItem.is_global, 'checking against:', props.globalSetting)
+            return settingsItem.is_global === props.globalSetting
         })
 
         console.log('[SettingsTable] filtered records:', filtered.length)
-        records.value = filtered
+        records.value = filtered as SettingsRecord[]
     }
 
-    const validateValue = (item, value) => {
+    const validateValue = (item: SettingsRecord, value: string): string => {
         let val = value.trim()
 
         if (item.type === 'B') {
@@ -262,7 +287,7 @@
         return String(val)
     }
 
-    const updateSetting = async (item, value) => {
+    const updateSetting = async (item: SettingsRecord, value: string): Promise<void> => {
         try {
             const validatedValue = validateValue(item, value)
             const settingData = {
@@ -297,13 +322,13 @@
         }
     }
 
-    const openEditDialog = (item) => {
+    const openEditDialog = (item: SettingsRecord): void => {
         editItem.value = item
         editValue.value = item.value
         editDialog.value = true
     }
 
-    const saveEdit = () => {
+    const saveEdit = (): void => {
         if (editItem.value && editValue.value !== null) {
             updateSetting(editItem.value, editValue.value)
         }

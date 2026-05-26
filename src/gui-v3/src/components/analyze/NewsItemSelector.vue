@@ -23,7 +23,9 @@
                         <v-list v-model:selected="selectedGroupList" density="compact" nav>
                             <v-list-item v-for="link in groups" :key="link.id" :value="link.id" class="px-1" @click="changeGroup(link.id)">
                                 <template #prepend>
-                                    <v-icon :color="link.color || 'default'">{{ link.icon }}</v-icon>
+                                    <v-icon :color="link.color || 'default'">
+                                        {{ link.icon }}
+                                    </v-icon>
                                 </template>
                                 <v-list-item-title class="text-caption" style="white-space: break-spaces">
                                     {{ link.translate ? t(link.title) : link.title }}
@@ -77,20 +79,20 @@
                                     <div class="text-caption text-grey mb-2">
                                         <v-row align="center" no-gutters>
                                             <v-col cols="auto">
-                                                <span v-if="item.news_items && item.news_items.length > 0">
+                                                <span v-if="getNewsItemCount(item) > 0">
                                                     <strong>{{ t('card_item.source') }}:</strong>
                                                     {{
-                                                        item.news_items[0].news_item_data?.osint_source_name ||
-                                                        item.news_items[0].news_item_data?.source ||
+                                                        getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
+                                                        getFirstNewsItem(item)?.news_item_data?.source ||
                                                         'Unknown'
                                                     }}
                                                 </span>
                                             </v-col>
                                             <v-spacer />
                                             <v-col cols="auto">
-                                                <span v-if="item.news_items && item.news_items.length > 0">
+                                                <span v-if="getNewsItemCount(item) > 0">
                                                     <strong>{{ t('card_item.published') }}:</strong>
-                                                    {{ item.news_items[0].news_item_data?.published || 'N/A' }}
+                                                    {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
                                                 </span>
                                             </v-col>
                                         </v-row>
@@ -111,7 +113,9 @@
                                     style="flex-shrink: 0"
                                     @click.stop="handleRemoveItem(item)"
                                 >
-                                    <v-icon :color="'error'">{{ ICONS.REMOVE }}</v-icon>
+                                    <v-icon :color="'error'">
+                                        {{ ICONS.REMOVE }}
+                                    </v-icon>
                                 </v-btn>
                             </div>
                         </template>
@@ -144,7 +148,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
@@ -156,56 +160,83 @@
     import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
     import BaseCard from '@/components/common/BaseCard.vue'
 
-    const props = defineProps({
-        values: {
-            type: Array,
-            default: () => []
-        },
-        reportItemId: {
-            type: Number,
-            required: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: true
-        },
-        attach: {
-            type: [String, Object],
-            default: undefined
-        },
-        verticalView: {
-            type: Boolean,
-            default: false
-        }
-    })
+    type SelectorItem = {
+        id: number | string
+        title?: string
+        description?: string
+        in_reports_count?: number
+        news_items?: Array<{
+            news_item_data?: {
+                osint_source_name?: string
+                source?: string
+                published?: string
+                link?: string
+                [key: string]: unknown
+            }
+        }>
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'items-changed'])
+    type SelectorGroup = {
+        id: string
+        title: string
+        icon: string
+        color?: string
+        translate?: boolean
+    }
+
+    type ReportItemUpdateDetail = {
+        report_item_id?: number
+        user_id?: number | string
+        add?: boolean
+        delete?: boolean
+        aggregate_id?: number | string
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            values?: SelectorItem[]
+            reportItemId?: number
+            edit?: boolean
+            modify?: boolean
+            attach?: string | object | boolean
+            verticalView?: boolean
+        }>(),
+        {
+            values: () => [],
+            edit: false,
+            modify: true,
+            verticalView: false
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: SelectorItem[]): void
+        (e: 'items-changed', value: SelectorItem[]): void
+    }>()
 
     const { t } = useI18n()
     const assessStore = useAssessStore()
     const { checkPermission, getUserId } = useAuth()
 
     // Refs
-    const toolbarFilter = ref(null)
-    const contentData = ref(null)
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
 
     // Reactive state
-    const selectorOpen = ref(false)
-    const value = ref(props.values || [])
-    const selectedItems = ref(props.values || [])
-    const groups = ref([])
-    const selectedGroupId = ref(null)
-    const selectedGroupList = ref([])
-    const showRemoveConfirm = ref(false)
-    const itemToDelete = ref(null)
+    const selectorOpen = ref<boolean>(false)
+    const value = ref<SelectorItem[]>(props.values || [])
+    const selectedItems = ref<SelectorItem[]>(props.values || [])
+    const groups = ref<SelectorGroup[]>([])
+    const selectedGroupId = ref<string | null>(null)
+    const selectedGroupList = ref<string[]>([])
+    const showRemoveConfirm = ref<boolean>(false)
+    const itemToDelete = ref<SelectorItem | null>(null)
 
     watch(
         () => props.values,
-        (newValues) => {
+        (newValues: SelectorItem[]) => {
             const normalized = Array.isArray(newValues) ? [...newValues] : []
             value.value = normalized
             selectedItems.value = normalized
@@ -218,8 +249,16 @@
         return props.edit === false || (checkPermission(PERMISSIONS.ANALYZE_UPDATE) && props.modify === true)
     })
 
+    const getFirstNewsItem = (item: SelectorItem): NonNullable<SelectorItem['news_items']>[number] | null => {
+        return item.news_items?.[0] ?? null
+    }
+
+    const getNewsItemCount = (item: SelectorItem): number => {
+        return item.news_items?.length ?? 0
+    }
+
     // Methods
-    const changeGroup = async (groupId) => {
+    const changeGroup = async (groupId: string): Promise<void> => {
         selectedGroupId.value = groupId
         assessStore.changeCurrentGroup(groupId)
         if (contentData.value) {
@@ -227,7 +266,7 @@
         }
     }
 
-    const openSelector = async () => {
+    const openSelector = async (): Promise<void> => {
         // Initialize selected group
         selectedGroupId.value = selectedGroupId.value || groups.value[0]?.id || 'all'
 
@@ -256,11 +295,11 @@
         }
     }
 
-    const handleAdd = async () => {
+    const handleAdd = async (): Promise<void> => {
         try {
-            const selection = assessStore.getSelection || []
-            const addedValues = []
-            const aggregateIds = []
+            const selection = (assessStore.getSelection || []) as Array<{ type?: string; item?: SelectorItem }>
+            const addedValues: SelectorItem[] = []
+            const aggregateIds: Array<number | string> = []
 
             // Find selected aggregate items that aren't already in values
             for (const selItem of selection) {
@@ -305,7 +344,7 @@
 
             // Emit event for parent
             emit('items-changed', value.value)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error adding items to report:', error)
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -315,34 +354,34 @@
         }
     }
 
-    const handleClose = () => {
+    const handleClose = (): void => {
         assessStore.multiSelect(false)
         selectorOpen.value = false
     }
 
-    const handleNewDataLoaded = (count) => {
+    const handleNewDataLoaded = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateDataCount?.(count)
         }
     }
 
-    const handleUpdateShowingCount = (count) => {
+    const handleUpdateShowingCount = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateCurrentlyShowingCount?.(count)
         }
     }
 
-    const handleCardItemsReindex = () => {
+    const handleCardItemsReindex = (): void => {
         // Handle reindexing if needed
     }
 
-    const handleFilterUpdate = (filter) => {
+    const handleFilterUpdate = (filter: Record<string, unknown>): void => {
         if (contentData.value) {
             contentData.value.updateFilter?.(filter)
         }
     }
 
-    const handleRemoveItem = (item) => {
+    const handleRemoveItem = (item: SelectorItem): void => {
         // Check permissions before allowing removal
         if (!canModify.value) {
             window.dispatchEvent(
@@ -356,11 +395,11 @@
         showRemoveConfirm.value = true
     }
 
-    const handleUpdateItem = (_item) => {
+    const handleUpdateItem = (_item: SelectorItem): void => {
         // Handle item updates if needed
     }
 
-    const confirmRemoveItem = async () => {
+    const confirmRemoveItem = async (): Promise<void> => {
         if (!itemToDelete.value) return
 
         try {
@@ -384,7 +423,7 @@
 
             // Emit event for parent
             emit('items-changed', value.value)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error removing item from report:', error)
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -394,18 +433,17 @@
         }
     }
 
-    const handleReportItemUpdated = (dataInfo) => {
+    const handleReportItemUpdated = async (dataInfo: ReportItemUpdateDetail): Promise<void> => {
         if (props.edit === true && props.reportItemId && props.reportItemId > 0 && props.reportItemId === dataInfo.report_item_id) {
             const currentUserId = getUserId()
             if (dataInfo.user_id !== currentUserId) {
                 if (dataInfo.add !== undefined) {
-                    getReportItemData(props.reportItemId, dataInfo).then((response) => {
-                        const data = response.data
-                        if (data.news_item_aggregates) {
-                            value.value.push(...data.news_item_aggregates)
-                            emit('items-changed', value.value)
-                        }
-                    })
+                    const response = await getReportItemData(props.reportItemId, dataInfo)
+                    const data = (response as { data?: { news_item_aggregates?: SelectorItem[] } }).data
+                    if (data?.news_item_aggregates) {
+                        value.value.push(...data.news_item_aggregates)
+                        emit('items-changed', value.value)
+                    }
                 } else if (dataInfo.delete !== undefined) {
                     value.value = value.value.filter((item) => item.id !== dataInfo.aggregate_id)
                     emit('items-changed', value.value)
@@ -414,8 +452,9 @@
         }
     }
 
-    const handleReportItemUpdatedEvent = (event) => {
-        handleReportItemUpdated(event.detail)
+    const handleReportItemUpdatedEvent = (event: Event): void => {
+        const customEvent = event as CustomEvent<ReportItemUpdateDetail>
+        handleReportItemUpdated(customEvent.detail)
     }
 
     // Lifecycle
@@ -423,11 +462,12 @@
         // Load groups (OSINT sources for Assess)
         // TODO: Load from store or API
         groups.value = [
-            { id: 'all', title: 'All', icon: 'mdi-folder', color: undefined, translate: false },
+            { id: 'all', title: 'All', icon: 'mdi-folder', translate: false },
             { id: 'unread', title: 'assess.unread', icon: 'mdi-email-multiple', color: 'primary', translate: true }
         ]
 
-        selectedGroupId.value = groups.value[0].id
+        const firstGroup = groups.value[0]
+        selectedGroupId.value = firstGroup ? firstGroup.id : ''
 
         // Listen for report item updates
         window.addEventListener('report-item-updated', handleReportItemUpdatedEvent)

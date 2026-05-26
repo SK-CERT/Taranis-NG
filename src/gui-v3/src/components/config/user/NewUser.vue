@@ -153,23 +153,57 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { createNewUser, updateUser, getAllOrganizations, getAllRoles, getAllPermissions } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        editItem: {
-            type: Object,
-            default: null
+    type SelectableEntity = {
+        id: string | number
+        name?: string
+        description?: string
+        [key: string]: unknown
+    }
+
+    type UserFormItem = {
+        id: string | number | null
+        username: string
+        name: string
+        organizations: SelectableEntity[]
+        roles: SelectableEntity[]
+        permissions: SelectableEntity[]
+        password?: string
+        [key: string]: unknown
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    type TableHeader = {
+        title: string
+        key: string
+        sortable: boolean
+    }
+
+    type IdSelection = Array<string | number>
+
+    type ListResponse = {
+        items?: SelectableEntity[]
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            editItem?: Partial<UserFormItem> | null
+        }>(),
+        {
+            modelValue: false,
+            editItem: null
         }
-    })
+    )
 
     const emit = defineEmits(['update:modelValue', 'saved'])
 
@@ -177,7 +211,7 @@
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const saving = ref(false)
     const showValidationError = ref(false)
     const showError = ref(false)
@@ -186,19 +220,19 @@
     const password = ref('')
     const passwordConfirm = ref('')
 
-    const organizations = ref([])
-    const roles = ref([])
-    const permissions = ref([])
+    const organizations = ref<SelectableEntity[]>([])
+    const roles = ref<SelectableEntity[]>([])
+    const permissions = ref<SelectableEntity[]>([])
 
     const loadingOrganizations = ref(false)
     const loadingRoles = ref(false)
     const loadingPermissions = ref(false)
 
-    const selectedOrganizations = ref([])
-    const selectedRoles = ref([])
-    const selectedPermissions = ref([])
+    const selectedOrganizations = ref<IdSelection>([])
+    const selectedRoles = ref<IdSelection>([])
+    const selectedPermissions = ref<IdSelection>([])
 
-    const defaultItem = {
+    const defaultItem: UserFormItem = {
         id: null,
         username: '',
         name: '',
@@ -207,7 +241,7 @@
         permissions: []
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<UserFormItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_USER_CREATE'))
@@ -215,30 +249,30 @@
     const passwordRules = computed(() => {
         if (isEdit.value) {
             // For edit, password is optional unless filled
-            return password.value ? [(v) => !!v || t('error.required')] : []
+            return password.value ? [(v: string) => !!v || t('error.required')] : []
         }
         // For new user, password is required
-        return [(v) => !!v || t('error.required')]
+        return [(v: string) => !!v || t('error.required')]
     })
 
     const passwordConfirmRules = computed(() => {
         if (isEdit.value && !password.value) {
             return []
         }
-        return [(v) => !!v || t('error.required'), (v) => v === password.value || t('user.password_mismatch')]
+        return [(v: string) => !!v || t('error.required'), (v: string) => v === password.value || t('user.password_mismatch')]
     })
 
-    const orgHeaders = [
+    const orgHeaders: TableHeader[] = [
         { title: t('user.name'), key: 'name', sortable: true },
         { title: t('user.description'), key: 'description', sortable: false }
     ]
 
-    const roleHeaders = [
+    const roleHeaders: TableHeader[] = [
         { title: t('user.name'), key: 'name', sortable: true },
         { title: t('user.description'), key: 'description', sortable: false }
     ]
 
-    const permissionHeaders = [
+    const permissionHeaders: TableHeader[] = [
         { title: t('user.name'), key: 'name', sortable: true },
         { title: t('user.description'), key: 'description', sortable: false }
     ]
@@ -248,7 +282,7 @@
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                localItem.value = { ...newVal }
+                localItem.value = { ...defaultItem, ...newVal }
 
                 // Set selected items
                 selectedOrganizations.value = newVal.organizations?.map((org) => org.id) || []
@@ -278,7 +312,7 @@
         await loadAllData()
     })
 
-    const loadAllData = async () => {
+    const loadAllData = async (): Promise<void> => {
         loadingOrganizations.value = true
         loadingRoles.value = true
         loadingPermissions.value = true
@@ -290,9 +324,9 @@
                 getAllPermissions({ search: '' })
             ])
 
-            organizations.value = orgsResponse.items || []
-            roles.value = rolesResponse.items || []
-            permissions.value = permsResponse.items || []
+            organizations.value = (orgsResponse as ListResponse).items || []
+            roles.value = (rolesResponse as ListResponse).items || []
+            permissions.value = (permsResponse as ListResponse).items || []
         } catch (error) {
             console.error('Error loading user data:', error)
         } finally {
@@ -302,7 +336,7 @@
         }
     }
 
-    const resetForm = () => {
+    const resetForm = (): void => {
         localItem.value = { ...defaultItem }
         password.value = ''
         passwordConfirm.value = ''
@@ -317,15 +351,15 @@
         }
     }
 
-    const cancel = () => {
+    const cancel = (): void => {
         dialog.value = false
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
 
         if (!valid) {
             showValidationError.value = true
@@ -335,7 +369,7 @@
         saving.value = true
 
         try {
-            const payload = {
+            const payload: UserFormItem = {
                 ...localItem.value,
                 organizations: selectedOrganizations.value.map((id) => ({ id })),
                 roles: selectedRoles.value.map((id) => ({ id })),

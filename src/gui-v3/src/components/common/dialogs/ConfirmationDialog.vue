@@ -2,7 +2,9 @@
     <v-dialog v-model="isOpen" :max-width="maxWidth">
         <v-card>
             <v-card-title class="d-flex align-center">
-                <v-icon color="error" class="mr-2">{{ ICONS.ALERT_CIRCLE }}</v-icon>
+                <v-icon color="error" class="mr-2">
+                    {{ ICONS.ALERT_CIRCLE }}
+                </v-icon>
                 {{ t(titleKey) }}
             </v-card-title>
             <v-card-text>
@@ -21,27 +23,27 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
-    const props = defineProps({
-        modelValue: Boolean,
-        message: String,
-        titleKey: {
-            type: String,
-            default: 'common.messagebox.delete'
-        },
-        confirmLabelKey: {
-            type: String,
-            default: 'common.delete'
-        },
-        maxWidth: {
-            type: String,
-            default: '600px'
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            message?: string
+            titleKey?: string
+            confirmLabelKey?: string
+            maxWidth?: string
+        }>(),
+        {
+            modelValue: false,
+            message: '',
+            titleKey: 'common.messagebox.delete',
+            confirmLabelKey: 'common.delete',
+            maxWidth: '600px'
         }
-    })
+    )
 
     const emit = defineEmits(['update:modelValue', 'confirm'])
 
@@ -49,20 +51,20 @@
     const titleKey = props.titleKey
     const confirmLabelKey = props.confirmLabelKey
 
-    const isOpen = ref(false)
+    const isOpen = ref<boolean>(false)
 
     watch(
         () => props.modelValue,
-        (newVal) => {
+        (newVal: boolean) => {
             isOpen.value = newVal
         }
     )
 
-    watch(isOpen, (newVal) => {
+    watch(isOpen, (newVal: boolean) => {
         emit('update:modelValue', newVal)
     })
 
-    const confirmDelete = () => {
+    const confirmDelete = (): void => {
         emit('confirm')
         isOpen.value = false
     }

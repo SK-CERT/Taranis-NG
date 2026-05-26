@@ -3,24 +3,24 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || values[index].remote" class="attachment-display d-flex align-center pa-3">
-                    <v-icon color="primary" class="mr-3">{{ ICONS.FILE_DOCUMENT }}</v-icon>
+                <div v-if="readOnly || value.remote" class="attachment-display d-flex align-center pa-3">
+                    <v-icon color="primary" class="mr-3">
+                        {{ ICONS.FILE_DOCUMENT }}
+                    </v-icon>
                     <div class="flex-grow-1">
                         <div class="text-body-2 font-weight-medium">
-                            {{ values[index].binary_description || 'Attachment' }}
+                            {{ value.binary_description || 'Attachment' }}
                         </div>
-                        <div class="text-caption text-grey">
-                            {{ values[index].binary_mime_type }} - {{ formatFileSize(values[index].binary_size) }}
-                        </div>
+                        <div class="text-caption text-grey">{{ value.binary_mime_type }} - {{ formatFileSize(value.binary_size) }}</div>
                     </div>
-                    <v-btn size="small" variant="text" @click="downloadAttachmentNow(values[index])">
+                    <v-btn size="small" variant="text" @click="downloadAttachmentNow(value)">
                         <v-icon>{{ ICONS.DOWNLOAD }}</v-icon>
                     </v-btn>
                 </div>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="false"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -29,13 +29,15 @@
                 >
                     <template #col_middle>
                         <div class="d-flex align-center">
-                            <div v-if="values[index].binary_description" class="mr-3">
-                                <div class="text-body-2">{{ values[index].binary_description }}</div>
+                            <div v-if="value.binary_description" class="mr-3">
+                                <div class="text-body-2">
+                                    {{ value.binary_description }}
+                                </div>
                                 <div class="text-caption text-grey">
-                                    {{ values[index].binary_mime_type }} - {{ formatFileSize(values[index].binary_size) }}
+                                    {{ value.binary_mime_type }} - {{ formatFileSize(value.binary_size) }}
                                 </div>
                             </div>
-                            <v-btn v-if="values[index].id > 0" size="small" variant="text" @click="downloadAttachmentNow(values[index])">
+                            <v-btn v-if="(value.id ?? 0) > 0" size="small" variant="text" @click="downloadAttachmentNow(value)">
                                 <v-icon>{{ ICONS.DOWNLOAD }}</v-icon>
                             </v-btn>
                         </div>
@@ -46,51 +48,56 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
     import { downloadAttachment } from '@/api/analyze'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        id?: number
+        index?: string | number
+        remote?: boolean
+        locked?: boolean
+        binary_description?: string
+        binary_mime_type?: string
+        binary_size?: number
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
         }
-    })
+    )
 
     const { canModify, add, del } = useAttributes(props)
 
-    const formatFileSize = (bytes) => {
+    const formatFileSize = (bytes: number | null | undefined): string => {
         if (!bytes) return '0 B'
         const k = 1024
         const sizes = ['B', 'KB', 'MB', 'GB']
         const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + (sizes[i] ?? 'B')
     }
 
-    const downloadAttachmentNow = (attrValue) => {
+    const downloadAttachmentNow = (attrValue: AttributeValueItem): void => {
         if (!attrValue || !attrValue.id) return
         const fileName = attrValue.binary_description || 'attachment'
         const downloadLink = `/analyze/report-items/${props.reportItemId}/file-attributes/${attrValue.id}/file`

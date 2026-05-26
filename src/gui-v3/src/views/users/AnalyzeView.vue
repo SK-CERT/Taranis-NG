@@ -28,7 +28,7 @@
     <NewReportItem ref="newReportItemRef" :show-button="false" @data-updated="updateData" />
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useRoute, onBeforeRouteLeave } from 'vue-router'
     import { useAnalyzeStore } from '@/stores/analyze'
@@ -41,45 +41,45 @@
     const route = useRoute()
     const analyzeStore = useAnalyzeStore()
     const { checkPermission } = useAuth()
-    const toolbarFilter = ref(null)
-    const contentData = ref(null)
-    const newReportItemRef = ref(null)
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
+    const newReportItemRef = ref<any>(null)
 
     const canCreateReportItem = computed(() => {
         return checkPermission('ANALYZE_CREATE') && !route.path.includes('/group/')
     })
 
-    const handleAddNew = () => {
+    const handleAddNew = (): void => {
         if (newReportItemRef.value) {
             newReportItemRef.value.openDialog()
         }
     }
 
-    const newDataLoaded = (count) => {
+    const newDataLoaded = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateDataCount(count)
         }
     }
 
-    const updateShowingCount = (count) => {
+    const updateShowingCount = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateShowingCount(count)
         }
     }
 
-    const updateFilter = (filter) => {
+    const updateFilter = (filter: Record<string, unknown>): void => {
         if (contentData.value) {
             contentData.value.updateFilter(filter)
         }
     }
 
-    const updateData = () => {
+    const updateData = (): void => {
         if (contentData.value) {
             contentData.value.updateData(false, true)
         }
     }
 
-    const showReportItemDetail = (reportItem) => {
+    const showReportItemDetail = (reportItem: unknown): void => {
         if (newReportItemRef.value) {
             newReportItemRef.value.showDetail(reportItem)
         }

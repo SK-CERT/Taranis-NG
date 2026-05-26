@@ -11,13 +11,13 @@
  * @param {string} password - Password (default: 'admin')
  */
 export async function login(page, username = 'admin', password = 'admin') {
-  await page.goto('/v2/login')
-  await page.locator('[data-test="login-username"] input').fill(username)
-  await page.locator('[data-test="login-password"] input').fill(password)
-  await page.locator('[data-test="login-submit"]').click()
+    await page.goto('/v2/login')
+    await page.locator('[data-test="login-username"] input').fill(username)
+    await page.locator('[data-test="login-password"] input').fill(password)
+    await page.locator('[data-test="login-submit"]').click()
 
-  // Wait for navigation to complete
-  await page.waitForURL(/\/v2\/(dashboard)?$/)
+    // Wait for navigation to complete
+    await page.waitForURL(/\/v2\/(dashboard)?$/)
 }
 
 /**
@@ -25,12 +25,12 @@ export async function login(page, username = 'admin', password = 'admin') {
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
 export async function logout(page) {
-  // Click user menu
-  await page.click('[data-test="user-menu"]')
-  await page.click('[data-test="logout-action"]')
+    // Click user menu
+    await page.click('[data-test="user-menu"]')
+    await page.click('[data-test="logout-action"]')
 
-  // Verify redirected to login
-  await page.waitForURL('/v2/login')
+    // Verify redirected to login
+    await page.waitForURL('/v2/login')
 }
 
 /**
@@ -39,9 +39,9 @@ export async function logout(page) {
  * @param {string} section - Section name (e.g., 'Roles', 'Organizations')
  */
 export async function navigateToConfig(page, section) {
-  // Open config sidebar if not already open
-  await page.goto('/v2/config')
-  await page.getByRole('navigation').getByText(section).click()
+    // Open config sidebar if not already open
+    await page.goto('/v2/config')
+    await page.getByRole('navigation').getByText(section).click()
 }
 
 /**
@@ -51,10 +51,10 @@ export async function navigateToConfig(page, section) {
  * @param {number} timeout - Timeout in milliseconds (default: 5000)
  */
 export async function waitForNotification(page, expectedText, timeout = 5000) {
-  const notification = page.locator('.v-snackbar')
-  await notification.waitFor({ state: 'visible', timeout })
-  await notification.locator(`text=${expectedText}`).waitFor({ timeout })
-  return notification
+    const notification = page.locator('.v-snackbar')
+    await notification.waitFor({ state: 'visible', timeout })
+    await notification.locator(`text=${expectedText}`).waitFor({ timeout })
+    return notification
 }
 
 /**
@@ -63,8 +63,8 @@ export async function waitForNotification(page, expectedText, timeout = 5000) {
  * @param {number} timeout - Timeout in milliseconds (default: 5000)
  */
 export async function waitForNotificationDismiss(page, timeout = 5000) {
-  const notification = page.locator('.v-snackbar')
-  await notification.waitFor({ state: 'hidden', timeout })
+    const notification = page.locator('.v-snackbar')
+    await notification.waitFor({ state: 'hidden', timeout })
 }
 
 /**
@@ -73,8 +73,8 @@ export async function waitForNotificationDismiss(page, timeout = 5000) {
  * @param {string} buttonText - Button text to click (default: 'New')
  */
 export async function openDialog(page, buttonText = 'New') {
-  await page.getByRole('button', { name: buttonText }).click()
-  await page.locator('.v-dialog').waitFor({ state: 'visible' })
+    await page.getByRole('button', { name: buttonText }).click()
+    await page.locator('.v-dialog').waitFor({ state: 'visible' })
 }
 
 /**
@@ -82,16 +82,16 @@ export async function openDialog(page, buttonText = 'New') {
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
 export async function closeDialog(page) {
-  // Try close button first (X icon)
-  const closeButton = page.locator('.v-dialog button:has(i.mdi-close)')
-  if (await closeButton.isVisible()) {
-    await closeButton.click()
-  } else {
-    // Otherwise try Cancel button
-    await page.getByRole('button', { name: 'Cancel' }).click()
-  }
+    // Try close button first (X icon)
+    const closeButton = page.locator('.v-dialog button:has(i.mdi-close)')
+    if (await closeButton.isVisible()) {
+        await closeButton.click()
+    } else {
+        // Otherwise try Cancel button
+        await page.getByRole('button', { name: 'Cancel' }).click()
+    }
 
-  await page.locator('.v-dialog').waitFor({ state: 'hidden' })
+    await page.locator('.v-dialog').waitFor({ state: 'hidden' })
 }
 
 /**
@@ -101,7 +101,22 @@ export async function closeDialog(page) {
  * @param {string} value - Value to fill
  */
 export async function fillField(page, fieldName, value) {
-  await page.fill(`[name="${fieldName}"]`, value)
+    const byName = page.locator(`input[name="${fieldName}"], textarea[name="${fieldName}"]`).first()
+    if (await byName.count()) {
+        await byName.fill(value)
+        return
+    }
+
+    // Fallback for Vuetify fields that don't expose stable name attributes.
+    const byAriaLabel = page.locator(`input[aria-label*="${fieldName}" i], textarea[aria-label*="${fieldName}" i]`).first()
+    if (await byAriaLabel.count()) {
+        await byAriaLabel.fill(value)
+        return
+    }
+
+    // Last resort: fill the first editable field in the active dialog.
+    const dialogField = page.locator('.v-dialog:visible input:not([type="hidden"]), .v-dialog:visible textarea').first()
+    await dialogField.fill(value)
 }
 
 /**
@@ -109,7 +124,7 @@ export async function fillField(page, fieldName, value) {
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
 export async function saveDialog(page) {
-  await page.getByRole('button', { name: 'Save' }).click()
+    await page.getByRole('button', { name: 'Save' }).click()
 }
 
 /**
@@ -118,14 +133,14 @@ export async function saveDialog(page) {
  * @param {string} itemIdentifier - Text or locator to identify the item
  */
 export async function deleteItem(page, itemIdentifier) {
-  // Hover over item to show delete button
-  await page.locator(`text=${itemIdentifier}`).hover()
+    // Hover over item to show delete button
+    await page.locator(`text=${itemIdentifier}`).hover()
 
-  // Click delete button
-  await page.locator(`[aria-label="Delete"]`).click()
+    // Click delete button
+    await page.locator(`[aria-label="Delete"]`).click()
 
-  // Confirm deletion
-  await page.getByRole('button', { name: 'Delete' }).click()
+    // Confirm deletion
+    await page.getByRole('button', { name: 'Delete' }).click()
 }
 
 /**
@@ -133,8 +148,8 @@ export async function deleteItem(page, itemIdentifier) {
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
 export async function waitForPageLoad(page) {
-  await page.waitForLoadState('networkidle')
-  await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 }
 
 /**
@@ -143,12 +158,12 @@ export async function waitForPageLoad(page) {
  * @param {string} selector - Element selector
  */
 export async function hasPermission(page, selector) {
-  try {
-    await page.waitForSelector(selector, { timeout: 2000 })
-    return true
-  } catch {
-    return false
-  }
+    try {
+        await page.waitForSelector(selector, { timeout: 2000 })
+        return true
+    } catch {
+        return false
+    }
 }
 
 /**
@@ -156,8 +171,8 @@ export async function hasPermission(page, selector) {
  * @param {string} baseName - Base name for the test entity
  */
 export function generateTestName(baseName) {
-  const timestamp = Date.now()
-  return `${baseName}_${timestamp}`
+    const timestamp = Date.now()
+    return `${baseName}_${timestamp}`
 }
 
 /**
@@ -166,5 +181,5 @@ export function generateTestName(baseName) {
  * @param {string} name - Screenshot name
  */
 export async function takeScreenshot(page, name) {
-  await page.screenshot({ path: `test-results/screenshots/${name}.png`, fullPage: true })
+    await page.screenshot({ path: `test-results/screenshots/${name}.png`, fullPage: true })
 }

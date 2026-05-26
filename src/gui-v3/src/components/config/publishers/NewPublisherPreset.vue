@@ -80,7 +80,9 @@
                     <!-- Dynamic Parameter Fields -->
                     <div v-if="selectedPublisher && selectedPublisher.parameters && selectedPublisher.parameters.length > 0">
                         <v-divider class="my-4" />
-                        <h3 class="text-subtitle-1 mb-3">{{ t('publisher_preset.parameters') }}</h3>
+                        <h3 class="text-subtitle-1 mb-3">
+                            {{ t('publisher_preset.parameters') }}
+                        </h3>
 
                         <div v-for="(param, index) in selectedPublisher.parameters" :key="param.key || index" class="mb-3">
                             <v-row align="center">
@@ -131,42 +133,88 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewPublisherPreset, updatePublisherPreset, getAllPublishersNodes } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        editItem: {
-            type: Object,
-            default: null
-        }
-    })
+    type PresetParameter = {
+        id?: string | number
+        key?: string
+        name?: string
+        description?: string
+        default_value?: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'saved'])
+    type Publisher = {
+        id: string | number
+        name?: string
+        parameters?: PresetParameter[]
+        [key: string]: unknown
+    }
+
+    type PublishersNode = {
+        id: string | number
+        name?: string
+        publishers?: Publisher[]
+        [key: string]: unknown
+    }
+
+    type PublisherPresetParameterValue = {
+        value?: string
+        parameter?: PresetParameter
+        [key: string]: unknown
+    }
+
+    type PublisherPresetItem = {
+        id: string | number | null
+        name: string
+        description: string
+        use_for_notifications: boolean
+        publisher_id: string | number | null
+        parameter_values: PublisherPresetParameterValue[]
+        [key: string]: unknown
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            editItem?: Record<string, unknown> | null
+        }>(),
+        {
+            modelValue: false,
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+        (e: 'saved'): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const saving = ref(false)
     const loadingNodes = ref(false)
     const showValidationError = ref(false)
     const showError = ref(false)
 
-    const nodes = ref([])
-    const selectedNode = ref(null)
-    const selectedPublisher = ref(null)
-    const parameterValues = ref([])
+    const nodes = ref<PublishersNode[]>([])
+    const selectedNode = ref<PublishersNode | null>(null)
+    const selectedPublisher = ref<Publisher | null>(null)
+    const parameterValues = ref<string[]>([])
 
-    const defaultItem = {
+    const defaultItem: PublisherPresetItem = {
         id: null,
         name: '',
         description: '',
@@ -175,7 +223,7 @@
         parameter_values: []
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<PublisherPresetItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_PUBLISHER_PRESET_CREATE'))
@@ -185,20 +233,25 @@
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                localItem.value = { ...newVal }
+                const incoming = newVal as Partial<PublisherPresetItem> & {
+                    publisher_id?: string | number | null
+                    parameter_values?: PublisherPresetParameterValue[]
+                }
+
+                localItem.value = { ...defaultItem, ...incoming }
 
                 // Find and set the node and publisher
                 for (const node of nodes.value) {
-                    const publisher = node.publishers?.find((p) => p.id === newVal.publisher_id)
+                    const publisher = node.publishers?.find((p) => p.id === incoming.publisher_id)
                     if (publisher) {
                         selectedNode.value = node
-                        selectedPublisher.value = publisher
+                        selectedPublisher.value = publisher as Publisher
 
                         // Map parameter values
                         parameterValues.value =
                             publisher.parameters?.map((param) => {
-                                const paramValue = newVal.parameter_values?.find((pv) => pv.parameter.id === param.id)
-                                return paramValue ? paramValue.value : param.default_value || ''
+                                const paramValue = incoming.parameter_values?.find((pv) => pv.parameter?.id === param.id)
+                                return String(paramValue?.value ?? param.default_value ?? '')
                             }) || []
                         break
                     }
@@ -219,9 +272,9 @@
     })
 
     // Watch selected publisher to initialize parameter values
-    watch(selectedPublisher, (newPublisher) => {
+    watch(selectedPublisher, (newPublisher: Publisher | null) => {
         if (!isEdit.value && newPublisher && newPublisher.parameters) {
-            parameterValues.value = newPublisher.parameters.map((param) => param.default_value || '')
+            parameterValues.value = newPublisher.parameters.map((param) => String(param.default_value ?? ''))
         }
     })
 
@@ -230,17 +283,25 @@
         await loadNodes()
     })
 
-    const loadNodes = async () => {
+    const loadNodes = async (): Promise<void> => {
         loadingNodes.value = true
         try {
-            const response = await getAllPublishersNodes({ search: '' })
-            nodes.value = response.items || []
+            const response = (await getAllPublishersNodes({ search: '' })) as {
+                items?: PublishersNode[]
+                data?: { items?: PublishersNode[] }
+            }
+            nodes.value = response.items || response.data?.items || []
 
             // Auto-select first node and publisher if available
             if (!isEdit.value && nodes.value.length > 0) {
-                selectedNode.value = nodes.value[0]
-                if (selectedNode.value.publishers && selectedNode.value.publishers.length > 0) {
-                    selectedPublisher.value = selectedNode.value.publishers[0]
+                const firstNode = nodes.value[0]
+                if (!firstNode) {
+                    return
+                }
+                selectedNode.value = firstNode
+                const publishers = firstNode.publishers ?? []
+                if (publishers.length > 0) {
+                    selectedPublisher.value = publishers[0] as Publisher
                 }
             }
         } catch (error) {
@@ -250,27 +311,30 @@
         }
     }
 
-    const resetForm = () => {
+    const resetForm = (): void => {
         localItem.value = { ...defaultItem }
         selectedNode.value = null
         selectedPublisher.value = null
         parameterValues.value = []
         showValidationError.value = false
         showError.value = false
-        if (formRef.value) {
+        if (formRef.value?.resetValidation) {
             formRef.value.resetValidation()
         }
     }
 
-    const cancel = () => {
+    const cancel = (): void => {
         dialog.value = false
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        if (!formRef.value?.validate) {
+            return
+        }
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
 
         if (!valid || !selectedPublisher.value) {
             showValidationError.value = true
@@ -283,11 +347,11 @@
             // Prepare parameter values
             const paramValues =
                 selectedPublisher.value.parameters?.map((param, index) => ({
-                    value: parameterValues.value[index] || param.default_value || '',
+                    value: String(parameterValues.value[index] ?? param.default_value ?? ''),
                     parameter: param
                 })) || []
 
-            const payload = {
+            const payload: PublisherPresetItem = {
                 ...localItem.value,
                 publisher_id: selectedPublisher.value.id,
                 parameter_values: paramValues

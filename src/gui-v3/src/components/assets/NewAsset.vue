@@ -15,42 +15,56 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn @click="closeDialog">{{ $t('common.cancel') }}</v-btn>
-                <v-btn color="primary" @click="save">{{ $t('common.save') }}</v-btn>
+                <v-btn @click="closeDialog">
+                    {{ $t('common.cancel') }}
+                </v-btn>
+                <v-btn color="primary" @click="save">
+                    {{ $t('common.save') }}
+                </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
 
+    type NewAssetForm = {
+        title: string
+        description: string
+    }
+
+    type FormRef = {
+        reset?: () => void
+        validate?: () => Promise<{ valid: boolean }>
+    }
+
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
-    const dialog = ref(false)
-    const form = ref({
+    const dialog = ref<boolean>(false)
+    const form = ref<NewAssetForm>({
         title: '',
         description: ''
     })
-    const formRef = ref(null)
+    const formRef = ref<FormRef | null>(null)
 
-    const requiredRule = (value) => !!value || t('common.required')
+    const requiredRule = (value: string | null | undefined): true | string => !!value || t('common.required')
     const canCreate = computed(() => checkPermission('MY_ASSETS_CREATE'))
 
-    const closeDialog = () => {
+    const closeDialog = (): void => {
         dialog.value = false
         form.value = {
             title: '',
             description: ''
         }
-        formRef.value?.reset()
+        formRef.value?.reset?.()
     }
 
-    const save = async () => {
-        const { valid } = await formRef.value.validate()
+    const save = async (): Promise<void> => {
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
         if (!valid) return
 
         try {
@@ -62,7 +76,7 @@
             )
             window.dispatchEvent(new CustomEvent('asset-created'))
             closeDialog()
-        } catch (error) {
+        } catch {
             window.dispatchEvent(
                 new CustomEvent('notification', {
                     detail: { type: 'error', loc: 'asset.error' }

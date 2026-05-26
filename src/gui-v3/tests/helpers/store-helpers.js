@@ -16,18 +16,18 @@ import { createPinia, setActivePinia } from 'pinia'
  *   const { store } = createTestStore(useAuthStore, { jwt: 'tok' })
  */
 export function createTestStore(useStore, initialState = {}) {
-  const pinia = createPinia()
-  setActivePinia(pinia)
-  const store = useStore()
-  if (initialState && Object.keys(initialState).length > 0) {
-    store.$patch(initialState)
-  }
-  return { store, pinia }
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useStore()
+    if (initialState && Object.keys(initialState).length > 0) {
+        store.$patch(initialState)
+    }
+    return { store, pinia }
 }
 
 /**
  * Reset Pinia between tests.  Call in `beforeEach`.
  */
 export function resetPinia() {
-  setActivePinia(createPinia())
+    setActivePinia(createPinia())
 }

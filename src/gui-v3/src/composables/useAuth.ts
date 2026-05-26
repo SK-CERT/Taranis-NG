@@ -3,54 +3,55 @@ import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import AuthService from '@/services/auth_service'
 import Permissions from '@/services/permissions'
+import type { PermissionKey } from '@/types/permissions'
 
 /**
- * Composable for authentication utilities
- * Provides common auth methods and permission checking
+ * Composable for authentication utilities.
+ * Provides common auth methods and permission checking.
  */
 export function useAuth() {
     const authStore = useAuthStore()
     const userStore = useUserStore()
 
     /**
-     * Logout user and redirect
+     * Logout user and redirect.
      */
     const logout = () => {
         return authStore.logout()
     }
 
     /**
-     * Check if user is authenticated
+     * Check if user is authenticated.
      */
     const isAuthenticated = () => {
         return AuthService.isAuthenticated()
     }
 
     /**
-     * Check if token needs refresh
+     * Check if token needs refresh.
      */
     const needTokenRefresh = () => {
         return AuthService.needTokenRefresh()
     }
 
     /**
-     * Check if user has specific permission
+     * Check if user has specific permission.
      */
-    const checkPermission = (permission) => {
+    const checkPermission = (permission: PermissionKey) => {
         return AuthService.hasPermission(permission)
     }
 
     /**
-     * Check if user has any of the provided permissions
+     * Check if user has any of the provided permissions.
      */
-    const checkAnyPermission = (permissions) => {
+    const checkAnyPermission = (permissions: PermissionKey[]) => {
         return AuthService.hasAnyPermission(permissions)
     }
 
     /**
-     * Check if user has all of the provided permissions
+     * Check if user has all of the provided permissions.
      */
-    const checkAllPermissions = (permissions) => {
+    const checkAllPermissions = (permissions: PermissionKey[]) => {
         return AuthService.hasAllPermissions(permissions)
     }
 

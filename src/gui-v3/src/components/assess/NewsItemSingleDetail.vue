@@ -8,53 +8,64 @@
     />
 </template>
 
-<script setup>
-    import { ref, computed } from 'vue'
+<script setup lang="ts">
+    import { ref } from 'vue'
     import NewsItemDetailDialog from '@/components/assess/NewsItemDetailDialog.vue'
     import { getNewsItem } from '@/api/assess'
 
-    const props = defineProps({
-        attach: {
-            type: [String, HTMLElement],
-            default: undefined
-        },
-        verticalView: {
-            type: Boolean,
-            default: false
-        },
-        multiSelectActive: {
-            type: Boolean,
-            default: false
+    type NewsItem = {
+        id?: number | string
+        [key: string]: any
+    }
+
+    type ActionPayload = {
+        action?: string
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attach?: string | HTMLElement | undefined
+            verticalView?: boolean
+            multiSelectActive?: boolean
+        }>(),
+        {
+            attach: undefined,
+            verticalView: false,
+            multiSelectActive: false
         }
-    })
+    )
 
-    const emit = defineEmits(['action', 'delete'])
+    const emit = defineEmits<{
+        (e: 'action', payload: ActionPayload): void
+        (e: 'delete', item: NewsItem): void
+    }>()
 
-    const showDialog = ref(false)
-    const newsItem = ref({})
+    const showDialog = ref<boolean>(false)
+    const newsItem = ref<NewsItem>({})
 
-    const open = async (item) => {
+    const open = async (item: NewsItem): Promise<void> => {
         try {
             // For single items, get the full detail from API
             if (item && item.id) {
                 const response = await getNewsItem(item.id)
-                newsItem.value = response || item
+                newsItem.value = (response || item) as NewsItem
             } else {
                 newsItem.value = item
             }
             showDialog.value = true
-        } catch (_error) {
+        } catch {
             // Fallback to passed item data
             newsItem.value = item
             showDialog.value = true
         }
     }
 
-    const handleAction = (payload) => {
+    const handleAction = (payload: ActionPayload): void => {
         emit('action', payload)
     }
 
-    const handleDelete = (item) => {
+    const handleDelete = (item: NewsItem): void => {
         showDialog.value = false
         emit('delete', item)
     }

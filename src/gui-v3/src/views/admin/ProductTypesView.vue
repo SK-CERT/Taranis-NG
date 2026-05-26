@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
@@ -37,11 +37,22 @@
     const { t } = useI18n()
     const configStore = useConfigStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type FilterState = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type ProductTypeItem = {
+        id?: string | number | null
+        title?: string
+        description?: string
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<ProductTypeItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await configStore.loadProductTypes(filter.value)
@@ -52,12 +63,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: FilterState): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (productType) => {
+    const handleDelete = async (productType: ProductTypeItem): Promise<void> => {
         try {
             await deleteProductType(productType)
             console.log('Product type deleted successfully')
@@ -67,11 +78,11 @@
         }
     }
 
-    const handleEdit = (productType) => {
+    const handleEdit = (productType: ProductTypeItem): void => {
         editItem.value = productType
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

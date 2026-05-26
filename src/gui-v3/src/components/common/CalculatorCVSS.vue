@@ -64,7 +64,9 @@
                         {{ group.label }}
                         <v-tooltip v-if="showTooltips && group.tooltipKey" location="end" max-width="500">
                             <template #activator="{ props: tp }">
-                                <v-icon v-bind="tp" size="x-small" class="ml-1">{{ ICONS.INFORMATION_OUTLINE }}</v-icon>
+                                <v-icon v-bind="tp" size="x-small" class="ml-1">
+                                    {{ ICONS.INFORMATION_OUTLINE }}
+                                </v-icon>
                             </template>
                             <span>{{ $t(group.tooltipKey) }}</span>
                         </v-tooltip>
@@ -76,7 +78,9 @@
                                 <span class="text-primary text-body-2">{{ metric.label }}</span>
                                 <v-tooltip v-if="showTooltips && metric.tooltipKey" location="end" max-width="500">
                                     <template #activator="{ props: tp }">
-                                        <v-icon v-bind="tp" size="x-small" class="ml-1">{{ ICONS.INFORMATION_OUTLINE }}</v-icon>
+                                        <v-icon v-bind="tp" size="x-small" class="ml-1">
+                                            {{ ICONS.INFORMATION_OUTLINE }}
+                                        </v-icon>
                                     </template>
                                     <span>{{ $t(metric.tooltipKey) }}</span>
                                 </v-tooltip>
@@ -115,37 +119,84 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, nextTick, triggerRef } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
-    import { VERSION_CLASSES, createInstance, stripParentheses, detectVersion, getSeverityRating, calculateScoreItems } from './cvss-utils.js'
+    import { VERSION_CLASSES, createInstance, stripParentheses, detectVersion, getSeverityRating, calculateScoreItems } from './cvss-utils'
 
     const { t, te } = useI18n()
 
-    const props = defineProps({
-        modelValue: {
-            type: String,
-            default: ''
-        },
-        disabled: {
-            type: Boolean,
-            default: false
+    type CvssVersion = '2.0' | '3.0' | '3.1' | '4.0'
+
+    type ScoreItem = {
+        name: string
+        label: string
+        score: string | number
+        severityLabel: string
+        severityClass: string
+    }
+
+    type HotMetricValue = {
+        shortName: string
+        name: string
+        hide?: boolean
+        [key: string]: unknown
+    }
+
+    type HotMetric = {
+        shortName: string
+        name: string
+        values: HotMetricValue[]
+        [key: string]: unknown
+    }
+
+    type MetricUi = {
+        shortName: string
+        label: string
+        component: HotMetric
+        tooltipKey: string | null
+        values: Array<{
+            shortName: string
+            label: string
+            value: HotMetricValue
+            tooltipKey: string | null
+        }>
+    }
+
+    type ScoreMap = {
+        base?: number
+        temporal?: number
+        environmental?: number
+        threat?: number
+        overall?: number
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: string
+            disabled?: boolean
+        }>(),
+        {
+            modelValue: '',
+            disabled: false
         }
-    })
+    )
 
-    const emit = defineEmits(['update:modelValue'])
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: string): void
+    }>()
 
-    const versionOptions = ['2.0', '3.0', '3.1', '4.0']
+    const versionOptions: CvssVersion[] = ['2.0', '3.0', '3.1', '4.0']
 
-    const visible = ref(false)
-    const selectedVersion = ref('3.1')
-    const showTooltips = ref(false)
-    const cvssInstance = ref(null)
-    const vectorInput = ref('')
+    const visible = ref<boolean>(false)
+    const selectedVersion = ref<CvssVersion>('3.1')
+    const showTooltips = ref<boolean>(false)
+    const cvssInstance = ref<any>(null)
+    const vectorInput = ref<string>('')
 
     // Name-to-i18n-key mapping for metric names
-    const NAME_TO_I18N = {
+    const NAME_TO_I18N: Record<string, string> = {
         'Attack Vector': 'attack_vector',
         'Attack Complexity': 'attack_complexity',
         'Privileges Required': 'privileges_required',
@@ -199,7 +250,7 @@
         'Provider Urgency': 'provider_urgency'
     }
 
-    const VALUE_NAME_TO_I18N = {
+    const VALUE_NAME_TO_I18N: Record<string, string> = {
         Network: 'network',
         Adjacent: 'adjacent',
         'Adjacent Network': 'adjacent_network',
@@ -247,7 +298,7 @@
     }
 
     // Labels for metric group cards (more specific than score labels)
-    const CATEGORY_GROUP_LABELS = {
+    const CATEGORY_GROUP_LABELS: Record<string, string> = {
         base: 'cvss_calculator.base_score',
         temporal: 'cvss_calculator.temporal_score',
         environmental: 'cvss_calculator.environmental_score',
@@ -257,17 +308,17 @@
         supplemental: 'cvss_calculator.supplemental_score'
     }
 
-    const CATEGORY_TOOLTIP_KEYS = {
+    const CATEGORY_TOOLTIP_KEYS: Record<string, string> = {
         base: 'cvss_calculator_tooltip.baseMetricGroup_Legend',
         temporal: 'cvss_calculator_tooltip.temporalMetricGroup_Legend',
         environmental: 'cvss_calculator_tooltip.environmentalMetricGroup_Legend'
     }
 
-    function syncVectorInput() {
+    function syncVectorInput(): void {
         vectorInput.value = vectorString.value
     }
 
-    function getMetricI18nKey(name) {
+    function getMetricI18nKey(name: string): string | null {
         const key = NAME_TO_I18N[name]
         if (key && te(`cvss_calculator.${key}`)) {
             return `cvss_calculator.${key}`
@@ -275,13 +326,13 @@
         return null
     }
 
-    function getMetricLabel(name, shortName) {
+    function getMetricLabel(name: string, shortName: string): string {
         const i18nKey = getMetricI18nKey(name)
         if (i18nKey) return t(i18nKey)
         return `${name} (${shortName})`
     }
 
-    function getValueLabel(name) {
+    function getValueLabel(name: string): string {
         const key = VALUE_NAME_TO_I18N[name]
         if (key && te(`cvss_calculator.${key}`)) {
             return t(`cvss_calculator.${key}`)
@@ -290,13 +341,13 @@
     }
 
     // Computed: vector string from instance
-    const vectorString = computed(() => {
+    const vectorString = computed<string>(() => {
         if (!cvssInstance.value) return ''
         return cvssInstance.value.toString()
     })
 
     // Computed: scores from instance
-    const scores = computed(() => {
+    const scores = computed<any>(() => {
         if (!cvssInstance.value) return null
         try {
             return cvssInstance.value.calculateScores()
@@ -307,11 +358,11 @@
 
     // Computed: score display items for header
     // Uses the vector string to create a fresh instance (same as attribute display)
-    const scoreDisplay = computed(() => {
-        return calculateScoreItems(vectorInput.value, t, te) || []
+    const scoreDisplay = computed<ScoreItem[]>(() => {
+        return (calculateScoreItems(vectorInput.value, t, te) || []) as ScoreItem[]
     })
 
-    function getScoreTypeForCategory(categoryName) {
+    function getScoreTypeForCategory(categoryName: string): string {
         if (categoryName === 'base') return 'base'
         if (categoryName === 'temporal' || categoryName === 'threat') return categoryName
         if (categoryName.startsWith('environmental')) return 'environmental'
@@ -319,8 +370,8 @@
         return categoryName
     }
 
-    function mapComponents(components) {
-        return components.map((comp) => {
+    function mapComponents(components: HotMetric[]): MetricUi[] {
+        return components.map((comp: HotMetric) => {
             const tooltipMetricKey = `cvss_calculator_tooltip.${comp.shortName}_Heading`
             return {
                 shortName: comp.shortName,
@@ -328,8 +379,8 @@
                 component: comp,
                 tooltipKey: te(tooltipMetricKey) ? tooltipMetricKey : null,
                 values: comp.values
-                    .filter((v) => !v.hide)
-                    .map((v) => {
+                    .filter((v: HotMetricValue) => !v.hide)
+                    .map((v: HotMetricValue) => {
                         const valTooltipKey = `cvss_calculator_tooltip.${comp.shortName}_${v.shortName}_Label`
                         return {
                             shortName: v.shortName,
@@ -342,23 +393,23 @@
         })
     }
 
-    function getScoreForCategory(scores, categoryName) {
+    function getScoreForCategory(scores: ScoreMap | null, categoryName: string): number | null {
         if (!scores) return null
         switch (categoryName) {
             case 'base':
-                return scores.base !== undefined ? scores.base : scores.overall
+                return scores.base ?? scores.overall ?? null
             case 'temporal':
-                return scores.temporal
+                return scores.temporal ?? null
             case 'environmental':
             case 'environmental-base':
             case 'environmental-security-requirement':
-                return scores.environmental
+                return scores.environmental ?? null
             case 'threat':
-                return scores.threat
+                return scores.threat ?? null
             case 'supplemental':
                 return null
             default:
-                return scores.overall
+                return scores.overall ?? null
         }
     }
 
@@ -366,8 +417,14 @@
     const metricGroups = computed(() => {
         if (!cvssInstance.value) return []
 
-        const registeredComponents = cvssInstance.value.getRegisteredComponents()
-        const groups = []
+        const registeredComponents = cvssInstance.value.getRegisteredComponents() as Array<[any, HotMetric[]]>
+        const groups: Array<{
+            name: string
+            label: string
+            tooltipKey: string | null
+            severityClass: string
+            metrics: MetricUi[]
+        }> = []
 
         for (const [category, components] of registeredComponents) {
             const score = getScoreForCategory(scores.value, category.name)
@@ -390,7 +447,7 @@
         return groups
     })
 
-    function getSelectedValueIndex(metric) {
+    function getSelectedValueIndex(metric: MetricUi): number {
         if (!cvssInstance.value) return 0
         const currentValue = cvssInstance.value.getComponent(metric.component)
         if (!currentValue) return 0
@@ -398,7 +455,7 @@
         return idx >= 0 ? idx : 0
     }
 
-    function onMetricToggle(metric, valueIndex) {
+    function onMetricToggle(metric: MetricUi, valueIndex: number): void {
         if (!cvssInstance.value) return
         const val = metric.values[valueIndex]
         if (val) {
@@ -408,7 +465,7 @@
         }
     }
 
-    function onVectorInput(input) {
+    function onVectorInput(input: string | null | undefined): void {
         const cleaned = stripParentheses(input?.trim())
         if (!cleaned) return
 
@@ -441,7 +498,7 @@
     let suppressVersionWatch = false
 
     // Watch version changes: clear metrics, create fresh instance
-    watch(selectedVersion, (newVersion) => {
+    watch(selectedVersion, (newVersion: CvssVersion) => {
         if (suppressVersionWatch) {
             suppressVersionWatch = false
             return
@@ -450,8 +507,8 @@
         syncVectorInput()
     })
 
-    function openDialog() {
-        const value = stripParentheses(props.modelValue)
+    function openDialog(): void {
+        const value = stripParentheses(props.modelValue) ?? ''
         const detected = detectVersion(value)
 
         if (detected) {
@@ -473,7 +530,7 @@
         visible.value = true
     }
 
-    function cancel() {
+    function cancel(): void {
         emit('update:modelValue', vectorString.value)
         visible.value = false
     }

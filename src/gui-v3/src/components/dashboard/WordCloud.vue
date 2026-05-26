@@ -26,31 +26,30 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
 
-    const props = defineProps({
-        data: {
-            type: Array,
-            default: () => []
-        },
-        minFontSize: {
-            type: Number,
-            default: 14
-        },
-        maxFontSize: {
-            type: Number,
-            default: 50
-        },
-        colorScheme: {
-            type: Array,
-            default: () => ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef']
-        },
-        emptyMessage: {
-            type: String,
-            default: 'No data available'
+    type WordCloudItem = {
+        word: string
+        word_quantity: number
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            data?: WordCloudItem[]
+            minFontSize?: number
+            maxFontSize?: number
+            colorScheme?: string[]
+            emptyMessage?: string
+        }>(),
+        {
+            data: () => [],
+            minFontSize: 14,
+            maxFontSize: 50,
+            colorScheme: () => ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'],
+            emptyMessage: 'No data available'
         }
-    })
+    )
 
     /**
      * Process and validate data
@@ -110,7 +109,7 @@
     /**
      * Calculate font size for a tag based on its quantity
      */
-    const getTagFontSize = (tag) => {
+    const getTagFontSize = (tag: WordCloudItem): number => {
         const { min, max } = quantityRange.value
         if (max === min) {
             return (props.minFontSize + props.maxFontSize) / 2
@@ -122,14 +121,14 @@
     /**
      * Get random color from scheme
      */
-    const getRandomColor = () => {
-        return props.colorScheme[Math.floor(Math.random() * props.colorScheme.length)]
+    const getRandomColor = (): string => {
+        return props.colorScheme[Math.floor(Math.random() * props.colorScheme.length)] || 'var(--v-theme-primary)'
     }
 
     /**
      * Get chip style (opacity based on frequency)
      */
-    const getChipStyle = (tag) => {
+    const getChipStyle = (tag: WordCloudItem): { opacity: number } => {
         const { min, max } = quantityRange.value
         if (max === min) {
             return { opacity: 0.8 }
@@ -142,7 +141,7 @@
     /**
      * Handle word click
      */
-    const handleWordClick = (tag) => {
+    const handleWordClick = (tag: WordCloudItem): void => {
         console.log('[WordCloud] Word clicked:', tag.word, 'Quantity:', tag.word_quantity)
     }
 </script>

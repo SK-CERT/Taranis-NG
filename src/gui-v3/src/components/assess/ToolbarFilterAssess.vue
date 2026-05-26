@@ -29,29 +29,35 @@
             <div style="display: flex; gap: 4px; flex-wrap: wrap">
                 <v-chip
                     size="small"
-                    :color="filter.read === 'ALL' ? 'default' : 'primary'"
-                    :variant="filter.read === 'ALL' ? 'outlined' : 'flat'"
+                    :color="filter['read'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['read'] === 'ALL' ? 'outlined' : 'flat'"
                     @click="cycleFilter('read')"
                 >
-                    <v-tooltip activator="parent" location="bottom">{{ readFilterTooltip }}</v-tooltip>
+                    <v-tooltip activator="parent" location="bottom">
+                        {{ readFilterTooltip }}
+                    </v-tooltip>
                     <v-icon>{{ readFilterIcon }}</v-icon>
                 </v-chip>
                 <v-chip
                     size="small"
-                    :color="filter.important === 'ALL' ? 'default' : 'primary'"
-                    :variant="filter.important === 'ALL' ? 'outlined' : 'flat'"
+                    :color="filter['important'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['important'] === 'ALL' ? 'outlined' : 'flat'"
                     @click="cycleFilter('important')"
                 >
-                    <v-tooltip activator="parent" location="bottom">{{ importantFilterTooltip }}</v-tooltip>
+                    <v-tooltip activator="parent" location="bottom">
+                        {{ importantFilterTooltip }}
+                    </v-tooltip>
                     <v-icon>{{ importantFilterIcon }}</v-icon>
                 </v-chip>
                 <v-chip
                     size="small"
-                    :color="filter.relevant === 'ALL' ? 'default' : 'primary'"
-                    :variant="filter.relevant === 'ALL' ? 'outlined' : 'flat'"
+                    :color="filter['relevant'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['relevant'] === 'ALL' ? 'outlined' : 'flat'"
                     @click="cycleFilter('relevant')"
                 >
-                    <v-tooltip activator="parent" location="bottom">{{ relevantFilterTooltip }}</v-tooltip>
+                    <v-tooltip activator="parent" location="bottom">
+                        {{ relevantFilterTooltip }}
+                    </v-tooltip>
                     <v-icon>{{ relevantFilterIcon }}</v-icon>
                 </v-chip>
             </div>
@@ -70,7 +76,9 @@
                 :variant="filter.sort === 'DATE_DESC' || filter.sort === 'DATE_ASC' ? 'flat' : 'outlined'"
                 @click="toggleDateSort"
             >
-                <v-tooltip activator="parent" location="bottom">{{ dateSortTooltip }}</v-tooltip>
+                <v-tooltip activator="parent" location="bottom">
+                    {{ dateSortTooltip }}
+                </v-tooltip>
                 <v-icon start>mdi-clock</v-icon>
                 <v-icon>{{ dateSortIcon }}</v-icon>
             </v-chip>
@@ -130,45 +138,54 @@
     </v-toolbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
 
-    const props = defineProps({
-        title: {
-            type: String,
-            default: 'nav_menu.newsitems'
-        },
-        total_count_title: {
-            type: String,
-            default: 'assess.total_count'
-        },
-        selected_count_title: {
-            type: String,
-            default: 'toolbar_filter.selected_count'
-        },
-        showAddButton: {
-            type: Boolean,
-            default: false
-        },
-        addButtonLabel: {
-            type: String,
-            default: 'common.add_btn'
+    type ThreeStateFilter = 'ALL' | boolean
+
+    type AssessToolbarFilter = {
+        search: string
+        range: string
+        read: ThreeStateFilter
+        important: ThreeStateFilter
+        relevant: ThreeStateFilter
+        sort: string
+        compact_mode?: boolean
+        hide_reviews?: boolean
+        hide_source_links?: boolean
+        highlight_wordlist?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            title?: string
+            total_count_title?: string
+            selected_count_title?: string
+            showAddButton?: boolean
+            addButtonLabel?: string
+        }>(),
+        {
+            title: 'nav_menu.newsitems',
+            total_count_title: 'assess.total_count',
+            selected_count_title: 'toolbar_filter.selected_count',
+            showAddButton: false,
+            addButtonLabel: 'common.add_btn'
         }
-    })
+    )
 
     const emit = defineEmits(['update-filter', 'update-data-count', 'update-data', 'add-new'])
 
     const { t } = useI18n()
     const assessStore = useAssessStore()
-    const baseFilter = ref(null)
-    const toolbarGroup = ref(null)
+    const baseFilter = ref<any>(null)
+    const toolbarGroup = ref<any>(null)
 
     // Filter state with three-state values: "ALL", true, false
-    const filter = ref({
+    const filter = ref<AssessToolbarFilter>({
         search: '',
         range: 'ALL',
         read: false,
@@ -233,14 +250,14 @@
     })
 
     // Handle filter updates from base component
-    const handleFilterUpdate = (updatedFilter) => {
+    const handleFilterUpdate = (updatedFilter: Partial<AssessToolbarFilter>): void => {
         // Merge the base filter updates with our local filter
         filter.value = { ...filter.value, ...updatedFilter }
         emitFilter()
     }
 
     // Cycle through three states: "ALL" -> true -> false -> "ALL"
-    const cycleFilter = (filterType) => {
+    const cycleFilter = (filterType: keyof Pick<AssessToolbarFilter, 'read' | 'important' | 'relevant'>): void => {
         if (filter.value[filterType] === 'ALL') {
             filter.value[filterType] = true
         } else if (filter.value[filterType] === true) {
@@ -251,7 +268,7 @@
         emitFilter()
     }
 
-    const toggleRelevanceSort = () => {
+    const toggleRelevanceSort = (): void => {
         // Toggle between RELEVANCE_DESC and default DATE_DESC
         if (filter.value.sort === 'RELEVANCE_DESC') {
             filter.value.sort = 'DATE_DESC'
@@ -261,27 +278,27 @@
         emitFilter()
     }
 
-    const toggleCompactMode = () => {
+    const toggleCompactMode = (): void => {
         compactMode.value = !compactMode.value
         emitFilter()
     }
 
-    const toggleHideReviews = () => {
+    const toggleHideReviews = (): void => {
         hideReviews.value = !hideReviews.value
         emitFilter()
     }
 
-    const toggleHideSourceLinks = () => {
+    const toggleHideSourceLinks = (): void => {
         hideSourceLinks.value = !hideSourceLinks.value
         emitFilter()
     }
 
-    const toggleHighlightWordlist = () => {
+    const toggleHighlightWordlist = (): void => {
         highlightWordlist.value = !highlightWordlist.value
         emitFilter()
     }
 
-    const emitFilter = () => {
+    const emitFilter = (): void => {
         emit('update-filter', {
             ...filter.value,
             compact_mode: compactMode.value,
@@ -291,26 +308,26 @@
         })
     }
 
-    const updateDataCount = (count) => {
+    const updateDataCount = (count: number): void => {
         totalCount.value = count
     }
 
-    const updateSelectedCount = (count) => {
+    const updateSelectedCount = (count: number): void => {
         selectedCount.value = count
     }
 
-    const updateCurrentlyShowingCount = (count) => {
+    const updateCurrentlyShowingCount = (count: number): void => {
         currentlyShowingCount.value = count
     }
 
-    const handleUpdateData = () => {
+    const handleUpdateData = (): void => {
         emit('update-data')
     }
 
     // Watch for selection changes
     watch(
         () => assessStore.getSelection,
-        (newSelection) => {
+        (newSelection: unknown[]) => {
             selectedCount.value = newSelection.length
         },
         { deep: true }

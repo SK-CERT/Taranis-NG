@@ -3,21 +3,17 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || values[index].remote" class="numbered-cve-value">
+                <span v-if="readOnly || value.remote" class="numbered-cve-value">
                     <span v-if="values.length > 1" class="cve-number text--disabled">{{ index + 1 }}.</span>
-                    <a
-                        :href="`https://cve.mitre.org/cgi-bin/cvename.cgi?name=${values[index].value}`"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        {{ values[index].value }}
+                    <a :href="`https://cve.mitre.org/cgi-bin/cvename.cgi?name=${value.value}`" target="_blank" rel="noopener noreferrer">
+                        {{ value.value }}
                         <v-icon size="x-small">{{ ICONS.OPEN }}</v-icon>
                     </a>
                 </span>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -29,12 +25,12 @@
                     </template>
                     <template #col_middle>
                         <v-text-field
-                            v-model="values[index].value"
+                            v-model="value.value"
                             density="compact"
                             variant="outlined"
                             label="CVE-YYYY-NNNNN"
                             :class="getLockedStyle(index)"
-                            :disabled="values[index].locked || !canModify"
+                            :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
                             @keyup="onKeyUp(index)"
@@ -46,39 +42,41 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { onMounted } from 'vue'
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
         }
-    })
+    )
 
     const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
 

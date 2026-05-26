@@ -3,7 +3,9 @@
         <!-- Confirmation dialogs -->
         <v-dialog v-model="showCloseConfirmation" max-width="500px" persistent>
             <v-card>
-                <v-card-title class="text-h5">{{ $t('confirm_close.title') }}</v-card-title>
+                <v-card-title class="text-h5">
+                    {{ $t('confirm_close.title') }}
+                </v-card-title>
                 <v-card-text>{{ $t('product.confirm_close.message') }}</v-card-text>
                 <v-card-actions>
                     <v-spacer />
@@ -22,19 +24,27 @@
 
         <v-dialog v-model="showPublishConfirmation" max-width="500px" persistent>
             <v-card>
-                <v-card-title class="text-h5">{{ $t('product.publish_confirmation') }}</v-card-title>
+                <v-card-title class="text-h5">
+                    {{ $t('product.publish_confirmation') }}
+                </v-card-title>
                 <v-card-text>{{ product.title }}</v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn @click="showPublishConfirmation = false">{{ $t('common.cancel') }}</v-btn>
-                    <v-btn color="primary" @click="handlePublish">{{ $t('common.yes') }}</v-btn>
+                    <v-btn @click="showPublishConfirmation = false">
+                        {{ $t('common.cancel') }}
+                    </v-btn>
+                    <v-btn color="primary" @click="handlePublish">
+                        {{ $t('common.yes') }}
+                    </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
 
         <v-dialog v-model="showPublishUnsavedConfirmation" max-width="500px" persistent>
             <v-card>
-                <v-card-title class="text-h5">{{ $t('product.publish_unsaved.title') }}</v-card-title>
+                <v-card-title class="text-h5">
+                    {{ $t('product.publish_unsaved.title') }}
+                </v-card-title>
                 <v-card-text>{{ $t('product.publish_unsaved.message') }}</v-card-text>
                 <v-card-actions>
                     <v-spacer />
@@ -63,14 +73,16 @@
                 <v-spacer />
                 <StateSelector
                     v-if="availableStates.length > 0"
-                    v-model="product.state_id"
+                    :model-value="product.state_id ?? ''"
                     :available-states="availableStates"
                     :label="$t('product.state')"
                     :disabled="!canModify"
                     @update:model-value="handleUpdateRecord"
                 />
                 <v-btn v-if="!isEditMode && canModify && product.id === -1" text @click="handleSave">
-                    <v-icon start>{{ ICONS.CONTENT_SAVE }}</v-icon>
+                    <v-icon start>
+                        {{ ICONS.CONTENT_SAVE }}
+                    </v-icon>
                     {{ $t('common.save') }}
                 </v-btn>
             </v-toolbar>
@@ -136,7 +148,9 @@
                     <!-- Publisher Presets -->
                     <v-row>
                         <v-col cols="12">
-                            <div class="text-subtitle-2 mb-2">{{ $t('product.publisher_presets') }}</div>
+                            <div class="text-subtitle-2 mb-2">
+                                {{ $t('product.publisher_presets') }}
+                            </div>
                             <div v-if="publisherPresets.length > 0">
                                 <v-checkbox
                                     v-for="preset in publisherPresets"
@@ -188,7 +202,7 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
@@ -200,41 +214,91 @@
     import StateSelector from '@/components/common/StateSelector.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
 
+    type ProductModel = {
+        id: number
+        title: string
+        description: string
+        product_type_id: number | string | undefined
+        state_id: number | string | undefined
+        report_items: Array<{ id: number | string }>
+    }
+
+    type FormRef = {
+        reset?: () => void
+        validate?: () => Promise<{ valid: boolean }>
+    }
+
+    type ReportItem = {
+        id: number | string
+        [key: string]: unknown
+    }
+
+    type PublisherPreset = {
+        id: number | string
+        name: string
+        selected: boolean
+        [key: string]: unknown
+    }
+
+    type AvailableState = {
+        id: number | string
+        title?: string
+        is_default?: boolean
+        [key: string]: unknown
+    }
+
+    type ProductType = {
+        id: number | string
+        title?: string
+        [key: string]: unknown
+    }
+
+    type ProductEditPayload = {
+        id: number
+        title: string
+        description: string
+        product_type_id: number | string | undefined
+        state_id: number | string | undefined
+        report_items?: ReportItem[]
+        modify: boolean
+        access: boolean
+    }
+
     const { t } = useI18n()
     const { checkPermission } = useAuth()
     const authStore = useAuthStore()
 
     // Component state
-    const visible = ref(false)
-    const isEditMode = ref(false)
-    const showError = ref(false)
-    const showCloseConfirmation = ref(false)
-    const showPublishConfirmation = ref(false)
-    const showPublishUnsavedConfirmation = ref(false)
-    const initialFormState = ref(null)
-    const formRef = ref(null)
-    const canModifyFlag = ref(false)
-    const canAccessFlag = ref(false)
+    const visible = ref<boolean>(false)
+    const isEditMode = ref<boolean>(false)
+    const showError = ref<boolean>(false)
+    const showCloseConfirmation = ref<boolean>(false)
+    const showPublishConfirmation = ref<boolean>(false)
+    const showPublishUnsavedConfirmation = ref<boolean>(false)
+    const initialFormState = ref<string | null>(null)
+    const formRef = ref<FormRef | null>(null)
+    const canModifyFlag = ref<boolean>(false)
+    const canAccessFlag = ref<boolean>(false)
 
     // Form data
-    const product = ref({
+    const product = ref<ProductModel>({
         id: -1,
         title: '',
         description: '',
-        product_type_id: null,
-        state_id: null,
+        product_type_id: undefined,
+        state_id: undefined,
         report_items: []
     })
 
-    const selectedType = ref(null)
-    const reportItems = ref([])
-    const productTypes = ref([])
-    const publisherPresets = ref([])
-    const availableStates = ref([])
-    const reportItemSelector = ref(null)
+    const selectedType = ref<ProductType | null>(null)
+    const reportItems = ref<ReportItem[]>([])
+    const productTypes = ref<ProductType[]>([])
+    const publisherPresets = ref<PublisherPreset[]>([])
+    const availableStates = ref<AvailableState[]>([])
+    const reportItemSelector = ref<{ openSelector?: () => void } | null>(null)
 
     // Validation rules
-    const requiredRule = (value) => !!value || t('common.required')
+    const requiredRule = (value: string | number | null | undefined): true | string => !!value || t('common.required')
 
     // Computed properties
     const canModify = computed(() => {
@@ -254,8 +318,8 @@
             id: -1,
             title: '',
             description: '',
-            product_type_id: null,
-            state_id: null,
+            product_type_id: undefined,
+            state_id: undefined,
             report_items: []
         }
         selectedType.value = null
@@ -264,7 +328,7 @@
         canModifyFlag.value = false
         canAccessFlag.value = false
         reportItems.value = []
-        formRef.value?.reset()
+        formRef.value?.reset?.()
         resetPublisherPresets()
         selectDefaultState()
         initialFormState.value = snapshotForm()
@@ -298,24 +362,24 @@
         }
     }
 
-    function handleProductTypeChange() {
+    function handleProductTypeChange(): void {
         if (selectedType.value) {
             product.value.product_type_id = selectedType.value.id
             handleUpdateRecord()
         }
     }
 
-    function prepareProduct() {
+    function prepareProduct(): void {
         showError.value = false
-        product.value.product_type_id = selectedType.value?.id || null
+        product.value.product_type_id = selectedType.value?.id
         product.value.report_items = reportItems.value.map((item) => ({ id: item.id }))
     }
 
-    function openReportItemSelector() {
-        reportItemSelector.value?.openSelector()
+    function openReportItemSelector(): void {
+        reportItemSelector.value?.openSelector?.()
     }
 
-    async function handleReportItemsChanged(items) {
+    async function handleReportItemsChanged(items: ReportItem[]): Promise<void> {
         reportItems.value = Array.isArray(items) ? [...items] : []
 
         if (isEditMode.value && product.value.id !== -1) {
@@ -323,11 +387,11 @@
         }
     }
 
-    function getSelectedPublisherIds() {
+    function getSelectedPublisherIds(): Array<number | string> {
         return publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.id)
     }
 
-    function validatePublisherSelection() {
+    function validatePublisherSelection(): boolean {
         const selectedIds = getSelectedPublisherIds()
         if (selectedIds.length === 0) {
             window.dispatchEvent(
@@ -340,8 +404,12 @@
         return true
     }
 
-    async function handleSave() {
-        const { valid } = await formRef.value.validate()
+    async function handleSave(): Promise<boolean> {
+        const validate = formRef.value?.validate
+        if (!validate) {
+            return false
+        }
+        const { valid } = (await validate()) || { valid: false }
         if (!valid) return false
 
         prepareProduct()
@@ -366,7 +434,7 @@
             window.dispatchEvent(new CustomEvent('product-updated'))
             initialFormState.value = snapshotForm()
             return true
-        } catch (error) {
+        } catch {
             showError.value = true
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -377,10 +445,10 @@
         }
     }
 
-    async function handleUpdateRecord() {
+    async function handleUpdateRecord(): Promise<void> {
         if (!isEditMode.value || product.value.id === -1) return
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
         if (!valid) return
 
         prepareProduct()
@@ -389,12 +457,12 @@
             await updateProduct(product.value)
             window.dispatchEvent(new CustomEvent('product-updated'))
             initialFormState.value = snapshotForm()
-        } catch (error) {
+        } catch {
             showError.value = true
         }
     }
 
-    function handleCancel() {
+    function handleCancel(): void {
         if (!isEditMode.value && hasUnsavedChanges()) {
             showCloseConfirmation.value = true
             return
@@ -402,12 +470,12 @@
         closeDialog()
     }
 
-    function confirmClose() {
+    function confirmClose(): void {
         showCloseConfirmation.value = false
         closeDialog()
     }
 
-    async function saveAndClose() {
+    async function saveAndClose(): Promise<void> {
         showCloseConfirmation.value = false
         const saved = await handleSave()
         if (saved) {
@@ -415,12 +483,12 @@
         }
     }
 
-    function closeDialog() {
+    function closeDialog(): void {
         visible.value = false
         resetForm()
     }
 
-    function handlePublishConfirmation() {
+    function handlePublishConfirmation(): void {
         if (!validatePublisherSelection()) return
 
         if (!isEditMode.value && hasUnsavedChanges()) {
@@ -430,10 +498,10 @@
         }
     }
 
-    async function handlePublish() {
+    async function handlePublish(): Promise<void> {
         showPublishConfirmation.value = false
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
         if (!valid) return
 
         prepareProduct()
@@ -454,7 +522,7 @@
                     })
                 )
             }
-        } catch (error) {
+        } catch {
             showError.value = true
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -464,7 +532,7 @@
         }
     }
 
-    async function saveAndPublish() {
+    async function saveAndPublish(): Promise<void> {
         showPublishUnsavedConfirmation.value = false
         const saved = await handleSave()
         if (saved) {
@@ -475,13 +543,13 @@
         }
     }
 
-    function publishOnly() {
+    function publishOnly(): void {
         showPublishUnsavedConfirmation.value = false
         handlePublish()
     }
 
-    async function handlePreview(event) {
-        const { valid } = await formRef.value.validate()
+    async function handlePreview(event?: MouseEvent): Promise<void> {
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
         if (!valid) return
 
         prepareProduct()
@@ -509,7 +577,7 @@
             document.body.appendChild(form)
             form.submit()
             document.body.removeChild(form)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Preview failed:', error)
             showError.value = true
         }
@@ -520,7 +588,7 @@
             const response = await getEntityTypeStates('product')
             availableStates.value = response.data.states || []
             selectDefaultState()
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Failed to load available states for PRODUCT:', error)
             availableStates.value = []
         }
@@ -530,7 +598,7 @@
         try {
             const response = await getAllUserProductTypes()
             productTypes.value = response.data.items || []
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Failed to load product types:', error)
         }
     }
@@ -542,18 +610,18 @@
                 ...preset,
                 selected: false
             }))
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Failed to load publisher presets:', error)
         }
     }
 
     // Public methods for opening dialog
-    function openDialog() {
+    function openDialog(): void {
         visible.value = true
         resetForm()
     }
 
-    function openEditDialog(data) {
+    function openEditDialog(data: ProductEditPayload): void {
         visible.value = true
         isEditMode.value = true
         canModifyFlag.value = data.modify
@@ -575,17 +643,19 @@
     }
 
     // Event listeners
-    const handleNewProduct = (event) => {
-        const data = event.detail
+    const handleNewProduct = (event: Event): void => {
+        const data = (event as CustomEvent<unknown>).detail
         openDialog()
         if (data && Array.isArray(data)) {
-            reportItems.value = [...data]
+            reportItems.value = [...(data as ReportItem[])]
         }
     }
 
-    const handleShowProductEdit = (event) => {
-        const data = event.detail
-        openEditDialog(data)
+    const handleShowProductEdit = (event: Event): void => {
+        const data = (event as CustomEvent<unknown>).detail
+        if (data && typeof data === 'object') {
+            openEditDialog(data as ProductEditPayload)
+        }
     }
 
     onMounted(() => {

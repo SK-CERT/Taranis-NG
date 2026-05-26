@@ -3,17 +3,17 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || values[index].remote" class="numbered-cvss-value">
+                <span v-if="readOnly || value.remote" class="numbered-cvss-value">
                     <span v-if="values.length > 1" class="cvss-number text--disabled">{{ index + 1 }}.</span>
-                    <v-chip :color="getCVSSColor(values[index].value)" size="small" class="mr-2">
-                        {{ values[index].value }}
+                    <v-chip :color="getCVSSColor(value.value)" size="small" class="mr-2">
+                        {{ value.value }}
                     </v-chip>
-                    <span class="text-caption text-grey">{{ getCVSSSeverity(values[index].value) }}</span>
+                    <span class="text-caption text-grey">{{ getCVSSSeverity(value.value) }}</span>
                 </span>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -22,31 +22,31 @@
                 >
                     <template #col_left>
                         <CalculatorCVSS
-                            :model-value="values[index].value"
-                            :disabled="values[index].locked || !canModify"
-                            @update:model-value="(v) => updateFromCalculator(index, v)"
+                            :model-value="value.value"
+                            :disabled="value.locked || !canModify"
+                            @update:model-value="updateFromCalculator(index, $event)"
                         />
                     </template>
                     <template #col_middle>
                         <v-text-field
-                            v-model="values[index].value"
+                            v-model="value.value"
                             density="compact"
                             variant="outlined"
                             label="CVSS Vector / Score"
                             :rules="[vectorRule]"
                             :class="getLockedStyle(index)"
-                            :disabled="values[index].locked || !canModify"
+                            :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
                             @keyup="onKeyUp(index)"
                         />
 
                         <!-- Score display for vector strings (always rendered to reserve space) -->
-                        <div class="score-display" :style="{ visibility: getVectorScores(values[index].value) ? 'visible' : 'hidden' }">
+                        <div class="score-display" :style="{ visibility: getVectorScores(value.value) ? 'visible' : 'hidden' }">
                             <v-row justify="center" no-gutters>
-                                <template v-if="getVectorScores(values[index].value)">
+                                <template v-if="getVectorScores(value.value)">
                                     <v-col
-                                        v-for="scoreItem in getVectorScores(values[index].value)"
+                                        v-for="scoreItem in getVectorScores(value.value)"
                                         :key="scoreItem.name"
                                         class="pa-0 mx-1 severity-box"
                                         :class="scoreItem.severityClass"
@@ -71,43 +71,45 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import CalculatorCVSS from '../CalculatorCVSS.vue'
-    import { useAttributes } from './useAttributes.js'
-    import { calculateScoreItems, detectVersion, createInstance, stripParentheses } from '../cvss-utils.js'
+    import { useAttributes } from './useAttributes'
+    import { calculateScoreItems, detectVersion, createInstance, stripParentheses } from '../cvss-utils'
 
     const { t, te } = useI18n()
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        index?: string | number
+        value: string
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
         }
-    })
+    )
 
     const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
 
@@ -118,15 +120,15 @@
         }
     })
 
-    const vectorRule = (value) => {
+    const vectorRule = (value: string | null | undefined): true | string => {
         if (!value || value === '') return true
-        const cleaned = stripParentheses(value)
+        const cleaned = stripParentheses(value ?? '') ?? ''
         // Accept plain numeric scores (0.0 - 10.0)
         if (/^(10(\.0)?|[0-9](\.[0-9])?)$/.test(cleaned)) return true
         // Validate vector strings using the library
         try {
             const version = detectVersion(cleaned)
-            if (!version) return t('cvss_calculator.validator')
+            if (typeof version !== 'string' || version.length === 0) return t('cvss_calculator.validator')
             createInstance(version, cleaned)
             return true
         } catch {
@@ -134,17 +136,21 @@
         }
     }
 
-    function updateFromCalculator(index, vectorValue) {
-        props.values[index].value = vectorValue
+    function updateFromCalculator(index: number, vectorValue: string): void {
+        const item = props.values[index]
+        if (!item) {
+            return
+        }
+        item.value = vectorValue
         onKeyUp(index)
     }
 
-    function getVectorScores(value) {
-        return calculateScoreItems(value, t, te)
+    function getVectorScores(value: string | null | undefined): any {
+        return calculateScoreItems(value ?? '', t, te)
     }
 
-    const getCVSSColor = (score) => {
-        const s = parseFloat(score)
+    const getCVSSColor = (score: string | number | null | undefined): string => {
+        const s = parseFloat(String(score ?? '0'))
         if (s >= 9.0) return 'error'
         if (s >= 7.0) return 'deep-orange'
         if (s >= 4.0) return 'warning'
@@ -152,8 +158,8 @@
         return 'grey'
     }
 
-    const getCVSSSeverity = (score) => {
-        const s = parseFloat(score)
+    const getCVSSSeverity = (score: string | number | null | undefined): string => {
+        const s = parseFloat(String(score ?? '0'))
         if (s >= 9.0) return 'Critical'
         if (s >= 7.0) return 'High'
         if (s >= 4.0) return 'Medium'
