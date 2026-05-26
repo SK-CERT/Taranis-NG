@@ -17,7 +17,7 @@
     <NewProduct ref="newProductRef" />
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, nextTick } from 'vue'
     import { onBeforeRouteLeave } from 'vue-router'
     import { usePublishStore } from '@/stores/publish'
@@ -30,19 +30,19 @@
     const publishStore = usePublishStore()
     const { checkPermission } = useAuth()
 
-    const newProductRef = ref(null)
-    const contentRef = ref(null)
-    const toolbarFilter = ref(null)
+    const newProductRef = ref<any>(null)
+    const contentRef = ref<any>(null)
+    const toolbarFilter = ref<any>(null)
 
     const canCreateProduct = computed(() => checkPermission('PUBLISH_CREATE'))
 
-    const handleAddNew = () => {
+    const handleAddNew = (): void => {
         if (newProductRef.value) {
             newProductRef.value.openDialog()
         }
     }
 
-    const updateShowingCount = (count) => {
+    const updateShowingCount = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateShowingCount(count)
         }

@@ -19,14 +19,22 @@
 
                 <!-- Error state -->
                 <div v-else-if="error" class="text-center pa-4">
-                    <v-icon color="error" size="large">{{ ICONS.ALERT_CIRCLE }}</v-icon>
-                    <p class="mt-2">{{ error }}</p>
+                    <v-icon color="error" size="large">
+                        {{ ICONS.ALERT_CIRCLE }}
+                    </v-icon>
+                    <p class="mt-2">
+                        {{ error }}
+                    </p>
                 </div>
 
                 <!-- List view -->
                 <div v-else-if="reports.length === 0" class="text-center pa-4">
-                    <v-icon size="large">{{ ICONS.INFORMATION_OUTLINE }}</v-icon>
-                    <p class="mt-2">{{ t('assess.reports_dialog.no_reports') }}</p>
+                    <v-icon size="large">
+                        {{ ICONS.INFORMATION_OUTLINE }}
+                    </v-icon>
+                    <p class="mt-2">
+                        {{ t('assess.reports_dialog.no_reports') }}
+                    </p>
                 </div>
 
                 <div v-else class="space-y-3">
@@ -47,34 +55,72 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import { ICONS } from '@/config/ui-constants'
     import { useI18n } from 'vue-i18n'
     import { getReportItemsByAggregate, updateReportItem } from '@/api/analyze'
     import CardAnalyze from '@/components/analyze/CardAnalyze.vue'
 
+    type ReportItem = {
+        id: number | string
+        access?: boolean
+        modify?: boolean
+        [key: string]: unknown
+    }
+
+    type AggregateCard = {
+        id: number | string
+        in_reports_count?: number
+        [key: string]: unknown
+    }
+
+    type ReportResponse = {
+        data?:
+            | {
+                  data?: ReportItem[]
+                  [key: string]: unknown
+              }
+            | ReportItem[]
+    }
+
     const { t } = useI18n()
 
-    const isOpen = ref(false)
-    const loading = ref(false)
-    const error = ref(null)
-    const reports = ref([])
-    const currentCard = ref(null)
+    const isOpen = ref<boolean>(false)
+    const loading = ref<boolean>(false)
+    const error = ref<string | null>(null)
+    const reports = ref<ReportItem[]>([])
+    const currentCard = ref<AggregateCard | null>(null)
 
-    const emit = defineEmits(['view-report-detail'])
+    const emit = defineEmits<{
+        (e: 'view-report-detail', report: ReportItem): void
+    }>()
 
-    const open = async (card) => {
+    const normalizeReportItems = (response: ReportResponse): ReportItem[] => {
+        const payload = response?.data
+        if (Array.isArray(payload)) {
+            return payload
+        }
+        if (payload && Array.isArray(payload.data)) {
+            return payload.data
+        }
+        return []
+    }
+
+    const open = async (card: AggregateCard): Promise<void> => {
         currentCard.value = card
 
         // If only one report, open it directly without dialog
         if (card.in_reports_count === 1) {
             try {
-                const response = await getReportItemsByAggregate(card.id)
-                const reportItems = response.data.data || response.data
+                const response = (await getReportItemsByAggregate(card.id)) as ReportResponse
+                const reportItems = normalizeReportItems(response)
 
                 if (reportItems && reportItems.length === 1) {
-                    emit('view-report-detail', reportItems[0])
+                    const firstReportItem = reportItems[0]
+                    if (firstReportItem) {
+                        emit('view-report-detail', firstReportItem)
+                    }
                     return
                 }
             } catch (err) {
@@ -86,15 +132,15 @@
         showDialog(card)
     }
 
-    const showDialog = async (card) => {
+    const showDialog = async (card: AggregateCard): Promise<void> => {
         isOpen.value = true
         loading.value = true
         error.value = null
         reports.value = []
 
         try {
-            const response = await getReportItemsByAggregate(card.id)
-            const reportItems = response.data.data || response.data
+            const response = (await getReportItemsByAggregate(card.id)) as ReportResponse
+            const reportItems = normalizeReportItems(response)
             reports.value = reportItems || []
             loading.value = false
         } catch (err) {
@@ -104,13 +150,13 @@
         }
     }
 
-    const viewReport = (report) => {
+    const viewReport = (report: ReportItem): void => {
         // Emit event to open report in NewReportItem
         emit('view-report-detail', report)
         close()
     }
 
-    const toAnalyzeCard = (report) => {
+    const toAnalyzeCard = (report: ReportItem): ReportItem => {
         // CardAnalyze gates click by access/modify flags; set safe defaults for dialog usage.
         return {
             ...report,
@@ -119,18 +165,24 @@
         }
     }
 
-    const close = () => {
+    const close = (): void => {
         isOpen.value = false
         reports.value = []
         currentCard.value = null
         error.value = null
     }
 
-    const removeReport = async (report) => {
+    const removeReport = async (report: ReportItem): Promise<void> => {
         try {
-            const data = {
-                delete: true,
-                aggregate_id: currentCard.value.id
+            const data: {
+                delete: true
+                aggregate_id?: number | string
+            } = {
+                delete: true
+            }
+
+            if (currentCard.value?.id !== undefined) {
+                data.aggregate_id = currentCard.value.id
             }
 
             await updateReportItem(report.id, data)
@@ -138,7 +190,7 @@
             // Remove the report from the list
             reports.value = reports.value.filter((r) => r.id !== report.id)
             if (currentCard.value) {
-                currentCard.value.in_reports_count -= 1
+                currentCard.value.in_reports_count = Math.max(0, (currentCard.value.in_reports_count || 0) - 1)
             }
 
             // If no reports left, close the dialog

@@ -22,11 +22,11 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import ExternalUsersView from './ExternalUsersView.vue'
     import AssetGroupsView from './AssetGroupsView.vue'
     import NotificationTemplatesView from './NotificationTemplatesView.vue'
 
-    const activeTab = ref('users')
+    const activeTab = ref<'users' | 'groups' | 'templates'>('users')
 </script>

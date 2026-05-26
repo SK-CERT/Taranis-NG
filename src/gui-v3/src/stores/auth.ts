@@ -1,34 +1,47 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import ApiService from '@/services/api_service'
 import { login as loginApi, logout as logoutApi, refresh } from '@/api/auth'
+import { parseJwtClaims } from '@/services/jwt'
 import { useUserStore } from './user'
+import type { AuthTokenResponse, JwtClaims, LoginPayload, UserClaims } from '@/types/auth'
+
+type ApiResponse<T> = {
+    data: T
+}
+
+const getStoredAccessToken = (): string => {
+    const tokenFromItem = localStorage.getItem('ACCESS_TOKEN')
+    if (tokenFromItem) {
+        return tokenFromItem
+    }
+
+    const tokenFromProp = (localStorage as unknown as { ACCESS_TOKEN?: unknown }).ACCESS_TOKEN
+    return typeof tokenFromProp === 'string' ? tokenFromProp : ''
+}
+
+const setStoredAccessToken = (value: string): void => {
+    localStorage.setItem('ACCESS_TOKEN', value)
+    ;(localStorage as unknown as { ACCESS_TOKEN?: string }).ACCESS_TOKEN = value
+}
+
+const parseJwtPayload = (token: string): JwtClaims | null => parseJwtClaims(token)
 
 export const useAuthStore = defineStore('auth', () => {
     // State - Initialize from localStorage if available
-    const jwt = ref(localStorage.ACCESS_TOKEN || '')
+    const jwt = ref(getStoredAccessToken())
 
     // Getters
     const getUserData = computed(() => {
         if (!jwt.value) return null
-        try {
-            const data = JSON.parse(atob(jwt.value.split('.')[1]))
-            return data.user_claims
-        } catch (error) {
-            console.error('Error parsing JWT:', error)
-            return null
-        }
+        const data = parseJwtPayload(jwt.value)
+        return data?.user_claims ?? null
     })
 
     const getSubjectName = computed(() => {
         if (!jwt.value) return ''
-        try {
-            const data = JSON.parse(atob(jwt.value.split('.')[1]))
-            return data.sub
-        } catch (error) {
-            console.error('Error parsing JWT:', error)
-            return ''
-        }
+        const data = parseJwtPayload(jwt.value)
+        return data?.sub ?? ''
     })
 
     const hasExternalLoginUrl = computed(() => {
@@ -69,31 +82,30 @@ export const useAuthStore = defineStore('auth', () => {
         if (!jwt.value || jwt.value.split('.').length < 3) {
             return false
         }
-        try {
-            const data = JSON.parse(atob(jwt.value.split('.')[1]))
-            const exp = new Date(data.exp * 1000)
-            const now = new Date()
-            return now < exp
-        } catch (error) {
+        const data = parseJwtPayload(jwt.value)
+        if (!data) {
             return false
         }
+        const exp = new Date((data.exp || 0) * 1000)
+        const now = new Date()
+        return now < exp
     })
 
     // Actions
-    function setJwtToken(access_token) {
-        localStorage.ACCESS_TOKEN = access_token
+    function setJwtToken(access_token: string): void {
+        setStoredAccessToken(access_token)
         ApiService.setHeader()
         jwt.value = access_token
     }
 
-    function clearJwtToken() {
-        localStorage.ACCESS_TOKEN = ''
+    function clearJwtToken(): void {
+        setStoredAccessToken('')
         jwt.value = ''
     }
 
-    async function login(userData) {
+    async function login(userData: LoginPayload): Promise<ApiResponse<AuthTokenResponse>> {
         try {
-            const response = await loginApi(userData, userData.method)
+            const response = (await loginApi(userData, userData.method)) as ApiResponse<AuthTokenResponse>
             setJwtToken(response.data.access_token)
 
             const userStore = useUserStore()
@@ -108,7 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function logout() {
+    async function logout(): Promise<void> {
         const userStore = useUserStore()
 
         try {
@@ -124,9 +136,9 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    async function refreshToken() {
+    async function refreshToken(): Promise<ApiResponse<AuthTokenResponse>> {
         try {
-            const response = await refresh()
+            const response = (await refresh()) as ApiResponse<AuthTokenResponse>
             setJwtToken(response.data.access_token)
 
             const userStore = useUserStore()
@@ -139,7 +151,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    function setToken(access_token) {
+    function setToken(access_token: string): void {
         setJwtToken(access_token)
 
         const userStore = useUserStore()

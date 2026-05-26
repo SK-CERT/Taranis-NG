@@ -1,16 +1,56 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { getUserWordLists, getAvailableWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from '@/api/user'
 import { getAllSettings, updateSetting } from '@/api/config'
 import Settings from '@/services/settings'
+import type { SettingEntry } from '@/types/settings'
+
+type HotkeyEntry = {
+    key: string
+    alias: string
+    icon: string
+}
+
+type SearchFilter = {
+    search: string
+}
+
+type SaveSettingsPayload = {
+    data: { id?: string | number; [key: string]: unknown }
+    is_global: boolean
+}
+
+type ApiResponse<T> = {
+    data?: T
+}
+
+const asObjectWithItems = (value: unknown): { items?: unknown[] } | null => {
+    if (value && typeof value === 'object') {
+        return value as { items?: unknown[] }
+    }
+    return null
+}
+
+const toSettingEntries = (value: unknown): SettingEntry[] => {
+    if (Array.isArray(value)) {
+        return value as SettingEntry[]
+    }
+
+    const withItems = asObjectWithItems(value)
+    if (withItems && Array.isArray(withItems.items)) {
+        return withItems.items as SettingEntry[]
+    }
+
+    return []
+}
 
 export const useSettingsStore = defineStore('settings', () => {
     // State
-    const settings = ref([])
+    const settings = ref<SettingEntry[]>([])
     const spellcheck = ref(true)
-    const hotkeys = ref([])
-    const word_lists = ref([])
-    const available_word_lists = ref([])
+    const hotkeys = ref<HotkeyEntry[]>([])
+    const word_lists = ref<unknown[]>([])
+    const available_word_lists = ref<unknown[]>([])
 
     // Getters
     const getSettings = computed(() => (Array.isArray(settings.value) ? settings.value : []))
@@ -28,10 +68,10 @@ export const useSettingsStore = defineStore('settings', () => {
         let lng = uiLangSetting ? uiLangSetting.value : null
 
         if (!lng) {
-            lng = navigator.language.split('-')[0]
+            lng = navigator.language.split('-')[0] || null
         }
         if (!lng && typeof import.meta.env.VITE_APP_TARANIS_NG_LOCALE !== 'undefined') {
-            lng = import.meta.env.VITE_APP_TARANIS_NG_LOCALE
+            lng = import.meta.env.VITE_APP_TARANIS_NG_LOCALE || null
         }
         if (!lng) {
             lng = 'en'
@@ -40,7 +80,7 @@ export const useSettingsStore = defineStore('settings', () => {
     })
 
     // Actions
-    function getSetting(key) {
+    function getSetting(key: string): SettingEntry | null {
         try {
             const settingsArray = Array.isArray(settings.value) ? settings.value : []
             if (settingsArray.length === 0) return null
@@ -56,21 +96,16 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    async function loadSettings(data) {
+    async function loadSettings(data: SearchFilter): Promise<ApiResponse<unknown>> {
         try {
-            const response = await getAllSettings(data)
+            const response = (await getAllSettings(data)) as ApiResponse<unknown>
             // Ensure we always set an array
             const responseData = response?.data
 
-            if (Array.isArray(responseData)) {
-                settings.value = responseData
-            } else if (responseData && typeof responseData === 'object' && Array.isArray(responseData.items)) {
-                settings.value = responseData.items
-            } else {
+            settings.value = toSettingEntries(responseData)
+            if (settings.value.length === 0) {
                 console.warn('[Settings] Unexpected response format, setting to empty array')
-                settings.value = []
             }
-            // console.log('[Settings] settings.value after load:', Array.isArray(settings.value), settings.value?.length)
             return response
         } catch (error) {
             console.error('[Settings] Error loading settings:', error)
@@ -79,27 +114,20 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    async function saveSettings({ data, is_global }) {
-        const response = await updateSetting(data, is_global)
+    async function saveSettings({ data, is_global }: SaveSettingsPayload): Promise<ApiResponse<unknown>> {
+        const response = (await updateSetting(data, is_global)) as ApiResponse<unknown>
         // Ensure we always set an array
         const responseData = response?.data
-        if (Array.isArray(responseData)) {
-            settings.value = responseData
-        } else if (responseData && Array.isArray(responseData.items)) {
-            settings.value = responseData.items
-        } else {
-            settings.value = []
-        }
+        settings.value = toSettingEntries(responseData)
         return response
     }
 
-    async function loadUserWordLists() {
+    async function loadUserWordLists(): Promise<ApiResponse<unknown>> {
         try {
-            const response = await getUserWordLists()
+            const response = (await getUserWordLists()) as ApiResponse<unknown>
             const responseData = response?.data
 
             word_lists.value = Array.isArray(responseData) ? responseData : []
-            // console.log('[Settings] word_lists.value after load:', Array.isArray(word_lists.value), word_lists.value?.length)
             return response
         } catch (error) {
             console.error('[Settings] Error loading word lists:', error)
@@ -108,19 +136,19 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    async function loadAvailableWordLists(data) {
+    async function loadAvailableWordLists(data: SearchFilter): Promise<ApiResponse<unknown>> {
         try {
-            const response = await getAvailableWordLists(data)
+            const response = (await getAvailableWordLists(data)) as ApiResponse<unknown>
             const responseData = response?.data
+            const withItems = asObjectWithItems(responseData)
 
-            if (responseData && Array.isArray(responseData.items)) {
-                available_word_lists.value = responseData.items
+            if (withItems && Array.isArray(withItems.items)) {
+                available_word_lists.value = withItems.items
             } else if (Array.isArray(responseData)) {
                 available_word_lists.value = responseData
             } else {
                 available_word_lists.value = []
             }
-            // console.log('[Settings] available_word_lists.value after load:', Array.isArray(available_word_lists.value))
             return response
         } catch (error) {
             console.error('[Settings] Error loading available word lists:', error)
@@ -129,9 +157,9 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    async function saveUserWordLists(data) {
+    async function saveUserWordLists(data: unknown): Promise<ApiResponse<unknown>> {
         try {
-            const response = await updateUserWordLists(data)
+            const response = (await updateUserWordLists(data)) as ApiResponse<unknown>
             const responseData = response?.data
             word_lists.value = Array.isArray(responseData) ? responseData : []
             return response
@@ -141,13 +169,12 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    async function loadUserHotkeys() {
+    async function loadUserHotkeys(): Promise<ApiResponse<unknown>> {
         try {
-            const response = await getHotkeys()
+            const response = (await getHotkeys()) as ApiResponse<unknown>
             const responseData = response?.data
 
-            setUserHotkeys(Array.isArray(responseData) ? responseData : [])
-            // console.log('[Settings] hotkeys.value after load:', Array.isArray(hotkeys.value), hotkeys.value?.length)
+            setUserHotkeys(Array.isArray(responseData) ? (responseData as HotkeyEntry[]) : [])
             return response
         } catch (error) {
             console.error('[Settings] Error loading hotkeys:', error)
@@ -156,11 +183,11 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    async function saveUserHotkeys(data) {
+    async function saveUserHotkeys(data: unknown): Promise<ApiResponse<unknown>> {
         try {
-            const response = await updateHotkeys(data)
+            const response = (await updateHotkeys(data)) as ApiResponse<unknown>
             const responseData = response?.data
-            setUserHotkeys(Array.isArray(responseData) ? responseData : [])
+            setUserHotkeys(Array.isArray(responseData) ? (responseData as HotkeyEntry[]) : [])
             return response
         } catch (error) {
             console.error('[Settings] Error saving hotkeys:', error)
@@ -168,7 +195,7 @@ export const useSettingsStore = defineStore('settings', () => {
         }
     }
 
-    function setUserHotkeys(userHotkeys) {
+    function setUserHotkeys(userHotkeys: HotkeyEntry[]): void {
         try {
             resetHotkeys()
             if (!Array.isArray(userHotkeys)) {
@@ -183,20 +210,21 @@ export const useSettingsStore = defineStore('settings', () => {
 
             for (let i = 0; i < hotkeys.value.length; i++) {
                 for (let j = 0; j < userHotkeys.length; j++) {
-                    if (hotkeys.value[i].alias === userHotkeys[j].alias) {
-                        hotkeys.value[i].key = userHotkeys[j].key
+                    const hotkey = hotkeys.value[i]
+                    const userHotkey = userHotkeys[j]
+                    if (hotkey && userHotkey && hotkey.alias === userHotkey.alias) {
+                        hotkey.key = userHotkey.key
                         break
                     }
                 }
             }
-            // console.log('[Settings] setUserHotkeys completed, hotkeys.value:', Array.isArray(hotkeys.value), hotkeys.value?.length)
         } catch (error) {
             console.error('[Settings] Error in setUserHotkeys:', error)
             resetHotkeys()
         }
     }
 
-    function resetHotkeys() {
+    function resetHotkeys(): void {
         // we can't process .code, .keyCode property because they can be same up to 4 different .key values. Example: rR = KeyR,82  /? = Slash,191
         hotkeys.value = [
             // assess: new item navigation

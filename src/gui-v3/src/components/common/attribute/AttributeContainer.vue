@@ -12,7 +12,7 @@
     />
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
 
     // Lazy load attribute components to reduce bundle size
@@ -37,31 +37,34 @@
     import AttributeCWE from './AttributeCWE.vue'
     import AttributeCVSS from './AttributeCVSS.vue'
 
-    const props = defineProps({
-        attributeItem: {
-            type: Object,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeItem = {
+        attribute_group_item?: {
+            attribute?: {
+                type?: string
+            }
+            [key: string]: unknown
         }
-    })
+        values?: unknown[]
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeItem: AttributeItem
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
 
     // Map attribute types to components
-    const componentMap = {
+    const componentMap: Record<string, unknown> = {
         // Phase 1 - Core types (DONE)
         STRING: AttributeString,
         NUMBER: AttributeNumber,
@@ -86,7 +89,10 @@
     }
 
     const attributeComponent = computed(() => {
-        const attrType = props.attributeItem.attribute_group_item.attribute.type
+        const attrType = props.attributeItem.attribute_group_item?.attribute?.type
+        if (!attrType) {
+            return null
+        }
         return componentMap[attrType] || null
     })
 </script>

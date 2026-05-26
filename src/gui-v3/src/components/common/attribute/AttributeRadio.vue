@@ -3,13 +3,13 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || values[index].remote" class="radio-value">
-                    {{ values[index].value }}
+                <span v-if="readOnly || value.remote" class="radio-value">
+                    {{ value.value }}
                 </span>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -18,11 +18,11 @@
                 >
                     <template #col_middle>
                         <v-radio-group
-                            v-model="values[index].value"
+                            v-model="value.value"
                             inline
                             density="compact"
                             class="radio-single-row"
-                            :disabled="values[index].locked || !canModify"
+                            :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
                             @update:model-value="onEdit(index)"
@@ -41,45 +41,62 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | number | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type RadioOptionObject = {
+        value?: string | number
+        title?: string
+        name?: string
+        id?: string | number
+        [key: string]: unknown
+    }
+
+    type RadioOption = string | number | RadioOptionObject
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        attribute?: {
+            attribute_enums?: RadioOption[]
+            enum_items?: RadioOption[]
+            enum_values?: RadioOption[]
         }
-    })
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
 
     const { t } = useI18n()
 
     const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
 
-    const radioOptions = computed(() => {
+    const radioOptions = computed<RadioOption[]>(() => {
         return (
             props.attributeGroup?.attribute?.attribute_enums ||
             props.attributeGroup?.attribute?.enum_items ||
@@ -88,14 +105,14 @@
         )
     })
 
-    const getOptionLabel = (option) => {
+    const getOptionLabel = (option: RadioOption): string => {
         if (option && typeof option === 'object') {
-            return option.value ?? option.title ?? option.name ?? String(option.id ?? '')
+            return String(option.value ?? option.title ?? option.name ?? option.id ?? '')
         }
         return String(option ?? '')
     }
 
-    const getOptionValue = (option) => {
+    const getOptionValue = (option: RadioOption): any => {
         if (option && typeof option === 'object') {
             return option.value ?? option.id ?? option.title ?? option.name
         }

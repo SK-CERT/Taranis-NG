@@ -22,40 +22,36 @@
     </v-row>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
-    const props = defineProps({
-        delButton: {
-            type: Boolean,
-            default: false
-        },
-        valIndex: {
-            type: Number,
-            required: true
-        },
-        occurrence: {
-            type: Number,
-            default: null
-        },
-        values: {
-            type: Array,
-            required: true
+    const props = withDefaults(
+        defineProps<{
+            delButton?: boolean
+            valIndex: number
+            occurrence?: number | null | undefined
+            values: Array<Record<string, unknown>>
+        }>(),
+        {
+            delButton: false,
+            occurrence: null
         }
-    })
+    )
 
-    const emit = defineEmits(['del-value'])
+    const emit = defineEmits<{
+        (e: 'del-value'): void
+    }>()
 
     const { t } = useI18n()
     const itemHover = ref(false)
 
     const delButtonVisible = computed(() => {
-        return itemHover.value && !(props.occurrence >= props.values.length)
+        return itemHover.value && (props.occurrence == null || props.occurrence < props.values.length)
     })
 
-    const handleDelete = () => {
+    const handleDelete = (): void => {
         emit('del-value')
     }
 </script>

@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
@@ -37,11 +37,26 @@
     const { t } = useI18n()
     const configStore = useConfigStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type FilterState = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type OSINTSourceItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        feed_url?: string
+        collector?: string
+        refresh_interval?: number
+        enabled?: boolean
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<OSINTSourceItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await configStore.loadOSINTSources(filter.value)
@@ -52,12 +67,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: FilterState): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (source) => {
+    const handleDelete = async (source: OSINTSourceItem): Promise<void> => {
         try {
             await deleteOSINTSource(source)
             console.log('OSINT source deleted successfully')
@@ -67,11 +82,11 @@
         }
     }
 
-    const handleEdit = (source) => {
+    const handleEdit = (source: OSINTSourceItem): void => {
         editItem.value = source
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

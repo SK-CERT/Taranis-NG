@@ -18,7 +18,9 @@
         >
             <div v-if="!dataLoaded" class="text-center text-grey">
                 <v-progress-circular indeterminate size="small" />
-                <p class="text-caption mt-2">{{ t('common.loading_more') }}</p>
+                <p class="text-caption mt-2">
+                    {{ t('common.loading_more') }}
+                </p>
             </div>
             <div v-else class="text-caption text-grey">
                 {{ t('common.end_of_list') }}
@@ -27,7 +29,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted, onUnmounted, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { usePublishStore } from '@/stores/publish'
@@ -35,18 +37,44 @@
     import CardProduct from './CardProduct.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
 
-    const props = defineProps({
-        selection: Array
-    })
+    type ProductItem = {
+        id: string | number
+        product_type_id?: string | number
+        product_type_name?: string
+        [key: string]: unknown
+    }
+
+    type ProductType = {
+        id: string | number
+        title?: string
+        [key: string]: unknown
+    }
+
+    type FilterState = {
+        search: string
+        range: string
+        published: boolean | string
+        sort: string
+        compact_mode?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            selection?: Array<{ id: string | number }>
+        }>(),
+        {
+            selection: () => []
+        }
+    )
 
     const emit = defineEmits(['update-showing-count'])
 
     const { t } = useI18n()
     const publishStore = usePublishStore()
 
-    const collections = ref([])
+    const collections = ref<ProductItem[]>([])
     const dataLoaded = ref(false)
-    const filter = ref({
+    const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
         published: 'ALL',
@@ -59,21 +87,31 @@
 
     const multiSelectActive = computed(() => publishStore.getMultiSelect)
 
-    const isPreselected = (item_id) => {
-        if (props.selection) {
-            return props.selection.some((item) => item.id === item_id)
-        }
-        return false
-    }
+    const isPreselected = (item_id: string | number): boolean => props.selection.some((item) => item.id === item_id)
 
-    const infiniteScrolling = (entries) => {
-        if (dataLoaded.value && entries?.[0]?.isIntersecting) {
+    const infiniteScrolling = (entries: boolean | IntersectionObserverEntry[] | IntersectionObserverEntry): void => {
+        const isIntersecting =
+            typeof entries === 'boolean'
+                ? entries
+                : Array.isArray(entries)
+                  ? entries[0]?.isIntersecting === true
+                  : entries?.isIntersecting === true
+
+        const totalCount = publishStore.getProducts.total_count || 0
+
+        if (dataLoaded.value && isIntersecting && collections.value.length < totalCount) {
             updateData(true, false)
         }
     }
 
-    const updateData = async (append, reloadAll) => {
+    const updateData = async (append = false, reloadAll = false): Promise<void> => {
         dataLoaded.value = false
+
+        const totalCount = publishStore.getProducts.total_count || 0
+        if (append && totalCount > 0 && collections.value.length >= totalCount) {
+            dataLoaded.value = true
+            return
+        }
 
         let offset = collections.value.length
         let limit = 20
@@ -95,17 +133,21 @@
 
             // Load product types
             const productTypesResponse = await getAllProductTypes({ search: '' })
-            const productTypes = productTypesResponse?.data?.items || []
+            const productTypes = Array.isArray(productTypesResponse?.data?.items) ? (productTypesResponse.data.items as ProductType[]) : []
 
-            const newItems = publishStore.getProducts.items || []
+            const newItems = Array.isArray(publishStore.getProducts.items) ? (publishStore.getProducts.items as ProductItem[]) : []
 
             if (Array.isArray(newItems) && Array.isArray(productTypes)) {
                 for (let i = 0; i < newItems.length; i++) {
-                    const productType = productTypes.find((x) => x.id == newItems[i].product_type_id)
+                    const item = newItems[i]
+                    if (!item) {
+                        continue
+                    }
+                    const productType = productTypes.find((x) => x.id == item.product_type_id)
                     if (productType) {
-                        newItems[i].product_type_name = productType.title
+                        item.product_type_name = String(productType.title || 'Product')
                     } else {
-                        newItems[i].product_type_name = 'Product'
+                        item.product_type_name = 'Product'
                     }
                 }
             }
@@ -128,12 +170,13 @@
         }
     }
 
-    const handleFilterUpdate = (event) => {
-        filter.value = event.detail
+    const handleFilterUpdate = (event: Event): void => {
+        const customEvent = event as CustomEvent<FilterState>
+        filter.value = customEvent.detail
         updateData(false, false)
     }
 
-    const handleSelectionChange = (itemId, isSelected) => {
+    const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
         // Get the full item from collections
         const item = collections.value.find((c) => c.id === itemId)
         if (item) {
@@ -145,7 +188,7 @@
         }
     }
 
-    const handleProductUpdate = () => {
+    const handleProductUpdate = (): void => {
         // Reload current view after product update/deletion
         // The animation will trigger when the deleted item is missing from the new data
         updateData(false, true)
@@ -153,13 +196,13 @@
 
     onMounted(() => {
         updateData(false, false)
-        window.addEventListener('update-products-filter', handleFilterUpdate)
-        window.addEventListener('product-updated', handleProductUpdate)
+        window.addEventListener('update-products-filter', handleFilterUpdate as EventListener)
+        window.addEventListener('product-updated', handleProductUpdate as EventListener)
     })
 
     onUnmounted(() => {
-        window.removeEventListener('update-products-filter', handleFilterUpdate)
-        window.removeEventListener('product-updated', handleProductUpdate)
+        window.removeEventListener('update-products-filter', handleFilterUpdate as EventListener)
+        window.removeEventListener('product-updated', handleProductUpdate as EventListener)
     })
 
     defineExpose({

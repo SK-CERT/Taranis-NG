@@ -22,11 +22,11 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import CollectorsNodesView from './CollectorsNodesView.vue'
     import OSINTSourcesView from './OSINTSourcesView.vue'
     import OSINTSourceGroupsView from './OSINTSourceGroupsView.vue'
 
-    const activeTab = ref('nodes')
+    const activeTab = ref<'nodes' | 'sources' | 'groups'>('nodes')
 </script>

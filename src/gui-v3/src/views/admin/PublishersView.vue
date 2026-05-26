@@ -17,10 +17,10 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import PublishersNodesView from './PublishersNodesView.vue'
     import PublisherPresetsView from './PublisherPresetsView.vue'
 
-    const activeTab = ref('nodes')
+    const activeTab = ref<'nodes' | 'presets'>('nodes')
 </script>

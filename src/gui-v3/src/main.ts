@@ -19,9 +19,9 @@ import en from './i18n/en.json'
 import cs from './i18n/cs.json'
 import sk from './i18n/sk.json'
 
-// Wait for stylesheets to be applied before mounting
-// This prevents "Layout was forced before page fully loaded" warnings
-async function waitForStylesReady() {
+// Wait for stylesheets to be applied before mounting.
+// This prevents "Layout was forced before page fully loaded" warnings.
+async function waitForStylesReady(): Promise<void> {
     return new Promise((resolve) => {
         if (document.readyState === 'complete') {
             resolve()
@@ -35,11 +35,11 @@ async function waitForStylesReady() {
             attempts++
             const appDiv = document.getElementById('app')
 
-            // Check if styles are applied by looking for computed styles
+            // Check if styles are applied by looking for computed styles.
             if (appDiv && document.fonts && document.fonts.ready) {
                 Promise.resolve(document.fonts.ready)
                     .then(() => {
-                        // Wait for next frame to ensure paint has occurred
+                        // Wait for next frame to ensure paint has occurred.
                         requestAnimationFrame(() => {
                             resolve()
                         })
@@ -55,7 +55,7 @@ async function waitForStylesReady() {
             }
         }
 
-        // Also wait for DOMContentLoaded
+        // Also wait for DOMContentLoaded.
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 requestAnimationFrame(checkStylesReady)
@@ -66,17 +66,17 @@ async function waitForStylesReady() {
     })
 }
 
-// Initialize API service with base URL
+// Initialize API service with base URL.
 const baseURL = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
 ApiService.init(baseURL)
 
-// Get default locale from environment or browser
-let defaultLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE
+// Get default locale from environment or browser.
+let defaultLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE as string | undefined
 if (!defaultLocale) {
     defaultLocale = navigator.language.split('-')[0] || 'en'
 }
 
-// Create Vuetify instance
+// Create Vuetify instance.
 const vuetify = createVuetify({
     components,
     directives,
@@ -112,7 +112,7 @@ const vuetify = createVuetify({
     }
 })
 
-// Create i18n instance
+// Create i18n instance.
 const i18n = createI18n({
     legacy: false,
     locale: defaultLocale,
@@ -124,10 +124,10 @@ const i18n = createI18n({
     }
 })
 
-// Create Pinia store
+// Create Pinia store.
 const pinia = createPinia()
 
-// Create Vue app instance (but defer mounting until styles are ready)
+// Create Vue app instance (but defer mounting until styles are ready).
 const app = createApp(App)
 
 app.use(pinia)
@@ -143,11 +143,11 @@ app.use(PrimeVue, {
     }
 })
 
-// Wait for styles to be ready, then mount
+// Wait for styles to be ready, then mount.
 waitForStylesReady().then(() => {
     app.mount('#app')
 
-    // Log environment info in development
+    // Log environment info in development.
     if (import.meta.env.DEV) {
         console.log('Environment:', {
             mode: import.meta.env.MODE,

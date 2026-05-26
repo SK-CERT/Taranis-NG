@@ -30,11 +30,13 @@
             <div style="display: flex; gap: 4px; flex-wrap: wrap">
                 <v-chip
                     size="small"
-                    :color="filter.published === 'ALL' ? 'default' : 'primary'"
-                    :variant="filter.published === 'ALL' ? 'outlined' : 'flat'"
+                    :color="filter['published'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['published'] === 'ALL' ? 'outlined' : 'flat'"
                     @click="cycleFilter('published')"
                 >
-                    <v-tooltip activator="parent" location="bottom">{{ publishedFilterTooltip }}</v-tooltip>
+                    <v-tooltip activator="parent" location="bottom">
+                        {{ publishedFilterTooltip }}
+                    </v-tooltip>
                     <v-icon>{{ publishedFilterIcon }}</v-icon>
                 </v-chip>
             </div>
@@ -59,7 +61,7 @@
     </v-toolbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
@@ -67,29 +69,39 @@
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
 
-    const props = defineProps({
-        title: String,
-        totalCountTitle: String,
-        showAddButton: {
-            type: Boolean,
-            default: false
-        },
-        addButtonLabel: {
-            type: String,
-            default: 'common.add_btn'
+    type PublishFilter = {
+        search: string
+        range: string
+        published: 'ALL' | boolean
+        sort: string
+        compact_mode?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            title?: string
+            totalCountTitle?: string
+            showAddButton?: boolean
+            addButtonLabel?: string
+        }>(),
+        {
+            title: '',
+            totalCountTitle: '',
+            showAddButton: false,
+            addButtonLabel: 'common.add_btn'
         }
-    })
+    )
 
     const emit = defineEmits(['add-new'])
 
     const { t } = useI18n()
     const publishStore = usePublishStore()
-    const baseFilter = ref(null)
-    const toolbarGroup = ref(null)
+    const baseFilter = ref<any>(null)
+    const toolbarGroup = ref<any>(null)
 
     const currentlyShowingCount = ref(0)
     const selectedCount = ref(0)
-    const filter = ref({
+    const filter = ref<PublishFilter>({
         search: '',
         range: 'ALL',
         published: 'ALL',
@@ -112,7 +124,7 @@
         return t('publish.tooltip.filter_unpublished')
     })
 
-    const cycleFilter = (filterType) => {
+    const cycleFilter = (filterType: 'published'): void => {
         if (filter.value[filterType] === 'ALL') {
             filter.value[filterType] = true
         } else if (filter.value[filterType] === true) {
@@ -127,17 +139,17 @@
         return publishStore.getProducts.total_count
     })
 
-    const handleFilterUpdate = (updatedFilter) => {
+    const handleFilterUpdate = (updatedFilter: Partial<PublishFilter>): void => {
         filter.value = { ...filter.value, ...updatedFilter }
         emitFilter()
     }
 
-    const toggleCompactMode = () => {
+    const toggleCompactMode = (): void => {
         compactMode.value = !compactMode.value
         emitFilter()
     }
 
-    const emitFilter = () => {
+    const emitFilter = (): void => {
         // Emit custom event for content to listen to
         window.dispatchEvent(
             new CustomEvent('update-products-filter', {
@@ -149,24 +161,24 @@
         )
     }
 
-    const handleUpdateData = () => {
+    const handleUpdateData = (): void => {
         // Emit custom event for content to refresh data
         window.dispatchEvent(new CustomEvent('product-updated'))
     }
 
     watch(
         () => publishStore.getSelection,
-        (newSelection) => {
+        (newSelection: unknown[]) => {
             selectedCount.value = newSelection.length
         },
         { deep: true }
     )
 
     defineExpose({
-        updateCurrentlyShowingCount: (count) => {
+        updateCurrentlyShowingCount: (count: number) => {
             currentlyShowingCount.value = count
         },
-        updateShowingCount: (count) => {
+        updateShowingCount: (count: number) => {
             currentlyShowingCount.value = count
         },
         toolbarGroup

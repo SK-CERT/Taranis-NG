@@ -1,15 +1,27 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+import type { UserClaims } from '@/types/auth'
+import type { PermissionKey } from '@/types/permissions'
+
+type UserState = {
+    id: string | number
+    name: string
+    organization_name: string
+    permissions: PermissionKey[]
+}
+
+const emptyUser = (): UserState => ({
+    id: '',
+    name: '',
+    organization_name: '',
+    permissions: []
+})
 
 export const useUserStore = defineStore('user', () => {
     // State
-    const user = ref({
-        id: '',
-        name: '',
-        organization_name: '',
-        permissions: []
-    })
+    const user = ref<UserState>(emptyUser())
 
+    // Keep the existing key spelling for backward compatibility.
     const verticalView = ref(localStorage.getItem('TNGVericalView') === 'true' || false)
 
     // Getters
@@ -19,29 +31,24 @@ export const useUserStore = defineStore('user', () => {
     const permissions = computed(() => user.value.permissions)
 
     // Actions
-    function setUser(userData) {
+    function setUser(userData?: Partial<UserClaims> | null): void {
         if (userData) {
             user.value = {
                 id: userData.id || '',
                 name: userData.name || '',
                 organization_name: userData.organization_name || '',
-                permissions: userData.permissions || []
+                permissions: Array.isArray(userData.permissions) ? userData.permissions : []
             }
         }
     }
 
-    function clearUser() {
-        user.value = {
-            id: '',
-            name: '',
-            organization_name: '',
-            permissions: []
-        }
+    function clearUser(): void {
+        user.value = emptyUser()
     }
 
-    function setVerticalView(value) {
+    function setVerticalView(value: boolean): void {
         verticalView.value = value
-        localStorage.setItem('TNGVericalView', value)
+        localStorage.setItem('TNGVericalView', String(value))
     }
 
     return {

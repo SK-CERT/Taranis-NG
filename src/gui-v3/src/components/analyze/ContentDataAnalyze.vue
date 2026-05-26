@@ -23,7 +23,9 @@
         >
             <div v-if="!dataLoaded" class="text-center text-grey">
                 <v-progress-circular indeterminate size="small" />
-                <p class="text-caption mt-2">{{ t('common.loading_more') }}</p>
+                <p class="text-caption mt-2">
+                    {{ t('common.loading_more') }}
+                </p>
             </div>
             <div v-else class="text-caption text-grey">
                 {{ t('common.end_of_list') }}
@@ -32,7 +34,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
@@ -40,19 +42,37 @@
     import CardAnalyze from './CardAnalyze.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
 
-    const props = defineProps({
-        showRemoveAction: Boolean,
-        disableActions: {
-            type: Boolean,
-            default: false
-        },
-        remoteReports: Boolean,
-        selection: Array,
-        cardItem: {
-            type: String,
-            default: ''
+    type ReportItem = {
+        id: string | number
+        report_item_type_id?: string | number
+        report_type_name?: string
+        [key: string]: unknown
+    }
+
+    type FilterState = {
+        search: string
+        range: string
+        completed: boolean | string
+        sort: string
+        compact_mode?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            showRemoveAction?: boolean
+            disableActions?: boolean
+            remoteReports?: boolean
+            selection?: Array<{ id: string | number }>
+            cardItem?: string
+        }>(),
+        {
+            showRemoveAction: false,
+            disableActions: false,
+            remoteReports: false,
+            selection: () => [],
+            cardItem: ''
         }
-    })
+    )
 
     const emit = defineEmits(['new-data-loaded', 'show-report-item-detail', 'update-showing-count'])
 
@@ -60,9 +80,9 @@
     const route = useRoute()
     const analyzeStore = useAnalyzeStore()
 
-    const collections = ref([])
+    const collections = ref<ReportItem[]>([])
     const dataLoaded = ref(false)
-    const filter = ref({
+    const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
         completed: 'ALL',
@@ -81,26 +101,34 @@
 
     const multiSelectActive = computed(() => analyzeStore.getMultiSelectReport)
 
-    const preselected = (itemId) => {
-        if (props.selection != null) {
-            for (let i = 0; i < props.selection.length; i++) {
-                if (props.selection[i].id === itemId) {
-                    return true
-                }
-            }
+    const preselected = (itemId: string | number): boolean => props.selection.some((item) => item.id === itemId)
+
+    const getNormalizedScope = (): string => {
+        const scope = route.params['scope']
+        if (typeof scope === 'string') {
+            return scope
         }
-        return false
+        if (Array.isArray(scope)) {
+            return scope[0] || 'local'
+        }
+        return 'local'
     }
 
-    const infiniteScrolling = (isIntersecting) => {
+    const infiniteScrolling = (isIntersecting: boolean): void => {
         const totalCount = analyzeStore.getReportItems.total_count || 0
         if (dataLoaded.value && isIntersecting && collections.value.length < totalCount) {
             updateData(true, false)
         }
     }
 
-    const updateData = async (append, reloadAll) => {
+    const updateData = async (append = false, reloadAll = false): Promise<void> => {
         dataLoaded.value = false
+
+        const totalCount = analyzeStore.getReportItems.total_count || 0
+        if (append && totalCount > 0 && collections.value.length >= totalCount) {
+            dataLoaded.value = true
+            return
+        }
 
         let offset = collections.value.length
         let limit = 20
@@ -115,10 +143,10 @@
 
         let group = ''
         if (props.remoteReports) {
-            group = analyzeStore.getCurrentReportItemGroup
+            group = typeof analyzeStore.getCurrentReportItemGroup === 'string' ? analyzeStore.getCurrentReportItemGroup : ''
         } else {
             // Extract scope from route params
-            const scope = route.params.scope || 'local'
+            const scope = getNormalizedScope()
             if (scope !== 'local') {
                 // If scope starts with 'group-', extract the group name
                 if (scope.startsWith('group-')) {
@@ -137,18 +165,24 @@
                 limit: limit
             })
 
-            await analyzeStore.loadReportItemTypes()
+            await analyzeStore.loadReportItemTypes({})
 
-            const reportTypes = analyzeStore.getReportItemTypes.items || []
-            const newItems = analyzeStore.getReportItems.items || []
+            const reportTypes = Array.isArray(analyzeStore.getReportItemTypes.items)
+                ? (analyzeStore.getReportItemTypes.items as ReportItem[])
+                : []
+            const newItems = Array.isArray(analyzeStore.getReportItems.items) ? (analyzeStore.getReportItems.items as ReportItem[]) : []
 
             if (Array.isArray(newItems) && Array.isArray(reportTypes)) {
                 for (let i = 0; i < newItems.length; i++) {
-                    const reportType = reportTypes.find((x) => x.id == newItems[i].report_item_type_id)
+                    const item = newItems[i]
+                    if (!item) {
+                        continue
+                    }
+                    const reportType = reportTypes.find((x) => x.id == item.report_item_type_id)
                     if (reportType) {
-                        newItems[i].report_type_name = reportType.title
+                        item.report_type_name = String(reportType['title'] || 'Report Item')
                     } else {
-                        newItems[i].report_type_name = 'Report Item'
+                        item.report_type_name = 'Report Item'
                     }
                 }
             }
@@ -173,7 +207,7 @@
         }
     }
 
-    const handleSelectionChange = (itemId, isSelected) => {
+    const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
         // Get the full item from collections
         const item = collections.value.find((c) => c.id === itemId)
         if (item) {
@@ -185,38 +219,38 @@
         }
     }
 
-    const updateFilter = (newFilter) => {
+    const updateFilter = (newFilter: FilterState): void => {
         filter.value = newFilter
         updateData(false, false)
     }
 
     watch(
-        () => route.params.scope,
+        () => route.params['scope'],
         () => {
             updateData(false, false)
         }
     )
 
-    const handleReportItemUpdate = () => {
+    const handleReportItemUpdate = (): void => {
         updateData(false, true)
     }
 
-    const handleReportItemsUpdate = () => {
+    const handleReportItemsUpdate = (): void => {
         updateData(false, true)
     }
 
     onMounted(() => {
         updateData(false, false)
-        window.addEventListener('report-item-updated', handleReportItemUpdate)
-        window.addEventListener('report-items-updated', handleReportItemsUpdate)
+        window.addEventListener('report-item-updated', handleReportItemUpdate as EventListener)
+        window.addEventListener('report-items-updated', handleReportItemsUpdate as EventListener)
     })
 
     onUnmounted(() => {
-        window.removeEventListener('report-item-updated', handleReportItemUpdate)
-        window.removeEventListener('report-items-updated', handleReportItemsUpdate)
+        window.removeEventListener('report-item-updated', handleReportItemUpdate as EventListener)
+        window.removeEventListener('report-items-updated', handleReportItemsUpdate as EventListener)
     })
 
-    const handleDelete = async () => {
+    const handleDelete = async (): Promise<void> => {
         // Reload current view after successful deletion
         // The animation will trigger when the deleted item is missing from the new data
         await updateData(false, true)

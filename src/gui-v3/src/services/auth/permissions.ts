@@ -47,6 +47,6 @@ export const PERMISSIONS = {
 
     // Admin permissions
     ADMIN_ACCESS: 'ADMIN_ACCESS'
-}
+} as const
 
 export default PERMISSIONS
