@@ -1,10 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import AuthService from '@/services/auth_service'
 import Permissions from '@/services/permissions'
+import type { PermissionKey } from '@/types/permissions'
 
-const routes = [
+interface RouteMetaAuth {
+    requiresAuth?: boolean
+    requiresPerm?: PermissionKey[]
+    title?: string
+}
+
+const routes: RouteRecordRaw[] = [
     {
         path: '/',
         name: 'home',
@@ -236,9 +244,9 @@ const router = createRouter({
     routes
 })
 
-// Global navigation guard for authentication and permissions
+// Global navigation guard for authentication and permissions.
 router.beforeEach((to) => {
-    // Initialize user from JWT if not already done
+    // Initialize user from JWT if not already done.
     const authStore = useAuthStore()
     const userStore = useUserStore()
     if (authStore.jwt && !userStore.user.id) {
@@ -248,44 +256,51 @@ router.beforeEach((to) => {
         }
     }
 
-    if (to.matched.some((record) => record.meta.requiresAuth)) {
+    const requiresAuth = to.matched.some((record) => Boolean((record.meta as RouteMetaAuth).requiresAuth))
+    if (requiresAuth) {
         if (!AuthService.isAuthenticated()) {
-            if (!authStore.externalLoginUrl) {
+            if (!authStore.hasExternalLoginUrl) {
                 return {
                     path: '/login',
                     query: { redirect: to.path }
                 }
             }
-            window.location = authStore.externalLoginUrl
+            window.location.href = authStore.getLoginURL
             return false
-        } else if (to.path === '/') {
-            // Redirect root to appropriate default page based on permissions
+        }
+
+        if (to.path === '/') {
+            // Redirect root to appropriate default page based on permissions.
             if (AuthService.hasPermission(Permissions.ASSESS_ACCESS)) {
                 return { path: '/dashboard' }
-            } else if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
+            }
+            if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
                 return { path: '/config' }
-            } else if (AuthService.hasPermission(Permissions.MY_ASSETS_ACCESS)) {
+            }
+            if (AuthService.hasPermission(Permissions.MY_ASSETS_ACCESS)) {
                 return { path: '/myassets' }
             }
             return true
-        } else {
-            // Check permissions for the route
-            if (to.meta.requiresPerm && to.meta.requiresPerm.length > 0) {
-                if (AuthService.hasAnyPermission(to.meta.requiresPerm)) {
-                    return true
-                }
-                return { path: '/' }
-            }
-            return true
         }
+
+        // Check permissions for the route.
+        const requiredPermissions = (to.meta as RouteMetaAuth).requiresPerm
+        if (requiredPermissions && requiredPermissions.length > 0) {
+            if (AuthService.hasAnyPermission(requiredPermissions)) {
+                return true
+            }
+            return { path: '/' }
+        }
+        return true
     }
 
     return true
 })
 
-// Set page title after navigation
+// Set page title after navigation.
 router.afterEach((to) => {
-    document.title = to.meta.title || 'Taranis NG'
+    const title = (to.meta as RouteMetaAuth).title
+    document.title = typeof title === 'string' ? title : 'Taranis NG'
 })
 
 export default router

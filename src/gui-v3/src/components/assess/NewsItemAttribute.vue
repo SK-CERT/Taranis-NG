@@ -26,28 +26,40 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
 
+    type NewsAttribute = {
+        id: number | string
+        key?: string
+        value?: string
+        binary_mime_type?: string
+        [key: string]: unknown
+    }
+
+    type NewsItemData = {
+        id?: number | string
+        [key: string]: unknown
+    }
+
     const { t } = useI18n()
     const authStore = useAuthStore()
 
-    const props = defineProps({
-        attribute: {
-            type: Object,
-            required: true
-        },
-        newsItemData: {
-            type: Object,
-            default: () => ({})
+    const props = withDefaults(
+        defineProps<{
+            attribute: NewsAttribute
+            newsItemData?: NewsItemData
+        }>(),
+        {
+            newsItemData: () => ({})
         }
-    })
+    )
 
     const downloadLink = computed(() => {
-        const apiBase = import.meta.env.VITE_TARANIS_NG_CORE_API || ''
-        const jwt = authStore.jwt || ''
+        const apiBase = import.meta.env['VITE_TARANIS_NG_CORE_API'] || ''
+        const jwt = authStore.getJWT || ''
         return `${apiBase}/assess/news-item-data/${props.newsItemData.id}/attributes/${props.attribute.id}/file?jwt=${jwt}`
     })
 </script>

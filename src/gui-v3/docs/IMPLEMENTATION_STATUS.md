@@ -7,12 +7,14 @@ This file is the canonical current-status snapshot for the Vue3 GUI under `src/g
 ## Current Status
 
 The Vue3 GUI is implemented and runs in parallel with the legacy Vue2 GUI:
+
 - **Vue2** remains present in `src/gui/`
 - **Vue3** is implemented in `src/gui-v3/`
 - **Router base path:** `/v2/`
 - **Deployment model:** parallel Vue2 + Vue3 during migration/cutover period
 
 The Vue3 application has the expected core architecture in place:
+
 - Vue 3 + Composition API
 - Vue Router 4
 - Pinia
@@ -26,19 +28,21 @@ The Vue3 application has the expected core architecture in place:
 ### Application Shell
 
 Implemented and present in the current repo:
-- `src/main.js`
+
+- `src/main.ts`
 - `src/App.vue`
-- `src/router.js`
-- `src/services/api_service.js`
-- `src/services/auth_service.js`
-- `src/services/permissions.js`
-- `src/composables/useAuth.js`
-- `src/composables/useSSE.js`
+- `src/router.ts`
+- `src/services/api_service.ts`
+- `src/services/auth_service.ts`
+- `src/services/permissions.ts`
+- `src/composables/useAuth.ts`
+- `src/composables/useSSE.ts`
 - Pinia stores under `src/stores/`
 
 ### Main User Views
 
 Present in `src/views/users/`:
+
 - `DashboardView.vue`
 - `AssessView.vue`
 - `AnalyzeView.vue`
@@ -46,6 +50,7 @@ Present in `src/views/users/`:
 - `MyAssetsView.vue`
 
 Also present:
+
 - `HomeView.vue`
 - `Login.vue`
 - Navigation views for Assess, Analyze, Publish, MyAssets, Dashboard, and Config
@@ -53,6 +58,7 @@ Also present:
 ### Assess Workflow
 
 Implemented components currently present:
+
 - `CardAssess.vue`
 - `ContentDataAssess.vue`
 - `ToolbarFilterAssess.vue`
@@ -67,6 +73,7 @@ Implemented components currently present:
 ### Analyze Workflow
 
 Implemented components currently present:
+
 - `CardAnalyze.vue`
 - `ContentDataAnalyze.vue`
 - `ToolbarFilterAnalyze.vue`
@@ -78,6 +85,7 @@ Implemented components currently present:
 ### Publish Workflow
 
 Implemented components currently present:
+
 - `CardProduct.vue`
 - `ContentDataPublish.vue`
 - `ToolbarFilterPublish.vue`
@@ -87,6 +95,7 @@ Implemented components currently present:
 ### Assets Workflow
 
 Implemented components currently present:
+
 - `CardAsset.vue`
 - `ContentDataAssets.vue`
 - `ToolbarFilterAssets.vue`
@@ -98,6 +107,7 @@ Implemented components currently present:
 The shared attribute system is implemented under `src/components/common/attribute/`.
 
 Present components include:
+
 - Core types: `AttributeString`, `AttributeNumber`, `AttributeBoolean`, `AttributeEnum`, `AttributeRadio`, `AttributeText`, `AttributeDate`
 - Common types: `AttributeTime`, `AttributeDateTime`, `AttributeRichText`, `AttributeTLP`, `AttributeAttachment`
 - Advanced types: `AttributeCPE`, `AttributeCVE`, `AttributeCWE`, `AttributeCVSS`
@@ -107,6 +117,7 @@ Present components include:
 ### Admin / Configuration
 
 The admin/config surface is broadly implemented. Current `src/views/admin/` includes:
+
 - ACL entries
 - Asset groups
 - Attributes
@@ -134,15 +145,18 @@ The admin/config surface is broadly implemented. Current `src/views/admin/` incl
 The following components are confirmed absent from the current `src/gui-v3/src` tree as of April 28, 2026:
 
 ### User-Facing Gaps
+
 - `EnterView.vue`
 - `EnterNav.vue`
 
 ### Assets / Vulnerability Gaps
+
 - `CPETable.vue`
 - `CardVulnerability.vue`
 - `VulnerabilityDetail.vue`
 
 ### Config / Specialized Card or Table Gaps
+
 - `CardSource.vue`
 - `CardGroup.vue`
 - `CardProductType.vue`
@@ -152,6 +166,7 @@ The following components are confirmed absent from the current `src/gui-v3/src` 
 - `RecipientTable.vue`
 
 ### Legacy / Specialized Helper Gaps
+
 - `ToolbarGroupAnalyze.vue`
 - `ToolbarGroupAssess.vue`
 - `CardAssessItem.vue`
@@ -161,6 +176,7 @@ Some of these may be intentionally superseded by generic Vue3 patterns rather th
 ## Status Summary
 
 ### Current Working Surface
+
 - Vue3 app shell is present and wired
 - Main user views are present
 - Assess, Analyze, Publish, and Assets flows all have working Vue3 component surfaces
@@ -169,6 +185,7 @@ Some of these may be intentionally superseded by generic Vue3 patterns rather th
 - Architecture documentation exists and has been refreshed
 
 ### Not Yet Complete
+
 - Full parity with every legacy Vue2 component is not finished
 - Vue2 is still present and has not been cut over or removed
 - Some specialized views/components remain absent
@@ -176,6 +193,7 @@ Some of these may be intentionally superseded by generic Vue3 patterns rather th
 ## Canonical Documentation
 
 For architecture details, use:
+
 - [README.md](./README.md)
 - [architecture/STATE_MANAGEMENT.md](./architecture/STATE_MANAGEMENT.md)
 - [architecture/ROUTING_AND_AUTH.md](./architecture/ROUTING_AND_AUTH.md)
@@ -185,6 +203,7 @@ For architecture details, use:
 ## Validation Basis
 
 This status document was refreshed by direct inspection of the current repo on April 28, 2026:
+
 - current docs tree
 - current Vue3 views tree
 - current component directories for Assess, Analyze, Publish, Assets, and the attribute system

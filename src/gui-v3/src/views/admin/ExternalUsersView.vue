@@ -2,7 +2,9 @@
     <v-container fluid>
         <v-card>
             <v-card-title>
-                <v-icon left>{{ ICONS.WRENCH }}</v-icon>
+                <v-icon left>
+                    {{ ICONS.WRENCH }}
+                </v-icon>
                 {{ viewName }}
             </v-card-title>
             <v-card-text>
@@ -12,11 +14,11 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
     import { useRoute } from 'vue-router'
     import { ICONS } from '@/config/ui-constants'
 
     const route = useRoute()
-    const viewName = computed(() => route.name || 'View')
+    const viewName = computed(() => String(route.name || 'View'))
 </script>

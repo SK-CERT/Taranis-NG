@@ -22,59 +22,75 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useRoute } from 'vue-router'
     import { useAssetsStore } from '@/stores/assets'
     import { deleteAsset } from '@/api/assets'
     import CardAsset from '@/components/assets/CardAsset.vue'
 
+    type AssetItem = {
+        id: number | string
+        title?: string
+        subtitle?: string
+        description?: string
+        vulnerabilities_count?: number
+        tag?: string
+        [key: string]: unknown
+    }
+
+    type AssetFilter = {
+        search: string
+        vulnerable: boolean
+        sort: 'ALPHABETICAL' | 'VULNERABILITY'
+    }
+
     const route = useRoute()
     const assetsStore = useAssetsStore()
 
-    const loading = ref(false)
-    const filter = ref({
+    const loading = ref<boolean>(false)
+    const filter = ref<AssetFilter>({
         search: '',
         vulnerable: false,
         sort: 'ALPHABETICAL'
     })
 
-    const groupId = computed(() => route.params.groupId || 'all')
-    const assets = computed(() => {
-        const items = assetsStore.assets?.items || []
-        return Array.isArray(items) ? items : []
+    const groupId = computed<string>(() => String(route.params['groupId'] || 'all'))
+    const assets = computed<AssetItem[]>(() => {
+        const items = assetsStore.assets?.items
+        return Array.isArray(items) ? (items as AssetItem[]) : []
     })
 
-    async function loadAssets() {
+    async function loadAssets(): Promise<void> {
         loading.value = true
         try {
             await assetsStore.loadAssets({
                 group_id: groupId.value,
                 filter: filter.value
             })
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error loading assets:', error)
         } finally {
             loading.value = false
         }
     }
 
-    async function handleDeleteAsset(asset) {
+    async function handleDeleteAsset(asset: AssetItem): Promise<void> {
         try {
             await deleteAsset(asset)
             await loadAssets()
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting asset:', error)
         }
     }
 
-    function updateFilter(newFilter) {
+    function updateFilter(newFilter: Partial<AssetFilter>): void {
         filter.value = { ...filter.value, ...newFilter }
         loadAssets()
     }
 
     watch(
-        () => route.params.groupId,
+        () => route.params['groupId'],
         () => {
             loadAssets()
         }

@@ -68,55 +68,64 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewOSINTSourceGroup, updateOSINTSourceGroup } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        item: {
-            type: Object,
-            default: () => ({})
-        },
-        isEdit: {
-            type: Boolean,
-            default: false
-        }
-    })
+    type OSINTSourceGroupItem = {
+        id: string | number | null
+        name: string
+        description: string
+        default: boolean
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'saved'])
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            editItem?: Partial<OSINTSourceGroupItem> | null
+        }>(),
+        {
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'saved'): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
     const dialog = ref(false)
 
-    const defaultItem = {
+    const defaultItem: OSINTSourceGroupItem = {
         id: null,
         name: '',
         description: '',
         default: false
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<OSINTSourceGroupItem>({ ...defaultItem })
+    const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_GROUP_CREATE'))
 
-    async function handleSubmit() {
+    async function handleSubmit(): Promise<void> {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid) {
             showValidationError.value = true
             return
@@ -124,7 +133,7 @@
 
         saving.value = true
         try {
-            if (props.isEdit) {
+            if (isEdit.value) {
                 await updateOSINTSourceGroup(localItem.value)
             } else {
                 await createNewOSINTSourceGroup(localItem.value)
@@ -143,7 +152,7 @@
         }
     }
 
-    function handleCancel() {
+    function handleCancel(): void {
         showValidationError.value = false
         showError.value = false
         formRef.value?.reset()
@@ -152,10 +161,10 @@
     }
 
     watch(
-        () => props.item,
+        () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...newItem }
+                localItem.value = { ...defaultItem, ...newItem }
             } else {
                 localItem.value = { ...defaultItem }
             }
@@ -165,7 +174,7 @@
 
     watch(
         () => dialog.value,
-        (newVal) => {
+        (newVal: boolean) => {
             if (!newVal) {
                 showValidationError.value = false
                 showError.value = false

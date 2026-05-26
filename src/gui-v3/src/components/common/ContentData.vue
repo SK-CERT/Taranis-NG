@@ -2,7 +2,7 @@
     <v-container fluid class="pa-4">
         <component
             :is="cardComponent"
-            v-for="item in items"
+            v-for="item in typedItems"
             :key="item.id"
             :card="item"
             :delete-permission="deletePermission"
@@ -13,8 +13,12 @@
         <!-- Empty state -->
         <v-row v-if="items.length === 0" justify="center" class="mt-8">
             <v-col cols="12" class="text-center">
-                <v-icon size="64" color="grey-lighten-1">{{ ICONS.DATABASE_OFF }}</v-icon>
-                <p class="text-h6 text-grey-lighten-1 mt-4">{{ t('common.no_data') }}</p>
+                <v-icon size="64" color="grey-lighten-1">
+                    {{ ICONS.DATABASE_OFF }}
+                </v-icon>
+                <p class="text-h6 text-grey-lighten-1 mt-4">
+                    {{ t('common.no_data') }}
+                </p>
             </v-col>
         </v-row>
 
@@ -27,7 +31,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
@@ -41,6 +45,11 @@
     // import CardProductType from '@/components/config/product_types/CardProductType.vue'
     // import CardSource from '@/components/config/osint_sources/CardSource.vue'
     // import CardGroup from '@/components/config/osint_sources/CardGroup.vue'
+
+    type CardItem = {
+        id: string | number
+        [key: string]: unknown
+    }
 
     const props = defineProps({
         items: {
@@ -66,7 +75,7 @@
     const { t } = useI18n()
 
     // Map of card component names to actual components
-    const cardComponents = {
+    const cardComponents: Record<string, any> = {
         CardCompact
         // Add more as they are migrated
     }
@@ -76,11 +85,13 @@
         return cardComponents[props.cardItem] || CardCompact
     })
 
-    const handleDelete = (item) => {
+    const typedItems = computed<CardItem[]>(() => props.items as CardItem[])
+
+    const handleDelete = (item: CardItem): void => {
         emit('delete', item)
     }
 
-    const handleEdit = (item) => {
+    const handleEdit = (item: CardItem): void => {
         emit('edit', item)
     }
 </script>

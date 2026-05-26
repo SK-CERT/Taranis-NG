@@ -17,10 +17,10 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import RemoteAccessesView from './RemoteAccessesView.vue'
     import RemoteNodesView from './RemoteNodesView.vue'
 
-    const activeTab = ref('access')
+    const activeTab = ref<'access' | 'nodes'>('access')
 </script>

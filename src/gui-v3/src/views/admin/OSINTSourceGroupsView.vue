@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
@@ -37,11 +37,23 @@
     const { t } = useI18n()
     const configStore = useConfigStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type FilterState = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type OSINTSourceGroupItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        default?: boolean
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<OSINTSourceGroupItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await configStore.loadOSINTSourceGroups(filter.value)
@@ -52,12 +64,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: FilterState): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (group) => {
+    const handleDelete = async (group: OSINTSourceGroupItem): Promise<void> => {
         try {
             await deleteOSINTSourceGroup(group)
             console.log('OSINT source group deleted successfully')
@@ -67,11 +79,11 @@
         }
     }
 
-    const handleEdit = (group) => {
+    const handleEdit = (group: OSINTSourceGroupItem): void => {
         editItem.value = group
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

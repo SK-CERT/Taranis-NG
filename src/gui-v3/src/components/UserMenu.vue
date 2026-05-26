@@ -45,7 +45,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
@@ -58,16 +58,16 @@
     const authStore = useAuthStore()
     const userStore = useUserStore()
 
-    const settingsVisible = ref(false)
+    const settingsVisible = ref<boolean>(false)
 
     const username = computed(() => userStore.userName || 'User')
     const organizationName = computed(() => userStore.organizationName || 'No Organization')
 
-    const showSettings = () => {
+    const showSettings = (): void => {
         settingsVisible.value = true
     }
 
-    const handleLogout = async () => {
+    const handleLogout = async (): Promise<void> => {
         try {
             await authStore.logout()
             if (authStore.hasExternalLogoutUrl) {
@@ -75,7 +75,7 @@
             } else {
                 router.push('/login')
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Logout error:', error)
         }
     }

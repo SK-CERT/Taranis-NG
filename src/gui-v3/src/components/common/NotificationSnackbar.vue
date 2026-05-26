@@ -11,7 +11,7 @@
     </v-snackbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
@@ -19,10 +19,10 @@
     const { t } = useI18n()
 
     const show = ref(false)
-    const type = ref('info')
+    const type = ref<'success' | 'error' | 'warning' | 'info'>('info')
     const message = ref('')
     const timeout = ref(3000)
-    const currentId = ref(null)
+    const currentId = ref<string | number | null>(null)
 
     const color = computed(() => {
         const colors = {
@@ -44,8 +44,15 @@
         return icons[type.value] || ICONS.INFORMATION
     })
 
-    const handleNotification = (event) => {
-        const { detail } = event
+    const handleNotification = (event: Event): void => {
+        const { detail } = event as CustomEvent<{
+            type?: 'success' | 'error' | 'warning' | 'info'
+            id?: string | number
+            loc?: string
+            message?: string
+            params?: Record<string, unknown>
+            timeout?: number
+        }>
         if (!detail) return
 
         // If notification has an ID and it's different from current, dismiss first
@@ -58,7 +65,14 @@
         }
     }
 
-    const showNotification = (detail) => {
+    const showNotification = (detail: {
+        type?: 'success' | 'error' | 'warning' | 'info'
+        id?: string | number
+        loc?: string
+        message?: string
+        params?: Record<string, unknown>
+        timeout?: number
+    }): void => {
         type.value = detail.type || 'info'
         currentId.value = detail.id || null
 

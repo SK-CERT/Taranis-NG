@@ -7,8 +7,12 @@
                 <v-card-text>{{ $t('confirm_close.message') }}</v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn @click="showCloseConfirmation = false">{{ $t('confirm_close.continue') }}</v-btn>
-                    <v-btn color="primary" @click="confirmClose">{{ $t('confirm_close.close') }}</v-btn>
+                    <v-btn @click="showCloseConfirmation = false">
+                        {{ $t('confirm_close.continue') }}
+                    </v-btn>
+                    <v-btn color="primary" @click="confirmClose">
+                        {{ $t('confirm_close.close') }}
+                    </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -27,8 +31,12 @@
 
             <!-- Tabs Navigation -->
             <v-tabs v-model="activeTab" class="bg-surface" hide-slider>
-                <v-tab value="details">{{ $t('common.details') }}</v-tab>
-                <v-tab value="attributes">{{ $t('common.attributes') }}</v-tab>
+                <v-tab value="details">
+                    {{ $t('common.details') }}
+                </v-tab>
+                <v-tab value="attributes">
+                    {{ $t('common.attributes') }}
+                </v-tab>
             </v-tabs>
 
             <!-- Tab Content -->
@@ -103,35 +111,58 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import AttributeContainer from '@/components/common/attribute/AttributeContainer.vue'
 
+    type AssetModel = {
+        id: number
+        title: string
+        description: string
+    }
+
+    type AssetAttributeItem = {
+        id: number | string
+        [key: string]: any
+    }
+
+    type FormRef = {
+        reset?: () => void
+        validate?: () => Promise<{ valid: boolean }>
+    }
+
+    type ShowAssetEditEvent = CustomEvent<{
+        id?: number
+        title?: string
+        description?: string
+        modify?: boolean
+    }>
+
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
     // Component state
-    const visible = ref(false)
-    const showError = ref(false)
-    const showCloseConfirmation = ref(false)
-    const activeTab = ref('details')
-    const formRef = ref(null)
-    const canModifyFlag = ref(false)
-    const initialFormState = ref(null)
+    const visible = ref<boolean>(false)
+    const showError = ref<boolean>(false)
+    const showCloseConfirmation = ref<boolean>(false)
+    const activeTab = ref<'details' | 'attributes'>('details')
+    const formRef = ref<FormRef | null>(null)
+    const canModifyFlag = ref<boolean>(false)
+    const initialFormState = ref<string | null>(null)
 
     // Form data
-    const asset = ref({
+    const asset = ref<AssetModel>({
         id: 0,
         title: '',
         description: ''
     })
 
-    const assetAttributes = ref([])
+    const assetAttributes = ref<AssetAttributeItem[]>([])
 
     // Validation rules
-    const requiredRule = (value) => !!value || t('common.required')
+    const requiredRule = (value: string | null | undefined): true | string => !!value || t('common.required')
 
     // Computed properties
     const canModify = computed(() => checkPermission('MY_ASSETS_CREATE') && canModifyFlag.value)
@@ -147,11 +178,11 @@
         canModifyFlag.value = false
         activeTab.value = 'details'
         assetAttributes.value = []
-        formRef.value?.reset()
+        formRef.value?.reset?.()
         initialFormState.value = snapshotForm()
     }
 
-    function snapshotForm() {
+    function snapshotForm(): string {
         return JSON.stringify({
             asset: asset.value
         })
@@ -162,8 +193,8 @@
         return snapshotForm() !== initialFormState.value
     }
 
-    async function handleSave() {
-        const { valid } = await formRef.value.validate()
+    async function handleSave(): Promise<void> {
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
         if (!valid) return
 
         try {
@@ -175,7 +206,7 @@
             )
             window.dispatchEvent(new CustomEvent('asset-updated'))
             initialFormState.value = snapshotForm()
-        } catch (error) {
+        } catch {
             showError.value = true
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -185,17 +216,17 @@
         }
     }
 
-    async function handleUpdateRecord() {
+    async function handleUpdateRecord(): Promise<void> {
         if (asset.value.id === 0) return
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
         if (!valid) return
 
         try {
             // TODO: Implement actual update API call
             window.dispatchEvent(new CustomEvent('asset-updated'))
             initialFormState.value = snapshotForm()
-        } catch (error) {
+        } catch {
             showError.value = true
         }
     }
@@ -218,7 +249,7 @@
         resetForm()
     }
 
-    function handleAttributeUpdated(updatedAttribute) {
+    function handleAttributeUpdated(updatedAttribute: AssetAttributeItem): void {
         const index = assetAttributes.value.findIndex((a) => a.id === updatedAttribute.id)
         if (index !== -1) {
             assetAttributes.value[index] = updatedAttribute
@@ -231,14 +262,14 @@
             // const response = await getAssetAttributes(asset.value.id)
             // assetAttributes.value = response.data.attributes || []
             assetAttributes.value = []
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Failed to load asset attributes:', error)
             assetAttributes.value = []
         }
     }
 
     // Public methods
-    function openDialog(data) {
+    function openDialog(data: { id?: number; title?: string; description?: string; modify?: boolean } | undefined): void {
         visible.value = true
         canModifyFlag.value = data?.modify || true
         showError.value = false
@@ -256,17 +287,18 @@
         initialFormState.value = snapshotForm()
     }
 
+    const onShowAssetEdit = (event: Event): void => {
+        const custom = event as ShowAssetEditEvent
+        openDialog(custom.detail)
+    }
+
     // Lifecycle
     onMounted(() => {
-        window.addEventListener('show-asset-edit', (event) => {
-            openDialog(event.detail)
-        })
+        window.addEventListener('show-asset-edit', onShowAssetEdit)
     })
 
     onUnmounted(() => {
-        window.removeEventListener('show-asset-edit', (event) => {
-            openDialog(event.detail)
-        })
+        window.removeEventListener('show-asset-edit', onShowAssetEdit)
     })
 
     // Expose methods

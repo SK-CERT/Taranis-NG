@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssetsStore } from '@/stores/assets'
@@ -37,11 +37,24 @@
     const { t } = useI18n()
     const assetsStore = useAssetsStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type FilterState = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type NotificationTemplateItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        subject?: string
+        body?: string
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<NotificationTemplateItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await assetsStore.loadNotificationTemplates(filter.value)
@@ -52,12 +65,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: FilterState): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (template) => {
+    const handleDelete = async (template: NotificationTemplateItem): Promise<void> => {
         try {
             await deleteNotificationTemplate(template)
             console.log('Notification template deleted successfully')
@@ -67,11 +80,11 @@
         }
     }
 
-    const handleEdit = (item) => {
+    const handleEdit = (item: NotificationTemplateItem): void => {
         editItem.value = item
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

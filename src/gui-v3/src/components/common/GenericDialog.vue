@@ -36,7 +36,9 @@
                     {{ t('common.cancel') }}
                 </v-btn>
                 <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>{{ ICONS.CONTENT_SAVE }}</v-icon>
+                    <v-icon left>
+                        {{ ICONS.CONTENT_SAVE }}
+                    </v-icon>
                     {{ t('common.save') }}
                 </v-btn>
             </v-card-actions>
@@ -44,7 +46,7 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
@@ -93,11 +95,15 @@
         }
     })
 
-    const emit = defineEmits(['update:modelValue', 'save', 'cancel'])
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+        (e: 'save', item: Record<string, unknown>): void
+        (e: 'cancel'): void
+    }>()
 
     const { t } = useI18n()
 
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
@@ -117,7 +123,7 @@
         return props.title || t('common.add_new')
     })
 
-    async function handleSubmit() {
+    async function handleSubmit(): Promise<void> {
         showValidationError.value = false
         showError.value = false
 
@@ -136,7 +142,7 @@
         }
     }
 
-    function handleCancel() {
+    function handleCancel(): void {
         showValidationError.value = false
         showError.value = false
         formRef.value?.reset()
@@ -146,7 +152,7 @@
 
     watch(
         () => props.modelValue,
-        (newVal) => {
+        (newVal: boolean) => {
             if (!newVal) {
                 showValidationError.value = false
                 showError.value = false

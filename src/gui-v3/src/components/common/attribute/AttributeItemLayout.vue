@@ -6,15 +6,19 @@
                     <!-- SORT -->
                     <v-chip-group v-if="values.length > 1" active-class="success" color="" class="pr-4">
                         <v-chip size="small" class="px-0 mr-1" :title="t('report_item.tooltip.sort_time')" @click="sort(false)">
-                            <v-icon class="px-2" size="small">{{ ICONS.CLOCK }}</v-icon>
+                            <v-icon class="px-2" size="small">
+                                {{ ICONS.CLOCK }}
+                            </v-icon>
                         </v-chip>
                         <v-chip
                             size="small"
                             class="px-0 mr-1"
                             :title="t('report_item.tooltip.sort_user')"
-                            @click="sort(true, authStore.user?.name)"
+                            @click="sort(true, currentUserName)"
                         >
-                            <v-icon class="px-2" size="small">{{ ICONS.ACCOUNT }}</v-icon>
+                            <v-icon class="px-2" size="small">
+                                {{ ICONS.ACCOUNT }}
+                            </v-icon>
                         </v-chip>
                     </v-chip-group>
                 </v-row>
@@ -41,34 +45,44 @@
     </v-row>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import { useAuthStore } from '@/stores/auth'
+    import { useUserStore } from '@/stores/user'
     import { ICONS } from '@/config/ui-constants'
 
-    const props = defineProps({
-        addButton: {
-            type: Boolean,
-            default: false
-        },
-        values: {
-            type: Array,
-            required: true
+    type ItemValue = {
+        id?: number | string
+        user?: {
+            name?: string
         }
-    })
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['add-value'])
+    const props = withDefaults(
+        defineProps<{
+            addButton?: boolean
+            values: ItemValue[]
+        }>(),
+        {
+            addButton: false
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'add-value'): void
+    }>()
 
     const { t } = useI18n()
-    const authStore = useAuthStore()
+    const userStore = useUserStore()
+    const currentUserName = computed(() => userStore.userName || '')
 
-    const handleAdd = () => {
+    const handleAdd = (): void => {
         emit('add-value')
     }
 
-    const sort = (sortByUser, userName) => {
-        props.values.sort((a, b) => {
+    const sort = (sortByUser: boolean, userName?: string): void => {
+        props.values.sort((a: ItemValue, b: ItemValue) => {
             if (sortByUser && userName) {
                 if (userName === a.user?.name && userName !== b.user?.name) {
                     return -1
@@ -76,8 +90,10 @@
                     return 1
                 }
             }
-            if (a.id < b.id) return -1
-            if (a.id > b.id) return 1
+            const aId = a.id ?? ''
+            const bId = b.id ?? ''
+            if (aId < bId) return -1
+            if (aId > bId) return 1
             return 0
         })
     }

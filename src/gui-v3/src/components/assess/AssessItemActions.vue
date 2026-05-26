@@ -13,7 +13,9 @@
             :title="t('assess.tooltip.open_source')"
             @click.stop
         >
-            <v-icon :size="iconSize">{{ ICONS.OPEN_SOURCE }}</v-icon>
+            <v-icon :size="iconSize">
+                {{ ICONS.OPEN_SOURCE }}
+            </v-icon>
         </v-btn>
 
         <!-- Create Report (Single Item Only) -->
@@ -25,7 +27,9 @@
             :title="t('assess.tooltip.analyze_item')"
             @click.stop="$emit('action', 'create-report')"
         >
-            <v-icon :size="iconSize">{{ ICONS.ANALYZE }}</v-icon>
+            <v-icon :size="iconSize">
+                {{ ICONS.ANALYZE }}
+            </v-icon>
         </v-btn>
 
         <!-- Ungroup (Aggregate Only) -->
@@ -37,7 +41,9 @@
             :title="t('assess.tooltip.ungroup_item')"
             @click.stop="$emit('action', 'ungroup')"
         >
-            <v-icon :size="iconSize">{{ ICONS.UNGROUP }}</v-icon>
+            <v-icon :size="iconSize">
+                {{ ICONS.UNGROUP }}
+            </v-icon>
         </v-btn>
 
         <!-- Like -->
@@ -126,7 +132,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
@@ -135,48 +141,62 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
-    const props = defineProps({
-        item: {
-            type: Object,
-            required: true
-        },
-        size: {
-            type: String,
-            default: 'small'
-        },
-        variant: {
-            type: String,
-            default: 'text'
-        },
-        iconSize: {
-            type: String,
-            default: 'small'
-        },
-        showCreateReport: {
-            type: Boolean,
-            default: false
-        },
-        showUngroup: {
-            type: Boolean,
-            default: false
-        },
-        showCounts: {
-            type: Boolean,
-            default: false
-        }
-    })
+    type AssessItem = {
+        id?: number | string
+        me_like?: boolean
+        me_dislike?: boolean
+        likes?: number
+        dislikes?: number
+        important?: boolean
+        read?: boolean
+        link?: string
+        news_items?: Array<{
+            news_item_data?: {
+                link?: string
+                [key: string]: unknown
+            }
+        }>
+        [key: string]: any
+    }
 
-    const emit = defineEmits(['action'])
+    type BtnVariant = 'text' | 'flat' | 'plain' | 'outlined' | 'elevated' | 'tonal'
+
+    const props = withDefaults(
+        defineProps<{
+            item: AssessItem
+            size?: string
+            variant?: BtnVariant
+            iconSize?: string
+            showCreateReport?: boolean
+            showUngroup?: boolean
+            showCounts?: boolean
+        }>(),
+        {
+            size: 'small',
+            variant: 'text',
+            iconSize: 'small',
+            showCreateReport: false,
+            showUngroup: false,
+            showCounts: false
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'action', action: string): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
-    const showDeleteDialog = ref(false)
+    const showDeleteDialog = ref<boolean>(false)
+
+    const newsItems = computed(() => props.item.news_items ?? [])
 
     const itemLink = computed(() => {
         // Support both news_items array (aggregate) and direct link property
-        if (props.item.news_items?.length > 0) {
-            return props.item.news_items[0].news_item_data?.link || ''
+        if (newsItems.value.length > 0) {
+            const firstNewsItem = newsItems.value[0]
+            return firstNewsItem?.news_item_data?.link || ''
         }
         return props.item.link || ''
     })

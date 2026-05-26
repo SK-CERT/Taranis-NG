@@ -119,7 +119,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { ICONS } from '@/config/ui-constants'
     import { useRoute, useRouter } from 'vue-router'
@@ -133,31 +133,56 @@
     import { getAllReportItemsUnpaginated, deleteReportItem } from '@/api/analyze'
     import { getAllProductsUnpaginated, deleteProduct } from '@/api/publish'
 
-    const props = defineProps({
-        view: {
-            type: String,
-            required: true,
-            validator: (value) => ['assess', 'analyze', 'publish'].includes(value)
-        },
-        currentFilter: {
-            type: Object,
-            default: null
-        }
-    })
+    type ViewMode = 'assess' | 'analyze' | 'publish'
+    type GenericFilter = Record<string, unknown>
+    type SelectionItem = {
+        type?: string
+        id: string | number
+        item: unknown
+    }
+    type ItemWithId = {
+        id: string | number
+        [key: string]: unknown
+    }
+    type NotificationDetail = {
+        id?: string
+        type?: 'success' | 'error' | 'warning' | 'info'
+        message?: string
+        persistent?: boolean
+        timeout?: number
+        loc?: string
+        params?: Record<string, unknown>
+    }
 
-    const emit = defineEmits(['update-data'])
+    const props = withDefaults(
+        defineProps<{
+            view: ViewMode
+            currentFilter?: GenericFilter | null
+        }>(),
+        {
+            currentFilter: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update-data'): void
+    }>()
 
     const route = useRoute()
     const router = useRouter()
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
-    // Get the appropriate store based on view
-    const assessStore = props.view === 'assess' ? useAssessStore() : null
-    const analyzeStore = props.view === 'analyze' ? useAnalyzeStore() : null
-    const publishStore = props.view === 'publish' ? usePublishStore() : null
+    const notify = (detail: NotificationDetail): void => {
+        window.dispatchEvent(new CustomEvent('notification', { detail }))
+    }
 
-    const allSelected = ref(false)
+    // Get the appropriate store based on view
+    const assessStore = useAssessStore()
+    const analyzeStore = useAnalyzeStore()
+    const publishStore = usePublishStore()
+
+    const allSelected = ref<boolean>(false)
 
     // Computed properties based on view
     const multiSelectActive = computed(() => {
@@ -198,14 +223,14 @@
     // Disable group actions when the current group is exactly "all"
     const canGroupActions = computed(() => {
         if (props.view === 'assess') {
-            const groupId = route.params.groupId || 'all'
+            const groupId = route.params['groupId'] || 'all'
             return groupId !== 'all'
         }
         return false
     })
 
     // Toggle multi-select
-    const toggleMultiSelect = () => {
+    const toggleMultiSelect = (): void => {
         const newState = !multiSelectActive.value
 
         if (props.view === 'assess') {
@@ -225,7 +250,7 @@
     }
 
     // Select all
-    const selectAll = async () => {
+    const selectAll = async (): Promise<void> => {
         if (props.view === 'assess') {
             await selectAllAssess()
         } else if (props.view === 'analyze') {
@@ -235,34 +260,43 @@
         }
     }
 
-    const selectAllAssess = async () => {
-        const group_id = route.params.groupId || 'all'
+    const selectAllAssess = async (): Promise<void> => {
+        const group_id = String(route.params['groupId'] || 'all')
 
         // Use current filter from parent component if available, otherwise use store filter
         const storeFilter = assessStore.getFilter
+        const filterSearchRaw = Reflect.get(storeFilter as object, 'search')
+        const filterRangeRaw = Reflect.get(storeFilter as object, 'range')
+        const filterReadRaw = Reflect.get(storeFilter as object, 'read')
+        const filterImportantRaw = Reflect.get(storeFilter as object, 'important')
+        const filterRelevantRaw = Reflect.get(storeFilter as object, 'relevant')
+        const filterSortRaw = Reflect.get(storeFilter as object, 'sort')
+
+        const filterSearch = typeof filterSearchRaw === 'string' ? filterSearchRaw : ''
+        const filterRange = typeof filterRangeRaw === 'string' ? filterRangeRaw : 'ALL'
+        const filterRead = filterReadRaw !== undefined ? filterReadRaw : 'ALL'
+        const filterImportant = typeof filterImportantRaw === 'string' ? filterImportantRaw : 'ALL'
+        const filterRelevant = typeof filterRelevantRaw === 'string' ? filterRelevantRaw : 'ALL'
+        const filterSort = typeof filterSortRaw === 'string' ? filterSortRaw : 'DATE_DESC'
         const filter = props.currentFilter || {
-            search: storeFilter.search || '',
-            range: storeFilter.range || 'ALL',
-            read: storeFilter.read !== undefined ? storeFilter.read : 'ALL',
-            important: storeFilter.important || 'ALL',
-            relevant: storeFilter.relevant || 'ALL',
-            sort: storeFilter.sort || 'DATE_DESC'
+            search: filterSearch,
+            range: filterRange,
+            read: filterRead,
+            important: filterImportant,
+            relevant: filterRelevant,
+            sort: filterSort
         }
 
         console.log('[ToolbarGroup] Select all assess - group_id:', group_id, 'filter:', filter)
 
         // Show loading notification
-        window.dispatchEvent(
-            new CustomEvent('notification', {
-                detail: {
-                    id: 'select-all-progress',
-                    type: 'info',
-                    message: 'Fetching all items...',
-                    persistent: true,
-                    timeout: 0
-                }
-            })
-        )
+        notify({
+            id: 'select-all-progress',
+            type: 'info',
+            message: 'Fetching all items...',
+            persistent: true,
+            timeout: 0
+        })
 
         try {
             const response = await selectAllNewsItems({
@@ -274,45 +308,34 @@
 
             if (response?.data?.items) {
                 console.log('[ToolbarGroup] Selecting', response.data.items.length, 'items')
-                response.data.items.forEach((item) => {
+                response.data.items.forEach((item: unknown) => {
+                    const typedItem = item as ItemWithId
                     assessStore.select({
                         type: 'AGGREGATE',
-                        id: item.id,
-                        item: item
+                        id: typedItem.id,
+                        item: typedItem
                     })
                 })
                 allSelected.value = true
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            id: 'select-all-progress',
-                            type: 'success',
-                            loc: 'assess.select_all_success',
-                            params: { count: response.data.items.length },
-                            timeout: 2000
-                        }
-                    })
-                )
+                notify({
+                    id: 'select-all-progress',
+                    type: 'success',
+                    loc: 'assess.select_all_success',
+                    params: { count: response.data.items.length },
+                    timeout: 2000
+                })
                 window.dispatchEvent(new CustomEvent('sync-assess-selection'))
             } else {
                 console.warn('[ToolbarGroup] No items in response:', response)
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: { type: 'warning', message: 'No items to select' }
-                    })
-                )
+                notify({ type: 'warning', message: 'No items to select' })
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[ToolbarGroup] Error selecting all:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'error.select_all_failed' }
-                })
-            )
+            notify({ type: 'error', loc: 'error.select_all_failed' })
         }
     }
 
-    const selectAllAnalyze = async () => {
+    const selectAllAnalyze = async (): Promise<void> => {
         const group = analyzeStore.getCurrentReportItemGroup
         // Use current filter from parent component if available, otherwise use defaults
         const filter = props.currentFilter || {
@@ -325,17 +348,13 @@
         console.log('[ToolbarGroup] Select all analyze - group:', group, 'filter:', filter)
 
         // Show loading notification
-        window.dispatchEvent(
-            new CustomEvent('notification', {
-                detail: {
-                    id: 'select-all-progress',
-                    type: 'info',
-                    message: 'Fetching all items...',
-                    persistent: true,
-                    timeout: 0
-                }
-            })
-        )
+        notify({
+            id: 'select-all-progress',
+            type: 'info',
+            message: 'Fetching all items...',
+            persistent: true,
+            timeout: 0
+        })
 
         try {
             const response = await getAllReportItemsUnpaginated({
@@ -348,39 +367,32 @@
 
             if (response?.data?.items) {
                 console.log('[ToolbarGroup] Selecting', response.data.items.length, 'analyze items')
-                response.data.items.forEach((item) => {
+                response.data.items.forEach((item: unknown) => {
+                    const typedItem = item as ItemWithId
                     analyzeStore.selectReport({
-                        id: item.id,
-                        item: item
+                        id: typedItem.id,
+                        item: typedItem
                     })
                 })
                 allSelected.value = true
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            id: 'select-all-progress',
-                            type: 'success',
-                            loc: 'analyze.select_all_success',
-                            params: { count: response.data.items.length },
-                            timeout: 2000
-                        }
-                    })
-                )
+                notify({
+                    id: 'select-all-progress',
+                    type: 'success',
+                    loc: 'analyze.select_all_success',
+                    params: { count: response.data.items.length },
+                    timeout: 2000
+                })
                 window.dispatchEvent(new CustomEvent('sync-analyze-selection'))
             } else {
                 console.warn('[ToolbarGroup] No items in analyze response:', response)
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[ToolbarGroup] Error selecting all analyze items:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'error.select_all_failed' }
-                })
-            )
+            notify({ type: 'error', loc: 'error.select_all_failed' })
         }
     }
 
-    const selectAllPublish = async () => {
+    const selectAllPublish = async (): Promise<void> => {
         // Use current filter from parent component if available, otherwise use defaults
         const filter = props.currentFilter || {
             search: '',
@@ -392,17 +404,13 @@
         console.log('[ToolbarGroup] Select all publish - filter:', filter)
 
         // Show loading notification
-        window.dispatchEvent(
-            new CustomEvent('notification', {
-                detail: {
-                    id: 'select-all-progress',
-                    type: 'info',
-                    message: 'Fetching all items...',
-                    persistent: true,
-                    timeout: 0
-                }
-            })
-        )
+        notify({
+            id: 'select-all-progress',
+            type: 'info',
+            message: 'Fetching all items...',
+            persistent: true,
+            timeout: 0
+        })
 
         try {
             const response = await getAllProductsUnpaginated({ filter })
@@ -412,40 +420,33 @@
 
             if (response?.data?.items) {
                 console.log('[ToolbarGroup] Selecting', response.data.items.length, 'publish items')
-                response.data.items.forEach((item) => {
+                response.data.items.forEach((item: unknown) => {
+                    const typedItem = item as ItemWithId
                     publishStore.select({
-                        id: item.id,
-                        item: item
+                        id: typedItem.id,
+                        item: typedItem
                     })
                 })
                 allSelected.value = true
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            id: 'select-all-progress',
-                            type: 'success',
-                            loc: 'publish.select_all_success',
-                            params: { count: response.data.items.length },
-                            timeout: 2000
-                        }
-                    })
-                )
+                notify({
+                    id: 'select-all-progress',
+                    type: 'success',
+                    loc: 'publish.select_all_success',
+                    params: { count: response.data.items.length },
+                    timeout: 2000
+                })
                 window.dispatchEvent(new CustomEvent('sync-publish-selection'))
             } else {
                 console.warn('[ToolbarGroup] No items in publish response:', response)
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[ToolbarGroup] Error selecting all publish items:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'error.select_all_failed' }
-                })
-            )
+            notify({ type: 'error', loc: 'error.select_all_failed' })
         }
     }
 
     // Unselect all
-    const unselectAll = () => {
+    const unselectAll = (): void => {
         allSelected.value = false
 
         if (props.view === 'assess') {
@@ -461,8 +462,8 @@
     }
 
     // Assess-specific actions
-    const handleAnalyze = () => {
-        const selection = assessStore.getSelection
+    const handleAnalyze = (): void => {
+        const selection = assessStore.getSelection as SelectionItem[]
         const items = selection.filter((s) => s.type === 'news_item_aggregate').map((s) => s.item)
 
         if (items.length > 0) {
@@ -472,57 +473,46 @@
         }
     }
 
-    const handleAction = async (type) => {
-        const selection = assessStore.getSelection
+    const handleAction = async (type: string): Promise<void> => {
+        const selection = assessStore.getSelection as SelectionItem[]
         const items = selection.map((s) => ({ type: s.type, id: s.id }))
 
         if (items.length > 0) {
-            const group_id = route.params.groupId || null
+            const group_id = (route.params['groupId'] as string | undefined) || null
 
             // Show progress notification
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: {
-                        id: 'assess-action-progress',
-                        type: 'info',
-                        message: `Processing ${items.length} item(s)...`,
-                        persistent: true,
-                        timeout: 0
-                    }
-                })
-            )
+            notify({
+                id: 'assess-action-progress',
+                type: 'info',
+                message: `Processing ${items.length} item(s)...`,
+                persistent: true,
+                timeout: 0
+            })
 
             try {
                 await groupAction({ group: group_id, action: type, items })
 
                 toggleMultiSelect()
 
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            id: 'assess-action-progress',
-                            type: 'success',
-                            loc: 'common.action_completed',
-                            timeout: 2000
-                        }
-                    })
-                )
+                notify({
+                    id: 'assess-action-progress',
+                    type: 'success',
+                    loc: 'common.action_completed',
+                    timeout: 2000
+                })
 
                 emit('update-data')
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error('Error performing action:', error)
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: { type: 'error', loc: `error.${error.response?.data || 'server_error'}` }
-                    })
-                )
+                const responseData = (error as { response?: { data?: string } } | undefined)?.response?.data
+                notify({ type: 'error', loc: `error.${responseData || 'server_error'}` })
             }
         }
     }
 
     // Analyze-specific actions
-    const handlePublish = () => {
-        const selection = analyzeStore.getSelectionReport
+    const handlePublish = (): void => {
+        const selection = analyzeStore.getSelectionReport as SelectionItem[]
         const items = selection.map((s) => s.item)
 
         if (items.length > 0) {
@@ -534,95 +524,73 @@
     }
 
     // Delete action (used by analyze and publish)
-    const handleDelete = async () => {
+    const handleDelete = async (): Promise<void> => {
         if (props.view === 'analyze') {
-            const selection = analyzeStore.getSelectionReport
+            const selection = analyzeStore.getSelectionReport as SelectionItem[]
 
             if (selection.length > 0) {
                 // Show progress notification
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            id: 'analyze-delete-progress',
-                            type: 'info',
-                            message: `Deleting ${selection.length} item(s)...`,
-                            persistent: true,
-                            timeout: 0
-                        }
-                    })
-                )
+                notify({
+                    id: 'analyze-delete-progress',
+                    type: 'info',
+                    message: `Deleting ${selection.length} item(s)...`,
+                    persistent: true,
+                    timeout: 0
+                })
 
                 try {
-                    const deletePromises = selection.map((s) => deleteReportItem({ id: s.id }))
+                    const deletePromises = selection.map((s: SelectionItem) => deleteReportItem({ id: s.id }))
 
                     await Promise.all(deletePromises)
 
                     toggleMultiSelect()
 
-                    window.dispatchEvent(
-                        new CustomEvent('notification', {
-                            detail: {
-                                id: 'analyze-delete-progress',
-                                type: 'success',
-                                loc: 'common.deleted_successfully',
-                                timeout: 2000
-                            }
-                        })
-                    )
+                    notify({
+                        id: 'analyze-delete-progress',
+                        type: 'success',
+                        loc: 'common.deleted_successfully',
+                        timeout: 2000
+                    })
 
                     emit('update-data')
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error('Error deleting items:', error)
-                    window.dispatchEvent(
-                        new CustomEvent('notification', {
-                            detail: { type: 'error', loc: `error.${error.response?.data || 'server_error'}` }
-                        })
-                    )
+                    const responseData = (error as { response?: { data?: string } } | undefined)?.response?.data
+                    notify({ type: 'error', loc: `error.${responseData || 'server_error'}` })
                 }
             }
         } else if (props.view === 'publish') {
-            const selection = publishStore.getSelection
+            const selection = publishStore.getSelection as SelectionItem[]
 
             if (selection.length > 0) {
                 // Show progress notification
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            id: 'publish-delete-progress',
-                            type: 'info',
-                            message: `Deleting ${selection.length} item(s)...`,
-                            persistent: true,
-                            timeout: 0
-                        }
-                    })
-                )
+                notify({
+                    id: 'publish-delete-progress',
+                    type: 'info',
+                    message: `Deleting ${selection.length} item(s)...`,
+                    persistent: true,
+                    timeout: 0
+                })
 
                 try {
-                    const deletePromises = selection.map((s) => deleteProduct(s.item))
+                    const deletePromises = selection.map((s: SelectionItem) => deleteProduct(s.item))
 
                     await Promise.all(deletePromises)
 
                     toggleMultiSelect()
 
-                    window.dispatchEvent(
-                        new CustomEvent('notification', {
-                            detail: {
-                                id: 'publish-delete-progress',
-                                type: 'success',
-                                loc: 'common.deleted_successfully',
-                                timeout: 2000
-                            }
-                        })
-                    )
+                    notify({
+                        id: 'publish-delete-progress',
+                        type: 'success',
+                        loc: 'common.deleted_successfully',
+                        timeout: 2000
+                    })
 
                     emit('update-data')
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error('Error deleting items:', error)
-                    window.dispatchEvent(
-                        new CustomEvent('notification', {
-                            detail: { type: 'error', loc: `error.${error.response?.data || 'server_error'}` }
-                        })
-                    )
+                    const responseData = (error as { response?: { data?: string } } | undefined)?.response?.data
+                    notify({ type: 'error', loc: `error.${responseData || 'server_error'}` })
                 }
             }
         }

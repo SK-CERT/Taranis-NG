@@ -9,8 +9,8 @@ const ApiService = {
     },
 
     setHeader() {
-        if (localStorage.ACCESS_TOKEN) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.ACCESS_TOKEN}`
+        if (localStorage['ACCESS_TOKEN']) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage['ACCESS_TOKEN']}`
         } else {
             axios.defaults.headers.common = {}
         }
@@ -66,8 +66,8 @@ const ApiService = {
             // Make the Axios request
             const config = {
                 url: resource, // full API path
-                method: 'POST', // matches backend post()
-                responseType: 'blob', // get raw data
+                method: 'POST' as const, // matches backend post()
+                responseType: 'blob' as const, // get raw data
                 data: data
             }
 

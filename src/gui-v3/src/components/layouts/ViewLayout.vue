@@ -9,7 +9,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     // Simple layout component with panel and content slots
 </script>
 

@@ -14,25 +14,21 @@
             <div class="text-label-small text-grey mb-2">
                 <v-row align="center" no-gutters>
                     <v-col cols="auto">
-                        <span v-if="card.news_items && card.news_items.length > 0">
+                        <span v-if="firstNewsItem">
                             {{ t('card_item.source') }}:
                             <strong>
-                                {{
-                                    card.news_items[0].news_item_data?.osint_source_name ||
-                                    card.news_items[0].news_item_data?.source ||
-                                    'Unknown'
-                                }}
-                                <span v-if="card.news_items[0].news_item_data?.osint_source_type">
-                                    ({{ card.news_items[0].news_item_data.osint_source_type.split(' ')[0] }})
+                                {{ firstNewsItem?.news_item_data?.osint_source_name || firstNewsItem?.news_item_data?.source || 'Unknown' }}
+                                <span v-if="firstNewsItem?.news_item_data?.osint_source_type">
+                                    ({{ firstNewsItem.news_item_data.osint_source_type.split(' ')[0] }})
                                 </span>
                             </strong>
                         </span>
                     </v-col>
                     <v-spacer />
                     <v-col cols="auto">
-                        <span v-if="card.news_items && card.news_items.length > 0">
+                        <span v-if="firstNewsItem">
                             <strong>{{ t('card_item.published') }}:</strong>
-                            {{ card.news_items[0].news_item_data?.published || 'N/A' }}
+                            {{ firstNewsItem?.news_item_data?.published || 'N/A' }}
                         </span>
                     </v-col>
                     <v-spacer />
@@ -58,22 +54,22 @@
                 <v-col class="d-flex align-center flex-wrap" style="gap: 12px">
                     <!-- Source Link URL (non-clickable text) -->
                     <span
-                        v-if="!hideSourceLinks && card.news_items && card.news_items.length > 0 && card.news_items[0].news_item_data?.link"
+                        v-if="!hideSourceLinks && firstNewsItem?.news_item_data?.link"
                         class="text-label-small text-primary"
                         style="display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
                     >
-                        {{ card.news_items[0].news_item_data.link }}
+                        {{ firstNewsItem?.news_item_data?.link }}
                     </span>
 
                     <!-- Aggregate Badge -->
-                    <v-chip v-if="card.news_items && card.news_items.length > 1" size="small" color="primary" variant="outlined">
+                    <v-chip v-if="newsItemsCount > 1" size="small" color="primary" variant="outlined">
                         <v-icon start>mdi-file-multiple</v-icon>
-                        {{ t('card_item.aggregated_items') }}: {{ card.news_items.length }}
+                        {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
                     </v-chip>
 
                     <!-- In Reports Badge -->
                     <v-chip
-                        v-if="card.in_reports_count > 0"
+                        v-if="inReportsCount > 0"
                         size="small"
                         color="orange"
                         variant="outlined"
@@ -83,7 +79,7 @@
                     >
                         <v-icon start>mdi-file-document</v-icon>
                         {{ t('card_item.in_analyze') }}
-                        <span v-if="card.in_reports_count > 1">&nbsp;({{ card.in_reports_count }})</span>
+                        <span v-if="inReportsCount > 1">&nbsp;({{ inReportsCount }})</span>
                     </v-chip>
 
                     <!-- Comments Icon -->
@@ -107,7 +103,7 @@
     </BaseCard>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
@@ -116,42 +112,68 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
 
-    const props = defineProps({
-        card: {
-            type: Object,
-            required: true
-        },
-        data_set: {
-            type: String,
-            default: 'assess'
-        },
-        preselected: {
-            type: Boolean,
-            default: false
-        },
-        analyzeSelector: {
-            type: Boolean,
-            default: false
-        },
-        hideReviews: {
-            type: Boolean,
-            default: false
-        },
-        hideSourceLinks: {
-            type: Boolean,
-            default: false
-        },
-        highlightWordlist: {
-            type: Boolean,
-            default: false
-        }
-    })
+    type NewsItemData = {
+        osint_source_name?: string
+        source?: string
+        osint_source_type?: string
+        published?: string
+        link?: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['show-detail', 'update-item', 'delete-item', 'show-reports-for-item'])
+    type NewsItemEntry = {
+        news_item_data?: NewsItemData
+        [key: string]: unknown
+    }
+
+    type AssessCard = {
+        id: number | string
+        title?: string
+        description?: string
+        comments?: string
+        created?: string
+        read?: boolean
+        modify?: boolean
+        access?: boolean
+        in_reports_count?: number
+        news_items?: NewsItemEntry[]
+        [key: string]: any
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            card: AssessCard
+            data_set?: string
+            preselected?: boolean
+            analyzeSelector?: boolean
+            hideReviews?: boolean
+            hideSourceLinks?: boolean
+            highlightWordlist?: boolean
+        }>(),
+        {
+            data_set: 'assess',
+            preselected: false,
+            analyzeSelector: false,
+            hideReviews: false,
+            hideSourceLinks: false,
+            highlightWordlist: false
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'show-detail', card: AssessCard): void
+        (e: 'update-item', card: AssessCard, action: string): void
+        (e: 'delete-item', card: AssessCard): void
+        (e: 'show-reports-for-item', card: AssessCard): void
+    }>()
 
     const { t } = useI18n()
     const assessStore = useAssessStore()
     const { checkPermission } = useAuth()
+
+    const firstNewsItem = computed(() => props.card.news_items?.[0])
+    const newsItemsCount = computed(() => props.card.news_items?.length ?? 0)
+    const inReportsCount = computed(() => props.card.in_reports_count ?? 0)
 
     const multiSelectActive = computed(() => assessStore.getMultiSelect)
 
@@ -166,7 +188,7 @@
         return plainText.length > 0
     })
 
-    const selectionChanged = (isSelected) => {
+    const selectionChanged = (isSelected: boolean): void => {
         if (isSelected) {
             assessStore.select({ type: 'news_item_aggregate', id: props.card.id, item: props.card })
         } else {
@@ -174,15 +196,15 @@
         }
     }
 
-    const showDetail = () => {
+    const showDetail = (): void => {
         emit('show-detail', props.card)
     }
 
-    const showInReports = () => {
+    const showInReports = (): void => {
         emit('show-reports-for-item', props.card)
     }
 
-    const handleCardAction = (action) => {
+    const handleCardAction = (action: string): void => {
         if (action === 'delete') {
             handleDelete()
         } else {
@@ -190,13 +212,13 @@
         }
     }
 
-    const updateCard = (action) => {
+    const updateCard = (action: string): void => {
         emit('update-item', props.card, action)
     }
 
-    const handleDelete = async () => {
+    const handleDelete = async (): Promise<void> => {
         try {
-            await deleteNewsItemAggregate(null, props.card.id)
+            await deleteNewsItemAggregate('', props.card.id)
             emit('delete-item', props.card)
 
             // Show success notification
@@ -205,13 +227,13 @@
                     detail: { type: 'success', loc: 'common.deleted_successfully' }
                 })
             )
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting news item aggregate:', error)
 
-            const responseData = error?.response?.data
+            const responseData = (error as { response?: { data?: unknown } } | undefined)?.response?.data
             const isAggregateInUse =
                 responseData === 'aggregate_in_use' ||
-                responseData?.error === 'aggregate_in_use' ||
+                (responseData as { error?: string } | undefined)?.error === 'aggregate_in_use' ||
                 (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
 
             // Check if it's an "in use" error

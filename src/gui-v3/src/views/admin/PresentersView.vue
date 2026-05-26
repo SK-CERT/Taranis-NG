@@ -17,10 +17,10 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import PresentersNodesView from './PresentersNodesView.vue'
     import ProductTypesView from './ProductTypesView.vue'
 
-    const activeTab = ref('nodes')
+    const activeTab = ref<'nodes' | 'types'>('nodes')
 </script>
