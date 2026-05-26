@@ -34,34 +34,37 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted } from 'vue'
     import { useAssetsStore } from '@/stores/assets'
-    import { useAuthStore } from '@/stores/auth'
     import ToolbarFilterAssets from '@/components/assets/ToolbarFilterAssets.vue'
     import ContentDataAssets from '@/components/assets/ContentDataAssets.vue'
     import NewAsset from '@/components/assets/NewAsset.vue'
     import AssetDetailDialog from '@/components/assets/AssetDetailDialog.vue'
 
-    const assetsStore = useAssetsStore()
-    const authStore = useAuthStore()
+    type AssetGroup = {
+        id: string | number
+        [key: string]: unknown
+    }
 
-    const contentDataRef = ref(null)
-    const newAssetRef = ref(null)
-    const assetDetailDialogRef = ref(null)
+    const assetsStore = useAssetsStore()
+
+    const contentDataRef = ref<any>(null)
+    const newAssetRef = ref<any>(null)
+    const assetDetailDialogRef = ref<any>(null)
 
     const canAddAssets = computed(() => {
         const groups = assetsStore.asset_groups?.items || []
-        return Array.isArray(groups) && groups.length > 0
+        return Array.isArray(groups) && (groups as AssetGroup[]).length > 0
     })
 
-    function handleFilterUpdate(filter) {
+    function handleFilterUpdate(filter: Record<string, unknown>): void {
         if (contentDataRef.value) {
             contentDataRef.value.updateFilter(filter)
         }
     }
 
-    function handleShowAddDialog() {
+    function handleShowAddDialog(): void {
         if (newAssetRef.value) {
             newAssetRef.value.openDialog()
         }

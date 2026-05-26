@@ -1,8 +1,12 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="presets">{{ t('nav_menu.bot_presets') }}</v-tab>
-            <v-tab value="nodes">{{ t('nav_menu.bots_nodes') }}</v-tab>
+            <v-tab value="presets">
+                {{ t('nav_menu.bot_presets') }}
+            </v-tab>
+            <v-tab value="nodes">
+                {{ t('nav_menu.bots_nodes') }}
+            </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -17,12 +21,12 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import BotPresetsView from './BotPresetsView.vue'
     import BotsNodesView from './BotsNodesView.vue'
 
     const { t } = useI18n()
-    const activeTab = ref('presets')
+    const activeTab = ref<'presets' | 'nodes'>('presets')
 </script>

@@ -13,17 +13,17 @@ import { vi } from 'vitest'
  * @returns {Object} — mock ApiService
  */
 export function createMockApiService() {
-  return {
-    init: vi.fn(),
-    setHeader: vi.fn(),
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    getWithCancel: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: {} }),
-    put: vi.fn().mockResolvedValue({ data: {} }),
-    delete: vi.fn().mockResolvedValue({ data: {} }),
-    upload: vi.fn().mockResolvedValue({ data: {} }),
-    download: vi.fn().mockResolvedValue(null)
-  }
+    return {
+        init: vi.fn(),
+        setHeader: vi.fn(),
+        get: vi.fn().mockResolvedValue({ data: {} }),
+        getWithCancel: vi.fn().mockResolvedValue({ data: {} }),
+        post: vi.fn().mockResolvedValue({ data: {} }),
+        put: vi.fn().mockResolvedValue({ data: {} }),
+        delete: vi.fn().mockResolvedValue({ data: {} }),
+        upload: vi.fn().mockResolvedValue({ data: {} }),
+        download: vi.fn().mockResolvedValue(null)
+    }
 }
 
 /**
@@ -34,7 +34,7 @@ export function createMockApiService() {
  * @returns {import('vitest').Mock}
  */
 export function mockApiResponse(payload) {
-  return vi.fn().mockResolvedValue({ data: payload })
+    return vi.fn().mockResolvedValue({ data: payload })
 }
 
 /**
@@ -45,7 +45,7 @@ export function mockApiResponse(payload) {
  * @returns {import('vitest').Mock}
  */
 export function mockApiError(message = 'Request failed', status = 500) {
-  const error = new Error(message)
-  error.response = { status, data: { error: message } }
-  return vi.fn().mockRejectedValue(error)
+    const error = new Error(message)
+    error.response = { status, data: { error: message } }
+    return vi.fn().mockRejectedValue(error)
 }

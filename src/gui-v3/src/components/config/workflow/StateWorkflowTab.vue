@@ -35,7 +35,9 @@
             <v-data-table :headers="headers" :items="filteredRecords" item-key="id" class="elevation-1">
                 <template #item.entity_type="{ item }">
                     <v-chip label :color="getEntityTypeColor(item.entity_type)">
-                        <v-icon start>{{ getEntityTypeIcon(item.entity_type) }}</v-icon>
+                        <v-icon start>
+                            {{ getEntityTypeIcon(item.entity_type) }}
+                        </v-icon>
                         {{ t(`workflow.entity_types.${item.entity_type}`) }}
                     </v-chip>
                 </template>
@@ -49,7 +51,9 @@
 
                 <template #item.state_type="{ item }">
                     <v-chip label color="grey">
-                        <v-icon start>{{ getStateTypeIcon(item.state_type) }}</v-icon>
+                        <v-icon start>
+                            {{ getStateTypeIcon(item.state_type) }}
+                        </v-icon>
                         {{ t(`workflow.state_types.${item.state_type}`) }}
                     </v-chip>
                 </template>
@@ -166,7 +170,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
@@ -175,17 +179,55 @@
     import { useAuth } from '@/composables/useAuth'
     import { createNewStateEntityType, updateStateEntityType, deleteStateEntityType } from '@/api/config'
 
+    type EntityType = 'product' | 'report_item' | string
+    type StateType = 'initial' | 'normal' | 'final' | string
+
+    type StateDefinition = {
+        id: string | number
+        display_name: string
+        color: string
+        icon: string
+        [key: string]: unknown
+    }
+
+    type StateEntityTypeRecord = {
+        id: string | number
+        entity_type: EntityType
+        state_id: string | number | null
+        state_type: StateType
+        is_active: boolean
+        editable: boolean
+        sort_order: number
+        state?: StateDefinition | null
+        [key: string]: unknown
+    }
+
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
+
+    type SelectOption = {
+        title: string
+        value: string
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
     const { t } = useI18n()
     const configStore = useConfigStore()
     const { checkPermission } = useAuth()
 
-    const filterEntityType = ref(null)
+    const filterEntityType = ref<string | null>(null)
     const dialogEdit = ref(false)
     const dialogDelete = ref(false)
     const editedIndex = ref(-1)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
 
-    const defaultItem = {
+    const defaultItem: StateEntityTypeRecord = {
         id: -1,
         entity_type: '',
         state_id: null,
@@ -195,9 +237,9 @@
         sort_order: 0
     }
 
-    const editedItem = ref({ ...defaultItem })
+    const editedItem = ref<StateEntityTypeRecord>({ ...defaultItem })
 
-    const headers = [
+    const headers: HeaderEntry[] = [
         { title: t('workflow.state_workflow.entity_type'), key: 'entity_type' },
         { title: t('workflow.state_workflow.state'), key: 'state_name' },
         { title: t('workflow.state_workflow.state_type'), key: 'state_type' },
@@ -206,12 +248,12 @@
         { title: t('settings.actions'), key: 'actions', sortable: false }
     ]
 
-    const entityTypeFilter = [
+    const entityTypeFilter: SelectOption[] = [
         { title: t('workflow.entity_types.product'), value: 'product' },
         { title: t('workflow.entity_types.report_item'), value: 'report_item' }
     ]
 
-    const stateTypeOptions = [
+    const stateTypeOptions: SelectOption[] = [
         { title: t('workflow.state_types.initial'), value: 'initial' },
         { title: t('workflow.state_types.normal'), value: 'normal' },
         { title: t('workflow.state_types.final'), value: 'final' }
@@ -221,71 +263,75 @@
 
     const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
 
-    const availableStates = computed(() => configStore.stateDefinitions.items || [])
+    const availableStates = computed<StateDefinition[]>(() =>
+        Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
+    )
 
-    const filteredRecords = computed(() => configStore.stateEntityTypes.items || [])
+    const filteredRecords = computed<StateEntityTypeRecord[]>(() =>
+        Array.isArray(configStore.stateEntityTypes.items) ? (configStore.stateEntityTypes.items as StateEntityTypeRecord[]) : []
+    )
 
-    function getEntityTypeColor(entityType) {
+    function getEntityTypeColor(entityType: EntityType): string {
         const colors = {
             report_item: '#2196F3',
             product: '#4CAF50'
         }
-        return colors[entityType] || 'grey'
+        return colors[entityType as keyof typeof colors] || 'grey'
     }
 
-    function getEntityTypeIcon(entityType) {
+    function getEntityTypeIcon(entityType: EntityType): string {
         const icons = {
             report_item: 'mdi-file-document',
             product: 'mdi-package-variant'
         }
-        return icons[entityType] || 'mdi-help'
+        return icons[entityType as keyof typeof icons] || 'mdi-help'
     }
 
-    function getStateTypeIcon(stateType) {
+    function getStateTypeIcon(stateType: StateType): string {
         const icons = {
             normal: 'mdi-circle',
             initial: 'mdi-star',
             final: 'mdi-flag-checkered'
         }
-        return icons[stateType] || 'mdi-help'
+        return icons[stateType as keyof typeof icons] || 'mdi-help'
     }
 
-    async function fetchRecords() {
+    async function fetchRecords(): Promise<void> {
         if (!checkPermission('CONFIG_WORKFLOW_ACCESS')) return
 
         // Load state definitions first
         await configStore.loadStateDefinitions({ search: '' })
 
         // Then load state-entity type associations
-        const filter = {}
+        const filter: Record<string, string> = {}
         if (filterEntityType.value) {
-            filter.entity_type = filterEntityType.value
+            filter['entity_type'] = filterEntityType.value
         }
         await configStore.loadStateEntityTypes(filter)
     }
 
-    function addItem() {
+    function addItem(): void {
         editedIndex.value = -1
         editedItem.value = { ...defaultItem }
         dialogEdit.value = true
     }
 
-    function editItem(item) {
-        const records = configStore.stateEntityTypes.items
+    function editItem(item: StateEntityTypeRecord): void {
+        const records = filteredRecords.value
         editedIndex.value = records.indexOf(item)
         editedItem.value = { ...item }
         dialogEdit.value = true
     }
 
-    function deleteItem(item) {
+    function deleteItem(item: StateEntityTypeRecord): void {
         if (!item.editable) return
-        const records = configStore.stateEntityTypes.items
+        const records = filteredRecords.value
         editedIndex.value = records.indexOf(item)
         editedItem.value = { ...item }
         dialogDelete.value = true
     }
 
-    function closeEdit() {
+    function closeEdit(): void {
         dialogEdit.value = false
         setTimeout(() => {
             editedItem.value = { ...defaultItem }
@@ -293,7 +339,7 @@
         }, 300)
     }
 
-    function closeDelete() {
+    function closeDelete(): void {
         dialogDelete.value = false
         setTimeout(() => {
             editedItem.value = { ...defaultItem }
@@ -301,8 +347,8 @@
         }, 300)
     }
 
-    async function saveRecord() {
-        const { valid } = await formRef.value.validate()
+    async function saveRecord(): Promise<void> {
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid) return
 
         try {
@@ -322,7 +368,7 @@
         }
     }
 
-    async function deleteRecord() {
+    async function deleteRecord(): Promise<void> {
         if (!editedItem.value.editable) {
             closeDelete()
             return

@@ -182,5 +182,5 @@ export function getReportItemsByAggregate(aggregate_id) {
 }
 
 export function downloadAttachment(download_link, optional_file_name) {
-    return ApiService.download(download_link, null, optional_file_name)
+    return ApiService.download(download_link, undefined, optional_file_name)
 }

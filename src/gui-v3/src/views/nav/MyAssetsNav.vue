@@ -23,19 +23,32 @@
     </v-list>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted, computed } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useTheme } from 'vuetify'
     import { useAssetsStore } from '@/stores/assets'
+
+    type AssetGroup = {
+        id: string | number
+        name?: string
+        [key: string]: unknown
+    }
+
+    type NavLink = {
+        icon: string
+        title: string
+        route: string
+        id: string | number
+    }
 
     const router = useRouter()
     const route = useRoute()
     const { global: themeGlobal } = useTheme()
     const assetsStore = useAssetsStore()
 
-    const groups = ref([])
-    const links = ref([])
+    const groups = ref<AssetGroup[]>([])
+    const links = ref<NavLink[]>([])
 
     const isDark = computed(() => themeGlobal.name.value === 'dark')
     const textColor = computed(() => (isDark.value ? '#ffffff' : '#000000'))
@@ -46,21 +59,28 @@
         try {
             await assetsStore.loadAssetGroups({ search: '' })
             const assetGroups = assetsStore.asset_groups?.items || []
-            groups.value = Array.isArray(assetGroups) ? assetGroups : []
+            groups.value = (Array.isArray(assetGroups) ? assetGroups : []) as AssetGroup[]
 
             // Build links from asset groups
             for (let i = 0; i < groups.value.length; i++) {
+                const group = groups.value[i]
+                if (!group) {
+                    continue
+                }
                 links.value.push({
                     icon: 'mdi-folder-multiple',
-                    title: groups.value[i].name,
-                    route: '/myassets/group/' + groups.value[i].id,
-                    id: groups.value[i].id
+                    title: String(group.name ?? ''),
+                    route: '/myassets/group/' + group.id,
+                    id: group.id
                 })
             }
 
             // If not on a specific group route and links exist, redirect to first
             if (!route.path.includes('/group/') && links.value.length > 0) {
-                router.push(links.value[0].route)
+                const firstLink = links.value[0]
+                if (firstLink) {
+                    router.push(firstLink.route)
+                }
             }
         } catch (error) {
             console.error('Error loading asset groups:', error)

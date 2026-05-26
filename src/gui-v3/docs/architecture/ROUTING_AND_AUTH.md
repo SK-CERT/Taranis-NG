@@ -8,11 +8,12 @@ Routing uses **Vue Router 4** with `createWebHistory` base `/v2/`. Authenticatio
 
 ## Route Structure
 
-Routes are defined in `src/router.js`. Each route specifies:
+Routes are defined in `src/router.ts`. Each route specifies:
+
 - `meta.requiresAuth` — whether the user must be logged in
 - `meta.requiresPerm` — array of permissions; user must have at least one
 
-```js
+```ts
 {
   path: '/assess/group/:groupId',
   name: 'assess',
@@ -28,10 +29,10 @@ Routes are defined in `src/router.js`. Each route specifies:
 
 `App.vue` has two `<router-view>` outlets:
 
-| Outlet | Purpose |
-|--------|---------|
-| `default` (unnamed) | Main content area (`<v-main>`) |
-| `nav` | Side navigation drawer (96px rail) |
+| Outlet              | Purpose                            |
+| ------------------- | ---------------------------------- |
+| `default` (unnamed) | Main content area (`<v-main>`)     |
+| `nav`               | Side navigation drawer (96px rail) |
 
 Each route provides separate components for both outlets. Views that share the same nav (e.g. all `/config/*` routes) all point to `ConfigNav.vue`.
 
@@ -49,7 +50,7 @@ Most views use `ViewLayout.vue` which renders a toolbar slot above a scrollable 
 
 ## Navigation Guard
 
-The `beforeEach` guard in `router.js` runs on every navigation:
+The `beforeEach` guard in `router.ts` runs on every navigation:
 
 ```
 Request to route
@@ -81,19 +82,20 @@ After each navigation, `afterEach` sets `document.title` from `route.meta.title`
 
 ## Authentication Services
 
-| File | Purpose |
-|------|---------|
-| `src/services/auth_service.js` | JWT decode, token validity, permission checks |
-| `src/services/permissions.js` | Main enum of permission strings used by route and UI checks |
-| `src/services/auth/permissions.js` | Secondary permissions module used by the attribute editing composable |
-| `src/stores/auth.js` | Pinia store — JWT, login/logout actions, external URL state |
-| `src/stores/user.js` | Current user profile (id, name, roles) |
-| `src/composables/useAuth.js` | Convenience composable combining auth + user stores |
+| File                               | Purpose                                                               |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| `src/services/auth_service.ts`     | JWT decode, token validity, permission checks                         |
+| `src/services/permissions.ts`      | Main enum of permission strings used by route and UI checks           |
+| `src/services/auth/permissions.ts` | Secondary permissions module used by the attribute editing composable |
+| `src/stores/auth.ts`               | Pinia store — JWT, login/logout actions, external URL state           |
+| `src/stores/user.ts`               | Current user profile (id, name, roles)                                |
+| `src/composables/useAuth.ts`       | Convenience composable combining auth + user stores                   |
 
 ### Permission Checking
 
-```js
+```ts
 import { useAuth } from '@/composables/useAuth'
+import Permissions from '@/services/permissions'
 
 const { checkPermission, checkAnyPermission } = useAuth()
 
@@ -118,6 +120,7 @@ CONFIG_{RESOURCE}_ACCESS / CREATE / UPDATE / DELETE
 ### External Authentication (Keycloak/OIDC)
 
 When `authStore.externalLoginUrl` is set:
+
 - The login page redirects to the external provider instead of showing the username/password form
 - `Login.vue` completes the external login flow using `code` and `session_state` query parameters
 - `App.vue` can also consume a `jwt` cookie and convert it into the active session token
@@ -125,9 +128,9 @@ When `authStore.externalLoginUrl` is set:
 
 ## SSE (Server-Sent Events)
 
-Real-time updates are managed by the `useSSE()` composable (`src/composables/useSSE.js`), initialized in `App.vue` on mount.
+Real-time updates are managed by the `useSSE()` composable (`src/composables/useSSE.ts`), initialized in `App.vue` on mount.
 
-```js
+```ts
 const { connect, subscribe, disconnect } = useSSE()
 
 await connect()
@@ -136,11 +139,13 @@ subscribe('report-items-updated', (data) => analyzeStore.handleUpdate(data))
 ```
 
 The SSE endpoint URL is read from `VITE_APP_TARANIS_NG_CORE_SSE` (falls back to `/sse`). The composable:
+
 - Automatically re-registers all handlers after reconnect
 - Calls `disconnect()` on `onUnmounted`
 - Uses `withCredentials: true` on the `EventSource`
 
 `App.vue` subscribes to these events and re-emits them as window events for workflow-specific components:
+
 - `news-items-updated`
 - `report-items-updated`
 - `report-item-updated`

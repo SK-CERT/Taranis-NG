@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
@@ -37,11 +37,24 @@
     const { t } = useI18n()
     const configStore = useConfigStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type RemoteFilter = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type RemoteNodeItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        url?: string
+        enabled?: boolean
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<RemoteFilter>({ search: '' })
+    const editItem = ref<RemoteNodeItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await configStore.loadRemoteNodes(filter.value)
@@ -52,12 +65,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: RemoteFilter): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (node) => {
+    const handleDelete = async (node: RemoteNodeItem): Promise<void> => {
         try {
             await deleteRemoteNode(node)
             console.log('Remote node deleted successfully')
@@ -67,11 +80,11 @@
         }
     }
 
-    const handleEdit = (item) => {
+    const handleEdit = (item: RemoteNodeItem): void => {
         editItem.value = item
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

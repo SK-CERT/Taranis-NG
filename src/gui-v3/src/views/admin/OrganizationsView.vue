@@ -1,7 +1,9 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="organizations">{{ t('nav_menu.organizations') }}</v-tab>
+            <v-tab value="organizations">
+                {{ t('nav_menu.organizations') }}
+            </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -12,11 +14,11 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import OrganizationsTab from '@/components/config/organizations/OrganizationsTab.vue'
 
     const { t } = useI18n()
-    const activeTab = ref('organizations')
+    const activeTab = ref<'organizations'>('organizations')
 </script>

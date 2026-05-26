@@ -1,33 +1,31 @@
 <template>
-    <attribute-item-layout :attribute-group="attributeGroup" :read-only="true" :editable="false">
-        <template #values>
-            <div v-for="value in attributeGroup.attributes" :key="value.id">
-                <attribute-value-layout :value="value" :read-only="true" :editable="false">
-                    <template #display>
-                        <span class="text-sm text-gray-300">
-                            {{ value.value }}
-                        </span>
-                    </template>
-                </attribute-value-layout>
+    <AttributeItemLayout :add-button="false" :values="attributeGroup.attributes">
+        <template #content>
+            <div v-for="value in attributeGroup.attributes" :key="value.id" class="remote-value">
+                <span class="text-sm text-gray-300">{{ value.value }}</span>
             </div>
         </template>
-    </attribute-item-layout>
+    </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import AttributeItemLayout from './AttributeItemLayout.vue'
-    import AttributeValueLayout from './AttributeValueLayout.vue'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        reportItemId: {
-            type: Number,
-            required: true
-        }
-    })
+    type RemoteAttributeValue = {
+        id: number | string
+        value?: string
+        [key: string]: unknown
+    }
+
+    type RemoteAttributeGroup = {
+        attributes: RemoteAttributeValue[]
+        [key: string]: unknown
+    }
+
+    const props = defineProps<{
+        attributeGroup: RemoteAttributeGroup
+        reportItemId: number
+    }>()
 
     // TODO: Phase 3 - Add remote-specific features:
     // - Display source/origin information
@@ -37,5 +35,8 @@
 </script>
 
 <style scoped>
-    /* TODO: Add remote string styling */
+    .remote-value {
+        width: 100%;
+        padding: 8px 0;
+    }
 </style>

@@ -102,8 +102,8 @@ src/
 ├── stores/       # Pinia stores
 ├── views/        # Route view components
 ├── App.vue       # Root component
-├── main.js       # Application entry point
-└── router.js     # Vue Router configuration
+├── main.ts       # Application entry point
+└── router.ts     # Vue Router configuration
 ```
 
 ## Migration Status

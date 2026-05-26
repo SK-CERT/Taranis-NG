@@ -30,7 +30,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, watch } from 'vue'
 
     const props = defineProps({
@@ -60,23 +60,26 @@
         }
     })
 
-    const emit = defineEmits(['card-click', 'selection-change'])
+    const emit = defineEmits<{
+        (e: 'card-click'): void
+        (e: 'selection-change', selected: boolean): void
+    }>()
 
-    const internalSelected = ref(props.preselected)
+    const internalSelected = ref<boolean>(props.preselected)
 
     // Watch preselected prop and sync with internalSelected
     watch(
         () => props.preselected,
-        (newValue) => {
+        (newValue: boolean) => {
             internalSelected.value = newValue
         }
     )
 
-    const handleCardClick = () => {
+    const handleCardClick = (): void => {
         emit('card-click')
     }
 
-    const emitSelectionChange = () => {
+    const emitSelectionChange = (): void => {
         emit('selection-change', internalSelected.value)
     }
 </script>

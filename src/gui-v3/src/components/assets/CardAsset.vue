@@ -10,11 +10,19 @@
                     </v-col>
 
                     <v-col>
-                        <div class="text-caption text-grey">{{ $t('card_item.title') }}</div>
-                        <div class="text-h6">{{ asset.title }}</div>
+                        <div class="text-caption text-grey">
+                            {{ $t('card_item.title') }}
+                        </div>
+                        <div class="text-h6">
+                            {{ asset.title }}
+                        </div>
 
-                        <div class="text-caption text-grey mt-2">{{ $t('card_item.description') }}</div>
-                        <div class="text-body-2">{{ asset.subtitle || asset.description }}</div>
+                        <div class="text-caption text-grey mt-2">
+                            {{ $t('card_item.description') }}
+                        </div>
+                        <div class="text-body-2">
+                            {{ asset.subtitle || asset.description }}
+                        </div>
                     </v-col>
 
                     <v-col v-if="canDelete" cols="auto" class="delete-btn">
@@ -24,9 +32,9 @@
             </v-card-text>
 
             <v-card-actions class="pt-0">
-                <v-chip v-if="asset.vulnerabilities_count > 0" color="error" size="small" variant="flat">
+                <v-chip v-if="vulnerabilitiesCount > 0" color="error" size="small" variant="flat">
                     <v-icon start size="small">mdi-shield-alert</v-icon>
-                    {{ $t('asset.vulnerabilities_count') }}{{ asset.vulnerabilities_count }}
+                    {{ $t('asset.vulnerabilities_count') }}{{ vulnerabilitiesCount }}
                 </v-chip>
                 <v-chip v-else color="success" size="small" variant="flat">
                     <v-icon start size="small">mdi-shield-check</v-icon>
@@ -57,32 +65,44 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useAuth } from '@/composables/useAuth'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
 
-    const props = defineProps({
-        asset: {
-            type: Object,
-            required: true
-        }
-    })
+    type AssetItem = {
+        id: number | string
+        title?: string
+        subtitle?: string
+        description?: string
+        vulnerabilities_count?: number
+        tag?: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['delete-asset', 'click'])
+    const props = defineProps<{
+        asset: AssetItem
+    }>()
+
+    const emit = defineEmits<{
+        (e: 'delete-asset', asset: AssetItem): void
+        (e: 'click', asset: AssetItem): void
+    }>()
 
     const { checkPermission } = useAuth()
-    const showDeleteDialog = ref(false)
+    const showDeleteDialog = ref<boolean>(false)
+
+    const vulnerabilitiesCount = computed(() => props.asset.vulnerabilities_count ?? 0)
 
     const statusClass = computed(() => {
-        return props.asset.vulnerabilities_count > 0 ? 'status-alert' : 'status-normal'
+        return vulnerabilitiesCount.value > 0 ? 'status-alert' : 'status-normal'
     })
 
     const canDelete = computed(() => {
         return checkPermission('MY_ASSETS_CREATE')
     })
 
-    function handleCardClick() {
+    function handleCardClick(): void {
         // Dispatch event to open asset detail dialog
         window.dispatchEvent(
             new CustomEvent('show-asset-edit', {
@@ -98,7 +118,7 @@
         emit('click', props.asset)
     }
 
-    function handleDelete() {
+    function handleDelete(): void {
         showDeleteDialog.value = false
         emit('delete-asset', props.asset)
     }

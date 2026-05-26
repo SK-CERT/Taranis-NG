@@ -44,7 +44,9 @@
                 </template>
 
                 <template #item.icon="{ item }">
-                    <v-icon :color="item.color">{{ item.icon }}</v-icon>
+                    <v-icon :color="item.color">
+                        {{ item.icon }}
+                    </v-icon>
                 </template>
 
                 <template #item.actions="{ item }">
@@ -141,7 +143,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
@@ -149,6 +151,26 @@
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from '@/api/config'
+
+    type StateDefinition = {
+        id: string | number
+        display_name: string
+        description: string
+        color: string
+        icon: string
+        editable: boolean
+        [key: string]: unknown
+    }
+
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -158,9 +180,9 @@
     const dialogEdit = ref(false)
     const dialogDelete = ref(false)
     const editedIndex = ref(-1)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
 
-    const defaultItem = {
+    const defaultItem: StateDefinition = {
         id: -1,
         display_name: '',
         description: '',
@@ -169,9 +191,9 @@
         editable: true
     }
 
-    const editedItem = ref({ ...defaultItem })
+    const editedItem = ref<StateDefinition>({ ...defaultItem })
 
-    const headers = [
+    const headers: HeaderEntry[] = [
         { title: t('workflow.states.display_name'), key: 'display_name' },
         { title: t('workflow.states.description'), key: 'description' },
         { title: t('workflow.states.color'), key: 'color' },
@@ -183,9 +205,11 @@
 
     const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
 
-    const filteredRecords = computed(() => configStore.stateDefinitions.items || [])
+    const filteredRecords = computed<StateDefinition[]>(() =>
+        Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
+    )
 
-    function getContrastColor(hexColor) {
+    function getContrastColor(hexColor?: string): 'white' | 'black' {
         if (!hexColor || hexColor.length < 7) return 'white'
         const r = parseInt(hexColor.slice(1, 3), 16)
         const g = parseInt(hexColor.slice(3, 5), 16)
@@ -194,28 +218,28 @@
         return luminance > 0.5 ? 'black' : 'white'
     }
 
-    function addItem() {
+    function addItem(): void {
         editedIndex.value = -1
         editedItem.value = { ...defaultItem }
         dialogEdit.value = true
     }
 
-    function editItem(item) {
-        const records = configStore.stateDefinitions.items
+    function editItem(item: StateDefinition): void {
+        const records = filteredRecords.value
         editedIndex.value = records.indexOf(item)
         editedItem.value = { ...item }
         dialogEdit.value = true
     }
 
-    function deleteItem(item) {
+    function deleteItem(item: StateDefinition): void {
         if (!item.editable) return
-        const records = configStore.stateDefinitions.items
+        const records = filteredRecords.value
         editedIndex.value = records.indexOf(item)
         editedItem.value = { ...item }
         dialogDelete.value = true
     }
 
-    function closeEdit() {
+    function closeEdit(): void {
         dialogEdit.value = false
         setTimeout(() => {
             editedItem.value = { ...defaultItem }
@@ -223,7 +247,7 @@
         }, 300)
     }
 
-    function closeDelete() {
+    function closeDelete(): void {
         dialogDelete.value = false
         setTimeout(() => {
             editedItem.value = { ...defaultItem }
@@ -231,8 +255,8 @@
         }, 300)
     }
 
-    async function saveRecord() {
-        const { valid } = await formRef.value.validate()
+    async function saveRecord(): Promise<void> {
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid) return
 
         try {
@@ -252,7 +276,7 @@
         }
     }
 
-    async function deleteRecord() {
+    async function deleteRecord(): Promise<void> {
         if (!editedItem.value.editable) {
             closeDelete()
             return

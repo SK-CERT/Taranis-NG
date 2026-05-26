@@ -29,11 +29,13 @@
             <div style="display: flex; gap: 4px; flex-wrap: wrap">
                 <v-chip
                     size="small"
-                    :color="filter.completed === 'ALL' ? 'default' : 'primary'"
-                    :variant="filter.completed === 'ALL' ? 'outlined' : 'flat'"
+                    :color="filter['completed'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['completed'] === 'ALL' ? 'outlined' : 'flat'"
                     @click="cycleFilter('completed')"
                 >
-                    <v-tooltip activator="parent" location="bottom">{{ completedFilterTooltip }}</v-tooltip>
+                    <v-tooltip activator="parent" location="bottom">
+                        {{ completedFilterTooltip }}
+                    </v-tooltip>
                     <v-icon>{{ completedFilterIcon }}</v-icon>
                 </v-chip>
             </div>
@@ -58,48 +60,51 @@
     </v-toolbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAnalyzeStore } from '@/stores/analyze'
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
 
-    const props = defineProps({
-        title: {
-            type: String,
-            default: 'nav_menu.report_items'
-        },
-        totalCountTitle: {
-            type: String,
-            default: 'analyze.total_count'
-        },
-        multiSelect: Boolean,
-        showGroupToolbar: {
-            type: Boolean,
-            default: true
-        },
-        showAddButton: {
-            type: Boolean,
-            default: false
-        },
-        addButtonLabel: {
-            type: String,
-            default: 'common.add_btn'
+    type AnalyzeFilter = {
+        search: string
+        range: string
+        completed: 'ALL' | boolean
+        sort: string
+        compact_mode?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            title?: string
+            totalCountTitle?: string
+            multiSelect?: boolean
+            showGroupToolbar?: boolean
+            showAddButton?: boolean
+            addButtonLabel?: string
+        }>(),
+        {
+            title: 'nav_menu.report_items',
+            totalCountTitle: 'analyze.total_count',
+            multiSelect: false,
+            showGroupToolbar: true,
+            showAddButton: false,
+            addButtonLabel: 'common.add_btn'
         }
-    })
+    )
 
     const emit = defineEmits(['update-filter', 'update-data', 'add-new'])
 
     const { t } = useI18n()
     const analyzeStore = useAnalyzeStore()
-    const baseFilter = ref(null)
-    const toolbarGroup = ref(null)
+    const baseFilter = ref<any>(null)
+    const toolbarGroup = ref<any>(null)
 
     const totalCount = ref(0)
     const currentlyShowingCount = ref(0)
     const selectedCount = ref(0)
-    const filter = ref({
+    const filter = ref<AnalyzeFilter>({
         search: '',
         range: 'ALL',
         completed: 'ALL',
@@ -122,7 +127,7 @@
         return t('analyze.tooltip.filter_incomplete')
     })
 
-    const cycleFilter = (filterType) => {
+    const cycleFilter = (filterType: 'completed'): void => {
         if (filter.value[filterType] === 'ALL') {
             filter.value[filterType] = true
         } else if (filter.value[filterType] === true) {
@@ -133,43 +138,43 @@
         emitFilter()
     }
 
-    const handleFilterUpdate = (updatedFilter) => {
+    const handleFilterUpdate = (updatedFilter: Partial<AnalyzeFilter>): void => {
         filter.value = { ...filter.value, ...updatedFilter }
         emitFilter()
     }
 
-    const toggleCompactMode = () => {
+    const toggleCompactMode = (): void => {
         compactMode.value = !compactMode.value
         emitFilter()
     }
 
-    const emitFilter = () => {
+    const emitFilter = (): void => {
         emit('update-filter', {
             ...filter.value,
             compact_mode: compactMode.value
         })
     }
 
-    const handleUpdateData = () => {
+    const handleUpdateData = (): void => {
         emit('update-data')
     }
 
     watch(
         () => analyzeStore.getSelectionReport,
-        (newSelection) => {
+        (newSelection: unknown[]) => {
             selectedCount.value = newSelection.length
         },
         { deep: true }
     )
 
     defineExpose({
-        updateDataCount: (count) => {
+        updateDataCount: (count: number) => {
             totalCount.value = count
         },
-        updateCurrentlyShowingCount: (count) => {
+        updateCurrentlyShowingCount: (count: number) => {
             currentlyShowingCount.value = count
         },
-        updateShowingCount: (count) => {
+        updateShowingCount: (count: number) => {
             currentlyShowingCount.value = count
         },
         toolbarGroup

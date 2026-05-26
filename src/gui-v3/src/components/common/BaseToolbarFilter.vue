@@ -3,7 +3,9 @@
     <v-toolbar flat color="surface">
         <v-row class="ma-0 pa-0" align="center" no-gutters>
             <v-col cols="12" md="3">
-                <div class="text-h6">{{ t(title) }}</div>
+                <div class="text-h6">
+                    {{ t(title) }}
+                </div>
             </v-col>
             <v-col cols="6" md="4">
                 <v-text-field
@@ -31,7 +33,7 @@
             <!-- Day Range Filters (optional) -->
             <div v-if="showDayRanges" style="display: flex; gap: 4px; flex-wrap: wrap">
                 <v-chip
-                    v-for="day in dayRanges"
+                    v-for="day in typedDayRanges"
                     :key="day.value"
                     :color="localFilter.range === day.value ? 'primary' : 'default'"
                     :variant="localFilter.range === day.value ? 'flat' : 'outlined'"
@@ -62,8 +64,12 @@
                         size="small"
                         @click="toggleDateSort"
                     >
-                        <v-tooltip activator="parent" location="bottom">{{ dateSortTooltip }}</v-tooltip>
-                        <v-icon start>{{ ICONS.CLOCK }}</v-icon>
+                        <v-tooltip activator="parent" location="bottom">
+                            {{ dateSortTooltip }}
+                        </v-tooltip>
+                        <v-icon start>
+                            {{ ICONS.CLOCK }}
+                        </v-icon>
                         <v-icon>{{ dateSortIcon }}</v-icon>
                     </v-chip>
                 </slot>
@@ -91,11 +97,24 @@
     </v-toolbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, useSlots } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+
+    type FilterState = {
+        search?: string
+        range?: string
+        sort?: string
+        [key: string]: unknown
+    }
+
+    type DayRange = {
+        value: string
+        label: string
+        tooltip: string
+    }
 
     const props = defineProps({
         title: {
@@ -185,10 +204,11 @@
     const slots = useSlots()
 
     // Local filter state
-    const localFilter = ref({ ...props.initialFilter })
+    const localFilter = ref<FilterState>({ ...(props.initialFilter as FilterState) })
 
     // Check if custom filters slot is used
     const hasCustomFilters = computed(() => !!slots['custom-filters'])
+    const typedDayRanges = computed<DayRange[]>(() => props.dayRanges as DayRange[])
 
     // Date sort icon and tooltip
     const dateSortIcon = computed(() => {
@@ -210,26 +230,26 @@
         { deep: true }
     )
 
-    let searchTimeout = null
+    let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-    const handleSearch = () => {
-        clearTimeout(searchTimeout)
+    const handleSearch = (): void => {
+        if (searchTimeout) clearTimeout(searchTimeout)
         searchTimeout = setTimeout(() => {
             emitFilter()
         }, props.searchDebounceMs)
     }
 
-    const handleRangeChange = (range) => {
+    const handleRangeChange = (range: string): void => {
         localFilter.value.range = range
         emitFilter()
     }
 
-    const toggleDateSort = () => {
+    const toggleDateSort = (): void => {
         localFilter.value.sort = localFilter.value.sort === 'DATE_DESC' ? 'DATE_ASC' : 'DATE_DESC'
         emitFilter()
     }
 
-    const emitFilter = () => {
+    const emitFilter = (): void => {
         emit('update-filter', { ...localFilter.value })
     }
 

@@ -39,7 +39,7 @@
     <NewReportItem ref="newReportItem" />
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted, onUnmounted, computed } from 'vue'
     import { useRoute, onBeforeRouteLeave } from 'vue-router'
     import { useI18n } from 'vue-i18n'
@@ -50,67 +50,69 @@
     import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
 
-    const props = defineProps({
-        analyze_selector: {
-            type: Boolean,
-            default: false
+    const props = withDefaults(
+        defineProps<{
+            analyze_selector?: boolean
+        }>(),
+        {
+            analyze_selector: false
         }
-    })
+    )
 
     const route = useRoute()
     const assessStore = useAssessStore()
     const { t } = useI18n()
 
-    const toolbarFilter = ref(null)
-    const contentData = ref(null)
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
     const showAddNewsItemDialog = ref(false)
-    const newReportItem = ref(null)
+    const newReportItem = ref<any>(null)
 
     // Computed property to check if manual sources exist
     const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
 
-    const newDataLoaded = (count) => {
+    const newDataLoaded = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateDataCount(count)
         }
     }
 
-    const updateFilter = (filter) => {
+    const updateFilter = (filter: Record<string, unknown>): void => {
         if (contentData.value) {
             contentData.value.updateFilter(filter)
             assessStore.setFilter(filter)
         }
     }
 
-    const updateData = () => {
+    const updateData = (): void => {
         if (contentData.value) {
             contentData.value.updateData(false, true)
         }
     }
 
-    const cardReindex = () => {
+    const cardReindex = (): void => {
         // Handle card reindexing (for keyboard navigation in future enhancement)
     }
 
-    const updateShowingCount = (count) => {
+    const updateShowingCount = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateCurrentlyShowingCount(count)
         }
     }
 
-    const handleNewsItemAdded = () => {
+    const handleNewsItemAdded = (): void => {
         // Refresh the data when a new news item is added
         updateData()
     }
 
-    const handleNewReport = (event) => {
+    const handleNewReport = (event: CustomEvent): void => {
         if (newReportItem.value) {
             newReportItem.value.openDialog(event.detail)
         }
     }
 
     // Handle route changes
-    const handleRouteChange = () => {
+    const handleRouteChange = (): void => {
         if (contentData.value) {
             contentData.value.updateData(false, false)
         }
@@ -126,7 +128,7 @@
             handleRouteChange()
         }
 
-        window.addEventListener('new-report', handleNewReport)
+        window.addEventListener('new-report', handleNewReport as EventListener)
     })
 
     onBeforeRouteLeave(() => {
@@ -134,6 +136,6 @@
     })
 
     onUnmounted(() => {
-        window.removeEventListener('new-report', handleNewReport)
+        window.removeEventListener('new-report', handleNewReport as EventListener)
     })
 </script>

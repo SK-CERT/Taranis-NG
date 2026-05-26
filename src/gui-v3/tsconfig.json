@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "jsx": "preserve",
+        "allowJs": true,
+        "checkJs": false,
+        "strict": false,
+        "strictNullChecks": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "useUnknownInCatchVariables": true,
+        "noImplicitOverride": true,
+        "noEmit": true,
+        "isolatedModules": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "useDefineForClassFields": true,
+        "paths": {
+            "@/*": ["./src/*"]
+        },
+        "types": ["vite/client", "node", "vitest/globals"]
+    },
+    "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "tests/**/*.js", "tests/**/*.ts", "tests/**/*.d.ts"],
+    "exclude": ["dist", "node_modules", "coverage", "playwright-report", "test-results"]
+}

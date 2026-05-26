@@ -78,7 +78,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
@@ -90,53 +90,73 @@
     import { updateReportItem, getReportItemData } from '@/api/analyze'
     import { PERMISSIONS } from '@/services/auth/permissions'
 
+    type ReportItem = {
+        id: number | string
+        tag?: string
+        [key: string]: any
+    }
+
+    type GroupLink = {
+        icon: string
+        title: string
+        id: string
+    }
+
+    type UpdatePayload = {
+        add?: boolean
+        delete?: boolean
+        report_item_id?: number
+        remote_report_item_id?: number | string
+        remote_report_item_ids?: Array<number | string>
+        user_id?: number | string
+        [key: string]: unknown
+    }
+
     const { t } = useI18n()
     const { checkPermission, getUserId } = useAuth()
     const analyzeStore = useAnalyzeStore()
 
-    const props = defineProps({
-        values: {
-            type: Array,
-            default: () => []
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            default: null
+    const props = withDefaults(
+        defineProps<{
+            values?: ReportItem[]
+            modify?: boolean
+            edit?: boolean
+            reportItemId?: number | null
+        }>(),
+        {
+            values: () => [],
+            modify: false,
+            edit: false,
+            reportItemId: null
         }
-    })
+    )
 
-    const emit = defineEmits(['remote-report-items-changed'])
+    const emit = defineEmits<{
+        (e: 'remote-report-items-changed', payload: null): void
+    }>()
 
-    const selectorOpen = ref(false)
-    const value = ref(props.values || [])
-    const groups = ref([])
-    const links = ref([])
-    const selectedGroupId = ref(null)
-    const selectedGroupList = ref([])
-    const toolbarFilter = ref(null)
-    const contentData = ref(null)
-    const remoteReportItemDialog = ref(null)
+    const selectorOpen = ref<boolean>(false)
+    const value = ref<ReportItem[]>(props.values || [])
+    const groups = ref<string[]>([])
+    const links = ref<GroupLink[]>([])
+    const selectedGroupId = ref<string | null>(null)
+    const selectedGroupList = ref<string[]>([])
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
+    const remoteReportItemDialog = ref<any>(null)
 
     const canModify = computed(() => {
         if (!props.edit) return true
         return checkPermission(PERMISSIONS.ANALYZE_UPDATE) && props.modify
     })
 
-    const loadGroups = async () => {
+    const loadGroups = async (): Promise<void> => {
         try {
             await analyzeStore.loadReportItemGroups({ search: '' })
             const allGroups = analyzeStore.getReportItemGroups
-            groups.value = allGroups || []
+            groups.value = Array.isArray(allGroups) ? allGroups.filter((group): group is string => typeof group === 'string') : []
 
-            links.value = groups.value.map((group) => ({
+            links.value = groups.value.map((group: string) => ({
                 icon: 'mdi-arrow-down-bold-circle-outline',
                 title: group,
                 id: group
@@ -144,16 +164,16 @@
 
             // Set initial group
             if (links.value.length > 0) {
-                const currentGroup = analyzeStore.currentReportItemGroup
+                const currentGroup = analyzeStore.getCurrentReportItemGroup as string | null
                 if (currentGroup) {
                     selectedGroupId.value = currentGroup
                 } else {
-                    selectedGroupId.value = links.value[0].id
+                    selectedGroupId.value = links.value[0]?.id || ''
                     await analyzeStore.changeCurrentReportItemGroup(selectedGroupId.value)
                 }
                 selectedGroupList.value = [selectedGroupId.value]
             }
-        } catch (_error) {
+        } catch {
             window.dispatchEvent(
                 new CustomEvent('notification', {
                     detail: { type: 'error', message: t('error.load_groups') }
@@ -162,7 +182,7 @@
         }
     }
 
-    const changeGroup = async (groupId) => {
+    const changeGroup = async (groupId: string): Promise<void> => {
         selectedGroupId.value = groupId
         selectedGroupList.value = [groupId]
         await analyzeStore.changeCurrentReportItemGroup(groupId)
@@ -171,38 +191,55 @@
         }
     }
 
-    const updateFilter = (filter) => {
+    const updateFilter = (filter: Record<string, unknown>): void => {
         if (contentData.value) {
             contentData.value.updateFilter(filter)
         }
     }
 
-    const handleNewDataLoaded = (count) => {
+    const handleNewDataLoaded = (count: number): void => {
         if (toolbarFilter.value) {
             toolbarFilter.value.updateDataCount(count)
         }
     }
 
-    const showReportItemDetail = (reportItem) => {
+    const showReportItemDetail = (reportItem: ReportItem): void => {
         if (remoteReportItemDialog.value) {
             remoteReportItemDialog.value.showDetail(reportItem)
         }
     }
 
-    const handleAdd = async () => {
-        const selection = analyzeStore.selectionReport
-        const addedValues = []
-        const data = {
+    const handleAdd = async (): Promise<void> => {
+        const rawSelection = analyzeStore.getSelectionReport
+        const selection: Array<{ item: ReportItem }> = Array.isArray(rawSelection)
+            ? rawSelection
+                  .map((entry): { item: ReportItem } | null => {
+                      if (!entry || typeof entry !== 'object') return null
+                      const candidate = (entry as { item?: unknown }).item
+                      if (!candidate || typeof candidate !== 'object') return null
+                      const id = (candidate as { id?: unknown }).id
+                      if (typeof id !== 'string' && typeof id !== 'number') return null
+                      return { item: candidate as ReportItem }
+                  })
+                  .filter((entry): entry is { item: ReportItem } => entry !== null)
+            : []
+        const addedValues: ReportItem[] = []
+        const data: UpdatePayload = {
             add: true,
-            report_item_id: props.reportItemId,
             remote_report_item_ids: []
         }
 
-        selection.forEach((selectedItem) => {
+        if (typeof props.reportItemId === 'number') {
+            data.report_item_id = props.reportItemId
+        }
+
+        selection.forEach((selectedItem: { item: ReportItem }) => {
             const found = value.value.some((item) => item.id === selectedItem.item.id)
             if (!found) {
                 addedValues.push(selectedItem.item)
-                data.remote_report_item_ids.push(selectedItem.item.id)
+                if (data.remote_report_item_ids) {
+                    data.remote_report_item_ids.push(selectedItem.item.id)
+                }
             }
         })
 
@@ -210,7 +247,7 @@
             try {
                 await updateReportItem(props.reportItemId, data)
                 value.value.push(...addedValues)
-            } catch (_error) {
+            } catch {
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'error', message: t('error.save_failed') }
@@ -226,8 +263,8 @@
         handleClose()
     }
 
-    const removeReportItem = async (reportItem) => {
-        const data = {
+    const removeReportItem = async (reportItem: ReportItem): Promise<void> => {
+        const data: UpdatePayload = {
             delete: true,
             remote_report_item_id: reportItem.id
         }
@@ -239,7 +276,7 @@
                 if (index > -1) {
                     value.value.splice(index, 1)
                 }
-            } catch (_error) {
+            } catch {
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'error', message: t('error.delete_failed') }
@@ -257,7 +294,7 @@
         emit('remote-report-items-changed', null)
     }
 
-    const openSelector = () => {
+    const openSelector = (): void => {
         analyzeStore.multiSelectReport(true)
         selectorOpen.value = true
         if (contentData.value) {
@@ -265,12 +302,12 @@
         }
     }
 
-    const handleClose = () => {
+    const handleClose = (): void => {
         analyzeStore.multiSelectReport(false)
         selectorOpen.value = false
     }
 
-    const handleReportItemUpdated = async (dataInfo) => {
+    const handleReportItemUpdated = async (dataInfo: UpdatePayload): Promise<void> => {
         if (!props.edit || !props.reportItemId || props.reportItemId <= 0 || props.reportItemId !== dataInfo.report_item_id) return
         if (dataInfo.user_id === getUserId()) return
 
@@ -288,13 +325,14 @@
             }
 
             emit('remote-report-items-changed', null)
-        } catch (_error) {
+        } catch {
             // Silent error handling for SSE updates
         }
     }
 
-    const handleReportItemUpdatedEvent = (event) => {
-        handleReportItemUpdated(event.detail)
+    const handleReportItemUpdatedEvent = (event: Event): void => {
+        const customEvent = event as CustomEvent<UpdatePayload>
+        handleReportItemUpdated(customEvent.detail)
     }
 
     onMounted(async () => {

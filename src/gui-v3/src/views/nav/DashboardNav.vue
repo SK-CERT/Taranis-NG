@@ -4,6 +4,6 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     // Empty navigation component
 </script>

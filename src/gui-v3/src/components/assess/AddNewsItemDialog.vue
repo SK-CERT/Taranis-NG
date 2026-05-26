@@ -107,45 +107,75 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import Editor from 'primevue/editor'
     import { addNewsItem } from '@/api/assess'
     import { useUserStore } from '@/stores/user'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        manualSources: {
-            type: Array,
-            default: () => []
-        }
-    })
+    type ManualSource = {
+        id: string | number
+        name?: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'news-item-added'])
+    type NewsItemForm = {
+        id: string
+        title: string
+        review: string
+        content: string
+        link: string
+        source: string
+        author: string
+        language: string
+        hash: string
+        osint_source_id: string | number
+        published: string
+        collected: string
+        attributes: unknown[]
+    }
+
+    type FormRef = {
+        reset?: () => void
+        validate?: () => Promise<{ valid: boolean }>
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            manualSources?: unknown[]
+        }>(),
+        {
+            modelValue: false,
+            manualSources: () => []
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+        (e: 'news-item-added'): void
+    }>()
 
     const { t, locale } = useI18n()
     const userStore = useUserStore()
 
-    const isOpen = computed({
+    const isOpen = computed<boolean>({
         get: () => props.modelValue,
-        set: (value) => emit('update:modelValue', value)
+        set: (value: boolean) => emit('update:modelValue', value)
     })
 
-    const formRef = ref(null)
-    const editorContent = ref('')
-    const isSubmitting = ref(false)
+    const formRef = ref<FormRef | null>(null)
+    const editorContent = ref<string>('')
+    const isSubmitting = ref<boolean>(false)
 
-    const showError = ref(false)
-    const showValidationError = ref(false)
-    const showSuccess = ref(false)
+    const showError = ref<boolean>(false)
+    const showValidationError = ref<boolean>(false)
+    const showSuccess = ref<boolean>(false)
 
-    const selectedSourceId = ref('')
+    const selectedSourceId = ref<string | number>('')
 
-    const newsItem = ref({
+    const newsItem = ref<NewsItemForm>({
         id: '',
         title: '',
         review: '',
@@ -161,12 +191,14 @@
         attributes: []
     })
 
-    const rules = {
-        required: (value) => !!value || t('error.required')
+    const rules: {
+        required: (value: string | number | null | undefined) => true | string
+    } = {
+        required: (value: string | number | null | undefined) => !!value || t('error.required')
     }
 
     const sourceOptions = computed(() => {
-        return props.manualSources.map((source) => ({
+        return (props.manualSources as ManualSource[]).map((source: ManualSource) => ({
             title: source.name || source.id,
             value: source.id
         }))
@@ -175,26 +207,26 @@
     // Initialize selected source
     watch(
         () => props.modelValue,
-        (newVal) => {
+        (newVal: boolean) => {
             if (newVal && props.manualSources.length > 0) {
                 // Set to first source if only one, otherwise let user select
                 if (props.manualSources.length === 1) {
-                    selectedSourceId.value = props.manualSources[0].id
+                    selectedSourceId.value = (props.manualSources[0] as ManualSource).id
                 } else if (!selectedSourceId.value) {
-                    selectedSourceId.value = props.manualSources[0].id
+                    selectedSourceId.value = (props.manualSources[0] as ManualSource).id
                 }
             }
         }
     )
 
-    const appendLeadingZeroes = (n) => {
+    const appendLeadingZeroes = (n: number): string | number => {
         if (n <= 9) {
             return '0' + n
         }
         return n
     }
 
-    const resetForm = () => {
+    const resetForm = (): void => {
         newsItem.value = {
             id: '',
             title: '',
@@ -214,22 +246,25 @@
         showError.value = false
         showValidationError.value = false
         showSuccess.value = false
-        if (formRef.value) {
+        if (formRef.value?.reset) {
             formRef.value.reset()
         }
     }
 
-    const closeDialog = () => {
+    const closeDialog = (): void => {
         resetForm()
         isOpen.value = false
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         showError.value = false
         showValidationError.value = false
         showSuccess.value = false
 
-        const { valid } = await formRef.value.validate()
+        if (!formRef.value?.validate) {
+            return
+        }
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
 
         if (!valid) {
             showValidationError.value = true
@@ -266,7 +301,7 @@
             setTimeout(() => {
                 closeDialog()
             }, 1000)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error adding news item:', error)
             showError.value = true
         } finally {

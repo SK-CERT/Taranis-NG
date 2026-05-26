@@ -25,7 +25,9 @@
         <div v-intersect="onIntersect" class="mt-4" style="min-height: 100px; display: flex; align-items: center; justify-content: center">
             <div v-if="loading" class="text-center text-grey">
                 <v-progress-circular indeterminate size="small" />
-                <p class="text-caption mt-2">{{ t('common.loading_more') }}</p>
+                <p class="text-caption mt-2">
+                    {{ t('common.loading_more') }}
+                </p>
             </div>
             <div v-else class="text-caption text-grey">
                 {{ t('common.end_of_list') }}
@@ -40,8 +42,12 @@
         <!-- Empty State -->
         <v-row v-if="!loading && news_items_data.length === 0" justify="center" class="my-8">
             <v-col cols="12" md="6" class="text-center">
-                <v-icon size="64" color="grey">{{ ICONS.NEWSPAPER_VARIANT_OUTLINE }}</v-icon>
-                <p class="text-h6 text-grey mt-4">{{ t('assess.no_items') }}</p>
+                <v-icon size="64" color="grey">
+                    {{ ICONS.NEWSPAPER_VARIANT_OUTLINE }}
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('assess.no_items') }}
+                </p>
             </v-col>
         </v-row>
 
@@ -62,7 +68,8 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
+    import type { AxiosError } from 'axios'
     import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
@@ -74,13 +81,52 @@
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import ReportsListDialog from './ReportsListDialog.vue'
 
-    const props = defineProps({
-        analyze_selector: Boolean,
-        selection: Array,
-        cardItem: String,
-        selfID: String,
-        data_set: String
-    })
+    type NewsItem = {
+        id: string | number
+        type?: string
+        title?: string
+        description?: string
+        comments?: string
+        [key: string]: unknown
+    }
+
+    type DetailActionPayload = {
+        action: string
+        newsItem: NewsItem
+        comment?: string
+        title?: string
+        description?: string
+    }
+
+    type FilterState = {
+        search: string
+        range: string
+        read: boolean | string
+        important: boolean | string
+        relevant: boolean | string
+        sort: string
+        hide_reviews: boolean
+        hide_source_links: boolean
+        highlight_wordlist: boolean
+        compact_mode?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            analyze_selector?: boolean
+            selection?: Array<{ id: string | number }>
+            cardItem?: string
+            selfID?: string
+            data_set?: string
+        }>(),
+        {
+            analyze_selector: false,
+            selection: () => [],
+            cardItem: '',
+            selfID: '',
+            data_set: ''
+        }
+    )
 
     const emit = defineEmits(['new-data-loaded', 'card-items-reindex', 'update-showing-count'])
 
@@ -88,17 +134,17 @@
     const route = useRoute()
     const assessStore = useAssessStore()
 
-    const news_items_data = ref([])
+    const news_items_data = ref<NewsItem[]>([])
     const loading = ref(false)
     const news_items_data_loaded = ref(false)
     const detailDialog = ref(false)
-    const selectedItem = ref(null)
-    const reportsListDialogRef = ref(null)
-    const reportItemModalRef = ref(null)
+    const selectedItem = ref<NewsItem | null>(null)
+    const reportsListDialogRef = ref<any>(null)
+    const reportItemModalRef = ref<any>(null)
     const current_group_id = ref('')
     const lastIntersectTime = ref(0)
     const INTERSECT_DEBOUNCE_MS = 500
-    const filter = ref({
+    const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
         read: false,
@@ -116,25 +162,34 @@
 
     const multiSelectActive = computed(() => assessStore.getMultiSelect)
 
-    const isPreselected = (item_id) => {
-        if (props.selection) {
-            return props.selection.some((item) => item.id === item_id)
+    const isPreselected = (item_id: string | number): boolean => props.selection.some((item) => item.id === item_id)
+
+    const getNormalizedGroupId = (): string => {
+        const routeGroupId = route.params['groupId']
+        if (typeof routeGroupId === 'string') {
+            return routeGroupId
         }
-        return false
+        if (Array.isArray(routeGroupId)) {
+            return routeGroupId[0] || 'all'
+        }
+        return 'all'
     }
 
-    const onIntersect = (entries) => {
+    const onIntersect = (entries: boolean | IntersectionObserverEntry[] | IntersectionObserverEntry): void => {
         // v-intersect passes a boolean directly
         let isIntersecting = false
         if (typeof entries === 'boolean') {
             isIntersecting = entries
         } else if (Array.isArray(entries) && entries.length > 0) {
-            isIntersecting = entries[0].isIntersecting === true
-        } else if (entries && typeof entries === 'object') {
+            const firstEntry = entries[0]
+            isIntersecting = firstEntry?.isIntersecting === true
+        } else if (!Array.isArray(entries) && entries && typeof entries === 'object') {
             isIntersecting = entries.isIntersecting === true
         }
 
-        if (isIntersecting && news_items_data_loaded.value && !loading.value) {
+        const totalCount = assessStore.getNewsItems.total_count || 0
+
+        if (isIntersecting && news_items_data_loaded.value && !loading.value && news_items_data.value.length < totalCount) {
             // Debounce: only trigger if enough time has passed since last trigger
             const now = Date.now()
             if (now - lastIntersectTime.value >= INTERSECT_DEBOUNCE_MS) {
@@ -144,27 +199,27 @@
         }
     }
 
-    const showDetail = (news_item) => {
+    const showDetail = (news_item: NewsItem): void => {
         selectedItem.value = news_item
         detailDialog.value = true
     }
 
-    const showReportsForItem = (card) => {
+    const showReportsForItem = (card: NewsItem): void => {
         if (reportsListDialogRef.value) {
             reportsListDialogRef.value.open(card)
         }
     }
 
-    const handleViewReportDetail = (report) => {
+    const handleViewReportDetail = (report: unknown): void => {
         // Open report in NewReportItem modal without navigation
         if (reportItemModalRef.value) {
             reportItemModalRef.value.showDetail(report)
         }
     }
 
-    const handleDetailAction = async (payload) => {
+    const handleDetailAction = async (payload: DetailActionPayload) => {
         const { action, newsItem } = payload
-        const group_id = current_group_id.value || route.params.groupId || 'all'
+        const group_id = current_group_id.value || getNormalizedGroupId()
 
         try {
             switch (action) {
@@ -191,11 +246,23 @@
                     break
                 case 'comment':
                     // Save comment to aggregate
-                    await assessStore.saveNewsItemAggregate(group_id, newsItem.id, newsItem.title, newsItem.description, payload.comment)
+                    await assessStore.saveNewsItemAggregate(
+                        group_id,
+                        newsItem.id,
+                        newsItem.title || '',
+                        newsItem.description || '',
+                        payload.comment || ''
+                    )
                     break
                 case 'update-aggregate':
                     // Save aggregate metadata (title, description)
-                    await assessStore.saveNewsItemAggregate(group_id, newsItem.id, payload.title, payload.description, newsItem.comments)
+                    await assessStore.saveNewsItemAggregate(
+                        group_id,
+                        newsItem.id,
+                        payload.title || '',
+                        payload.description || '',
+                        newsItem.comments || ''
+                    )
                     break
             }
 
@@ -204,7 +271,7 @@
 
             // Update the selected item in the dialog to show fresh data with updated colors
             if (selectedItem.value && action !== 'delete') {
-                const updatedItem = news_items_data.value.find((item) => item.id === selectedItem.value.id)
+                const updatedItem = news_items_data.value.find((item) => item.id === selectedItem.value?.id)
                 if (updatedItem) {
                     selectedItem.value = updatedItem
                 }
@@ -225,9 +292,9 @@
         }
     }
 
-    const handleDetailDelete = async (newsItem) => {
+    const handleDetailDelete = async (newsItem: NewsItem) => {
         try {
-            const group_id = current_group_id.value || route.params.groupId || 'all'
+            const group_id = current_group_id.value || getNormalizedGroupId()
             await assessStore.deleteNewsItemAggregate(group_id, newsItem.id)
 
             // Close dialog and reload
@@ -243,10 +310,14 @@
         } catch (error) {
             console.error('Error deleting item:', error)
 
-            const responseData = error?.response?.data
+            const responseData = (error as AxiosError)?.response?.data
+            const responseError =
+                responseData && typeof responseData === 'object' && 'error' in responseData
+                    ? (responseData as { error?: string }).error
+                    : undefined
             const isAggregateInUse =
                 responseData === 'aggregate_in_use' ||
-                responseData?.error === 'aggregate_in_use' ||
+                responseError === 'aggregate_in_use' ||
                 (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
 
             if (isAggregateInUse) {
@@ -269,9 +340,9 @@
         }
     }
 
-    const updateItem = async (news_item, action) => {
+    const updateItem = async (news_item: NewsItem, action: string) => {
         try {
-            const group_id = current_group_id.value || route.params.groupId || 'all'
+            const group_id = current_group_id.value || getNormalizedGroupId()
 
             switch (action) {
                 case 'like':
@@ -311,22 +382,22 @@
         }
     }
 
-    const handleDelete = async () => {
+    const handleDelete = async (): Promise<void> => {
         // Reload current view after successful deletion
         // The animation will trigger when the deleted item is missing from the new data
         await updateData(false, true)
     }
 
-    const updateFilter = (newFilter) => {
+    const updateFilter = (newFilter: Partial<FilterState>): void => {
         filter.value = { ...filter.value, ...newFilter }
         updateData(false, false)
     }
 
-    const handleNewsItemsUpdated = () => {
+    const handleNewsItemsUpdated = (): void => {
         updateData(false, true)
     }
 
-    const handleSelectionChange = (itemId, isSelected) => {
+    const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
         // Get the full item from news_items_data
         const item = news_items_data.value.find((n) => n.id === itemId)
         if (item) {
@@ -338,9 +409,16 @@
         }
     }
 
-    const updateData = async (append = false, reload_all = false) => {
+    const updateData = async (append = false, reload_all = false): Promise<void> => {
         loading.value = true
         news_items_data_loaded.value = false
+
+        const totalCount = assessStore.getNewsItems.total_count || 0
+        if (append && totalCount > 0 && news_items_data.value.length >= totalCount) {
+            loading.value = false
+            news_items_data_loaded.value = true
+            return
+        }
 
         let offset = 0
         let limit = 20
@@ -354,12 +432,13 @@
         }
 
         // Get group from route or store
-        let group
+        let group: string
         if (props.analyze_selector) {
-            group = assessStore.getCurrentGroup
+            group =
+                typeof assessStore.getCurrentGroup === 'string' ? assessStore.getCurrentGroup : String(assessStore.getCurrentGroup || 'all')
         } else {
             // Get groupId from route params
-            group = route.params.groupId || 'all'
+            group = getNormalizedGroupId()
             assessStore.changeCurrentGroup(group)
         }
         current_group_id.value = group
@@ -375,7 +454,7 @@
             })
 
             if (response) {
-                const newItems = assessStore.getNewsItems.items
+                const newItems = Array.isArray(assessStore.getNewsItems.items) ? (assessStore.getNewsItems.items as NewsItem[]) : []
                 if (append) {
                     news_items_data.value = news_items_data.value.concat(newItems)
                 } else {
@@ -397,7 +476,7 @@
 
     // Watch route changes
     watch(
-        () => route.params.groupId,
+        () => route.params['groupId'],
         () => {
             updateData(false, false)
         }

@@ -4,7 +4,9 @@
             <v-col cols="12" sm="8" md="6">
                 <v-card>
                     <v-card-title class="text-display-small text-center bg-gradient white--text pa-6">
-                        <v-icon left color="white" size="large">{{ ICONS.SHIELD_SEARCH }}</v-icon>
+                        <v-icon left color="white" size="large">
+                            {{ ICONS.SHIELD_SEARCH }}
+                        </v-icon>
                         Taranis NG
                     </v-card-title>
                     <v-card-text class="text-center pa-6">
@@ -20,7 +22,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ICONS } from '@/config/ui-constants'
 
     // This view is temporary - the router automatically redirects

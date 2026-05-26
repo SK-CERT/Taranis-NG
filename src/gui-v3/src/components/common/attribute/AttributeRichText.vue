@@ -3,13 +3,13 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || values[index].remote" class="richtext-display pa-3 rounded">
-                    <div v-html="sanitizeHtml(values[index].value)" />
+                <div v-if="readOnly || value.remote" class="richtext-display pa-3 rounded">
+                    <div v-html="sanitizeHtml(value.value)" />
                 </div>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -18,7 +18,7 @@
                 >
                     <template #col_middle>
                         <Editor
-                            v-model="values[index].value"
+                            v-model="value.value"
                             :read-only="false"
                             theme="snow"
                             placeholder="Enter rich text..."
@@ -32,43 +32,45 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import Editor from 'primevue/editor'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        index?: string | number
+        value: string
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
         }
-    })
+    )
 
     const { canModify, addButtonVisible, add, del, onBlur } = useAttributes(props)
 
     // Basic HTML sanitization - removes potentially dangerous tags/attributes
-    const sanitizeHtml = (html) => {
+    const sanitizeHtml = (html: string | null | undefined): string => {
         if (!html) return ''
         try {
             // Create a temporary element to parse HTML
@@ -104,49 +106,62 @@
             const allowedAttrs = ['class', 'style', 'href', 'target', 'rel']
 
             // Walk through all nodes and remove unsafe ones
-            const walk = (node) => {
-                const nodesToRemove = []
+            const walk = (node: Node): void => {
+                const nodesToRemove: Node[] = []
                 for (let i = 0; i < node.childNodes.length; i++) {
                     const child = node.childNodes[i]
+                    if (!child) {
+                        continue
+                    }
                     if (child.nodeType === 1) {
                         // Element node
-                        const tagName = child.tagName.toLowerCase()
+                        const element = child as Element
+                        const tagName = element.tagName.toLowerCase()
 
                         if (!allowedTags.includes(tagName)) {
                             // Keep content but remove the tag
                             while (child.childNodes.length) {
-                                node.insertBefore(child.childNodes[0], child)
+                                const firstChild = child.childNodes[0]
+                                if (!firstChild) {
+                                    break
+                                }
+                                node.insertBefore(firstChild as Node, child)
                             }
                             nodesToRemove.push(child)
                         } else {
                             // Remove unsafe attributes
-                            const attrs = child.attributes
+                            const attrs = element.attributes
                             for (let j = attrs.length - 1; j >= 0; j--) {
-                                if (!allowedAttrs.includes(attrs[j].name)) {
-                                    child.removeAttribute(attrs[j].name)
+                                const attr = attrs[j]
+                                if (!attr) {
+                                    continue
+                                }
+                                if (!allowedAttrs.includes(attr.name)) {
+                                    element.removeAttribute(attr.name)
                                 }
                             }
                             // Sanitize href to prevent javascript: URLs
-                            if (child.href && child.href.startsWith('javascript:')) {
-                                child.removeAttribute('href')
+                            const href = element.getAttribute('href')
+                            if (href && href.startsWith('javascript:')) {
+                                element.removeAttribute('href')
                             }
-                            walk(child)
+                            walk(element)
                         }
                     }
                 }
-                nodesToRemove.forEach((node) => node.parentNode.removeChild(node))
+                nodesToRemove.forEach((childNode) => childNode.parentNode?.removeChild(childNode))
             }
 
             walk(temp)
             return temp.innerHTML
-        } catch (error) {
+        } catch {
             // Fallback: return text with tags stripped
             return html.replace(/<[^>]*>/g, '')
         }
     }
 
     // Count words in rich text (strips HTML)
-    const getWordCount = (html) => {
+    const getWordCount = (html: string | null | undefined): number => {
         if (!html) return 0
         const text = html.replace(/<[^>]*>/g, '').trim()
         return text.split(/\s+/).filter((w) => w.length > 0).length

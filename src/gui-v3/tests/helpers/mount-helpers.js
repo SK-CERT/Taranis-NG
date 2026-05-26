@@ -20,12 +20,12 @@ const vuetify = createVuetify({ components, directives })
  * Uses real English messages so translated labels can be asserted on.
  */
 export function createTestI18n() {
-  return createI18n({
-    legacy: false,
-    locale: 'en',
-    fallbackLocale: 'en',
-    messages: { en }
-  })
+    return createI18n({
+        legacy: false,
+        locale: 'en',
+        fallbackLocale: 'en',
+        messages: { en }
+    })
 }
 
 /**
@@ -41,24 +41,24 @@ export function createTestI18n() {
  *   })
  */
 export function mountWithPlugins(component, options = {}) {
-  const pinia = createPinia()
-  setActivePinia(pinia)
-  const i18n = createTestI18n()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const i18n = createTestI18n()
 
-  const globalOptions = options.global || {}
-  const existingPlugins = globalOptions.plugins || []
+    const globalOptions = options.global || {}
+    const existingPlugins = globalOptions.plugins || []
 
-  return mount(component, {
-    ...options,
-    global: {
-      ...globalOptions,
-      plugins: [vuetify, i18n, pinia, ...existingPlugins],
-      stubs: {
-        // Prevent router-link from causing errors in unit tests
-        'router-link': true,
-        'router-view': true,
-        ...globalOptions.stubs
-      }
-    }
-  })
+    return mount(component, {
+        ...options,
+        global: {
+            ...globalOptions,
+            plugins: [vuetify, i18n, pinia, ...existingPlugins],
+            stubs: {
+                // Prevent router-link from causing errors in unit tests
+                'router-link': true,
+                'router-view': true,
+                ...globalOptions.stubs
+            }
+        }
+    })
 }

@@ -68,7 +68,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useI18n } from 'vue-i18n'
@@ -89,7 +89,7 @@
         value: username,
         errorMessage: usernameError,
         validate: validateUsername
-    } = useField('username', (value) => {
+    } = useField<string>('username', (value: string | undefined) => {
         if (!value) return t('validations.custom.username.required')
         return true
     })
@@ -98,7 +98,7 @@
         value: password,
         errorMessage: passwordError,
         validate: validatePassword
-    } = useField('password', (value) => {
+    } = useField<string>('password', (value: string | undefined) => {
         if (!value) return t('validations.custom.password.required')
         return true
     })
@@ -109,7 +109,7 @@
     /**
      * Handle form submission with validation
      */
-    const handleFormSubmit = async () => {
+    const handleFormSubmit = async (): Promise<void> => {
         // Validate all fields
         await validateUsername()
         await validatePassword()
@@ -123,8 +123,8 @@
                     // External authentication (OAuth/Keycloak)
                     const req = authStore.login({
                         params: {
-                            code: route.query.code,
-                            session_state: route.query.session_state
+                            code: route.query['code'],
+                            session_state: route.query['session_state']
                         },
                         method: 'get'
                     })
@@ -133,15 +133,16 @@
                     // Internal authentication
                     const req = authStore.login({
                         username: username.value,
-                        password: password.value,
-                        method: 'post'
+                        password: password.value
                     })
                     await req
                 }
 
                 if (isAuthenticated()) {
                     showLoginError.value = false
-                    const redirect = route.query.redirect || '/'
+                    const queryRedirect = route.query['redirect']
+                    const redirect =
+                        typeof queryRedirect === 'string' ? queryRedirect : Array.isArray(queryRedirect) ? (queryRedirect[0] ?? '/') : '/'
                     router.push(redirect)
                 } else {
                     validationFailed()
@@ -156,7 +157,7 @@
     /**
      * Handle validation failure
      */
-    const validationFailed = () => {
+    const validationFailed = (): void => {
         if (authStore.hasExternalLogoutUrl) {
             // Redirect to external logout (no gotoUrl)
             window.location.href = authStore.getLogoutURL
@@ -178,7 +179,10 @@
 
         // Handle external login flow
         if (authStore.hasExternalLoginUrl) {
-            if (route.query.code !== undefined && route.query.session_state !== undefined) {
+            const code = route.query['code']
+            const sessionState = route.query['session_state']
+
+            if (code !== undefined && sessionState !== undefined) {
                 // Complete external auth with code
                 handleFormSubmit()
             } else {

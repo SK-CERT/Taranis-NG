@@ -110,41 +110,54 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewDataProvider, updateDataProvider } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        item: {
-            type: Object,
-            default: () => ({})
-        },
-        isEdit: {
-            type: Boolean,
-            default: false
+    type DataProviderItem = {
+        id: string | number | null
+        name: string
+        api_type: string
+        api_url: string
+        api_key: string
+        user_agent: string
+        web_url: string
+        [key: string]: unknown
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            item?: Partial<DataProviderItem>
+            isEdit?: boolean
+        }>(),
+        {
+            modelValue: false,
+            item: () => ({}),
+            isEdit: false
         }
-    })
+    )
 
     const emit = defineEmits(['update:modelValue', 'saved'])
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
     const dialog = ref(false)
     const showApiKey = ref(false)
 
-    const defaultItem = {
+    const defaultItem: DataProviderItem = {
         id: null,
         name: 'ENISA EUVD',
         api_type: 'EUVD',
@@ -154,15 +167,15 @@
         web_url: ''
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<DataProviderItem>({ ...defaultItem })
 
     const canCreate = computed(() => checkPermission('CONFIG_DATA_PROVIDER_CREATE'))
 
-    async function handleSubmit() {
+    async function handleSubmit(): Promise<void> {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid) {
             showValidationError.value = true
             return
@@ -189,7 +202,7 @@
         }
     }
 
-    function handleCancel() {
+    function handleCancel(): void {
         showValidationError.value = false
         showError.value = false
         formRef.value?.reset()
@@ -202,7 +215,7 @@
         () => props.item,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...newItem }
+                localItem.value = { ...defaultItem, ...newItem }
             } else {
                 localItem.value = { ...defaultItem }
             }
