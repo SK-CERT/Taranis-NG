@@ -3,10 +3,7 @@
     "singleQuote": true,
     "printWidth": 142,
     "trailingComma": "none",
-    "arrowParens": "always",
-    "endOfLine": "lf",
     "tabWidth": 4,
-    "useTabs": false,
     "vueIndentScriptAndStyle": true,
-    "htmlWhitespaceSensitivity": "ignore"
+    "quoteProps": "consistent"
 }
