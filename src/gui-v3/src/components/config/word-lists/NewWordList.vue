@@ -53,7 +53,9 @@
                     <v-row>
                         <v-col cols="12">
                             <div class="d-flex align-center mb-3">
-                                <h3 class="text-h6">{{ t('word_list.categories') }}</h3>
+                                <h3 class="text-h6">
+                                    {{ t('word_list.categories') }}
+                                </h3>
                                 <v-spacer />
                                 <v-btn color="primary" prepend-icon="mdi-plus" :disabled="saving" @click="addCategory">
                                     {{ t('word_list.new_category') }}
@@ -78,7 +80,9 @@
                                                 :disabled="saving"
                                                 @click.stop="deleteCategory(index)"
                                             >
-                                                <v-icon color="error">{{ ICONS.DELETE }}</v-icon>
+                                                <v-icon color="error">
+                                                    {{ ICONS.DELETE }}
+                                                </v-icon>
                                             </v-btn>
                                         </div>
                                     </v-expansion-panel-title>
@@ -121,7 +125,9 @@
                                         <!-- Words/Entries for this category -->
                                         <div class="mb-3">
                                             <div class="d-flex align-center mb-2">
-                                                <h4 class="text-subtitle-1">{{ t('word_list.words') }}</h4>
+                                                <h4 class="text-subtitle-1">
+                                                    {{ t('word_list.words') }}
+                                                </h4>
                                                 <v-spacer />
                                                 <v-btn
                                                     size="small"
@@ -167,7 +173,9 @@
                                                         :disabled="saving"
                                                         @click="deleteWord(index, category.entries.indexOf(item))"
                                                     >
-                                                        <v-icon color="error">{{ ICONS.DELETE }}</v-icon>
+                                                        <v-icon color="error">
+                                                            {{ ICONS.DELETE }}
+                                                        </v-icon>
                                                     </v-btn>
                                                 </template>
                                                 <template #no-data>
@@ -183,8 +191,12 @@
 
                             <div v-if="localItem.categories.length === 0" class="text-center pa-8 text-grey">
                                 <v-icon size="64" color="grey-lighten-1">mdi-folder-open-outline</v-icon>
-                                <div class="text-h6 mt-2">{{ t('word_list.no_categories') }}</div>
-                                <div class="text-body-2">{{ t('word_list.add_category_hint') }}</div>
+                                <div class="text-h6 mt-2">
+                                    {{ t('word_list.no_categories') }}
+                                </div>
+                                <div class="text-body-2">
+                                    {{ t('word_list.add_category_hint') }}
+                                </div>
                             </div>
                         </v-col>
                     </v-row>
@@ -213,7 +225,7 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { ICONS } from '@/config/ui-constants'
     import { useI18n } from 'vue-i18n'
@@ -221,30 +233,68 @@
     import { useAuth } from '@/composables/useAuth'
     import { createNewWordList, updateWordList } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        editItem: {
-            type: Object,
-            default: null
-        }
-    })
+    type WordEntry = {
+        value: string
+        description: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'saved'])
+    type WordCategory = {
+        name: string
+        description: string
+        link: string
+        entries: WordEntry[]
+        [key: string]: unknown
+    }
+
+    type WordListItem = {
+        id: string | number | null
+        name: string
+        description: string
+        use_for_stop_words: boolean
+        categories: WordCategory[]
+        [key: string]: unknown
+    }
+
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+        width?: string
+        align?: 'start' | 'center' | 'end'
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            editItem?: Record<string, unknown> | null
+        }>(),
+        {
+            modelValue: false,
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+        (e: 'saved'): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const saving = ref(false)
     const showValidationError = ref(false)
     const showError = ref(false)
-    const expandedPanels = ref([])
+    const expandedPanels = ref<number[]>([])
 
-    const defaultItem = {
+    const defaultItem: WordListItem = {
         id: null,
         name: '',
         description: '',
@@ -252,12 +302,12 @@
         categories: []
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<WordListItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_WORD_LIST_CREATE'))
 
-    const wordHeaders = [
+    const wordHeaders: HeaderEntry[] = [
         { title: t('word_list.value'), key: 'value', sortable: true, width: '40%' },
         { title: t('word_list.description'), key: 'description', sortable: false, width: '50%' },
         { title: t('common.actions'), key: 'actions', sortable: false, width: '10%', align: 'center' }
@@ -268,7 +318,8 @@
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                localItem.value = JSON.parse(JSON.stringify(newVal)) // Deep clone
+                const incoming = JSON.parse(JSON.stringify(newVal)) as Partial<WordListItem>
+                localItem.value = { ...defaultItem, ...incoming, categories: incoming.categories || [] }
 
                 // Expand all panels when editing
                 expandedPanels.value = localItem.value.categories.map((_, index) => index)
@@ -287,7 +338,7 @@
         emit('update:modelValue', newVal)
     })
 
-    const resetForm = () => {
+    const resetForm = (): void => {
         localItem.value = { ...defaultItem, categories: [] }
         expandedPanels.value = []
         showValidationError.value = false
@@ -297,11 +348,11 @@
         }
     }
 
-    const cancel = () => {
+    const cancel = (): void => {
         dialog.value = false
     }
 
-    const addCategory = () => {
+    const addCategory = (): void => {
         localItem.value.categories.push({
             name: '',
             description: '',
@@ -312,31 +363,42 @@
         expandedPanels.value.push(localItem.value.categories.length - 1)
     }
 
-    const deleteCategory = (index) => {
+    const deleteCategory = (index: number): void => {
         localItem.value.categories.splice(index, 1)
         // Update expanded panels
         expandedPanels.value = expandedPanels.value.filter((p) => p !== index).map((p) => (p > index ? p - 1 : p))
     }
 
-    const addWord = (categoryIndex) => {
-        if (!localItem.value.categories[categoryIndex].entries) {
-            localItem.value.categories[categoryIndex].entries = []
+    const addWord = (categoryIndex: number): void => {
+        const category = localItem.value.categories[categoryIndex]
+        if (!category) {
+            return
         }
-        localItem.value.categories[categoryIndex].entries.push({
+        if (!category.entries) {
+            category.entries = []
+        }
+        category.entries.push({
             value: '',
             description: ''
         })
     }
 
-    const deleteWord = (categoryIndex, wordIndex) => {
-        localItem.value.categories[categoryIndex].entries.splice(wordIndex, 1)
+    const deleteWord = (categoryIndex: number, wordIndex: number): void => {
+        const category = localItem.value.categories[categoryIndex]
+        if (!category?.entries) {
+            return
+        }
+        category.entries.splice(wordIndex, 1)
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        if (!formRef.value?.validate) {
+            return
+        }
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
 
         if (!valid) {
             showValidationError.value = true

@@ -70,7 +70,9 @@
                     <!-- Dynamic Parameter Fields -->
                     <div v-if="selectedBot && selectedBot.parameters && selectedBot.parameters.length > 0">
                         <v-divider class="my-4" />
-                        <h3 class="text-subtitle-1 mb-3">{{ t('bot_preset.parameters') }}</h3>
+                        <h3 class="text-subtitle-1 mb-3">
+                            {{ t('bot_preset.parameters') }}
+                        </h3>
 
                         <div v-for="(param, index) in selectedBot.parameters" :key="param.key || index" class="mb-3">
                             <v-row align="center">
@@ -121,42 +123,87 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewBotPreset, updateBotPreset, getAllBotsNodes } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        editItem: {
-            type: Object,
-            default: null
-        }
-    })
+    type PresetParameter = {
+        id?: string | number
+        key?: string
+        name?: string
+        description?: string
+        default_value?: string
+        [key: string]: unknown
+    }
 
-    const emit = defineEmits(['update:modelValue', 'saved'])
+    type Bot = {
+        id: string | number
+        name?: string
+        parameters?: PresetParameter[]
+        [key: string]: unknown
+    }
+
+    type BotsNode = {
+        id: string | number
+        name?: string
+        bots?: Bot[]
+        [key: string]: unknown
+    }
+
+    type BotPresetParameterValue = {
+        value?: string
+        parameter?: PresetParameter
+        [key: string]: unknown
+    }
+
+    type BotPresetItem = {
+        id: string | number | null
+        name: string
+        description: string
+        bot_id: string | number | null
+        parameter_values: BotPresetParameterValue[]
+        [key: string]: unknown
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            modelValue?: boolean
+            editItem?: Record<string, unknown> | null
+        }>(),
+        {
+            modelValue: false,
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+        (e: 'saved'): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const saving = ref(false)
     const loadingNodes = ref(false)
     const showValidationError = ref(false)
     const showError = ref(false)
 
-    const nodes = ref([])
-    const selectedNode = ref(null)
-    const selectedBot = ref(null)
-    const parameterValues = ref([])
+    const nodes = ref<BotsNode[]>([])
+    const selectedNode = ref<BotsNode | null>(null)
+    const selectedBot = ref<Bot | null>(null)
+    const parameterValues = ref<string[]>([])
 
-    const defaultItem = {
+    const defaultItem: BotPresetItem = {
         id: null,
         name: '',
         description: '',
@@ -164,7 +211,7 @@
         parameter_values: []
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<BotPresetItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_BOT_PRESET_CREATE'))
@@ -174,20 +221,25 @@
         () => props.editItem,
         (newVal) => {
             if (newVal) {
-                localItem.value = { ...newVal }
+                const incoming = newVal as Partial<BotPresetItem> & {
+                    bot_id?: string | number | null
+                    parameter_values?: BotPresetParameterValue[]
+                }
+
+                localItem.value = { ...defaultItem, ...incoming }
 
                 // Find and set the node and bot
                 for (const node of nodes.value) {
-                    const bot = node.bots?.find((b) => b.id === newVal.bot_id)
+                    const bot = node.bots?.find((b) => b.id === incoming.bot_id)
                     if (bot) {
                         selectedNode.value = node
-                        selectedBot.value = bot
+                        selectedBot.value = bot as Bot
 
                         // Map parameter values
                         parameterValues.value =
                             bot.parameters?.map((param) => {
-                                const paramValue = newVal.parameter_values?.find((pv) => pv.parameter.id === param.id)
-                                return paramValue ? paramValue.value : param.default_value || ''
+                                const paramValue = incoming.parameter_values?.find((pv) => pv.parameter?.id === param.id)
+                                return String(paramValue?.value ?? param.default_value ?? '')
                             }) || []
                         break
                     }
@@ -208,9 +260,9 @@
     })
 
     // Watch selected bot to initialize parameter values
-    watch(selectedBot, (newBot) => {
+    watch(selectedBot, (newBot: Bot | null) => {
         if (!isEdit.value && newBot && newBot.parameters) {
-            parameterValues.value = newBot.parameters.map((param) => param.default_value || '')
+            parameterValues.value = newBot.parameters.map((param) => String(param.default_value ?? ''))
         }
     })
 
@@ -219,17 +271,22 @@
         await loadNodes()
     })
 
-    const loadNodes = async () => {
+    const loadNodes = async (): Promise<void> => {
         loadingNodes.value = true
         try {
-            const response = await getAllBotsNodes({ search: '' })
-            nodes.value = response.items || []
+            const response = (await getAllBotsNodes({ search: '' })) as { items?: BotsNode[]; data?: { items?: BotsNode[] } }
+            nodes.value = response.items || response.data?.items || []
 
             // Auto-select first node and bot if available
             if (!isEdit.value && nodes.value.length > 0) {
-                selectedNode.value = nodes.value[0]
-                if (selectedNode.value.bots && selectedNode.value.bots.length > 0) {
-                    selectedBot.value = selectedNode.value.bots[0]
+                const firstNode = nodes.value[0]
+                if (!firstNode) {
+                    return
+                }
+                selectedNode.value = firstNode
+                const bots = firstNode.bots ?? []
+                if (bots.length > 0) {
+                    selectedBot.value = bots[0] as Bot
                 }
             }
         } catch (error) {
@@ -239,27 +296,30 @@
         }
     }
 
-    const resetForm = () => {
+    const resetForm = (): void => {
         localItem.value = { ...defaultItem }
         selectedNode.value = null
         selectedBot.value = null
         parameterValues.value = []
         showValidationError.value = false
         showError.value = false
-        if (formRef.value) {
+        if (formRef.value?.resetValidation) {
             formRef.value.resetValidation()
         }
     }
 
-    const cancel = () => {
+    const cancel = (): void => {
         dialog.value = false
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        if (!formRef.value?.validate) {
+            return
+        }
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
 
         if (!valid || !selectedBot.value) {
             showValidationError.value = true
@@ -272,11 +332,11 @@
             // Prepare parameter values
             const paramValues =
                 selectedBot.value.parameters?.map((param, index) => ({
-                    value: parameterValues.value[index] || param.default_value || '',
+                    value: String(parameterValues.value[index] ?? param.default_value ?? ''),
                     parameter: param
                 })) || []
 
-            const payload = {
+            const payload: BotPresetItem = {
                 ...localItem.value,
                 bot_id: selectedBot.value.id,
                 parameter_values: paramValues

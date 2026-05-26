@@ -84,40 +84,56 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewACLEntry, updateACLEntry } from '@/api/config'
 
-    const props = defineProps({
-        modelValue: {
-            type: Boolean,
-            default: false
-        },
-        item: {
-            type: Object,
-            default: () => ({})
-        },
-        isEdit: {
-            type: Boolean,
-            default: false
-        }
-    })
+    type ACLItemType = 'product' | 'report_item' | 'product_type' | 'organization' | 'user'
 
-    const emit = defineEmits(['update:modelValue', 'saved'])
+    type ACLItem = {
+        id: string | number | null
+        name: string
+        description: string
+        item_type: ACLItemType | ''
+        item_id: number | null
+        [key: string]: unknown
+    }
+
+    type ACLItemTypeOption = {
+        title: string
+        value: ACLItemType
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            editItem?: Record<string, unknown> | null
+        }>(),
+        {
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'saved'): void
+    }>()
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
-    const formRef = ref(null)
+    const formRef = ref<any>(null)
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
     const dialog = ref(false)
 
-    const itemTypes = [
+    const itemTypes: ACLItemTypeOption[] = [
         { title: 'Product', value: 'product' },
         { title: 'Report Item', value: 'report_item' },
         { title: 'Product Type', value: 'product_type' },
@@ -125,7 +141,7 @@
         { title: 'User', value: 'user' }
     ]
 
-    const defaultItem = {
+    const defaultItem: ACLItem = {
         id: null,
         name: '',
         description: '',
@@ -133,15 +149,16 @@
         item_id: null
     }
 
-    const localItem = ref({ ...defaultItem })
+    const localItem = ref<ACLItem>({ ...defaultItem })
+    const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_ACL_CREATE'))
 
-    async function handleSubmit() {
+    async function handleSubmit(): Promise<void> {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = await formRef.value.validate()
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid) {
             showValidationError.value = true
             return
@@ -149,7 +166,7 @@
 
         saving.value = true
         try {
-            if (props.isEdit) {
+            if (isEdit.value) {
                 await updateACLEntry(localItem.value)
             } else {
                 await createNewACLEntry(localItem.value)
@@ -168,7 +185,7 @@
         }
     }
 
-    function handleCancel() {
+    function handleCancel(): void {
         showValidationError.value = false
         showError.value = false
         formRef.value?.reset()
@@ -177,10 +194,11 @@
     }
 
     watch(
-        () => props.item,
+        () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...newItem }
+                const incoming = newItem as Partial<ACLItem>
+                localItem.value = { ...defaultItem, ...incoming }
             } else {
                 localItem.value = { ...defaultItem }
             }
@@ -190,7 +208,7 @@
 
     watch(
         () => dialog.value,
-        (newVal) => {
+        (newVal: boolean) => {
             if (!newVal) {
                 showValidationError.value = false
                 showError.value = false

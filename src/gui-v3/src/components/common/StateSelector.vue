@@ -15,21 +15,33 @@
         <template #item="{ item, props }">
             <v-list-item v-bind="props">
                 <template v-if="item" #prepend>
-                    <v-icon :color="item.color">{{ item.icon }}</v-icon>
+                    <v-icon :color="asStateItem(item).color">
+                        {{ asStateItem(item).icon }}
+                    </v-icon>
                 </template>
             </v-list-item>
         </template>
         <template #selection="{ item }">
             <template v-if="item">
-                <v-icon :color="item.color" class="mr-2">{{ item.icon }}</v-icon>
-                <span>{{ getStateTitle(item) }}</span>
+                <v-icon :color="asStateItem(item).color" class="mr-2">
+                    {{ asStateItem(item).icon }}
+                </v-icon>
+                <span>{{ getStateTitle(asStateItem(item)) }}</span>
             </template>
         </template>
     </v-select>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { useI18n } from 'vue-i18n'
+
+    type StateItem = {
+        id: string | number
+        display_name?: string
+        color?: string
+        icon?: string
+        [key: string]: unknown
+    }
 
     const { t, te } = useI18n()
 
@@ -58,9 +70,11 @@
 
     const emit = defineEmits(['update:modelValue'])
 
-    const getStateTitle = (item) => {
+    const asStateItem = (item: unknown): StateItem => item as StateItem
+
+    const getStateTitle = (item: StateItem | null | undefined): string => {
         if (!item) return ''
         const key = 'workflow.states.' + item.display_name
-        return te(key) ? t(key) : item.display_name
+        return te(key) ? t(key) : String(item.display_name || '')
     }
 </script>

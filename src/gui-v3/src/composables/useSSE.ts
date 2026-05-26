@@ -2,25 +2,30 @@ import { ref, onUnmounted } from 'vue'
 import { initSSE } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 
+type SseHandler = (payload: unknown) => void
+
+type SseListener = (event: MessageEvent<string>) => void
+
 /**
  * Composable for Server-Sent Events (SSE) connection
  * Manages real-time event streaming from the backend
  */
 export function useSSE() {
     useAuthStore()
-    const sseConnection = ref(null)
-    const eventHandlers = ref(new Map())
-    const eventListeners = ref(new Map())
+
+    const sseConnection = ref<EventSource | null>(null)
+    const eventHandlers = ref(new Map<string, SseHandler>())
+    const eventListeners = ref(new Map<string, SseListener>())
 
     /**
      * Get SSE URL from environment
      */
-    const getSSEUrl = () => {
+    const getSSEUrl = (): string => {
         const baseUrl = import.meta.env.VITE_APP_TARANIS_NG_CORE_SSE || '/sse'
         return baseUrl
     }
 
-    const closeConnection = (clearHandlers = false) => {
+    const closeConnection = (clearHandlers = false): void => {
         if (sseConnection.value) {
             sseConnection.value.close()
             sseConnection.value = null
@@ -37,7 +42,7 @@ export function useSSE() {
     /**
      * Connect to SSE endpoint
      */
-    const connect = async () => {
+    const connect = async (): Promise<EventSource> => {
         if (sseConnection.value) {
             console.log('[SSE] already conected')
             return sseConnection.value
@@ -45,7 +50,7 @@ export function useSSE() {
 
         await initSSE()
 
-        return new Promise((resolve, reject) => {
+        return new Promise<EventSource>((resolve, reject) => {
             let settled = false
 
             try {
@@ -83,7 +88,7 @@ export function useSSE() {
     /**
      * Subscribe to an event
      */
-    const subscribe = (eventName, handler) => {
+    const subscribe = (eventName: string, handler: SseHandler): void => {
         eventHandlers.value.set(eventName, handler)
 
         if (!sseConnection.value) {
@@ -92,10 +97,10 @@ export function useSSE() {
 
         const existingListener = eventListeners.value.get(eventName)
         if (existingListener) {
-            sseConnection.value.removeEventListener(eventName, existingListener)
+            sseConnection.value.removeEventListener(eventName, existingListener as EventListener)
         }
 
-        const listener = (event) => {
+        const listener: SseListener = (event) => {
             try {
                 const data = JSON.parse(event.data)
                 handler(data)
@@ -105,18 +110,18 @@ export function useSSE() {
             }
         }
 
-        sseConnection.value.addEventListener(eventName, listener)
+        sseConnection.value.addEventListener(eventName, listener as EventListener)
         eventListeners.value.set(eventName, listener)
     }
 
     /**
      * Unsubscribe from an event
      */
-    const unsubscribe = (eventName) => {
+    const unsubscribe = (eventName: string): void => {
         const listener = eventListeners.value.get(eventName)
 
         if (sseConnection.value && listener) {
-            sseConnection.value.removeEventListener(eventName, listener)
+            sseConnection.value.removeEventListener(eventName, listener as EventListener)
         }
 
         eventListeners.value.delete(eventName)
@@ -126,14 +131,14 @@ export function useSSE() {
     /**
      * Disconnect SSE
      */
-    const disconnect = () => {
+    const disconnect = (): void => {
         closeConnection(true)
     }
 
     /**
      * Reconnect SSE (close and reopen)
      */
-    const reconnect = () => {
+    const reconnect = (): Promise<EventSource> => {
         closeConnection(false)
         return connect()
     }

@@ -3,16 +3,16 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || values[index].remote" class="boolean-value">
-                    <v-icon :color="values[index].value ? 'success' : 'error'" size="small">
-                        {{ values[index].value ? ICONS.CHECK_CIRCLE : ICONS.CLOSE }}
+                <span v-if="readOnly || value.remote" class="boolean-value">
+                    <v-icon :color="value.value ? 'success' : 'error'" size="small">
+                        {{ value.value ? ICONS.CHECK_CIRCLE : ICONS.CLOSE }}
                     </v-icon>
-                    {{ values[index].value ? $t('common.yes') : $t('common.no') }}
+                    {{ value.value ? $t('common.yes') : $t('common.no') }}
                 </span>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -21,10 +21,10 @@
                 >
                     <template #col_middle>
                         <v-switch
-                            v-model="values[index].value"
-                            :label="values[index].value ? $t('common.yes') : $t('common.no')"
+                            v-model="value.value"
+                            :label="value.value ? $t('common.yes') : $t('common.no')"
                             density="compact"
-                            :disabled="values[index].locked || !canModify"
+                            :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
                             @update:model-value="onEdit(index)"
@@ -36,39 +36,44 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        index?: string | number
+        value: boolean
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        attribute?: {
+            enum_values?: Array<string | number>
         }
-    })
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
 
     const { t } = useI18n()
 

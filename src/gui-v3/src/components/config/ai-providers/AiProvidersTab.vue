@@ -34,28 +34,30 @@
             <!-- Data Table -->
             <v-data-table :headers="headers" :items="configStore.aiProviders.items" :search="search" item-key="id" class="elevation-1">
                 <template #item.name="{ item }">
-                    <strong>{{ item.name }}</strong>
+                    <strong>{{ asAiProviderItem(item).name }}</strong>
                 </template>
 
                 <template #item.api_type="{ item }">
-                    <v-chip size="small">{{ item.api_type }}</v-chip>
+                    <v-chip size="small">
+                        {{ asAiProviderItem(item).api_type }}
+                    </v-chip>
                 </template>
 
                 <template #item.model="{ item }">
-                    {{ item.model }}
+                    {{ asAiProviderItem(item).model }}
                 </template>
 
                 <template #item.api_key="{ item }">
-                    {{ item.api_key ? '••••••••' : '-' }}
+                    {{ asAiProviderItem(item).api_key ? '••••••••' : '-' }}
                 </template>
 
                 <template #item.updated_at="{ item }">
-                    {{ item.updated_at ? new Date(item.updated_at).toLocaleString() : '' }}
+                    {{ asAiProviderItem(item).updated_at ? new Date(String(asAiProviderItem(item).updated_at)).toLocaleString() : '' }}
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(item)" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(item)" />
+                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asAiProviderItem(item))" />
+                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asAiProviderItem(item))" />
                 </template>
             </v-data-table>
         </v-card>
@@ -67,7 +69,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
@@ -75,14 +77,31 @@
     import NewAiProvider from '@/components/config/ai-providers/NewAiProvider.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
 
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
+
+    type AiProviderItem = {
+        id: string | number
+        name?: string
+        api_type?: string
+        model?: string
+        api_key?: string
+        updated_by?: string
+        updated_at?: string
+        [key: string]: unknown
+    }
+
     const { t } = useI18n()
     const configStore = useConfigStore()
 
     const search = ref('')
     const showEditDialog = ref(false)
-    const editItem = ref(null)
+    const editItem = ref<AiProviderItem | null>(null)
 
-    const headers = [
+    const headers: HeaderEntry[] = [
         { title: t('ai_provider.name'), key: 'name' },
         { title: t('ai_provider.api_type'), key: 'api_type' },
         { title: t('ai_provider.model'), key: 'model' },
@@ -92,7 +111,9 @@
         { title: t('common.actions'), key: 'actions', sortable: false }
     ]
 
-    const loadData = async () => {
+    const asAiProviderItem = (item: unknown): AiProviderItem => item as AiProviderItem
+
+    const loadData = async (): Promise<void> => {
         try {
             await configStore.loadAiProviders({ search: search.value })
         } catch (error) {
@@ -100,12 +121,12 @@
         }
     }
 
-    const handleEdit = (item) => {
+    const handleEdit = (item: AiProviderItem): void => {
         editItem.value = item
         showEditDialog.value = true
     }
 
-    const handleDelete = async (item) => {
+    const handleDelete = async (item: AiProviderItem): Promise<void> => {
         if (confirm(t('common.messagebox.delete_confirm', { name: item.name }))) {
             try {
                 await deleteAiProvider(item)
@@ -116,7 +137,7 @@
         }
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         showEditDialog.value = false
         editItem.value = null
         loadData()

@@ -1,10 +1,18 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="states">{{ t('workflow.states_tab') }}</v-tab>
-            <v-tab value="state-workflow">{{ t('workflow.state_workflow_tab') }}</v-tab>
-            <v-tab value="tags">{{ t('workflow.tags_tab') }}</v-tab>
-            <v-tab value="tag-workflow">{{ t('workflow.tag_workflow_tab') }}</v-tab>
+            <v-tab value="states">
+                {{ t('workflow.states_tab') }}
+            </v-tab>
+            <v-tab value="state-workflow">
+                {{ t('workflow.state_workflow_tab') }}
+            </v-tab>
+            <v-tab value="tags">
+                {{ t('workflow.tags_tab') }}
+            </v-tab>
+            <v-tab value="tag-workflow">
+                {{ t('workflow.tag_workflow_tab') }}
+            </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -27,7 +35,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import StatesTab from '@/components/config/workflow/StatesTab.vue'
@@ -36,5 +44,5 @@
     import TagWorkflowTab from '@/components/config/workflow/TagWorkflowTab.vue'
 
     const { t } = useI18n()
-    const activeTab = ref('states')
+    const activeTab = ref<'states' | 'state-workflow' | 'tags' | 'tag-workflow'>('states')
 </script>

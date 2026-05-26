@@ -3,16 +3,16 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="tlp-holder">
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || values[index].remote" class="tlp-display">
-                    <div class="tlp-badge" :style="getTLPStyle(values[index].value)">
-                        {{ values[index].value || '—' }}
+                <div v-if="readOnly || value.remote" class="tlp-display">
+                    <div class="tlp-badge" :style="getTLPStyle(value.value)">
+                        {{ value.value || '—' }}
                     </div>
-                    <span class="tlp-description">{{ getTLPDescription(values[index].value) }}</span>
+                    <span class="tlp-description">{{ getTLPDescription(value.value) }}</span>
                 </div>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -27,16 +27,16 @@
                                     :key="tlp"
                                     type="button"
                                     class="tlp-button"
-                                    :class="{ active: values[index].value === tlp }"
+                                    :class="{ active: value.value === tlp }"
                                     :style="getTLPStyle(tlp)"
-                                    :disabled="values[index].locked || !canModify"
+                                    :disabled="value.locked || !canModify"
                                     @click="setTlpValue(index, tlp)"
                                 >
                                     {{ tlp }}
                                 </button>
                             </div>
-                            <div v-if="values[index].value" class="tlp-info">
-                                {{ getTLPDescription(values[index].value) }}
+                            <div v-if="value.value" class="tlp-info">
+                                {{ getTLPDescription(value.value) }}
                             </div>
                         </div>
                     </template>
@@ -46,39 +46,44 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
-    import { computed, onMounted, watch } from 'vue'
+<script setup lang="ts">
+    import { onMounted, watch } from 'vue'
+    import type { CSSProperties } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type TlpLevel = 'CLEAR' | 'GREEN' | 'AMBER' | 'AMBER+STRICT' | 'RED'
+
+    type AttributeValueItem = {
+        index?: string | number
+        value: string
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
         }
-    })
+    )
 
     const { t } = useI18n()
     const { canModify, addButtonVisible, add, del, onEdit } = useAttributes(props)
@@ -92,8 +97,8 @@
     // Set CLEAR as default for new values
     watch(
         () => props.values,
-        (newValues) => {
-            newValues.forEach((val) => {
+        (newValues: AttributeValueItem[]) => {
+            newValues.forEach((val: AttributeValueItem) => {
                 if (!val.value) {
                     val.value = 'CLEAR'
                 }
@@ -103,10 +108,10 @@
     )
 
     // TLP (Traffic Light Protocol) options in order
-    const tlpOptions = ['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED']
+    const tlpOptions: TlpLevel[] = ['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED']
 
     // TLP color definitions
-    const tlpColors = {
+    const tlpColors: Record<TlpLevel, { bg: string; text: string }> = {
         CLEAR: { bg: '#ffffff', text: '#000000' },
         GREEN: { bg: '#33FF00', text: '#000000' },
         AMBER: { bg: '#FFC000', text: '#000000' },
@@ -115,7 +120,7 @@
     }
 
     // TLP descriptions
-    const tlpDescriptions = {
+    const tlpDescriptions: Record<TlpLevel, string> = {
         CLEAR: 'Unrestricted - Information may be distributed without restriction',
         GREEN: 'Community - Information may be shared within communities',
         AMBER: 'Limited Sharing - Information should not be publicly disclosed',
@@ -123,8 +128,8 @@
         RED: 'Not for Sharing - Information may not be shared with anyone'
     }
 
-    const getTLPStyle = (tlp) => {
-        const config = tlpColors[tlp]
+    const getTLPStyle = (tlp: string | null | undefined): CSSProperties => {
+        const config = tlp ? tlpColors[tlp as TlpLevel] : undefined
         if (!config) {
             return {
                 backgroundColor: '#666666',
@@ -137,12 +142,16 @@
         }
     }
 
-    const getTLPDescription = (tlp) => {
-        return tlpDescriptions[tlp] || 'Unknown TLP level'
+    const getTLPDescription = (tlp: string | null | undefined): string => {
+        return (tlp && tlpDescriptions[tlp as TlpLevel]) || 'Unknown TLP level'
     }
 
-    const setTlpValue = (index, tlp) => {
-        props.values[index].value = tlp
+    const setTlpValue = (index: number, tlp: TlpLevel): void => {
+        const item = props.values[index]
+        if (!item) {
+            return
+        }
+        item.value = tlp
         onEdit(index)
     }
 </script>

@@ -3,13 +3,13 @@
         <template #content>
             <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || values[index].remote" class="date-value">
-                    {{ formatDate(values[index].value) }}
+                <span v-if="readOnly || value.remote" class="date-value">
+                    {{ formatDate(value.value) }}
                 </span>
 
                 <!-- Editable -->
                 <AttributeValueLayout
-                    v-if="!readOnly && canModify && !values[index].remote"
+                    v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
@@ -18,12 +18,12 @@
                 >
                     <template #col_middle>
                         <v-text-field
-                            v-model="values[index].value"
+                            v-model="value.value"
                             type="date"
                             density="compact"
                             variant="outlined"
                             :label="$t('attribute.value')"
-                            :disabled="values[index].locked || !canModify"
+                            :disabled="value.locked || !canModify"
                             style="max-width: 200px"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
@@ -36,39 +36,41 @@
     </AttributeItemLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
-    import { useAttributes } from './useAttributes.js'
+    import { useAttributes } from './useAttributes'
 
-    const props = defineProps({
-        attributeGroup: {
-            type: Object,
-            required: true
-        },
-        values: {
-            type: Array,
-            required: true
-        },
-        readOnly: {
-            type: Boolean,
-            default: false
-        },
-        edit: {
-            type: Boolean,
-            default: false
-        },
-        modify: {
-            type: Boolean,
-            default: false
-        },
-        reportItemId: {
-            type: Number,
-            required: true
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
         }
-    })
+    )
 
     const { t } = useI18n()
 
@@ -80,11 +82,11 @@
         }
     })
 
-    const formatDate = (dateStr) => {
+    const formatDate = (dateStr: string | null | undefined): string => {
         if (!dateStr) return ''
         try {
             return new Date(dateStr).toLocaleDateString()
-        } catch (e) {
+        } catch {
             return dateStr
         }
     }

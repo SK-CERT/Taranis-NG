@@ -17,7 +17,7 @@
                             {{ link.icon }}
                         </v-icon>
                         <span class="text-caption" :style="{ color: textColor, fontSize: '0.65rem', lineHeight: '1.2' }">
-                            {{ link.translate ? $t(link.title) : link.title }}
+                            {{ link.translate ? $t(link.title || '') : link.title || '' }}
                         </span>
                     </div>
                 </template>
@@ -26,10 +26,21 @@
     </v-list>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
     import { useTheme } from 'vuetify'
     import { useAuth } from '@/composables/useAuth'
+    import type { PermissionKey } from '@/types/permissions'
+
+    type ConfigLink = {
+        id: number
+        icon?: string
+        title?: string
+        route?: string
+        permission?: PermissionKey
+        translate?: boolean
+        separator?: boolean
+    }
 
     const { checkPermission } = useAuth()
     const { global: themeGlobal } = useTheme()
@@ -39,7 +50,7 @@
     const iconColor = computed(() => (isDark.value ? '#ffffff' : 'rgba(0, 0, 0, 0.54)'))
     const dividerColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)'))
 
-    const links = [
+    const links: ConfigLink[] = [
         {
             id: 1,
             icon: 'mdi-account-group',
@@ -169,14 +180,18 @@
 
     // Filter links based on permissions and remove leading/trailing separators
     const filteredLinks = computed(() => {
-        const filtered = []
+        const filtered: ConfigLink[] = []
 
         for (let i = 0; i < links.length; i++) {
             const link = links[i]
+            if (!link) {
+                continue
+            }
 
             if (link.separator) {
                 // Only add separator if there are items before it and it's not the first item
-                if (filtered.length > 0 && !filtered[filtered.length - 1].separator) {
+                const lastFiltered = filtered[filtered.length - 1]
+                if (filtered.length > 0 && lastFiltered && !lastFiltered.separator) {
                     filtered.push(link)
                 }
             } else if (!link.permission || checkPermission(link.permission)) {
@@ -185,12 +200,14 @@
         }
 
         // Remove leading separator
-        if (filtered.length > 0 && filtered[0].separator) {
+        const firstFiltered = filtered[0]
+        if (filtered.length > 0 && firstFiltered && firstFiltered.separator) {
             filtered.shift()
         }
 
         // Remove trailing separator
-        if (filtered.length > 0 && filtered[filtered.length - 1].separator) {
+        const lastFiltered = filtered[filtered.length - 1]
+        if (filtered.length > 0 && lastFiltered && lastFiltered.separator) {
             filtered.pop()
         }
 

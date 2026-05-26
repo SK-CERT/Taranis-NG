@@ -20,7 +20,9 @@
                 color="white"
                 :opacity="isButtonActive(button) ? 1 : 0.85"
             >
-                <v-icon start>{{ button.icon }}</v-icon>
+                <v-icon start>
+                    {{ button.icon }}
+                </v-icon>
                 {{ t(button.title) }}
             </v-btn>
         </template>
@@ -32,20 +34,30 @@
     </v-app-bar>
 </template>
 
-<script setup>
-    import { ref, computed } from 'vue'
+<script setup lang="ts">
+    import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
     import { useAuth } from '@/composables/useAuth'
     import { ICONS } from '@/config/ui-constants'
     import UserMenu from './UserMenu.vue'
     import { PERMISSIONS } from '@/services/auth/permissions'
+    import type { PermissionKey } from '@/types/permissions'
 
     const { t } = useI18n()
     const { isAuth, checkPermission } = useAuth()
     const route = useRoute()
 
-    const buttons = ref([
+    type MenuButton = {
+        title: string
+        icon: string
+        permission: PermissionKey
+        route: string
+        routeName: string
+        show: boolean
+    }
+
+    const buttons: MenuButton[] = [
         {
             title: 'main_menu.dashboard',
             icon: ICONS.CHART_BOX,
@@ -95,22 +107,22 @@
             routeName: 'config',
             show: true
         }
-    ])
+    ]
 
     const isAuthenticated = computed(() => isAuth.value)
 
     const visibleButtons = computed(() => {
-        return buttons.value.filter((button) => {
+        return buttons.filter((button) => {
             return checkPermission(PERMISSIONS[button.permission]) && button.show
         })
     })
 
-    const isButtonActive = (button) => {
+    const isButtonActive = (button: MenuButton): boolean => {
         // Check if the button's route name matches the current route name
         return route.name === button.routeName
     }
 
-    const toggleNav = () => {
+    const toggleNav = (): void => {
         window.dispatchEvent(new Event('nav-clicked'))
     }
 

@@ -3,7 +3,9 @@
         <!-- Title, Search, and Counts -->
         <v-row class="mb-2" align="center">
             <v-col cols="12" md="2">
-                <div class="text-h6">{{ t(title) }}</div>
+                <div class="text-h6">
+                    {{ t(title) }}
+                </div>
             </v-col>
             <v-col cols="12" md="7">
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap">
@@ -37,9 +39,14 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { ICONS } from '@/config/ui-constants'
+
+    type FilterState = {
+        search: string
+    }
 
     const props = defineProps({
         title: {
@@ -73,14 +80,14 @@
     const { t } = useI18n()
 
     // Filter state
-    const filter = ref({
+    const filter = ref<FilterState>({
         search: ''
     })
 
     // Debounce search
-    let searchTimeout = null
-    const debounceSearch = () => {
-        clearTimeout(searchTimeout)
+    let searchTimeout: ReturnType<typeof setTimeout> | null = null
+    const debounceSearch = (): void => {
+        if (searchTimeout) clearTimeout(searchTimeout)
         searchTimeout = setTimeout(() => {
             emit('update-filter', { ...filter.value })
         }, 800)

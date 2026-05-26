@@ -23,19 +23,26 @@
     </v-list>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted, computed } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useTheme } from 'vuetify'
     import { useAnalyzeStore } from '@/stores/analyze'
+
+    type AnalyzeNavLink = {
+        icon: string
+        title: string
+        translate: boolean
+        route: string
+    }
 
     const router = useRouter()
     const route = useRoute()
     const { global: themeGlobal } = useTheme()
     const analyzeStore = useAnalyzeStore()
 
-    const groups = ref([])
-    const links = ref([])
+    const groups = ref<Array<string | number>>([])
+    const links = ref<AnalyzeNavLink[]>([])
 
     const isDark = computed(() => themeGlobal.name.value === 'dark')
     const textColor = computed(() => (isDark.value ? '#ffffff' : '#000000'))
@@ -44,8 +51,9 @@
 
     onMounted(async () => {
         try {
-            await analyzeStore.loadReportItemGroups()
-            groups.value = analyzeStore.getReportItemGroups
+            await analyzeStore.loadReportItemGroups({})
+            const reportGroups = analyzeStore.getReportItemGroups
+            groups.value = Array.isArray(reportGroups) ? (reportGroups as Array<string | number>) : []
 
             // Add local link
             links.value.push({
@@ -58,16 +66,21 @@
             // Add group links (groups are just strings)
             const groupArray = Array.isArray(groups.value) ? groups.value : []
             for (let i = 0; i < groupArray.length; i++) {
+                const group = groupArray[i]
+                if (group === undefined || group === null) {
+                    continue
+                }
+                const groupTitle = String(group)
                 links.value.push({
                     icon: 'mdi-arrow-down-bold-circle-outline',
-                    title: groupArray[i],
+                    title: groupTitle,
                     translate: false,
-                    route: '/analyze/group-' + groupArray[i].replaceAll(' ', '-')
+                    route: '/analyze/group-' + groupTitle.replaceAll(' ', '-')
                 })
             }
 
             // If not on a specific scope route, redirect to local
-            if (!route.params.scope) {
+            if (!route.params['scope']) {
                 router.push('/analyze/local')
             }
         } catch (error) {

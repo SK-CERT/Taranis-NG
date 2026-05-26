@@ -25,7 +25,7 @@
     </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
@@ -37,11 +37,23 @@
     const { t } = useI18n()
     const configStore = useConfigStore()
 
-    const loading = ref(false)
-    const filter = ref({ search: '' })
-    const editItem = ref(null)
+    type FilterState = {
+        search: string
+    }
 
-    const loadData = async () => {
+    type AttributeItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        type?: string
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<AttributeItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await configStore.loadAttributes(filter.value)
@@ -52,12 +64,12 @@
         }
     }
 
-    const handleFilterUpdate = (newFilter) => {
+    const handleFilterUpdate = (newFilter: FilterState): void => {
         filter.value = newFilter
         loadData()
     }
 
-    const handleDelete = async (attribute) => {
+    const handleDelete = async (attribute: AttributeItem): Promise<void> => {
         try {
             await deleteAttribute(attribute)
             console.log('Attribute deleted successfully')
@@ -67,11 +79,11 @@
         }
     }
 
-    const handleEdit = (attribute) => {
+    const handleEdit = (attribute: AttributeItem): void => {
         editItem.value = attribute
     }
 
-    const handleSaved = () => {
+    const handleSaved = (): void => {
         editItem.value = null
         loadData()
     }

@@ -23,12 +23,18 @@
                         <v-spacer />
                         <!-- State -->
                         <v-col v-if="card.state" shrink class="d-flex align-center" style="gap: 3px; padding: 0">
-                            <v-icon :color="card.state.color" size="small">{{ card.state.icon }}</v-icon>
-                            <span class="text-caption">{{ t('workflow.states.' + card.state.display_name, card.state.display_name) }}</span>
+                            <v-icon :color="card.state.color" size="small">
+                                {{ card.state.icon }}
+                            </v-icon>
+                            <span class="text-caption">
+                                {{ card.state.display_name ? t('workflow.states.' + card.state.display_name) : '' }}
+                            </span>
                         </v-col>
                         <!-- Updated Info -->
                         <v-col shrink class="d-flex flex-column justify-center" style="gap: 0; padding: 0; margin-left: 8px">
-                            <div class="text-caption text-medium-emphasis">{{ t('card_item.updated') }}</div>
+                            <div class="text-caption text-medium-emphasis">
+                                {{ t('card_item.updated') }}
+                            </div>
                             <div class="text-body-2">
                                 {{ card.updated_at }}
                                 <span v-if="card.updated_by" class="text-medium-emphasis">&nbsp;&nbsp;{{ card.updated_by }}</span>
@@ -55,8 +61,12 @@
                             </div>
                         </v-col>
                         <v-col v-if="card.subtitle" cols="12" md="6">
-                            <div class="text-caption text-medium-emphasis">{{ t('card_item.description') }}</div>
-                            <div class="text-body-2">{{ card.subtitle }}</div>
+                            <div class="text-caption text-medium-emphasis">
+                                {{ t('card_item.description') }}
+                            </div>
+                            <div class="text-body-2">
+                                {{ card.subtitle }}
+                            </div>
                         </v-col>
                     </v-row>
                 </div>
@@ -64,11 +74,11 @@
         </BaseCard>
 
         <!-- Delete Confirmation Dialog -->
-        <ConfirmationDialog v-model="showDeleteDialog" :message="card.title" max-width="500px" @confirm="handleDelete" />
+        <ConfirmationDialog v-model="showDeleteDialog" :message="card.title || ''" max-width="500px" @confirm="handleDelete" />
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { usePublishStore } from '@/stores/publish'
@@ -80,22 +90,43 @@
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
-    const props = defineProps({
-        card: {
-            type: Object,
-            required: true
-        },
-        preselected: {
-            type: Boolean,
-            default: false
+    type ProductCard = {
+        id: number | string
+        title?: string
+        subtitle?: string
+        tag?: string
+        product_type_name?: string
+        product_type_id?: number | string
+        report_items_count?: number
+        report_items?: unknown[]
+        updated_at?: string
+        updated_by?: string
+        modify?: boolean
+        access?: boolean
+        state?: {
+            id?: number | string | null
+            color?: string
+            icon?: string
+            display_name?: string
+        } | null
+        [key: string]: any
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            card: ProductCard
+            preselected?: boolean
+        }>(),
+        {
+            preselected: false
         }
-    })
+    )
 
     const { t } = useI18n()
     const publishStore = usePublishStore()
     const { checkPermission } = useAuth()
 
-    const showDeleteDialog = ref(false)
+    const showDeleteDialog = ref<boolean>(false)
 
     const multiSelectActive = computed(() => publishStore.getMultiSelect)
 
@@ -108,7 +139,7 @@
         return checkPermission(PERMISSIONS.PUBLISH_DELETE)
     })
 
-    const selectionChanged = (isSelected) => {
+    const selectionChanged = (isSelected: boolean): void => {
         if (isSelected) {
             publishStore.select({ id: props.card.id, item: props.card })
         } else {
@@ -116,7 +147,7 @@
         }
     }
 
-    const cardItemClick = () => {
+    const cardItemClick = (): void => {
         // Emit event to open edit dialog
         const editData = {
             id: props.card.id,
@@ -131,7 +162,7 @@
         window.dispatchEvent(new CustomEvent('show-product-edit', { detail: editData }))
     }
 
-    const handleDelete = async () => {
+    const handleDelete = async (): Promise<void> => {
         showDeleteDialog.value = false
         try {
             await deleteProduct(props.card)
@@ -145,7 +176,7 @@
 
             // Emit event to refresh the list
             window.dispatchEvent(new CustomEvent('product-updated'))
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting product:', error)
 
             // Show error notification

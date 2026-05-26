@@ -43,35 +43,43 @@
     </v-toolbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, watch } from 'vue'
     import { useAssetsStore } from '@/stores/assets'
 
+    type AssetFilter = {
+        search: string
+        vulnerable: boolean
+        sort: 'ALPHABETICAL' | 'VULNERABILITY'
+    }
+
     const assetsStore = useAssetsStore()
 
-    const emit = defineEmits(['update-filter'])
+    const emit = defineEmits<{
+        (e: 'update-filter', payload: AssetFilter): void
+    }>()
 
-    const filterData = ref({
+    const filterData = ref<AssetFilter>({
         search: '',
         vulnerable: false,
         sort: 'ALPHABETICAL'
     })
 
-    const sortSelection = ref('ALPHABETICAL')
+    const sortSelection = ref<AssetFilter['sort']>('ALPHABETICAL')
 
-    watch(sortSelection, (newValue) => {
+    watch(sortSelection, (newValue: AssetFilter['sort']) => {
         if (newValue) {
             filterData.value.sort = newValue
             updateFilter()
         }
     })
 
-    function toggleVulnerable() {
+    function toggleVulnerable(): void {
         filterData.value.vulnerable = !filterData.value.vulnerable
         updateFilter()
     }
 
-    function updateFilter() {
+    function updateFilter(): void {
         emit('update-filter', filterData.value)
     }
 </script>

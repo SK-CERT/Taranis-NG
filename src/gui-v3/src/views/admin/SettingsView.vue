@@ -1,7 +1,7 @@
 <template>
-    <SettingsTable :glob_setting="true" />
+    <SettingsTable :global-setting="true" />
 </template>
 
-<script setup>
+<script setup lang="ts">
     import SettingsTable from '@/components/config/SettingsTable.vue'
 </script>

@@ -12,9 +12,9 @@
     </v-btn>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { computed } from 'vue'
-    import { useAttrs } from 'vue'
+    import { useAttrs, type VNodeProps } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
@@ -42,9 +42,12 @@
     })
 
     // Handle click - forward to the dialog activator handler if present
-    const onButtonClick = (event) => {
-        if (attrs.onClick) {
-            attrs.onClick(event)
+    const onButtonClick = (event: MouseEvent): void => {
+        const clickHandler = (attrs as VNodeProps & { onClick?: ((e: MouseEvent) => void) | Array<(e: MouseEvent) => void> }).onClick
+        if (Array.isArray(clickHandler)) {
+            clickHandler.forEach((handler) => handler(event))
+        } else if (clickHandler) {
+            clickHandler(event)
         }
     }
 </script>

@@ -63,7 +63,9 @@
                             <v-row>
                                 <v-col v-for="shortcut in shortcuts" :key="shortcut.alias" cols="12" sm="6" md="4">
                                     <v-btn block variant="outlined" @click="openKeyDialog(shortcut.alias)">
-                                        <v-icon start>{{ shortcut.icon }}</v-icon>
+                                        <v-icon start>
+                                            {{ shortcut.icon }}
+                                        </v-icon>
                                         <span v-if="shortcut.key" class="text-caption">
                                             {{ shortcut.key }}
                                         </span>
@@ -101,35 +103,56 @@
     </v-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useSettingsStore } from '@/stores/settings'
     import SettingsTable from './config/SettingsTable.vue'
 
-    const props = defineProps({
-        modelValue: Boolean
-    })
+    type HotkeyItem = {
+        alias: string
+        icon: string
+        key: string
+    }
 
-    const emit = defineEmits(['update:modelValue'])
+    type WordListItem = {
+        id: number | string
+        name?: string
+        description?: string
+        selected?: boolean
+        [key: string]: unknown
+    }
+
+    type KeyboardEventLike = {
+        preventDefault: () => void
+        key: string
+    }
+
+    const props = defineProps<{
+        modelValue: boolean
+    }>()
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+    }>()
 
     const { t } = useI18n()
     const settingsStore = useSettingsStore()
 
-    const activeTab = ref('general')
-    const keyDialogVisible = ref(false)
-    const currentHotkeyAlias = ref('')
+    const activeTab = ref<'general' | 'wordlists' | 'hotkeys'>('general')
+    const keyDialogVisible = ref<boolean>(false)
+    const currentHotkeyAlias = ref<string>('')
 
     // Word lists
     const wordListHeaders = [
         { title: 'Name', key: 'name', sortable: true },
         { title: 'Description', key: 'description', sortable: false }
     ]
-    const wordLists = ref([])
-    const selectedWordLists = ref([])
+    const wordLists = ref<WordListItem[]>([])
+    const selectedWordLists = ref<Array<number | string>>([])
 
     // Hotkeys
-    const shortcuts = ref([
+    const shortcuts = ref<HotkeyItem[]>([
         { alias: 'close_item_1', icon: 'mdi-close', key: 'Escape' },
         { alias: 'close_item_2', icon: 'mdi-close', key: '' },
         { alias: 'close_item_3', icon: 'mdi-close', key: '' },
@@ -151,56 +174,56 @@
         { alias: 'new_product', icon: 'mdi-plus', key: 'n' }
     ])
 
-    const visible = computed({
+    const visible = computed<boolean>({
         get: () => props.modelValue,
-        set: (value) => emit('update:modelValue', value)
+        set: (value: boolean) => emit('update:modelValue', value)
     })
 
-    const close = () => {
+    const close = (): void => {
         visible.value = false
     }
 
-    const loadSettings = async () => {
+    const loadSettings = async (): Promise<void> => {
         try {
             // Load word lists
             await settingsStore.loadUserWordLists()
-            const profileWordLists = settingsStore.getProfileWordLists || []
+            const profileWordLists = (settingsStore.getProfileWordLists || []) as WordListItem[]
             wordLists.value = Array.isArray(profileWordLists) ? profileWordLists : []
-            selectedWordLists.value = wordLists.value.filter((wl) => wl.selected).map((wl) => wl.id)
+            selectedWordLists.value = wordLists.value.filter((wl: WordListItem) => wl.selected).map((wl: WordListItem) => wl.id)
 
             // Load hotkeys
             await settingsStore.loadUserHotkeys()
-            const userHotkeys = settingsStore.getProfileHotkeys || []
+            const userHotkeys = (settingsStore.getProfileHotkeys || []) as HotkeyItem[]
             if (Array.isArray(userHotkeys) && userHotkeys.length > 0) {
                 // Convert to plain array to ensure it's not a Proxy
-                shortcuts.value = userHotkeys.map((h) => ({
+                shortcuts.value = userHotkeys.map((h: HotkeyItem) => ({
                     alias: h.alias,
                     icon: h.icon,
                     key: h.key
                 }))
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error loading user settings:', error)
         }
     }
 
-    const save = async () => {
+    const save = async (): Promise<void> => {
         try {
             // Save word lists and hotkeys (general settings are auto-saved by SettingsTable)
             await Promise.all([settingsStore.saveUserWordLists(selectedWordLists.value), settingsStore.saveUserHotkeys(shortcuts.value)])
 
             close()
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error saving user settings:', error)
         }
     }
 
-    const openKeyDialog = (alias) => {
+    const openKeyDialog = (alias: string): void => {
         currentHotkeyAlias.value = alias
         keyDialogVisible.value = true
     }
 
-    const handleKeyPress = (event) => {
+    const handleKeyPress = (event: KeyboardEventLike): void => {
         event.preventDefault()
         const key = event.key
 
@@ -211,14 +234,14 @@
             return
         }
 
-        const shortcut = shortcuts.value.find((s) => s && s.alias === currentHotkeyAlias.value)
+        const shortcut = shortcuts.value.find((s: HotkeyItem) => s && s.alias === currentHotkeyAlias.value)
         if (shortcut) {
             shortcut.key = key
         }
         keyDialogVisible.value = false
     }
 
-    const resetHotkeys = () => {
+    const resetHotkeys = (): void => {
         // Reset to default hotkeys
         shortcuts.value = [
             { alias: 'close_item_1', icon: 'mdi-close', key: 'Escape' },
@@ -244,7 +267,7 @@
     }
 
     // Load settings when dialog opens
-    watch(visible, (newValue) => {
+    watch(visible, (newValue: boolean) => {
         if (newValue) {
             loadSettings()
         }
