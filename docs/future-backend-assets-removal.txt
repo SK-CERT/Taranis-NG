@@ -1,0 +1,126 @@
+Taranis-NG backend cleanup map for removing My Assets feature (future work)
+Date: 2026-06-03
+Scope: backend-only follow-up after gui-v3 feature removal
+
+Overview
+- GUI v3 no longer exposes My Assets, Asset Groups, or Notification Templates.
+- Backend code is intentionally untouched in this change.
+- This document maps backend code paths and dependencies for a future backend removal.
+
+1) API layer
+
+1.1 src/core/api/assets.py
+- Main API module for all My Assets functionality.
+- Registers permissions:
+  - MY_ASSETS_ACCESS
+  - MY_ASSETS_CREATE
+  - MY_ASSETS_CONFIG
+- Defines resources/endpoints for:
+  - Asset groups: /api/v1/my-assets/asset-groups
+  - Single asset group: /api/v1/my-assets/asset-groups/<asset_group_id>
+  - Assets in group: /api/v1/my-assets/asset-groups/<asset_group_id>/assets
+  - Single asset: /api/v1/my-assets/asset-groups/<asset_group_id>/assets/<asset_id>
+  - Notification templates: /api/v1/my-assets/asset-notification-templates
+  - Single notification template: /api/v1/my-assets/asset-notification-templates/<template_id>
+  - CPE helper endpoints: /api/v1/my-assets/attributes/cpe and /api/v1/my-assets/attributes/cpe-enums
+- Future action:
+  - Remove this module and route registrations if feature retirement is final.
+
+1.2 src/core/managers/api_manager.py
+- Initializes API blueprints/modules, including assets.initialize(api).
+- Future action:
+  - Remove assets module initialization call and related imports.
+
+1.3 src/core/api/config.py
+- Contains config resources that reference MY_ASSETS_CONFIG in permission checks.
+- Future action:
+  - Verify whether MY_ASSETS_CONFIG is used outside removed assets-related flows.
+  - Remove or adjust references once assets permissions are retired.
+
+2) Model and schema layer
+
+2.1 src/core/model/asset.py
+- Defines ORM models and logic:
+  - AssetGroup
+  - Asset
+  - AssetCpe
+- Includes relationships with users and notification templates.
+- Future action:
+  - Remove models and related table mappings/migrations.
+  - Verify and clean relationship backrefs in other models.
+
+2.2 src/core/model/notification_template.py
+- Defines:
+  - NotificationTemplate
+  - NotificationTemplateOrganization
+- Future action:
+  - Remove model definitions and DB dependencies.
+
+2.3 src/shared/shared/schema/asset.py
+- Marshmallow schemas for asset entities.
+- Future action:
+  - Remove unused schemas after API/model removal.
+
+2.4 src/shared/shared/schema/notification_template.py
+- Marshmallow schemas for notification template entities.
+- Future action:
+  - Remove unused schemas after API/model removal.
+
+3) Manager/business logic
+
+3.1 src/core/managers/asset_manager.py
+- Contains asset-related runtime logic.
+- Includes report/vulnerability handling linked to assets and notification workflows.
+- Future action:
+  - Remove manager if no remaining backend consumer depends on it.
+  - Verify call sites before deletion.
+
+4) Authorization and permissions
+
+4.1 src/core/managers/auth_manager.py
+- Defines and uses My Assets permission constants:
+  - MY_ASSETS_ACCESS
+  - MY_ASSETS_CREATE
+  - MY_ASSETS_CONFIG
+- Default external-user role currently includes these permissions.
+- Future action:
+  - Remove permission constants and role assignments.
+  - Re-check role defaults and migration/seed data logic.
+
+5) Database and migration follow-up checklist
+
+- Identify migration files that created:
+  - asset groups
+  - assets
+  - asset CPE mappings
+  - notification templates and association tables
+- Plan rollback-safe migration strategy for production data:
+  - archive/export strategy if data must be retained
+  - irreversible drop warnings
+- Remove seed/demo/sample data paths related to assets/templates.
+
+6) Integration and side effects to validate during backend removal
+
+- Report item workflows that may trigger asset manager hooks.
+- Publisher/email flows that may rely on notification templates.
+- Any API clients outside gui-v3 that still call /api/v1/my-assets/*.
+- Permissions UI/admin flows that list My Assets permissions.
+
+7) Recommended execution order for backend removal (future)
+
+1. Remove external consumers and verify no active API usage.
+2. Remove API registrations and permission wiring.
+3. Remove manager call sites and business logic hooks.
+4. Remove schemas and model usage from service layers.
+5. Apply DB migrations to drop tables/constraints.
+6. Remove residual constants, tests, and docs.
+
+8) Quick grep hints for future cleanup
+
+- my-assets
+- MY_ASSETS_ACCESS
+- MY_ASSETS_CREATE
+- MY_ASSETS_CONFIG
+- AssetGroup
+- NotificationTemplate
+- asset-notification-templates

@@ -57,19 +57,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.PUBLISH_ACCESS] }
     },
     {
-        path: '/myassets',
-        redirect: '/myassets/group/all'
-    },
-    {
-        path: '/myassets/group/:groupId',
-        name: 'myassets',
-        components: {
-            default: () => import('./views/users/MyAssetsView.vue'),
-            nav: () => import('./views/nav/MyAssetsNav.vue')
-        },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_ACCESS] }
-    },
-    {
         path: '/dashboard',
         name: 'dashboard',
         components: {
@@ -276,9 +263,6 @@ router.beforeEach((to) => {
             }
             if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
                 return { path: '/config' }
-            }
-            if (AuthService.hasPermission(Permissions.MY_ASSETS_ACCESS)) {
-                return { path: '/myassets' }
             }
             return true
         }

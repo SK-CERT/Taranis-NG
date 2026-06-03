@@ -55,8 +55,7 @@
         "analyze": "Analyzovať",
         "publish": "Publikovať",
         "config": "Nastavenie",
-        "dashboard": "Dashboard",
-        "my_assets": "Aktíva"
+        "dashboard": "Dashboard"
     },
     "dashboard": {
         "assess": {
@@ -115,8 +114,6 @@
         "external": "Externé",
         "organizations": "Organizácie",
         "word_lists": "Slovníky",
-        "asset_groups": "Skupiny aktív",
-        "notification_templates": "Šablóny oznámení",
         "remote_access": "Vzdialený prístup",
         "remote_nodes": "Vzdialené inštancie",
         "remote": "Vzdialené",
@@ -948,19 +945,6 @@
         },
         "select_all_success": "{count} položiek vybraných"
     },
-    "assets": {
-        "tooltip": {
-            "filter_vulnerable": "Zobraziť/skryť zraniteľné aktíva",
-            "sort": {
-                "vulnerability": {
-                    "descending": "Zoradiť podľa zraniteľnosti zostupne"
-                },
-                "alphabetical": {
-                    "ascending": "Zoradiť abecedne vzostupne"
-                }
-            }
-        }
-    },
     "publish": {
         "tooltip": {
             "filter_all": "Aktuálne zobrazené: všetky",
@@ -1026,7 +1010,6 @@
         "dashboard_view": "Dashboard",
         "analyze_view": "Analyzovať",
         "publish_view": "Zverejniť",
-        "my_assets_view": "Aktíva",
         "configuration_view": "Nastavenie",
         "source_group_up": "O skupinu OSINT zdrojov vyššie",
         "source_group_down": "O skupinu OSINT zdrojov nižšie",
@@ -1175,67 +1158,6 @@
         "remove": "Zdroj dát bol úspešne odstránený",
         "removed_error": "Zdroj dát sa používa a nie je možné ho odstrániť",
         "total_count": "Počet zdrojov dát: "
-    },
-    "asset_group": {
-        "add_new": "Pridať novú skupinu aktív",
-        "edit": "Upraviť skupinu aktív",
-        "error": "Nepodarilo sa uložiť skupinu aktív",
-        "name": "Názov",
-        "description": "Popis",
-        "notification_templates": "Šablóny notifikácií",
-        "allowed_users": "Povolení používatelia (ak nie je vybraný žiadny, povolení sú všetci)",
-        "successful": "Nová skupina aktív bola úspešne pridaná",
-        "successful_edit": "Skupina aktív bola úspešne aktualizovaná",
-        "removed": "Skupina aktív bola úspešne odstránená",
-        "removed_error": "Skupina aktív sa používa a nie je možné ju odstrániť",
-        "total_count": "Počet skupín aktív: "
-    },
-    "notification_template": {
-        "add_new": "Pridať novú šablónu notifikácie",
-        "add_recipient": "Pridať príjemcu",
-        "edit_recipient": "Upraviť príjemcu",
-        "edit": "Upraviť šablónu notifikácie",
-        "error": "Nepodarilo sa uložiť šablónu notifikácie",
-        "name": "Názov",
-        "description": "Popis",
-        "message_title": "Názov správy",
-        "message_body": "Text správy",
-        "new_recipient": "Nový príjemca",
-        "recipient_name": "Meno príjemcu",
-        "email": "Email",
-        "recipients": "Príjemcovia",
-        "successful": "Nová šablóna notifikácie bola úspešne pridaná",
-        "successful_edit": "Šablóna notifikácie bola úspešne aktualizovaná",
-        "removed": "Šablóna notifikácie bola úspešne odstránená",
-        "removed_error": "Šablóna notifikácie sa používa a nie je možné ju odstrániť",
-        "total_count": "Počet šablón notifikácií: "
-    },
-    "asset": {
-        "add_new": "Pridať nové aktívum",
-        "add_group_info": "Prosím, pridajte skupinu aktív",
-        "edit": "Upraviť aktívum",
-        "error": "Nepodarilo sa uložiť aktívum",
-        "name": "Názov",
-        "serial": "Sériové číslo",
-        "description": "Popis",
-        "cpe": "CPE kód",
-        "new_cpe": "Pridať CPE kód",
-        "cpes": "CPE kódy",
-        "value": "Hodnota",
-        "successful": "Nové aktívum bolo úspešne pridané",
-        "successful_edit": "Aktívum bolo úspešne aktualizované",
-        "removed": "Aktívum bolo úspešne odstránené",
-        "removed_error": "Aktívum sa používa a nie je možné ho odstrániť",
-        "total_count": "Počet aktív: ",
-        "vulnerabilities": "Zraniteľnosti",
-        "vulnerabilities_count": "Zraniteľnosti: ",
-        "no_vulnerabilities": "Žiadne zraniteľnosti",
-        "import_csv": "Import CSV",
-        "import_from_csv": "Import CPE z CSV",
-        "file_has_header": "Súbor obsahuje hlavičku",
-        "load_csv_file": "Načítať CSV súbor",
-        "import": "Import",
-        "close": "Zavrieť"
     },
     "remote_access": {
         "add_new": "Pridať nový vzdialený prístup",
