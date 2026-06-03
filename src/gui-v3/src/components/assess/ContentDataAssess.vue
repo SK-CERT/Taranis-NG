@@ -74,6 +74,7 @@
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
     import { ICONS } from '@/config/ui-constants'
+    import { deleteNewsItem, groupAction, importantNewsItem, readNewsItem, voteNewsItem } from '@/api/assess'
     import { useAssessStore } from '@/stores/assess'
     import CardAssess from './CardAssess.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
@@ -83,6 +84,7 @@
 
     type NewsItem = {
         id: string | number
+        entityType?: 'news_item' | 'news_item_aggregate'
         type?: string
         title?: string
         description?: string
@@ -220,20 +222,37 @@
     const handleDetailAction = async (payload: DetailActionPayload) => {
         const { action, newsItem } = payload
         const group_id = current_group_id.value || getNormalizedGroupId()
+        const isChildNewsItem = newsItem.entityType === 'news_item'
 
         try {
             switch (action) {
                 case 'like':
-                    await assessStore.voteNewsItemAggregate(group_id, newsItem.id, 1)
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, newsItem.id, 1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, newsItem.id, 1)
+                    }
                     break
                 case 'dislike':
-                    await assessStore.voteNewsItemAggregate(group_id, newsItem.id, -1)
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, newsItem.id, -1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, newsItem.id, -1)
+                    }
                     break
                 case 'important':
-                    await assessStore.importantNewsItemAggregate(group_id, newsItem.id)
+                    if (isChildNewsItem) {
+                        await importantNewsItem(group_id, newsItem.id)
+                    } else {
+                        await assessStore.importantNewsItemAggregate(group_id, newsItem.id)
+                    }
                     break
                 case 'read':
-                    await assessStore.readNewsItemAggregate(group_id, newsItem.id)
+                    if (isChildNewsItem) {
+                        await readNewsItem(group_id, newsItem.id)
+                    } else {
+                        await assessStore.readNewsItemAggregate(group_id, newsItem.id)
+                    }
                     break
                 case 'create-report':
                     if (reportItemModalRef.value) {
@@ -241,28 +260,41 @@
                     }
                     return
                 case 'ungroup':
-                    // Handle ungrouping
-                    // This would split the aggregate into individual items
+                    if (isChildNewsItem) {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'ITEM', id: newsItem.id }]
+                        })
+                    } else {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'AGGREGATE', id: newsItem.id }]
+                        })
+                    }
                     break
                 case 'comment':
-                    // Save comment to aggregate
-                    await assessStore.saveNewsItemAggregate(
-                        group_id,
-                        newsItem.id,
-                        newsItem.title || '',
-                        newsItem.description || '',
-                        payload.comment || ''
-                    )
+                    if (!isChildNewsItem) {
+                        await assessStore.saveNewsItemAggregate(
+                            group_id,
+                            newsItem.id,
+                            newsItem.title || '',
+                            newsItem.description || '',
+                            payload.comment || ''
+                        )
+                    }
                     break
                 case 'update-aggregate':
-                    // Save aggregate metadata (title, description)
-                    await assessStore.saveNewsItemAggregate(
-                        group_id,
-                        newsItem.id,
-                        payload.title || '',
-                        payload.description || '',
-                        newsItem.comments || ''
-                    )
+                    if (!isChildNewsItem) {
+                        await assessStore.saveNewsItemAggregate(
+                            group_id,
+                            newsItem.id,
+                            payload.title || '',
+                            payload.description || '',
+                            newsItem.comments || ''
+                        )
+                    }
                     break
             }
 
@@ -295,7 +327,11 @@
     const handleDetailDelete = async (newsItem: NewsItem) => {
         try {
             const group_id = current_group_id.value || getNormalizedGroupId()
-            await assessStore.deleteNewsItemAggregate(group_id, newsItem.id)
+            if (newsItem.entityType === 'news_item') {
+                await deleteNewsItem(group_id, newsItem.id)
+            } else {
+                await assessStore.deleteNewsItemAggregate(group_id, newsItem.id)
+            }
 
             // Close dialog and reload
             detailDialog.value = false
@@ -343,25 +379,44 @@
     const updateItem = async (news_item: NewsItem, action: string) => {
         try {
             const group_id = current_group_id.value || getNormalizedGroupId()
+            const isChildNewsItem = news_item.entityType === 'news_item'
 
             switch (action) {
                 case 'like':
-                    await assessStore.voteNewsItemAggregate(group_id, news_item.id, 1)
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, news_item.id, 1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, news_item.id, 1)
+                    }
                     break
                 case 'dislike':
-                    await assessStore.voteNewsItemAggregate(group_id, news_item.id, -1)
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, news_item.id, -1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, news_item.id, -1)
+                    }
                     break
                 case 'important':
-                    await assessStore.importantNewsItemAggregate(group_id, news_item.id)
+                    if (isChildNewsItem) {
+                        await importantNewsItem(group_id, news_item.id)
+                    } else {
+                        await assessStore.importantNewsItemAggregate(group_id, news_item.id)
+                    }
                     break
                 case 'read':
-                    await assessStore.readNewsItemAggregate(group_id, news_item.id)
+                    if (isChildNewsItem) {
+                        await readNewsItem(group_id, news_item.id)
+                    } else {
+                        await assessStore.readNewsItemAggregate(group_id, news_item.id)
+                    }
                     break
                 case 'create-report':
                     if (reportItemModalRef.value) {
                         reportItemModalRef.value.openDialog([news_item])
                     }
                     return
+                case 'refresh':
+                    break
             }
 
             // Reload current view
