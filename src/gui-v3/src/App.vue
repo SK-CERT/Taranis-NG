@@ -89,8 +89,7 @@
                 // Apply dark theme setting
                 const darkThemeSetting = settingsStore.getSetting('DARK_THEME')
                 if (darkThemeSetting) {
-                    const isDark = darkThemeSetting.value === 'true'
-                    applyTheme(isDark ? 'dark' : 'light')
+                    applyTheme(darkThemeSetting.value === 'true' ? 'dark' : 'light')
                 }
 
                 // Apply spellcheck setting
