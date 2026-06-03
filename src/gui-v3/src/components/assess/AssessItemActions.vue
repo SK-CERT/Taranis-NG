@@ -2,7 +2,7 @@
     <div class="assess-item-actions">
         <!-- Open Link -->
         <v-btn
-            v-if="hasLink"
+            v-if="showOpenLink && hasLink"
             icon
             :size="size"
             :variant="variant"
@@ -170,6 +170,7 @@
             showCreateReport?: boolean
             showUngroup?: boolean
             showCounts?: boolean
+            showOpenLink?: boolean
         }>(),
         {
             size: 'small',
@@ -177,7 +178,8 @@
             iconSize: 'small',
             showCreateReport: false,
             showUngroup: false,
-            showCounts: false
+            showCounts: false,
+            showOpenLink: true
         }
     )
 
