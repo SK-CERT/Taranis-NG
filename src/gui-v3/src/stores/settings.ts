@@ -262,7 +262,6 @@ export const useSettingsStore = defineStore('settings', () => {
             { key: 'd', alias: 'dashboard_view', icon: 'mdi-view-dashboard-variant-outline' },
             { key: 'z', alias: 'analyze_view', icon: 'mdi-file-table' },
             { key: 'p', alias: 'publish_view', icon: 'mdi mdi-send' },
-            { key: 'm', alias: 'my_assets_view', icon: 'mdi-file-cabinet' },
             { key: 'c', alias: 'configuration_view', icon: 'mdi-cog' },
             // assess: filter actions
             { key: 'f', alias: 'enter_filter_mode', icon: 'mdi-filter-outline' }
