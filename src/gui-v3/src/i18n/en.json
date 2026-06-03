@@ -55,8 +55,7 @@
         "analyze": "Analyze",
         "publish": "Publish",
         "config": "Configuration",
-        "dashboard": "Dashboard",
-        "my_assets": "My Assets"
+        "dashboard": "Dashboard"
     },
     "dashboard": {
         "assess": {
@@ -115,8 +114,6 @@
         "external": "External",
         "organizations": "Organizations",
         "word_lists": "Word Lists",
-        "asset_groups": "Asset Groups",
-        "notification_templates": "Notification Templates",
         "remote_access": "Remote Access",
         "remote_nodes": "Remote Nodes",
         "remote": "Remote",
@@ -989,19 +986,6 @@
         },
         "select_all_success": "Selected {count} news item(s)"
     },
-    "assets": {
-        "tooltip": {
-            "filter_vulnerable": "Show/hide vulnerable assets",
-            "sort": {
-                "vulnerability": {
-                    "descending": "Sort assets by vulnerability in descending order"
-                },
-                "alphabetical": {
-                    "ascending": "Sort assets alphabetically in ascending order"
-                }
-            }
-        }
-    },
     "publish": {
         "tooltip": {
             "filter_all": "Currently showing: all",
@@ -1082,7 +1066,6 @@
         "dashboard_view": "Dashboard",
         "analyze_view": "Analyze",
         "publish_view": "Publish",
-        "my_assets_view": "My Assets",
         "configuration_view": "Configuration",
         "source_group_up": "OSINT Source Group Up",
         "source_group_down": "OSINT Source Group Down",
@@ -1230,76 +1213,6 @@
         "remove": "Data provider was successfully deleted",
         "removed_error": "Data provider is in use and could not be deleted",
         "total_count": "Data providers count"
-    },
-    "asset_group": {
-        "add_new": "Add new asset group",
-        "edit": "Edit asset group",
-        "error": "Could not save this asset group",
-        "name": "Name",
-        "description": "Description",
-        "notification_templates": "Notification Templates",
-        "allowed_users": "Allowed users (If none is selected, all users are allowed)",
-        "successful": "New asset group was successfully added",
-        "successful_edit": "Asset group was successfully updated",
-        "removed": "Asset group was successfully deleted",
-        "removed_error": "Asset group is in use and could not be deleted",
-        "total_count": "Asset group count"
-    },
-    "notification_template": {
-        "add_new": "Add new notification template",
-        "add_recipient": "Add Recipient",
-        "edit_recipient": "Edit Recipient",
-        "edit": "Edit notification template",
-        "error": "Could not save this notification template",
-        "name": "Name",
-        "description": "Description",
-        "message_title": "Message Title",
-        "message_body": "Message Body",
-        "new_recipient": "New Recipient",
-        "recipient_name": "Recipient Name",
-        "email": "Email",
-        "recipients": "Recipients",
-        "successful": "New notification template was successfully added",
-        "successful_edit": "Notification template was successfully updated",
-        "removed": "Notification template was successfully deleted",
-        "removed_error": "Notification template is in use and could not be deleted",
-        "total_count": "Notification template count"
-    },
-    "asset": {
-        "add": "Add Asset",
-        "add_new": "Add new asset",
-        "add_group_info": "Please add an asset group",
-        "no_groups_message": "Please create an asset group before adding assets",
-        "no_data": "No assets found",
-        "edit": "Edit asset",
-        "error": "Could not save this asset",
-        "name": "Name",
-        "serial": "Serial Number",
-        "description": "Description",
-        "cpe": "CPE Code",
-        "new_cpe": "Add CPE Code",
-        "cpes": "CPE Codes",
-        "value": "Value",
-        "vulnerable": "Vulnerable",
-        "total": "Total",
-        "total_count": "Asset count",
-        "successful": "New asset was successfully added",
-        "successful_edit": "Asset was successfully updated",
-        "removed": "Asset was successfully deleted",
-        "removed_error": "Asset is in use and could not be deleted",
-        "vulnerabilities": "Vulnerabilities",
-        "vulnerabilities_count": "Vulnerabilities: ",
-        "no_vulnerabilities": "No vulnerabilities",
-        "sort": {
-            "alphabetical": "Alphabetical",
-            "vulnerability": "By Vulnerability"
-        },
-        "import_csv": "Import CSV",
-        "import_from_csv": "Import CPE from CSV",
-        "file_has_header": "File has header",
-        "load_csv_file": "Load CSV file",
-        "import": "Import",
-        "close": "Close"
     },
     "remote_access": {
         "add_new": "Add new remote access",

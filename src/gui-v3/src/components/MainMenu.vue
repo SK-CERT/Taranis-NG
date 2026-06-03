@@ -92,14 +92,6 @@
             show: true
         },
         {
-            title: 'main_menu.my_assets',
-            icon: ICONS.FILE_CABINET,
-            permission: 'MY_ASSETS_ACCESS',
-            route: '/myassets',
-            routeName: 'myassets',
-            show: true
-        },
-        {
             title: 'main_menu.config',
             icon: ICONS.COG,
             permission: 'CONFIG_ACCESS',
