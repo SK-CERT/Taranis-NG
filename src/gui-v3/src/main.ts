@@ -85,24 +85,29 @@ const vuetify = createVuetify({
         themes: {
             light: {
                 colors: {
+                    background: '#FAFAFA',
+                    surface: '#FFFFFF',
                     primary: '#1976D2',
-                    secondary: '#424242',
+                    secondary: '#0781a6',
+                    tertiary: '#7169d6',
                     accent: '#82B1FF',
                     error: '#FF5252',
                     info: '#2196F3',
                     success: '#4CAF50',
-                    warning: '#FFC107'
+                    warning: '#fb8c00'
                 }
             },
             dark: {
                 colors: {
-                    primary: '#2196F3',
-                    secondary: '#424242',
-                    accent: '#FF4081',
-                    error: '#FF5252',
-                    info: '#2196F3',
-                    success: '#4CAF50',
-                    warning: '#FB8C00'
+                    background: '#121212',
+                    surface: '#212121',
+                    primary: '#8ecdff',
+                    secondary: '#75d4e8',
+                    tertiary: '#b5c4ff',
+                    error: '#CF6679',
+                    info: '#2196f3',
+                    success: '#4caf50',
+                    warning: '#fb8c00'
                 }
             }
         }
