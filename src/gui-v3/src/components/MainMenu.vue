@@ -1,15 +1,14 @@
 <template>
-    <v-app-bar app clipped-left density="compact" color="primary">
+    <v-app-bar app clipped-left density="compact" color="surface">
         <!-- Menu toggle button -->
         <v-app-bar-nav-icon v-if="isAuthenticated" color="white" @click="toggleNav" />
 
         <!-- Logo -->
-        <v-toolbar-title class="d-flex align-center">
-            <img src="@/assets/taranis-logo-nav.svg" alt="Taranis NG" class="logo" />
-        </v-toolbar-title>
+        <div class="d-flex align-center justify-start">
+            <v-img :src="isDark ? darkLogo : lightLogo" alt="Taranis NG" contain height="48" width="auto" />
+        </div>
 
         <v-spacer />
-
         <!-- Main navigation buttons -->
         <template v-if="isAuthenticated">
             <v-btn
@@ -17,7 +16,6 @@
                 :key="button.routeName"
                 :to="button.route"
                 :variant="isButtonActive(button) ? 'outlined' : 'text'"
-                color="white"
                 :opacity="isButtonActive(button) ? 1 : 0.85"
             >
                 <v-icon start>
@@ -43,7 +41,11 @@
     import UserMenu from './UserMenu.vue'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import type { PermissionKey } from '@/types/permissions'
+    import { useTheme } from 'vuetify'
+    import lightLogo from '@/assets/taranis-logo-nav.svg'
+    import darkLogo from '@/assets/taranis-logo-nav-dark.svg'
 
+    const isDark = computed(() => useTheme().global.current.value.dark)
     const { t } = useI18n()
     const { isAuth, checkPermission } = useAuth()
     const route = useRoute()
@@ -128,10 +130,3 @@
 
     // No additional onMounted logic needed
 </script>
-
-<style scoped>
-    .logo {
-        height: 48px;
-        width: auto;
-    }
-</style>
