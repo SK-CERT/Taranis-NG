@@ -55,8 +55,7 @@
         "analyze": "Analyzovat",
         "publish": "Zveřejnit",
         "config": "Nastavení",
-        "dashboard": "Dashboard",
-        "my_assets": "Aktiva"
+        "dashboard": "Dashboard"
     },
     "dashboard": {
         "assess": {
@@ -115,8 +114,6 @@
         "external": "Externí",
         "organizations": "Organizace",
         "word_lists": "Seznamy slov",
-        "asset_groups": "Skupiny aktiv",
-        "notification_templates": "Šablony oznámení",
         "remote_access": "Vzdálený přístup",
         "remote_nodes": "Vzdálené instance",
         "remote": "Vzdálené",
@@ -808,19 +805,6 @@
         },
         "select_all_success": "Vybráno {count} novinek"
     },
-    "assets": {
-        "tooltip": {
-            "filter_vulnerable": "Zobrazit/Skrýt zranitelné aktiva",
-            "sort": {
-                "vulnerability": {
-                    "descending": "Seřadit aktiva podle zranitelnosti sestupně"
-                },
-                "alphabetical": {
-                    "ascending": "Seřadit aktiva abecedně vzestupně"
-                }
-            }
-        }
-    },
     "publish": {
         "tooltip": {
             "filter_all": "Aktuálně zobrazeno: vše",
@@ -899,7 +883,6 @@
         "dashboard_view": "Dashboard",
         "analyze_view": "Analyzovat",
         "publish_view": "Zveřejnit",
-        "my_assets_view": "Aktiva",
         "configuration_view": "Nastavení",
         "source_group_up": "O skupinu OSINT zdrojů výše",
         "source_group_down": "O skupinu OSINT zdrojů níže",
@@ -1047,76 +1030,6 @@
         "remove": "Poskytovatel dat byl úspěšně smazán",
         "removed_error": "Poskytovatel dat se používá a nelze jej smazat",
         "total_count": "Počet poskytovatelů dat: "
-    },
-    "asset_group": {
-        "add_new": "Přidat novou skupinu aktiv",
-        "edit": "Upravit skupinu aktiv",
-        "error": "Nepodařilo se vytvořit skupinu aktiv",
-        "name": "Název",
-        "description": "Popis",
-        "notification_templates": "Šablony upozornění",
-        "allowed_users": "Povolení uživatelé (Pokud není žádný vybrán, získávají povolení všichni)",
-        "successful": "Nová skupina aktiv byla přidána",
-        "successful_edit": "Skupina aktiv byla upravena",
-        "removed": "Skupina aktiv byla smazána",
-        "removed_error": "Skupina aktiv je používána a nelze ji smazat",
-        "total_count": "Počet skupin aktiv: "
-    },
-    "notification_template": {
-        "add_new": "Přidat novou šablonu upozornění",
-        "add_recipient": "Přidat příjemce",
-        "edit_recipient": "Upravit příjemce",
-        "edit": "Upravit šablonu upozornění",
-        "error": "Nepodařilo se uložit šablonu upozornění",
-        "name": "Název",
-        "description": "Popis",
-        "message_title": "Nadpis zprávy",
-        "message_body": "Tělo zprávy",
-        "new_recipient": "Nový příjemce",
-        "recipient_name": "Jméno příjemce",
-        "email": "E-mailová adresa",
-        "recipients": "Příjemci",
-        "successful": "Nová šablona upozornění byla přidána",
-        "successful_edit": "Šablona upozornění byla upravena",
-        "removed": "Šablona upozornění byla smazána",
-        "removed_error": "Šablona upozornění se používá a nelze ji smazat",
-        "total_count": "Počet šablon upozornění: "
-    },
-    "asset": {
-        "add": "Přidat aktivum",
-        "add_new": "Přidat nové aktivum",
-        "add_group_info": "Přidejte prosím skupinu aktiv",
-        "no_groups_message": "Před přidáním aktiv vytvořte prosím skupinu aktiv",
-        "no_data": "Nebyla nalezena žádná aktiva",
-        "edit": "Upravit aktivum",
-        "error": "Nepodařilo se uložit toto aktivum",
-        "name": "Název",
-        "serial": "Sériové číslo",
-        "description": "Popis",
-        "cpe": "CPE kód",
-        "new_cpe": "Přidat CPE kód",
-        "cpes": "CPE kódy",
-        "value": "Hodnota",
-        "vulnerable": "Zranitelné",
-        "total": "Celkem",
-        "total_count": "Počet aktiv: ",
-        "successful": "Nové aktivum bylo přidáno",
-        "successful_edit": "Aktivum bylo upraveno",
-        "removed": "Aktivum bylo smazáno",
-        "removed_error": "Aktivum se používá a nelze jej smazat",
-        "vulnerabilities": "Zranitelnosti",
-        "vulnerabilities_count": "Počet zranitelností: ",
-        "no_vulnerabilities": "Bez zranitelností",
-        "sort": {
-            "alphabetical": "Abecedně",
-            "vulnerability": "Podle zranitelnosti"
-        },
-        "import_csv": "Importovat CSV",
-        "import_from_csv": "Importovat CPE z CSV",
-        "file_has_header": "Soubor má hlavičku",
-        "load_csv_file": "Načíst CSV soubor",
-        "import": "Importovat",
-        "close": "Zavřít"
     },
     "remote_access": {
         "add_new": "Přidat vzdálený přístup",

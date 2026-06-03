@@ -26,7 +26,7 @@
     import { ICONS } from '@/config/ui-constants'
 
     // This view is temporary - the router automatically redirects
-    // authenticated users to /dashboard, /config, or /myassets
+    // authenticated users to /dashboard or /config
     // based on their permissions
 </script>
 
