@@ -80,7 +80,7 @@
     const headers: HeaderEntry[] = [
         { title: t('organization.name'), key: 'name' },
         { title: t('organization.description'), key: 'description' },
-        { title: t('common.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false }
     ]
 
     const asOrganizationItem = (item: unknown): OrganizationItem => item as OrganizationItem

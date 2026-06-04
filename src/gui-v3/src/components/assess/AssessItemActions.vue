@@ -6,7 +6,6 @@
             icon
             :size="size"
             :variant="variant"
-            color="primary"
             :href="itemLink"
             target="_blank"
             rel="noreferrer"
@@ -14,7 +13,7 @@
             @click.stop
         >
             <v-icon :size="iconSize">
-                {{ ICONS.OPEN_SOURCE }}
+                {{ ICONS.OPEN }}
             </v-icon>
         </v-btn>
 
@@ -51,48 +50,45 @@
             v-if="canModify"
             icon
             :size="size"
-            :variant="item.me_like ? 'plain' : variant"
-            :color="item.me_like ? COLORS.ACTIVE : COLORS.PRIMARY"
+            :variant="variant"
             :title="t('assess.tooltip.like_item')"
             @click.stop="$emit('action', 'like')"
         >
-            <v-icon :size="iconSize">
-                {{ showCounts && item.likes ? ICONS.LIKE : ICONS.LIKE_OUTLINE }}
+            <v-icon :size="iconSize" :color="item.me_like ? 'warning' : undefined">
+                {{ item.me_like ? ICONS.LIKE : ICONS.LIKE_OUTLINE }}
             </v-icon>
         </v-btn>
-        <v-btn v-if="showCounts && canModify && item.likes" text :size="size" disabled style="min-width: 16px; pointer-events: none">
+        <v-label v-if="showCounts && canModify && item.likes > 0" class="text-caption text-disabled">
             {{ item.likes }}
-        </v-btn>
+        </v-label>
 
         <!-- Dislike -->
         <v-btn
             v-if="canModify"
             icon
             :size="size"
-            :variant="item.me_dislike ? 'plain' : variant"
-            :color="item.me_dislike ? COLORS.ACTIVE : COLORS.PRIMARY"
+            :variant="variant"
             :title="t('assess.tooltip.dislike_item')"
             @click.stop="$emit('action', 'dislike')"
         >
-            <v-icon :size="iconSize">
-                {{ showCounts && item.dislikes ? ICONS.UNLIKE : ICONS.UNLIKE_OUTLINE }}
+            <v-icon :size="iconSize" :color="item.me_dislike ? 'warning' : undefined">
+                {{ item.me_dislike ? ICONS.UNLIKE : ICONS.UNLIKE_OUTLINE }}
             </v-icon>
         </v-btn>
-        <v-btn v-if="showCounts && canModify && item.dislikes" text :size="size" disabled style="min-width: 16px; pointer-events: none">
+        <v-label v-if="showCounts && canModify && item.dislikes > 0" class="text-caption text-disabled">
             {{ item.dislikes }}
-        </v-btn>
+        </v-label>
 
         <!-- Important -->
         <v-btn
             v-if="canModify"
             icon
             :size="size"
-            :variant="item.important ? 'plain' : variant"
-            :color="item.important ? 'amber-darken-1' : COLORS.PRIMARY"
+            :variant="variant"
             :title="t('assess.tooltip.important_item')"
             @click.stop="$emit('action', 'important')"
         >
-            <v-icon :size="iconSize" :color="item.important ? 'amber-darken-1' : undefined">
+            <v-icon :size="iconSize" :color="item.important ? 'warning' : undefined">
                 {{ item.important ? ICONS.IMPORTANT : ICONS.IMPORTANT_OUTLINE }}
             </v-icon>
         </v-btn>
@@ -102,12 +98,11 @@
             v-if="canModify"
             icon
             :size="size"
-            :variant="item.read ? 'plain' : variant"
-            :color="item.read ? COLORS.ACTIVE : COLORS.PRIMARY"
+            :variant="variant"
             :title="t('assess.tooltip.read_item')"
             @click.stop="$emit('action', 'read')"
         >
-            <v-icon :size="iconSize">
+            <v-icon :size="iconSize" :color="item.read ? 'warning' : undefined">
                 {{ item.read ? ICONS.READ : ICONS.READ_OUTLINE }}
             </v-icon>
         </v-btn>
@@ -137,7 +132,7 @@
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import { PERMISSIONS } from '@/services/auth/permissions'
-    import { ICONS, COLORS } from '@/config/ui-constants'
+    import { ICONS } from '@/config/ui-constants'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
