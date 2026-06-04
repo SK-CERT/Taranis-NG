@@ -94,7 +94,7 @@
         { title: t('user.username'), key: 'username' },
         { title: t('user.name'), key: 'name' },
         { title: t('user.organizations'), key: 'organizations' },
-        { title: t('common.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false }
     ]
 
     const asUserItem = (item: unknown): UserItem => item as UserItem
