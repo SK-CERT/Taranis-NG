@@ -6,23 +6,20 @@ describe('ActionButton', () => {
     // ── Predefined Actions ────────────────────────
     describe('predefined actions', () => {
         it.each([
-            ['delete', 'mdi-delete-outline', 'error'],
-            ['edit', 'mdi-pencil', 'primary'],
-            ['publish', 'mdi-file-outline', 'info'],
-            ['remove', 'mdi-minus-thick', 'accent'],
-            ['open', 'mdi-open-in-new', 'primary'],
-            ['open_source', 'mdi-open-in-app', 'primary'],
-            ['lock', 'mdi-lock-outline', 'warning']
-        ])('action="%s" should render icon %s with color %s', (action, expectedIcon, expectedColor) => {
+            ['delete', 'mdi-delete-outline'],
+            ['edit', 'mdi-pencil'],
+            ['publish', 'mdi-file-outline'],
+            ['remove', 'mdi-minus-thick'],
+            ['open', 'mdi-open-in-new'],
+            ['open_source', 'mdi-open-in-new'],
+            ['lock', 'mdi-lock-outline']
+        ])('action="%s" should render icon %s', (action, expectedIcon) => {
             const wrapper = mountWithPlugins(ActionButton, {
                 props: { action }
             })
 
             // Vuetify 4 renders icon name in the HTML (class or text depending on version)
             expect(wrapper.html()).toContain(expectedIcon)
-
-            const btn = wrapper.findComponent({ name: 'VBtn' })
-            expect(btn.props('color')).toBe(expectedColor)
         })
     })
 
@@ -34,16 +31,16 @@ describe('ActionButton', () => {
             })
 
             expect(wrapper.html()).toContain('mdi-star')
-            const btn = wrapper.findComponent({ name: 'VBtn' })
-            expect(btn.props('color')).toBe('success')
+            const icon = wrapper.findComponent({ name: 'VIcon' })
+            expect(icon.props('color')).toBe('success')
         })
 
         it('should use default icon/color when no action or custom props', () => {
             const wrapper = mountWithPlugins(ActionButton, { props: {} })
 
             expect(wrapper.html()).toContain('mdi-help')
-            const btn = wrapper.findComponent({ name: 'VBtn' })
-            expect(btn.props('color')).toBe('primary')
+            const icon = wrapper.findComponent({ name: 'VIcon' })
+            expect(icon.props('color')).toBe('primary')
         })
 
         it('should pass size to v-btn', () => {

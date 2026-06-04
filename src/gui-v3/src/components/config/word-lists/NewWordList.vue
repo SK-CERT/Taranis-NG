@@ -67,7 +67,7 @@
                                 <v-expansion-panel v-for="(category, index) in localItem.categories" :key="index" :value="index">
                                     <v-expansion-panel-title>
                                         <div class="d-flex align-center w-100">
-                                            <v-icon class="mr-2">mdi-folder-outline</v-icon>
+                                            <v-icon class="mr-2"> mdi-folder-outline </v-icon>
                                             <strong>
                                                 {{ category.name || t('word_list.category') + ' ' + (index + 1) }}
                                             </strong>
@@ -190,7 +190,7 @@
                             </v-expansion-panels>
 
                             <div v-if="localItem.categories.length === 0" class="text-center pa-8 text-grey">
-                                <v-icon size="64" color="grey-lighten-1">mdi-folder-open-outline</v-icon>
+                                <v-icon size="64" color="grey-lighten-1"> mdi-folder-open-outline </v-icon>
                                 <div class="text-h6 mt-2">
                                     {{ t('word_list.no_categories') }}
                                 </div>
@@ -217,7 +217,7 @@
                     {{ t('common.cancel') }}
                 </v-btn>
                 <v-btn color="primary" variant="text" :loading="saving" :disabled="saving" @click="handleSubmit">
-                    <v-icon start>mdi-content-save</v-icon>
+                    <v-icon start> mdi-content-save </v-icon>
                     {{ t('common.save') }}
                 </v-btn>
             </v-card-actions>
@@ -310,7 +310,7 @@
     const wordHeaders: HeaderEntry[] = [
         { title: t('word_list.value'), key: 'value', sortable: true, width: '40%' },
         { title: t('word_list.description'), key: 'description', sortable: false, width: '50%' },
-        { title: t('common.actions'), key: 'actions', sortable: false, width: '10%', align: 'center' }
+        { title: t('settings.actions'), key: 'actions', sortable: false, width: '10%', align: 'center' }
     ]
 
     // Watch for edit item changes

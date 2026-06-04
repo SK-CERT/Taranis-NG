@@ -1,5 +1,5 @@
 <template>
-    <v-btn icon :size="size" :color="color" :variant="variant" :disabled="disabled" :title="title" @click="handleClick">
+    <v-btn icon :size="size" :variant="variant" :disabled="disabled" :title="title" @click="handleClick">
         <v-icon :color="color">
             {{ icon }}
         </v-icon>

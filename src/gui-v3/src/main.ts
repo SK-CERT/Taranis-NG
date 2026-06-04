@@ -94,7 +94,7 @@ const vuetify = createVuetify({
                     error: '#FF5252',
                     info: '#2196F3',
                     success: '#4CAF50',
-                    warning: '#fb8c00'
+                    warning: '#FFC107'
                 }
             },
             dark: {
