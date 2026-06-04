@@ -4,7 +4,7 @@
             <v-card-title class="d-flex align-center">
                 <v-tooltip location="right">
                     <template #activator="{ props }">
-                        <v-icon v-bind="props" color="blue" class="me-2">mdi-help-circle</v-icon>
+                        <v-icon v-bind="props" color="blue" class="me-2"> mdi-help-circle </v-icon>
                     </template>
                     <span>{{ t('data_provider.ai_providers.tab_description') }}</span>
                 </v-tooltip>
@@ -108,7 +108,7 @@
         { title: t('settings.api_key'), key: 'api_key', sortable: false },
         { title: t('settings.updated_by'), key: 'updated_by' },
         { title: t('settings.updated_at'), key: 'updated_at', sortable: false },
-        { title: t('common.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false }
     ]
 
     const asAiProviderItem = (item: unknown): AiProviderItem => item as AiProviderItem

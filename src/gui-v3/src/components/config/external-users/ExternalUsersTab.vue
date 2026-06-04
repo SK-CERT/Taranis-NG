@@ -81,7 +81,7 @@
     const headers: HeaderEntry[] = [
         { title: t('external_user.username'), key: 'username' },
         { title: t('external_user.name'), key: 'name' },
-        { title: t('common.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false }
     ]
 
     const asExternalUserItem = (item: unknown): ExternalUserItem => item as ExternalUserItem

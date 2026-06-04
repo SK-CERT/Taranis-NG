@@ -80,7 +80,7 @@
     const headers: HeaderEntry[] = [
         { title: t('role.name'), key: 'name' },
         { title: t('role.description'), key: 'description' },
-        { title: t('common.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false }
     ]
 
     const asRoleItem = (item: unknown): RoleItem => item as RoleItem

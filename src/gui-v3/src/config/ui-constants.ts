@@ -76,7 +76,6 @@ export const ICONS = Object.freeze({
     NO_STATE: 'mdi-progress-helper',
     OFFICE_BUILDING: 'mdi-office-building',
     OPEN: 'mdi-open-in-new',
-    OPEN_SOURCE: 'mdi-open-in-app',
     PLUS: 'mdi-plus-circle-outline',
     PLUS_BOX: 'mdi-plus-box',
     PUBLISH: 'mdi-file-outline',
@@ -143,13 +142,13 @@ export const BUTTON_CONFIGS = Object.freeze({
     OPEN: {
         icon: ICONS.OPEN,
         color: 'primary',
-        variant: 'plain',
+        variant: 'text',
         size: 'small'
     },
     OPEN_SOURCE: {
-        icon: ICONS.OPEN_SOURCE,
+        icon: ICONS.OPEN,
         color: 'primary',
-        variant: 'plain',
+        variant: 'text',
         size: 'small'
     }
 })
