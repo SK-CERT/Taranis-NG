@@ -860,7 +860,8 @@
             "option_news_items": "vybrané novinky",
             "option_search": "novinky z vyhľadávania",
             "option_osint": "OSINT databáza"
-        }
+        },
+        "source": "ZDROJ"
     },
     "assess": {
         "source": "Zdroj",
@@ -943,7 +944,8 @@
             "no_reports": "Táto položka nie je v žiadnych analýzach",
             "error_loading": "Chyba pri načítavaní analýz"
         },
-        "select_all_success": "{count} položiek vybraných"
+        "select_all_success": "{count} položiek vybraných",
+        "groups": "SKUPINY"
     },
     "publish": {
         "tooltip": {

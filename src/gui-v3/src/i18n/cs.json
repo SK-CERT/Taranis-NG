@@ -723,7 +723,8 @@
             "option_news_items": "vybraných novinek",
             "option_search": "novinek z hledání",
             "option_osint": "OSINT databází"
-        }
+        },
+        "source": "ZDROJ"
     },
     "assess": {
         "source": "Zdroj",
@@ -803,7 +804,8 @@
             "no_reports": "Tato položka není v žádných reportech",
             "error_loading": "Chyba při načítání reportů"
         },
-        "select_all_success": "Vybráno {count} novinek"
+        "select_all_success": "Vybráno {count} novinek",
+        "groups": "SKUPINY"
     },
     "publish": {
         "tooltip": {
