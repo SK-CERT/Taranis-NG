@@ -1,20 +1,14 @@
 <template>
-    <v-list density="compact" class="pa-0">
-        <!-- Section icon -->
-        <v-list-item class="justify-center pa-2">
-            <v-icon size="large">mdi-newspaper-variant</v-icon>
-        </v-list-item>
-
-        <v-divider class="mx-2" />
-
+    <v-list density="compact">
         <!-- Group links -->
-        <v-list-item v-for="group in groups" :key="group.id" :to="group.route" class="px-1 py-2" density="compact">
+        <v-list-subheader>{{ $t('assess.groups') }}</v-list-subheader>
+        <v-list-item v-for="group in groups" :key="group.id" :to="group.route" style="padding: 8px 8px">
             <template #default>
-                <div class="d-flex flex-column align-center text-center">
-                    <v-icon :color="group.color || undefined" size="small" class="mb-1">
+                <div style="display: flex; flex-direction: column; align-items: center">
+                    <v-icon :color="group.color || undefined" style="margin-bottom: 6px">
                         {{ group.icon }}
                     </v-icon>
-                    <span class="text-caption" style="font-size: 0.65rem; line-height: 1.2">
+                    <span style="font-size: 0.8rem; line-height: 1.4; text-align: center">
                         {{ group.translate ? $t(group.title) : group.title }}
                     </span>
                 </div>
@@ -60,9 +54,3 @@
         }
     })
 </script>
-
-<style scoped>
-    .v-list-item {
-        min-height: auto;
-    }
-</style>

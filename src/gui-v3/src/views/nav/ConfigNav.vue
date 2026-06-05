@@ -1,28 +1,19 @@
 <template>
-    <v-list density="compact" class="pa-0">
-        <!-- Section icon -->
-        <v-list-item class="justify-center pa-2">
-            <v-icon :color="iconColor" size="large">mdi-cog</v-icon>
-        </v-list-item>
-
-        <v-divider class="mx-2" :color="dividerColor" />
-
+    <v-list density="compact">
         <!-- Config links with permission filtering -->
-        <template v-for="link in filteredLinks" :key="link.id">
-            <v-divider v-if="link.separator" class="mx-2 my-1" :color="dividerColor" :thickness="1" />
-            <v-list-item v-else :to="link.route" class="px-1 py-2" density="compact">
-                <template #default>
-                    <div class="d-flex flex-column align-center text-center">
-                        <v-icon :color="iconColor" size="small" class="mb-1">
-                            {{ link.icon }}
-                        </v-icon>
-                        <span class="text-caption" :style="{ color: textColor, fontSize: '0.65rem', lineHeight: '1.2' }">
-                            {{ link.translate ? $t(link.title || '') : link.title || '' }}
-                        </span>
-                    </div>
-                </template>
-            </v-list-item>
-        </template>
+        <v-list-item v-for="link in filteredLinks" :key="link.id" :to="link.route" style="padding: 8px 8px; min-height: auto">
+            <template #default>
+                <v-divider v-if="link.separator" />
+                <div v-else style="display: flex; flex-direction: column; align-items: center">
+                    <v-icon :color="link.color || undefined" style="margin-bottom: 6px">
+                        {{ link.icon }}
+                    </v-icon>
+                    <span style="font-size: 0.8rem; line-height: 1.4; text-align: center">
+                        {{ link.translate ? $t(link.title) : link.title }}
+                    </span>
+                </div>
+            </template>
+        </v-list-item>
     </v-list>
 </template>
 
@@ -44,11 +35,7 @@
 
     const { checkPermission } = useAuth()
     const { global: themeGlobal } = useTheme()
-
     const isDark = computed(() => themeGlobal.name.value === 'dark')
-    const textColor = computed(() => (isDark.value ? '#ffffff' : '#000000'))
-    const iconColor = computed(() => (isDark.value ? '#ffffff' : 'rgba(0, 0, 0, 0.54)'))
-    const dividerColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)'))
 
     const links: ConfigLink[] = [
         {
@@ -214,9 +201,3 @@
         return filtered
     })
 </script>
-
-<style scoped>
-    .v-list-item {
-        min-height: auto;
-    }
-</style>

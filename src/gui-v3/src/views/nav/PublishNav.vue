@@ -1,10 +1,7 @@
 <template>
-    <v-list density="compact" class="pa-0">
-        <!-- Section icon -->
-        <v-list-item class="justify-center pa-2">
-            <v-icon :color="iconColor" size="large">mdi-send</v-icon>
-        </v-list-item>
-    </v-list>
+    <div>
+        <!-- Publish has no navigation sidebar -->
+    </div>
 </template>
 
 <script setup lang="ts">
