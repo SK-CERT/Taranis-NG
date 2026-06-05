@@ -241,7 +241,7 @@
         "removed_error": "OSINT source group is in use and could not be deleted",
         "title": "Title",
         "osint_sources": "OSINT Sources",
-        "total_count": "OSINT Source Sroup count",
+        "total_count": "OSINT Source Group count",
         "default_group": "Uncategorized",
         "default_group_description": "Default group for uncategorized OSINT sources",
         "all": "All Sources"
@@ -884,7 +884,8 @@
             "option_news_items": "selected news items",
             "option_search": "news items from search",
             "option_osint": "OSINT database"
-        }
+        },
+        "source": "SOURCE"
     },
     "assess": {
         "source": "Source",
@@ -984,7 +985,8 @@
             "no_reports": "This item is not in any reports",
             "error_loading": "Error loading reports"
         },
-        "select_all_success": "Selected {count} news item(s)"
+        "select_all_success": "Selected {count} news item(s)",
+        "groups": "GROUPS"
     },
     "publish": {
         "tooltip": {

@@ -1,20 +1,14 @@
 <template>
-    <v-list density="compact" class="pa-0">
-        <!-- Section icon -->
-        <v-list-item class="justify-center pa-2">
-            <v-icon :color="iconColor" size="large">mdi-file-table</v-icon>
-        </v-list-item>
-
-        <v-divider class="mx-2" :color="dividerColor" />
-
+    <v-list density="compact">
         <!-- Group links -->
-        <v-list-item v-for="link in links" :key="link.route" :to="link.route" class="px-1 py-2" density="compact">
+        <v-list-subheader>{{ $t('analyze.source') }}</v-list-subheader>
+        <v-list-item v-for="link in links" :key="link.route" :to="link.route" style="padding: 8px 8px">
             <template #default>
-                <div class="d-flex flex-column align-center text-center">
-                    <v-icon :color="iconColor" size="small" class="mb-1">
+                <div style="display: flex; flex-direction: column; align-items: center">
+                    <v-icon :color="link.color || undefined" style="margin-bottom: 6px">
                         {{ link.icon }}
                     </v-icon>
-                    <span class="text-caption" :style="{ color: textColor, fontSize: '0.65rem', lineHeight: '1.2' }">
+                    <span style="font-size: 0.8rem; line-height: 1.4; text-align: center">
                         {{ link.translate ? $t(link.title) : link.title }}
                     </span>
                 </div>
@@ -88,9 +82,3 @@
         }
     })
 </script>
-
-<style scoped>
-    .v-list-item {
-        min-height: auto;
-    }
-</style>
