@@ -40,7 +40,7 @@
                     </v-row>
                 </div>
 
-                <h3 class="mb-2" style="font-size: 1.25rem; font-weight: 700; line-height: 1.35; color: rgba(255, 255, 255, 0.95)">
+                <h3 class="mb-2" style="font-size: 1.25rem; line-height: 1.35">
                     {{ card.title }}
                 </h3>
 
