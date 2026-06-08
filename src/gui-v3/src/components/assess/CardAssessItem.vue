@@ -178,9 +178,7 @@
 
     .child-title {
         font-size: 1.05rem;
-        font-weight: 600;
         line-height: 1.35;
-        color: rgba(255, 255, 255, 0.95);
     }
 
     .source-link {

@@ -13,8 +13,7 @@
 </template>
 
 <script setup lang="ts">
-    import { computed } from 'vue'
-    import { useAttrs, type VNodeProps } from 'vue'
+    import { computed, useAttrs, type VNodeProps } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
@@ -34,26 +33,29 @@
 
     const translatedLabel = computed(() => t(props.label))
 
-    // Remove onClick and color from attrs to avoid conflicts
-    // Only pass through safe attributes like 'id', 'class', etc
+    // ONLY strip real conflicts (not color)
     const sanitizedAttrs = computed(() => {
-        const { onClick, color, ...rest } = attrs
+        const { onClick, ...rest } = attrs
         return rest
     })
 
-    // Handle click - forward to the dialog activator handler if present
+    // proper click forwarding
     const onButtonClick = (event: MouseEvent): void => {
-        const clickHandler = (attrs as VNodeProps & { onClick?: ((e: MouseEvent) => void) | Array<(e: MouseEvent) => void> }).onClick
+        const clickHandler = (
+            attrs as VNodeProps & {
+                onClick?: ((e: MouseEvent) => void) | Array<(e: MouseEvent) => void>
+            }
+        ).onClick
+
         if (Array.isArray(clickHandler)) {
-            clickHandler.forEach((handler) => handler(event))
+            clickHandler.forEach((h) => h(event))
         } else if (clickHandler) {
-            clickHandler(event)
+            clickHandler?.(event)
         }
     }
 </script>
-
 <style scoped>
     .add-new-button {
-        color: white !important;
+        color: rgb(var(--v-theme-on-primary)) !important;
     }
 </style>
