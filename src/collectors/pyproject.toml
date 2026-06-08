@@ -4,7 +4,7 @@ version = "26.05.1"
 description = "Taranis-NG Collectors service."
 requires-python = ">=3.10"
 dependencies = [
-    "beautifulsoup4==4.14.3",
+    "beautifulsoup4==4.15.0",
     "dateparser==1.4.0",
     "feedparser==6.0.12",
     "Flask==3.1.3",
