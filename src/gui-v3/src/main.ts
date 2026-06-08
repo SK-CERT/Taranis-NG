@@ -85,29 +85,39 @@ const vuetify = createVuetify({
         themes: {
             light: {
                 colors: {
-                    background: '#FAFAFA',
-                    surface: '#FFFFFF',
-                    primary: '#1976D2',
-                    secondary: '#0781a6',
-                    tertiary: '#7169d6',
-                    accent: '#82B1FF',
-                    error: '#FF5252',
-                    info: '#2196F3',
-                    success: '#4CAF50',
-                    warning: '#FFC107'
+                    'background': '#eceef4',
+                    'surface': '#FAFAFA',
+                    'on-surface': '#212121',
+                    'primary': '#4092dd',
+                    'on-primary': '#FFFFFF',
+                    'secondary': '#00677f',
+                    'on-secondary': '#FFFFFF',
+                    'tertiary': '#4e55b0',
+                    'on-tertiary': '#FFFFFF',
+                    'error': '#FF5252',
+                    'on-error': '#ffffff',
+                    'info': '#2196F3',
+                    'success': '#4CAF50',
+                    'warning': '#fb8c00',
+                    'accent': '#82B1FF'
                 }
             },
             dark: {
                 colors: {
-                    background: '#121212',
-                    surface: '#212121',
-                    primary: '#8ecdff',
-                    secondary: '#75d4e8',
-                    tertiary: '#b5c4ff',
-                    error: '#CF6679',
-                    info: '#2196f3',
-                    success: '#4caf50',
-                    warning: '#fb8c00'
+                    'background': '#121212',
+                    'surface': '#212121',
+                    'on-surface': '#e1e2e7',
+                    'primary': '#4092dd',
+                    'on-primary': '#ffffff',
+                    'secondary': '#64d4f8',
+                    'on-secondary': '#003543',
+                    'tertiary': '#bec2ff',
+                    'on-tertiary': '#1d2380',
+                    'error': '#CF6679',
+                    'on-error': '#690005',
+                    'info': '#2196f3',
+                    'success': '#4caf50',
+                    'warning': '#fb8c00'
                 }
             }
         }
