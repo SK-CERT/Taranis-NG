@@ -24,7 +24,7 @@
             <!-- View-specific action buttons -->
             <template v-if="view === 'assess'">
                 <!-- Group -->
-                <v-btn v-if="canModify && canGroupActions" icon size="small" :disabled="selectedCount === 0" @click="handleAction('GROUP')">
+                <v-btn v-if="canModify && canGroupActions" icon size="small" :disabled="selectedCount < 2" @click="handleAction('GROUP')">
                     <v-tooltip activator="parent" location="bottom">
                         {{ t('assess.tooltip.group_items') }}
                     </v-tooltip>
@@ -32,7 +32,13 @@
                 </v-btn>
 
                 <!-- Ungroup -->
-                <v-btn v-if="canModify && canGroupActions" icon size="small" :disabled="selectedCount === 0" @click="handleAction('UNGROUP')">
+                <v-btn
+                    v-if="canModify && canGroupActions"
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0 || !canUngroupSelection"
+                    @click="handleAction('UNGROUP')"
+                >
                     <v-tooltip activator="parent" location="bottom">
                         {{ t('assess.tooltip.ungroup_items') }}
                     </v-tooltip>
@@ -154,6 +160,12 @@
         params?: Record<string, unknown>
     }
 
+    type ApiErrorShape = {
+        response?: {
+            data?: unknown
+        }
+    }
+
     const props = withDefaults(
         defineProps<{
             view: ViewMode
@@ -218,6 +230,35 @@
     const canCreateProduct = computed(() => {
         if (props.view === 'analyze') return checkPermission(PERMISSIONS.PUBLISH_CREATE)
         return false
+    })
+
+    const normalizeSelectionType = (rawType: unknown): 'AGGREGATE' | 'ITEM' => {
+        const typeValue = String(rawType || '').toUpperCase()
+        if (typeValue.includes('AGGREGATE')) {
+            return 'AGGREGATE'
+        }
+        return 'ITEM'
+    }
+
+    const canUngroupSelection = computed(() => {
+        if (props.view !== 'assess') {
+            return false
+        }
+
+        const selection = assessStore.getSelection as SelectionItem[]
+
+        return selection.some((selectedItem) => {
+            const normalizedType = normalizeSelectionType(selectedItem.type)
+
+            // Single item selections can be ungrouped from their parent aggregate.
+            if (normalizedType === 'ITEM') {
+                return true
+            }
+
+            // Aggregate can only be ungrouped when it actually contains multiple news items.
+            const aggregate = selectedItem.item as { news_items?: unknown[] } | undefined
+            return Array.isArray(aggregate?.news_items) && aggregate.news_items.length > 1
+        })
     })
 
     // Disable group actions when the current group is exactly "all"
@@ -475,7 +516,41 @@
 
     const handleAction = async (type: string): Promise<void> => {
         const selection = assessStore.getSelection as SelectionItem[]
-        const items = selection.map((s) => ({ type: s.type, id: s.id }))
+
+        const getErrorKey = (error: unknown): string => {
+            const responseData = (error as ApiErrorShape | undefined)?.response?.data
+
+            if (responseData && typeof responseData === 'object' && 'error' in responseData) {
+                const errorValue = (responseData as { error?: unknown }).error
+                if (typeof errorValue === 'string' && errorValue.trim().length > 0) {
+                    return errorValue
+                }
+            }
+
+            if (typeof responseData === 'string') {
+                const normalized = responseData.trim()
+                if (normalized.toLowerCase().includes('<html')) {
+                    return 'server_error'
+                }
+                if (normalized.length > 0) {
+                    return normalized
+                }
+            }
+
+            return 'server_error'
+        }
+
+        const items = selection.map((s) => ({ type: normalizeSelectionType(s.type), id: s.id }))
+
+        if (type === 'GROUP' && items.length < 2) {
+            notify({ type: 'warning', message: 'Select at least two items to group.' })
+            return
+        }
+
+        if (type === 'UNGROUP' && !canUngroupSelection.value) {
+            notify({ type: 'warning', message: 'No grouped items selected.' })
+            return
+        }
 
         if (items.length > 0) {
             const group_id = (route.params['groupId'] as string | undefined) || null
@@ -504,8 +579,7 @@
                 emit('update-data')
             } catch (error: unknown) {
                 console.error('Error performing action:', error)
-                const responseData = (error as { response?: { data?: string } } | undefined)?.response?.data
-                notify({ type: 'error', loc: `error.${responseData || 'server_error'}` })
+                notify({ type: 'error', loc: `error.${getErrorKey(error)}` })
             }
         }
     }

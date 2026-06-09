@@ -4,6 +4,7 @@
         <v-btn
             v-if="showOpenLink && hasLink"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :href="itemLink"
@@ -21,6 +22,7 @@
         <v-btn
             v-if="showCreateReport && canCreateReport"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.analyze_item')"
@@ -35,6 +37,7 @@
         <v-btn
             v-if="showUngroup && canModify"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.ungroup_item')"
@@ -49,6 +52,7 @@
         <v-btn
             v-if="canModify"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.like_item')"
@@ -58,14 +62,15 @@
                 {{ item.me_like ? ICONS.LIKE : ICONS.LIKE_OUTLINE }}
             </v-icon>
         </v-btn>
-        <v-label v-if="showCounts && canModify && item.likes > 0" class="text-caption text-disabled">
-            {{ item.likes }}
-        </v-label>
+        <span v-if="showCounts && canModify" class="vote-count" :class="{ 'is-empty': Number(item.likes || 0) === 0 }">
+            {{ Number(item.likes || 0) > 0 ? Number(item.likes || 0) : '0' }}
+        </span>
 
         <!-- Dislike -->
         <v-btn
             v-if="canModify"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.dislike_item')"
@@ -75,14 +80,15 @@
                 {{ item.me_dislike ? ICONS.UNLIKE : ICONS.UNLIKE_OUTLINE }}
             </v-icon>
         </v-btn>
-        <v-label v-if="showCounts && canModify && item.dislikes > 0" class="text-caption text-disabled">
-            {{ item.dislikes }}
-        </v-label>
+        <span v-if="showCounts && canModify" class="vote-count" :class="{ 'is-empty': Number(item.dislikes || 0) === 0 }">
+            {{ Number(item.dislikes || 0) > 0 ? Number(item.dislikes || 0) : '0' }}
+        </span>
 
         <!-- Important -->
         <v-btn
             v-if="canModify"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.important_item')"
@@ -97,6 +103,7 @@
         <v-btn
             v-if="canModify"
             icon
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.read_item')"
@@ -111,6 +118,7 @@
         <ActionButton
             v-if="canDelete"
             action="delete"
+            :disabled="disabled"
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.delete_item')"
@@ -166,6 +174,7 @@
             showUngroup?: boolean
             showCounts?: boolean
             showOpenLink?: boolean
+            disabled?: boolean
         }>(),
         {
             size: 'small',
@@ -174,7 +183,8 @@
             showCreateReport: false,
             showUngroup: false,
             showCounts: false,
-            showOpenLink: true
+            showOpenLink: true,
+            disabled: false
         }
     )
 
@@ -220,5 +230,19 @@
         display: flex;
         align-items: center;
         gap: 4px;
+    }
+
+    .vote-count {
+        min-width: 0.75rem;
+        text-align: center;
+        font-size: 0.75rem;
+        color: rgb(var(--v-theme-on-surface));
+        opacity: 0.7;
+        margin-left: -0.5rem;
+        margin-right: -0.2rem;
+    }
+
+    .vote-count.is-empty {
+        visibility: hidden;
     }
 </style>
