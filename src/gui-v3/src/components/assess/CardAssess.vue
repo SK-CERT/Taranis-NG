@@ -127,7 +127,7 @@
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
     import { useAuth } from '@/composables/useAuth'
-    import { deleteNewsItemAggregate, groupAction } from '@/api/assess'
+    import { deleteNewsItemAggregate } from '@/api/assess'
     import { ICONS } from '@/config/ui-constants'
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
@@ -211,8 +211,6 @@
     const childNewsItems = computed(() => props.card.news_items ?? [])
 
     const multiSelectActive = computed(() => assessStore.getMultiSelect)
-    const currentGroupId = computed(() => String(assessStore.getCurrentGroup || ''))
-
     const selectedColor = computed(() => {
         return assessStore.selectedItems.has(props.card.id) ? 'orange-lighten-4' : ''
     })
@@ -251,8 +249,6 @@
     const handleCardAction = (action: string): void => {
         if (action === 'delete') {
             handleDelete()
-        } else if (action === 'ungroup') {
-            handleUngroup()
         } else {
             updateCard(action)
         }
@@ -268,28 +264,6 @@
 
     const deleteChildItem = (item: AssessCard): void => {
         emit('delete-item', item)
-    }
-
-    const handleUngroup = async (): Promise<void> => {
-        try {
-            opened.value = false
-            await groupAction({
-                group: currentGroupId.value,
-                action: 'UNGROUP',
-                items: [{ type: 'AGGREGATE', id: props.card.id }]
-            })
-            emit('update-item', props.card, 'refresh')
-        } catch (error: unknown) {
-            console.error('Error ungrouping news item aggregate:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: {
-                        type: 'error',
-                        message: t('assess.error_updating')
-                    }
-                })
-            )
-        }
     }
 
     const handleDelete = async (): Promise<void> => {

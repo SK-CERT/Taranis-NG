@@ -55,6 +55,7 @@
         <NewsItemDetailDialog
             v-model="detailDialog"
             :news-item="selectedItem"
+            :actions-disabled="detailActionPending"
             :multi-select-active="multiSelectActive"
             @action="handleDetailAction"
             @delete="handleDetailDelete"
@@ -141,9 +142,11 @@
     const news_items_data_loaded = ref(false)
     const detailDialog = ref(false)
     const selectedItem = ref<NewsItem | null>(null)
+    const detailActionPending = ref(false)
     const reportsListDialogRef = ref<any>(null)
     const reportItemModalRef = ref<any>(null)
     const current_group_id = ref('')
+    const detailActionRequestId = ref(0)
     const lastIntersectTime = ref(0)
     const INTERSECT_DEBOUNCE_MS = 500
     const filter = ref<FilterState>({
@@ -206,10 +209,83 @@
         detailDialog.value = true
     }
 
+    const normalizeId = (id: string | number | undefined): string => String(id ?? '')
+
+    const toDetailNewsItem = (news_item: NewsItem): NewsItem => {
+        if (news_item.entityType === 'news_item') {
+            const nestedData = (news_item['news_item_data'] as Record<string, unknown> | undefined) || {}
+
+            return {
+                ...news_item,
+                entityType: 'news_item',
+                title: (nestedData['title'] as string) || (news_item['title'] as string) || '',
+                description: (nestedData['review'] as string) || (news_item['description'] as string) || '',
+                comments: (news_item['comments'] as string) || '',
+                created: (nestedData['collected'] as string) || (news_item['created'] as string) || '',
+                read: Boolean(news_item['read']),
+                important: Boolean(news_item['important']),
+                likes: Number(news_item['likes'] || 0),
+                dislikes: Number(news_item['dislikes'] || 0),
+                me_like: Boolean(news_item['me_like']),
+                me_dislike: Boolean(news_item['me_dislike']),
+                link: (nestedData['link'] as string) || '',
+                news_items: [news_item]
+            }
+        }
+
+        return news_item
+    }
+
+    const findUpdatedSelectedItem = (currentItem: NewsItem): NewsItem | null => {
+        const currentId = normalizeId(currentItem.id)
+
+        if (currentItem.entityType === 'news_item') {
+            // Child item dialogs must resolve from nested items first.
+            for (const aggregate of news_items_data.value) {
+                const nestedItems = Array.isArray(aggregate['news_items']) ? (aggregate['news_items'] as NewsItem[]) : []
+                const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === currentId)
+                if (nestedMatch) {
+                    return toDetailNewsItem({ ...nestedMatch, entityType: 'news_item' })
+                }
+            }
+        }
+
+        // Aggregate dialogs (or fallback) resolve from top-level list.
+        const topLevelMatch = news_items_data.value.find((item) => normalizeId(item.id) === currentId)
+        if (topLevelMatch) {
+            return toDetailNewsItem(topLevelMatch)
+        }
+
+        // Fallback for child items if entity type metadata is missing.
+        for (const aggregate of news_items_data.value) {
+            const nestedItems = Array.isArray(aggregate['news_items']) ? (aggregate['news_items'] as NewsItem[]) : []
+            const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === currentId)
+            if (nestedMatch) {
+                return toDetailNewsItem({ ...nestedMatch, entityType: 'news_item' })
+            }
+        }
+
+        return null
+    }
+
     const showReportsForItem = (card: NewsItem): void => {
         if (reportsListDialogRef.value) {
             reportsListDialogRef.value.open(card)
         }
+    }
+
+    const isAggregateInUseError = (error: unknown): boolean => {
+        const responseData = (error as AxiosError)?.response?.data
+        const responseError =
+            responseData && typeof responseData === 'object' && 'error' in responseData
+                ? (responseData as { error?: string }).error
+                : undefined
+
+        return (
+            responseData === 'aggregate_in_use' ||
+            responseError === 'aggregate_in_use' ||
+            (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
+        )
     }
 
     const handleViewReportDetail = (report: unknown): void => {
@@ -223,6 +299,18 @@
         const { action, newsItem } = payload
         const group_id = current_group_id.value || getNormalizedGroupId()
         const isChildNewsItem = newsItem.entityType === 'news_item'
+        const isToolbarAction = ['like', 'dislike', 'important', 'read', 'ungroup'].includes(action)
+
+        if (isToolbarAction && detailActionPending.value) {
+            return
+        }
+
+        const requestId = detailActionRequestId.value + 1
+        detailActionRequestId.value = requestId
+
+        if (isToolbarAction) {
+            detailActionPending.value = true
+        }
 
         try {
             switch (action) {
@@ -301,9 +389,14 @@
             // Reload current view
             await updateData(false, true)
 
+            // Ignore stale completions from older requests.
+            if (requestId !== detailActionRequestId.value) {
+                return
+            }
+
             // Update the selected item in the dialog to show fresh data with updated colors
             if (selectedItem.value && action !== 'delete') {
-                const updatedItem = news_items_data.value.find((item) => item.id === selectedItem.value?.id)
+                const updatedItem = findUpdatedSelectedItem(selectedItem.value)
                 if (updatedItem) {
                     selectedItem.value = updatedItem
                 }
@@ -315,12 +408,28 @@
                 })
             )
         } catch (error) {
+            if (isAggregateInUseError(error)) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.aggregate_in_use')
+                        }
+                    })
+                )
+                return
+            }
+
             console.error('Error handling detail action:', error)
             window.dispatchEvent(
                 new CustomEvent('notification', {
                     detail: { type: 'error', loc: 'assess.error_updating' }
                 })
             )
+        } finally {
+            if (isToolbarAction && requestId === detailActionRequestId.value) {
+                detailActionPending.value = false
+            }
         }
     }
 
@@ -410,6 +519,21 @@
                         await assessStore.readNewsItemAggregate(group_id, news_item.id)
                     }
                     break
+                case 'ungroup':
+                    if (isChildNewsItem) {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'ITEM', id: news_item.id }]
+                        })
+                    } else {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'AGGREGATE', id: news_item.id }]
+                        })
+                    }
+                    break
                 case 'create-report':
                     if (reportItemModalRef.value) {
                         reportItemModalRef.value.openDialog([news_item])
@@ -428,6 +552,18 @@
                 })
             )
         } catch (error) {
+            if (isAggregateInUseError(error)) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.aggregate_in_use')
+                        }
+                    })
+                )
+                return
+            }
+
             console.error('Error updating item:', error)
             window.dispatchEvent(
                 new CustomEvent('notification', {

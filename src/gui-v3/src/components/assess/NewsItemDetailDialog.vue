@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="isOpen" max-width="90vh" max-height="90vh" scrollable @update:model-value="handleClose">
+    <v-dialog v-model="isOpen" max-width="90vw" max-height="90vh" scrollable @update:model-value="handleClose">
         <v-card style="min-height: 70vh; display: flex; flex-direction: column">
             <!-- Toolbar -->
             <v-toolbar color="primary" dark>
@@ -15,9 +15,11 @@
                 <AssessItemActions
                     v-if="!multiSelectActive"
                     :item="newsItem"
+                    :disabled="actionsDisabled"
                     size="small"
                     variant="text"
                     icon-size="small"
+                    show-counts
                     show-create-report
                     :show-ungroup="isAggregate"
                     @action="handleDialogAction"
@@ -100,7 +102,7 @@
                     <v-divider class="my-4" />
 
                     <div v-if="hasLink" class="text-caption">
-                        <strong>Link:</strong>
+                        <strong>Link: </strong>
                         <a :href="newsItemLink" target="_blank" rel="noreferrer">
                             {{ newsItemLink }}
                         </a>
@@ -214,11 +216,13 @@
             modelValue?: boolean
             newsItem?: NewsItemModel | null
             multiSelectActive?: boolean
+            actionsDisabled?: boolean
         }>(),
         {
             modelValue: false,
             newsItem: () => ({}),
-            multiSelectActive: false
+            multiSelectActive: false,
+            actionsDisabled: false
         }
     )
 
