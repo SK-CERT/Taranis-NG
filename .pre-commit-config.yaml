@@ -31,3 +31,5 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+    env:
+        FORCE_COLOR: "1"
