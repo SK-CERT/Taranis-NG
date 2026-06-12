@@ -895,6 +895,7 @@
         "author": "Author",
         "add_news_item": "Add News Items",
         "attached_news_items": "Attached News Items",
+        "read_news_item": "Click to read",
         "aggregate_detail": "Aggregate Detail",
         "aggregate_info": "Info",
         "aggregate_title": "Title",

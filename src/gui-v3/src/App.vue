@@ -39,14 +39,17 @@
     const navVisible = ref(true)
     const isAuth = computed(() => authStore.isAuthenticated)
 
-    // Watch theme changes and apply dark-mode class to HTML element for PrimeVue
+    // Watch theme changes and apply dark-mode/light-mode classes to HTML element.
+    // These override the prefers-color-scheme CSS fallback once the user's preference is known.
     watch(
         () => theme.global.name.value,
         (newTheme) => {
             if (newTheme === 'dark') {
                 document.documentElement.classList.add('dark-mode')
+                document.documentElement.classList.remove('light-mode')
             } else {
                 document.documentElement.classList.remove('dark-mode')
+                document.documentElement.classList.add('light-mode')
             }
             console.log('[App] Theme changed to:', newTheme, 'HTML classes:', document.documentElement.className)
         },

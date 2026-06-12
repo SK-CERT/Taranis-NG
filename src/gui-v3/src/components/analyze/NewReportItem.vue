@@ -31,7 +31,7 @@
                 <v-progress-circular indeterminate size="64" />
             </v-overlay>
 
-            <v-card>
+            <v-card class="d-flex flex-column" style="height: 100vh">
                 <v-toolbar color="primary" dark data-dialog="report-item">
                     <v-btn icon data-btn="cancel" @click="cancel">
                         <v-icon>mdi-close-circle</v-icon>
@@ -64,12 +64,19 @@
                     </v-btn>
                 </v-toolbar>
 
-                <v-row>
-                    <v-col :cols="verticalView ? 6 : 12" :style="verticalView ? 'height: calc(100vh - 3em); overflow-y: auto;' : ''">
+                <!-- Row fills the space left below the toolbar; columns scroll internally so the
+                     toolbar stays fixed and there is no overflow when the form is empty. -->
+                <v-row class="flex-grow-1" style="min-height: 0">
+                    <v-col :cols="verticalView ? 6 : 12" style="height: 100%; overflow-y: auto">
                         <v-form ref="formRef" class="px-4" @submit.prevent="addReportItem">
                             <v-row>
-                                <v-col v-if="edit" cols="12">
-                                    <span class="text-caption text-grey">ID: {{ report_item.uuid }}</span>
+                                <!-- Always rendered so create mode reserves the same vertical space
+                                     the ID line occupies when editing; a non-breaking space holds the line. -->
+                                <v-col cols="12">
+                                    <span class="text-caption text-grey">
+                                        <template v-if="edit">ID: {{ report_item.uuid }}</template>
+                                        <template v-else>&nbsp;</template>
+                                    </span>
                                 </v-col>
                                 <v-col cols="4" class="pr-3">
                                     <v-combobox
@@ -170,18 +177,20 @@
                                                     <v-expansion-panel
                                                         v-for="attribute_item in attribute_group.attribute_group_items"
                                                         :key="attribute_item.attribute_group_item.id"
-                                                        class="item-panel"
+                                                        :class="['item-panel', { 'item-panel--half': isHalfWidth(attribute_item) }]"
                                                     >
                                                         <v-expansion-panel-title class="pa-2 font-weight-bold text-primary rounded-0">
-                                                            <v-row>
-                                                                <span>{{ attribute_item.attribute_group_item.title }}</span>
+                                                            <div class="d-flex align-center w-100">
+                                                                <span class="text-truncate">{{
+                                                                    attribute_item.attribute_group_item.title
+                                                                }}</span>
                                                                 <span
                                                                     v-if="getAttributeMeta(attribute_item)"
-                                                                    class="attribute-meta text-medium-emphasis ml-2"
+                                                                    class="attribute-meta text-medium-emphasis text-no-wrap ml-auto mr-2"
                                                                 >
                                                                     {{ getAttributeMeta(attribute_item) }}
                                                                 </span>
-                                                            </v-row>
+                                                            </div>
                                                         </v-expansion-panel-title>
                                                         <v-expansion-panel-text class="pt-0">
                                                             <v-row align="center">
@@ -233,12 +242,7 @@
                         </v-form>
                     </v-col>
 
-                    <v-col
-                        v-if="verticalView"
-                        :cols="6"
-                        style="height: calc(100vh - 3em); overflow-y: auto"
-                        class="pa-5 taranis-ng-vertical-view"
-                    >
+                    <v-col v-if="verticalView" :cols="6" style="height: 100%; overflow-y: auto" class="pa-5 taranis-ng-vertical-view">
                         <NewsItemSelector
                             ref="newsItemSelectorRef"
                             attach=".taranis-ng-vertical-view"
@@ -774,6 +778,13 @@
         news_item_aggregates.value = Array.isArray(items) ? [...items] : []
     }
 
+    // Compact attribute types that only need a narrow field, so two can share a row.
+    const HALF_WIDTH_TYPES = ['DATE', 'CWE', 'CVE']
+    const isHalfWidth = (attributeItem) => {
+        const type = attributeItem?.attribute_group_item?.attribute?.type
+        return HALF_WIDTH_TYPES.includes(type)
+    }
+
     const getAttributeMeta = (attributeItem) => {
         const values = Array.isArray(attributeItem?.values) ? attributeItem.values : []
         let latest: Record<string, unknown> | null = null
@@ -1049,5 +1060,19 @@
         font-size: 0.8rem;
         font-weight: 400;
         text-transform: none;
+    }
+
+    /* Let the panel list wrap so compact attributes can pair up two-per-row.
+       8px gap; each half-panel is 50% minus half the gap. */
+    .items {
+        gap: 8px;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    .item-panel--half {
+        flex: 1 1 calc(50% - 4px);
+        max-width: calc(50% - 4px);
+        border-radius: 4px;
     }
 </style>

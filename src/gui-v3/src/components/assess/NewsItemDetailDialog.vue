@@ -1,5 +1,14 @@
 <template>
-    <v-dialog v-model="isOpen" max-width="90vw" max-height="90vh" scrollable @update:model-value="handleClose">
+    <!-- contained renders the dialog inside its positioned ancestor (e.g. the side-by-side
+         right column) instead of as a centered, full-screen-overlay modal. -->
+    <v-dialog
+        v-model="isOpen"
+        :contained="contained"
+        :max-width="contained ? '100%' : '90vw'"
+        max-height="90vh"
+        scrollable
+        @update:model-value="handleClose"
+    >
         <v-card style="min-height: 70vh; display: flex; flex-direction: column">
             <!-- Toolbar -->
             <v-toolbar color="primary" dark>
@@ -217,12 +226,14 @@
             newsItem?: NewsItemModel | null
             multiSelectActive?: boolean
             actionsDisabled?: boolean
+            contained?: boolean
         }>(),
         {
             modelValue: false,
             newsItem: () => ({}),
             multiSelectActive: false,
-            actionsDisabled: false
+            actionsDisabled: false,
+            contained: false
         }
     )
 

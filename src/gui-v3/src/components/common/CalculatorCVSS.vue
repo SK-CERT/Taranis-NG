@@ -1,5 +1,13 @@
 <template>
-    <v-btn variant="text" size="small" :disabled="disabled" :title="$t('report_item.tooltip.cvss_detail')" @click.prevent="openDialog">
+    <!-- Compact icon button so it fits inside a text field's append-inner slot -->
+    <v-btn
+        icon
+        variant="text"
+        density="compact"
+        :disabled="disabled"
+        :title="$t('report_item.tooltip.cvss_detail')"
+        @click.prevent="openDialog"
+    >
         <v-icon>{{ ICONS.CALCULATOR }}</v-icon>
     </v-btn>
 
@@ -35,17 +43,24 @@
                         placeholder="Enter CVSS vector string..."
                         @update:model-value="onVectorInput"
                     />
-                    <v-row justify="center">
-                        <v-col
-                            v-for="scoreItem in scoreDisplay"
-                            :key="scoreItem.name"
-                            class="pa-0 mx-1 severity-box"
-                            :class="scoreItem.severityClass"
-                        >
-                            <span class="text-body-2 text-white">{{ scoreItem.label }}</span>
-                            <span class="text-body-2 text-white font-weight-bold text-uppercase">{{ scoreItem.severityLabel }}</span>
-                            <br />
-                            <span class="text-h5 font-weight-medium score-value">{{ scoreItem.score }}</span>
+                    <v-row class="ga-1">
+                        <v-col v-for="scoreItem in scoreDisplay" :key="scoreItem.name">
+                            <v-sheet
+                                :color="scoreItem.color"
+                                rounded
+                                height="96"
+                                class="pa-2 text-center text-white d-flex flex-column justify-center"
+                            >
+                                <div class="text-body-2 text-truncate">
+                                    {{ scoreItem.label }}
+                                </div>
+                                <div class="text-body-2 font-weight-bold text-uppercase text-truncate">
+                                    {{ scoreItem.severityLabel }}
+                                </div>
+                                <div class="text-h5 font-weight-medium mt-1">
+                                    {{ scoreItem.score }}
+                                </div>
+                            </v-sheet>
                         </v-col>
                     </v-row>
                 </v-sheet>
@@ -58,7 +73,7 @@
                     :key="groupIndex"
                     variant="outlined"
                     class="mb-4"
-                    :class="`metric-group-${group.severityClass}`"
+                    :style="{ borderLeft: `4px solid ${group.color}` }"
                 >
                     <v-card-title class="text-uppercase text-body-1 font-weight-bold pa-3">
                         {{ group.label }}
@@ -123,7 +138,16 @@
     import { ref, computed, watch, nextTick, triggerRef } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
-    import { VERSION_CLASSES, createInstance, stripParentheses, detectVersion, getSeverityRating, calculateScoreItems } from './cvss-utils'
+    import {
+        VERSION_CLASSES,
+        createInstance,
+        stripParentheses,
+        detectVersion,
+        getSeverityRating,
+        buildScoreItems,
+        calculateScoreItems,
+        SEVERITY_COLORS
+    } from './cvss-utils'
 
     const { t, te } = useI18n()
 
@@ -133,6 +157,7 @@
         name: string
         label: string
         score: string | number
+        color: string
         severityLabel: string
         severityClass: string
     }
@@ -356,10 +381,17 @@
         }
     })
 
-    // Computed: score display items for header
-    // Uses the vector string to create a fresh instance (same as attribute display)
+    // Computed: score display items for header — driven directly from the live
+    // instance so scores are always present regardless of version or text input state.
     const scoreDisplay = computed<ScoreItem[]>(() => {
-        return (calculateScoreItems(vectorInput.value, t, te) || []) as ScoreItem[]
+        // Prefer parsing the actual vector string: a fresh instance computes every metric
+        // (incl. CVSS 4.0 threat/environmental) correctly.
+        const fromVector = calculateScoreItems(vectorInput.value, t, te) as ScoreItem[] | null
+        if (fromVector) return fromVector
+        // Fallback for when there is no parseable vector yet (e.g. a freshly opened
+        // calculator with a version selected but nothing typed): use the live instance.
+        if (!scores.value) return []
+        return buildScoreItems(scores.value, selectedVersion.value, t, te)
     })
 
     function getScoreTypeForCategory(categoryName: string): string {
@@ -423,6 +455,7 @@
             label: string
             tooltipKey: string | null
             severityClass: string
+            color: string
             metrics: MetricUi[]
         }> = []
 
@@ -440,6 +473,7 @@
                 label: labelKey ? t(labelKey) : category.name,
                 tooltipKey: tooltipKey && te(tooltipKey) ? tooltipKey : null,
                 severityClass: severity.name,
+                color: SEVERITY_COLORS[severity.name as keyof typeof SEVERITY_COLORS] ?? SEVERITY_COLORS.na,
                 metrics: mapComponents(components)
             })
         }
@@ -552,54 +586,5 @@
     .vector-input {
         max-width: 800px;
         font-family: monospace;
-    }
-
-    .severity-box {
-        border-radius: 4px;
-        padding: 4px 8px;
-        max-width: 280px;
-        transition:
-            background-color 250ms,
-            color 250ms;
-    }
-
-    .severity-none {
-        background-color: #53aa33;
-    }
-    .severity-na {
-        background-color: #9e9e9e;
-    }
-    .severity-low {
-        background-color: #ffcb0d;
-    }
-    .severity-medium {
-        background-color: #f9a009;
-    }
-    .severity-high {
-        background-color: #df3d03;
-    }
-    .severity-critical {
-        background-color: red;
-    }
-
-    .score-value {
-        display: block;
-        line-height: 1.4;
-    }
-
-    .metric-group-none {
-        border-left: 4px solid #53aa33;
-    }
-    .metric-group-low {
-        border-left: 4px solid #ffcb0d;
-    }
-    .metric-group-medium {
-        border-left: 4px solid #f9a009;
-    }
-    .metric-group-high {
-        border-left: 4px solid #df3d03;
-    }
-    .metric-group-critical {
-        border-left: 4px solid red;
     }
 </style>

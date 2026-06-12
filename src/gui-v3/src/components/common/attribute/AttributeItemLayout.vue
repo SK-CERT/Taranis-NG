@@ -1,22 +1,20 @@
 <template>
-    <v-row justify="center" class="attribute-item-layout pt-2">
-        <v-row>
+    <!-- Inner rows must be w-100: without a width, each row's flex-basis is its content's
+         max-content size, so rows can end up sharing a flex line (off-center content) and the
+         content width tracks text length (layout jumps when values change). -->
+    <v-row justify="center" class="attribute-item-layout pt-1">
+        <v-row class="w-100">
             <slot name="header">
                 <v-row justify="center">
                     <!-- SORT -->
                     <v-chip-group v-if="values.length > 1" active-class="success" color="" class="pr-4">
-                        <v-chip size="small" class="px-0 mr-1" :title="t('report_item.tooltip.sort_time')" @click="sort(false)">
-                            <v-icon class="px-2" size="small">
+                        <v-chip class="mr-1" :title="t('report_item.tooltip.sort_time')" @click="sort(false)">
+                            <v-icon class="px-1">
                                 {{ ICONS.CLOCK }}
                             </v-icon>
                         </v-chip>
-                        <v-chip
-                            size="small"
-                            class="px-0 mr-1"
-                            :title="t('report_item.tooltip.sort_user')"
-                            @click="sort(true, currentUserName)"
-                        >
-                            <v-icon class="px-2" size="small">
+                        <v-chip class="mr-1" :title="t('report_item.tooltip.sort_user')" @click="sort(true, currentUserName)">
+                            <v-icon class="px-1">
                                 {{ ICONS.ACCOUNT }}
                             </v-icon>
                         </v-chip>
@@ -24,17 +22,17 @@
                 </v-row>
             </slot>
         </v-row>
-        <v-row class="ml-0 mr-4">
+        <v-row class="ml-0 mr-4 w-100">
             <slot name="content" />
         </v-row>
-        <v-row class="ml-3 mr-5">
+        <v-row class="ml-3 mr-5 w-100">
             <slot name="footer" class="pr-0">
                 <v-btn
                     v-if="addButton"
                     variant="flat"
                     size="small"
                     block
-                    class="mt-2"
+                    class="mt-1"
                     :title="t('report_item.tooltip.add_value')"
                     @click="handleAdd"
                 >
@@ -53,6 +51,7 @@
 
     type ItemValue = {
         id?: number | string
+        last_updated?: unknown
         user?: {
             name?: string
         }
@@ -84,12 +83,26 @@
     const sort = (sortByUser: boolean, userName?: string): void => {
         props.values.sort((a: ItemValue, b: ItemValue) => {
             if (sortByUser && userName) {
-                if (userName === a.user?.name && userName !== b.user?.name) {
-                    return -1
-                } else if (userName !== a.user?.name && userName === b.user?.name) {
-                    return 1
+                // Current user's values first, then everyone else's.
+                const aMine = a.user?.name === userName
+                const bMine = b.user?.name === userName
+                if (aMine !== bMine) {
+                    return aMine ? -1 : 1
+                }
+            } else {
+                // Newest first by last_updated timestamp.
+                const aTime = Date.parse(String(a.last_updated ?? ''))
+                const bTime = Date.parse(String(b.last_updated ?? ''))
+                const aValid = !Number.isNaN(aTime)
+                const bValid = !Number.isNaN(bTime)
+                if (aValid && bValid && aTime !== bTime) {
+                    return bTime - aTime
+                }
+                if (aValid !== bValid) {
+                    return aValid ? -1 : 1
                 }
             }
+            // Stable fallback: by id.
             const aId = a.id ?? ''
             const bId = b.id ?? ''
             if (aId < bId) return -1
