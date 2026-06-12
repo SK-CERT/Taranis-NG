@@ -2,7 +2,7 @@
     <v-container>
         <!-- Activate Button -->
         <v-btn v-if="canModify && groups.length > 0" variant="elevated" size="small" class="mb-4" @click="openSelector">
-            <v-icon start>mdi-plus</v-icon>
+            <v-icon start> mdi-plus </v-icon>
             {{ t('report_item.select_remote') }}
         </v-btn>
 
@@ -17,13 +17,13 @@
                     <v-toolbar-title>{{ t('report_item.select_remote') }}</v-toolbar-title>
                     <v-spacer />
                     <v-btn @click="handleAdd">
-                        <v-icon start>mdi-plus-box</v-icon>
+                        <v-icon start> mdi-plus-box </v-icon>
                         {{ t('common.add') }}
                     </v-btn>
                 </v-toolbar>
 
                 <!-- Main Content Row -->
-                <v-row no-gutters class="mt-12">
+                <v-row class="mt-12">
                     <!-- Left Sidebar: Groups -->
                     <v-col
                         cols="auto"

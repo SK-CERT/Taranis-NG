@@ -9,13 +9,13 @@
         <v-hover v-slot="{ isHovering, props: hoverProps }">
             <v-card
                 v-bind="hoverProps"
-                class="card-item mb-3 flex-grow-1"
+                class="card-item mb-2 flex-grow-1"
                 :class="cardClass"
                 :elevation="isHovering ? 12 : 2"
                 :color="cardColor"
                 @click="handleCardClick"
             >
-                <v-card-text>
+                <v-card-text class="pa-2">
                     <!-- Content slot -->
                     <div>
                         <slot name="content" :is-hovering="isHovering" />

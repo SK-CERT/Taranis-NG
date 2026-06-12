@@ -2,7 +2,7 @@
     <BaseCard :multi-select-active="false" :show-selection-checkbox="false" card-class="aggregate-child-card" @card-click="showDetail">
         <template #content>
             <div class="text-label-small text-grey mb-2">
-                <v-row align="center" no-gutters>
+                <v-row align="center">
                     <v-col cols="auto">
                         <strong>{{ t('card_item.source') }}:</strong>
                         {{ sourceLabel }}
@@ -28,7 +28,7 @@
                 {{ itemReview }}
             </p>
 
-            <v-row align="center" no-gutters>
+            <v-row align="center">
                 <v-col class="d-flex align-center flex-wrap" style="gap: 12px">
                     <span v-if="!hideSourceLinks && itemLink" class="text-label-small text-primary source-link">
                         {{ itemLink }}

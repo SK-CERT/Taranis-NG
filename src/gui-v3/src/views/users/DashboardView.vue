@@ -4,7 +4,7 @@
             <!-- Future: Add dashboard controls/filters here -->
         </template>
         <template #content>
-            <v-row no-gutters>
+            <v-row>
                 <!-- Main Content - News Items & Tag Cloud -->
                 <v-col cols="12" lg="8">
                     <v-card class="mt-2">
