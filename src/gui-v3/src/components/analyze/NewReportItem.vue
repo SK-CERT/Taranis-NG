@@ -1,7 +1,7 @@
 <template>
     <v-row>
         <v-btn v-if="showButton && canCreate" color="primary" variant="elevated" @click="addEmptyReportItem">
-            <v-icon start>mdi-plus</v-icon>
+            <v-icon start> mdi-plus </v-icon>
             <span>{{ t('common.add_btn') }}</span>
         </v-btn>
 
@@ -59,15 +59,15 @@
                     />
 
                     <v-btn v-if="!edit" variant="text" @click="addReportItem">
-                        <v-icon start>mdi-content-save</v-icon>
+                        <v-icon start> mdi-content-save </v-icon>
                         <span>{{ t('common.save') }}</span>
                     </v-btn>
                 </v-toolbar>
 
-                <v-row no-gutters>
+                <v-row>
                     <v-col :cols="verticalView ? 6 : 12" :style="verticalView ? 'height: calc(100vh - 3em); overflow-y: auto;' : ''">
                         <v-form ref="formRef" class="px-4" @submit.prevent="addReportItem">
-                            <v-row no-gutters>
+                            <v-row>
                                 <v-col v-if="edit" cols="12">
                                     <span class="text-caption text-grey">ID: {{ report_item.uuid }}</span>
                                 </v-col>
@@ -110,7 +110,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row no-gutters class="pb-4">
+                            <v-row class="pb-4">
                                 <v-col cols="12">
                                     <v-btn
                                         v-if="canModify"
@@ -124,7 +124,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row v-if="!verticalView" no-gutters>
+                            <v-row v-if="!verticalView">
                                 <v-col cols="12">
                                     <NewsItemSelector
                                         ref="newsItemSelectorRef"
@@ -139,7 +139,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row no-gutters>
+                            <v-row>
                                 <v-col cols="12">
                                     <RemoteReportItemSelector
                                         :values="remote_report_items"
@@ -220,7 +220,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row no-gutters class="pt-2">
+                            <v-row class="pt-2">
                                 <v-col cols="12">
                                     <v-alert v-if="show_validation_error" density="compact" type="error" variant="tonal">
                                         {{ t('error.validation') }}

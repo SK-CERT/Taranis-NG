@@ -1,6 +1,6 @@
 <template>
     <v-row justify="center" class="attribute-item-layout pt-2">
-        <v-row no-gutters>
+        <v-row>
             <slot name="header">
                 <v-row justify="center">
                     <!-- SORT -->

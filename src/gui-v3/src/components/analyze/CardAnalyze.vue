@@ -11,74 +11,71 @@
         >
             <!-- Content Slot -->
             <template #content>
-                <!-- Header Row: Icon+Type, State, Updated Info, Actions -->
-                <div class="mb-2">
-                    <v-row align="center" no-gutters class="ga-2">
-                        <!-- Icon + Type Name (tight together using inline-flex) -->
-                        <v-col shrink class="d-inline-flex align-center" style="gap: 4px">
-                            <v-icon size="large" :icon="card.tag || ICONS.FILE_DOCUMENT" />
-                            <span class="text-caption text-medium-emphasis">{{ card.report_type_name }}</span>
-                        </v-col>
-                        <!-- Spacer to push state/updated/actions to the right -->
-                        <v-spacer />
-                        <!-- State -->
-                        <v-col v-if="card.state" shrink class="d-flex align-center" style="gap: 3px; padding: 0">
-                            <v-icon :color="card.state.color" size="small">
-                                {{ card.state.icon }}
-                            </v-icon>
-                            <span class="text-caption">
-                                {{ t('workflow.states.' + (card.state.display_name || ''), card.state.display_name || '') }}
-                            </span>
-                        </v-col>
-                        <!-- Updated Info -->
-                        <v-col shrink class="d-flex flex-column justify-center" style="gap: 0; padding: 0; margin-left: 8px">
-                            <div class="text-caption text-medium-emphasis">
-                                {{ t('card_item.updated') }}
-                            </div>
-                            <div class="text-body-2">
-                                {{ card.last_updated }}
-                                <span v-if="card.updated_by" class="text-medium-emphasis">&nbsp;&nbsp;{{ card.updated_by }}</span>
-                            </div>
-                        </v-col>
-                        <!-- Actions - flat buttons without circles -->
-                        <v-col v-if="!disableActions" shrink class="d-flex align-center" style="gap: 0; padding: 0; margin-left: 4px">
-                            <!-- Publish -->
-                            <ActionButton
-                                v-if="canCreateProduct && !showRemoveAction"
-                                action="publish"
-                                size="x-small"
-                                :title="t('analyze.tooltip.publish_item')"
-                                @click.stop="handlePublish"
-                            />
-                            <!-- Delete -->
-                            <ActionButton
-                                v-if="canDelete && !showRemoveAction"
-                                action="delete"
-                                size="x-small"
-                                :title="t('analyze.tooltip.delete_item')"
-                                @click.stop="showDeleteDialog = true"
-                            />
-                            <!-- Remove from Group -->
-                            <ActionButton
-                                v-if="canModify && showRemoveAction"
-                                action="remove"
-                                size="x-small"
-                                :title="t('analyze.tooltip.remove_item')"
-                                @click.stop="showRemoveDialog = true"
-                            />
-                        </v-col>
-                    </v-row>
-                    <!-- Title Row -->
-                    <v-row no-gutters class="mt-2">
-                        <v-col>
-                            <div class="text-body-1 font-weight-medium">
+                <v-row class="align-center">
+                    <v-col cols="auto">
+                        <v-icon style="font-size: 32px" :icon="card.tag || ICONS.FILE_DOCUMENT" class="ms-2" />
+                    </v-col>
+                    <v-col>
+                        <v-row>
+                            <!-- Type Name -->
+                            <v-col class="d-flex align-center">
+                                <span class="text-body-large text-disabled">{{ card.report_type_name }}</span>
+                            </v-col>
+                            <!-- Spacer to push state/updated/actions to the right -->
+                            <!-- State -->
+                            <v-col v-if="card.state" class="d-inline-flex align-center">
+                                <v-icon :color="card.state.color">
+                                    {{ card.state.icon }}
+                                </v-icon>
+                                <span class="text-body-large ms-2">
+                                    {{ t('workflow.states.' + (card.state.display_name || ''), card.state.display_name || '') }}
+                                </span>
+                            </v-col>
+                            <!-- Updated Info -->
+                            <v-col class="d-flex flex-column justify-center">
+                                <div class="text-body-large text-disabled">
+                                    {{ t('card_item.updated') }}
+                                </div>
+                                <div class="text-body-large">
+                                    {{ card.last_updated }}
+                                    <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
+                                </div>
+                            </v-col>
+                        </v-row>
+                        <!-- Title Row -->
+                        <v-row class="mt-2">
+                            <div class="text-title-medium">
                                 <span v-if="card.title_prefix">{{ card.title_prefix }} -</span>
                                 {{ card.title }}
-                                <span v-if="card.news_items_count" class="text-medium-emphasis">&nbsp;({{ card.news_items_count }})</span>
+                                <span v-if="card.news_items_count" class="text-disabled ms-1">({{ card.news_items_count }})</span>
                             </div>
-                        </v-col>
-                    </v-row>
-                </div>
+                        </v-row>
+                    </v-col>
+                    <!-- Actions -->
+                    <v-col v-if="!disableActions" cols="auto" class="d-flex justify-end">
+                        <!-- Publish -->
+                        <ActionButton
+                            v-if="canCreateProduct && !showRemoveAction"
+                            action="publish"
+                            :title="t('analyze.tooltip.publish_item')"
+                            @click.stop="handlePublish"
+                        />
+                        <!-- Delete -->
+                        <ActionButton
+                            v-if="canDelete && !showRemoveAction"
+                            action="delete"
+                            :title="t('analyze.tooltip.delete_item')"
+                            @click.stop="showDeleteDialog = true"
+                        />
+                        <!-- Remove from Group -->
+                        <ActionButton
+                            v-if="canModify && showRemoveAction"
+                            action="remove"
+                            :title="t('analyze.tooltip.remove_item')"
+                            @click.stop="showRemoveDialog = true"
+                        />
+                    </v-col>
+                </v-row>
             </template>
         </BaseCard>
 

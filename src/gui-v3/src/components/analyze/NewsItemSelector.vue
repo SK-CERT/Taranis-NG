@@ -11,7 +11,7 @@
                     <v-toolbar-title>{{ t('assess.attached_news_items') }}</v-toolbar-title>
                     <v-spacer />
                     <v-btn @click="handleAdd">
-                        <v-icon start>mdi-plus-box</v-icon>
+                        <v-icon start> mdi-plus-box </v-icon>
                         {{ t('common.add_items') }}
                     </v-btn>
                 </v-toolbar>
@@ -77,7 +77,7 @@
                                 <div class="flex-grow-1">
                                     <!-- Source and Date Info -->
                                     <div class="text-caption text-grey mb-2">
-                                        <v-row align="center" no-gutters>
+                                        <v-row align="center">
                                             <v-col cols="auto">
                                                 <span v-if="getNewsItemCount(item) > 0">
                                                     <strong>{{ t('card_item.source') }}:</strong>
@@ -128,7 +128,7 @@
         <v-dialog v-model="showRemoveConfirm" max-width="500">
             <v-card>
                 <v-card-title class="d-flex align-center">
-                    <v-icon color="primary" class="mr-2">mdi-help-circle</v-icon>
+                    <v-icon color="primary" class="mr-2"> mdi-help-circle </v-icon>
                     {{ t('common.messagebox.remove') }}
                 </v-card-title>
                 <v-card-text>

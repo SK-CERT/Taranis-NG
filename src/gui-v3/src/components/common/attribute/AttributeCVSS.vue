@@ -43,7 +43,7 @@
 
                         <!-- Score display for vector strings (always rendered to reserve space) -->
                         <div class="score-display" :style="{ visibility: getVectorScores(value.value) ? 'visible' : 'hidden' }">
-                            <v-row justify="center" no-gutters>
+                            <v-row justify="center">
                                 <template v-if="getVectorScores(value.value)">
                                     <v-col
                                         v-for="scoreItem in getVectorScores(value.value)"
@@ -60,7 +60,7 @@
                                     </v-col>
                                 </template>
                                 <template v-else>
-                                    <v-col class="pa-0 mx-1 severity-box severity-na" style="min-height: 48px">&nbsp;</v-col>
+                                    <v-col class="pa-0 mx-1 severity-box severity-na" style="min-height: 48px"> &nbsp; </v-col>
                                 </template>
                             </v-row>
                         </div>

@@ -2,7 +2,7 @@
     <v-container fluid>
         <!-- Main Toolbar: Title and Search -->
         <v-toolbar flat color="surface" density="compact">
-            <v-row align="center" no-gutters>
+            <v-row align="center">
                 <v-col cols="12" md="3">
                     <div class="text-h6">
                         {{ t(title) }}

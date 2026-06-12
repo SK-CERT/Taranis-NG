@@ -35,7 +35,7 @@
                         placeholder="Enter CVSS vector string..."
                         @update:model-value="onVectorInput"
                     />
-                    <v-row justify="center" no-gutters>
+                    <v-row justify="center">
                         <v-col
                             v-for="scoreItem in scoreDisplay"
                             :key="scoreItem.name"
@@ -201,15 +201,15 @@
         'Attack Complexity': 'attack_complexity',
         'Privileges Required': 'privileges_required',
         'User Interaction': 'user_interaction',
-        Scope: 'scope',
+        'Scope': 'scope',
         'Confidentiality Impact': 'confidentiality',
-        Confidentiality: 'confidentiality',
+        'Confidentiality': 'confidentiality',
         'Integrity Impact': 'integrity',
-        Integrity: 'integrity',
+        'Integrity': 'integrity',
         'Availability Impact': 'availability',
-        Availability: 'availability',
+        'Availability': 'availability',
         'Exploit Code Maturity': 'exploitability_code_maturity',
-        Exploitability: 'exploitability_code_maturity',
+        'Exploitability': 'exploitability_code_maturity',
         'Remediation Level': 'remediation_level',
         'Report Confidence': 'report_confidence',
         'Confidentiality Requirement': 'confidentiality_requirement',
@@ -224,7 +224,7 @@
         'Modified Integrity': 'modified_integrity',
         'Modified Availability': 'modified_availability',
         // CVSS 2.0 specific
-        Authentication: 'authentication',
+        'Authentication': 'authentication',
         'Collateral Damage Potential': 'collateral_damage_potential',
         'Target Distribution': 'target_distribution',
         // CVSS 4.0 specific
@@ -242,70 +242,70 @@
         'Modified Subsequent System Integrity': 'modified_subsequent_system_integrity',
         'Modified Subsequent System Availability': 'modified_subsequent_system_availability',
         'Modified Attack Requirements': 'modified_attack_requirements',
-        Safety: 'safety',
-        Automatable: 'automatable',
-        Recovery: 'recovery',
+        'Safety': 'safety',
+        'Automatable': 'automatable',
+        'Recovery': 'recovery',
         'Value Density': 'value_density',
         'Vulnerability Response Effort': 'vulnerability_response_effort',
         'Provider Urgency': 'provider_urgency'
     }
 
     const VALUE_NAME_TO_I18N: Record<string, string> = {
-        Network: 'network',
-        Adjacent: 'adjacent',
+        'Network': 'network',
+        'Adjacent': 'adjacent',
         'Adjacent Network': 'adjacent_network',
-        Local: 'local',
-        Physical: 'physical',
-        Low: 'low',
-        High: 'high',
-        None: 'none',
-        Required: 'required',
-        Unchanged: 'unchanged',
-        Changed: 'changed',
+        'Local': 'local',
+        'Physical': 'physical',
+        'Low': 'low',
+        'High': 'high',
+        'None': 'none',
+        'Required': 'required',
+        'Unchanged': 'unchanged',
+        'Changed': 'changed',
         'Not Defined': 'not_defined',
-        Medium: 'medium',
-        Unproven: 'unproven',
+        'Medium': 'medium',
+        'Unproven': 'unproven',
         'Proof-of-Concept': 'proof_of_concept',
         'Proof of Concept': 'proof_of_concept',
-        Functional: 'functional',
+        'Functional': 'functional',
         'Official Fix': 'official_fix',
         'Temporary Fix': 'temporary_fix',
-        Workaround: 'workaround',
-        Unavailable: 'unavailable',
-        Unknown: 'unknown',
-        Reasonable: 'reasonable',
-        Confirmed: 'confirmed',
+        'Workaround': 'workaround',
+        'Unavailable': 'unavailable',
+        'Unknown': 'unknown',
+        'Reasonable': 'reasonable',
+        'Confirmed': 'confirmed',
         // CVSS 2.0 specific
-        Multiple: 'multiple',
-        Single: 'single',
+        'Multiple': 'multiple',
+        'Single': 'single',
         // CVSS 4.0 specific
-        Present: 'present',
-        Active: 'active',
-        Passive: 'passive',
-        Attacked: 'attacked',
+        'Present': 'present',
+        'Active': 'active',
+        'Passive': 'passive',
+        'Attacked': 'attacked',
         'Not Attacked': 'not_attacked',
-        Clear: 'clear',
-        Green: 'green',
-        Amber: 'amber',
-        Red: 'red',
-        Negligible: 'negligible',
-        Diffuse: 'diffuse',
-        Concentrated: 'concentrated',
-        Automatic: 'automatic',
-        User: 'user',
-        Irrecoverable: 'irrecoverable',
-        Automatable: 'automatable'
+        'Clear': 'clear',
+        'Green': 'green',
+        'Amber': 'amber',
+        'Red': 'red',
+        'Negligible': 'negligible',
+        'Diffuse': 'diffuse',
+        'Concentrated': 'concentrated',
+        'Automatic': 'automatic',
+        'User': 'user',
+        'Irrecoverable': 'irrecoverable',
+        'Automatable': 'automatable'
     }
 
     // Labels for metric group cards (more specific than score labels)
     const CATEGORY_GROUP_LABELS: Record<string, string> = {
-        base: 'cvss_calculator.base_score',
-        temporal: 'cvss_calculator.temporal_score',
-        environmental: 'cvss_calculator.environmental_score',
-        threat: 'cvss_calculator.threat_score',
+        'base': 'cvss_calculator.base_score',
+        'temporal': 'cvss_calculator.temporal_score',
+        'environmental': 'cvss_calculator.environmental_score',
+        'threat': 'cvss_calculator.threat_score',
         'environmental-base': 'cvss_calculator.environmental_base_score',
         'environmental-security-requirement': 'cvss_calculator.environmental_security_requirement_score',
-        supplemental: 'cvss_calculator.supplemental_score'
+        'supplemental': 'cvss_calculator.supplemental_score'
     }
 
     const CATEGORY_TOOLTIP_KEYS: Record<string, string> = {

@@ -1,6 +1,6 @@
 <template>
     <v-btn icon :size="size" :variant="variant" :disabled="disabled" :title="title" @click="handleClick">
-        <v-icon :color="color">
+        <v-icon :color="color" :size="icon_size">
             {{ icon }}
         </v-icon>
     </v-btn>
@@ -69,6 +69,13 @@
         size: {
             type: String,
             default: 'small'
+        },
+        /**
+         * Icon size
+         */
+        icon_size: {
+            type: String,
+            default: 'large'
         },
         /**
          * Disabled state
