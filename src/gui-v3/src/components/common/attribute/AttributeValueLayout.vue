@@ -1,12 +1,14 @@
 <template>
-    <v-row justify="center" class="attribute-value-layout pt-2" @mouseenter="itemHover = true" @mouseleave="itemHover = false">
-        <div class="col-left" style="position: relative">
+    <v-row align="start" no-gutters class="ga-2 pt-1" @mouseenter="itemHover = true" @mouseleave="itemHover = false">
+        <v-col v-if="$slots['col_left']" cols="auto">
             <slot name="col_left" />
-        </div>
-        <div class="col-middle">
-            <slot name="col_middle" />
-        </div>
-        <div class="col-right">
+        </v-col>
+        <v-col style="min-width: 200px">
+            <!-- del-visible / on-delete let an attribute embed the delete button inside its
+                 input (e.g. a text field's append-inner slot) instead of the col_right column. -->
+            <slot name="col_middle" :del-visible="delButtonVisible" :on-delete="handleDelete" />
+        </v-col>
+        <v-col v-if="!embedDelete" cols="auto">
             <slot name="col_right">
                 <v-btn
                     v-if="delButtonVisible"
@@ -18,7 +20,7 @@
                     <v-icon>{{ ICONS.CLOSE }}</v-icon>
                 </v-btn>
             </slot>
-        </div>
+        </v-col>
     </v-row>
 </template>
 
@@ -30,12 +32,14 @@
     const props = withDefaults(
         defineProps<{
             delButton?: boolean
+            embedDelete?: boolean
             valIndex: number
             occurrence?: number | null | undefined
             values: Array<Record<string, unknown>>
         }>(),
         {
             delButton: false,
+            embedDelete: false,
             occurrence: null
         }
     )
@@ -48,34 +52,13 @@
     const itemHover = ref(false)
 
     const delButtonVisible = computed(() => {
-        return itemHover.value && (props.occurrence == null || props.occurrence < props.values.length)
+        // Never allow deleting the last value: the effective minimum is at least 1,
+        // but a higher min_occurrence from the attribute group is still respected.
+        const minRequired = Math.max(props.occurrence ?? 0, 1)
+        return itemHover.value && minRequired < props.values.length
     })
 
     const handleDelete = (): void => {
         emit('del-value')
     }
 </script>
-
-<style scoped>
-    .attribute-value-layout {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-    }
-
-    .col-left {
-        flex-shrink: 0;
-        width: auto;
-    }
-
-    .col-middle {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .col-right {
-        flex-shrink: 0;
-        width: auto;
-    }
-</style>

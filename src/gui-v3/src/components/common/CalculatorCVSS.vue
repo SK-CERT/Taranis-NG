@@ -1,5 +1,13 @@
 <template>
-    <v-btn variant="text" size="small" :disabled="disabled" :title="$t('report_item.tooltip.cvss_detail')" @click.prevent="openDialog">
+    <!-- Compact icon button so it fits inside a text field's append-inner slot -->
+    <v-btn
+        icon
+        variant="text"
+        density="compact"
+        :disabled="disabled"
+        :title="$t('report_item.tooltip.cvss_detail')"
+        @click.prevent="openDialog"
+    >
         <v-icon>{{ ICONS.CALCULATOR }}</v-icon>
     </v-btn>
 
@@ -35,17 +43,24 @@
                         placeholder="Enter CVSS vector string..."
                         @update:model-value="onVectorInput"
                     />
-                    <v-row justify="center" no-gutters>
-                        <v-col
-                            v-for="scoreItem in scoreDisplay"
-                            :key="scoreItem.name"
-                            class="pa-0 mx-1 severity-box"
-                            :class="scoreItem.severityClass"
-                        >
-                            <span class="text-body-2 text-white">{{ scoreItem.label }}</span>
-                            <span class="text-body-2 text-white font-weight-bold text-uppercase">{{ scoreItem.severityLabel }}</span>
-                            <br />
-                            <span class="text-h5 font-weight-medium score-value">{{ scoreItem.score }}</span>
+                    <v-row no-gutters class="ga-1">
+                        <v-col v-for="scoreItem in scoreDisplay" :key="scoreItem.name">
+                            <v-sheet
+                                :color="scoreItem.color"
+                                rounded
+                                height="96"
+                                class="pa-2 text-center text-white d-flex flex-column justify-center"
+                            >
+                                <div class="text-body-2 text-truncate">
+                                    {{ scoreItem.label }}
+                                </div>
+                                <div class="text-body-2 font-weight-bold text-uppercase text-truncate">
+                                    {{ scoreItem.severityLabel }}
+                                </div>
+                                <div class="text-h5 font-weight-medium mt-1">
+                                    {{ scoreItem.score }}
+                                </div>
+                            </v-sheet>
                         </v-col>
                     </v-row>
                 </v-sheet>
@@ -58,7 +73,7 @@
                     :key="groupIndex"
                     variant="outlined"
                     class="mb-4"
-                    :class="`metric-group-${group.severityClass}`"
+                    :style="{ borderLeft: `4px solid ${group.color}` }"
                 >
                     <v-card-title class="text-uppercase text-body-1 font-weight-bold pa-3">
                         {{ group.label }}
@@ -123,7 +138,16 @@
     import { ref, computed, watch, nextTick, triggerRef } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
-    import { VERSION_CLASSES, createInstance, stripParentheses, detectVersion, getSeverityRating, calculateScoreItems } from './cvss-utils'
+    import {
+        VERSION_CLASSES,
+        createInstance,
+        stripParentheses,
+        detectVersion,
+        getSeverityRating,
+        buildScoreItems,
+        calculateScoreItems,
+        SEVERITY_COLORS
+    } from './cvss-utils'
 
     const { t, te } = useI18n()
 
@@ -133,6 +157,7 @@
         name: string
         label: string
         score: string | number
+        color: string
         severityLabel: string
         severityClass: string
     }
@@ -201,15 +226,15 @@
         'Attack Complexity': 'attack_complexity',
         'Privileges Required': 'privileges_required',
         'User Interaction': 'user_interaction',
-        Scope: 'scope',
+        'Scope': 'scope',
         'Confidentiality Impact': 'confidentiality',
-        Confidentiality: 'confidentiality',
+        'Confidentiality': 'confidentiality',
         'Integrity Impact': 'integrity',
-        Integrity: 'integrity',
+        'Integrity': 'integrity',
         'Availability Impact': 'availability',
-        Availability: 'availability',
+        'Availability': 'availability',
         'Exploit Code Maturity': 'exploitability_code_maturity',
-        Exploitability: 'exploitability_code_maturity',
+        'Exploitability': 'exploitability_code_maturity',
         'Remediation Level': 'remediation_level',
         'Report Confidence': 'report_confidence',
         'Confidentiality Requirement': 'confidentiality_requirement',
@@ -224,7 +249,7 @@
         'Modified Integrity': 'modified_integrity',
         'Modified Availability': 'modified_availability',
         // CVSS 2.0 specific
-        Authentication: 'authentication',
+        'Authentication': 'authentication',
         'Collateral Damage Potential': 'collateral_damage_potential',
         'Target Distribution': 'target_distribution',
         // CVSS 4.0 specific
@@ -242,70 +267,70 @@
         'Modified Subsequent System Integrity': 'modified_subsequent_system_integrity',
         'Modified Subsequent System Availability': 'modified_subsequent_system_availability',
         'Modified Attack Requirements': 'modified_attack_requirements',
-        Safety: 'safety',
-        Automatable: 'automatable',
-        Recovery: 'recovery',
+        'Safety': 'safety',
+        'Automatable': 'automatable',
+        'Recovery': 'recovery',
         'Value Density': 'value_density',
         'Vulnerability Response Effort': 'vulnerability_response_effort',
         'Provider Urgency': 'provider_urgency'
     }
 
     const VALUE_NAME_TO_I18N: Record<string, string> = {
-        Network: 'network',
-        Adjacent: 'adjacent',
+        'Network': 'network',
+        'Adjacent': 'adjacent',
         'Adjacent Network': 'adjacent_network',
-        Local: 'local',
-        Physical: 'physical',
-        Low: 'low',
-        High: 'high',
-        None: 'none',
-        Required: 'required',
-        Unchanged: 'unchanged',
-        Changed: 'changed',
+        'Local': 'local',
+        'Physical': 'physical',
+        'Low': 'low',
+        'High': 'high',
+        'None': 'none',
+        'Required': 'required',
+        'Unchanged': 'unchanged',
+        'Changed': 'changed',
         'Not Defined': 'not_defined',
-        Medium: 'medium',
-        Unproven: 'unproven',
+        'Medium': 'medium',
+        'Unproven': 'unproven',
         'Proof-of-Concept': 'proof_of_concept',
         'Proof of Concept': 'proof_of_concept',
-        Functional: 'functional',
+        'Functional': 'functional',
         'Official Fix': 'official_fix',
         'Temporary Fix': 'temporary_fix',
-        Workaround: 'workaround',
-        Unavailable: 'unavailable',
-        Unknown: 'unknown',
-        Reasonable: 'reasonable',
-        Confirmed: 'confirmed',
+        'Workaround': 'workaround',
+        'Unavailable': 'unavailable',
+        'Unknown': 'unknown',
+        'Reasonable': 'reasonable',
+        'Confirmed': 'confirmed',
         // CVSS 2.0 specific
-        Multiple: 'multiple',
-        Single: 'single',
+        'Multiple': 'multiple',
+        'Single': 'single',
         // CVSS 4.0 specific
-        Present: 'present',
-        Active: 'active',
-        Passive: 'passive',
-        Attacked: 'attacked',
+        'Present': 'present',
+        'Active': 'active',
+        'Passive': 'passive',
+        'Attacked': 'attacked',
         'Not Attacked': 'not_attacked',
-        Clear: 'clear',
-        Green: 'green',
-        Amber: 'amber',
-        Red: 'red',
-        Negligible: 'negligible',
-        Diffuse: 'diffuse',
-        Concentrated: 'concentrated',
-        Automatic: 'automatic',
-        User: 'user',
-        Irrecoverable: 'irrecoverable',
-        Automatable: 'automatable'
+        'Clear': 'clear',
+        'Green': 'green',
+        'Amber': 'amber',
+        'Red': 'red',
+        'Negligible': 'negligible',
+        'Diffuse': 'diffuse',
+        'Concentrated': 'concentrated',
+        'Automatic': 'automatic',
+        'User': 'user',
+        'Irrecoverable': 'irrecoverable',
+        'Automatable': 'automatable'
     }
 
     // Labels for metric group cards (more specific than score labels)
     const CATEGORY_GROUP_LABELS: Record<string, string> = {
-        base: 'cvss_calculator.base_score',
-        temporal: 'cvss_calculator.temporal_score',
-        environmental: 'cvss_calculator.environmental_score',
-        threat: 'cvss_calculator.threat_score',
+        'base': 'cvss_calculator.base_score',
+        'temporal': 'cvss_calculator.temporal_score',
+        'environmental': 'cvss_calculator.environmental_score',
+        'threat': 'cvss_calculator.threat_score',
         'environmental-base': 'cvss_calculator.environmental_base_score',
         'environmental-security-requirement': 'cvss_calculator.environmental_security_requirement_score',
-        supplemental: 'cvss_calculator.supplemental_score'
+        'supplemental': 'cvss_calculator.supplemental_score'
     }
 
     const CATEGORY_TOOLTIP_KEYS: Record<string, string> = {
@@ -356,10 +381,17 @@
         }
     })
 
-    // Computed: score display items for header
-    // Uses the vector string to create a fresh instance (same as attribute display)
+    // Computed: score display items for header — driven directly from the live
+    // instance so scores are always present regardless of version or text input state.
     const scoreDisplay = computed<ScoreItem[]>(() => {
-        return (calculateScoreItems(vectorInput.value, t, te) || []) as ScoreItem[]
+        // Prefer parsing the actual vector string: a fresh instance computes every metric
+        // (incl. CVSS 4.0 threat/environmental) correctly.
+        const fromVector = calculateScoreItems(vectorInput.value, t, te) as ScoreItem[] | null
+        if (fromVector) return fromVector
+        // Fallback for when there is no parseable vector yet (e.g. a freshly opened
+        // calculator with a version selected but nothing typed): use the live instance.
+        if (!scores.value) return []
+        return buildScoreItems(scores.value, selectedVersion.value, t, te)
     })
 
     function getScoreTypeForCategory(categoryName: string): string {
@@ -423,6 +455,7 @@
             label: string
             tooltipKey: string | null
             severityClass: string
+            color: string
             metrics: MetricUi[]
         }> = []
 
@@ -440,6 +473,7 @@
                 label: labelKey ? t(labelKey) : category.name,
                 tooltipKey: tooltipKey && te(tooltipKey) ? tooltipKey : null,
                 severityClass: severity.name,
+                color: SEVERITY_COLORS[severity.name as keyof typeof SEVERITY_COLORS] ?? SEVERITY_COLORS.na,
                 metrics: mapComponents(components)
             })
         }
@@ -552,54 +586,5 @@
     .vector-input {
         max-width: 800px;
         font-family: monospace;
-    }
-
-    .severity-box {
-        border-radius: 4px;
-        padding: 4px 8px;
-        max-width: 280px;
-        transition:
-            background-color 250ms,
-            color 250ms;
-    }
-
-    .severity-none {
-        background-color: #53aa33;
-    }
-    .severity-na {
-        background-color: #9e9e9e;
-    }
-    .severity-low {
-        background-color: #ffcb0d;
-    }
-    .severity-medium {
-        background-color: #f9a009;
-    }
-    .severity-high {
-        background-color: #df3d03;
-    }
-    .severity-critical {
-        background-color: red;
-    }
-
-    .score-value {
-        display: block;
-        line-height: 1.4;
-    }
-
-    .metric-group-none {
-        border-left: 4px solid #53aa33;
-    }
-    .metric-group-low {
-        border-left: 4px solid #ffcb0d;
-    }
-    .metric-group-medium {
-        border-left: 4px solid #f9a009;
-    }
-    .metric-group-high {
-        border-left: 4px solid #df3d03;
-    }
-    .metric-group-critical {
-        border-left: 4px solid red;
     }
 </style>

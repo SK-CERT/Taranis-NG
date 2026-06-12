@@ -2,7 +2,7 @@
     <v-container>
         <!-- Activate Button -->
         <v-btn v-if="canModify && groups.length > 0" variant="elevated" size="small" class="mb-4" @click="openSelector">
-            <v-icon start>mdi-plus</v-icon>
+            <v-icon start> mdi-plus </v-icon>
             {{ t('report_item.select_remote') }}
         </v-btn>
 
@@ -17,7 +17,7 @@
                     <v-toolbar-title>{{ t('report_item.select_remote') }}</v-toolbar-title>
                     <v-spacer />
                     <v-btn @click="handleAdd">
-                        <v-icon start>mdi-plus-box</v-icon>
+                        <v-icon start> mdi-plus-box </v-icon>
                         {{ t('common.add') }}
                     </v-btn>
                 </v-toolbar>
@@ -64,8 +64,7 @@
         <RemoteReportItem ref="remoteReportItemDialog" />
 
         <!-- Selected Items Display -->
-        <div v-if="!selectorOpen" class="selected-items-container ml-4">
-            <v-spacer style="height: 8px" />
+        <div v-if="!selectorOpen" class="selected-items-container ml-4 pt-2">
             <CardAnalyze
                 v-for="item in value"
                 :key="item.id"

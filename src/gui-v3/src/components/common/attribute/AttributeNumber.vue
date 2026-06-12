@@ -12,6 +12,7 @@
                 <AttributeValueLayout
                     v-if="!readOnly && canModify && !value.remote"
                     :del-button="true"
+                    embed-delete
                     :occurrence="attributeGroup.min_occurrence"
                     :values="values"
                     :val-index="index"
@@ -20,19 +21,24 @@
                     <template #col_left>
                         <span v-if="values.length > 1" class="number-index text--disabled">{{ index + 1 }}.</span>
                     </template>
-                    <template #col_middle>
+                    <template #col_middle="{ delVisible, onDelete }">
                         <v-text-field
                             v-model.number="value.value"
                             type="number"
                             density="compact"
                             variant="outlined"
+                            hide-details="auto"
                             :label="$t('attribute.value')"
                             :class="getLockedStyle(index)"
                             :disabled="value.locked || !canModify"
                             @focus="onFocus(index)"
                             @blur="onBlur(index)"
                             @keyup="onKeyUp(index)"
-                        />
+                        >
+                            <template #append-inner>
+                                <AttributeFieldDeleteButton :visible="delVisible" @delete="onDelete" />
+                            </template>
+                        </v-text-field>
                     </template>
                 </AttributeValueLayout>
             </div>
@@ -44,6 +50,7 @@
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
+    import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
     import { useAttributes } from './useAttributes'
 
     type AttributeValueItem = {
@@ -102,6 +109,6 @@
 
     .value-holder {
         width: 100%;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
 </style>

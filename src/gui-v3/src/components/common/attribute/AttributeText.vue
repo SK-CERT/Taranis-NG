@@ -21,6 +21,7 @@
                             v-model="value.value"
                             density="compact"
                             variant="outlined"
+                            hide-details="auto"
                             :label="$t('attribute.value')"
                             rows="3"
                             :disabled="value.locked || !canModify"
@@ -92,6 +93,6 @@
 
     .value-holder {
         width: 100%;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
 </style>

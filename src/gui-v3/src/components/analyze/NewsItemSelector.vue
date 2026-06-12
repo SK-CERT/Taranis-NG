@@ -11,7 +11,7 @@
                     <v-toolbar-title>{{ t('assess.attached_news_items') }}</v-toolbar-title>
                     <v-spacer />
                     <v-btn @click="handleAdd">
-                        <v-icon start>mdi-plus-box</v-icon>
+                        <v-icon start> mdi-plus-box </v-icon>
                         {{ t('common.add_items') }}
                     </v-btn>
                 </v-toolbar>
@@ -73,8 +73,13 @@
                         <!-- Content Slot -->
                         <template #content>
                             <div class="d-flex align-center" style="gap: 12px">
-                                <!-- News Item Content -->
-                                <div class="flex-grow-1">
+                                <!-- News Item Content (click to read) -->
+                                <div
+                                    class="flex-grow-1"
+                                    style="cursor: pointer"
+                                    :title="t('assess.read_news_item')"
+                                    @click="openDetail(item)"
+                                >
                                     <!-- Source and Date Info -->
                                     <div class="text-caption text-grey mb-2">
                                         <v-row align="center" no-gutters>
@@ -103,6 +108,20 @@
                                     <div class="text-body-2 mb-3">
                                         {{ item.description }}
                                     </div>
+
+                                    <!-- Aggregate: expand to reveal the child news items (like Assess) -->
+                                    <v-btn
+                                        v-if="getNewsItemCount(item) > 1"
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                        @click.stop="toggleExpand(item.id)"
+                                    >
+                                        <v-icon start>
+                                            {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                                        </v-icon>
+                                        {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
+                                    </v-btn>
                                 </div>
 
                                 <!-- Remove Button on the Right, Centered -->
@@ -120,6 +139,17 @@
                             </div>
                         </template>
                     </BaseCard>
+
+                    <!-- Child news items of the aggregate; click one to read it. -->
+                    <div v-if="isExpanded(item.id) && getNewsItemCount(item) > 1" class="mt-1">
+                        <CardAssessItem
+                            v-for="child in item.news_items"
+                            :key="child.id"
+                            :news-item="child"
+                            :analyze-selector="true"
+                            @show-detail="openDetail"
+                        />
+                    </div>
                 </v-col>
             </v-row>
         </v-container>
@@ -128,7 +158,7 @@
         <v-dialog v-model="showRemoveConfirm" max-width="500">
             <v-card>
                 <v-card-title class="d-flex align-center">
-                    <v-icon color="primary" class="mr-2">mdi-help-circle</v-icon>
+                    <v-icon color="primary" class="mr-2"> mdi-help-circle </v-icon>
                     {{ t('common.messagebox.remove') }}
                 </v-card-title>
                 <v-card-text>
@@ -145,6 +175,10 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- News item reader. Contained to the right column in side-by-side mode;
+             a normal centered modal otherwise. Read-only (actions hidden). -->
+        <NewsItemDetailDialog v-model="detailDialog" :news-item="detailItem" :contained="verticalView" multi-select-active />
     </v-container>
 </template>
 
@@ -152,11 +186,14 @@
     import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
+    import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import { updateReportItem, getReportItemData } from '@/api/analyze'
     import { ICONS } from '@/config/ui-constants'
     import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess.vue'
+    import NewsItemDetailDialog from '@/components/assess/NewsItemDetailDialog.vue'
+    import CardAssessItem from '@/components/assess/CardAssessItem.vue'
     import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
     import BaseCard from '@/components/common/BaseCard.vue'
 
@@ -166,6 +203,7 @@
         description?: string
         in_reports_count?: number
         news_items?: Array<{
+            id: number | string
             news_item_data?: {
                 osint_source_name?: string
                 source?: string
@@ -173,6 +211,7 @@
                 link?: string
                 [key: string]: unknown
             }
+            [key: string]: unknown
         }>
         [key: string]: unknown
     }
@@ -218,6 +257,7 @@
 
     const { t } = useI18n()
     const assessStore = useAssessStore()
+    const configStore = useConfigStore()
     const { checkPermission, getUserId } = useAuth()
 
     // Refs
@@ -226,6 +266,8 @@
 
     // Reactive state
     const selectorOpen = ref<boolean>(false)
+    const detailDialog = ref<boolean>(false)
+    const detailItem = ref<SelectorItem | null>(null)
     const value = ref<SelectorItem[]>(props.values || [])
     const selectedItems = ref<SelectorItem[]>(props.values || [])
     const groups = ref<SelectorGroup[]>([])
@@ -255,6 +297,20 @@
 
     const getNewsItemCount = (item: SelectorItem): number => {
         return item.news_items?.length ?? 0
+    }
+
+    // Open the news item for reading. In side-by-side mode the dialog is contained to the
+    // right-hand column so the user can read it next to the report form.
+    const openDetail = (item: SelectorItem): void => {
+        detailItem.value = item
+        detailDialog.value = true
+    }
+
+    // Track which aggregate cards are expanded to reveal their child news items.
+    const expandedItems = ref<Record<string, boolean>>({})
+    const isExpanded = (id: string | number): boolean => !!expandedItems.value[String(id)]
+    const toggleExpand = (id: string | number): void => {
+        expandedItems.value[String(id)] = !expandedItems.value[String(id)]
     }
 
     // Methods
@@ -459,12 +515,23 @@
 
     // Lifecycle
     onMounted(async () => {
-        // Load groups (OSINT sources for Assess)
-        // TODO: Load from store or API
-        groups.value = [
-            { id: 'all', title: 'All', icon: 'mdi-folder', translate: false },
-            { id: 'unread', title: 'assess.unread', icon: 'mdi-email-multiple', color: 'primary', translate: true }
-        ]
+        // Load the same OSINT source groups the Assess view shows in its sidebar
+        // (includes the leading "All" category). Read/unread is handled by the toolbar filter.
+        try {
+            await configStore.loadOSINTSourceGroupsAssess({ search: '' })
+            groups.value = configStore.osintSourceGroupsForAssess.map((g) => {
+                const group: SelectorGroup = {
+                    id: String(g.id),
+                    title: g.title,
+                    icon: g.icon,
+                    translate: !!g.translate
+                }
+                if (g.color) group.color = g.color
+                return group
+            })
+        } catch (error) {
+            console.error('Error loading OSINT source groups:', error)
+        }
 
         const firstGroup = groups.value[0]
         selectedGroupId.value = firstGroup ? firstGroup.id : ''
