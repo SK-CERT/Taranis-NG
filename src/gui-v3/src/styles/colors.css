@@ -62,6 +62,23 @@
     --color-dark-drawer-divider: rgba(255, 255, 255, 0.2);
 }
 
+/* Signal color-scheme to browsers and Dark Reader.
+   Fallback follows OS preference (covers login page, which uses prefers-color-scheme for styling).
+   Explicit classes override after login when the user's saved preference is known. */
+@media (prefers-color-scheme: dark) {
+    html {
+        color-scheme: dark;
+    }
+}
+
+html.light-mode {
+    color-scheme: light;
+}
+
+html.dark-mode {
+    color-scheme: dark;
+}
+
 /* Light theme */
 [data-theme='light'] {
     --color-drawer-bg: var(--color-light-drawer-bg);

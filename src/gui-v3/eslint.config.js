@@ -54,6 +54,44 @@ const sharedGlobals = {
     withDefaults: 'readonly'
 }
 
+const generalRules = {
+    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'no-unused-vars': 'off',
+    'prefer-const': 'warn',
+    'no-var': 'error'
+}
+
+const vueRules = {
+    'vue/multi-word-component-names': 'off',
+    'vue/no-v-html': 'off',
+    'vue/require-default-prop': 'off',
+    'vue/require-prop-types': 'off',
+    'vue/valid-v-slot': 'off',
+    'vue/no-mutating-props': 'off',
+    'vue/no-template-shadow': 'off',
+    'vue/prop-name-casing': 'off',
+    'vue/no-required-prop-with-default': 'off',
+    'vue/singleline-html-element-content-newline': 'off',
+    'vue/multiline-html-element-content-newline': 'off',
+    'vue/max-attributes-per-line': [
+        'warn',
+        {
+            singleline: 3,
+            multiline: 1
+        }
+    ],
+    'vue/html-indent': [
+        'warn',
+        4,
+        {
+            attribute: 1,
+            baseIndent: 1,
+            closeBracket: 0
+        }
+    ]
+}
+
 export default [
     js.configs.recommended,
     ...pluginVue.configs['flat/recommended'],
@@ -64,43 +102,7 @@ export default [
             sourceType: 'module',
             globals: sharedGlobals
         },
-        rules: {
-            // Vue specific
-            'vue/multi-word-component-names': 'off',
-            'vue/no-v-html': 'off',
-            'vue/require-default-prop': 'off',
-            'vue/require-prop-types': 'off',
-            'vue/valid-v-slot': 'off',
-            'vue/no-mutating-props': 'off',
-            'vue/no-template-shadow': 'off',
-            'vue/prop-name-casing': 'off',
-            'vue/no-required-prop-with-default': 'off',
-            'vue/max-attributes-per-line': [
-                'warn',
-                {
-                    singleline: 3,
-                    multiline: 1
-                }
-            ],
-            'vue/html-indent': [
-                'warn',
-                4,
-                {
-                    attribute: 1,
-                    baseIndent: 1,
-                    closeBracket: 0
-                }
-            ],
-            'vue/singleline-html-element-content-newline': 'off',
-            'vue/multiline-html-element-content-newline': 'off',
-
-            // JavaScript/General
-            'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-            'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-            'no-unused-vars': 'off',
-            'prefer-const': 'warn',
-            'no-var': 'error'
-        }
+        rules: generalRules
     },
     {
         files: ['**/*.vue'],
@@ -115,10 +117,8 @@ export default [
             globals: sharedGlobals
         },
         rules: {
-            'no-unused-vars': 'off',
-            'vue/multi-word-component-names': 'off',
-            'vue/valid-v-slot': 'off',
-            'vue/no-mutating-props': 'off'
+            ...generalRules,
+            ...vueRules
         }
     },
     {
@@ -132,13 +132,7 @@ export default [
             },
             globals: sharedGlobals
         },
-        rules: {
-            'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-            'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-            'no-unused-vars': 'off',
-            'prefer-const': 'warn',
-            'no-var': 'error'
-        }
+        rules: generalRules
     },
     {
         files: ['**/*.{js,ts,vue}'],
