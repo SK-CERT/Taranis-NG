@@ -42,8 +42,7 @@
         <NewReportItem ref="reportItemDialog" :show-button="false" :read-only="readOnlySelector" />
 
         <!-- Selected Items Display -->
-        <div v-if="!selectorOpen" class="selected-items-container">
-            <v-spacer style="height: 8px" />
+        <div v-if="!selectorOpen" class="selected-items-container pt-2">
             <CardAnalyze
                 v-for="item in value"
                 :key="item.id"

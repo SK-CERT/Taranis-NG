@@ -22,10 +22,20 @@ export interface CvssScores {
     [key: string]: number | undefined
 }
 
+export const SEVERITY_COLORS = {
+    none: '#53aa33',
+    low: '#ffcb0d',
+    medium: '#f9a009',
+    high: '#df3d03',
+    critical: '#cc0500',
+    na: '#9e9e9e'
+} as const
+
 export interface ScoreItem {
     name: string
     label: string
     score: string
+    color: string
     severityClass: string
     severityLabel: string
 }
@@ -146,6 +156,7 @@ function makeScoreItem(name: string, label: string, score: number | undefined, t
         name,
         label,
         score: scoreNum,
+        color: SEVERITY_COLORS[severity.name as keyof typeof SEVERITY_COLORS] ?? SEVERITY_COLORS.na,
         severityClass: `severity-${severity.name}`,
         severityLabel: te(`cvss_calculator.${severity.name}`) ? t(`cvss_calculator.${severity.name}`) : severity.label
     }
@@ -156,6 +167,7 @@ function makeNAScoreItem(name: string, label: string): ScoreItem {
         name,
         label,
         score: 'N/A',
+        color: SEVERITY_COLORS.na,
         severityClass: 'severity-na',
         severityLabel: ''
     }

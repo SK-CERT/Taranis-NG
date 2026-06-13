@@ -64,8 +64,7 @@
         <RemoteReportItem ref="remoteReportItemDialog" />
 
         <!-- Selected Items Display -->
-        <div v-if="!selectorOpen" class="selected-items-container ml-4">
-            <v-spacer style="height: 8px" />
+        <div v-if="!selectorOpen" class="selected-items-container ml-4 pt-2">
             <CardAnalyze
                 v-for="item in value"
                 :key="item.id"
