@@ -118,7 +118,16 @@ export default [
             'no-unused-vars': 'off',
             'vue/multi-word-component-names': 'off',
             'vue/valid-v-slot': 'off',
-            'vue/no-mutating-props': 'off'
+            'vue/no-mutating-props': 'off',
+            'vue/html-indent': [
+                'warn',
+                4,
+                {
+                    attribute: 1,
+                    baseIndent: 1,
+                    closeBracket: 0
+                }
+            ]
         }
     },
     {
