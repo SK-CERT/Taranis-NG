@@ -82,7 +82,7 @@
                                 >
                                     <!-- Source and Date Info -->
                                     <div class="text-caption text-grey mb-2">
-                                        <v-row align="center" no-gutters>
+                                        <v-row align="center">
                                             <v-col cols="auto">
                                                 <span v-if="getNewsItemCount(item) > 0">
                                                     <strong>{{ t('card_item.source') }}:</strong>

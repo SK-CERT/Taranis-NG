@@ -3,7 +3,7 @@
          max-content size, so rows can end up sharing a flex line (off-center content) and the
          content width tracks text length (layout jumps when values change). -->
     <v-row justify="center" class="attribute-item-layout pt-1">
-        <v-row no-gutters class="w-100">
+        <v-row class="w-100">
             <slot name="header">
                 <v-row justify="center">
                     <!-- SORT -->

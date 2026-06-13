@@ -66,10 +66,10 @@
 
                 <!-- Row fills the space left below the toolbar; columns scroll internally so the
                      toolbar stays fixed and there is no overflow when the form is empty. -->
-                <v-row no-gutters class="flex-grow-1" style="min-height: 0">
+                <v-row class="flex-grow-1" style="min-height: 0">
                     <v-col :cols="verticalView ? 6 : 12" style="height: 100%; overflow-y: auto">
                         <v-form ref="formRef" class="px-4" @submit.prevent="addReportItem">
-                            <v-row no-gutters>
+                            <v-row>
                                 <!-- Always rendered so create mode reserves the same vertical space
                                      the ID line occupies when editing; a non-breaking space holds the line. -->
                                 <v-col cols="12">
@@ -117,7 +117,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row no-gutters class="pb-4">
+                            <v-row class="pb-4">
                                 <v-col cols="12">
                                     <v-btn
                                         v-if="canModify"
@@ -131,7 +131,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row v-if="!verticalView" no-gutters>
+                            <v-row v-if="!verticalView">
                                 <v-col cols="12">
                                     <NewsItemSelector
                                         ref="newsItemSelectorRef"
@@ -146,7 +146,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row no-gutters>
+                            <v-row>
                                 <v-col cols="12">
                                     <RemoteReportItemSelector
                                         :values="remote_report_items"
@@ -229,7 +229,7 @@
                                 </v-col>
                             </v-row>
 
-                            <v-row no-gutters class="pt-2">
+                            <v-row class="pt-2">
                                 <v-col cols="12">
                                     <v-alert v-if="show_validation_error" density="compact" type="error" variant="tonal">
                                         {{ t('error.validation') }}

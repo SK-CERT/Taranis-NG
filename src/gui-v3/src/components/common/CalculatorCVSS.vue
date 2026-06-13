@@ -43,7 +43,7 @@
                         placeholder="Enter CVSS vector string..."
                         @update:model-value="onVectorInput"
                     />
-                    <v-row no-gutters class="ga-1">
+                    <v-row class="ga-1">
                         <v-col v-for="scoreItem in scoreDisplay" :key="scoreItem.name">
                             <v-sheet
                                 :color="scoreItem.color"

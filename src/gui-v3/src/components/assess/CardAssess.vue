@@ -11,7 +11,7 @@
         >
             <template #content>
                 <div class="text-label-small text-grey mb-2">
-                    <v-row align="center" no-gutters>
+                    <v-row align="center">
                         <v-col cols="auto">
                             <span v-if="firstNewsItem">
                                 {{ t('card_item.source') }}:
@@ -48,7 +48,7 @@
                     {{ card.description }}
                 </p>
 
-                <v-row align="center" no-gutters>
+                <v-row align="center">
                     <v-col class="d-flex align-center flex-wrap" style="gap: 12px">
                         <span
                             v-if="!isAggregate && !hideSourceLinks && firstNewsItem?.news_item_data?.link"

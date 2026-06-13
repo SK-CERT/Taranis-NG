@@ -23,7 +23,7 @@
                 </v-toolbar>
 
                 <!-- Main Content Row -->
-                <v-row no-gutters class="mt-12">
+                <v-row class="mt-12">
                     <!-- Left Sidebar: Groups -->
                     <v-col
                         cols="auto"

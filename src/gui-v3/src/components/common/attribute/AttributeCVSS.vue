@@ -51,7 +51,7 @@
                         </v-text-field>
 
                         <!-- Score display — always rendered at fixed height to keep layout stable -->
-                        <v-row no-gutters class="mb-2 ga-1">
+                        <v-row class="mb-2 ga-1">
                             <v-col v-for="scoreItem in getVectorScores(value.value) ?? placeholderScores" :key="scoreItem.name">
                                 <v-sheet
                                     :color="scoreItem.color"

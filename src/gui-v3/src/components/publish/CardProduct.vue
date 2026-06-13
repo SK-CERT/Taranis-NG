@@ -13,7 +13,7 @@
             <template #content>
                 <!-- Header Row: Icon+Type, State, Updated Info, Actions -->
                 <div class="mb-2">
-                    <v-row align="center" no-gutters class="ga-2">
+                    <v-row align="center" class="ga-2">
                         <!-- Icon + Type Name (tight together using inline-flex) -->
                         <v-col shrink class="d-inline-flex align-center" style="gap: 4px">
                             <v-icon size="large" :icon="card.tag || ICONS.FILE_DOCUMENT" />
@@ -53,7 +53,7 @@
                         </v-col>
                     </v-row>
                     <!-- Title + Description Row -->
-                    <v-row no-gutters class="mt-2">
+                    <v-row class="mt-2">
                         <v-col cols="12" md="6">
                             <div class="text-body-1 font-weight-medium">
                                 {{ card.title }}
