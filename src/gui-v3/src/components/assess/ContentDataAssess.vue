@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid class="py-4">
+    <v-container fluid class="pa-2">
         <!-- News Items Cards -->
         <TransitionGroup name="card-list" tag="div" class="w-100">
             <component

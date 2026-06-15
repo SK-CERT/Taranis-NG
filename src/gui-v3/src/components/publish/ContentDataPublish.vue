@@ -1,5 +1,5 @@
 <template>
-    <v-container id="selector_publish" fluid>
+    <v-container id="selector_publish" fluid class="pa-2">
         <TransitionGroup name="card-list" tag="div" class="w-100">
             <component
                 :is="currentCard"

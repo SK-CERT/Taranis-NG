@@ -11,65 +11,69 @@
         >
             <!-- Content Slot -->
             <template #content>
-                <!-- Header Row: Icon+Type, State, Updated Info, Actions -->
-                <div class="mb-2">
-                    <v-row align="center" class="ga-2">
-                        <!-- Icon + Type Name (tight together using inline-flex) -->
-                        <v-col shrink class="d-inline-flex align-center" style="gap: 4px">
-                            <v-icon size="large" :icon="card.tag || ICONS.FILE_DOCUMENT" />
-                            <span class="text-caption text-medium-emphasis">{{ card.product_type_name }}</span>
-                        </v-col>
-                        <!-- Spacer to push state/updated/actions to the right -->
-                        <v-spacer />
-                        <!-- State -->
-                        <v-col v-if="card.state" shrink class="d-flex align-center" style="gap: 3px; padding: 0">
-                            <v-icon :color="card.state.color" size="small">
-                                {{ card.state.icon }}
-                            </v-icon>
-                            <span class="text-caption">
-                                {{ card.state.display_name ? t('workflow.states.' + card.state.display_name) : '' }}
-                            </span>
-                        </v-col>
-                        <!-- Updated Info -->
-                        <v-col shrink class="d-flex flex-column justify-center" style="gap: 0; padding: 0; margin-left: 8px">
-                            <div class="text-caption text-medium-emphasis">
-                                {{ t('card_item.updated') }}
-                            </div>
-                            <div class="text-body-2">
-                                {{ card.updated_at }}
-                                <span v-if="card.updated_by" class="text-medium-emphasis">&nbsp;&nbsp;{{ card.updated_by }}</span>
-                            </div>
-                        </v-col>
-                        <!-- Actions - inline in header, like Analyze -->
-                        <v-col shrink class="d-flex align-center" style="gap: 0; padding: 0; margin-left: 4px">
-                            <!-- Delete -->
-                            <ActionButton
-                                v-if="canDelete"
-                                action="delete"
-                                size="x-small"
-                                :title="t('publish.tooltip.delete_item')"
-                                @click.stop="showDeleteDialog = true"
-                            />
-                        </v-col>
-                    </v-row>
-                    <!-- Title + Description Row -->
-                    <v-row class="mt-2">
-                        <v-col cols="12" md="6">
-                            <div class="text-body-1 font-weight-medium">
-                                {{ card.title }}
-                                <span v-if="card.report_items_count" class="text-medium-emphasis">&nbsp;({{ card.report_items_count }})</span>
-                            </div>
-                        </v-col>
-                        <v-col v-if="card.subtitle" cols="12" md="6">
-                            <div class="text-caption text-medium-emphasis">
-                                {{ t('card_item.description') }}
-                            </div>
-                            <div class="text-body-2">
-                                {{ card.subtitle }}
-                            </div>
-                        </v-col>
-                    </v-row>
-                </div>
+                <v-row class="align-center">
+                    <!-- Reserve space for an icon (products have none) so content aligns like Analyze -->
+                    <v-col cols="auto">
+                        <div class="ms-2" style="width: 32px" />
+                    </v-col>
+                    <!-- Main content (grows to push actions to the right) -->
+                    <v-col>
+                        <!-- Label Row: Type Name, Description, Updated Info -->
+                        <v-row align="center">
+                            <!-- Type Name (label for title) -->
+                            <v-col cols="12" md="6" class="d-flex align-center">
+                                <span class="text-body-large text-disabled">{{ card.product_type_name }}</span>
+                            </v-col>
+                            <!-- Description label (for subtitle) -->
+                            <v-col>
+                                <span class="text-caption text-medium-emphasis">{{ t('card_item.description') }}</span>
+                            </v-col>
+                            <!-- Updated Info -->
+                            <v-col cols="auto" class="d-flex align-center">
+                                <span class="text-caption">
+                                    <strong>{{ t('card_item.updated') }}:</strong>
+                                    {{ card.updated_at }}
+                                    <span v-if="card.updated_by" class="text-medium-emphasis">&nbsp;&nbsp;{{ card.updated_by }}</span>
+                                </span>
+                            </v-col>
+                        </v-row>
+                        <!-- Value Row: Title, Subtitle, State (below Updated) -->
+                        <v-row class="mt-2" align="center">
+                            <v-col cols="12" md="6">
+                                <div class="text-title-medium">
+                                    {{ card.title }}
+                                    <span v-if="card.report_items_count" class="text-disabled ms-1">({{ card.report_items_count }})</span>
+                                </div>
+                            </v-col>
+                            <v-col>
+                                <div class="text-body-2">
+                                    {{ card.subtitle }}
+                                </div>
+                            </v-col>
+                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center">
+                                <v-icon :color="card.state.color">
+                                    {{ card.state.icon }}
+                                </v-icon>
+                                <span class="text-body-large ms-2">
+                                    {{ card.state.display_name ? t('workflow.states.' + card.state.display_name) : '' }}
+                                </span>
+                                <v-tooltip v-if="card.state.description" activator="parent" location="bottom">
+                                    {{ card.state.description }}
+                                </v-tooltip>
+                            </v-col>
+                        </v-row>
+                    </v-col>
+                    <!-- Actions - right side, vertically centered, like Analyze -->
+                    <v-col cols="auto" class="d-flex justify-end">
+                        <!-- Delete -->
+                        <ActionButton
+                            v-if="canDelete"
+                            action="delete"
+                            :title="t('publish.tooltip.delete_item')"
+                            @click.stop="showDeleteDialog = true"
+                        />
+                    </v-col>
+                </v-row>
             </template>
         </BaseCard>
 
@@ -83,7 +87,6 @@
     import { useI18n } from 'vue-i18n'
     import { usePublishStore } from '@/stores/publish'
     import { useAuth } from '@/composables/useAuth'
-    import { ICONS } from '@/config/ui-constants'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import { deleteProduct } from '@/api/publish'
     import BaseCard from '@/components/common/BaseCard.vue'
@@ -108,6 +111,7 @@
             color?: string
             icon?: string
             display_name?: string
+            description?: string
         } | null
         [key: string]: any
     }
