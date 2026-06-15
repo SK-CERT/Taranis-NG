@@ -21,34 +21,35 @@
                             <v-col class="d-flex align-center">
                                 <span class="text-body-large text-disabled">{{ card.report_type_name }}</span>
                             </v-col>
-                            <!-- Spacer to push state/updated/actions to the right -->
-                            <!-- State -->
-                            <v-col v-if="card.state" class="d-inline-flex align-center">
+                            <!-- Updated Info, pushed to the right -->
+                            <v-col cols="auto" class="d-flex align-center">
+                                <span class="text-caption">
+                                    <strong>{{ t('card_item.updated') }}:</strong>
+                                    {{ card.last_updated }}
+                                    <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
+                                </span>
+                            </v-col>
+                        </v-row>
+                        <!-- Title Row + State (below Updated) -->
+                        <v-row class="mt-2" align="center">
+                            <v-col>
+                                <div class="text-title-medium">
+                                    <span v-if="card.title_prefix">{{ card.title_prefix }} -</span>
+                                    {{ card.title }}
+                                    <span v-if="card.news_items_count" class="text-disabled ms-1">({{ card.news_items_count }})</span>
+                                </div>
+                            </v-col>
+                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center">
                                 <v-icon :color="card.state.color">
                                     {{ card.state.icon }}
                                 </v-icon>
                                 <span class="text-body-large ms-2">
                                     {{ t('workflow.states.' + (card.state.display_name || ''), card.state.display_name || '') }}
                                 </span>
+                                <v-tooltip v-if="card.state.description" activator="parent" location="bottom">
+                                    {{ card.state.description }}
+                                </v-tooltip>
                             </v-col>
-                            <!-- Updated Info -->
-                            <v-col class="d-flex flex-column justify-center">
-                                <div class="text-body-large text-disabled">
-                                    {{ t('card_item.updated') }}
-                                </div>
-                                <div class="text-body-large">
-                                    {{ card.last_updated }}
-                                    <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
-                                </div>
-                            </v-col>
-                        </v-row>
-                        <!-- Title Row -->
-                        <v-row class="mt-2">
-                            <div class="text-title-medium">
-                                <span v-if="card.title_prefix">{{ card.title_prefix }} -</span>
-                                {{ card.title }}
-                                <span v-if="card.news_items_count" class="text-disabled ms-1">({{ card.news_items_count }})</span>
-                            </div>
                         </v-row>
                     </v-col>
                     <!-- Actions -->
@@ -125,6 +126,7 @@
             color?: string
             icon?: string
             display_name?: string
+            description?: string
         } | null
         [key: string]: any
     }
