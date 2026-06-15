@@ -561,22 +561,8 @@
 
             const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
             const previewUrl = `${apiBase}/publish/products/preview/${token}`
-
-            // hide JWT from URL by creating a form and submitting it as POST, also solve window.open() issue
-            const form = document.createElement('form')
-            form.method = 'POST'
-            form.action = previewUrl
-            form.target = '_blank' // open in a new tab - window.open() replacement
-
-            const input = document.createElement('input')
-            input.type = 'hidden'
-            input.name = 'jwt'
-            input.value = authStore.jwt
-
-            form.appendChild(input)
-            document.body.appendChild(form)
-            form.submit()
-            document.body.removeChild(form)
+            // Open the preview URL in a new tab
+            window.open(previewUrl, '_blank')
         } catch (error: unknown) {
             console.error('Preview failed:', error)
             showError.value = true
