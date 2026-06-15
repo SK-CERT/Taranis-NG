@@ -192,13 +192,13 @@ def prepare_product(product_data: dict, user: User, token: str) -> tuple[dict, H
 class ProductGetPreview(Resource):
     """A resource class for serving cached preview data.
 
-    This class handles the POST request for retrieving a cached preview by token.
+    This class handles the GET request for retrieving a cached preview by token.
 
     Attributes:
         Resource (class): The base class for creating API resources.
     """
 
-    def post(self, token: str) -> Response:
+    def get(self, token: str) -> Response:
         """Retrieve and serve cached preview data.
 
         Args:
@@ -209,17 +209,9 @@ class ProductGetPreview(Resource):
         """
         err_msg = None
 
-        jwt = request.form.get("jwt")
-        if not jwt:
-            err_msg = "Missing JWT"
-        else:
-            user = auth_manager.decode_user_from_jwt(jwt)
-            if user is None:
-                err_msg = "Invalid JWT"
-
-        if err_msg:
-            log_manager.store_auth_error_activity(err_msg)
-            return Response(err_msg, HTTPStatus.UNAUTHORIZED, mimetype="text/plain")
+        # Chrome does not process the Content-Disposition filename on POST requests -> therefore, GET is used.
+        # No need to re-check JWT here — it was already validated during preview generation.
+        # The token is temporary, will expire, and is single-use.
 
         cache_key = f"preview:{token}"
         try:
@@ -242,7 +234,7 @@ class ProductGetPreview(Resource):
             disposition = "inline" if any(preview_mime.startswith(itype) for itype in inline_types) else "attachment"
 
             # RFC 5987 encoding for non-ASCII filenames
-            encoded_filename = quote(preview_filename)
+            encoded_filename = quote(preview_filename.replace('"', ""), safe="")
             response.headers["Content-Disposition"] = f"{disposition}; filename*=UTF-8''{encoded_filename}"
             return response
 
