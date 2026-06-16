@@ -10,46 +10,41 @@
             @selection-change="selectionChanged"
         >
             <template #content>
-                <div class="text-label-small text-grey mb-2">
+                <div class="text-label-medium text-grey mb-2">
                     <v-row align="center">
                         <v-col cols="auto">
                             <span v-if="firstNewsItem">
-                                {{ t('card_item.source') }}:
-                                <strong>
-                                    {{
-                                        firstNewsItem?.news_item_data?.osint_source_name || firstNewsItem?.news_item_data?.source || 'Unknown'
-                                    }}
-                                    <span v-if="firstNewsItem?.news_item_data?.osint_source_type">
-                                        ({{ firstNewsItem.news_item_data.osint_source_type.split(' ')[0] }})
-                                    </span>
-                                </strong>
+                                {{ firstNewsItem?.news_item_data?.osint_source_name || firstNewsItem?.news_item_data?.source || 'Unknown' }}
+                                <span v-if="firstNewsItem?.news_item_data?.osint_source_type">
+                                    ({{ firstNewsItem.news_item_data.osint_source_type.split(' ')[0] }})
+                                </span>
                             </span>
                         </v-col>
                         <v-spacer />
                         <v-col cols="auto">
                             <span v-if="firstNewsItem">
-                                <strong>{{ t('card_item.published') }}:</strong>
+                                {{ t('card_item.published') }}:
                                 {{ firstNewsItem?.news_item_data?.published || 'N/A' }}
                             </span>
                         </v-col>
                         <v-spacer />
                         <v-col cols="auto">
-                            <strong>{{ t('card_item.collected') }}:</strong>
+                            {{ t('card_item.collected') }}:
                             {{ card.created }}
                         </v-col>
                     </v-row>
                 </div>
 
-                <h3 class="mb-2" style="font-size: 1.25rem; line-height: 1.35">
+                <span class="text-title-large mb-2">
                     {{ card.title }}
-                </h3>
+                </span>
 
-                <p v-if="!hideReviews" class="text-grey mb-3">
+                <p v-if="!hideReviews" class="text-body-medium text-grey mb-3">
                     {{ card.description }}
                 </p>
 
                 <v-row align="center">
-                    <v-col class="d-flex align-center flex-wrap" style="gap: 12px">
+                    <v-col class="d-flex align-center flex-wrap">
                         <span
                             v-if="!isAggregate && !hideSourceLinks && firstNewsItem?.news_item_data?.link"
                             class="text-label-small text-primary"

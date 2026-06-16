@@ -4,7 +4,6 @@
             <div class="text-label-small text-grey mb-2">
                 <v-row align="center">
                     <v-col cols="auto">
-                        <strong>{{ t('card_item.source') }}:</strong>
                         {{ sourceLabel }}
                     </v-col>
                     <v-spacer />

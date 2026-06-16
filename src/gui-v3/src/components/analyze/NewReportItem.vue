@@ -179,7 +179,7 @@
                                                         :key="attribute_item.attribute_group_item.id"
                                                         :class="['item-panel', { 'item-panel--half': isHalfWidth(attribute_item) }]"
                                                     >
-                                                        <v-expansion-panel-title class="pa-2 font-weight-bold text-primary rounded-0">
+                                                        <v-expansion-panel-title class="font-weight-bold text-primary rounded-0">
                                                             <div class="d-flex align-center w-100">
                                                                 <span class="text-truncate">{{
                                                                     attribute_item.attribute_group_item.title
@@ -192,7 +192,7 @@
                                                                 </span>
                                                             </div>
                                                         </v-expansion-panel-title>
-                                                        <v-expansion-panel-text class="pt-0">
+                                                        <v-expansion-panel-text>
                                                             <v-row align="center">
                                                                 <v-col>
                                                                     <AttributeContainer
@@ -1074,5 +1074,13 @@
         flex: 1 1 calc(50% - 4px);
         max-width: calc(50% - 4px);
         border-radius: 4px;
+    }
+
+    :deep(.v-expansion-panel-title) {
+        background-color: rgb(var(--v-theme-surface-variant));
+    }
+
+    :deep(.v-expansion-panel) {
+        border: 1px solid rgb(var(--v-theme-outline)) !important;
     }
 </style>

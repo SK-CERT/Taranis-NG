@@ -6,7 +6,7 @@
                 <div v-if="readOnly || value.remote" class="numbered-cvss-value d-flex align-center w-100 py-2">
                     <span
                         v-if="values.length > 1"
-                        class="mr-2 text-disabled"
+                        class="mr-2 text-grey"
                         :style="{ userSelect: 'none', minWidth: '24px', display: 'inline-block' }"
                         >{{ index + 1 }}.</span
                     >

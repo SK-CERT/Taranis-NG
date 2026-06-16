@@ -24,8 +24,6 @@
 
         <!-- Custom Filters: Three-state filters -->
         <template #custom-filters="{ filter }">
-            <v-divider vertical />
-
             <div style="display: flex; gap: 4px; flex-wrap: wrap">
                 <v-chip
                     size="small"
@@ -61,10 +59,6 @@
                     <v-icon>{{ relevantFilterIcon }}</v-icon>
                 </v-chip>
             </div>
-
-            <div style="flex-grow: 1" />
-
-            <v-divider vertical />
         </template>
 
         <!-- Sort Buttons: Use default date sort + add relevance sort -->
