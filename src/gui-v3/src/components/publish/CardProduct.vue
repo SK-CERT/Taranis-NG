@@ -19,21 +19,21 @@
                     <!-- Main content (grows to push actions to the right) -->
                     <v-col>
                         <!-- Label Row: Type Name, Description, Updated Info -->
-                        <v-row align="center">
+                        <v-row align="center" class="text-label-medium text-grey">
                             <!-- Type Name (label for title) -->
                             <v-col cols="12" md="6" class="d-flex align-center">
-                                <span class="text-body-large text-disabled">{{ card.product_type_name }}</span>
+                                <span>{{ card.product_type_name }}</span>
                             </v-col>
                             <!-- Description label (for subtitle) -->
                             <v-col>
-                                <span class="text-caption text-medium-emphasis">{{ t('card_item.description') }}</span>
+                                <span>{{ t('card_item.description') }}</span>
                             </v-col>
                             <!-- Updated Info -->
                             <v-col cols="auto" class="d-flex align-center">
-                                <span class="text-caption">
-                                    <strong>{{ t('card_item.updated') }}:</strong>
+                                <span>
+                                    {{ t('card_item.updated') }}:
                                     {{ card.updated_at }}
-                                    <span v-if="card.updated_by" class="text-medium-emphasis">&nbsp;&nbsp;{{ card.updated_by }}</span>
+                                    <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
                                 </span>
                             </v-col>
                         </v-row>
@@ -42,11 +42,11 @@
                             <v-col cols="12" md="6">
                                 <div class="text-title-medium">
                                     {{ card.title }}
-                                    <span v-if="card.report_items_count" class="text-disabled ms-1">({{ card.report_items_count }})</span>
+                                    <span v-if="card.report_items_count" class="text-grey ms-1">({{ card.report_items_count }})</span>
                                 </div>
                             </v-col>
                             <v-col>
-                                <div class="text-body-2">
+                                <div class="text-body-medium">
                                     {{ card.subtitle }}
                                 </div>
                             </v-col>

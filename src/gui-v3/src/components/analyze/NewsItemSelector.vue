@@ -85,7 +85,6 @@
                                         <v-row align="center">
                                             <v-col cols="auto">
                                                 <span v-if="getNewsItemCount(item) > 0">
-                                                    <strong>{{ t('card_item.source') }}:</strong>
                                                     {{
                                                         getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
                                                         getFirstNewsItem(item)?.news_item_data?.source ||
@@ -96,7 +95,7 @@
                                             <v-spacer />
                                             <v-col cols="auto">
                                                 <span v-if="getNewsItemCount(item) > 0">
-                                                    <strong>{{ t('card_item.published') }}:</strong>
+                                                    {{ t('card_item.published') }}:
                                                     {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
                                                 </span>
                                             </v-col>

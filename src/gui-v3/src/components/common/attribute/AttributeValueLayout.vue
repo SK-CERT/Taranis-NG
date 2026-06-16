@@ -1,5 +1,5 @@
 <template>
-    <v-row align="start" no-gutters class="ga-2 pt-1" @mouseenter="itemHover = true" @mouseleave="itemHover = false">
+    <v-row align="start" class="ga-2 pt-1" @mouseenter="itemHover = true" @mouseleave="itemHover = false">
         <v-col v-if="$slots['col_left']" cols="auto">
             <slot name="col_left" />
         </v-col>

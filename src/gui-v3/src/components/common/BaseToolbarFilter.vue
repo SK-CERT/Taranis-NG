@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid>
+    <v-container fluid class="py-0">
         <!-- Main Toolbar: Title and Search -->
         <v-toolbar flat color="surface" density="compact">
             <v-row align="center">
@@ -52,8 +52,6 @@
                 <slot name="custom-filters" :filter="localFilter" :emit-filter="emitFilter" />
 
                 <div v-if="hasCustomFilters && showSort" style="flex-grow: 1" />
-
-                <v-divider v-if="hasCustomFilters && showSort" vertical />
 
                 <!-- Sort Buttons (optional) -->
                 <div v-if="showSort" style="display: flex; gap: 4px; flex-wrap: wrap">

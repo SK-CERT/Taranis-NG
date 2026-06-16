@@ -18,16 +18,14 @@
                     <v-col>
                         <v-row>
                             <!-- Type Name -->
-                            <v-col class="d-flex align-center">
-                                <span class="text-body-large text-disabled">{{ card.report_type_name }}</span>
+                            <v-col class="d-flex align-center text-label-medium text-grey">
+                                {{ card.report_type_name }}
                             </v-col>
                             <!-- Updated Info, pushed to the right -->
-                            <v-col cols="auto" class="d-flex align-center">
-                                <span class="text-caption">
-                                    <strong>{{ t('card_item.updated') }}:</strong>
-                                    {{ card.last_updated }}
-                                    <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
-                                </span>
+                            <v-col cols="auto" class="d-flex align-center text-label-medium text-grey">
+                                {{ t('card_item.updated') }}:
+                                {{ card.last_updated }}
+                                <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
                             </v-col>
                         </v-row>
                         <!-- Title Row + State (below Updated) -->
@@ -36,7 +34,7 @@
                                 <div class="text-title-medium">
                                     <span v-if="card.title_prefix">{{ card.title_prefix }} -</span>
                                     {{ card.title }}
-                                    <span v-if="card.news_items_count" class="text-disabled ms-1">({{ card.news_items_count }})</span>
+                                    <span v-if="card.news_items_count" class="text-grey ms-1">({{ card.news_items_count }})</span>
                                 </div>
                             </v-col>
                             <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center">
