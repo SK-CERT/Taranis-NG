@@ -31,7 +31,7 @@
                 <v-progress-circular indeterminate size="64" />
             </v-overlay>
 
-            <v-card class="d-flex flex-column" style="height: 100vh">
+            <v-card class="d-flex flex-column bg-background" style="height: 100vh">
                 <v-toolbar color="primary" dark data-dialog="report-item">
                     <v-btn icon data-btn="cancel" @click="cancel">
                         <v-icon>mdi-close-circle</v-icon>
@@ -70,14 +70,6 @@
                     <v-col :cols="verticalView ? 6 : 12" style="height: 100%; overflow-y: auto">
                         <v-form ref="formRef" class="px-4" @submit.prevent="addReportItem">
                             <v-row>
-                                <!-- Always rendered so create mode reserves the same vertical space
-                                     the ID line occupies when editing; a non-breaking space holds the line. -->
-                                <v-col cols="12">
-                                    <span class="text-caption text-grey">
-                                        <template v-if="edit">ID: {{ report_item.uuid }}</template>
-                                        <template v-else>&nbsp;</template>
-                                    </span>
-                                </v-col>
                                 <v-col cols="4" class="pr-3">
                                     <v-combobox
                                         v-model="selected_type"
@@ -122,7 +114,8 @@
                                     <v-btn
                                         v-if="canModify"
                                         :prepend-icon="ICONS.PLUS"
-                                        variant="outlined"
+                                        color="primary"
+                                        variant="flat"
                                         class="mb-3"
                                         @click="newsItemSelectorRef?.openSelector()"
                                     >

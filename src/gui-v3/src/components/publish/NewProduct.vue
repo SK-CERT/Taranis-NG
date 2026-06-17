@@ -87,7 +87,7 @@
                 </v-btn>
             </v-toolbar>
 
-            <v-card-text class="pa-4 overflow-y-auto">
+            <v-card-text class="pa-4 overflow-y-auto bg-background">
                 <v-form ref="formRef" @submit.prevent="handleSave">
                     <v-row>
                         <v-col cols="12" md="6">
@@ -128,7 +128,8 @@
                             <v-btn
                                 v-if="canModify"
                                 :prepend-icon="ICONS.PLUS"
-                                variant="outlined"
+                                color="primary"
+                                variant="flat"
                                 class="mb-3"
                                 @click="openReportItemSelector"
                             >
@@ -148,7 +149,7 @@
                     <!-- Publisher Presets -->
                     <v-row>
                         <v-col cols="12">
-                            <div class="text-subtitle-2 mb-2">
+                            <div class="text-title-medium mb-2">
                                 {{ $t('product.publisher_presets') }}
                             </div>
                             <div v-if="publisherPresets.length > 0">
@@ -171,7 +172,7 @@
                     <!-- Action Buttons -->
                     <v-row class="mt-4">
                         <v-col cols="12" md="6">
-                            <v-btn :prepend-icon="ICONS.READ_OUTLINE" variant="outlined" @click="handlePreview">
+                            <v-btn :prepend-icon="ICONS.READ_OUTLINE" color="primary" variant="flat" @click="handlePreview">
                                 {{ $t('product.preview') }}
                             </v-btn>
                         </v-col>
@@ -179,8 +180,8 @@
                             <v-btn
                                 v-if="canPublish"
                                 :prepend-icon="ICONS.SEND_OUTLINE"
-                                variant="outlined"
                                 color="primary"
+                                variant="flat"
                                 @click="handlePublishConfirmation"
                             >
                                 {{ $t('product.publish') }}
