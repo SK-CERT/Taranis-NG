@@ -144,6 +144,7 @@
         "updated": "Updated",
         "collected": "Collected",
         "published": "Published",
+        "source": "Source",
         "node": "Node",
         "description": "Description",
         "in_analyze": "Analysis in progress",
