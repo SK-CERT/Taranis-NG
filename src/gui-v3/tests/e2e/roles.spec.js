@@ -20,8 +20,8 @@ test.describe('Role Management', () => {
     })
 
     test('should display roles list', async ({ page }) => {
-        // Verify we're on roles page
-        await expect(page).toHaveURL(/\/config\/roles/)
+        // Roles is now the Roles tab inside the Access Management view.
+        await expect(page).toHaveURL(/\/config\/access-management\?tab=roles/)
 
         // Should show page title or header
         await expect(page.locator('.v-card-title').filter({ hasText: /roles/i })).toBeVisible()
@@ -60,7 +60,7 @@ test.describe('Role Management', () => {
                 .click()
         }
 
-        await expect(page.locator('.v-data-table')).toBeVisible()
+        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
     test('should show validation error when creating role without name', async ({ page }) => {
@@ -81,16 +81,20 @@ test.describe('Role Management', () => {
         // Edit action should be available on existing rows.
         const row = page.locator('tbody tr').first()
         await row.locator('button[title="Edit"]').click()
-        await expect(page.locator('.v-data-table')).toBeVisible()
+        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
     test('should delete a role', async ({ page }) => {
-        // Delete button opens browser confirm in this view.
-        page.once('dialog', (dialog) => dialog.dismiss())
+        // Delete now opens an in-app confirmation dialog (no browser confirm).
         const row = page.locator('tbody tr').first()
         await row.locator('button[title="Delete"]').click()
 
-        await expect(page.locator('.v-data-table')).toBeVisible()
+        const confirmDialog = page.locator('.v-dialog:visible')
+        await expect(confirmDialog).toBeVisible()
+
+        // Cancel to keep test data intact.
+        await confirmDialog.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
     test('should cancel role creation', async ({ page }) => {

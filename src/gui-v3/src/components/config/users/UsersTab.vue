@@ -20,7 +20,7 @@
                         />
                     </v-col>
                     <v-col cols="4" class="text-right">
-                        <NewUser ref="newUserRef" @saved="handleSaved" />
+                        <NewUser :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -48,10 +48,7 @@
             </v-data-table>
         </v-card>
 
-        <!-- Edit Dialog -->
-        <v-dialog v-model="showEditDialog" max-width="800">
-            <NewUser ref="newUserRef" :edit-item="editItem" @saved="handleSaved" />
-        </v-dialog>
+        <ConfirmationDialog v-model="deleteDialog" :message="itemToDelete?.username || ''" max-width="600px" @confirm="confirmDelete" />
     </v-container>
 </template>
 
@@ -60,13 +57,15 @@
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteUser } from '@/api/config'
-    import NewUser from '@/components/config/user/NewUser.vue'
+    import NewUser from '@/components/config/users/NewUser.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
     type HeaderEntry = {
         title: string
         key: string
         sortable?: boolean
+        align?: 'start' | 'end' | 'center'
     }
 
     type OrganizationItem = {
@@ -86,15 +85,15 @@
     const configStore = useConfigStore()
 
     const search = ref('')
-    const showEditDialog = ref(false)
     const editItem = ref<UserItem | null>(null)
-    const newUserRef = ref<any>(null)
+    const deleteDialog = ref(false)
+    const itemToDelete = ref<UserItem | null>(null)
 
     const headers: HeaderEntry[] = [
         { title: t('user.username'), key: 'username' },
         { title: t('user.name'), key: 'name' },
         { title: t('user.organizations'), key: 'organizations' },
-        { title: t('settings.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
 
     const asUserItem = (item: unknown): UserItem => item as UserItem
@@ -108,25 +107,40 @@
     }
 
     const handleEdit = (item: UserItem): void => {
+        // Setting editItem triggers NewUser's watcher to open its dialog in edit mode.
         editItem.value = item
-        showEditDialog.value = true
     }
 
-    const handleDelete = async (item: UserItem): Promise<void> => {
-        if (confirm(t('common.messagebox.delete_confirm', { name: item.username }))) {
-            try {
-                await deleteUser(item)
-                await loadData()
-            } catch (error) {
-                console.error('Error deleting user:', error)
-            }
+    const handleDelete = (item: UserItem): void => {
+        itemToDelete.value = item
+        deleteDialog.value = true
+    }
+
+    const confirmDelete = async (): Promise<void> => {
+        if (!itemToDelete.value) {
+            return
+        }
+        try {
+            await deleteUser(itemToDelete.value)
+            await loadData()
+        } catch (error) {
+            console.error('Error deleting user:', error)
+        } finally {
+            itemToDelete.value = null
         }
     }
 
     const handleSaved = (): void => {
-        showEditDialog.value = false
         editItem.value = null
         loadData()
+    }
+
+    // Reset editItem when the dialog closes so the same row can be edited again,
+    // and so the Add New button opens a blank form.
+    const onDialogChange = (open: boolean): void => {
+        if (!open) {
+            editItem.value = null
+        }
     }
 
     onMounted(() => {

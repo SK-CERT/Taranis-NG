@@ -79,7 +79,7 @@ test.describe('Authentication', () => {
         await context.clearCookies()
 
         // Try to access protected route
-        await page.goto('/v2/config/roles')
+        await page.goto('/v2/config/access-management')
 
         // Should redirect to login
         await expect(page).toHaveURL(/login/)
