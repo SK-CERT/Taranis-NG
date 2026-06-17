@@ -109,6 +109,7 @@
         "product_types": "Product Types",
         "roles": "Roles",
         "acls": "ACL",
+        "access_management": "Access Management",
         "users": "Users",
         "external_users": "External Users",
         "external": "External",
@@ -184,7 +185,8 @@
         "permissions": "Permissions",
         "total_count": "User count",
         "password": "Password",
-        "password_check": "Retype Password"
+        "password_check": "Retype Password",
+        "password_mismatch": "Passwords do not match"
     },
     "collectors_node": {
         "add_new": "Add new collectors node",

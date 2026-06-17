@@ -1,13 +1,13 @@
 <template>
     <v-dialog v-model="isOpen" :max-width="maxWidth">
         <v-card>
-            <v-card-title class="d-flex align-center">
+            <v-card-title class="d-flex align-center" style="white-space: normal">
                 <v-icon color="error" class="mr-2">
                     {{ ICONS.ALERT_CIRCLE }}
                 </v-icon>
                 {{ t(titleKey) }}
             </v-card-title>
-            <v-card-text>
+            <v-card-text class="text-center">
                 <slot>{{ message }}</slot>
             </v-card-text>
             <v-card-actions>

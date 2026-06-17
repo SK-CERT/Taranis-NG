@@ -123,13 +123,11 @@
     const props = withDefaults(
         defineProps<{
             modelValue?: boolean
-            item?: Partial<OrganizationItem>
-            isEdit?: boolean
+            editItem?: Partial<OrganizationItem> | null
         }>(),
         {
             modelValue: false,
-            item: () => ({}),
-            isEdit: false
+            editItem: null
         }
     )
 
@@ -156,6 +154,7 @@
 
     const localItem = ref<OrganizationItem>({ ...defaultItem })
 
+    const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_ORGANIZATION_CREATE'))
 
     async function handleSubmit(): Promise<void> {
@@ -170,7 +169,7 @@
 
         saving.value = true
         try {
-            if (props.isEdit) {
+            if (isEdit.value) {
                 await updateOrganization(localItem.value)
             } else {
                 await createNewOrganization(localItem.value)
@@ -198,10 +197,12 @@
     }
 
     watch(
-        () => props.item,
+        () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
                 localItem.value = { ...defaultItem, ...newItem }
+                // Opening the dialog automatically when an item to edit is provided.
+                dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
             }
@@ -216,7 +217,10 @@
                 showValidationError.value = false
                 showError.value = false
                 saving.value = false
+                formRef.value?.reset()
+                localItem.value = { ...defaultItem }
             }
+            emit('update:modelValue', newVal)
         }
     )
 </script>
