@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid class="pa-0">
         <!-- Dialog Container -->
         <v-dialog v-model="selectorOpen" fullscreen persistent>
             <v-card flat>
@@ -19,10 +19,8 @@
                 </v-toolbar>
 
                 <!-- Main Content -->
-                <v-container fluid class="pa-0 ma-0 mt-12">
-                    <div style="position: sticky; top: 0; z-index: 100; background: white">
-                        <ToolbarFilterAnalyze ref="toolbarFilter" :show-group-toolbar="false" @update-filter="updateFilter" />
-                    </div>
+                <v-container fluid class="pa-0">
+                    <ToolbarFilterAnalyze ref="toolbarFilter" :show-group-toolbar="false" @update-filter="updateFilter" />
 
                     <ContentDataAnalyze
                         ref="contentData"
@@ -42,7 +40,7 @@
         <NewReportItem ref="reportItemDialog" :show-button="false" :read-only="readOnlySelector" />
 
         <!-- Selected Items Display -->
-        <div v-if="!selectorOpen" class="selected-items-container pt-2">
+        <div v-if="!selectorOpen" class="pt-2">
             <CardAnalyze
                 v-for="item in value"
                 :key="item.id"
@@ -186,11 +184,3 @@
         openSelector
     })
 </script>
-
-<style scoped>
-    .selected-items-container {
-        padding: 0;
-        margin: 0;
-        background: white;
-    }
-</style>

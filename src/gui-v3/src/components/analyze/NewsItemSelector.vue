@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container fluid class="pa-0">
         <!-- Dialog Container -->
         <v-dialog v-model="selectorOpen" fullscreen persistent>
             <v-card flat class="selector-layout">
@@ -65,93 +65,86 @@
             </v-card>
         </v-dialog>
 
-        <!-- Selected Items Display (outside dialog) -->
-        <v-container v-if="!selectorOpen" fluid>
-            <v-row>
-                <v-col v-for="item in value" :key="item.id" cols="12">
-                    <BaseCard :multi-select-active="false" :show-selection-checkbox="false" :preselected="false" card-class="card-item">
-                        <!-- Content Slot -->
-                        <template #content>
-                            <div class="d-flex align-center" style="gap: 12px">
-                                <!-- News Item Content (click to read) -->
-                                <div
-                                    class="flex-grow-1"
-                                    style="cursor: pointer"
-                                    :title="t('assess.read_news_item')"
-                                    @click="openDetail(item)"
-                                >
-                                    <!-- Source and Date Info -->
-                                    <div class="text-caption text-grey mb-2">
-                                        <v-row align="center">
-                                            <v-col cols="auto">
-                                                <span v-if="getNewsItemCount(item) > 0">
-                                                    {{
-                                                        getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
-                                                        getFirstNewsItem(item)?.news_item_data?.source ||
-                                                        'Unknown'
-                                                    }}
-                                                </span>
-                                            </v-col>
-                                            <v-spacer />
-                                            <v-col cols="auto">
-                                                <span v-if="getNewsItemCount(item) > 0">
-                                                    {{ t('card_item.published') }}:
-                                                    {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
-                                                </span>
-                                            </v-col>
-                                        </v-row>
-                                    </div>
-                                    <div class="text-h6 font-weight-medium mb-2">
-                                        {{ item.title }}
-                                    </div>
-                                    <div class="text-body-2 mb-3">
-                                        {{ item.description }}
-                                    </div>
-
-                                    <!-- Aggregate: expand to reveal the child news items (like Assess) -->
-                                    <v-btn
-                                        v-if="getNewsItemCount(item) > 1"
-                                        size="small"
-                                        color="primary"
-                                        variant="outlined"
-                                        @click.stop="toggleExpand(item.id)"
-                                    >
-                                        <v-icon start>
-                                            {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
-                                        </v-icon>
-                                        {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
-                                    </v-btn>
+        <!-- Items Display (outside dialog) -->
+        <v-row v-if="!selectorOpen">
+            <v-col v-for="item in value" :key="item.id" cols="12">
+                <BaseCard :multi-select-active="false" :show-selection-checkbox="false" :preselected="false" card-class="card-item">
+                    <!-- Content Slot -->
+                    <template #content>
+                        <div class="d-flex align-center" style="gap: 12px">
+                            <!-- News Item Content (click to read) -->
+                            <div class="flex-grow-1" style="cursor: pointer" :title="t('assess.read_news_item')" @click="openDetail(item)">
+                                <!-- Source and Date Info -->
+                                <div class="text-caption text-grey mb-2">
+                                    <v-row align="center">
+                                        <v-col cols="auto">
+                                            <span v-if="getNewsItemCount(item) > 0">
+                                                {{
+                                                    getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
+                                                    getFirstNewsItem(item)?.news_item_data?.source ||
+                                                    'Unknown'
+                                                }}
+                                            </span>
+                                        </v-col>
+                                        <v-spacer />
+                                        <v-col cols="auto">
+                                            <span v-if="getNewsItemCount(item) > 0">
+                                                {{ t('card_item.published') }}:
+                                                {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
+                                            </span>
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                                <div class="text-h6 font-weight-medium mb-2">
+                                    {{ item.title }}
+                                </div>
+                                <div class="text-body-2 mb-3">
+                                    {{ item.description }}
                                 </div>
 
-                                <!-- Remove Button on the Right, Centered -->
+                                <!-- Aggregate: expand to reveal the child news items (like Assess) -->
                                 <v-btn
+                                    v-if="getNewsItemCount(item) > 1"
                                     size="small"
-                                    variant="text"
-                                    :title="t('common.remove')"
-                                    style="flex-shrink: 0"
-                                    @click.stop="handleRemoveItem(item)"
+                                    color="primary"
+                                    variant="outlined"
+                                    @click.stop="toggleExpand(item.id)"
                                 >
-                                    <v-icon :color="'error'">
-                                        {{ ICONS.REMOVE }}
+                                    <v-icon start>
+                                        {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
                                     </v-icon>
+                                    {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
                                 </v-btn>
                             </div>
-                        </template>
-                    </BaseCard>
 
-                    <!-- Child news items of the aggregate; click one to read it. -->
-                    <div v-if="isExpanded(item.id) && getNewsItemCount(item) > 1" class="mt-1">
-                        <CardAssessItem
-                            v-for="child in item.news_items"
-                            :key="child.id"
-                            :news-item="child"
-                            :analyze-selector="true"
-                            @show-detail="openDetail"
-                        />
-                    </div>
-                </v-col>
-            </v-row>
-        </v-container>
+                            <!-- Remove Button on the Right, Centered -->
+                            <v-btn
+                                size="small"
+                                variant="text"
+                                :title="t('common.remove')"
+                                style="flex-shrink: 0"
+                                @click.stop="handleRemoveItem(item)"
+                            >
+                                <v-icon :color="'error'">
+                                    {{ ICONS.REMOVE }}
+                                </v-icon>
+                            </v-btn>
+                        </div>
+                    </template>
+                </BaseCard>
+
+                <!-- Child news items of the aggregate; click one to read it. -->
+                <div v-if="isExpanded(item.id) && getNewsItemCount(item) > 1" class="mt-1">
+                    <CardAssessItem
+                        v-for="child in item.news_items"
+                        :key="child.id"
+                        :news-item="child"
+                        :analyze-selector="true"
+                        @show-detail="openDetail"
+                    />
+                </div>
+            </v-col>
+        </v-row>
 
         <!-- Confirmation Dialog: Remove Item -->
         <v-dialog v-model="showRemoveConfirm" max-width="500">
