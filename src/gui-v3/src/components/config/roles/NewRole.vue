@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" max-width="600" persistent>
+    <v-dialog v-model="dialog" max-width="900" persistent scrollable>
         <template #activator="{ props: activatorProps }">
             <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
@@ -32,10 +32,15 @@
                         :disabled="saving"
                     />
 
-                    <!-- Permissions selection would go here -->
-                    <v-alert type="info" variant="tonal" class="mt-2">
-                        {{ t('role.permissions_note') }}
-                    </v-alert>
+                    <!-- Permissions Selection -->
+                    <EntitySelectTable
+                        v-model="selectedPermissions"
+                        :title="t('role.permissions')"
+                        :items="permissions"
+                        :headers="permissionHeaders"
+                        :loading="loadingPermissions"
+                        :disabled="saving"
+                    />
                 </v-form>
 
                 <v-alert
@@ -69,11 +74,19 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
-    import { createNewRole, updateRole } from '@/api/config'
+    import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
+    import { createNewRole, updateRole, getAllPermissions } from '@/api/config'
+
+    type SelectableEntity = {
+        id: string | number
+        name?: string
+        description?: string
+        [key: string]: unknown
+    }
 
     type RoleItem = {
         id: string | number | null
@@ -87,16 +100,28 @@
         valid: boolean
     }
 
+    type TableHeader = {
+        title: string
+        key: string
+        sortable: boolean
+    }
+
+    type IdSelection = Array<string | number>
+
+    type ListResponse = {
+        data?: {
+            items?: SelectableEntity[]
+        }
+    }
+
     const props = withDefaults(
         defineProps<{
             modelValue?: boolean
-            item?: Partial<RoleItem>
-            isEdit?: boolean
+            editItem?: Partial<RoleItem> | null
         }>(),
         {
             modelValue: false,
-            item: () => ({}),
-            isEdit: false
+            editItem: null
         }
     )
 
@@ -111,6 +136,15 @@
     const saving = ref(false)
     const dialog = ref(false)
 
+    const permissions = ref<SelectableEntity[]>([])
+    const loadingPermissions = ref(false)
+    const selectedPermissions = ref<IdSelection>([])
+
+    const permissionHeaders: TableHeader[] = [
+        { title: t('role.name'), key: 'name', sortable: true },
+        { title: t('role.description'), key: 'description', sortable: false }
+    ]
+
     const defaultItem: RoleItem = {
         id: null,
         name: '',
@@ -120,8 +154,23 @@
 
     const localItem = ref<RoleItem>({ ...defaultItem })
 
+    const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_ROLE_CREATE'))
-    const canUpdate = computed(() => checkPermission('CONFIG_ROLE_UPDATE') || !props.isEdit)
+    const canUpdate = computed(() => checkPermission('CONFIG_ROLE_UPDATE') || !isEdit.value)
+
+    const loadPermissions = async (): Promise<void> => {
+        loadingPermissions.value = true
+        try {
+            const response = await getAllPermissions({ search: '' })
+            permissions.value = (response as ListResponse).data?.items || []
+        } catch (error) {
+            console.error('Error loading permissions:', error)
+        } finally {
+            loadingPermissions.value = false
+        }
+    }
+
+    onMounted(loadPermissions)
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -135,10 +184,14 @@
 
         saving.value = true
         try {
-            if (props.isEdit) {
-                await updateRole(localItem.value)
+            const payload: RoleItem = {
+                ...localItem.value,
+                permissions: selectedPermissions.value.map((id) => ({ id }))
+            }
+            if (isEdit.value) {
+                await updateRole(payload)
             } else {
-                await createNewRole(localItem.value)
+                await createNewRole(payload)
             }
             emit('saved')
             handleCancel()
@@ -159,16 +212,23 @@
         showError.value = false
         formRef.value?.reset()
         localItem.value = { ...defaultItem }
+        selectedPermissions.value = []
         dialog.value = false
     }
 
     watch(
-        () => props.item,
+        () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
                 localItem.value = { ...defaultItem, ...newItem }
+                selectedPermissions.value = Array.isArray(newItem.permissions)
+                    ? (newItem.permissions as SelectableEntity[]).map((perm) => perm.id)
+                    : []
+                // Opening the dialog automatically when an item to edit is provided.
+                dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
+                selectedPermissions.value = []
             }
         },
         { immediate: true, deep: true }
@@ -181,7 +241,11 @@
                 showValidationError.value = false
                 showError.value = false
                 saving.value = false
+                formRef.value?.reset()
+                localItem.value = { ...defaultItem }
+                selectedPermissions.value = []
             }
+            emit('update:modelValue', newVal)
         }
     )
 </script>

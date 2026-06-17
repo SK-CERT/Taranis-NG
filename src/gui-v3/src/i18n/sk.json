@@ -109,6 +109,7 @@
         "product_types": "Typy publikácií",
         "roles": "Role",
         "acls": "ACL",
+        "access_management": "Správa prístupov",
         "users": "Užívatelia",
         "external_users": "Externí užívatelia",
         "external": "Externé",
@@ -183,7 +184,8 @@
         "permissions": "Oprávnenia",
         "total_count": "Počet používateľov: ",
         "password": "Heslo",
-        "password_check": "Zadajte heslo znova"
+        "password_check": "Zadajte heslo znova",
+        "password_mismatch": "Heslá sa nezhodujú"
     },
     "collectors_node": {
         "add_new": "Pridať novú inštanciu kolektora",

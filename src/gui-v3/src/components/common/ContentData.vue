@@ -41,7 +41,7 @@
     // TODO: Import other card components as they are migrated
     // import CardNode from '@/components/common/CardNode.vue'
     // import CardPreset from '@/components/common/CardPreset.vue'
-    // import CardUser from '@/components/config/user/CardUser.vue'
+    // import CardUser from '@/components/config/users/CardUser.vue'
     // import CardProductType from '@/components/config/product_types/CardProductType.vue'
     // import CardSource from '@/components/config/osint_sources/CardSource.vue'
     // import CardGroup from '@/components/config/osint_sources/CardGroup.vue'

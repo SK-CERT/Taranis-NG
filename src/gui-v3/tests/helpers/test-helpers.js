@@ -34,14 +34,29 @@ export async function logout(page) {
 }
 
 /**
- * Navigate to configuration section
+ * Navigate to a configuration section.
+ *
+ * Users, Roles, ACL and Organizations now live as tabs inside the
+ * "Access Management" view, so we open /config and click the matching tab.
+ * Other sections still have their own sidebar entry.
  * @param {import('@playwright/test').Page} page - Playwright page object
  * @param {string} section - Section name (e.g., 'Roles', 'Organizations')
  */
 export async function navigateToConfig(page, section) {
-    // Open config sidebar if not already open
-    await page.goto('/v2/config')
-    await page.getByRole('navigation').getByText(section).click()
+    // Navigate straight to Access Management instead of /config. /config redirects
+    // client-side, and that redirect-during-initial-navigation intermittently makes
+    // WebKit throw an internal error; going to the resolved route avoids it.
+    await page.goto('/v2/config/access-management')
+
+    // Click the matching tab once it renders. Fall back to a sidebar entry for
+    // sections that are not Access Management tabs.
+    const tab = page.getByRole('tab', { name: section }).first()
+    try {
+        await tab.waitFor({ state: 'visible', timeout: 5000 })
+        await tab.click()
+    } catch {
+        await page.getByRole('navigation').getByText(section).click()
+    }
 }
 
 /**

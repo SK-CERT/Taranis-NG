@@ -17,7 +17,8 @@ test.describe('Organization Management', () => {
     })
 
     test('should display organizations list', async ({ page }) => {
-        await expect(page).toHaveURL(/\/config\/organizations/)
+        // Organizations is now the Organizations tab inside the Access Management view.
+        await expect(page).toHaveURL(/\/config\/access-management\?tab=organizations/)
         await expect(page.locator('.v-card-title').filter({ hasText: /organizations/i })).toBeVisible()
     })
 
@@ -43,7 +44,7 @@ test.describe('Organization Management', () => {
                 .click()
         }
 
-        await expect(page.locator('.v-data-table')).toBeVisible()
+        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
     test('should require name field', async ({ page }) => {
@@ -59,16 +60,20 @@ test.describe('Organization Management', () => {
         // Edit action should be available on existing rows.
         const row = page.locator('tbody tr').first()
         await row.locator('button[title="Edit"]').click()
-        await expect(page.locator('.v-data-table')).toBeVisible()
+        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
     test('should delete organization', async ({ page }) => {
-        // Confirm dialog path exists for delete action.
-        page.once('dialog', (dialog) => dialog.dismiss())
+        // Delete now opens an in-app confirmation dialog (no browser confirm).
         const row = page.locator('tbody tr').first()
         await row.locator('button[title="Delete"]').click()
 
-        await expect(page.locator('.v-data-table')).toBeVisible()
+        const confirmDialog = page.locator('.v-dialog:visible')
+        await expect(confirmDialog).toBeVisible()
+
+        // Cancel to keep test data intact.
+        await confirmDialog.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
     test('should cancel creation', async ({ page }) => {

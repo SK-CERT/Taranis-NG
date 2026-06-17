@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import AuthService from '@/services/auth_service'
 import Permissions from '@/services/permissions'
+import { getFirstConfigRoute } from '@/config/config-nav-links'
 import type { PermissionKey } from '@/types/permissions'
 
 interface RouteMetaAuth {
@@ -77,47 +78,40 @@ const routes: RouteRecordRaw[] = [
     {
         path: '/config',
         name: 'config',
-        components: {
-            default: () => import('./views/admin/ConfigView.vue'),
-            nav: () => import('./views/nav/ConfigNav.vue')
+        // Redirect to the first accessible config menu item.
+        redirect: () => {
+            // This redirect resolves before the global guard runs, so make sure
+            // the user (and its permissions) is hydrated from the JWT first.
+            const authStore = useAuthStore()
+            const userStore = useUserStore()
+            if (authStore.jwt && !userStore.user.id) {
+                const userData = authStore.getUserData
+                if (userData) {
+                    userStore.setUser(userData)
+                }
+            }
+
+            const firstRoute = getFirstConfigRoute((permission) => AuthService.hasPermission(permission))
+            return firstRoute ?? '/'
         },
         meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ACCESS] }
     },
     {
-        path: '/config/organizations',
-        name: 'organization',
+        path: '/config/access-management',
+        name: 'access_management',
         components: {
-            default: () => import('./views/admin/OrganizationsView.vue'),
+            default: () => import('./views/admin/AccessManagementView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ORGANIZATION_ACCESS] }
-    },
-    {
-        path: '/config/roles',
-        name: 'roles',
-        components: {
-            default: () => import('./views/admin/RolesView.vue'),
-            nav: () => import('./views/nav/ConfigNav.vue')
-        },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ROLE_ACCESS] }
-    },
-    {
-        path: '/config/acls',
-        name: 'acls',
-        components: {
-            default: () => import('./views/admin/ACLEntriesView.vue'),
-            nav: () => import('./views/nav/ConfigNav.vue')
-        },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ACL_ACCESS] }
-    },
-    {
-        path: '/config/users',
-        name: 'users',
-        components: {
-            default: () => import('./views/admin/UsersView.vue'),
-            nav: () => import('./views/nav/ConfigNav.vue')
-        },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_USER_ACCESS] }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [
+                Permissions.CONFIG_USER_ACCESS,
+                Permissions.CONFIG_ROLE_ACCESS,
+                Permissions.CONFIG_ACL_ACCESS,
+                Permissions.CONFIG_ORGANIZATION_ACCESS
+            ]
+        }
     },
     {
         path: '/config/collectors',

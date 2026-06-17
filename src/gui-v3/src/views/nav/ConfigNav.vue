@@ -9,7 +9,7 @@
                         {{ link.icon }}
                     </v-icon>
                     <span style="font-size: 0.8rem; line-height: 1.4; text-align: center">
-                        {{ link.translate ? $t(link.title) : link.title }}
+                        {{ link.translate ? $t(link.title ?? '') : link.title }}
                     </span>
                 </div>
             </template>
@@ -21,183 +21,12 @@
     import { computed } from 'vue'
     import { useTheme } from 'vuetify'
     import { useAuth } from '@/composables/useAuth'
-    import type { PermissionKey } from '@/types/permissions'
-
-    type ConfigLink = {
-        id: number
-        icon?: string
-        title?: string
-        route?: string
-        permission?: PermissionKey
-        translate?: boolean
-        separator?: boolean
-    }
+    import { filterConfigLinks } from '@/config/config-nav-links'
 
     const { checkPermission } = useAuth()
     const { global: themeGlobal } = useTheme()
     const isDark = computed(() => themeGlobal.name.value === 'dark')
 
-    const links: ConfigLink[] = [
-        {
-            id: 1,
-            icon: 'mdi-account-group',
-            title: 'nav_menu.users',
-            route: '/config/users',
-            permission: 'CONFIG_USER_ACCESS',
-            translate: true
-        },
-        {
-            id: 2,
-            icon: 'mdi-office-building',
-            title: 'nav_menu.organizations',
-            route: '/config/organizations',
-            permission: 'CONFIG_ORGANIZATION_ACCESS',
-            translate: true
-        },
-        {
-            id: 3,
-            icon: 'mdi-account-arrow-right',
-            title: 'nav_menu.roles',
-            route: '/config/roles',
-            permission: 'CONFIG_ROLE_ACCESS',
-            translate: true
-        },
-        {
-            id: 4,
-            icon: 'mdi-lock-check',
-            title: 'nav_menu.acls',
-            route: '/config/acls',
-            permission: 'CONFIG_ACL_ACCESS',
-            translate: true
-        },
-        { id: 5, separator: true },
-        {
-            id: 6,
-            icon: 'mdi-download-network',
-            title: 'nav_menu.collectors',
-            route: '/config/collectors',
-            translate: true
-        },
-        { id: 7, separator: true },
-        {
-            id: 8,
-            icon: 'mdi-presentation',
-            title: 'nav_menu.presenters',
-            route: '/config/presenters',
-            translate: true
-        },
-        { id: 9, separator: true },
-        {
-            id: 10,
-            icon: 'mdi-upload-network',
-            title: 'nav_menu.publishers',
-            route: '/config/publishers',
-            translate: true
-        },
-        { id: 11, separator: true },
-        {
-            id: 12,
-            icon: 'mdi-application-variable-outline',
-            title: 'nav_menu.attributes',
-            route: '/config/reportitems/attributes',
-            permission: 'CONFIG_ATTRIBUTE_ACCESS',
-            translate: true
-        },
-        {
-            id: 13,
-            icon: 'mdi-file-table',
-            title: 'nav_menu.report_types',
-            route: '/config/reportitems/types',
-            permission: 'CONFIG_REPORT_TYPE_ACCESS',
-            translate: true
-        },
-        { id: 14, separator: true },
-        { id: 15, icon: 'mdi-robot', title: 'nav_menu.bots', route: '/config/bots', translate: true },
-        { id: 16, separator: true },
-        {
-            id: 17,
-            icon: 'mdi-remote',
-            title: 'nav_menu.remote',
-            route: '/config/remote',
-            translate: true
-        },
-        { id: 18, separator: true },
-        {
-            id: 19,
-            icon: 'mdi-application-cog-outline',
-            title: 'nav_menu.settings',
-            route: '/config/settings',
-            permission: 'CONFIG_SETTINGS_ACCESS',
-            translate: true
-        },
-        {
-            id: 20,
-            icon: 'mdi-format-list-text',
-            title: 'nav_menu.word_lists',
-            route: '/config/wordlists',
-            permission: 'CONFIG_WORD_LIST_ACCESS',
-            translate: true
-        },
-        {
-            id: 21,
-            icon: 'mdi-state-machine',
-            title: 'nav_menu.workflow',
-            route: '/config/workflow',
-            permission: 'CONFIG_WORKFLOW_ACCESS',
-            translate: true
-        },
-        {
-            id: 22,
-            icon: 'mdi-cloud-arrow-down',
-            title: 'nav_menu.data_providers',
-            route: '/config/data-providers',
-            permission: 'CONFIG_DATA_PROVIDER_ACCESS',
-            translate: true
-        },
-        { id: 23, separator: true },
-        {
-            id: 24,
-            icon: 'mdi-database-export',
-            title: 'nav_menu.external',
-            route: '/config/external',
-            permission: 'MY_ASSETS_CONFIG',
-            translate: true
-        }
-    ]
-
     // Filter links based on permissions and remove leading/trailing separators
-    const filteredLinks = computed(() => {
-        const filtered: ConfigLink[] = []
-
-        for (let i = 0; i < links.length; i++) {
-            const link = links[i]
-            if (!link) {
-                continue
-            }
-
-            if (link.separator) {
-                // Only add separator if there are items before it and it's not the first item
-                const lastFiltered = filtered[filtered.length - 1]
-                if (filtered.length > 0 && lastFiltered && !lastFiltered.separator) {
-                    filtered.push(link)
-                }
-            } else if (!link.permission || checkPermission(link.permission)) {
-                filtered.push(link)
-            }
-        }
-
-        // Remove leading separator
-        const firstFiltered = filtered[0]
-        if (filtered.length > 0 && firstFiltered && firstFiltered.separator) {
-            filtered.shift()
-        }
-
-        // Remove trailing separator
-        const lastFiltered = filtered[filtered.length - 1]
-        if (filtered.length > 0 && lastFiltered && lastFiltered.separator) {
-            filtered.pop()
-        }
-
-        return filtered
-    })
+    const filteredLinks = computed(() => filterConfigLinks(checkPermission))
 </script>

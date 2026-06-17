@@ -20,7 +20,7 @@
                         />
                     </v-col>
                     <v-col cols="4" class="text-right">
-                        <NewRole @saved="handleSaved" />
+                        <NewRole :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -42,10 +42,7 @@
             </v-data-table>
         </v-card>
 
-        <!-- Edit Dialog -->
-        <v-dialog v-model="showEditDialog" max-width="800">
-            <NewRole :edit-item="editItem" @saved="handleSaved" />
-        </v-dialog>
+        <ConfirmationDialog v-model="deleteDialog" :message="itemToDelete?.name || ''" max-width="600px" @confirm="confirmDelete" />
     </v-container>
 </template>
 
@@ -56,11 +53,13 @@
     import { deleteRole } from '@/api/config'
     import NewRole from '@/components/config/roles/NewRole.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
     type HeaderEntry = {
         title: string
         key: string
         sortable?: boolean
+        align?: 'start' | 'end' | 'center'
     }
 
     type RoleItem = {
@@ -74,13 +73,14 @@
     const configStore = useConfigStore()
 
     const search = ref('')
-    const showEditDialog = ref(false)
     const editItem = ref<RoleItem | null>(null)
+    const deleteDialog = ref(false)
+    const itemToDelete = ref<RoleItem | null>(null)
 
     const headers: HeaderEntry[] = [
         { title: t('role.name'), key: 'name' },
         { title: t('role.description'), key: 'description' },
-        { title: t('settings.actions'), key: 'actions', sortable: false }
+        { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
 
     const asRoleItem = (item: unknown): RoleItem => item as RoleItem
@@ -94,25 +94,40 @@
     }
 
     const handleEdit = (item: RoleItem): void => {
+        // Setting editItem triggers NewRole's watcher to open its dialog in edit mode.
         editItem.value = item
-        showEditDialog.value = true
     }
 
-    const handleDelete = async (item: RoleItem): Promise<void> => {
-        if (confirm(t('common.messagebox.delete_confirm', { name: item.name }))) {
-            try {
-                await deleteRole(item)
-                await loadData()
-            } catch (error) {
-                console.error('Error deleting role:', error)
-            }
+    const handleDelete = (item: RoleItem): void => {
+        itemToDelete.value = item
+        deleteDialog.value = true
+    }
+
+    const confirmDelete = async (): Promise<void> => {
+        if (!itemToDelete.value) {
+            return
+        }
+        try {
+            await deleteRole(itemToDelete.value)
+            await loadData()
+        } catch (error) {
+            console.error('Error deleting role:', error)
+        } finally {
+            itemToDelete.value = null
         }
     }
 
     const handleSaved = (): void => {
-        showEditDialog.value = false
         editItem.value = null
         loadData()
+    }
+
+    // Reset editItem when the dialog closes so the same row can be edited again,
+    // and so the Add New button opens a blank form.
+    const onDialogChange = (open: boolean): void => {
+        if (!open) {
+            editItem.value = null
+        }
     }
 
     onMounted(() => {

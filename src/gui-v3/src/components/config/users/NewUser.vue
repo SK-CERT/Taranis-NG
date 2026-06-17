@@ -57,8 +57,10 @@
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="passwordConfirmRules"
-                                :disabled="saving"
+                                :color="passwordsMatch ? 'success' : undefined"
+                                :base-color="passwordsMatch ? 'success' : undefined"
                                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                :disabled="saving"
                                 @click:append-inner="showPassword = !showPassword"
                             />
                         </v-col>
@@ -67,67 +69,34 @@
                     <v-divider class="my-4" />
 
                     <!-- Organizations Selection -->
-                    <v-card variant="outlined" class="mb-4">
-                        <v-card-title class="text-subtitle-1 bg-grey-lighten-4">
-                            {{ t('user.organizations') }}
-                        </v-card-title>
-                        <v-data-table
-                            v-model="selectedOrganizations"
-                            :headers="orgHeaders"
-                            :items="organizations"
-                            :loading="loadingOrganizations"
-                            item-value="id"
-                            show-select
-                            density="comfortable"
-                            :disabled="saving"
-                        >
-                            <template #item.name="{ item }">
-                                <strong>{{ item.name }}</strong>
-                            </template>
-                        </v-data-table>
-                    </v-card>
+                    <EntitySelectTable
+                        v-model="selectedOrganizations"
+                        :title="t('user.organizations')"
+                        :items="organizations"
+                        :headers="orgHeaders"
+                        :loading="loadingOrganizations"
+                        :disabled="saving"
+                    />
 
                     <!-- Roles Selection -->
-                    <v-card variant="outlined" class="mb-4">
-                        <v-card-title class="text-subtitle-1 bg-grey-lighten-4">
-                            {{ t('user.roles') }}
-                        </v-card-title>
-                        <v-data-table
-                            v-model="selectedRoles"
-                            :headers="roleHeaders"
-                            :items="roles"
-                            :loading="loadingRoles"
-                            item-value="id"
-                            show-select
-                            density="comfortable"
-                            :disabled="saving"
-                        >
-                            <template #item.name="{ item }">
-                                <strong>{{ item.name }}</strong>
-                            </template>
-                        </v-data-table>
-                    </v-card>
+                    <EntitySelectTable
+                        v-model="selectedRoles"
+                        :title="t('user.roles')"
+                        :items="roles"
+                        :headers="roleHeaders"
+                        :loading="loadingRoles"
+                        :disabled="saving"
+                    />
 
                     <!-- Permissions Selection -->
-                    <v-card variant="outlined" class="mb-4">
-                        <v-card-title class="text-subtitle-1 bg-grey-lighten-4">
-                            {{ t('user.permissions') }}
-                        </v-card-title>
-                        <v-data-table
-                            v-model="selectedPermissions"
-                            :headers="permissionHeaders"
-                            :items="permissions"
-                            :loading="loadingPermissions"
-                            item-value="id"
-                            show-select
-                            density="comfortable"
-                            :disabled="saving"
-                        >
-                            <template #item.name="{ item }">
-                                <strong>{{ item.name }}</strong>
-                            </template>
-                        </v-data-table>
-                    </v-card>
+                    <EntitySelectTable
+                        v-model="selectedPermissions"
+                        :title="t('user.permissions')"
+                        :items="permissions"
+                        :headers="permissionHeaders"
+                        :loading="loadingPermissions"
+                        :disabled="saving"
+                    />
 
                     <v-alert v-if="showValidationError" type="error" density="compact" class="mb-3">
                         {{ t('error.validation') }}
@@ -158,6 +127,7 @@
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
     import { createNewUser, updateUser, getAllOrganizations, getAllRoles, getAllPermissions } from '@/api/config'
 
     type SelectableEntity = {
@@ -191,7 +161,9 @@
     type IdSelection = Array<string | number>
 
     type ListResponse = {
-        items?: SelectableEntity[]
+        data?: {
+            items?: SelectableEntity[]
+        }
     }
 
     const props = withDefaults(
@@ -262,19 +234,22 @@
         return [(v: string) => !!v || t('error.required'), (v: string) => v === password.value || t('user.password_mismatch')]
     })
 
+    // True when both password fields are filled and identical, used to turn the confirm field green.
+    const passwordsMatch = computed(() => !!passwordConfirm.value && passwordConfirm.value === password.value)
+
     const orgHeaders: TableHeader[] = [
         { title: t('user.name'), key: 'name', sortable: true },
-        { title: t('user.description'), key: 'description', sortable: false }
+        { title: t('organization.description'), key: 'description', sortable: false }
     ]
 
     const roleHeaders: TableHeader[] = [
         { title: t('user.name'), key: 'name', sortable: true },
-        { title: t('user.description'), key: 'description', sortable: false }
+        { title: t('role.description'), key: 'description', sortable: false }
     ]
 
     const permissionHeaders: TableHeader[] = [
         { title: t('user.name'), key: 'name', sortable: true },
-        { title: t('user.description'), key: 'description', sortable: false }
+        { title: t('acl.description'), key: 'description', sortable: false }
     ]
 
     // Watch for edit item changes
@@ -324,9 +299,9 @@
                 getAllPermissions({ search: '' })
             ])
 
-            organizations.value = (orgsResponse as ListResponse).items || []
-            roles.value = (rolesResponse as ListResponse).items || []
-            permissions.value = (permsResponse as ListResponse).items || []
+            organizations.value = (orgsResponse as ListResponse).data?.items || []
+            roles.value = (rolesResponse as ListResponse).data?.items || []
+            permissions.value = (permsResponse as ListResponse).data?.items || []
         } catch (error) {
             console.error('Error loading user data:', error)
         } finally {
