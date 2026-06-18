@@ -44,6 +44,7 @@ export const ICONS = Object.freeze({
     DESC: 'mdi-sort-descending',
     DOWNLOAD: 'mdi-download',
     DOWNLOAD_NETWORK: 'mdi-download-network',
+    DRAG_HANDLE: 'mdi-drag-vertical',
     EDIT: 'mdi-pencil',
     EMAIL_OPEN: 'mdi-email-open',
     EXCLAMATION_THICK: 'mdi-exclamation-thick',

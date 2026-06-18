@@ -19,19 +19,7 @@
                 <!-- Main Content Row -->
                 <div class="selector-body">
                     <!-- Left Sidebar: Groups -->
-                    <v-list v-model:selected="selectedGroupList" density="compact">
-                        <v-list-subheader>{{ $t('assess.groups') }}</v-list-subheader>
-                        <v-list-item v-for="group in groups" :key="group.id" :value="group.id" class="pa-2" @click="changeGroup(group.id)">
-                            <div class="d-flex flex-column align-center text-center">
-                                <v-icon :color="group.color || undefined" class="mb-2">
-                                    {{ group.icon }}
-                                </v-icon>
-                                <span class="text-body-small">
-                                    {{ group.translate ? $t(group.title) : group.title }}
-                                </span>
-                            </div>
-                        </v-list-item>
-                    </v-list>
+                    <GroupNavList :groups="groups" :active-id="selectedGroupId" @select="onGroupSelect" />
 
                     <!-- Right Content Area: Toolbar + Items -->
                     <div class="selector-main">
@@ -39,7 +27,7 @@
                         <ToolbarFilterAssess
                             ref="toolbarFilter"
                             :analyze_selector="true"
-                            :total-count-title="'assess.total_count'"
+                            :total_count_title="'assess.total_count'"
                             @update-filter="handleFilterUpdate"
                         />
 
@@ -185,6 +173,7 @@
     import CardAssessItem from '@/components/assess/CardAssessItem.vue'
     import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
     import BaseCard from '@/components/common/BaseCard.vue'
+    import GroupNavList from '@/components/common/GroupNavList.vue'
 
     type SelectorItem = {
         id: number | string
@@ -261,7 +250,6 @@
     const selectedItems = ref<SelectorItem[]>(props.values || [])
     const groups = ref<SelectorGroup[]>([])
     const selectedGroupId = ref<string | null>(null)
-    const selectedGroupList = ref<string[]>([])
     const showRemoveConfirm = ref<boolean>(false)
     const itemToDelete = ref<SelectorItem | null>(null)
 
@@ -309,6 +297,10 @@
         if (contentData.value) {
             contentData.value.updateData?.(false, false)
         }
+    }
+
+    const onGroupSelect = (group: { id: string | number }): void => {
+        changeGroup(String(group.id))
     }
 
     const openSelector = async (): Promise<void> => {
@@ -554,7 +546,15 @@
     .selector-body {
         min-height: 0;
         display: grid;
-        grid-template-columns: 96px minmax(0, 1fr);
+        grid-template-columns: 100px minmax(0, 1fr);
+        overflow: hidden;
+    }
+
+    .selector-main {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
         overflow: hidden;
     }
 

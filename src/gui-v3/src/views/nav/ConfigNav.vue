@@ -9,7 +9,7 @@
                         {{ link.icon }}
                     </v-icon>
                     <span class="text-body-small">
-                        {{ link.translate ? $t(link.title) : link.title }}
+                        {{ link.translate ? $t(link.title ?? '') : link.title }}
                     </span>
                 </div>
             </template>

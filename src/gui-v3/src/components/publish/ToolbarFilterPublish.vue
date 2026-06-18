@@ -30,11 +30,9 @@
                     size="small"
                     :color="filter['published'] === 'ALL' ? 'default' : 'primary'"
                     :variant="filter['published'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="publishedFilterTooltip"
                     @click="cycleFilter('published')"
                 >
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ publishedFilterTooltip }}
-                    </v-tooltip>
                     <v-icon>{{ publishedFilterIcon }}</v-icon>
                 </v-chip>
             </div>
@@ -46,10 +44,13 @@
         <ToolbarGroup ref="toolbarGroup" view="publish" :current-filter="filter" @update-data="handleUpdateData" />
 
         <v-spacer />
-        <v-btn icon size="small" :color="compactMode ? 'primary' : 'default'" @click="toggleCompactMode">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t('publish.tooltip.compact_mode') }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="compactMode ? 'primary' : 'default'"
+            :title="t('publish.tooltip.compact_mode')"
+            @click="toggleCompactMode"
+        >
             <v-icon>{{ ICONS.FORMAT_LIST_BULLETED }}</v-icon>
         </v-btn>
     </v-toolbar>

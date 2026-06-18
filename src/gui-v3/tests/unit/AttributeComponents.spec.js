@@ -152,6 +152,22 @@ describe('AttributeString', () => {
         expect(wrapper.text()).toContain('1.')
         expect(wrapper.text()).toContain('2.')
     })
+
+    it('shows reorder controls (drag handle + arrows) when there are multiple editable values', () => {
+        const props = {
+            ...baseProps(),
+            values: [makeValue({ value: 'first' }), makeValue({ id: 2, index: 1, value: 'second' })]
+        }
+        const wrapper = mountAttr(AttributeString, props)
+        expect(wrapper.findAll('.reorder-controls').length).toBe(2)
+        expect(wrapper.find('.drag-handle').exists()).toBe(true)
+        expect(wrapper.findAll('.reorder-arrows').length).toBe(2)
+    })
+
+    it('does not show reorder controls for a single value', () => {
+        const wrapper = mountAttr(AttributeString, baseProps())
+        expect(wrapper.find('.reorder-controls').exists()).toBe(false)
+    })
 })
 
 // ── AttributeNumber ───────────────────────────────────────────────────────────
@@ -387,6 +403,15 @@ describe('AttributeTLP', () => {
         expect(wrapper.find('.tlp-options').exists()).toBe(true)
         const buttons = wrapper.findAll('.tlp-button')
         expect(buttons.length).toBe(5) // CLEAR, GREEN, AMBER, AMBER+STRICT, RED
+    })
+
+    it('renders TLP buttons with type="button" so they never submit a parent form', () => {
+        const wrapper = mountAttr(AttributeTLP, baseProps({ value: 'CLEAR' }))
+        const buttons = wrapper.findAll('.tlp-button')
+        expect(buttons.length).toBe(5)
+        buttons.forEach((btn) => {
+            expect(btn.attributes('type')).toBe('button')
+        })
     })
 
     it('shows TLP description in read-only mode', () => {

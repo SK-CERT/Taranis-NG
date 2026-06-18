@@ -37,16 +37,13 @@
                                     <span v-if="card.news_items_count" class="text-grey ms-1">({{ card.news_items_count }})</span>
                                 </div>
                             </v-col>
-                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center">
+                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center" :title="card.state.description">
                                 <v-icon :color="card.state.color">
                                     {{ card.state.icon }}
                                 </v-icon>
                                 <span class="text-body-large ms-2">
                                     {{ t('workflow.states.' + (card.state.display_name || ''), card.state.display_name || '') }}
                                 </span>
-                                <v-tooltip v-if="card.state.description" activator="parent" location="bottom">
-                                    {{ card.state.description }}
-                                </v-tooltip>
                             </v-col>
                         </v-row>
                     </v-col>

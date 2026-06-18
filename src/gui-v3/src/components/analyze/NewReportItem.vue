@@ -14,13 +14,13 @@
                     <v-card-text>{{ t('report_item.confirm_close.message') }}</v-card-text>
                     <v-card-actions>
                         <v-spacer />
-                        <v-btn color="" @click="showCloseConfirmation = false">
+                        <v-btn color="primary" variant="elevated" class="confirm-btn" @click="showCloseConfirmation = false">
                             {{ t('confirm_close.continue') }}
                         </v-btn>
-                        <v-btn color="primary" @click="saveAndClose">
+                        <v-btn color="success" variant="elevated" class="confirm-btn" @click="saveAndClose">
                             {{ t('confirm_close.save_and_close') }}
                         </v-btn>
-                        <v-btn color="error" @click="confirmClose">
+                        <v-btn color="error" variant="elevated" class="confirm-btn" @click="confirmClose">
                             {{ t('confirm_close.close') }}
                         </v-btn>
                     </v-card-actions>
@@ -55,6 +55,7 @@
                         :available-states="available_states"
                         :label="t('report_item.state')"
                         :disabled="!canModify"
+                        class="me-4"
                         @update:model-value="saveReportItem('state_id')"
                     />
 
@@ -1075,5 +1076,11 @@
 
     :deep(.v-expansion-panel) {
         border: 1px solid rgb(var(--v-theme-outline)) !important;
+    }
+
+    /* Keep the unsaved-changes dialog button labels white regardless of theme on-* colors. */
+    .confirm-btn,
+    .confirm-btn :deep(.v-btn__content) {
+        color: #fff !important;
     }
 </style>

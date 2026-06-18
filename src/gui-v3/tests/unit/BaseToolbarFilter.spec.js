@@ -5,6 +5,7 @@ import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
 // Stub the AddNewButton to keep tests focused
 const stubs = {
     AddNewButton: {
+        name: 'AddNewButton',
         template: '<button class="add-new-stub" @click="$emit(\'click\')"><slot /></button>',
         props: ['label']
     }
@@ -86,6 +87,16 @@ describe('BaseToolbarFilter', () => {
             await wrapper.find('.add-new-stub').trigger('click')
             expect(wrapper.emitted('add-new')).toBeDefined()
             expect(wrapper.emitted('add-new').length).toBeGreaterThanOrEqual(1)
+        })
+
+        it('passes the label as a translation key (AddNewButton translates it itself, avoiding double translation)', () => {
+            const wrapper = mountWithPlugins(BaseToolbarFilter, {
+                props: { ...defaultProps, showAddButton: true },
+                global: { stubs }
+            })
+
+            const addBtn = wrapper.findComponent({ name: 'AddNewButton' })
+            expect(addBtn.props('label')).toBe('common.add_btn')
         })
     })
 

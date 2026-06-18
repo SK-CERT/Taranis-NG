@@ -1,26 +1,12 @@
 <template>
-    <v-list density="compact">
-        <!-- Group links -->
-        <v-list-subheader>{{ $t('assess.groups') }}</v-list-subheader>
-        <v-list-item v-for="group in groups" :key="group.id" :to="group.route" class="pa-2">
-            <template #default>
-                <div class="d-flex flex-column align-center text-center">
-                    <v-icon :color="group.color || undefined" class="mb-2">
-                        {{ group.icon }}
-                    </v-icon>
-                    <span class="text-body-small">
-                        {{ group.translate ? $t(group.title) : group.title }}
-                    </span>
-                </div>
-            </template>
-        </v-list-item>
-    </v-list>
+    <GroupNavList :groups="groups" :active-id="activeGroupId" @select="onSelect" />
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { ref, computed, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useConfigStore } from '@/stores/config'
+    import GroupNavList from '@/components/common/GroupNavList.vue'
 
     type AssessGroup = {
         id: string | number
@@ -36,6 +22,13 @@
     const configStore = useConfigStore()
 
     const groups = ref<AssessGroup[]>([])
+
+    // Highlight the group matching the current /assess/group/:groupId route.
+    const activeGroupId = computed<string | null>(() => (route.params['groupId'] as string) ?? null)
+
+    const onSelect = (group: { route?: string }): void => {
+        if (group.route) router.push(group.route)
+    }
 
     onMounted(async () => {
         try {

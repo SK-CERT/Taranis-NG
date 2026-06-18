@@ -1,10 +1,13 @@
 <template>
     <div class="toolbar-group">
         <!-- Multi-select toggle button -->
-        <v-btn icon size="small" :color="multiSelectActive ? 'primary' : 'default'" @click="toggleMultiSelect">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t(`${view}.tooltip.toggle_selection`) }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="multiSelectActive ? 'primary' : 'default'"
+            :title="t(`${view}.tooltip.toggle_selection`)"
+            @click="toggleMultiSelect"
+        >
             <v-icon>{{ ICONS.MULTISELECT }}</v-icon>
         </v-btn>
 
@@ -14,20 +17,27 @@
         <!-- Action Buttons (only visible when multi-select is active) -->
         <template v-if="multiSelectActive">
             <!-- Select All / Unselect All -->
-            <v-btn icon size="small" :disabled="false" @click="allSelected ? unselectAll() : selectAll()">
-                <v-tooltip activator="parent" location="bottom">
-                    {{ allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`) }}
-                </v-tooltip>
+            <v-btn
+                icon
+                size="small"
+                :disabled="false"
+                :title="allSelected ? t(`${view}.tooltip.unselect_all`) : t(`${view}.tooltip.select_all`)"
+                @click="allSelected ? unselectAll() : selectAll()"
+            >
                 <v-icon>{{ allSelected ? ICONS.CHECKBOX_BLANK_OUTLINE : ICONS.SELECT_ALL }}</v-icon>
             </v-btn>
 
             <!-- View-specific action buttons -->
             <template v-if="view === 'assess'">
                 <!-- Group -->
-                <v-btn v-if="canModify && canGroupActions" icon size="small" :disabled="selectedCount < 2" @click="handleAction('GROUP')">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.group_items') }}
-                    </v-tooltip>
+                <v-btn
+                    v-if="canModify && canGroupActions"
+                    icon
+                    size="small"
+                    :disabled="selectedCount < 2"
+                    :title="t('assess.tooltip.group_items')"
+                    @click="handleAction('GROUP')"
+                >
                     <v-icon>{{ ICONS.GROUP }}</v-icon>
                 </v-btn>
 
@@ -37,87 +47,120 @@
                     icon
                     size="small"
                     :disabled="selectedCount === 0 || !canUngroupSelection"
+                    :title="t('assess.tooltip.ungroup_items')"
                     @click="handleAction('UNGROUP')"
                 >
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.ungroup_items') }}
-                    </v-tooltip>
                     <v-icon>{{ ICONS.UNGROUP }}</v-icon>
                 </v-btn>
 
                 <!-- Mark as Read -->
-                <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('READ')">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.read_items') }}
-                    </v-tooltip>
+                <v-btn
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0"
+                    :title="t('assess.tooltip.read_items')"
+                    @click="handleAction('READ')"
+                >
                     <v-icon>{{ ICONS.READ }}</v-icon>
                 </v-btn>
 
                 <!-- Mark as Important -->
-                <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('IMPORTANT')">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.important_items') }}
-                    </v-tooltip>
+                <v-btn
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0"
+                    :title="t('assess.tooltip.important_items')"
+                    @click="handleAction('IMPORTANT')"
+                >
                     <v-icon>{{ ICONS.IMPORTANT }}</v-icon>
                 </v-btn>
 
                 <!-- Give a Like -->
-                <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('LIKE')">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.like_items') }}
-                    </v-tooltip>
+                <v-btn
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0"
+                    :title="t('assess.tooltip.like_items')"
+                    @click="handleAction('LIKE')"
+                >
                     <v-icon>{{ ICONS.LIKE }}</v-icon>
                 </v-btn>
 
                 <!-- Give a Dislike -->
-                <v-btn icon size="small" :disabled="selectedCount === 0" @click="handleAction('DISLIKE')">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.dislike_items') }}
-                    </v-tooltip>
+                <v-btn
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0"
+                    :title="t('assess.tooltip.dislike_items')"
+                    @click="handleAction('DISLIKE')"
+                >
                     <v-icon>{{ ICONS.UNLIKE }}</v-icon>
                 </v-btn>
 
                 <!-- Analyze (Create Report) -->
-                <v-btn v-if="canCreateReport" icon size="small" :disabled="selectedCount === 0" @click="handleAnalyze">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.analyze_items') }}
-                    </v-tooltip>
+                <v-btn
+                    v-if="canCreateReport"
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0"
+                    :title="t('assess.tooltip.analyze_items')"
+                    @click="handleAnalyze"
+                >
                     <v-icon>{{ ICONS.FILE_CHART_OUTLINE }}</v-icon>
                 </v-btn>
 
                 <!-- Delete -->
-                <v-btn v-if="canDelete" icon size="small" color="error" :disabled="selectedCount === 0" @click="handleAction('DELETE')">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('assess.tooltip.delete_items') }}
-                    </v-tooltip>
+                <v-btn
+                    v-if="canDelete"
+                    icon
+                    size="small"
+                    color="error"
+                    :disabled="selectedCount === 0"
+                    :title="t('assess.tooltip.delete_items')"
+                    @click="handleAction('DELETE')"
+                >
                     <v-icon>{{ ICONS.DELETE }}</v-icon>
                 </v-btn>
             </template>
 
             <template v-else-if="view === 'analyze'">
                 <!-- Publish (Create Product) -->
-                <v-btn v-if="canCreateProduct" icon size="small" :disabled="selectedCount === 0" @click="handlePublish">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('analyze.tooltip.publish_items') }}
-                    </v-tooltip>
+                <v-btn
+                    v-if="canCreateProduct"
+                    icon
+                    size="small"
+                    :disabled="selectedCount === 0"
+                    :title="t('analyze.tooltip.publish_items')"
+                    @click="handlePublish"
+                >
                     <v-icon>{{ ICONS.PUBLISH }}</v-icon>
                 </v-btn>
 
                 <!-- Delete -->
-                <v-btn v-if="canDelete" icon size="small" color="error" :disabled="selectedCount === 0" @click="handleDelete">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('analyze.tooltip.delete_items') }}
-                    </v-tooltip>
+                <v-btn
+                    v-if="canDelete"
+                    icon
+                    size="small"
+                    color="error"
+                    :disabled="selectedCount === 0"
+                    :title="t('analyze.tooltip.delete_items')"
+                    @click="handleDelete"
+                >
                     <v-icon>{{ ICONS.DELETE }}</v-icon>
                 </v-btn>
             </template>
 
             <template v-else-if="view === 'publish'">
                 <!-- Delete -->
-                <v-btn v-if="canDelete" icon size="small" color="error" :disabled="selectedCount === 0" @click="handleDelete">
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ t('publish.tooltip.delete_items') }}
-                    </v-tooltip>
+                <v-btn
+                    v-if="canDelete"
+                    icon
+                    size="small"
+                    color="error"
+                    :disabled="selectedCount === 0"
+                    :title="t('publish.tooltip.delete_items')"
+                    @click="handleDelete"
+                >
                     <v-icon>{{ ICONS.DELETE }}</v-icon>
                 </v-btn>
             </template>

@@ -20,7 +20,7 @@
                     />
                 </v-col>
                 <v-col cols="12" md="5" style="display: flex; justify-content: flex-end; align-items: center">
-                    <AddNewButton v-if="showAddButton" :label="t('common.add_btn')" @click="emit('add-new')" />
+                    <AddNewButton v-if="showAddButton" label="common.add_btn" @click="emit('add-new')" />
                     <slot v-else name="addbutton" />
                 </v-col>
             </v-row>
@@ -61,11 +61,9 @@
                             :color="localFilter.sort === 'DATE_DESC' || localFilter.sort === 'DATE_ASC' ? 'primary' : 'default'"
                             :variant="localFilter.sort === 'DATE_DESC' || localFilter.sort === 'DATE_ASC' ? 'flat' : 'outlined'"
                             size="small"
+                            :title="dateSortTooltip"
                             @click="toggleDateSort"
                         >
-                            <v-tooltip activator="parent" location="bottom">
-                                {{ dateSortTooltip }}
-                            </v-tooltip>
                             <v-icon start>
                                 {{ ICONS.CLOCK }}
                             </v-icon>

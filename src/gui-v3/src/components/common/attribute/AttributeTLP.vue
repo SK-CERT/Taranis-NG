@@ -29,6 +29,7 @@
                             <button
                                 v-for="tlp in tlpOptions"
                                 :key="tlp"
+                                type="button"
                                 class="tlp-btn tlp-button"
                                 :style="getTLPButtonStyle(tlp, value.value)"
                                 :disabled="value.locked || !canModify"
@@ -158,14 +159,13 @@
     const getTLPButtonStyle = (tlp: TlpLevel, selectedValue: string): CSSProperties => {
         const config = tlpColors[tlp]
         const isActive = tlp === selectedValue
-        // Ring contrasts with the button background. Always set boxShadow even when inactive
-        // so the CSS property value changes but the property itself never appears/disappears,
-        // preventing any layout recalculation that would change button size.
-        const ringColor = config.text === '#ffffff' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.75)'
+        // Selected ring uses the app's primary blue so it's clearly visible against any TLP
+        // background in both light and dark mode. Always set boxShadow even when inactive so
+        // the property value changes but never appears/disappears, avoiding layout recalculation.
         return {
             backgroundColor: config.bg,
             color: config.text,
-            boxShadow: isActive ? `inset 0 0 0 3px ${ringColor}` : 'none'
+            boxShadow: isActive ? 'inset 0 0 0 3px rgb(var(--v-theme-primary))' : 'none'
         }
     }
 

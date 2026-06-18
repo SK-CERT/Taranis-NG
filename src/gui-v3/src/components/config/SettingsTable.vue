@@ -67,14 +67,9 @@
         </template>
 
         <template #item.description="{ item }">
-            <v-tooltip location="bottom">
-                <template #activator="{ props }">
-                    <span v-bind="props" style="cursor: help">
-                        {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
-                    </span>
-                </template>
-                {{ t('settings.default_value') }}: {{ item.default_val }}
-            </v-tooltip>
+            <span style="cursor: help" :title="`${t('settings.default_value')}: ${item.default_val}`">
+                {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
+            </span>
         </template>
 
         <template #item.updated_at="{ item }">

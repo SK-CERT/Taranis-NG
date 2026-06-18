@@ -417,4 +417,102 @@ describe('useAttributes', () => {
             scope.stop()
         })
     })
+
+    // ── move / moveUp / moveDown ──────────────────
+    describe('move / moveUp / moveDown', () => {
+        const makeValues = () => [
+            { id: 1, index: 0, value: 'a' },
+            { id: 2, index: 1, value: 'b' },
+            { id: 3, index: 2, value: 'c' }
+        ]
+
+        it('rotates value payloads while keeping records (ids) in place', async () => {
+            const values = makeValues()
+            const props = makeProps({ edit: false, values })
+            const { result, scope } = setupComposable(props)
+
+            await result.move(0, 2)
+
+            // values rotate, ids stay in their original order (backend orders by id)
+            expect(props.values.map((v) => v.value)).toEqual(['b', 'c', 'a'])
+            expect(props.values.map((v) => v.id)).toEqual([1, 2, 3])
+            scope.stop()
+        })
+
+        it('moveUp swaps a value with the one above it', async () => {
+            const values = makeValues()
+            const props = makeProps({ edit: false, values })
+            const { result, scope } = setupComposable(props)
+
+            await result.moveUp(2)
+
+            expect(props.values.map((v) => v.value)).toEqual(['a', 'c', 'b'])
+            expect(props.values.map((v) => v.id)).toEqual([1, 2, 3])
+            scope.stop()
+        })
+
+        it('moveDown swaps a value with the one below it', async () => {
+            const values = makeValues()
+            const props = makeProps({ edit: false, values })
+            const { result, scope } = setupComposable(props)
+
+            await result.moveDown(0)
+
+            expect(props.values.map((v) => v.value)).toEqual(['b', 'a', 'c'])
+            scope.stop()
+        })
+
+        it('is a no-op for the same index or out-of-bounds', async () => {
+            const values = makeValues()
+            const props = makeProps({ edit: false, values })
+            const { result, scope } = setupComposable(props)
+
+            await result.move(1, 1)
+            await result.move(0, 5)
+            await result.move(-1, 1)
+
+            expect(props.values.map((v) => v.value)).toEqual(['a', 'b', 'c'])
+            scope.stop()
+        })
+
+        it('does not reorder across a locked slot', async () => {
+            const values = [
+                { id: 1, index: 0, value: 'a' },
+                { id: 2, index: 1, value: 'b', locked: true },
+                { id: 3, index: 2, value: 'c' }
+            ]
+            const props = makeProps({ edit: false, values })
+            const { result, scope } = setupComposable(props)
+
+            await result.move(0, 2)
+
+            expect(props.values.map((v) => v.value)).toEqual(['a', 'b', 'c'])
+            scope.stop()
+        })
+
+        it('persists only the changed slots via onEdit in edit mode', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue({
+                data: { attribute_last_updated: 'now', attribute_user: 'admin' }
+            })
+
+            const values = makeValues()
+            const props = makeProps({ edit: true, values })
+            const { result, scope } = setupComposable(props)
+
+            // moveDown(0) swaps slots 0 and 1; slot 2 is unchanged.
+            await result.moveDown(0)
+
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledTimes(2)
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledWith(
+                'report-1',
+                expect.objectContaining({ attribute_id: 1, attribute_value: 'b' })
+            )
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledWith(
+                'report-1',
+                expect.objectContaining({ attribute_id: 2, attribute_value: 'a' })
+            )
+            scope.stop()
+        })
+    })
 })

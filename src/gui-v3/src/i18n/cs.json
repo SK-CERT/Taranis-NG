@@ -647,7 +647,10 @@
             "enum_selector": "Zobrazit okno s hledáním hodnot",
             "delete_value": "Smazat hodnotu tohoto atributu",
             "add_value": "Přidat novou hodnotu k tomuto atributu",
-            "auto_generate": "Automaticky generovat"
+            "auto_generate": "Automaticky generovat",
+            "drag_to_reorder": "Přetažením změníte pořadí",
+            "move_up": "Posunout nahoru",
+            "move_down": "Posunout dolů"
         }
     },
     "product": {
