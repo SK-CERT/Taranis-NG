@@ -2,12 +2,7 @@
     <v-container fluid>
         <v-card>
             <v-card-title class="d-flex align-center">
-                <v-tooltip location="top">
-                    <template #activator="{ props }">
-                        <v-icon color="blue" v-bind="props" class="mr-2">mdi-information-outline</v-icon>
-                    </template>
-                    <span>{{ t('workflow.states.tab_description') }}</span>
-                </v-tooltip>
+                <v-icon color="blue" class="mr-2" :title="t('workflow.states.tab_description')">mdi-information-outline</v-icon>
                 <span>{{ t('workflow.states_tab') }}</span>
             </v-card-title>
 

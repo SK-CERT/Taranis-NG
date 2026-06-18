@@ -77,28 +77,18 @@
                 >
                     <v-card-title class="text-uppercase text-body-1 font-weight-bold pa-3">
                         {{ group.label }}
-                        <v-tooltip v-if="showTooltips && group.tooltipKey" location="end" max-width="500">
-                            <template #activator="{ props: tp }">
-                                <v-icon v-bind="tp" size="x-small" class="ml-1">
-                                    {{ ICONS.INFORMATION_OUTLINE }}
-                                </v-icon>
-                            </template>
-                            <span>{{ $t(group.tooltipKey) }}</span>
-                        </v-tooltip>
+                        <v-icon v-if="showTooltips && group.tooltipKey" size="x-small" class="ml-1" :title="$t(group.tooltipKey)">
+                            {{ ICONS.INFORMATION_OUTLINE }}
+                        </v-icon>
                     </v-card-title>
 
                     <v-card-text class="pt-0">
                         <div v-for="metric in group.metrics" :key="metric.shortName" class="mb-3">
                             <div class="d-flex align-center mb-1">
                                 <span class="text-primary text-body-2">{{ metric.label }}</span>
-                                <v-tooltip v-if="showTooltips && metric.tooltipKey" location="end" max-width="500">
-                                    <template #activator="{ props: tp }">
-                                        <v-icon v-bind="tp" size="x-small" class="ml-1">
-                                            {{ ICONS.INFORMATION_OUTLINE }}
-                                        </v-icon>
-                                    </template>
-                                    <span>{{ $t(metric.tooltipKey) }}</span>
-                                </v-tooltip>
+                                <v-icon v-if="showTooltips && metric.tooltipKey" size="x-small" class="ml-1" :title="$t(metric.tooltipKey)">
+                                    {{ ICONS.INFORMATION_OUTLINE }}
+                                </v-icon>
                             </div>
                             <v-btn-toggle
                                 :model-value="getSelectedValueIndex(metric)"
@@ -106,25 +96,18 @@
                                 density="compact"
                                 @update:model-value="(idx) => onMetricToggle(metric, idx)"
                             >
-                                <template v-for="(val, valIdx) in metric.values" :key="val.shortName">
-                                    <v-tooltip v-if="showTooltips && val.tooltipKey" location="bottom" max-width="300">
-                                        <template #activator="{ props: tp }">
-                                            <v-btn v-bind="tp" size="small" :value="valIdx">
-                                                <span>{{ val.label }}</span>
-                                                <v-icon size="small" color="primary" class="ml-1">
-                                                    {{ 'mdi-alpha-' + val.shortName.toLowerCase() + '-box' }}
-                                                </v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>{{ $t(val.tooltipKey) }}</span>
-                                    </v-tooltip>
-                                    <v-btn v-else size="small" :value="valIdx">
-                                        <span>{{ val.label }}</span>
-                                        <v-icon size="small" color="primary" class="ml-1">
-                                            {{ 'mdi-alpha-' + val.shortName.toLowerCase() + '-box' }}
-                                        </v-icon>
-                                    </v-btn>
-                                </template>
+                                <v-btn
+                                    v-for="(val, valIdx) in metric.values"
+                                    :key="val.shortName"
+                                    size="small"
+                                    :value="valIdx"
+                                    :title="showTooltips && val.tooltipKey ? $t(val.tooltipKey) : undefined"
+                                >
+                                    <span>{{ val.label }}</span>
+                                    <v-icon size="small" color="primary" class="ml-1">
+                                        {{ 'mdi-alpha-' + val.shortName.toLowerCase() + '-box' }}
+                                    </v-icon>
+                                </v-btn>
                             </v-btn-toggle>
                         </div>
                     </v-card-text>

@@ -60,12 +60,15 @@
     import { ICONS } from '@/config/ui-constants'
     import { useI18n } from 'vue-i18n'
     import { getReportItemsByAggregate, updateReportItem } from '@/api/analyze'
+    import { useAnalyzeStore } from '@/stores/analyze'
     import CardAnalyze from '@/components/analyze/CardAnalyze.vue'
 
     type ReportItem = {
         id: number | string
         access?: boolean
         modify?: boolean
+        report_item_type_id?: number | string
+        report_type_name?: string
         [key: string]: unknown
     }
 
@@ -85,6 +88,7 @@
     }
 
     const { t } = useI18n()
+    const analyzeStore = useAnalyzeStore()
 
     const isOpen = ref<boolean>(false)
     const loading = ref<boolean>(false)
@@ -139,6 +143,12 @@
         reports.value = []
 
         try {
+            // Report item types are needed to resolve the type name shown on each card
+            // (the aggregate response only carries report_item_type_id, like the Analyze list).
+            if (!analyzeStore.getReportItemTypes.items?.length) {
+                await analyzeStore.loadReportItemTypes({})
+            }
+
             const response = (await getReportItemsByAggregate(card.id)) as ReportResponse
             const reportItems = normalizeReportItems(response)
             reports.value = reportItems || []
@@ -157,9 +167,17 @@
     }
 
     const toAnalyzeCard = (report: ReportItem): ReportItem => {
+        // Resolve the report type name from its id, the same way the Analyze list does,
+        // so the card shows the type (the aggregate response has no report_type_name).
+        const types = Array.isArray(analyzeStore.getReportItemTypes.items)
+            ? (analyzeStore.getReportItemTypes.items as Array<{ id: number | string; title?: string }>)
+            : []
+        const reportType = types.find((x) => x.id == report.report_item_type_id)
+
         // CardAnalyze gates click by access/modify flags; set safe defaults for dialog usage.
         return {
             ...report,
+            report_type_name: report.report_type_name ?? (reportType?.title || 'Report Item'),
             access: report.access ?? true,
             modify: report.modify ?? true
         }

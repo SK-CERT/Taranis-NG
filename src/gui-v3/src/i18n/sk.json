@@ -785,7 +785,10 @@
             "enum_selector": "Zobraziť okno na vyhľadávanie hodnôt",
             "delete_value": "Odstrániť hodnotu z tohto atribútu",
             "add_value": "Pridať novú hodnotu k tomuto atribútu",
-            "auto_generate": "Automaticky vygenerovať"
+            "auto_generate": "Automaticky vygenerovať",
+            "drag_to_reorder": "Presunutím zmeníte poradie",
+            "move_up": "Posunúť nahor",
+            "move_down": "Posunúť nadol"
         }
     },
     "product": {

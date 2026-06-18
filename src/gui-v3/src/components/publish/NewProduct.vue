@@ -9,13 +9,13 @@
                 <v-card-text>{{ $t('product.confirm_close.message') }}</v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn color="" @click="showCloseConfirmation = false">
+                    <v-btn color="primary" variant="elevated" class="confirm-btn" @click="showCloseConfirmation = false">
                         {{ $t('confirm_close.continue') }}
                     </v-btn>
-                    <v-btn color="primary" @click="saveAndClose">
+                    <v-btn color="success" variant="elevated" class="confirm-btn" @click="saveAndClose">
                         {{ $t('confirm_close.save_and_close') }}
                     </v-btn>
-                    <v-btn color="error" @click="confirmClose">
+                    <v-btn color="error" variant="elevated" class="confirm-btn" @click="confirmClose">
                         {{ $t('confirm_close.close') }}
                     </v-btn>
                 </v-card-actions>
@@ -77,7 +77,8 @@
                     :available-states="availableStates"
                     :label="$t('product.state')"
                     :disabled="!canModify"
-                    @update:model-value="handleUpdateRecord"
+                    class="me-4"
+                    @update:model-value="handleStateChange"
                 />
                 <v-btn v-if="!isEditMode && canModify && product.id === -1" text @click="handleSave">
                     <v-icon start>
@@ -446,6 +447,13 @@
         }
     }
 
+    function handleStateChange(newStateId: number | string | null): void {
+        // StateSelector is bound one-way via :model-value, so we must write the
+        // selected id back into the product before persisting.
+        product.value.state_id = newStateId ?? undefined
+        handleUpdateRecord()
+    }
+
     async function handleUpdateRecord(): Promise<void> {
         if (!isEditMode.value || product.value.id === -1) return
 
@@ -668,5 +676,11 @@
 <style scoped>
     .v-toolbar :deep(.v-select) {
         margin-top: 8px;
+    }
+
+    /* Keep the unsaved-changes dialog button labels white regardless of theme on-* colors. */
+    .confirm-btn,
+    .confirm-btn :deep(.v-btn__content) {
+        color: #fff !important;
     }
 </style>

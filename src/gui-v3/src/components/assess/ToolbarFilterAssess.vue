@@ -29,33 +29,27 @@
                     size="small"
                     :color="filter['read'] === 'ALL' ? 'default' : 'primary'"
                     :variant="filter['read'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="readFilterTooltip"
                     @click="cycleFilter('read')"
                 >
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ readFilterTooltip }}
-                    </v-tooltip>
                     <v-icon>{{ readFilterIcon }}</v-icon>
                 </v-chip>
                 <v-chip
                     size="small"
                     :color="filter['important'] === 'ALL' ? 'default' : 'primary'"
                     :variant="filter['important'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="importantFilterTooltip"
                     @click="cycleFilter('important')"
                 >
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ importantFilterTooltip }}
-                    </v-tooltip>
                     <v-icon>{{ importantFilterIcon }}</v-icon>
                 </v-chip>
                 <v-chip
                     size="small"
                     :color="filter['relevant'] === 'ALL' ? 'default' : 'primary'"
                     :variant="filter['relevant'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="relevantFilterTooltip"
                     @click="cycleFilter('relevant')"
                 >
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ relevantFilterTooltip }}
-                    </v-tooltip>
                     <v-icon>{{ relevantFilterIcon }}</v-icon>
                 </v-chip>
             </div>
@@ -68,11 +62,9 @@
                 size="small"
                 :color="filter.sort === 'DATE_DESC' || filter.sort === 'DATE_ASC' ? 'primary' : 'default'"
                 :variant="filter.sort === 'DATE_DESC' || filter.sort === 'DATE_ASC' ? 'flat' : 'outlined'"
+                :title="dateSortTooltip"
                 @click="toggleDateSort"
             >
-                <v-tooltip activator="parent" location="bottom">
-                    {{ dateSortTooltip }}
-                </v-tooltip>
                 <v-icon start>mdi-clock</v-icon>
                 <v-icon>{{ dateSortIcon }}</v-icon>
             </v-chip>
@@ -81,52 +73,62 @@
                 size="small"
                 :color="filter.sort === 'RELEVANCE_DESC' ? 'primary' : 'default'"
                 :variant="filter.sort === 'RELEVANCE_DESC' ? 'flat' : 'outlined'"
+                :title="t('assess.tooltip.sort.relevance.descending')"
                 @click="toggleRelevanceSort"
             >
-                <v-tooltip activator="parent" location="bottom">
-                    {{ t('assess.tooltip.sort.relevance.descending') }}
-                </v-tooltip>
                 <v-icon start>mdi-thumb-up</v-icon>
                 <v-icon>mdi-arrow-down</v-icon>
             </v-chip>
         </template>
     </BaseToolbarFilter>
 
-    <!-- Additional Row: Selection Group and View Options -->
-    <v-toolbar flat color="surface" density="compact">
+    <!-- Additional Row: Selection Group and View Options (hidden in the attach-news-items selector) -->
+    <v-toolbar v-if="!analyze_selector" flat color="surface" density="compact">
         <ToolbarGroup ref="toolbarGroup" view="assess" :current-filter="filter" @update-data="handleUpdateData" />
 
         <v-spacer />
 
         <!-- Hide Reviews Button -->
-        <v-btn icon size="small" :color="hideReviews ? 'primary' : 'default'" @click="toggleHideReviews">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t('assess.tooltip.hide_review') }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="hideReviews ? 'primary' : 'default'"
+            :title="t('assess.tooltip.hide_review')"
+            @click="toggleHideReviews"
+        >
             <v-icon>{{ hideReviews ? 'mdi-text-short' : 'mdi-text-long' }}</v-icon>
         </v-btn>
 
         <!-- Hide Source Links Button -->
-        <v-btn icon size="small" :color="hideSourceLinks ? 'primary' : 'default'" @click="toggleHideSourceLinks">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t('assess.tooltip.hide_source_link') }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="hideSourceLinks ? 'primary' : 'default'"
+            :title="t('assess.tooltip.hide_source_link')"
+            @click="toggleHideSourceLinks"
+        >
             <v-icon>{{ hideSourceLinks ? 'mdi-link-off' : 'mdi-link' }}</v-icon>
         </v-btn>
 
         <!-- Highlight Wordlist Button -->
-        <v-btn icon size="small" :color="highlightWordlist ? 'primary' : 'default'" @click="toggleHighlightWordlist">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t('assess.tooltip.highlight_wordlist') }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="highlightWordlist ? 'primary' : 'default'"
+            :title="t('assess.tooltip.highlight_wordlist')"
+            @click="toggleHighlightWordlist"
+        >
             <v-icon>{{ highlightWordlist ? 'mdi-alphabetical-off' : 'mdi-alphabetical' }}</v-icon>
         </v-btn>
 
         <!-- Compact Mode Button -->
-        <v-btn icon size="small" :color="compactMode ? 'primary' : 'default'" @click="toggleCompactMode">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t('assess.tooltip.compact_mode') }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="compactMode ? 'primary' : 'default'"
+            :title="t('assess.tooltip.compact_mode')"
+            @click="toggleCompactMode"
+        >
             <v-icon>mdi-format-list-bulleted</v-icon>
         </v-btn>
     </v-toolbar>
@@ -161,13 +163,15 @@
             selected_count_title?: string
             showAddButton?: boolean
             addButtonLabel?: string
+            analyze_selector?: boolean
         }>(),
         {
             title: 'nav_menu.newsitems',
             total_count_title: 'assess.total_count',
             selected_count_title: 'toolbar_filter.selected_count',
             showAddButton: false,
-            addButtonLabel: 'common.add_btn'
+            addButtonLabel: 'common.add_btn',
+            analyze_selector: false
         }
     )
 

@@ -295,4 +295,30 @@
     .cx-drawer-bg {
         background-color: var(--color-drawer-bg) !important;
     }
+
+    /* Filled (flat/elevated) colored buttons should use their themed on-color for the
+       label. Vuetify 4's base .v-btn color rule otherwise wins over the .bg-{color}
+       rule, leaving dark text on colored backgrounds. Only targets buttons that carry
+       a bg-{color} class (filled variants); text/outlined/tonal keep their colored label. */
+    .v-btn.bg-primary {
+        color: rgb(var(--v-theme-on-primary)) !important;
+    }
+    .v-btn.bg-secondary {
+        color: rgb(var(--v-theme-on-secondary)) !important;
+    }
+    .v-btn.bg-tertiary {
+        color: rgb(var(--v-theme-on-tertiary)) !important;
+    }
+    .v-btn.bg-success {
+        color: rgb(var(--v-theme-on-success)) !important;
+    }
+    .v-btn.bg-error {
+        color: rgb(var(--v-theme-on-error)) !important;
+    }
+    .v-btn.bg-warning {
+        color: rgb(var(--v-theme-on-warning)) !important;
+    }
+    .v-btn.bg-info {
+        color: rgb(var(--v-theme-on-info)) !important;
+    }
 </style>

@@ -28,6 +28,7 @@
         title: string
         translate: boolean
         route: string
+        color?: string
     }
 
     const router = useRouter()

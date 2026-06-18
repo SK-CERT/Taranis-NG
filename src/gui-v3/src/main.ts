@@ -99,8 +99,11 @@ const vuetify = createVuetify({
                     'error': '#FF5252',
                     'on-error': '#FFFFFF',
                     'info': '#2196F3',
+                    'on-info': '#FFFFFF',
                     'success': '#4CAF50',
+                    'on-success': '#FFFFFF',
                     'warning': '#FB8C00',
+                    'on-warning': '#FFFFFF',
                     'accent': '#82B1FF'
                 }
             },

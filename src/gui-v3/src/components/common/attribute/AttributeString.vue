@@ -1,7 +1,15 @@
 <template>
     <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
+                :class="{ 'drag-over': dragOverIndex === index, 'dragging': dragIndex === index }"
+                @dragover="onDragOver(index, $event)"
+                @drop="onDrop(index)"
+                @dragleave="onDragLeave(index)"
+            >
                 <!-- Read-only or remote -->
                 <span v-if="readOnly || value.remote" class="numbered-string-value">
                     <span v-if="values.length > 1" class="string-number text--disabled">{{ index + 1 }}.</span>
@@ -19,7 +27,38 @@
                     @del-value="del(index)"
                 >
                     <template #col_left>
-                        <span v-if="values.length > 1" class="string-number text--disabled">{{ index + 1 }}.</span>
+                        <div v-if="values.length > 1" class="reorder-controls d-flex align-center">
+                            <v-icon
+                                class="drag-handle"
+                                size="small"
+                                draggable="true"
+                                :title="$t('report_item.tooltip.drag_to_reorder')"
+                                :icon="ICONS.DRAG_HANDLE"
+                                @dragstart="onDragStart(index, $event)"
+                                @dragend="onDragEnd"
+                            />
+                            <span class="string-number text--disabled">{{ index + 1 }}.</span>
+                            <div class="reorder-arrows d-flex flex-column ms-1">
+                                <v-btn
+                                    variant="text"
+                                    density="compact"
+                                    size="x-small"
+                                    :icon="ICONS.ARROW_UP"
+                                    :disabled="index === 0 || value.locked === true"
+                                    :title="$t('report_item.tooltip.move_up')"
+                                    @click="moveUp(index)"
+                                />
+                                <v-btn
+                                    variant="text"
+                                    density="compact"
+                                    size="x-small"
+                                    :icon="ICONS.ARROW_DOWN"
+                                    :disabled="index === values.length - 1 || value.locked === true"
+                                    :title="$t('report_item.tooltip.move_down')"
+                                    @click="moveDown(index)"
+                                />
+                            </div>
+                        </div>
                     </template>
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-text-field
@@ -46,11 +85,12 @@
 </template>
 
 <script setup lang="ts">
-    import { onMounted } from 'vue'
+    import { onMounted, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import { ICONS } from '@/config/ui-constants'
     import { useAttributes } from './useAttributes'
 
     type AttributeValueItem = {
@@ -84,7 +124,50 @@
 
     const { t } = useI18n()
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } = useAttributes(props)
+
+    // Drag-and-drop reordering state.
+    const dragIndex = ref<number | null>(null)
+    const dragOverIndex = ref<number | null>(null)
+
+    const onDragStart = (index: number, event: DragEvent) => {
+        dragIndex.value = index
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move'
+            // Some browsers require data to be set for the drag to initiate.
+            event.dataTransfer.setData('text/plain', String(index))
+        }
+    }
+
+    const onDragOver = (index: number, event: DragEvent) => {
+        if (dragIndex.value === null) {
+            return
+        }
+        event.preventDefault()
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move'
+        }
+        dragOverIndex.value = index
+    }
+
+    const onDragLeave = (index: number) => {
+        if (dragOverIndex.value === index) {
+            dragOverIndex.value = null
+        }
+    }
+
+    const onDrop = (index: number) => {
+        if (dragIndex.value !== null && dragIndex.value !== index) {
+            move(dragIndex.value, index)
+        }
+        dragIndex.value = null
+        dragOverIndex.value = null
+    }
+
+    const onDragEnd = () => {
+        dragIndex.value = null
+        dragOverIndex.value = null
+    }
 
     // Always show one (possibly empty) field, even when the attribute starts with no values.
     onMounted(() => {
@@ -117,5 +200,22 @@
     .value-holder {
         width: 100%;
         margin-bottom: 2px;
+        border-top: 2px solid transparent;
+    }
+
+    .value-holder.drag-over {
+        border-top-color: rgb(var(--v-theme-primary));
+    }
+
+    .value-holder.dragging {
+        opacity: 0.5;
+    }
+
+    .drag-handle {
+        cursor: grab;
+    }
+
+    .drag-handle:active {
+        cursor: grabbing;
     }
 </style>

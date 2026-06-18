@@ -11,7 +11,11 @@
                     </v-icon>
                     <span>{{ value.value.filename || 'Remote Attachment' }}</span>
                     <span class="text-xs text-gray-500">({{ formatFileSize(value.value.size) }})</span>
-                    <button class="text-blue-400 hover:text-blue-300 text-xs ml-auto" @click="downloadRemoteAttachment(value.value)">
+                    <button
+                        type="button"
+                        class="text-blue-400 hover:text-blue-300 text-xs ml-auto"
+                        @click="downloadRemoteAttachment(value.value)"
+                    >
                         Download
                     </button>
                 </div>

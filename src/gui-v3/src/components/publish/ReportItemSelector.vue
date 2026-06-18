@@ -2,26 +2,28 @@
     <v-container fluid class="pa-0">
         <!-- Dialog Container -->
         <v-dialog v-model="selectorOpen" fullscreen persistent>
-            <v-card flat>
-                <!-- Fixed Toolbar -->
-                <v-toolbar color="primary" dark sticky>
-                    <v-btn icon @click="handleClose">
-                        <v-icon>{{ ICONS.CLOSE }}</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>{{ t('report_item.select') }}</v-toolbar-title>
-                    <v-spacer />
-                    <v-btn @click="handleAdd">
-                        <v-icon start>
-                            {{ ICONS.PLUS_BOX }}
-                        </v-icon>
-                        {{ t('common.add_items') }}
-                    </v-btn>
-                </v-toolbar>
+            <v-card flat class="d-flex flex-column" style="height: 100vh">
+                <!-- Fixed header (toolbar + filter stay put while the list below scrolls) -->
+                <div class="flex-grow-0 flex-shrink-0">
+                    <v-toolbar color="primary" dark>
+                        <v-btn icon @click="handleClose">
+                            <v-icon>{{ ICONS.CLOSE }}</v-icon>
+                        </v-btn>
+                        <v-toolbar-title>{{ t('report_item.select') }}</v-toolbar-title>
+                        <v-spacer />
+                        <v-btn @click="handleAdd">
+                            <v-icon start>
+                                {{ ICONS.PLUS_BOX }}
+                            </v-icon>
+                            {{ t('common.add_items') }}
+                        </v-btn>
+                    </v-toolbar>
 
-                <!-- Main Content -->
-                <v-container fluid class="pa-0">
                     <ToolbarFilterAnalyze ref="toolbarFilter" :show-group-toolbar="false" @update-filter="updateFilter" />
+                </div>
 
+                <!-- Main Content (scrollable area) -->
+                <div class="flex-grow-1 overflow-y-auto">
                     <ContentDataAnalyze
                         ref="contentData"
                         :show-remove-action="false"
@@ -33,7 +35,7 @@
                         @new-data-loaded="handleNewDataLoaded"
                         @update-showing-count="handleUpdateShowingCount"
                     />
-                </v-container>
+                </div>
             </v-card>
         </v-dialog>
 
@@ -43,7 +45,7 @@
         <!-- Selected Items Display -->
         <div v-if="!selectorOpen" class="pt-2">
             <CardAnalyze
-                v-for="item in value"
+                v-for="item in displayItems"
                 :key="item.id"
                 :card="item"
                 :show-remove-action="true"
@@ -55,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, watch, nextTick } from 'vue'
+    import { ref, computed, watch, onMounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
@@ -67,6 +69,8 @@
     type ReportItem = {
         id: number | string
         tag?: string
+        report_item_type_id?: number | string
+        report_type_name?: string
         [key: string]: any
     }
 
@@ -104,6 +108,26 @@
         },
         { deep: true, immediate: true }
     )
+
+    // The selected report items only carry report_item_type_id; resolve the type
+    // name from the loaded report item types so the cards show the type like the
+    // Analyze list does.
+    const displayItems = computed<ReportItem[]>(() => {
+        const types = Array.isArray(analyzeStore.getReportItemTypes.items)
+            ? (analyzeStore.getReportItemTypes.items as Array<{ id: number | string; title?: string }>)
+            : []
+        return value.value.map((item) => {
+            if (item.report_type_name) return item
+            const reportType = types.find((x) => x.id == item.report_item_type_id)
+            return { ...item, report_type_name: reportType?.title || 'Report Item' }
+        })
+    })
+
+    onMounted(async () => {
+        if (!analyzeStore.getReportItemTypes.items?.length) {
+            await analyzeStore.loadReportItemTypes({})
+        }
+    })
 
     const openSelector = async (): Promise<void> => {
         // Disable multi-select from previous selections

@@ -289,6 +289,70 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
         onEdit(data.index)
     }
 
+    /**
+     * Reorder values by moving the one at `from` to position `to`.
+     *
+     * The backend has no per-value ordering column (values of an attribute are
+     * returned ordered by their id), so we cannot persist a reordered record
+     * list. Instead we keep the records (and their ids/locks) fixed and rotate
+     * their value payloads, then persist each changed slot via onEdit. Because
+     * the records stay in id order, reloading from the backend preserves the new
+     * visual order. In create mode (edit === false) the array order is the
+     * submitted order, so this works there too.
+     */
+    const move = async (from: number, to: number) => {
+        const last = props.values.length - 1
+        if (from === to || from < 0 || to < 0 || from > last || to > last) {
+            return
+        }
+
+        // Don't reorder across a slot that is locked by someone else.
+        const lo = Math.min(from, to)
+        const hi = Math.max(from, to)
+        for (let index = lo; index <= hi; index++) {
+            if (props.values[index]?.locked === true) {
+                return
+            }
+        }
+
+        type Payload = { value: unknown; value_description: string | undefined }
+        const payloads: Payload[] = props.values.map((val) => ({
+            value: val.value,
+            value_description: val.value_description
+        }))
+        const moved = payloads.splice(from, 1)[0]
+        if (!moved) {
+            return
+        }
+        payloads.splice(to, 0, moved)
+
+        const changed: number[] = []
+        props.values.forEach((val, index) => {
+            const payload = payloads[index]
+            if (!payload) {
+                return
+            }
+            if (val.value !== payload.value || val.value_description !== payload.value_description) {
+                changed.push(index)
+            }
+            val.value = payload.value
+            if (payload.value_description === undefined) {
+                delete val.value_description
+            } else {
+                val.value_description = payload.value_description
+            }
+        })
+
+        if (props.edit === true) {
+            for (const index of changed) {
+                await onEdit(index)
+            }
+        }
+    }
+
+    const moveUp = (index: number) => move(index, index - 1)
+    const moveDown = (index: number) => move(index, index + 1)
+
     const reportItemLocked = (data: ReportEventData) => {
         if (props.edit === true && props.reportItemId === data.report_item_id) {
             if (data.user_id !== currentUserId()) {
@@ -410,6 +474,9 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
         onBlur,
         onKeyUp,
         onEdit,
-        enumSelected
+        enumSelected,
+        move,
+        moveUp,
+        moveDown
     }
 }

@@ -29,11 +29,9 @@
                     size="small"
                     :color="filter['completed'] === 'ALL' ? 'default' : 'primary'"
                     :variant="filter['completed'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="completedFilterTooltip"
                     @click="cycleFilter('completed')"
                 >
-                    <v-tooltip activator="parent" location="bottom">
-                        {{ completedFilterTooltip }}
-                    </v-tooltip>
                     <v-icon>{{ completedFilterIcon }}</v-icon>
                 </v-chip>
             </div>
@@ -45,10 +43,13 @@
         <ToolbarGroup ref="toolbarGroup" view="analyze" :current-filter="filter" @update-data="handleUpdateData" />
 
         <v-spacer />
-        <v-btn icon size="small" :color="compactMode ? 'primary' : 'default'" @click="toggleCompactMode">
-            <v-tooltip activator="parent" location="bottom">
-                {{ t('analyze.tooltip.compact_mode') }}
-            </v-tooltip>
+        <v-btn
+            icon
+            size="small"
+            :color="compactMode ? 'primary' : 'default'"
+            :title="t('analyze.tooltip.compact_mode')"
+            @click="toggleCompactMode"
+        >
             <v-icon>mdi-format-list-bulleted</v-icon>
         </v-btn>
     </v-toolbar>

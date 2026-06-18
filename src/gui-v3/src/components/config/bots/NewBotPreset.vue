@@ -88,12 +88,7 @@
                                     />
                                 </v-col>
                                 <v-col cols="1">
-                                    <v-tooltip location="top">
-                                        <template #activator="{ props }">
-                                            <v-icon v-bind="props" color="primary">mdi-help-circle</v-icon>
-                                        </template>
-                                        <span>{{ param.description }}</span>
-                                    </v-tooltip>
+                                    <v-icon color="primary" :title="param.description">mdi-help-circle</v-icon>
                                 </v-col>
                             </v-row>
                         </div>

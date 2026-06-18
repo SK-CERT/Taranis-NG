@@ -805,7 +805,10 @@
             "enum_selector": "Show value search window",
             "delete_value": "Delete value from this attribute",
             "add_value": "Add new value to this attribute",
-            "auto_generate": "Auto generate"
+            "auto_generate": "Auto generate",
+            "drag_to_reorder": "Drag to reorder",
+            "move_up": "Move up",
+            "move_down": "Move down"
         }
     },
     "product": {

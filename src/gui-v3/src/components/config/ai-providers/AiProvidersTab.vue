@@ -2,12 +2,7 @@
     <v-container fluid>
         <v-card>
             <v-card-title class="d-flex align-center">
-                <v-tooltip location="right">
-                    <template #activator="{ props }">
-                        <v-icon v-bind="props" color="blue" class="me-2"> mdi-help-circle </v-icon>
-                    </template>
-                    <span>{{ t('data_provider.ai_providers.tab_description') }}</span>
-                </v-tooltip>
+                <v-icon color="blue" class="me-2" :title="t('data_provider.ai_providers.tab_description')"> mdi-help-circle </v-icon>
                 <span>{{ t('nav_menu.ai_providers') }}</span>
             </v-card-title>
 

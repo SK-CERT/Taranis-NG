@@ -50,16 +50,13 @@
                                     {{ card.subtitle }}
                                 </div>
                             </v-col>
-                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center">
+                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center" :title="card.state.description">
                                 <v-icon :color="card.state.color">
                                     {{ card.state.icon }}
                                 </v-icon>
                                 <span class="text-body-large ms-2">
                                     {{ card.state.display_name ? t('workflow.states.' + card.state.display_name) : '' }}
                                 </span>
-                                <v-tooltip v-if="card.state.description" activator="parent" location="bottom">
-                                    {{ card.state.description }}
-                                </v-tooltip>
                             </v-col>
                         </v-row>
                     </v-col>
