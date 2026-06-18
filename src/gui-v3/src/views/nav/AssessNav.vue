@@ -2,13 +2,13 @@
     <v-list density="compact">
         <!-- Group links -->
         <v-list-subheader>{{ $t('assess.groups') }}</v-list-subheader>
-        <v-list-item v-for="group in groups" :key="group.id" :to="group.route" style="padding: 8px 8px">
+        <v-list-item v-for="group in groups" :key="group.id" :to="group.route" class="pa-2">
             <template #default>
-                <div style="display: flex; flex-direction: column; align-items: center">
-                    <v-icon :color="group.color || undefined" style="margin-bottom: 6px">
+                <div class="d-flex flex-column align-center text-center">
+                    <v-icon :color="group.color || undefined" class="mb-2">
                         {{ group.icon }}
                     </v-icon>
-                    <span style="font-size: 0.8rem; line-height: 1.4; text-align: center">
+                    <span class="text-body-small">
                         {{ group.translate ? $t(group.title) : group.title }}
                     </span>
                 </div>

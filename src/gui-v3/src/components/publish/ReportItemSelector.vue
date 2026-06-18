@@ -28,6 +28,7 @@
                         :disable-actions="true"
                         :selection="value"
                         card-item="CardAnalyze"
+                        class="bg-background"
                         @show-report-item-detail="showReportItemDetail"
                         @new-data-loaded="handleNewDataLoaded"
                         @update-showing-count="handleUpdateShowingCount"
