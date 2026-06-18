@@ -19,34 +19,31 @@
                 <!-- Main Content Row -->
                 <div class="selector-body">
                     <!-- Left Sidebar: Groups -->
-                    <div class="bg-surface selector-sidebar">
-                        <v-list v-model:selected="selectedGroupList" density="compact" nav>
-                            <v-list-item v-for="link in groups" :key="link.id" :value="link.id" class="px-1" @click="changeGroup(link.id)">
-                                <template #prepend>
-                                    <v-icon :color="link.color || 'default'">
-                                        {{ link.icon }}
-                                    </v-icon>
-                                </template>
-                                <v-list-item-title class="text-caption" style="white-space: break-spaces">
-                                    {{ link.translate ? t(link.title) : link.title }}
-                                </v-list-item-title>
-                            </v-list-item>
-                        </v-list>
-                    </div>
+                    <v-list v-model:selected="selectedGroupList" density="compact">
+                        <v-list-subheader>{{ $t('assess.groups') }}</v-list-subheader>
+                        <v-list-item v-for="group in groups" :key="group.id" :value="group.id" class="pa-2" @click="changeGroup(group.id)">
+                            <div class="d-flex flex-column align-center text-center">
+                                <v-icon :color="group.color || undefined" class="mb-2">
+                                    {{ group.icon }}
+                                </v-icon>
+                                <span class="text-body-small">
+                                    {{ group.translate ? $t(group.title) : group.title }}
+                                </span>
+                            </div>
+                        </v-list-item>
+                    </v-list>
 
                     <!-- Right Content Area: Toolbar + Items -->
                     <div class="selector-main">
                         <!-- Toolbar Filter -->
-                        <div class="bg-surface pa-3 selector-filter">
-                            <ToolbarFilterAssess
-                                ref="toolbarFilter"
-                                :analyze_selector="true"
-                                :total-count-title="'assess.total_count'"
-                                @update-filter="handleFilterUpdate"
-                            />
-                        </div>
+                        <ToolbarFilterAssess
+                            ref="toolbarFilter"
+                            :analyze_selector="true"
+                            :total-count-title="'assess.total_count'"
+                            @update-filter="handleFilterUpdate"
+                        />
 
-                        <div class="selector-results">
+                        <div class="selector-results bg-background">
                             <!-- Content Data -->
                             <ContentDataAssess
                                 ref="contentData"
@@ -559,23 +556,6 @@
         display: grid;
         grid-template-columns: 96px minmax(0, 1fr);
         overflow: hidden;
-    }
-
-    .selector-sidebar {
-        border-right: 1px solid rgba(0, 0, 0, 0.12);
-        overflow: hidden;
-    }
-
-    .selector-main {
-        min-width: 0;
-        min-height: 0;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        overflow: hidden;
-    }
-
-    .selector-filter {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     }
 
     .selector-results {
