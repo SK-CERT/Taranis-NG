@@ -1,0 +1,690 @@
+<template>
+    <v-container fluid class="pa-2">
+        <!-- News Items Cards -->
+        <TransitionGroup name="card-list" tag="div" class="w-100">
+            <component
+                :is="currentCard"
+                v-for="news_item in news_items_data"
+                :key="news_item.id"
+                :card="news_item"
+                :analyze-selector="analyze_selector"
+                :data_set="data_set"
+                :multi-select-active="multiSelectActive"
+                :preselected="isPreselected(news_item.id)"
+                :hide-reviews="filter.hide_reviews"
+                :hide-source-links="filter.hide_source_links"
+                :highlight-wordlist="filter.highlight_wordlist"
+                @show-detail="showDetail"
+                @show-reports-for-item="showReportsForItem"
+                @update-item="updateItem"
+                @delete-item="handleDelete"
+            />
+        </TransitionGroup>
+
+        <!-- Infinite Scroll Trigger -->
+        <div v-intersect="onIntersect" class="mt-4" style="min-height: 100px; display: flex; align-items: center; justify-content: center">
+            <div v-if="loading" class="text-center text-grey">
+                <v-progress-circular indeterminate size="small" />
+                <p class="text-caption mt-2">
+                    {{ t('common.loading_more') }}
+                </p>
+            </div>
+            <div v-else class="text-caption text-grey">
+                {{ t('common.end_of_list') }}
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <v-row v-if="loading" justify="center" class="my-4">
+            <v-progress-circular indeterminate color="primary" />
+        </v-row>
+
+        <!-- Empty State -->
+        <v-row v-if="!loading && news_items_data.length === 0" justify="center" class="my-8">
+            <v-col cols="12" md="6" class="text-center">
+                <v-icon size="64" color="grey">
+                    {{ ICONS.NEWSPAPER_VARIANT_OUTLINE }}
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('assess.no_items') }}
+                </p>
+            </v-col>
+        </v-row>
+
+        <!-- News Item Detail Dialog -->
+        <NewsItemDetailDialog
+            v-model="detailDialog"
+            :news-item="selectedItem"
+            :actions-disabled="detailActionPending"
+            :multi-select-active="multiSelectActive"
+            @action="handleDetailAction"
+            @delete="handleDetailDelete"
+        />
+
+        <!-- Reports List Dialog -->
+        <ReportsListDialog ref="reportsListDialogRef" @view-report-detail="handleViewReportDetail" />
+
+        <!-- Report Item Detail Modal (opened from ReportsListDialog) -->
+        <NewReportItem ref="reportItemModalRef" :show-button="false" />
+    </v-container>
+</template>
+
+<script setup lang="ts">
+    import type { AxiosError } from 'axios'
+    import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useRoute } from 'vue-router'
+    import { ICONS } from '@/config/ui-constants'
+    import { deleteNewsItem, groupAction, importantNewsItem, readNewsItem, voteNewsItem } from '@/api/assess'
+    import { useAssessStore } from '@/stores/assess'
+    import CardAssess from './CardAssess.vue'
+    import CardCompact from '@/components/common/CardCompact.vue'
+    import NewsItemDetailDialog from './NewsItemDetailDialog.vue'
+    import NewReportItem from '@/components/analyze/NewReportItem.vue'
+    import ReportsListDialog from './ReportsListDialog.vue'
+
+    type NewsItem = {
+        id: string | number
+        entityType?: 'news_item' | 'news_item_aggregate'
+        type?: string
+        title?: string
+        description?: string
+        comments?: string
+        [key: string]: unknown
+    }
+
+    type DetailActionPayload = {
+        action: string
+        newsItem: NewsItem
+        comment?: string
+        title?: string
+        description?: string
+    }
+
+    type FilterState = {
+        search: string
+        range: string
+        read: boolean | string
+        important: boolean | string
+        relevant: boolean | string
+        sort: string
+        hide_reviews: boolean
+        hide_source_links: boolean
+        highlight_wordlist: boolean
+        compact_mode?: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            analyze_selector?: boolean
+            selection?: Array<{ id: string | number }>
+            cardItem?: string
+            selfID?: string
+            data_set?: string
+        }>(),
+        {
+            analyze_selector: false,
+            selection: () => [],
+            cardItem: '',
+            selfID: '',
+            data_set: ''
+        }
+    )
+
+    const emit = defineEmits(['new-data-loaded', 'card-items-reindex', 'update-showing-count'])
+
+    const { t } = useI18n()
+    const route = useRoute()
+    const assessStore = useAssessStore()
+
+    const news_items_data = ref<NewsItem[]>([])
+    const loading = ref(false)
+    const news_items_data_loaded = ref(false)
+    const detailDialog = ref(false)
+    const selectedItem = ref<NewsItem | null>(null)
+    const detailActionPending = ref(false)
+    const reportsListDialogRef = ref<any>(null)
+    const reportItemModalRef = ref<any>(null)
+    const current_group_id = ref('')
+    const detailActionRequestId = ref(0)
+    const lastIntersectTime = ref(0)
+    const INTERSECT_DEBOUNCE_MS = 500
+    const filter = ref<FilterState>({
+        search: '',
+        range: 'ALL',
+        read: false,
+        important: 'ALL',
+        relevant: 'ALL',
+        sort: 'DATE_DESC',
+        hide_reviews: false,
+        hide_source_links: false,
+        highlight_wordlist: false
+    })
+
+    const currentCard = computed(() => {
+        return filter.value.compact_mode ? CardCompact : CardAssess
+    })
+
+    const multiSelectActive = computed(() => assessStore.getMultiSelect)
+
+    const isPreselected = (item_id: string | number): boolean => props.selection.some((item) => item.id === item_id)
+
+    const getNormalizedGroupId = (): string => {
+        const routeGroupId = route.params['groupId']
+        if (typeof routeGroupId === 'string') {
+            return routeGroupId
+        }
+        if (Array.isArray(routeGroupId)) {
+            return routeGroupId[0] || 'all'
+        }
+        return 'all'
+    }
+
+    const onIntersect = (entries: boolean | IntersectionObserverEntry[] | IntersectionObserverEntry): void => {
+        // v-intersect passes a boolean directly
+        let isIntersecting = false
+        if (typeof entries === 'boolean') {
+            isIntersecting = entries
+        } else if (Array.isArray(entries) && entries.length > 0) {
+            const firstEntry = entries[0]
+            isIntersecting = firstEntry?.isIntersecting === true
+        } else if (!Array.isArray(entries) && entries && typeof entries === 'object') {
+            isIntersecting = entries.isIntersecting === true
+        }
+
+        const totalCount = assessStore.getNewsItems.total_count || 0
+
+        if (isIntersecting && news_items_data_loaded.value && !loading.value && news_items_data.value.length < totalCount) {
+            // Debounce: only trigger if enough time has passed since last trigger
+            const now = Date.now()
+            if (now - lastIntersectTime.value >= INTERSECT_DEBOUNCE_MS) {
+                lastIntersectTime.value = now
+                updateData(true, false)
+            }
+        }
+    }
+
+    const showDetail = (news_item: NewsItem): void => {
+        selectedItem.value = news_item
+        detailDialog.value = true
+    }
+
+    const normalizeId = (id: string | number | undefined): string => String(id ?? '')
+
+    const toDetailNewsItem = (news_item: NewsItem): NewsItem => {
+        if (news_item.entityType === 'news_item') {
+            const nestedData = (news_item['news_item_data'] as Record<string, unknown> | undefined) || {}
+
+            return {
+                ...news_item,
+                entityType: 'news_item',
+                title: (nestedData['title'] as string) || (news_item['title'] as string) || '',
+                description: (nestedData['review'] as string) || (news_item['description'] as string) || '',
+                comments: (news_item['comments'] as string) || '',
+                created: (nestedData['collected'] as string) || (news_item['created'] as string) || '',
+                read: Boolean(news_item['read']),
+                important: Boolean(news_item['important']),
+                likes: Number(news_item['likes'] || 0),
+                dislikes: Number(news_item['dislikes'] || 0),
+                me_like: Boolean(news_item['me_like']),
+                me_dislike: Boolean(news_item['me_dislike']),
+                link: (nestedData['link'] as string) || '',
+                news_items: [news_item]
+            }
+        }
+
+        return news_item
+    }
+
+    const findUpdatedSelectedItem = (currentItem: NewsItem): NewsItem | null => {
+        const currentId = normalizeId(currentItem.id)
+
+        if (currentItem.entityType === 'news_item') {
+            // Child item dialogs must resolve from nested items first.
+            for (const aggregate of news_items_data.value) {
+                const nestedItems = Array.isArray(aggregate['news_items']) ? (aggregate['news_items'] as NewsItem[]) : []
+                const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === currentId)
+                if (nestedMatch) {
+                    return toDetailNewsItem({ ...nestedMatch, entityType: 'news_item' })
+                }
+            }
+        }
+
+        // Aggregate dialogs (or fallback) resolve from top-level list.
+        const topLevelMatch = news_items_data.value.find((item) => normalizeId(item.id) === currentId)
+        if (topLevelMatch) {
+            return toDetailNewsItem(topLevelMatch)
+        }
+
+        // Fallback for child items if entity type metadata is missing.
+        for (const aggregate of news_items_data.value) {
+            const nestedItems = Array.isArray(aggregate['news_items']) ? (aggregate['news_items'] as NewsItem[]) : []
+            const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === currentId)
+            if (nestedMatch) {
+                return toDetailNewsItem({ ...nestedMatch, entityType: 'news_item' })
+            }
+        }
+
+        return null
+    }
+
+    const showReportsForItem = (card: NewsItem): void => {
+        if (reportsListDialogRef.value) {
+            reportsListDialogRef.value.open(card)
+        }
+    }
+
+    const isAggregateInUseError = (error: unknown): boolean => {
+        const responseData = (error as AxiosError)?.response?.data
+        const responseError =
+            responseData && typeof responseData === 'object' && 'error' in responseData
+                ? (responseData as { error?: string }).error
+                : undefined
+
+        return (
+            responseData === 'aggregate_in_use' ||
+            responseError === 'aggregate_in_use' ||
+            (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
+        )
+    }
+
+    const handleViewReportDetail = (report: unknown): void => {
+        // Open report in NewReportItem modal without navigation
+        if (reportItemModalRef.value) {
+            reportItemModalRef.value.showDetail(report)
+        }
+    }
+
+    const handleDetailAction = async (payload: DetailActionPayload) => {
+        const { action, newsItem } = payload
+        const group_id = current_group_id.value || getNormalizedGroupId()
+        const isChildNewsItem = newsItem.entityType === 'news_item'
+        const isToolbarAction = ['like', 'dislike', 'important', 'read', 'ungroup'].includes(action)
+
+        if (isToolbarAction && detailActionPending.value) {
+            return
+        }
+
+        const requestId = detailActionRequestId.value + 1
+        detailActionRequestId.value = requestId
+
+        if (isToolbarAction) {
+            detailActionPending.value = true
+        }
+
+        try {
+            switch (action) {
+                case 'like':
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, newsItem.id, 1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, newsItem.id, 1)
+                    }
+                    break
+                case 'dislike':
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, newsItem.id, -1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, newsItem.id, -1)
+                    }
+                    break
+                case 'important':
+                    if (isChildNewsItem) {
+                        await importantNewsItem(group_id, newsItem.id)
+                    } else {
+                        await assessStore.importantNewsItemAggregate(group_id, newsItem.id)
+                    }
+                    break
+                case 'read':
+                    if (isChildNewsItem) {
+                        await readNewsItem(group_id, newsItem.id)
+                    } else {
+                        await assessStore.readNewsItemAggregate(group_id, newsItem.id)
+                    }
+                    break
+                case 'create-report':
+                    if (reportItemModalRef.value) {
+                        reportItemModalRef.value.openDialog([newsItem])
+                    }
+                    return
+                case 'ungroup':
+                    if (isChildNewsItem) {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'ITEM', id: newsItem.id }]
+                        })
+                    } else {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'AGGREGATE', id: newsItem.id }]
+                        })
+                    }
+                    break
+                case 'comment':
+                    if (!isChildNewsItem) {
+                        await assessStore.saveNewsItemAggregate(
+                            group_id,
+                            newsItem.id,
+                            newsItem.title || '',
+                            newsItem.description || '',
+                            payload.comment || ''
+                        )
+                    }
+                    break
+                case 'update-aggregate':
+                    if (!isChildNewsItem) {
+                        await assessStore.saveNewsItemAggregate(
+                            group_id,
+                            newsItem.id,
+                            payload.title || '',
+                            payload.description || '',
+                            newsItem.comments || ''
+                        )
+                    }
+                    break
+            }
+
+            // Reload current view
+            await updateData(false, true)
+
+            // Ignore stale completions from older requests.
+            if (requestId !== detailActionRequestId.value) {
+                return
+            }
+
+            // Update the selected item in the dialog to show fresh data with updated colors
+            if (selectedItem.value && action !== 'delete') {
+                const updatedItem = findUpdatedSelectedItem(selectedItem.value)
+                if (updatedItem) {
+                    selectedItem.value = updatedItem
+                }
+            }
+
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'assess.item_updated' }
+                })
+            )
+        } catch (error) {
+            if (isAggregateInUseError(error)) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.aggregate_in_use')
+                        }
+                    })
+                )
+                return
+            }
+
+            console.error('Error handling detail action:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'assess.error_updating' }
+                })
+            )
+        } finally {
+            if (isToolbarAction && requestId === detailActionRequestId.value) {
+                detailActionPending.value = false
+            }
+        }
+    }
+
+    const handleDetailDelete = async (newsItem: NewsItem) => {
+        try {
+            const group_id = current_group_id.value || getNormalizedGroupId()
+            if (newsItem.entityType === 'news_item') {
+                await deleteNewsItem(group_id, newsItem.id)
+            } else {
+                await assessStore.deleteNewsItemAggregate(group_id, newsItem.id)
+            }
+
+            // Close dialog and reload
+            detailDialog.value = false
+            selectedItem.value = null
+            await updateData(false, true)
+
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'assess.item_deleted' }
+                })
+            )
+        } catch (error) {
+            console.error('Error deleting item:', error)
+
+            const responseData = (error as AxiosError)?.response?.data
+            const responseError =
+                responseData && typeof responseData === 'object' && 'error' in responseData
+                    ? (responseData as { error?: string }).error
+                    : undefined
+            const isAggregateInUse =
+                responseData === 'aggregate_in_use' ||
+                responseError === 'aggregate_in_use' ||
+                (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
+
+            if (isAggregateInUse) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.aggregate_in_use')
+                        }
+                    })
+                )
+                return
+            }
+
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'assess.error_deleting' }
+                })
+            )
+        }
+    }
+
+    const updateItem = async (news_item: NewsItem, action: string) => {
+        try {
+            const group_id = current_group_id.value || getNormalizedGroupId()
+            const isChildNewsItem = news_item.entityType === 'news_item'
+
+            switch (action) {
+                case 'like':
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, news_item.id, 1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, news_item.id, 1)
+                    }
+                    break
+                case 'dislike':
+                    if (isChildNewsItem) {
+                        await voteNewsItem(group_id, news_item.id, -1)
+                    } else {
+                        await assessStore.voteNewsItemAggregate(group_id, news_item.id, -1)
+                    }
+                    break
+                case 'important':
+                    if (isChildNewsItem) {
+                        await importantNewsItem(group_id, news_item.id)
+                    } else {
+                        await assessStore.importantNewsItemAggregate(group_id, news_item.id)
+                    }
+                    break
+                case 'read':
+                    if (isChildNewsItem) {
+                        await readNewsItem(group_id, news_item.id)
+                    } else {
+                        await assessStore.readNewsItemAggregate(group_id, news_item.id)
+                    }
+                    break
+                case 'ungroup':
+                    if (isChildNewsItem) {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'ITEM', id: news_item.id }]
+                        })
+                    } else {
+                        await groupAction({
+                            group: group_id,
+                            action: 'UNGROUP',
+                            items: [{ type: 'AGGREGATE', id: news_item.id }]
+                        })
+                    }
+                    break
+                case 'create-report':
+                    if (reportItemModalRef.value) {
+                        reportItemModalRef.value.openDialog([news_item])
+                    }
+                    return
+                case 'refresh':
+                    break
+            }
+
+            // Reload current view
+            await updateData(false, true)
+
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'assess.item_updated' }
+                })
+            )
+        } catch (error) {
+            if (isAggregateInUseError(error)) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.aggregate_in_use')
+                        }
+                    })
+                )
+                return
+            }
+
+            console.error('Error updating item:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'assess.error_updating' }
+                })
+            )
+        }
+    }
+
+    const handleDelete = async (): Promise<void> => {
+        // Reload current view after successful deletion
+        // The animation will trigger when the deleted item is missing from the new data
+        await updateData(false, true)
+    }
+
+    const updateFilter = (newFilter: Partial<FilterState>): void => {
+        filter.value = { ...filter.value, ...newFilter }
+        updateData(false, false)
+    }
+
+    const handleNewsItemsUpdated = (): void => {
+        updateData(false, true)
+    }
+
+    const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
+        // Get the full item from news_items_data
+        const item = news_items_data.value.find((n) => n.id === itemId)
+        if (item) {
+            if (isSelected) {
+                assessStore.select({ type: 'AGGREGATE', id: itemId, item: item })
+            } else {
+                assessStore.deselect({ type: 'AGGREGATE', id: itemId })
+            }
+        }
+    }
+
+    const updateData = async (append = false, reload_all = false): Promise<void> => {
+        loading.value = true
+        news_items_data_loaded.value = false
+
+        const totalCount = assessStore.getNewsItems.total_count || 0
+        if (append && totalCount > 0 && news_items_data.value.length >= totalCount) {
+            loading.value = false
+            news_items_data_loaded.value = true
+            return
+        }
+
+        let offset = 0
+        let limit = 20
+
+        if (reload_all) {
+            if (news_items_data.value.length > limit) {
+                limit = news_items_data.value.length
+            }
+        } else if (append) {
+            offset = news_items_data.value.length
+        }
+
+        // Get group from route or store
+        let group: string
+        if (props.analyze_selector) {
+            group =
+                typeof assessStore.getCurrentGroup === 'string' ? assessStore.getCurrentGroup : String(assessStore.getCurrentGroup || 'all')
+        } else {
+            // Get groupId from route params
+            group = getNormalizedGroupId()
+            assessStore.changeCurrentGroup(group)
+        }
+        current_group_id.value = group
+
+        try {
+            const response = await assessStore.loadNewsItemsByGroup({
+                group_id: group,
+                data: {
+                    filter: filter.value,
+                    offset: offset,
+                    limit: limit
+                }
+            })
+
+            if (response) {
+                const newItems = Array.isArray(assessStore.getNewsItems.items) ? (assessStore.getNewsItems.items as NewsItem[]) : []
+                if (append) {
+                    news_items_data.value = news_items_data.value.concat(newItems)
+                } else {
+                    // Directly assign new data - Vue will detect removed items and animate them
+                    news_items_data.value = newItems
+                }
+
+                emit('new-data-loaded', assessStore.getNewsItems.total_count)
+                emit('update-showing-count', news_items_data.value.length)
+                emit('card-items-reindex')
+            }
+        } catch (error) {
+            console.error('Error loading news items:', error)
+        } finally {
+            loading.value = false
+            news_items_data_loaded.value = true
+        }
+    }
+
+    // Watch route changes
+    watch(
+        () => route.params['groupId'],
+        () => {
+            updateData(false, false)
+        }
+    )
+
+    // Initial load
+    onMounted(() => {
+        updateData(false, false)
+        window.addEventListener('news-items-updated', handleNewsItemsUpdated)
+    })
+
+    onUnmounted(() => {
+        window.removeEventListener('news-items-updated', handleNewsItemsUpdated)
+    })
+
+    defineExpose({
+        updateFilter,
+        updateData
+    })
+</script>

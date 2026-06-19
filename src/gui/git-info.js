@@ -12,7 +12,7 @@ function safeGit(cmd, fallback = '') {
 }
 
 function toUTCISOString(dateString) {
-  // Parse date string and return UTC ISO string
+  // Parse any date string and return UTC ISO string
   const d = new Date(dateString);
   return d.toISOString();
 }
@@ -26,5 +26,4 @@ const meta = {
 
 const metaPath = path.resolve(__dirname, 'git-info.json');
 fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
-// eslint-disable-next-line no-console
 console.log('Wrote git info to git-info.json:', meta);

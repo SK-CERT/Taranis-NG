@@ -1,0 +1,91 @@
+<template>
+    <ViewLayout>
+        <template #panel>
+            <ToolbarFilterAnalyze
+                ref="toolbarFilter"
+                :multi-select="true"
+                title="nav_menu.report_items"
+                total-count-title="toolbar_filter.total_count"
+                :show-add-button="canCreateReportItem"
+                @update-filter="updateFilter"
+                @update-data="updateData"
+                @add-new="handleAddNew"
+            />
+        </template>
+        <template #content>
+            <ContentDataAnalyze
+                ref="contentData"
+                :show-remove-action="false"
+                :remote-reports="false"
+                :selection="analyzeStore.getSelectionReport"
+                @new-data-loaded="newDataLoaded"
+                @update-showing-count="updateShowingCount"
+                @show-report-item-detail="showReportItemDetail"
+            />
+        </template>
+    </ViewLayout>
+
+    <NewReportItem ref="newReportItemRef" :show-button="false" @data-updated="updateData" />
+</template>
+
+<script setup lang="ts">
+    import { ref, computed } from 'vue'
+    import { useRoute, onBeforeRouteLeave } from 'vue-router'
+    import { useAnalyzeStore } from '@/stores/analyze'
+    import { useAuth } from '@/composables/useAuth'
+    import ViewLayout from '@/components/layouts/ViewLayout.vue'
+    import ToolbarFilterAnalyze from '@/components/analyze/ToolbarFilterAnalyze.vue'
+    import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
+    import NewReportItem from '@/components/analyze/NewReportItem.vue'
+
+    const route = useRoute()
+    const analyzeStore = useAnalyzeStore()
+    const { checkPermission } = useAuth()
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
+    const newReportItemRef = ref<any>(null)
+
+    const canCreateReportItem = computed(() => {
+        return checkPermission('ANALYZE_CREATE') && !route.path.includes('/group/')
+    })
+
+    const handleAddNew = (): void => {
+        if (newReportItemRef.value) {
+            newReportItemRef.value.openDialog()
+        }
+    }
+
+    const newDataLoaded = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateDataCount(count)
+        }
+    }
+
+    const updateShowingCount = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateShowingCount(count)
+        }
+    }
+
+    const updateFilter = (filter: Record<string, unknown>): void => {
+        if (contentData.value) {
+            contentData.value.updateFilter(filter)
+        }
+    }
+
+    const updateData = (): void => {
+        if (contentData.value) {
+            contentData.value.updateData(false, true)
+        }
+    }
+
+    const showReportItemDetail = (reportItem: unknown): void => {
+        if (newReportItemRef.value) {
+            newReportItemRef.value.showDetail(reportItem)
+        }
+    }
+
+    onBeforeRouteLeave(() => {
+        analyzeStore.multiSelectReport(false)
+    })
+</script>
