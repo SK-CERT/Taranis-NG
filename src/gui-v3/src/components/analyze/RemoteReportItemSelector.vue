@@ -30,14 +30,16 @@
                         class="bg-surface pa-0"
                         style="max-width: 96px; min-height: calc(100vh - 64px); border-right: 1px solid rgba(0, 0, 0, 0.12); overflow-y: auto"
                     >
-                        <v-list v-model:selected="selectedGroupList" density="compact" nav>
-                            <v-list-item v-for="link in links" :key="link.id" :value="link.id" class="px-1" @click="changeGroup(link.id)">
-                                <template #prepend>
-                                    <v-icon>{{ link.icon }}</v-icon>
-                                </template>
-                                <v-list-item-title class="text-caption" style="white-space: break-spaces">
-                                    {{ link.title }}
-                                </v-list-item-title>
+                        <v-list v-model:selected="selectedGroupList" density="compact">
+                            <v-list-item v-for="link in links" :key="link.id" :value="link.id" class="pa-2" @click="changeGroup(link.id)">
+                                <div class="d-flex flex-column align-center text-center">
+                                    <v-icon :color="link.color || undefined" class="mb-2">
+                                        {{ link.icon }}
+                                    </v-icon>
+                                    <span class="text-body-small">
+                                        {{ link.title }}
+                                    </span>
+                                </div>
                             </v-list-item>
                         </v-list>
                     </v-col>
@@ -52,6 +54,7 @@
                             :show-remove-action="false"
                             :remote-reports="true"
                             card-item="CardAnalyze"
+                            class="bg-background"
                             @show-remote-report-item-detail="showReportItemDetail"
                             @new-data-loaded="handleNewDataLoaded"
                         />
