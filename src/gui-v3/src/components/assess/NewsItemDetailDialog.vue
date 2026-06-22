@@ -125,8 +125,7 @@
                             {{ t('common.no_data') }}
                         </v-col>
                         <v-col v-for="attributeItem in newsItemAttributes" :key="attributeItem.id" cols="12">
-                            <!-- Use new AttributeContainer component for structured attribute displays -->
-                            <AttributeContainer :attribute-item="attributeItem" :report-item-id="Number(newsItem.id || 0)" read-only />
+                            <NewsItemAttribute :attribute="attributeItem" :news-item-data="firstNewsItemData" />
                         </v-col>
                     </v-row>
                 </v-window-item>
@@ -172,7 +171,7 @@
     import { PERMISSIONS } from '@/services/auth/permissions'
     import Editor from 'primevue/editor'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
-    import AttributeContainer from '@/components/common/attribute/AttributeContainer.vue'
+    import NewsItemAttribute from '@/components/assess/NewsItemAttribute.vue'
 
     type NewsAttributeItem = {
         id: number | string

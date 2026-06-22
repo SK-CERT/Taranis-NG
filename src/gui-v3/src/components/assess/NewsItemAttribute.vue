@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container class="ma-0">
         <v-row>
             <v-col>
                 <span style="margin-right: 20px; font-size: 12px">{{ attribute.key }}</span>
@@ -7,17 +7,16 @@
                 <span v-if="attribute.binary_mime_type === ''" style="font-size: 16px">
                     {{ attribute.value }}
                 </span>
-                <v-row v-if="attribute.binary_mime_type !== ''">
-                    <v-col style="flex-grow: 0">
+                <v-row v-if="attribute.binary_mime_type !== ''" class="align-center">
+                    <v-col class="flex-grow-0">
                         <v-icon>mdi-file-document</v-icon>
                     </v-col>
                     <v-col>
                         <div>{{ attribute.value }}</div>
                     </v-col>
                     <v-col>
-                        <v-btn size="small" :href="downloadLink" target="_blank" rel="noreferrer">
+                        <v-btn prepend-icon="mdi-cloud-download" variant="outlined" size="large" @click="downloadFile">
                             {{ t('assess.download') }}
-                            <v-icon end>mdi-cloud-download</v-icon>
                         </v-btn>
                     </v-col>
                 </v-row>
@@ -30,6 +29,7 @@
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
+    import { downloadAttachment } from '@/api/analyze'
 
     type NewsAttribute = {
         id: number | string
@@ -57,9 +57,8 @@
         }
     )
 
-    const downloadLink = computed(() => {
-        const apiBase = import.meta.env['VITE_TARANIS_NG_CORE_API'] || ''
-        const jwt = authStore.getJWT || ''
-        return `${apiBase}/assess/news-item-data/${props.newsItemData.id}/attributes/${props.attribute.id}/file?jwt=${jwt}`
-    })
+    async function downloadFile() {
+        const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || ''
+        downloadAttachment(`${apiBase}/assess/news-item-data/${props.newsItemData.id}/attributes/${props.attribute.id}/file`, undefined)
+    }
 </script>

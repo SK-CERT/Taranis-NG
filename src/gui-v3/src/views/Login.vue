@@ -1,8 +1,8 @@
 <template>
     <div v-if="!authStore.hasExternalLoginUrl" class="login-screen">
         <!-- Logo -->
-        <div class="logo-container">
-            <img src="@/assets/taranis-logo-login.svg" alt="Taranis NG" class="login-logo" />
+        <div class="logo-container pb-3">
+            <img :src="isDark ? darkLogo : lightLogo" alt="Taranis NG" class="login-logo" />
         </div>
 
         <!-- Login Form -->
@@ -75,7 +75,10 @@
     import { useField, useForm } from 'vee-validate'
     import { useAuthStore } from '@/stores/auth'
     import { useAuth } from '@/composables/useAuth'
+    import lightLogo from '@/assets/taranis-logo-nav.svg'
+    import darkLogo from '@/assets/taranis-logo-nav-dark.svg'
 
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const router = useRouter()
     const route = useRoute()
     const { t } = useI18n()
@@ -204,7 +207,6 @@
         align-items: center;
         justify-content: center;
         padding: 20px;
-        gap: 30px;
     }
 
     .logo-container {
@@ -214,12 +216,12 @@
         align-items: center;
         order: 1;
         width: 100%;
-        min-height: 150px;
+        min-height: 100px;
     }
 
     .login-logo {
         max-width: 400px;
-        width: 80%;
+        width: 100%;
         height: auto;
         display: block;
         filter: drop-shadow(var(--color-light-shadow-small));
@@ -388,7 +390,7 @@
         }
 
         .login-logo {
-            max-width: 200px;
+            width: 100%;
         }
     }
 </style>
