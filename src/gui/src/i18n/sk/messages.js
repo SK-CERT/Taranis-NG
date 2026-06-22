@@ -847,7 +847,7 @@ const messages_sk = {
         aggregate_info: "Info",
         aggregate_title: "Názov",
         aggregate_description: "Popis",
-        attributes: "Atributy",
+        attributes: "Atribúty",
         title: "Názov",
         description: "Popis",
         download: "Stiahnuť",

@@ -91,6 +91,7 @@
     const attributeComponent = computed(() => {
         const attrType = props.attributeItem.attribute_group_item?.attribute?.type
         if (!attrType) {
+            console.warn('Unknown attribute type:', attrType)
             return null
         }
         return componentMap[attrType] || null
