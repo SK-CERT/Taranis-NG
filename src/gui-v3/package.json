@@ -29,7 +29,7 @@
         "@mdi/font": "^7.4.47",
         "@primeuix/themes": "^2.0.3",
         "ae-cvss-calculator": "^1.0.11",
-        "axios": "^1.7.9",
+        "axios": "^1.18.1",
         "date-fns": "^4.1.0",
         "pinia": "^3.0.4",
         "primeicons": "^7.0.0",
