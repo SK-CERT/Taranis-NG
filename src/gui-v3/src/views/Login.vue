@@ -69,10 +69,9 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { ref, computed, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import { useI18n } from 'vue-i18n'
-    import { useField, useForm } from 'vee-validate'
     import { useAuthStore } from '@/stores/auth'
     import { useAuth } from '@/composables/useAuth'
     import lightLogo from '@/assets/taranis-logo-nav.svg'
@@ -85,40 +84,52 @@
     const authStore = useAuthStore()
     const { isAuthenticated } = useAuth()
 
-    // Form validation setup
-    const { handleSubmit, resetForm } = useForm()
-
-    const {
-        value: username,
-        errorMessage: usernameError,
-        validate: validateUsername
-    } = useField<string>('username', (value: string | undefined) => {
-        if (!value) return t('validations.custom.username.required')
-        return true
-    })
-
-    const {
-        value: password,
-        errorMessage: passwordError,
-        validate: validatePassword
-    } = useField<string>('password', (value: string | undefined) => {
-        if (!value) return t('validations.custom.password.required')
-        return true
-    })
-
+    // Form data
+    const username = ref<string>('')
+    const password = ref<string>('')
     const showLoginError = ref(false)
     const showPassword = ref(false)
+
+    // Validation error states
+    const usernameError = ref<string | null>(null)
+    const passwordError = ref<string | null>(null)
+
+    // Validation functions
+    const validateUsername = (): boolean => {
+        if (!username.value) {
+            usernameError.value = t('validations.custom.username.required')
+            return false
+        }
+        usernameError.value = null
+        return true
+    }
+
+    const validatePassword = (): boolean => {
+        if (!password.value) {
+            passwordError.value = t('validations.custom.password.required')
+            return false
+        }
+        passwordError.value = null
+        return true
+    }
+
+    const resetForm = (): void => {
+        username.value = ''
+        password.value = ''
+        usernameError.value = null
+        passwordError.value = null
+    }
 
     /**
      * Handle form submission with validation
      */
     const handleFormSubmit = async (): Promise<void> => {
         // Validate all fields
-        await validateUsername()
-        await validatePassword()
+        const usernameValid = validateUsername()
+        const passwordValid = validatePassword()
 
         // If no errors, proceed with login
-        if (!usernameError.value && !passwordError.value && username.value && password.value) {
+        if (usernameValid && passwordValid && username.value && password.value) {
             showLoginError.value = false
 
             try {
