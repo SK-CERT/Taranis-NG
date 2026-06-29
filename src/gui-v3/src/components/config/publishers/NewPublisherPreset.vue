@@ -1,17 +1,17 @@
 <template>
     <v-dialog v-model="dialog" max-width="800" persistent scrollable>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('publisher_preset.edit') : t('publisher_preset.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('publishers.presets.edit') : t('publishers.presets.add_new')"
+                :saving="saving"
+                :save-disabled="!selectedPublisher"
+                @cancel="cancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -21,7 +21,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('publisher_preset.node')"
+                        :label="t('publishers.presets.node')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -37,7 +37,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('publisher_preset.publisher')"
+                        :label="t('publishers.presets.publisher')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -48,7 +48,7 @@
                     <v-text-field
                         v-if="selectedPublisher"
                         v-model="localItem.name"
-                        :label="t('publisher_preset.name')"
+                        :label="t('publishers.presets.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -59,7 +59,7 @@
                     <v-textarea
                         v-if="selectedPublisher"
                         v-model="localItem.description"
-                        :label="t('publisher_preset.description')"
+                        :label="t('publishers.presets.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -70,7 +70,7 @@
                     <v-checkbox
                         v-if="selectedPublisher"
                         v-model="localItem.use_for_notifications"
-                        :label="t('publisher_preset.use_for_notifications')"
+                        :label="t('publishers.presets.use_for_notifications')"
                         color="primary"
                         density="comfortable"
                         class="mb-3"
@@ -81,7 +81,7 @@
                     <div v-if="selectedPublisher && selectedPublisher.parameters && selectedPublisher.parameters.length > 0">
                         <v-divider class="my-4" />
                         <h3 class="text-subtitle-1 mb-3">
-                            {{ t('publisher_preset.parameters') }}
+                            {{ t('publishers.presets.parameters') }}
                         </h3>
 
                         <div v-for="(param, index) in selectedPublisher.parameters" :key="param.key || index" class="mb-3">
@@ -109,21 +109,10 @@
                     </v-alert>
 
                     <v-alert v-if="showError" type="error" density="compact" class="mb-3">
-                        {{ t('publisher_preset.error') }}
+                        {{ t('publishers.presets.error') }}
                     </v-alert>
                 </v-form>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="cancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" :disabled="saving || !selectedPublisher" @click="handleSubmit">
-                    <v-icon start>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -132,6 +121,7 @@
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewPublisherPreset, updatePublisherPreset, getAllPublishersNodes } from '@/api/config'
 
@@ -210,7 +200,8 @@
     const parameterValues = ref<string[]>([])
 
     const defaultItem: PublisherPresetItem = {
-        id: null,
+        // Empty string (not null): backend requires a string id even on create (ignored), null fails validation.
+        id: '',
         name: '',
         description: '',
         use_for_notifications: false,

@@ -1,10 +1,6 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <span>{{ t('nav_menu.roles') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
@@ -20,29 +16,35 @@
                         />
                     </v-col>
                     <v-col cols="4" class="text-right">
-                        <NewRole :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
+                        <NewUser :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.roles.items" :search="search" item-key="id" class="elevation-1">
-                <template #item.name="{ item }">
-                    <strong>{{ asRoleItem(item).name }}</strong>
+            <v-data-table :headers="headers" :items="configStore.users.items" :search="search" item-key="id" class="elevation-1">
+                <template #item.username="{ item }">
+                    <strong>{{ asUserItem(item).username }}</strong>
                 </template>
 
-                <template #item.description="{ item }">
-                    {{ asRoleItem(item).description }}
+                <template #item.name="{ item }">
+                    {{ asUserItem(item).name }}
+                </template>
+
+                <template #item.organizations="{ item }">
+                    <v-chip v-for="org in asUserItem(item).organizations || []" :key="org.id" size="small" class="mr-1">
+                        {{ org.name }}
+                    </v-chip>
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asRoleItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asRoleItem(item))" />
+                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asUserItem(item))" />
+                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asUserItem(item))" />
                 </template>
             </v-data-table>
         </v-card>
 
-        <ConfirmationDialog v-model="deleteDialog" :message="itemToDelete?.name || ''" max-width="600px" @confirm="confirmDelete" />
+        <ConfirmationDialog v-model="deleteDialog" :message="itemToDelete?.username || ''" max-width="600px" @confirm="confirmDelete" />
     </v-container>
 </template>
 
@@ -50,8 +52,8 @@
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
-    import { deleteRole } from '@/api/config'
-    import NewRole from '@/components/config/roles/NewRole.vue'
+    import { deleteUser } from '@/api/config'
+    import NewUser from '@/components/config/access-management/NewUser.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
@@ -62,10 +64,16 @@
         align?: 'start' | 'end' | 'center'
     }
 
-    type RoleItem = {
+    type OrganizationItem = {
         id: string | number
         name?: string
-        description?: string
+    }
+
+    type UserItem = {
+        id: string | number
+        username?: string
+        name?: string
+        organizations?: OrganizationItem[]
         [key: string]: unknown
     }
 
@@ -73,32 +81,33 @@
     const configStore = useConfigStore()
 
     const search = ref('')
-    const editItem = ref<RoleItem | null>(null)
+    const editItem = ref<UserItem | null>(null)
     const deleteDialog = ref(false)
-    const itemToDelete = ref<RoleItem | null>(null)
+    const itemToDelete = ref<UserItem | null>(null)
 
     const headers: HeaderEntry[] = [
-        { title: t('role.name'), key: 'name' },
-        { title: t('role.description'), key: 'description' },
+        { title: t('access_management.users.username'), key: 'username' },
+        { title: t('access_management.users.name'), key: 'name' },
+        { title: t('access_management.users.organizations'), key: 'organizations' },
         { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
 
-    const asRoleItem = (item: unknown): RoleItem => item as RoleItem
+    const asUserItem = (item: unknown): UserItem => item as UserItem
 
     const loadData = async (): Promise<void> => {
         try {
-            await configStore.loadRoles({ search: search.value })
+            await configStore.loadUsers({ search: search.value })
         } catch (error) {
-            console.error('Error loading roles:', error)
+            console.error('Error loading users:', error)
         }
     }
 
-    const handleEdit = (item: RoleItem): void => {
-        // Setting editItem triggers NewRole's watcher to open its dialog in edit mode.
+    const handleEdit = (item: UserItem): void => {
+        // Setting editItem triggers NewUser's watcher to open its dialog in edit mode.
         editItem.value = item
     }
 
-    const handleDelete = (item: RoleItem): void => {
+    const handleDelete = (item: UserItem): void => {
         itemToDelete.value = item
         deleteDialog.value = true
     }
@@ -108,10 +117,10 @@
             return
         }
         try {
-            await deleteRole(itemToDelete.value)
+            await deleteUser(itemToDelete.value)
             await loadData()
         } catch (error) {
-            console.error('Error deleting role:', error)
+            console.error('Error deleting user:', error)
         } finally {
             itemToDelete.value = null
         }

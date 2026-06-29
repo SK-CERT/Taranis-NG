@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.osint_sources"
             :total-count="configStore.osintSources.total_count"
-            total-count-title="osint_source.total_count"
+            total-count-title="collectors.sources.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
@@ -32,7 +31,7 @@
     import { deleteOSINTSource } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
-    import NewOSINTSource from '@/components/config/osint-sources/NewOSINTSource.vue'
+    import NewOSINTSource from '@/components/config/collectors/NewOSINTSource.vue'
 
     const { t } = useI18n()
     const configStore = useConfigStore()

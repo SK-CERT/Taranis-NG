@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.product_types"
             :total-count="configStore.productTypes.total_count"
-            total-count-title="product_type.total_count"
+            total-count-title="presenters.types.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
@@ -32,7 +31,7 @@
     import { deleteProductType } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
-    import NewProductType from '@/components/config/product-types/NewProductType.vue'
+    import NewProductType from '@/components/config/presenters/NewProductType.vue'
 
     const { t } = useI18n()
     const configStore = useConfigStore()

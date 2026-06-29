@@ -1,11 +1,6 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <v-icon color="blue" class="me-2" :title="t('data_provider.data_providers.tab_description')"> mdi-help-circle </v-icon>
-                <span>{{ t('nav_menu.data_providers') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
@@ -89,12 +84,12 @@
     const editItem = ref<DataProviderItem | null>(null)
 
     const headers: HeaderEntry[] = [
-        { title: t('data_provider.name'), key: 'name' },
-        { title: t('data_provider.api_type'), key: 'api_type' },
-        { title: t('data_provider.api_url'), key: 'api_url' },
+        { title: t('data_providers.data.name'), key: 'name' },
+        { title: t('data_providers.data.api_type'), key: 'api_type' },
+        { title: t('data_providers.data.api_url'), key: 'api_url' },
         { title: t('settings.api_key'), key: 'api_key', sortable: false },
-        { title: t('data_provider.user_agent'), key: 'user_agent' },
-        { title: t('data_provider.web_url'), key: 'web_url' },
+        { title: t('data_providers.data.user_agent'), key: 'user_agent' },
+        { title: t('data_providers.data.web_url'), key: 'web_url' },
         { title: t('settings.updated_by'), key: 'updated_by' },
         { title: t('settings.updated_at'), key: 'updated_at', sortable: false },
         { title: t('settings.actions'), key: 'actions', sortable: false }

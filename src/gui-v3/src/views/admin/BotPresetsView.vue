@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.bot_presets"
             :total-count="configStore.botPresets.total_count"
-            total-count-title="bot_preset.total_count"
+            total-count-title="bots.presets.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>

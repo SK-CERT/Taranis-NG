@@ -1,10 +1,6 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <span>{{ t('nav_menu.acls') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
@@ -20,28 +16,24 @@
                         />
                     </v-col>
                     <v-col cols="4" class="text-right">
-                        <NewACL :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
+                        <NewRole :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.acls.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table :headers="headers" :items="configStore.roles.items" :search="search" item-key="id" class="elevation-1">
                 <template #item.name="{ item }">
-                    <strong>{{ asACLItem(item).name }}</strong>
+                    <strong>{{ asRoleItem(item).name }}</strong>
                 </template>
 
                 <template #item.description="{ item }">
-                    {{ asACLItem(item).description }}
-                </template>
-
-                <template #item.item_type="{ item }">
-                    {{ asACLItem(item).item_type }}
+                    {{ asRoleItem(item).description }}
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asACLItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asACLItem(item))" />
+                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asRoleItem(item))" />
+                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asRoleItem(item))" />
                 </template>
             </v-data-table>
         </v-card>
@@ -54,8 +46,8 @@
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
-    import { deleteACLEntry } from '@/api/config'
-    import NewACL from '@/components/config/acl/NewACL.vue'
+    import { deleteRole } from '@/api/config'
+    import NewRole from '@/components/config/access-management/NewRole.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
@@ -66,11 +58,10 @@
         align?: 'start' | 'end' | 'center'
     }
 
-    type ACLItem = {
+    type RoleItem = {
         id: string | number
         name?: string
         description?: string
-        item_type?: string
         [key: string]: unknown
     }
 
@@ -78,33 +69,32 @@
     const configStore = useConfigStore()
 
     const search = ref('')
-    const editItem = ref<ACLItem | null>(null)
+    const editItem = ref<RoleItem | null>(null)
     const deleteDialog = ref(false)
-    const itemToDelete = ref<ACLItem | null>(null)
+    const itemToDelete = ref<RoleItem | null>(null)
 
     const headers: HeaderEntry[] = [
-        { title: t('acl.name'), key: 'name' },
-        { title: t('acl.description'), key: 'description' },
-        { title: t('acl.item_type'), key: 'item_type' },
+        { title: t('access_management.roles.name'), key: 'name' },
+        { title: t('access_management.roles.description'), key: 'description' },
         { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
 
-    const asACLItem = (item: unknown): ACLItem => item as ACLItem
+    const asRoleItem = (item: unknown): RoleItem => item as RoleItem
 
     const loadData = async (): Promise<void> => {
         try {
-            await configStore.loadACLEntries({ search: search.value })
+            await configStore.loadRoles({ search: search.value })
         } catch (error) {
-            console.error('Error loading ACL entries:', error)
+            console.error('Error loading roles:', error)
         }
     }
 
-    const handleEdit = (item: ACLItem): void => {
-        // Setting editItem triggers NewACL's watcher to open its dialog in edit mode.
+    const handleEdit = (item: RoleItem): void => {
+        // Setting editItem triggers NewRole's watcher to open its dialog in edit mode.
         editItem.value = item
     }
 
-    const handleDelete = (item: ACLItem): void => {
+    const handleDelete = (item: RoleItem): void => {
         itemToDelete.value = item
         deleteDialog.value = true
     }
@@ -114,10 +104,10 @@
             return
         }
         try {
-            await deleteACLEntry(itemToDelete.value)
+            await deleteRole(itemToDelete.value)
             await loadData()
         } catch (error) {
-            console.error('Error deleting ACL entry:', error)
+            console.error('Error deleting role:', error)
         } finally {
             itemToDelete.value = null
         }

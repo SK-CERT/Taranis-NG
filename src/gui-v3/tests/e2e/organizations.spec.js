@@ -19,32 +19,24 @@ test.describe('Organization Management', () => {
     test('should display organizations list', async ({ page }) => {
         // Organizations is now the Organizations tab inside the Access Management view.
         await expect(page).toHaveURL(/\/config\/access-management\?tab=organizations/)
-        await expect(page.locator('.v-card-title').filter({ hasText: /organizations/i })).toBeVisible()
+        await expect(page.locator('.v-data-table')).toBeVisible()
     })
 
     test('should create a new organization', async ({ page }) => {
         const orgName = generateTestName('Test Org')
 
         await openDialog(page, 'New')
-        await expect(page.locator('.v-dialog')).toBeVisible()
+        const dialog = page.locator('.v-dialog:visible')
+        await expect(dialog).toBeVisible()
 
-        await page.locator('.v-dialog:visible input').first().fill(orgName)
-        await page.locator('.v-dialog:visible textarea').first().fill('Automated test organization')
+        await dialog.locator('input').first().fill(orgName)
+        await dialog.locator('textarea').first().fill('Automated test organization')
 
         await saveDialog(page)
 
-        // Depending on backend constraints in test data, save can either succeed
-        // (dialog closes) or return an inline error while keeping dialog open.
-        const dialogStillOpen = await page.locator('.v-dialog:visible').count()
-        if (dialogStillOpen) {
-            await expect(page.locator('.v-dialog:visible .v-alert')).toBeVisible()
-            await page
-                .locator('.v-dialog:visible button')
-                .filter({ hasText: /^Cancel$/ })
-                .click()
-        }
-
-        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
+        // Web-first assertion (auto-retries): a successful save closes the dialog
+        // and surfaces the new row; a rejected save keeps an inline alert open.
+        await expect(page.locator('tbody tr').filter({ hasText: orgName }).or(dialog.locator('.v-alert'))).toBeVisible()
     })
 
     test('should require name field', async ({ page }) => {

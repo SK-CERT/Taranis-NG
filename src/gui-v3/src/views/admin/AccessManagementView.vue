@@ -1,7 +1,8 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab v-for="tab in availableTabs" :key="tab.value" :value="tab.value">
+            <v-tab v-for="tab in availableTabs" :key="tab.value" :value="tab.value" :title="t(tab.description)">
+                <v-icon :icon="tab.icon" start />
                 {{ t(tab.title) }}
             </v-tab>
         </v-tabs>
@@ -20,15 +21,18 @@
     import { useRoute, useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import { ICONS } from '@/config/ui-constants'
     import type { PermissionKey } from '@/types/permissions'
-    import UsersTab from '@/components/config/users/UsersTab.vue'
-    import RolesTab from '@/components/config/roles/RolesTab.vue'
-    import ACLTab from '@/components/config/acl/ACLTab.vue'
-    import OrganizationsTab from '@/components/config/organizations/OrganizationsTab.vue'
+    import UsersTab from '@/components/config/access-management/UsersTab.vue'
+    import RolesTab from '@/components/config/access-management/RolesTab.vue'
+    import ACLTab from '@/components/config/access-management/ACLTab.vue'
+    import OrganizationsTab from '@/components/config/access-management/OrganizationsTab.vue'
 
     type AccessTab = {
         value: string
         title: string
+        icon: string
+        description: string
         component: Component
         permission: PermissionKey
     }
@@ -39,10 +43,38 @@
     const router = useRouter()
 
     const tabs: AccessTab[] = [
-        { value: 'users', title: 'nav_menu.users', component: UsersTab, permission: 'CONFIG_USER_ACCESS' },
-        { value: 'roles', title: 'nav_menu.roles', component: RolesTab, permission: 'CONFIG_ROLE_ACCESS' },
-        { value: 'acls', title: 'nav_menu.acls', component: ACLTab, permission: 'CONFIG_ACL_ACCESS' },
-        { value: 'organizations', title: 'nav_menu.organizations', component: OrganizationsTab, permission: 'CONFIG_ORGANIZATION_ACCESS' }
+        {
+            value: 'users',
+            title: 'nav_menu.users',
+            icon: ICONS.ACCOUNT_GROUP,
+            description: 'access_management.users.tab_description',
+            component: UsersTab,
+            permission: 'CONFIG_USER_ACCESS'
+        },
+        {
+            value: 'roles',
+            title: 'nav_menu.roles',
+            icon: ICONS.ACCOUNT_ARROW_RIGHT,
+            description: 'access_management.roles.tab_description',
+            component: RolesTab,
+            permission: 'CONFIG_ROLE_ACCESS'
+        },
+        {
+            value: 'acls',
+            title: 'nav_menu.acls',
+            icon: ICONS.LOCK_CHECK,
+            description: 'access_management.acls.tab_description',
+            component: ACLTab,
+            permission: 'CONFIG_ACL_ACCESS'
+        },
+        {
+            value: 'organizations',
+            title: 'nav_menu.organizations',
+            icon: ICONS.OFFICE_BUILDING,
+            description: 'access_management.organizations.tab_description',
+            component: OrganizationsTab,
+            permission: 'CONFIG_ORGANIZATION_ACCESS'
+        }
     ]
 
     // Only show tabs the user is allowed to access.

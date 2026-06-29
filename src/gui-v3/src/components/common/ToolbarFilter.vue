@@ -1,13 +1,8 @@
 <template>
     <v-container fluid class="pa-4">
-        <!-- Title, Search, and Counts -->
+        <!-- Search and Counts -->
         <v-row class="mb-2" align="center">
-            <v-col cols="12" md="2">
-                <div class="text-h6">
-                    {{ t(title) }}
-                </div>
-            </v-col>
-            <v-col cols="12" md="7">
+            <v-col cols="12" md="9">
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap">
                     <v-text-field
                         v-model="filter.search"
@@ -49,10 +44,6 @@
     }
 
     const props = defineProps({
-        title: {
-            type: String,
-            required: true
-        },
         totalCountTitle: {
             type: String,
             default: 'toolbar_filter.total_count'

@@ -7,7 +7,7 @@
             </div>
 
             <!-- Card -->
-            <v-hover v-slot="{ isHovering, props: hoverProps }" class="flex-grow-1">
+            <v-hover v-slot="{ isHovering, props: hoverProps }">
                 <v-card v-bind="hoverProps" :elevation="isHovering ? 12 : 2" class="card-compact flex-grow-1" @click="handleClick">
                     <v-card-text>
                         <v-row align="center">
@@ -29,18 +29,68 @@
                             </v-col>
 
                             <!-- Description/Subtitle -->
-                            <v-col v-if="card.subtitle || card.description">
+                            <v-col v-if="card.subtitle || card.description || isOsintSource">
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.description') }}
                                 </div>
                                 <div class="text-body-medium">
-                                    {{ card.subtitle || card.description }}
+                                    {{ card.subtitle || card.description || '' }}
+                                </div>
+                            </v-col>
+
+                            <!-- URL (nodes) -->
+                            <v-col v-if="card.api_url">
+                                <div class="text-label-small text-grey">
+                                    {{ t('card_item.url') }}
+                                </div>
+                                <div class="text-body-medium">
+                                    {{ card.api_url }}
+                                </div>
+                            </v-col>
+
+                            <!-- Last Seen (nodes) -->
+                            <v-col v-if="card.last_seen">
+                                <div class="text-label-small text-grey">
+                                    {{ t('card_item.last_seen') }}
+                                </div>
+                                <div class="text-body-medium">
+                                    {{ card.last_seen || '' }}
+                                </div>
+                            </v-col>
+
+                            <!-- Last Attempt / Last Collected (OSINT sources) — last_collected is
+                                 empty until a source is collected successfully. -->
+                            <v-col v-if="isOsintSource">
+                                <div class="text-label-small text-grey">
+                                    {{ t('card_item.last_attempted') }}
+                                </div>
+                                <div class="text-body-medium">
+                                    {{ card.last_attempted || ' ' }}
+                                </div>
+                            </v-col>
+
+                            <v-col v-if="isOsintSource">
+                                <div class="text-label-small text-grey">
+                                    {{ t('card_item.last_collected') }}
+                                </div>
+                                <div class="text-body-medium">
+                                    {{ card.last_collected || ' ' }}
+                                </div>
+                            </v-col>
+
+                            <!-- Last Error (OSINT sources) -->
+                            <v-col v-if="isOsintSource">
+                                <div class="text-label-small text-grey">
+                                    {{ t('card_item.last_error') }}
+                                </div>
+                                <div class="text-body-medium text-error">
+                                    {{ card.last_error_message || ' ' }}
                                 </div>
                             </v-col>
 
                             <!-- Actions -->
                             <v-col v-if="canDelete" cols="auto">
-                                <ActionButton action="delete" @click.stop="showDeleteDialog" />
+                                <ActionButton action="delete" :disabled="isProtected" @click.stop="showDeleteDialog" />
                             </v-col>
                         </v-row>
                     </v-card-text>
@@ -86,6 +136,13 @@
         subtitle?: string
         description?: string
         tag?: string
+        api_url?: string
+        last_seen?: string
+        collector_id?: string
+        last_attempted?: string
+        last_collected?: string
+        last_error_message?: string
+        default?: boolean
         report_type_name?: string
         product_type_name?: string
         news_items?: Array<{
@@ -103,11 +160,13 @@
             deletePermission?: string
             multiSelectActive?: boolean
             preselected?: boolean
+            lockDefault?: boolean
         }>(),
         {
             deletePermission: '',
             multiSelectActive: false,
-            preselected: false
+            preselected: false,
+            lockDefault: false
         }
     )
 
@@ -132,7 +191,21 @@
         return checkPermission(props.deletePermission as PermissionKey)
     })
 
+    // Protected (default) items cannot be deleted — the backend forbids it (e.g. the default
+    // "Uncategorized" OSINT source group). The card stays clickable; the dialog opens read-only.
+    // Enabled per view via lock-default.
+    const isProtected = computed(() => props.lockDefault && props.card?.default === true)
+
+    // OSINT source cards always carry a collector_id; for them we always render the
+    // description and collection-status columns (matching the Vue 2 card), with an em-dash
+    // fallback when a value is empty.
+    const isOsintSource = computed(() => props.card?.collector_id != null)
+
     const typeLabel = computed(() => {
+        // Node-type items (collectors/presenters/publishers/bots nodes) carry an api_url.
+        if (props.card?.api_url) {
+            return t('card_item.node')
+        }
         if (props.card?.report_type_name) {
             return props.card.report_type_name
         }

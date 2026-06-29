@@ -1,23 +1,22 @@
 <template>
     <v-dialog v-model="dialog" max-width="600" persistent>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('product_type.edit') : t('product_type.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('reports.types.edit') : t('reports.types.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.title"
-                        :label="t('product_type.title')"
+                        :label="t('reports.types.title')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -27,7 +26,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('product_type.description')"
+                        :label="t('reports.types.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -47,20 +46,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('product_type.error') }}
+                    {{ t('reports.types.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -69,10 +57,11 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
-    import { createNewProductType, updateProductType } from '@/api/config'
+    import { createNewReportItemType, updateReportItemType } from '@/api/config'
 
-    type ProductTypeItem = {
+    type ReportTypeItem = {
         id: string | number | null
         title: string
         description: string
@@ -85,7 +74,7 @@
 
     const props = withDefaults(
         defineProps<{
-            editItem?: Partial<ProductTypeItem> | null
+            editItem?: Partial<ReportTypeItem> | null
         }>(),
         {
             editItem: null
@@ -105,16 +94,16 @@
     const saving = ref(false)
     const dialog = ref(false)
 
-    const defaultItem: ProductTypeItem = {
+    const defaultItem: ReportTypeItem = {
         id: null,
         title: '',
         description: ''
     }
 
-    const localItem = ref<ProductTypeItem>({ ...defaultItem })
+    const localItem = ref<ReportTypeItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
 
-    const canCreate = computed(() => checkPermission('CONFIG_PRODUCT_TYPE_CREATE'))
+    const canCreate = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -129,9 +118,10 @@
         saving.value = true
         try {
             if (isEdit.value) {
-                await updateProductType(localItem.value)
+                await updateReportItemType(localItem.value)
             } else {
-                await createNewProductType(localItem.value)
+                // Backend requires an integer id even on create (ignored); null fails validation.
+                await createNewReportItemType({ ...localItem.value, id: -1 })
             }
             emit('saved')
             handleCancel()

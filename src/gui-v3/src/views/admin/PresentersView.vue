@@ -1,8 +1,14 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="nodes">Presenters Nodes</v-tab>
-            <v-tab value="types">Product Types</v-tab>
+            <v-tab value="types" :title="t('presenters.types.tab_description')">
+                <v-icon :icon="ICONS.FILE_DOCUMENT_OUTLINE" start />
+                Product Types
+            </v-tab>
+            <v-tab value="nodes" :title="t('presenters.nodes.tab_description')">
+                <v-icon :icon="ICONS.SERVER_NETWORK" start />
+                Presenters Nodes
+            </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -18,9 +24,12 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useTabQuery } from '@/composables/useTabQuery'
+    import { ICONS } from '@/config/ui-constants'
     import PresentersNodesView from './PresentersNodesView.vue'
     import ProductTypesView from './ProductTypesView.vue'
 
-    const activeTab = ref<'nodes' | 'types'>('nodes')
+    const { t } = useI18n()
+    const activeTab = useTabQuery(['nodes', 'types'], 'types')
 </script>

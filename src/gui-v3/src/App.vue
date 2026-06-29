@@ -321,4 +321,27 @@
     .v-btn.bg-info {
         color: rgb(var(--v-theme-on-info)) !important;
     }
+
+    /* Selected left-nav item: tint the icon and label with the primary colour. */
+    .v-navigation-drawer .v-list-item--active,
+    .v-navigation-drawer .v-list-item--active .v-icon {
+        color: rgb(var(--v-theme-primary)) !important;
+    }
+
+    /* Keep the active highlight grey (the overlay otherwise inherits the primary
+       text colour via currentColor and turns blue). */
+    .v-navigation-drawer .v-list-item--active > .v-list-item__overlay {
+        background-color: rgb(var(--v-theme-on-surface)) !important;
+    }
+
+    /* Selected tab: primary text and icon. */
+    .v-tab.v-tab--selected,
+    .v-tab.v-tab--selected .v-icon {
+        color: rgb(var(--v-theme-primary)) !important;
+    }
+
+    /* Selected tab slider bar (its background defaults to a faint on-surface grey). */
+    .v-tab.v-tab--selected .v-tab__slider {
+        background-color: rgb(var(--v-theme-primary)) !important;
+    }
 </style>

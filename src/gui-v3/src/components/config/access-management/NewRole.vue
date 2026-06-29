@@ -1,21 +1,22 @@
 <template>
-    <v-dialog v-model="dialog" max-width="600" persistent>
+    <v-dialog v-model="dialog" max-width="900" persistent scrollable>
         <template #activator="{ props: activatorProps }">
             <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('organization.edit') : t('organization.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('access_management.roles.edit') : t('access_management.roles.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('organization.name')"
+                        :label="t('access_management.roles.title')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -25,45 +26,20 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('organization.description')"
+                        :label="t('access_management.roles.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
                         :disabled="saving"
                     />
 
-                    <v-text-field
-                        v-model="localItem.street"
-                        :label="t('organization.street')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
-
-                    <v-text-field
-                        v-model="localItem.city"
-                        :label="t('organization.city')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
-
-                    <v-text-field
-                        v-model="localItem.zip"
-                        :label="t('organization.zip')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
-
-                    <v-text-field
-                        v-model="localItem.country"
-                        :label="t('organization.country')"
-                        variant="outlined"
-                        density="comfortable"
+                    <!-- Permissions Selection -->
+                    <EntitySelectTable
+                        v-model="selectedPermissions"
+                        :title="t('access_management.roles.permissions')"
+                        :items="permissions"
+                        :headers="permissionHeaders"
+                        :loading="loadingPermissions"
                         :disabled="saving"
                     />
                 </v-form>
@@ -80,39 +56,34 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('organization.error') }}
+                    {{ t('access_management.roles.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
-    import { createNewOrganization, updateOrganization } from '@/api/config'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
+    import { createNewRole, updateRole, getAllPermissions } from '@/api/config'
 
-    type OrganizationItem = {
+    type SelectableEntity = {
+        id: string | number
+        name?: string
+        description?: string
+        [key: string]: unknown
+    }
+
+    type RoleItem = {
         id: string | number | null
         name: string
         description: string
-        street: string
-        city: string
-        zip: string
-        country: string
+        permissions: unknown[]
         [key: string]: unknown
     }
 
@@ -120,10 +91,24 @@
         valid: boolean
     }
 
+    type TableHeader = {
+        title: string
+        key: string
+        sortable: boolean
+    }
+
+    type IdSelection = Array<string | number>
+
+    type ListResponse = {
+        data?: {
+            items?: SelectableEntity[]
+        }
+    }
+
     const props = withDefaults(
         defineProps<{
             modelValue?: boolean
-            editItem?: Partial<OrganizationItem> | null
+            editItem?: Partial<RoleItem> | null
         }>(),
         {
             modelValue: false,
@@ -142,20 +127,42 @@
     const saving = ref(false)
     const dialog = ref(false)
 
-    const defaultItem: OrganizationItem = {
-        id: null,
+    const permissions = ref<SelectableEntity[]>([])
+    const loadingPermissions = ref(false)
+    const selectedPermissions = ref<IdSelection>([])
+
+    const permissionHeaders: TableHeader[] = [
+        { title: t('access_management.roles.name'), key: 'name', sortable: true },
+        { title: t('access_management.roles.description'), key: 'description', sortable: false }
+    ]
+
+    const defaultItem: RoleItem = {
+        // Empty string (not null): backend requires a string id even on create (ignored), null fails validation.
+        id: '',
         name: '',
         description: '',
-        street: '',
-        city: '',
-        zip: '',
-        country: ''
+        permissions: []
     }
 
-    const localItem = ref<OrganizationItem>({ ...defaultItem })
+    const localItem = ref<RoleItem>({ ...defaultItem })
 
     const isEdit = computed(() => !!localItem.value.id)
-    const canCreate = computed(() => checkPermission('CONFIG_ORGANIZATION_CREATE'))
+    const canCreate = computed(() => checkPermission('CONFIG_ROLE_CREATE'))
+    const canUpdate = computed(() => checkPermission('CONFIG_ROLE_UPDATE') || !isEdit.value)
+
+    const loadPermissions = async (): Promise<void> => {
+        loadingPermissions.value = true
+        try {
+            const response = await getAllPermissions({ search: '' })
+            permissions.value = (response as ListResponse).data?.items || []
+        } catch (error) {
+            console.error('Error loading permissions:', error)
+        } finally {
+            loadingPermissions.value = false
+        }
+    }
+
+    onMounted(loadPermissions)
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -169,10 +176,14 @@
 
         saving.value = true
         try {
+            const payload: RoleItem = {
+                ...localItem.value,
+                permissions: selectedPermissions.value.map((id) => ({ id }))
+            }
             if (isEdit.value) {
-                await updateOrganization(localItem.value)
+                await updateRole(payload)
             } else {
-                await createNewOrganization(localItem.value)
+                await createNewRole(payload)
             }
             emit('saved')
             handleCancel()
@@ -193,6 +204,7 @@
         showError.value = false
         formRef.value?.reset()
         localItem.value = { ...defaultItem }
+        selectedPermissions.value = []
         dialog.value = false
     }
 
@@ -201,10 +213,14 @@
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
                 localItem.value = { ...defaultItem, ...newItem }
+                selectedPermissions.value = Array.isArray(newItem.permissions)
+                    ? (newItem.permissions as SelectableEntity[]).map((perm) => perm.id)
+                    : []
                 // Opening the dialog automatically when an item to edit is provided.
                 dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
+                selectedPermissions.value = []
             }
         },
         { immediate: true, deep: true }
@@ -219,6 +235,7 @@
                 saving.value = false
                 formRef.value?.reset()
                 localItem.value = { ...defaultItem }
+                selectedPermissions.value = []
             }
             emit('update:modelValue', newVal)
         }

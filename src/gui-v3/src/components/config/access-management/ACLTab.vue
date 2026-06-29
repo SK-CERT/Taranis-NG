@@ -1,10 +1,6 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <span>{{ t('nav_menu.organizations') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
@@ -20,24 +16,28 @@
                         />
                     </v-col>
                     <v-col cols="4" class="text-right">
-                        <NewOrganization :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
+                        <NewACL :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.organizations.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table :headers="headers" :items="configStore.acls.items" :search="search" item-key="id" class="elevation-1">
                 <template #item.name="{ item }">
-                    <strong>{{ asOrganizationItem(item).name }}</strong>
+                    <strong>{{ asACLItem(item).name }}</strong>
                 </template>
 
                 <template #item.description="{ item }">
-                    {{ asOrganizationItem(item).description }}
+                    {{ asACLItem(item).description }}
+                </template>
+
+                <template #item.item_type="{ item }">
+                    {{ aclItemTypeLabel(asACLItem(item).item_type) }}
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asOrganizationItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asOrganizationItem(item))" />
+                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asACLItem(item))" />
+                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asACLItem(item))" />
                 </template>
             </v-data-table>
         </v-card>
@@ -50,8 +50,9 @@
     import { ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
-    import { deleteOrganization } from '@/api/config'
-    import NewOrganization from '@/components/config/organizations/NewOrganization.vue'
+    import { deleteACLEntry } from '@/api/config'
+    import NewACL from '@/components/config/access-management/NewACL.vue'
+    import { aclItemTypeLabel } from '@/components/config/access-management/aclItemTypes'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
@@ -62,10 +63,11 @@
         align?: 'start' | 'end' | 'center'
     }
 
-    type OrganizationItem = {
+    type ACLItem = {
         id: string | number
         name?: string
         description?: string
+        item_type?: string
         [key: string]: unknown
     }
 
@@ -73,32 +75,33 @@
     const configStore = useConfigStore()
 
     const search = ref('')
-    const editItem = ref<OrganizationItem | null>(null)
+    const editItem = ref<ACLItem | null>(null)
     const deleteDialog = ref(false)
-    const itemToDelete = ref<OrganizationItem | null>(null)
+    const itemToDelete = ref<ACLItem | null>(null)
 
     const headers: HeaderEntry[] = [
-        { title: t('organization.name'), key: 'name' },
-        { title: t('organization.description'), key: 'description' },
+        { title: t('access_management.acls.name'), key: 'name' },
+        { title: t('access_management.acls.description'), key: 'description' },
+        { title: t('access_management.acls.item_type'), key: 'item_type' },
         { title: t('settings.actions'), key: 'actions', sortable: false, align: 'end' }
     ]
 
-    const asOrganizationItem = (item: unknown): OrganizationItem => item as OrganizationItem
+    const asACLItem = (item: unknown): ACLItem => item as ACLItem
 
     const loadData = async (): Promise<void> => {
         try {
-            await configStore.loadOrganizations({ search: search.value })
+            await configStore.loadACLEntries({ search: search.value })
         } catch (error) {
-            console.error('Error loading organizations:', error)
+            console.error('Error loading ACL entries:', error)
         }
     }
 
-    const handleEdit = (item: OrganizationItem): void => {
-        // Setting editItem triggers NewOrganization's watcher to open its dialog in edit mode.
+    const handleEdit = (item: ACLItem): void => {
+        // Setting editItem triggers NewACL's watcher to open its dialog in edit mode.
         editItem.value = item
     }
 
-    const handleDelete = (item: OrganizationItem): void => {
+    const handleDelete = (item: ACLItem): void => {
         itemToDelete.value = item
         deleteDialog.value = true
     }
@@ -108,10 +111,10 @@
             return
         }
         try {
-            await deleteOrganization(itemToDelete.value)
+            await deleteACLEntry(itemToDelete.value)
             await loadData()
         } catch (error) {
-            console.error('Error deleting organization:', error)
+            console.error('Error deleting ACL entry:', error)
         } finally {
             itemToDelete.value = null
         }

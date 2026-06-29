@@ -1,11 +1,6 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <v-icon color="blue" class="mr-2" :title="t('workflow.states.tab_description')">mdi-information-outline</v-icon>
-                <span>{{ t('workflow.states_tab') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
@@ -78,9 +73,12 @@
         <!-- Edit Dialog - Simplified for now -->
         <v-dialog v-model="dialogEdit" max-width="700">
             <v-card>
-                <v-card-title>
-                    {{ editedIndex === -1 ? t('workflow.states.add_new') : t('workflow.states.edit') }}
-                </v-card-title>
+                <DialogToolbar
+                    :title="editedIndex === -1 ? t('workflow.states.add_new') : t('workflow.states.edit')"
+                    :show-save="isEditable"
+                    @cancel="closeEdit"
+                    @save="saveRecord"
+                />
                 <v-card-text>
                     <v-form ref="formRef">
                         <v-text-field
@@ -123,16 +121,6 @@
                         />
                     </v-form>
                 </v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn color="grey" variant="text" @click="closeEdit">
-                        {{ t('common.cancel') }}
-                    </v-btn>
-                    <v-btn v-if="isEditable" color="primary" variant="text" @click="saveRecord">
-                        <v-icon left>mdi-content-save</v-icon>
-                        {{ t('common.save') }}
-                    </v-btn>
-                </v-card-actions>
             </v-card>
         </v-dialog>
     </v-container>
@@ -143,6 +131,7 @@
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from '@/api/config'

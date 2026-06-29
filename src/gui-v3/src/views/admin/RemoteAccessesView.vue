@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.remote_access"
             :total-count="configStore.remoteAccess.total_count"
-            total-count-title="remote_access.total_count"
+            total-count-title="remote.access.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>

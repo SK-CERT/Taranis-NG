@@ -1,23 +1,22 @@
 <template>
     <v-dialog v-model="dialog" max-width="600" persistent>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('presenters_node.edit') : t('presenters_node.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('access_management.organizations.edit') : t('access_management.organizations.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('presenters_node.name')"
+                        :label="t('access_management.organizations.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -27,30 +26,45 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('presenters_node.description')"
+                        :label="t('access_management.organizations.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
+                        :disabled="saving"
+                    />
+
+                    <v-text-field
+                        v-model="localItem.street"
+                        :label="t('access_management.organizations.street')"
+                        variant="outlined"
+                        density="comfortable"
                         class="mb-3"
                         :disabled="saving"
                     />
 
                     <v-text-field
-                        v-model="localItem.api_url"
-                        :label="t('presenters_node.api_url')"
+                        v-model="localItem.city"
+                        :label="t('access_management.organizations.city')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
                     />
 
                     <v-text-field
-                        v-model="localItem.api_key"
-                        :label="t('presenters_node.api_key')"
+                        v-model="localItem.zip"
+                        :label="t('access_management.organizations.zip')"
                         variant="outlined"
                         density="comfortable"
-                        type="password"
+                        class="mb-3"
+                        :disabled="saving"
+                    />
+
+                    <v-text-field
+                        v-model="localItem.country"
+                        :label="t('access_management.organizations.country')"
+                        variant="outlined"
+                        density="comfortable"
                         :disabled="saving"
                     />
                 </v-form>
@@ -67,20 +81,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('presenters_node.error') }}
+                    {{ t('access_management.organizations.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -88,16 +91,19 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
-    import { createNewPresentersNode, updatePresentersNode } from '@/api/config'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import { createNewOrganization, updateOrganization } from '@/api/config'
 
-    type PresentersNodeItem = {
+    type OrganizationItem = {
         id: string | number | null
         name: string
         description: string
-        api_url: string
-        api_key: string
+        street: string
+        city: string
+        zip: string
+        country: string
         [key: string]: unknown
     }
 
@@ -107,16 +113,16 @@
 
     const props = withDefaults(
         defineProps<{
-            editItem?: Partial<PresentersNodeItem> | null
+            modelValue?: boolean
+            editItem?: Partial<OrganizationItem> | null
         }>(),
         {
+            modelValue: false,
             editItem: null
         }
     )
 
-    const emit = defineEmits<{
-        (e: 'saved'): void
-    }>()
+    const emit = defineEmits(['update:modelValue', 'saved'])
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
@@ -127,18 +133,20 @@
     const saving = ref(false)
     const dialog = ref(false)
 
-    const defaultItem: PresentersNodeItem = {
+    const defaultItem: OrganizationItem = {
         id: null,
         name: '',
         description: '',
-        api_url: '',
-        api_key: ''
+        street: '',
+        city: '',
+        zip: '',
+        country: ''
     }
 
-    const localItem = ref<PresentersNodeItem>({ ...defaultItem })
-    const isEdit = computed(() => !!localItem.value.id)
+    const localItem = ref<OrganizationItem>({ ...defaultItem })
 
-    const canCreate = computed(() => checkPermission('CONFIG_PRESENTERS_NODE_CREATE'))
+    const isEdit = computed(() => !!localItem.value.id)
+    const canCreate = computed(() => checkPermission('CONFIG_ORGANIZATION_CREATE'))
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -152,10 +160,24 @@
 
         saving.value = true
         try {
+            // The backend expects the address as a nested object and a (non-null) integer id;
+            // the id is ignored on create, so -1 is used as the "new" sentinel.
+            const payload = {
+                id: isEdit.value ? localItem.value.id : -1,
+                name: localItem.value.name,
+                description: localItem.value.description,
+                address: {
+                    street: localItem.value.street,
+                    city: localItem.value.city,
+                    zip: localItem.value.zip,
+                    country: localItem.value.country
+                }
+            }
+
             if (isEdit.value) {
-                await updatePresentersNode(localItem.value)
+                await updateOrganization(payload)
             } else {
-                await createNewPresentersNode(localItem.value)
+                await createNewOrganization(payload)
             }
             emit('saved')
             handleCancel()
@@ -183,7 +205,18 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...defaultItem, ...newItem }
+                // The backend returns the address as a nested object; flatten it into the form fields.
+                const address = (newItem as { address?: { street?: string; city?: string; zip?: string; country?: string } }).address
+                localItem.value = {
+                    ...defaultItem,
+                    ...newItem,
+                    street: address?.street ?? '',
+                    city: address?.city ?? '',
+                    zip: address?.zip ?? '',
+                    country: address?.country ?? ''
+                }
+                // Opening the dialog automatically when an item to edit is provided.
+                dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
             }
@@ -193,12 +226,15 @@
 
     watch(
         () => dialog.value,
-        (newVal: boolean) => {
+        (newVal) => {
             if (!newVal) {
                 showValidationError.value = false
                 showError.value = false
                 saving.value = false
+                formRef.value?.reset()
+                localItem.value = { ...defaultItem }
             }
+            emit('update:modelValue', newVal)
         }
     )
 </script>

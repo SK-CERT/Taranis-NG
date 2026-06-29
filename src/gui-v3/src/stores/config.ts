@@ -104,7 +104,7 @@ export const useConfigStore = defineStore('config', () => {
         groups.push({
             icon: 'mdi-folder-multiple',
             color: '#81D4FA',
-            title: 'osint_source_group.all',
+            title: 'collectors.groups.all',
             translate: '1',
             route: '/assess/group/all',
             id: 'all'
@@ -120,7 +120,7 @@ export const useConfigStore = defineStore('config', () => {
             let translate = ''
             let color: string | null = null
             if (g.default === true) {
-                title = 'osint_source_group.default_group'
+                title = 'collectors.groups.default_group'
                 translate = '1'
                 color = '#BDBDBD'
             }

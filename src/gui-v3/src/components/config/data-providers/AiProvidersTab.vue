@@ -1,11 +1,6 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <v-icon color="blue" class="me-2" :title="t('data_provider.ai_providers.tab_description')"> mdi-help-circle </v-icon>
-                <span>{{ t('nav_menu.ai_providers') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
@@ -69,7 +64,7 @@
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteAiProvider } from '@/api/config'
-    import NewAiProvider from '@/components/config/ai-providers/NewAiProvider.vue'
+    import NewAiProvider from '@/components/config/data-providers/NewAiProvider.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
 
     type HeaderEntry = {
@@ -97,9 +92,9 @@
     const editItem = ref<AiProviderItem | null>(null)
 
     const headers: HeaderEntry[] = [
-        { title: t('ai_provider.name'), key: 'name' },
-        { title: t('ai_provider.api_type'), key: 'api_type' },
-        { title: t('ai_provider.model'), key: 'model' },
+        { title: t('data_providers.ai.name'), key: 'name' },
+        { title: t('data_providers.ai.api_type'), key: 'api_type' },
+        { title: t('data_providers.ai.model'), key: 'model' },
         { title: t('settings.api_key'), key: 'api_key', sortable: false },
         { title: t('settings.updated_by'), key: 'updated_by' },
         { title: t('settings.updated_at'), key: 'updated_at', sortable: false },

@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.report_types"
             :total-count="configStore.reportItemTypesConfig.total_count"
-            total-count-title="report_type.total_count"
+            total-count-title="reports.types.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
@@ -32,7 +31,7 @@
     import { deleteReportItemType } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
-    import NewReportType from '@/components/config/report-types/NewReportType.vue'
+    import NewReportType from '@/components/config/reports/NewReportType.vue'
 
     const { t } = useI18n()
     const configStore = useConfigStore()

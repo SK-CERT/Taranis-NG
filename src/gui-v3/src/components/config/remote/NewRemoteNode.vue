@@ -5,17 +5,18 @@
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('remote_node.edit') : t('remote_node.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('remote.nodes.edit') : t('remote.nodes.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('remote_node.name')"
+                        :label="t('remote.nodes.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -25,7 +26,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('remote_node.description')"
+                        :label="t('remote.nodes.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -35,7 +36,7 @@
 
                     <v-text-field
                         v-model="localItem.url"
-                        :label="t('remote_node.url')"
+                        :label="t('remote.nodes.url')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -43,7 +44,7 @@
                         :disabled="saving"
                     />
 
-                    <v-switch v-model="localItem.enabled" :label="t('remote_node.enabled')" color="primary" :disabled="saving" />
+                    <v-switch v-model="localItem.enabled" :label="t('remote.nodes.enabled')" color="primary" :disabled="saving" />
                 </v-form>
 
                 <v-alert
@@ -58,20 +59,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('remote_node.error') }}
+                    {{ t('remote.nodes.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -80,6 +70,7 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewRemoteNode, updateRemoteNode } from '@/api/config'
 
@@ -146,7 +137,8 @@
             if (isEdit.value) {
                 await updateRemoteNode(localItem.value)
             } else {
-                await createNewRemoteNode(localItem.value)
+                // Backend requires an integer id even on create (ignored); null fails validation.
+                await createNewRemoteNode({ ...localItem.value, id: -1 })
             }
             emit('saved')
             handleCancel()

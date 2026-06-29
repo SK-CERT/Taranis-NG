@@ -1,23 +1,22 @@
 <template>
-    <v-dialog v-model="dialog" max-width="800" persistent>
+    <v-dialog v-model="dialog" max-width="600" persistent>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('osint_source.edit') : t('osint_source.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('reports.attributes.edit') : t('reports.attributes.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('osint_source.name')"
+                        :label="t('reports.attributes.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -27,7 +26,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('osint_source.description')"
+                        :label="t('reports.attributes.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -35,38 +34,15 @@
                         :disabled="saving"
                     />
 
-                    <v-text-field
-                        v-model="localItem.feed_url"
-                        :label="t('osint_source.feed_url')"
-                        variant="outlined"
-                        density="comfortable"
-                        class="mb-3"
-                        :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving"
-                    />
-
                     <v-select
-                        v-model="localItem.collector"
-                        :label="t('osint_source.collector')"
-                        :items="collectorTypes"
+                        v-model="localItem.type"
+                        :label="t('reports.attributes.type')"
+                        :items="attributeTypes"
                         variant="outlined"
                         density="comfortable"
-                        class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
                     />
-
-                    <v-text-field
-                        v-model.number="localItem.refresh_interval"
-                        :label="t('osint_source.refresh_interval')"
-                        variant="outlined"
-                        density="comfortable"
-                        type="number"
-                        class="mb-3"
-                        :disabled="saving"
-                    />
-
-                    <v-switch v-model="localItem.enabled" :label="t('osint_source.enabled')" color="primary" :disabled="saving" />
                 </v-form>
 
                 <v-alert
@@ -81,20 +57,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('osint_source.error') }}
+                    {{ t('reports.attributes.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -102,24 +67,24 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import { useAuth } from '@/composables/useAuth'
-    import { createNewOSINTSource, updateOSINTSource } from '@/api/config'
+    import { createNewAttribute, updateAttribute } from '@/api/config'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
 
-    type OSINTSourceItem = {
+    type AttributeType = 'STRING' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'DATETIME' | 'TEXT' | 'ENUM'
+
+    type AttributeItem = {
         id: string | number | null
         name: string
         description: string
-        feed_url: string
-        collector: string
-        refresh_interval: number
-        enabled: boolean
+        type: AttributeType
         [key: string]: unknown
     }
 
-    type CollectorTypeItem = {
-        title: string
-        value: string
+    type AttributeTypeItem = {
+        title: AttributeType
+        value: AttributeType
     }
 
     type FormValidationResult = {
@@ -128,7 +93,7 @@
 
     const props = withDefaults(
         defineProps<{
-            editItem?: Partial<OSINTSourceItem> | null
+            editItem?: Record<string, unknown> | null
         }>(),
         {
             editItem: null
@@ -148,29 +113,27 @@
     const saving = ref(false)
     const dialog = ref(false)
 
-    const collectorTypes: CollectorTypeItem[] = [
-        { title: 'RSS Collector', value: 'rss_collector' },
-        { title: 'Web Collector', value: 'web_collector' },
-        { title: 'RT Collector', value: 'rt_collector' },
-        { title: 'Email Collector', value: 'email_collector' },
-        { title: 'Twitter Collector', value: 'twitter_collector' },
-        { title: 'Simple Collector', value: 'simple_collector' }
+    const attributeTypes: AttributeTypeItem[] = [
+        { title: 'STRING', value: 'STRING' },
+        { title: 'NUMBER', value: 'NUMBER' },
+        { title: 'BOOLEAN', value: 'BOOLEAN' },
+        { title: 'DATE', value: 'DATE' },
+        { title: 'DATETIME', value: 'DATETIME' },
+        { title: 'TEXT', value: 'TEXT' },
+        { title: 'ENUM', value: 'ENUM' }
     ]
 
-    const defaultItem: OSINTSourceItem = {
+    const defaultItem: AttributeItem = {
         id: null,
         name: '',
         description: '',
-        feed_url: '',
-        collector: 'rss_collector',
-        refresh_interval: 60,
-        enabled: true
+        type: 'STRING'
     }
 
-    const localItem = ref<OSINTSourceItem>({ ...defaultItem })
+    const localItem = ref<AttributeItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
 
-    const canCreate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
+    const canCreate = computed(() => checkPermission('CONFIG_ATTRIBUTE_CREATE'))
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -185,9 +148,10 @@
         saving.value = true
         try {
             if (isEdit.value) {
-                await updateOSINTSource(localItem.value)
+                await updateAttribute(localItem.value)
             } else {
-                await createNewOSINTSource(localItem.value)
+                // Backend requires an integer id even on create (ignored); null fails validation.
+                await createNewAttribute({ ...localItem.value, id: -1 })
             }
             emit('saved')
             handleCancel()
@@ -215,7 +179,9 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...defaultItem, ...newItem }
+                const incoming = newItem as Partial<AttributeItem>
+                localItem.value = { ...defaultItem, ...incoming }
+                dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
             }

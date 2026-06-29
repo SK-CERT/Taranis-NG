@@ -1,23 +1,22 @@
 <template>
     <v-dialog v-model="dialog" max-width="600" persistent>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('data_provider.edit') : t('data_provider.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('data_providers.data.edit') : t('data_providers.data.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('data_provider.name')"
+                        :label="t('data_providers.data.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -27,7 +26,7 @@
 
                     <v-select
                         v-model="localItem.api_type"
-                        :label="t('data_provider.api_type')"
+                        :label="t('data_providers.data.api_type')"
                         :items="['CVE', 'CWE', 'CPE', 'EUVD', 'EPSS']"
                         variant="outlined"
                         density="comfortable"
@@ -38,7 +37,7 @@
 
                     <v-text-field
                         v-model="localItem.api_url"
-                        :label="t('data_provider.api_url')"
+                        :label="t('data_providers.data.api_url')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -62,7 +61,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.user_agent"
-                                :label="t('data_provider.user_agent')"
+                                :label="t('data_providers.data.user_agent')"
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving"
@@ -72,7 +71,7 @@
 
                     <v-text-field
                         v-model="localItem.web_url"
-                        :label="t('data_provider.web_url')"
+                        :label="t('data_providers.data.web_url')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -92,20 +91,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('data_provider.error') }}
+                    {{ t('data_providers.data.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -114,6 +102,7 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewDataProvider, updateDataProvider } from '@/api/config'
 
@@ -186,7 +175,10 @@
             if (props.isEdit) {
                 await updateDataProvider(localItem.value)
             } else {
-                await createNewDataProvider(localItem.value)
+                // Backend create schema has no id field for the constructor; omit it (null fails validation).
+                const payload: Record<string, unknown> = { ...localItem.value }
+                delete payload['id']
+                await createNewDataProvider(payload)
             }
             emit('saved')
             handleCancel()

@@ -1,7 +1,10 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="users"> External Users </v-tab>
+            <v-tab value="users" :title="t('external_user.tab_description')">
+                <v-icon :icon="ICONS.ACCOUNT_GROUP" start />
+                External Users
+            </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -13,8 +16,11 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useTabQuery } from '@/composables/useTabQuery'
+    import { ICONS } from '@/config/ui-constants'
     import ExternalUsersView from './ExternalUsersView.vue'
 
-    const activeTab = ref<'users'>('users')
+    const { t } = useI18n()
+    const activeTab = useTabQuery(['users'], 'users')
 </script>

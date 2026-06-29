@@ -6,6 +6,7 @@
             :key="item.id"
             :card="item"
             :delete-permission="deletePermission"
+            :lock-default="lockDefault"
             @delete="handleDelete"
             @edit="handleEdit"
         />
@@ -65,6 +66,10 @@
             default: ''
         },
         loading: {
+            type: Boolean,
+            default: false
+        },
+        lockDefault: {
             type: Boolean,
             default: false
         }

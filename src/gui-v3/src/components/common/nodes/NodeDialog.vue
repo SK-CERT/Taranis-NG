@@ -5,17 +5,18 @@
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('attribute.edit') : t('attribute.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t(`${config.i18nPrefix}.edit`) : t(`${config.i18nPrefix}.add_new`)"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('attribute.name')"
+                        :label="t(`${config.i18nPrefix}.name`)"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -25,7 +26,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('attribute.description')"
+                        :label="t(`${config.i18nPrefix}.description`)"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -33,14 +34,26 @@
                         :disabled="saving"
                     />
 
-                    <v-select
-                        v-model="localItem.type"
-                        :label="t('attribute.type')"
-                        :items="attributeTypes"
+                    <v-text-field
+                        v-model="localItem.api_url"
+                        :label="t(`${config.i18nPrefix}.api_url`)"
                         variant="outlined"
                         density="comfortable"
+                        class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
+                    />
+
+                    <v-text-field
+                        v-model="localItem.api_key"
+                        :label="t(`${config.i18nPrefix}.api_key`)"
+                        variant="outlined"
+                        density="comfortable"
+                        :type="showApiKey ? 'text' : 'password'"
+                        :rules="config.apiKeyRequired ? [(v) => !!v || t('error.required')] : []"
+                        :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
+                        :disabled="saving"
+                        @click:append-inner="showApiKey = !showApiKey"
                     />
                 </v-form>
 
@@ -56,20 +69,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('attribute.error') }}
+                    {{ t(`${config.i18nPrefix}.error`) }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -77,22 +79,19 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
-    import { createNewAttribute, updateAttribute } from '@/api/config'
+    import type { PermissionKey } from '@/types/permissions'
+    import { NODE_TYPES, type NodeType } from './nodeTypes'
 
-    type AttributeType = 'STRING' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'DATETIME' | 'TEXT' | 'ENUM'
-
-    type AttributeItem = {
+    type NodeItem = {
         id: string | number | null
         name: string
         description: string
-        type: AttributeType
+        api_url: string
+        api_key: string
         [key: string]: unknown
-    }
-
-    type AttributeTypeItem = {
-        title: AttributeType
-        value: AttributeType
     }
 
     type FormValidationResult = {
@@ -101,7 +100,8 @@
 
     const props = withDefaults(
         defineProps<{
-            editItem?: Record<string, unknown> | null
+            type: NodeType
+            editItem?: Partial<NodeItem> | null
         }>(),
         {
             editItem: null
@@ -115,33 +115,29 @@
     const { t } = useI18n()
     const { checkPermission } = useAuth()
 
+    const config = computed(() => NODE_TYPES[props.type])
+
     const formRef = ref<any>(null)
     const showValidationError = ref(false)
     const showError = ref(false)
     const saving = ref(false)
     const dialog = ref(false)
+    const showApiKey = ref(false)
 
-    const attributeTypes: AttributeTypeItem[] = [
-        { title: 'STRING', value: 'STRING' },
-        { title: 'NUMBER', value: 'NUMBER' },
-        { title: 'BOOLEAN', value: 'BOOLEAN' },
-        { title: 'DATE', value: 'DATE' },
-        { title: 'DATETIME', value: 'DATETIME' },
-        { title: 'TEXT', value: 'TEXT' },
-        { title: 'ENUM', value: 'ENUM' }
-    ]
-
-    const defaultItem: AttributeItem = {
-        id: null,
+    const defaultItem: NodeItem = {
+        // Empty string (not null): the backend requires a string id even on create (it is ignored
+        // and replaced by a generated UUID), and a null id fails schema validation.
+        id: '',
         name: '',
         description: '',
-        type: 'STRING'
+        api_url: '',
+        api_key: ''
     }
 
-    const localItem = ref<AttributeItem>({ ...defaultItem })
+    const localItem = ref<NodeItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
 
-    const canCreate = computed(() => checkPermission('CONFIG_ATTRIBUTE_CREATE'))
+    const canCreate = computed(() => checkPermission(`${config.value.permissionPrefix}_CREATE` as PermissionKey))
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -156,10 +152,15 @@
         saving.value = true
         try {
             if (isEdit.value) {
-                await updateAttribute(localItem.value)
+                await config.value.updateFn(localItem.value)
             } else {
-                await createNewAttribute(localItem.value)
+                await config.value.createFn(localItem.value)
             }
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: isEdit.value ? 'common.updated_successfully' : 'common.created_successfully' }
+                })
+            )
             emit('saved')
             handleCancel()
         } catch (error) {
@@ -177,6 +178,7 @@
     function handleCancel(): void {
         showValidationError.value = false
         showError.value = false
+        showApiKey.value = false
         formRef.value?.reset()
         localItem.value = { ...defaultItem }
         dialog.value = false
@@ -186,8 +188,8 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                const incoming = newItem as Partial<AttributeItem>
-                localItem.value = { ...defaultItem, ...incoming }
+                localItem.value = { ...defaultItem, ...newItem }
+                dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
             }
@@ -201,6 +203,7 @@
             if (!newVal) {
                 showValidationError.value = false
                 showError.value = false
+                showApiKey.value = false
                 saving.value = false
             }
         }

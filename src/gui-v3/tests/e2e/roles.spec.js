@@ -23,8 +23,8 @@ test.describe('Role Management', () => {
         // Roles is now the Roles tab inside the Access Management view.
         await expect(page).toHaveURL(/\/config\/access-management\?tab=roles/)
 
-        // Should show page title or header
-        await expect(page.locator('.v-card-title').filter({ hasText: /roles/i })).toBeVisible()
+        // Tab content (data table) should be visible
+        await expect(page.locator('.v-data-table')).toBeVisible()
 
         // Should show New button if user has permissions
         const newButton = page.getByRole('button', { name: 'New' })
@@ -42,25 +42,19 @@ test.describe('Role Management', () => {
         await openDialog(page, 'New')
 
         // Verify dialog is open
-        await expect(page.locator('.v-dialog')).toBeVisible()
+        const dialog = page.locator('.v-dialog:visible')
+        await expect(dialog).toBeVisible()
 
         // Fill form
-        await page.locator('.v-dialog:visible input').first().fill(roleName)
-        await page.locator('.v-dialog:visible textarea').first().fill('Automated test role')
+        await dialog.locator('input').first().fill(roleName)
+        await dialog.locator('textarea').first().fill('Automated test role')
 
         // Save
         await saveDialog(page)
 
-        const dialogStillOpen = await page.locator('.v-dialog:visible').count()
-        if (dialogStillOpen) {
-            await expect(page.locator('.v-dialog:visible .v-alert.text-error')).toBeVisible()
-            await page
-                .locator('.v-dialog:visible button')
-                .filter({ hasText: /^Cancel$/ })
-                .click()
-        }
-
-        await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
+        // Web-first assertion (auto-retries): a successful save closes the dialog
+        // and surfaces the new row; a rejected save keeps an inline alert open.
+        await expect(page.locator('tbody tr').filter({ hasText: roleName }).or(dialog.locator('.v-alert.text-error'))).toBeVisible()
     })
 
     test('should show validation error when creating role without name', async ({ page }) => {

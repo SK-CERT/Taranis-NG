@@ -5,11 +5,12 @@
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('user.edit') : t('user.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('access_management.users.edit') : t('access_management.users.add_new')"
+                :saving="saving"
+                @cancel="cancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -17,7 +18,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.username"
-                                :label="t('user.username')"
+                                :label="t('access_management.users.username')"
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="[(v) => !!v || t('error.required')]"
@@ -27,7 +28,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.name"
-                                :label="t('user.name')"
+                                :label="t('access_management.users.name')"
                                 variant="outlined"
                                 density="comfortable"
                                 :disabled="saving"
@@ -39,7 +40,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="password"
-                                :label="t('user.password')"
+                                :label="t('access_management.users.password')"
                                 :type="showPassword ? 'text' : 'password'"
                                 variant="outlined"
                                 density="comfortable"
@@ -52,7 +53,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="passwordConfirm"
-                                :label="t('user.password_check')"
+                                :label="t('access_management.users.password_check')"
                                 :type="showPassword ? 'text' : 'password'"
                                 variant="outlined"
                                 density="comfortable"
@@ -71,7 +72,7 @@
                     <!-- Organizations Selection -->
                     <EntitySelectTable
                         v-model="selectedOrganizations"
-                        :title="t('user.organizations')"
+                        :title="t('access_management.users.organizations')"
                         :items="organizations"
                         :headers="orgHeaders"
                         :loading="loadingOrganizations"
@@ -81,7 +82,7 @@
                     <!-- Roles Selection -->
                     <EntitySelectTable
                         v-model="selectedRoles"
-                        :title="t('user.roles')"
+                        :title="t('access_management.users.roles')"
                         :items="roles"
                         :headers="roleHeaders"
                         :loading="loadingRoles"
@@ -91,7 +92,7 @@
                     <!-- Permissions Selection -->
                     <EntitySelectTable
                         v-model="selectedPermissions"
-                        :title="t('user.permissions')"
+                        :title="t('access_management.users.permissions')"
                         :items="permissions"
                         :headers="permissionHeaders"
                         :loading="loadingPermissions"
@@ -103,21 +104,10 @@
                     </v-alert>
 
                     <v-alert v-if="showError" type="error" density="compact" class="mb-3">
-                        {{ t('user.error') }}
+                        {{ t('access_management.users.error') }}
                     </v-alert>
                 </v-form>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="cancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" :disabled="saving" @click="handleSubmit">
-                    <v-icon start>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -127,6 +117,7 @@
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
     import { createNewUser, updateUser, getAllOrganizations, getAllRoles, getAllPermissions } from '@/api/config'
 
@@ -231,25 +222,28 @@
         if (isEdit.value && !password.value) {
             return []
         }
-        return [(v: string) => !!v || t('error.required'), (v: string) => v === password.value || t('user.password_mismatch')]
+        return [
+            (v: string) => !!v || t('error.required'),
+            (v: string) => v === password.value || t('access_management.users.password_mismatch')
+        ]
     })
 
     // True when both password fields are filled and identical, used to turn the confirm field green.
     const passwordsMatch = computed(() => !!passwordConfirm.value && passwordConfirm.value === password.value)
 
     const orgHeaders: TableHeader[] = [
-        { title: t('user.name'), key: 'name', sortable: true },
-        { title: t('organization.description'), key: 'description', sortable: false }
+        { title: t('access_management.users.name'), key: 'name', sortable: true },
+        { title: t('access_management.organizations.description'), key: 'description', sortable: false }
     ]
 
     const roleHeaders: TableHeader[] = [
-        { title: t('user.name'), key: 'name', sortable: true },
-        { title: t('role.description'), key: 'description', sortable: false }
+        { title: t('access_management.users.name'), key: 'name', sortable: true },
+        { title: t('access_management.roles.description'), key: 'description', sortable: false }
     ]
 
     const permissionHeaders: TableHeader[] = [
-        { title: t('user.name'), key: 'name', sortable: true },
-        { title: t('acl.description'), key: 'description', sortable: false }
+        { title: t('access_management.users.name'), key: 'name', sortable: true },
+        { title: t('access_management.acls.description'), key: 'description', sortable: false }
     ]
 
     // Watch for edit item changes
@@ -344,8 +338,12 @@
         saving.value = true
 
         try {
-            const payload: UserFormItem = {
-                ...localItem.value,
+            // The backend requires an integer id even on create (it is ignored and the DB assigns
+            // the real id); a null id fails schema validation, so send -1 as the "new" sentinel.
+            const { id: currentId, ...rest } = localItem.value
+            const payload: Record<string, unknown> = {
+                ...rest,
+                id: isEdit.value ? currentId : -1,
                 organizations: selectedOrganizations.value.map((id) => ({ id })),
                 roles: selectedRoles.value.map((id) => ({ id })),
                 permissions: selectedPermissions.value.map((id) => ({ id }))
@@ -353,7 +351,7 @@
 
             // Add password if provided
             if (password.value) {
-                payload.password = password.value
+                payload['password'] = password.value
             }
 
             if (isEdit.value) {
