@@ -17,7 +17,7 @@
         icon: string
         color: string | null
         title: string
-        translate: string
+        translate: boolean | null
         route: string
     }
 
