@@ -1,8 +1,14 @@
 <template>
     <v-container fluid class="pa-0">
         <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="nodes">Publishers Nodes</v-tab>
-            <v-tab value="presets">Publisher Presets</v-tab>
+            <v-tab value="presets" :title="t('publishers.presets.tab_description')">
+                <v-icon :icon="ICONS.FILE_STAR_OUTLINE" start />
+                Publisher Presets
+            </v-tab>
+            <v-tab value="nodes" :title="t('publishers.nodes.tab_description')">
+                <v-icon :icon="ICONS.SERVER_NETWORK" start />
+                Publishers Nodes
+            </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -18,9 +24,12 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useTabQuery } from '@/composables/useTabQuery'
+    import { ICONS } from '@/config/ui-constants'
     import PublishersNodesView from './PublishersNodesView.vue'
     import PublisherPresetsView from './PublisherPresetsView.vue'
 
-    const activeTab = ref<'nodes' | 'presets'>('nodes')
+    const { t } = useI18n()
+    const activeTab = useTabQuery(['presets', 'nodes'], 'presets')
 </script>

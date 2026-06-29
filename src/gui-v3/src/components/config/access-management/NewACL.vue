@@ -5,17 +5,18 @@
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('acl.edit') : t('acl.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('access_management.acls.edit') : t('access_management.acls.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
                         v-model="localItem.name"
-                        :label="t('acl.name')"
+                        :label="t('access_management.acls.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -25,7 +26,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
-                        :label="t('acl.description')"
+                        :label="t('access_management.acls.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -35,7 +36,7 @@
 
                     <v-select
                         v-model="localItem.item_type"
-                        :label="t('acl.item_type')"
+                        :label="t('access_management.acls.item_type')"
                         :items="itemTypes"
                         variant="outlined"
                         density="comfortable"
@@ -47,7 +48,7 @@
 
                     <v-select
                         v-model="localItem.item_id"
-                        :label="t('acl.item')"
+                        :label="t('access_management.acls.item')"
                         :items="itemOptions"
                         item-title="name"
                         item-value="id"
@@ -60,15 +61,21 @@
 
                     <!-- Permission flags -->
                     <div class="d-flex ga-8 mb-2">
-                        <v-checkbox v-model="localItem.see" :label="t('acl.see')" hide-details :disabled="saving" />
-                        <v-checkbox v-model="localItem.access" :label="t('acl.access')" hide-details :disabled="saving" />
-                        <v-checkbox v-model="localItem.modify" :label="t('acl.modify')" hide-details :disabled="saving" />
-                        <v-checkbox v-model="localItem.everyone" :label="t('acl.everyone')" hide-details :disabled="saving" class="ms-auto" />
+                        <v-checkbox v-model="localItem.see" :label="t('access_management.acls.see')" hide-details :disabled="saving" />
+                        <v-checkbox v-model="localItem.access" :label="t('access_management.acls.access')" hide-details :disabled="saving" />
+                        <v-checkbox v-model="localItem.modify" :label="t('access_management.acls.modify')" hide-details :disabled="saving" />
+                        <v-checkbox
+                            v-model="localItem.everyone"
+                            :label="t('access_management.acls.everyone')"
+                            hide-details
+                            :disabled="saving"
+                            class="ms-auto"
+                        />
                     </div>
 
                     <EntitySelectTable
                         v-model="selectedUsers"
-                        :title="t('acl.users')"
+                        :title="t('access_management.acls.users')"
                         :items="users"
                         :headers="userHeaders"
                         :loading="loadingRecipients"
@@ -77,7 +84,7 @@
 
                     <EntitySelectTable
                         v-model="selectedRoles"
-                        :title="t('acl.roles')"
+                        :title="t('access_management.acls.roles')"
                         :items="roles"
                         :headers="roleHeaders"
                         :loading="loadingRecipients"
@@ -97,20 +104,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('acl.error') }}
+                    {{ t('access_management.acls.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -119,7 +115,9 @@
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
+    import { ACL_ITEM_TYPES, type ACLItemType } from '@/components/config/access-management/aclItemTypes'
     import { useAuth } from '@/composables/useAuth'
     import {
         createNewACLEntry,
@@ -134,8 +132,6 @@
         getAllRoles
     } from '@/api/config'
 
-    type ACLItemType = 'COLLECTOR' | 'OSINT_SOURCE' | 'OSINT_SOURCE_GROUP' | 'REPORT_ITEM_TYPE' | 'PRODUCT_TYPE' | 'WORD_LIST'
-
     type ACLItem = {
         id: string | number | null
         name: string
@@ -147,11 +143,6 @@
         access: boolean
         modify: boolean
         [key: string]: unknown
-    }
-
-    type ACLItemTypeOption = {
-        title: string
-        value: ACLItemType
     }
 
     type ACLTargetItem = {
@@ -214,14 +205,7 @@
     const saving = ref(false)
     const dialog = ref(false)
 
-    const itemTypes: ACLItemTypeOption[] = [
-        { title: 'Collector', value: 'COLLECTOR' },
-        { title: 'OSINT Source', value: 'OSINT_SOURCE' },
-        { title: 'OSINT Source Group', value: 'OSINT_SOURCE_GROUP' },
-        { title: 'Report Item Type', value: 'REPORT_ITEM_TYPE' },
-        { title: 'Product Type', value: 'PRODUCT_TYPE' },
-        { title: 'Word List', value: 'WORD_LIST' }
-    ]
+    const itemTypes = ACL_ITEM_TYPES
 
     const defaultItem: ACLItem = {
         id: null,
@@ -248,13 +232,13 @@
     const loadingRecipients = ref(false)
 
     const userHeaders: TableHeader[] = [
-        { title: t('user.username'), key: 'username', sortable: true },
-        { title: t('user.name'), key: 'name', sortable: false }
+        { title: t('access_management.users.username'), key: 'username', sortable: true },
+        { title: t('access_management.users.name'), key: 'name', sortable: false }
     ]
 
     const roleHeaders: TableHeader[] = [
-        { title: t('role.name'), key: 'name', sortable: true },
-        { title: t('role.description'), key: 'description', sortable: false }
+        { title: t('access_management.roles.name'), key: 'name', sortable: true },
+        { title: t('access_management.roles.description'), key: 'description', sortable: false }
     ]
 
     // Selectable target items per ACL item type.

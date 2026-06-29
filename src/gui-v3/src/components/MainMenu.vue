@@ -16,6 +16,7 @@
                 :key="button.routeName"
                 :to="button.route"
                 :variant="isButtonActive(button) ? 'outlined' : 'text'"
+                :color="isButtonActive(button) ? 'primary' : undefined"
                 :opacity="isButtonActive(button) ? 1 : 0.85"
             >
                 <v-icon start>
@@ -112,8 +113,13 @@
     })
 
     const isButtonActive = (button: MenuButton): boolean => {
-        // Check if the button's route name matches the current route name
-        return route.name === button.routeName
+        if (route.name === button.routeName) {
+            return true
+        }
+        // Config groups many child routes (collectors, reports, ...) under /config/*
+        // with their own names, so match by the top-level path segment instead.
+        const base = '/' + button.route.split('/')[1]
+        return route.path === base || route.path.startsWith(base + '/')
     }
 
     const toggleNav = (): void => {

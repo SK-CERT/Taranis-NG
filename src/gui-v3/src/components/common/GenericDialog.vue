@@ -5,9 +5,7 @@
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">{{ dialogTitle }}</span>
-            </v-card-title>
+            <DialogToolbar :title="dialogTitle" :saving="saving" @cancel="handleCancel" @save="handleSubmit" />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -29,19 +27,6 @@
                     {{ errorMessage || t('common.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>
-                        {{ ICONS.CONTENT_SAVE }}
-                    </v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -49,8 +34,8 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import { ICONS } from '@/config/ui-constants'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
 
     const props = defineProps({
         modelValue: {

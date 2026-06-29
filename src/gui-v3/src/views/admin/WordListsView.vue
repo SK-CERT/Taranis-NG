@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.word_lists"
             :total-count="configStore.wordLists.total_count"
-            total-count-title="word_list.total_count"
+            total-count-title="word_lists.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>

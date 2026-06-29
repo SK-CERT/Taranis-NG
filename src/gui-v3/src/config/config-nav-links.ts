@@ -24,60 +24,45 @@ export const configLinks: ConfigLink[] = [
         permissions: ['CONFIG_USER_ACCESS', 'CONFIG_ROLE_ACCESS', 'CONFIG_ACL_ACCESS', 'CONFIG_ORGANIZATION_ACCESS'],
         translate: true
     },
-    { id: 5, separator: true },
     {
-        id: 6,
+        id: 2,
         icon: 'mdi-download-network',
         title: 'nav_menu.collectors',
         route: '/config/collectors',
         translate: true
     },
-    { id: 7, separator: true },
     {
-        id: 8,
+        id: 3,
         icon: 'mdi-presentation',
         title: 'nav_menu.presenters',
         route: '/config/presenters',
         translate: true
     },
-    { id: 9, separator: true },
     {
-        id: 10,
+        id: 4,
         icon: 'mdi-upload-network',
         title: 'nav_menu.publishers',
         route: '/config/publishers',
         translate: true
     },
-    { id: 11, separator: true },
     {
-        id: 12,
-        icon: 'mdi-application-variable-outline',
-        title: 'nav_menu.attributes',
-        route: '/config/reportitems/attributes',
-        permission: 'CONFIG_ATTRIBUTE_ACCESS',
-        translate: true
-    },
-    {
-        id: 13,
+        id: 5,
         icon: 'mdi-file-table',
-        title: 'nav_menu.report_types',
-        route: '/config/reportitems/types',
-        permission: 'CONFIG_REPORT_TYPE_ACCESS',
+        title: 'nav_menu.reports',
+        route: '/config/reports',
+        permissions: ['CONFIG_REPORT_TYPE_ACCESS', 'CONFIG_ATTRIBUTE_ACCESS'],
         translate: true
     },
-    { id: 14, separator: true },
-    { id: 15, icon: 'mdi-robot', title: 'nav_menu.bots', route: '/config/bots', translate: true },
-    { id: 16, separator: true },
+    { id: 7, icon: 'mdi-robot', title: 'nav_menu.bots', route: '/config/bots', translate: true },
     {
-        id: 17,
+        id: 8,
         icon: 'mdi-remote',
         title: 'nav_menu.remote',
         route: '/config/remote',
         translate: true
     },
-    { id: 18, separator: true },
     {
-        id: 19,
+        id: 9,
         icon: 'mdi-application-cog-outline',
         title: 'nav_menu.settings',
         route: '/config/settings',
@@ -85,7 +70,7 @@ export const configLinks: ConfigLink[] = [
         translate: true
     },
     {
-        id: 20,
+        id: 10,
         icon: 'mdi-format-list-text',
         title: 'nav_menu.word_lists',
         route: '/config/wordlists',
@@ -93,7 +78,7 @@ export const configLinks: ConfigLink[] = [
         translate: true
     },
     {
-        id: 21,
+        id: 11,
         icon: 'mdi-state-machine',
         title: 'nav_menu.workflow',
         route: '/config/workflow',
@@ -101,16 +86,15 @@ export const configLinks: ConfigLink[] = [
         translate: true
     },
     {
-        id: 22,
+        id: 12,
         icon: 'mdi-cloud-arrow-down',
         title: 'nav_menu.data_providers',
         route: '/config/data-providers',
         permission: 'CONFIG_DATA_PROVIDER_ACCESS',
         translate: true
     },
-    { id: 23, separator: true },
     {
-        id: 24,
+        id: 13,
         icon: 'mdi-database-export',
         title: 'nav_menu.external',
         route: '/config/external',

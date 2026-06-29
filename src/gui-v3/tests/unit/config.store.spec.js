@@ -248,7 +248,7 @@ describe('Config Store', () => {
 
             expect(groups[0]).toMatchObject({
                 id: 'all',
-                title: 'osint_source_group.all',
+                title: 'collectors.groups.all',
                 route: '/assess/group/all'
             })
         })
@@ -278,7 +278,7 @@ describe('Config Store', () => {
 
             const groups = store.osintSourceGroupsForAssess
             expect(groups[1]).toMatchObject({
-                title: 'osint_source_group.default_group',
+                title: 'collectors.groups.default_group',
                 translate: '1',
                 color: '#BDBDBD'
             })

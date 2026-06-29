@@ -5,15 +5,12 @@
         </template>
 
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <span class="text-h5">
-                    {{ isEdit ? t('word_list.edit') : t('word_list.add_new') }}
-                </span>
-                <v-spacer />
-                <v-btn icon :disabled="saving" @click="cancel">
-                    <v-icon>mdi-close</v-icon>
-                </v-btn>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('word_lists.edit') : t('word_lists.add_new')"
+                :saving="saving"
+                @cancel="cancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -21,7 +18,7 @@
                         <v-col cols="12">
                             <v-text-field
                                 v-model="localItem.name"
-                                :label="t('word_list.name')"
+                                :label="t('word_lists.name')"
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="[(v) => !!v || t('error.required')]"
@@ -31,7 +28,7 @@
                         <v-col cols="12">
                             <v-textarea
                                 v-model="localItem.description"
-                                :label="t('word_list.description')"
+                                :label="t('word_lists.description')"
                                 variant="outlined"
                                 density="comfortable"
                                 rows="3"
@@ -41,7 +38,7 @@
                         <v-col cols="12">
                             <v-checkbox
                                 v-model="localItem.use_for_stop_words"
-                                :label="t('word_list.use_for_stop_words')"
+                                :label="t('word_lists.use_for_stop_words')"
                                 color="primary"
                                 :disabled="saving"
                             />
@@ -54,11 +51,11 @@
                         <v-col cols="12">
                             <div class="d-flex align-center mb-3">
                                 <h3 class="text-h6">
-                                    {{ t('word_list.categories') }}
+                                    {{ t('word_lists.categories') }}
                                 </h3>
                                 <v-spacer />
                                 <v-btn color="primary" prepend-icon="mdi-plus" :disabled="saving" @click="addCategory">
-                                    {{ t('word_list.new_category') }}
+                                    {{ t('word_lists.new_category') }}
                                 </v-btn>
                             </div>
 
@@ -69,7 +66,7 @@
                                         <div class="d-flex align-center w-100">
                                             <v-icon class="mr-2"> mdi-folder-outline </v-icon>
                                             <strong>
-                                                {{ category.name || t('word_list.category') + ' ' + (index + 1) }}
+                                                {{ category.name || t('word_lists.category') + ' ' + (index + 1) }}
                                             </strong>
                                             <v-spacer />
                                             <v-btn
@@ -92,7 +89,7 @@
                                             <v-col cols="12">
                                                 <v-text-field
                                                     v-model="category.name"
-                                                    :label="t('word_list.name')"
+                                                    :label="t('word_lists.name')"
                                                     variant="outlined"
                                                     density="comfortable"
                                                     :disabled="saving"
@@ -101,7 +98,7 @@
                                             <v-col cols="12">
                                                 <v-textarea
                                                     v-model="category.description"
-                                                    :label="t('word_list.description')"
+                                                    :label="t('word_lists.description')"
                                                     variant="outlined"
                                                     density="comfortable"
                                                     rows="2"
@@ -111,7 +108,7 @@
                                             <v-col cols="12">
                                                 <v-text-field
                                                     v-model="category.link"
-                                                    :label="t('word_list.link')"
+                                                    :label="t('word_lists.link')"
                                                     variant="outlined"
                                                     density="comfortable"
                                                     hint="Optional URL for downloading word entries"
@@ -126,7 +123,7 @@
                                         <div class="mb-3">
                                             <div class="d-flex align-center mb-2">
                                                 <h4 class="text-subtitle-1">
-                                                    {{ t('word_list.words') }}
+                                                    {{ t('word_lists.words') }}
                                                 </h4>
                                                 <v-spacer />
                                                 <v-btn
@@ -136,7 +133,7 @@
                                                     :disabled="saving"
                                                     @click="addWord(index)"
                                                 >
-                                                    {{ t('word_list.new_word') }}
+                                                    {{ t('word_lists.new_word') }}
                                                 </v-btn>
                                             </div>
 
@@ -180,7 +177,7 @@
                                                 </template>
                                                 <template #no-data>
                                                     <div class="text-center pa-4 text-grey">
-                                                        {{ t('word_list.no_words') }}
+                                                        {{ t('word_lists.no_words') }}
                                                     </div>
                                                 </template>
                                             </v-data-table>
@@ -192,10 +189,10 @@
                             <div v-if="localItem.categories.length === 0" class="text-center pa-8 text-grey">
                                 <v-icon size="64" color="grey-lighten-1"> mdi-folder-open-outline </v-icon>
                                 <div class="text-h6 mt-2">
-                                    {{ t('word_list.no_categories') }}
+                                    {{ t('word_lists.no_categories') }}
                                 </div>
                                 <div class="text-body-2">
-                                    {{ t('word_list.add_category_hint') }}
+                                    {{ t('word_lists.add_category_hint') }}
                                 </div>
                             </div>
                         </v-col>
@@ -206,21 +203,10 @@
                     </v-alert>
 
                     <v-alert v-if="showError" type="error" density="compact" class="mb-3 mt-4">
-                        {{ t('word_list.error') }}
+                        {{ t('word_lists.error') }}
                     </v-alert>
                 </v-form>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="cancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" :disabled="saving" @click="handleSubmit">
-                    <v-icon start> mdi-content-save </v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -230,6 +216,7 @@
     import { ICONS } from '@/config/ui-constants'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewWordList, updateWordList } from '@/api/config'
 
@@ -308,8 +295,8 @@
     const canCreate = computed(() => checkPermission('CONFIG_WORD_LIST_CREATE'))
 
     const wordHeaders: HeaderEntry[] = [
-        { title: t('word_list.value'), key: 'value', sortable: true, width: '40%' },
-        { title: t('word_list.description'), key: 'description', sortable: false, width: '50%' },
+        { title: t('word_lists.value'), key: 'value', sortable: true, width: '40%' },
+        { title: t('word_lists.description'), key: 'description', sortable: false, width: '50%' },
         { title: t('settings.actions'), key: 'actions', sortable: false, width: '10%', align: 'center' }
     ]
 
@@ -416,7 +403,10 @@
                     })
                 )
             } else {
-                await createNewWordList(localItem.value)
+                // Backend create schema has no id field for the constructor; omit it (null fails validation).
+                const createPayload: Record<string, unknown> = { ...localItem.value }
+                delete createPayload['id']
+                await createNewWordList(createPayload)
                 window.dispatchEvent(
                     new CustomEvent('notification', {
                         detail: { type: 'success', loc: 'common.created_successfully' }

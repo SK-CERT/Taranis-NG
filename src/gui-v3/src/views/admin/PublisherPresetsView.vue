@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.publisher_presets"
             :total-count="configStore.publisherPresets.total_count"
-            total-count-title="publisher_preset.total_count"
+            total-count-title="publishers.presets.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>

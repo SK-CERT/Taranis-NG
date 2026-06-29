@@ -12,9 +12,13 @@
                 hide-details
                 single-line
                 class="flex-grow-0"
-                style="width: 450px"
+                style="width: 350px"
                 :disabled="disabled"
             />
+            <!-- Let callers add an action (e.g. "add new") at the top-right of the table header. -->
+            <div v-if="$slots['header-append']" class="ms-3">
+                <slot name="header-append" />
+            </div>
         </v-card-title>
         <v-data-table
             v-model="selected"
@@ -22,6 +26,8 @@
             :items="items"
             :search="search"
             :loading="loading"
+            :items-per-page="-1"
+            hide-default-footer
             item-value="id"
             show-select
             density="comfortable"

@@ -54,7 +54,7 @@ test.describe('Navigation', () => {
         await page.getByRole('tab', { name: 'Roles' }).click()
 
         await expect(page).toHaveURL(/\/config\/access-management\?tab=roles/)
-        await expect(page.locator('.v-card-title').filter({ hasText: /roles/i })).toBeVisible()
+        await expect(page.locator('.v-data-table')).toBeVisible()
     })
 
     test('should open the organizations tab in access management', async ({ page }) => {
@@ -64,7 +64,7 @@ test.describe('Navigation', () => {
         await page.getByRole('tab', { name: 'Organizations' }).click()
 
         await expect(page).toHaveURL(/\/config\/access-management\?tab=organizations/)
-        await expect(page.locator('.v-card-title').filter({ hasText: /organizations/i })).toBeVisible()
+        await expect(page.locator('.v-data-table')).toBeVisible()
     })
 
     test('should navigate back using browser back button', async ({ page }) => {
@@ -83,7 +83,7 @@ test.describe('Navigation', () => {
         await page.goto('/v2/config/access-management?tab=roles')
 
         await expect(page).toHaveURL(/tab=roles/)
-        await expect(page.locator('.v-card-title').filter({ hasText: /roles/i })).toBeVisible()
+        await expect(page.locator('.v-data-table')).toBeVisible()
     })
 
     test('should navigate to assess view', async ({ page }) => {

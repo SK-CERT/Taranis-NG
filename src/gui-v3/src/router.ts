@@ -160,22 +160,16 @@ const routes: RouteRecordRaw[] = [
     },
 
     {
-        path: '/config/reportitems/attributes',
-        name: 'attributes',
+        path: '/config/reports',
+        name: 'reports',
         components: {
-            default: () => import('./views/admin/AttributesView.vue'),
+            default: () => import('./views/admin/ReportsView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_ATTRIBUTE_ACCESS] }
-    },
-    {
-        path: '/config/reportitems/types',
-        name: 'report_types',
-        components: {
-            default: () => import('./views/admin/ReportTypesView.vue'),
-            nav: () => import('./views/nav/ConfigNav.vue')
-        },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_SETTINGS_ACCESS] }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [Permissions.CONFIG_REPORT_TYPE_ACCESS, Permissions.CONFIG_ATTRIBUTE_ACCESS]
+        }
     },
     {
         path: '/config/settings',

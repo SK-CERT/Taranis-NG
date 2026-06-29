@@ -1,17 +1,17 @@
 <template>
     <v-dialog v-model="dialog" max-width="800" persistent scrollable>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('bot_preset.edit') : t('bot_preset.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('bots.presets.edit') : t('bots.presets.add_new')"
+                :saving="saving"
+                :save-disabled="!selectedBot"
+                @cancel="cancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -21,7 +21,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('bot_preset.node')"
+                        :label="t('bots.presets.node')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -37,7 +37,7 @@
                         item-title="name"
                         item-value="id"
                         return-object
-                        :label="t('bot_preset.bot')"
+                        :label="t('bots.presets.bot')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -48,7 +48,7 @@
                     <v-text-field
                         v-if="selectedBot"
                         v-model="localItem.name"
-                        :label="t('bot_preset.name')"
+                        :label="t('bots.presets.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -59,7 +59,7 @@
                     <v-textarea
                         v-if="selectedBot"
                         v-model="localItem.description"
-                        :label="t('bot_preset.description')"
+                        :label="t('bots.presets.description')"
                         variant="outlined"
                         density="comfortable"
                         rows="3"
@@ -71,7 +71,7 @@
                     <div v-if="selectedBot && selectedBot.parameters && selectedBot.parameters.length > 0">
                         <v-divider class="my-4" />
                         <h3 class="text-subtitle-1 mb-3">
-                            {{ t('bot_preset.parameters') }}
+                            {{ t('bots.presets.parameters') }}
                         </h3>
 
                         <div v-for="(param, index) in selectedBot.parameters" :key="param.key || index" class="mb-3">
@@ -99,21 +99,10 @@
                     </v-alert>
 
                     <v-alert v-if="showError" type="error" density="compact" class="mb-3">
-                        {{ t('bot_preset.error') }}
+                        {{ t('bots.presets.error') }}
                     </v-alert>
                 </v-form>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="cancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" :disabled="saving || !selectedBot" @click="handleSubmit">
-                    <v-icon start>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -122,6 +111,7 @@
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewBotPreset, updateBotPreset, getAllBotsNodes } from '@/api/config'
 
@@ -199,7 +189,8 @@
     const parameterValues = ref<string[]>([])
 
     const defaultItem: BotPresetItem = {
-        id: null,
+        // Empty string (not null): backend requires a string id even on create (ignored), null fails validation.
+        id: '',
         name: '',
         description: '',
         bot_id: null,

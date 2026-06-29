@@ -2,9 +2,8 @@
     <v-container fluid class="pa-0">
         <!-- Toolbar -->
         <ToolbarFilter
-            title="nav_menu.osint_source_groups"
             :total-count="configStore.osintSourceGroups.total_count"
-            total-count-title="osint_source_group.total_count"
+            total-count-title="collectors.groups.total_count"
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
@@ -14,9 +13,10 @@
 
         <!-- Content -->
         <ContentData
-            :items="configStore.osintSourceGroups.items"
+            :items="groupItems"
             card-item="CardCompact"
             delete-permission="CONFIG_OSINT_SOURCE_GROUP_DELETE"
+            lock-default
             :loading="loading"
             @delete="handleDelete"
             @edit="handleEdit"
@@ -26,13 +26,13 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { ref, computed, onMounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteOSINTSourceGroup } from '@/api/config'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
     import ContentData from '@/components/common/ContentData.vue'
-    import NewOSINTSourceGroup from '@/components/config/osint-sources/NewOSINTSourceGroup.vue'
+    import NewOSINTSourceGroup from '@/components/config/collectors/NewOSINTSourceGroup.vue'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -52,6 +52,14 @@
     const loading = ref(false)
     const filter = ref<FilterState>({ search: '' })
     const editItem = ref<OSINTSourceGroupItem | null>(null)
+
+    // The default group is seeded with the name "Default"; show it as the translated
+    // "Uncategorized" (matching the Assess sidebar).
+    const groupItems = computed<OSINTSourceGroupItem[]>(() =>
+        (configStore.osintSourceGroups.items as OSINTSourceGroupItem[]).map((item) =>
+            item.default === true ? { ...item, name: t('collectors.groups.default_group') } : item
+        )
+    )
 
     const loadData = async (): Promise<void> => {
         loading.value = true
@@ -79,7 +87,10 @@
         }
     }
 
-    const handleEdit = (group: OSINTSourceGroupItem): void => {
+    const handleEdit = async (group: OSINTSourceGroupItem): Promise<void> => {
+        // Reset first so re-selecting the same card is still a change the dialog reacts to.
+        editItem.value = null
+        await nextTick()
         editItem.value = group
     }
 

@@ -57,5 +57,9 @@
 <style scoped>
     .add-new-button {
         color: rgb(var(--v-theme-on-primary)) !important;
+        /* Pin the label size so it doesn't inherit the surrounding container's
+           font-size (e.g. v-card-title's text-subtitle-1), which made the button
+           render at inconsistent sizes across toolbars and dialogs. */
+        font-size: 0.875rem;
     }
 </style>

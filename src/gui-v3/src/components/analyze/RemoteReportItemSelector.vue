@@ -102,6 +102,7 @@
         icon: string
         title: string
         id: string
+        color?: string
     }
 
     type UpdatePayload = {

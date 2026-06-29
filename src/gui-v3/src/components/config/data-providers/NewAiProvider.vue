@@ -1,23 +1,22 @@
 <template>
     <v-dialog v-model="dialog" max-width="600" persistent>
         <template #activator="{ props: activatorProps }">
-            <v-btn v-if="canCreate" v-bind="activatorProps" color="primary" prepend-icon="mdi-plus">
-                {{ t('common.add_btn') }}
-            </v-btn>
+            <AddNewButton :show="canCreate" v-bind="activatorProps" />
         </template>
 
         <v-card>
-            <v-card-title>
-                <span class="text-h5">
-                    {{ isEdit ? t('report_type.edit') : t('report_type.add_new') }}
-                </span>
-            </v-card-title>
+            <DialogToolbar
+                :title="isEdit ? t('data_providers.ai.edit') : t('data_providers.ai.add_new')"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form ref="formRef" @submit.prevent="handleSubmit">
                     <v-text-field
-                        v-model="localItem.title"
-                        :label="t('report_type.title')"
+                        v-model="localItem.name"
+                        :label="t('data_providers.ai.name')"
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
@@ -25,12 +24,46 @@
                         :disabled="saving"
                     />
 
-                    <v-textarea
-                        v-model="localItem.description"
-                        :label="t('report_type.description')"
+                    <v-select
+                        v-model="localItem.api_type"
+                        :label="t('data_providers.ai.api_type')"
+                        :items="['openai']"
                         variant="outlined"
                         density="comfortable"
-                        rows="3"
+                        class="mb-3"
+                        :rules="[(v) => !!v || t('error.required')]"
+                        :disabled="saving"
+                    />
+
+                    <v-text-field
+                        v-model="localItem.api_url"
+                        :label="t('data_providers.ai.api_url')"
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        :rules="[(v) => !!v || t('error.required')]"
+                        :disabled="saving"
+                    />
+
+                    <v-text-field
+                        v-model="localItem.api_key"
+                        :label="t('settings.api_key')"
+                        variant="outlined"
+                        density="comfortable"
+                        :type="showApiKey ? 'text' : 'password'"
+                        class="mb-3"
+                        :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
+                        :rules="[(v) => !!v || t('error.required')]"
+                        :disabled="saving"
+                        @click:append-inner="showApiKey = !showApiKey"
+                    />
+
+                    <v-text-field
+                        v-model="localItem.model"
+                        :label="t('data_providers.ai.model')"
+                        variant="outlined"
+                        density="comfortable"
+                        :rules="[(v) => !!v || t('error.required')]"
                         :disabled="saving"
                     />
                 </v-form>
@@ -47,20 +80,9 @@
                 </v-alert>
 
                 <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
-                    {{ t('report_type.error') }}
+                    {{ t('data_providers.ai.error') }}
                 </v-alert>
             </v-card-text>
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn color="grey" variant="text" :disabled="saving" @click="handleCancel">
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn color="primary" variant="text" :loading="saving" @click="handleSubmit">
-                    <v-icon left>mdi-content-save</v-icon>
-                    {{ t('common.save') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -69,13 +91,17 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { useAuth } from '@/composables/useAuth'
-    import { createNewReportItemType, updateReportItemType } from '@/api/config'
+    import { createNewAiProvider, updateAiProvider } from '@/api/config'
 
-    type ReportTypeItem = {
+    type AiProviderItem = {
         id: string | number | null
-        title: string
-        description: string
+        name: string
+        api_type: string
+        api_url: string
+        api_key: string
+        model: string
         [key: string]: unknown
     }
 
@@ -85,16 +111,14 @@
 
     const props = withDefaults(
         defineProps<{
-            editItem?: Partial<ReportTypeItem> | null
+            editItem?: Partial<AiProviderItem> | null
         }>(),
         {
             editItem: null
         }
     )
 
-    const emit = defineEmits<{
-        (e: 'saved'): void
-    }>()
+    const emit = defineEmits(['saved'])
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
@@ -104,17 +128,21 @@
     const showError = ref(false)
     const saving = ref(false)
     const dialog = ref(false)
+    const showApiKey = ref(false)
 
-    const defaultItem: ReportTypeItem = {
+    const defaultItem: AiProviderItem = {
         id: null,
-        title: '',
-        description: ''
+        name: '',
+        api_type: 'openai',
+        api_url: '',
+        api_key: '',
+        model: ''
     }
 
-    const localItem = ref<ReportTypeItem>({ ...defaultItem })
-    const isEdit = computed(() => !!localItem.value.id)
+    const localItem = ref<AiProviderItem>({ ...defaultItem })
 
-    const canCreate = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
+    const isEdit = computed(() => !!localItem.value.id)
+    const canCreate = computed(() => checkPermission('CONFIG_AI_CREATE'))
 
     async function handleSubmit(): Promise<void> {
         showValidationError.value = false
@@ -129,9 +157,12 @@
         saving.value = true
         try {
             if (isEdit.value) {
-                await updateReportItemType(localItem.value)
+                await updateAiProvider(localItem.value)
             } else {
-                await createNewReportItemType(localItem.value)
+                // Backend create schema has no id field for the constructor; omit it (null fails validation).
+                const payload: Record<string, unknown> = { ...localItem.value }
+                delete payload['id']
+                await createNewAiProvider(payload)
             }
             emit('saved')
             handleCancel()
@@ -153,6 +184,7 @@
         formRef.value?.reset()
         localItem.value = { ...defaultItem }
         dialog.value = false
+        showApiKey.value = false
     }
 
     watch(
@@ -169,11 +201,12 @@
 
     watch(
         () => dialog.value,
-        (newVal: boolean) => {
+        (newVal) => {
             if (!newVal) {
                 showValidationError.value = false
                 showError.value = false
                 saving.value = false
+                showApiKey.value = false
             }
         }
     )
