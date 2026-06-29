@@ -78,7 +78,7 @@ const vueRules = {
     'vue/max-attributes-per-line': [
         'warn',
         {
-            singleline: 3,
+            singleline: 1,
             multiline: 1
         }
     ],
