@@ -1,7 +1,15 @@
 <template>
-    <v-dialog v-model="dialog" max-width="900" persistent scrollable>
+    <v-dialog
+        v-model="dialog"
+        max-width="900"
+        persistent
+        scrollable
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+            />
         </template>
 
         <v-card>
@@ -13,7 +21,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-text-field
                         v-model="localItem.name"
                         :label="t('access_management.roles.title')"
@@ -55,7 +66,14 @@
                     {{ t('error.validation') }}
                 </v-alert>
 
-                <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
+                <v-alert
+                    v-if="showError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showError = false"
+                >
                     {{ t('access_management.roles.error') }}
                 </v-alert>
             </v-card-text>

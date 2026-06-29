@@ -3,7 +3,12 @@
         <!-- User Menu -->
         <v-menu offset-y>
             <template #activator="{ props }">
-                <v-btn data-test="user-menu" icon v-bind="props" color="white">
+                <v-btn
+                    data-test="user-menu"
+                    icon
+                    v-bind="props"
+                    color="white"
+                >
                     <v-icon>mdi-shield-account</v-icon>
                 </v-btn>
             </template>
@@ -31,7 +36,10 @@
                 </v-list-item>
 
                 <!-- Logout -->
-                <v-list-item data-test="logout-action" @click="handleLogout">
+                <v-list-item
+                    data-test="logout-action"
+                    @click="handleLogout"
+                >
                     <template #prepend>
                         <v-icon>mdi-logout</v-icon>
                     </template>

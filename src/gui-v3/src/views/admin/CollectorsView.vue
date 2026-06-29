@@ -1,16 +1,41 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="sources" :title="t('collectors.sources.tab_description')">
-                <v-icon :icon="ICONS.ANIMATION_OUTLINE" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="sources"
+                :title="t('collectors.sources.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.ANIMATION_OUTLINE"
+                    start
+                />
                 OSINT Sources
             </v-tab>
-            <v-tab value="groups" :title="t('collectors.groups.tab_description')">
-                <v-icon :icon="ICONS.FOLDER_MULTIPLE" start />
+            <v-tab
+                value="groups"
+                :title="t('collectors.groups.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.FOLDER_MULTIPLE"
+                    start
+                />
                 OSINT Source Groups
             </v-tab>
-            <v-tab value="nodes" :title="t('collectors.nodes.tab_description')">
-                <v-icon :icon="ICONS.SERVER_NETWORK" start />
+            <v-tab
+                value="nodes"
+                :title="t('collectors.nodes.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SERVER_NETWORK"
+                    start
+                />
                 Collectors Nodes
             </v-tab>
         </v-tabs>

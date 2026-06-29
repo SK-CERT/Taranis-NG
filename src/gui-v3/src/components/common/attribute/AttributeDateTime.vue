@@ -1,10 +1,25 @@
 <template>
-    <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
+            >
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || value.remote" class="datetime-value">
-                    <span v-if="values.length > 1" class="datetime-number text--disabled">{{ index + 1 }}.</span>
+                <span
+                    v-if="readOnly || value.remote"
+                    class="datetime-value"
+                >
+                    <span
+                        v-if="values.length > 1"
+                        class="datetime-number text--disabled"
+                        >{{ index + 1 }}.</span
+                    >
                     {{ formatDateTime(value.value) }}
                 </span>
 
@@ -33,7 +48,10 @@
                             @keyup="onKeyUp(index)"
                         >
                             <template #append-inner>
-                                <AttributeFieldDeleteButton :visible="delVisible" @delete="onDelete" />
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
                             </template>
                         </v-text-field>
                     </template>

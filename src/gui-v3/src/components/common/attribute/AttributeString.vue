@@ -1,5 +1,9 @@
 <template>
-    <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
             <div
                 v-for="(value, index) in values"
@@ -11,8 +15,15 @@
                 @dragleave="onDragLeave(index)"
             >
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || value.remote" class="numbered-string-value">
-                    <span v-if="values.length > 1" class="string-number text--disabled">{{ index + 1 }}.</span>
+                <span
+                    v-if="readOnly || value.remote"
+                    class="numbered-string-value"
+                >
+                    <span
+                        v-if="values.length > 1"
+                        class="string-number text--disabled"
+                        >{{ index + 1 }}.</span
+                    >
                     <span class="string-content">{{ value.value }}</span>
                 </span>
 
@@ -27,7 +38,10 @@
                     @del-value="del(index)"
                 >
                     <template #col_left>
-                        <div v-if="values.length > 1" class="reorder-controls d-flex align-center">
+                        <div
+                            v-if="values.length > 1"
+                            class="reorder-controls d-flex align-center"
+                        >
                             <v-icon
                                 class="drag-handle"
                                 size="small"
@@ -74,7 +88,10 @@
                             @keyup="onKeyUp(index)"
                         >
                             <template #append-inner>
-                                <AttributeFieldDeleteButton :visible="delVisible" @delete="onDelete" />
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
                             </template>
                         </v-text-field>
                     </template>

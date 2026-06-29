@@ -1,12 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="access" :title="t('remote.access.tab_description')">
-                <v-icon :icon="ICONS.REMOTE_DESKTOP" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="access"
+                :title="t('remote.access.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.REMOTE_DESKTOP"
+                    start
+                />
                 Remote Access
             </v-tab>
-            <v-tab value="nodes" :title="t('remote.nodes.tab_description')">
-                <v-icon :icon="ICONS.SHARE_VARIANT" start />
+            <v-tab
+                value="nodes"
+                :title="t('remote.nodes.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SHARE_VARIANT"
+                    start
+                />
                 Remote Nodes
             </v-tab>
         </v-tabs>

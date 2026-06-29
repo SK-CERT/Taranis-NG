@@ -1,7 +1,16 @@
 <template>
-    <v-dialog v-model="visible" fullscreen persistent @keydown.esc="handleCancel">
+    <v-dialog
+        v-model="visible"
+        fullscreen
+        persistent
+        @keydown.esc="handleCancel"
+    >
         <!-- Confirmation dialogs -->
-        <v-dialog v-model="showCloseConfirmation" max-width="500px" persistent>
+        <v-dialog
+            v-model="showCloseConfirmation"
+            max-width="500px"
+            persistent
+        >
             <v-card>
                 <v-card-title class="text-h5">
                     {{ $t('confirm_close.title') }}
@@ -9,20 +18,39 @@
                 <v-card-text>{{ $t('product.confirm_close.message') }}</v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn color="primary" variant="elevated" class="confirm-btn" @click="showCloseConfirmation = false">
+                    <v-btn
+                        color="primary"
+                        variant="elevated"
+                        class="confirm-btn"
+                        @click="showCloseConfirmation = false"
+                    >
                         {{ $t('confirm_close.continue') }}
                     </v-btn>
-                    <v-btn color="success" variant="elevated" class="confirm-btn" @click="saveAndClose">
+                    <v-btn
+                        color="success"
+                        variant="elevated"
+                        class="confirm-btn"
+                        @click="saveAndClose"
+                    >
                         {{ $t('confirm_close.save_and_close') }}
                     </v-btn>
-                    <v-btn color="error" variant="elevated" class="confirm-btn" @click="confirmClose">
+                    <v-btn
+                        color="error"
+                        variant="elevated"
+                        class="confirm-btn"
+                        @click="confirmClose"
+                    >
                         {{ $t('confirm_close.close') }}
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
 
-        <v-dialog v-model="showPublishConfirmation" max-width="500px" persistent>
+        <v-dialog
+            v-model="showPublishConfirmation"
+            max-width="500px"
+            persistent
+        >
             <v-card>
                 <v-card-title class="text-h5">
                     {{ $t('product.publish_confirmation') }}
@@ -33,14 +61,21 @@
                     <v-btn @click="showPublishConfirmation = false">
                         {{ $t('common.cancel') }}
                     </v-btn>
-                    <v-btn color="primary" @click="handlePublish">
+                    <v-btn
+                        color="primary"
+                        @click="handlePublish"
+                    >
                         {{ $t('common.yes') }}
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
 
-        <v-dialog v-model="showPublishUnsavedConfirmation" max-width="500px" persistent>
+        <v-dialog
+            v-model="showPublishUnsavedConfirmation"
+            max-width="500px"
+            persistent
+        >
             <v-card>
                 <v-card-title class="text-h5">
                     {{ $t('product.publish_unsaved.title') }}
@@ -51,10 +86,16 @@
                     <v-btn @click="showPublishUnsavedConfirmation = false">
                         {{ $t('product.publish_unsaved.close') }}
                     </v-btn>
-                    <v-btn color="primary" @click="saveAndPublish">
+                    <v-btn
+                        color="primary"
+                        @click="saveAndPublish"
+                    >
                         {{ $t('product.publish_unsaved.save_and_publish') }}
                     </v-btn>
-                    <v-btn color="error" @click="publishOnly">
+                    <v-btn
+                        color="error"
+                        @click="publishOnly"
+                    >
                         {{ $t('product.publish_unsaved.publish_only') }}
                     </v-btn>
                 </v-card-actions>
@@ -63,8 +104,14 @@
 
         <!-- Main dialog -->
         <v-card class="d-flex flex-column h-100">
-            <v-toolbar color="primary" dark>
-                <v-btn icon @click="handleCancel">
+            <v-toolbar
+                color="primary"
+                dark
+            >
+                <v-btn
+                    icon
+                    @click="handleCancel"
+                >
                     <v-icon>{{ ICONS.CLOSE_BOX }}</v-icon>
                 </v-btn>
                 <v-toolbar-title>
@@ -80,7 +127,11 @@
                     class="me-4"
                     @update:model-value="handleStateChange"
                 />
-                <v-btn v-if="!isEditMode && canModify && product.id === -1" text @click="handleSave">
+                <v-btn
+                    v-if="!isEditMode && canModify && product.id === -1"
+                    text
+                    @click="handleSave"
+                >
                     <v-icon start>
                         {{ ICONS.CONTENT_SAVE }}
                     </v-icon>
@@ -89,9 +140,15 @@
             </v-toolbar>
 
             <v-card-text class="pa-4 overflow-y-auto bg-background">
-                <v-form ref="formRef" @submit.prevent="handleSave">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSave"
+                >
                     <v-row>
-                        <v-col cols="12" md="6">
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
                             <v-combobox
                                 v-model="selectedType"
                                 :items="productTypes"
@@ -103,7 +160,10 @@
                                 @update:model-value="handleProductTypeChange"
                             />
                         </v-col>
-                        <v-col cols="12" md="6">
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
                             <v-text-field
                                 v-model="product.title"
                                 :label="$t('product.title')"
@@ -164,7 +224,10 @@
                                     density="compact"
                                 />
                             </div>
-                            <div v-else class="text-center text-grey py-4">
+                            <div
+                                v-else
+                                class="text-center text-grey py-4"
+                            >
                                 {{ $t('common.no_data') }}
                             </div>
                         </v-col>
@@ -172,12 +235,23 @@
 
                     <!-- Action Buttons -->
                     <v-row class="mt-4">
-                        <v-col cols="12" md="6">
-                            <v-btn :prepend-icon="ICONS.READ_OUTLINE" color="primary" variant="flat" @click="handlePreview">
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-btn
+                                :prepend-icon="ICONS.READ_OUTLINE"
+                                color="primary"
+                                variant="flat"
+                                @click="handlePreview"
+                            >
                                 {{ $t('product.preview') }}
                             </v-btn>
                         </v-col>
-                        <v-col cols="12" md="6">
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
                             <v-btn
                                 v-if="canPublish"
                                 :prepend-icon="ICONS.SEND_OUTLINE"
@@ -193,7 +267,10 @@
                     <!-- Error Messages -->
                     <v-row v-if="showError">
                         <v-col cols="12">
-                            <v-alert type="error" variant="tonal">
+                            <v-alert
+                                type="error"
+                                variant="tonal"
+                            >
                                 {{ $t('product.error') }}
                             </v-alert>
                         </v-col>

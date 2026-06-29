@@ -2,10 +2,18 @@
     <v-list density="compact">
         <!-- Group links -->
         <v-list-subheader>{{ $t('analyze.source') }}</v-list-subheader>
-        <v-list-item v-for="link in links" :key="link.route" :to="link.route" class="pa-2">
+        <v-list-item
+            v-for="link in links"
+            :key="link.route"
+            :to="link.route"
+            class="pa-2"
+        >
             <template #default>
                 <div class="d-flex flex-column align-center text-center">
-                    <v-icon :color="link.color || undefined" class="mb-2">
+                    <v-icon
+                        :color="link.color || undefined"
+                        class="mb-2"
+                    >
                         {{ link.icon }}
                     </v-icon>
                     <span class="text-body-small">

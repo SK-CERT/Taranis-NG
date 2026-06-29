@@ -1,12 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="data-providers" :title="t('data_providers.data.tab_description')">
-                <v-icon :icon="ICONS.CLOUD_ARROW_DOWN" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="data-providers"
+                :title="t('data_providers.data.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.CLOUD_ARROW_DOWN"
+                    start
+                />
                 {{ t('nav_menu.data_providers') }}
             </v-tab>
-            <v-tab value="ai-providers" :title="t('data_providers.ai.tab_description')">
-                <v-icon :icon="ICONS.CREATION" start />
+            <v-tab
+                value="ai-providers"
+                :title="t('data_providers.ai.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.CREATION"
+                    start
+                />
                 {{ t('nav_menu.ai_providers') }}
             </v-tab>
         </v-tabs>

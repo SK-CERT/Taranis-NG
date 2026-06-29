@@ -1,12 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="types" :title="t('presenters.types.tab_description')">
-                <v-icon :icon="ICONS.FILE_DOCUMENT_OUTLINE" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="types"
+                :title="t('presenters.types.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.FILE_DOCUMENT_OUTLINE"
+                    start
+                />
                 Product Types
             </v-tab>
-            <v-tab value="nodes" :title="t('presenters.nodes.tab_description')">
-                <v-icon :icon="ICONS.SERVER_NETWORK" start />
+            <v-tab
+                value="nodes"
+                :title="t('presenters.nodes.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SERVER_NETWORK"
+                    start
+                />
                 Presenters Nodes
             </v-tab>
         </v-tabs>

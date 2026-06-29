@@ -1,19 +1,39 @@
 <template>
-    <v-dialog v-model="visible" max-width="900" max-height="90vh" scrollable @keydown.esc="close">
+    <v-dialog
+        v-model="visible"
+        max-width="900"
+        max-height="90vh"
+        scrollable
+        @keydown.esc="close"
+    >
         <v-card>
-            <v-toolbar color="primary" dark density="compact">
-                <v-btn icon @click="close">
+            <v-toolbar
+                color="primary"
+                dark
+                density="compact"
+            >
+                <v-btn
+                    icon
+                    @click="close"
+                >
                     <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
                 <v-toolbar-title>{{ t('settings.user_settings') }}</v-toolbar-title>
                 <v-spacer />
-                <v-btn variant="text" @click="save">
+                <v-btn
+                    variant="text"
+                    @click="save"
+                >
                     <v-icon start>mdi-content-save</v-icon>
                     {{ t('common.save') }}
                 </v-btn>
             </v-toolbar>
 
-            <v-tabs v-model="activeTab" grow color="primary">
+            <v-tabs
+                v-model="activeTab"
+                grow
+                color="primary"
+            >
                 <!-- General Tab -->
                 <v-tab value="general">
                     {{ t('settings.tab_general') }}
@@ -49,7 +69,10 @@
                                 density="compact"
                             >
                                 <template #top>
-                                    <v-toolbar flat density="compact">
+                                    <v-toolbar
+                                        flat
+                                        density="compact"
+                                    >
                                         <v-toolbar-title>{{ t('assess.tooltip.highlight_wordlist') }}</v-toolbar-title>
                                     </v-toolbar>
                                 </template>
@@ -61,15 +84,32 @@
                     <v-window-item value="hotkeys">
                         <v-container fluid>
                             <v-row>
-                                <v-col v-for="shortcut in shortcuts" :key="shortcut.alias" cols="12" sm="6" md="4">
-                                    <v-btn block variant="outlined" @click="openKeyDialog(shortcut.alias)">
+                                <v-col
+                                    v-for="shortcut in shortcuts"
+                                    :key="shortcut.alias"
+                                    cols="12"
+                                    sm="6"
+                                    md="4"
+                                >
+                                    <v-btn
+                                        block
+                                        variant="outlined"
+                                        @click="openKeyDialog(shortcut.alias)"
+                                    >
                                         <v-icon start>
                                             {{ shortcut.icon }}
                                         </v-icon>
-                                        <span v-if="shortcut.key" class="text-caption">
+                                        <span
+                                            v-if="shortcut.key"
+                                            class="text-caption"
+                                        >
                                             {{ shortcut.key }}
                                         </span>
-                                        <v-icon v-else color="error">mdi-alert</v-icon>
+                                        <v-icon
+                                            v-else
+                                            color="error"
+                                            >mdi-alert</v-icon
+                                        >
                                     </v-btn>
                                     <div class="text-caption text-center mt-1">
                                         {{ t('settings.' + shortcut.alias) }}
@@ -78,7 +118,10 @@
                             </v-row>
                             <v-row>
                                 <v-col class="text-right">
-                                    <v-btn variant="text" @click="resetHotkeys">
+                                    <v-btn
+                                        variant="text"
+                                        @click="resetHotkeys"
+                                    >
                                         <v-icon start>mdi-reload</v-icon>
                                         {{ t('settings.reset_keys') }}
                                     </v-btn>
@@ -91,12 +134,24 @@
         </v-card>
 
         <!-- Press Key Dialog -->
-        <v-dialog v-model="keyDialogVisible" max-width="300" persistent @keydown="handleKeyPress">
-            <v-card color="primary" dark>
+        <v-dialog
+            v-model="keyDialogVisible"
+            max-width="300"
+            persistent
+            @keydown="handleKeyPress"
+        >
+            <v-card
+                color="primary"
+                dark
+            >
                 <v-card-text class="white--text">
                     {{ t('settings.press_key') }}
                     <strong>{{ t('settings.' + currentHotkeyAlias) }}</strong>
-                    <v-progress-linear indeterminate color="white" class="mb-0" />
+                    <v-progress-linear
+                        indeterminate
+                        color="white"
+                        class="mb-0"
+                    />
                 </v-card-text>
             </v-card>
         </v-dialog>

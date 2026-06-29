@@ -1,12 +1,26 @@
 <template>
     <v-row>
-        <v-btn v-if="showButton && canCreate" color="primary" variant="elevated" @click="addEmptyReportItem">
+        <v-btn
+            v-if="showButton && canCreate"
+            color="primary"
+            variant="elevated"
+            @click="addEmptyReportItem"
+        >
             <v-icon start> mdi-plus </v-icon>
             <span>{{ t('common.add_btn') }}</span>
         </v-btn>
 
-        <v-dialog v-model="visible" fullscreen persistent @keydown.esc="cancel">
-            <v-dialog v-model="showCloseConfirmation" max-width="500px" persistent>
+        <v-dialog
+            v-model="visible"
+            fullscreen
+            persistent
+            @keydown.esc="cancel"
+        >
+            <v-dialog
+                v-model="showCloseConfirmation"
+                max-width="500px"
+                persistent
+            >
                 <v-card>
                     <v-card-title class="text-h5">
                         {{ t('confirm_close.title') }}
@@ -14,26 +28,60 @@
                     <v-card-text>{{ t('report_item.confirm_close.message') }}</v-card-text>
                     <v-card-actions>
                         <v-spacer />
-                        <v-btn color="primary" variant="elevated" class="confirm-btn" @click="showCloseConfirmation = false">
+                        <v-btn
+                            color="primary"
+                            variant="elevated"
+                            class="confirm-btn"
+                            @click="showCloseConfirmation = false"
+                        >
                             {{ t('confirm_close.continue') }}
                         </v-btn>
-                        <v-btn color="success" variant="elevated" class="confirm-btn" @click="saveAndClose">
+                        <v-btn
+                            color="success"
+                            variant="elevated"
+                            class="confirm-btn"
+                            @click="saveAndClose"
+                        >
                             {{ t('confirm_close.save_and_close') }}
                         </v-btn>
-                        <v-btn color="error" variant="elevated" class="confirm-btn" @click="confirmClose">
+                        <v-btn
+                            color="error"
+                            variant="elevated"
+                            class="confirm-btn"
+                            @click="confirmClose"
+                        >
                             {{ t('confirm_close.close') }}
                         </v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
 
-            <v-overlay v-model="overlay" contained class="align-center justify-center" z-index="50000">
-                <v-progress-circular indeterminate size="64" />
+            <v-overlay
+                v-model="overlay"
+                contained
+                class="align-center justify-center"
+                z-index="50000"
+            >
+                <v-progress-circular
+                    indeterminate
+                    size="64"
+                />
             </v-overlay>
 
-            <v-card class="d-flex flex-column bg-background" style="height: 100vh">
-                <v-toolbar color="primary" dark data-dialog="report-item">
-                    <v-btn icon data-btn="cancel" @click="cancel">
+            <v-card
+                class="d-flex flex-column bg-background"
+                style="height: 100vh"
+            >
+                <v-toolbar
+                    color="primary"
+                    dark
+                    data-dialog="report-item"
+                >
+                    <v-btn
+                        icon
+                        data-btn="cancel"
+                        @click="cancel"
+                    >
                         <v-icon>mdi-close-circle</v-icon>
                     </v-btn>
 
@@ -45,7 +93,13 @@
 
                     <v-spacer />
 
-                    <v-switch v-model="verticalView" hide-details density="compact" label="Side-by-side view" class="mt-5" />
+                    <v-switch
+                        v-model="verticalView"
+                        hide-details
+                        density="compact"
+                        label="Side-by-side view"
+                        class="mt-5"
+                    />
 
                     <v-spacer />
 
@@ -59,7 +113,11 @@
                         @update:model-value="saveReportItem('state_id')"
                     />
 
-                    <v-btn v-if="!edit" variant="text" @click="addReportItem">
+                    <v-btn
+                        v-if="!edit"
+                        variant="text"
+                        @click="addReportItem"
+                    >
                         <v-icon start> mdi-content-save </v-icon>
                         <span>{{ t('common.save') }}</span>
                     </v-btn>
@@ -67,11 +125,24 @@
 
                 <!-- Row fills the space left below the toolbar; columns scroll internally so the
                      toolbar stays fixed and there is no overflow when the form is empty. -->
-                <v-row class="flex-grow-1" style="min-height: 0">
-                    <v-col :cols="verticalView ? 6 : 12" style="height: 100%; overflow-y: auto">
-                        <v-form ref="formRef" class="px-4" @submit.prevent="addReportItem">
+                <v-row
+                    class="flex-grow-1"
+                    style="min-height: 0"
+                >
+                    <v-col
+                        :cols="verticalView ? 6 : 12"
+                        style="height: 100%; overflow-y: auto"
+                    >
+                        <v-form
+                            ref="formRef"
+                            class="px-4"
+                            @submit.prevent="addReportItem"
+                        >
                             <v-row>
-                                <v-col cols="4" class="pr-3">
+                                <v-col
+                                    cols="4"
+                                    class="pr-3"
+                                >
                                     <v-combobox
                                         v-model="selected_type"
                                         :disabled="edit"
@@ -83,7 +154,10 @@
                                         @update:model-value="reportSelected"
                                     />
                                 </v-col>
-                                <v-col cols="4" class="pr-3">
+                                <v-col
+                                    cols="4"
+                                    class="pr-3"
+                                >
                                     <v-text-field
                                         v-model="report_item.title_prefix"
                                         :label="t('report_item.title_prefix')"
@@ -95,7 +169,10 @@
                                         @keyup="onKeyUp('title_prefix')"
                                     />
                                 </v-col>
-                                <v-col cols="4" class="pr-3">
+                                <v-col
+                                    cols="4"
+                                    class="pr-3"
+                                >
                                     <v-text-field
                                         v-model="report_item.title"
                                         :label="t('report_item.title')"
@@ -154,7 +231,10 @@
 
                             <!-- Attribute Groups -->
                             <v-row>
-                                <v-col cols="12" class="pa-0 ma-0">
+                                <v-col
+                                    cols="12"
+                                    class="pa-0 ma-0"
+                                >
                                     <v-expansion-panels
                                         v-for="(attribute_group, i) in attribute_groups"
                                         :key="attribute_group.id"
@@ -167,7 +247,11 @@
                                                 {{ attribute_group.title }}
                                             </v-expansion-panel-title>
                                             <v-expansion-panel-text>
-                                                <v-expansion-panels v-model="expand_group_items[i].values" multiple class="items">
+                                                <v-expansion-panels
+                                                    v-model="expand_group_items[i].values"
+                                                    multiple
+                                                    class="items"
+                                                >
                                                     <v-expansion-panel
                                                         v-for="attribute_item in attribute_group.attribute_group_items"
                                                         :key="attribute_item.attribute_group_item.id"
@@ -197,7 +281,10 @@
                                                                         :read-only="readOnly"
                                                                     />
                                                                 </v-col>
-                                                                <v-col class="d-flex justify-end" cols="auto">
+                                                                <v-col
+                                                                    class="d-flex justify-end"
+                                                                    cols="auto"
+                                                                >
                                                                     <v-btn
                                                                         v-if="!!attribute_item.attribute_group_item.ai_provider_id"
                                                                         variant="text"
@@ -225,10 +312,20 @@
 
                             <v-row class="pt-2">
                                 <v-col cols="12">
-                                    <v-alert v-if="show_validation_error" density="compact" type="error" variant="tonal">
+                                    <v-alert
+                                        v-if="show_validation_error"
+                                        density="compact"
+                                        type="error"
+                                        variant="tonal"
+                                    >
                                         {{ t('error.validation') }}
                                     </v-alert>
-                                    <v-alert v-if="show_error" density="compact" type="error" variant="tonal">
+                                    <v-alert
+                                        v-if="show_error"
+                                        density="compact"
+                                        type="error"
+                                        variant="tonal"
+                                    >
                                         {{ t('report_item.error') }}
                                     </v-alert>
                                 </v-col>
@@ -236,7 +333,12 @@
                         </v-form>
                     </v-col>
 
-                    <v-col v-if="verticalView" :cols="6" style="height: 100%; overflow-y: auto" class="pa-5 taranis-ng-vertical-view">
+                    <v-col
+                        v-if="verticalView"
+                        :cols="6"
+                        style="height: 100%; overflow-y: auto"
+                        class="pa-5 taranis-ng-vertical-view"
+                    >
                         <NewsItemSelector
                             ref="newsItemSelectorRef"
                             attach=".taranis-ng-vertical-view"

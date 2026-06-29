@@ -1,7 +1,14 @@
 <template>
-    <v-container fluid class="pa-2">
+    <v-container
+        fluid
+        class="pa-2"
+    >
         <!-- News Items Cards -->
-        <TransitionGroup name="card-list" tag="div" class="w-100">
+        <TransitionGroup
+            name="card-list"
+            tag="div"
+            class="w-100"
+        >
             <component
                 :is="currentCard"
                 v-for="news_item in news_items_data"
@@ -22,27 +29,58 @@
         </TransitionGroup>
 
         <!-- Infinite Scroll Trigger -->
-        <div v-intersect="onIntersect" class="mt-4" style="min-height: 100px; display: flex; align-items: center; justify-content: center">
-            <div v-if="loading" class="text-center text-grey">
-                <v-progress-circular indeterminate size="small" />
+        <div
+            v-intersect="onIntersect"
+            class="mt-4"
+            style="min-height: 100px; display: flex; align-items: center; justify-content: center"
+        >
+            <div
+                v-if="loading"
+                class="text-center text-grey"
+            >
+                <v-progress-circular
+                    indeterminate
+                    size="small"
+                />
                 <p class="text-caption mt-2">
                     {{ t('common.loading_more') }}
                 </p>
             </div>
-            <div v-else class="text-caption text-grey">
+            <div
+                v-else
+                class="text-caption text-grey"
+            >
                 {{ t('common.end_of_list') }}
             </div>
         </div>
 
         <!-- Loading Indicator -->
-        <v-row v-if="loading" justify="center" class="my-4">
-            <v-progress-circular indeterminate color="primary" />
+        <v-row
+            v-if="loading"
+            justify="center"
+            class="my-4"
+        >
+            <v-progress-circular
+                indeterminate
+                color="primary"
+            />
         </v-row>
 
         <!-- Empty State -->
-        <v-row v-if="!loading && news_items_data.length === 0" justify="center" class="my-8">
-            <v-col cols="12" md="6" class="text-center">
-                <v-icon size="64" color="grey">
+        <v-row
+            v-if="!loading && news_items_data.length === 0"
+            justify="center"
+            class="my-8"
+        >
+            <v-col
+                cols="12"
+                md="6"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey"
+                >
                     {{ ICONS.NEWSPAPER_VARIANT_OUTLINE }}
                 </v-icon>
                 <p class="text-h6 text-grey mt-4">
@@ -62,10 +100,16 @@
         />
 
         <!-- Reports List Dialog -->
-        <ReportsListDialog ref="reportsListDialogRef" @view-report-detail="handleViewReportDetail" />
+        <ReportsListDialog
+            ref="reportsListDialogRef"
+            @view-report-detail="handleViewReportDetail"
+        />
 
         <!-- Report Item Detail Modal (opened from ReportsListDialog) -->
-        <NewReportItem ref="reportItemModalRef" :show-button="false" />
+        <NewReportItem
+            ref="reportItemModalRef"
+            :show-button="false"
+        />
     </v-container>
 </template>
 

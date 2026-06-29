@@ -8,7 +8,11 @@
                 {{ viewName }}
             </v-card-title>
             <v-card-text>
-                <v-alert type="info" variant="tonal">This view is under migration from Vue 2 to Vue 3.</v-alert>
+                <v-alert
+                    type="info"
+                    variant="tonal"
+                    >This view is under migration from Vue 2 to Vue 3.</v-alert
+                >
             </v-card-text>
         </v-card>
     </v-container>

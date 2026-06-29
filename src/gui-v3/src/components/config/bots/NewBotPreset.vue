@@ -1,7 +1,15 @@
 <template>
-    <v-dialog v-model="dialog" max-width="800" persistent scrollable>
+    <v-dialog
+        v-model="dialog"
+        max-width="800"
+        persistent
+        scrollable
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+            />
         </template>
 
         <v-card>
@@ -14,7 +22,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-select
                         v-model="selectedNode"
                         :items="nodes"
@@ -74,7 +85,11 @@
                             {{ t('bots.presets.parameters') }}
                         </h3>
 
-                        <div v-for="(param, index) in selectedBot.parameters" :key="param.key || index" class="mb-3">
+                        <div
+                            v-for="(param, index) in selectedBot.parameters"
+                            :key="param.key || index"
+                            class="mb-3"
+                        >
                             <v-row align="center">
                                 <v-col cols="11">
                                     <v-text-field
@@ -88,17 +103,31 @@
                                     />
                                 </v-col>
                                 <v-col cols="1">
-                                    <v-icon color="primary" :title="param.description">mdi-help-circle</v-icon>
+                                    <v-icon
+                                        color="primary"
+                                        :title="param.description"
+                                        >mdi-help-circle</v-icon
+                                    >
                                 </v-col>
                             </v-row>
                         </div>
                     </div>
 
-                    <v-alert v-if="showValidationError" type="error" density="compact" class="mb-3">
+                    <v-alert
+                        v-if="showValidationError"
+                        type="error"
+                        density="compact"
+                        class="mb-3"
+                    >
                         {{ t('error.validation') }}
                     </v-alert>
 
-                    <v-alert v-if="showError" type="error" density="compact" class="mb-3">
+                    <v-alert
+                        v-if="showError"
+                        type="error"
+                        density="compact"
+                        class="mb-3"
+                    >
                         {{ t('bots.presets.error') }}
                     </v-alert>
                 </v-form>

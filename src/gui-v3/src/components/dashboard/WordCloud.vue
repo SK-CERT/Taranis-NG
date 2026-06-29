@@ -1,5 +1,8 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <div
             v-if="processedData && processedData.length > 0"
             class="word-cloud-container d-flex flex-wrap gap-2 align-center justify-center pa-4"
@@ -18,8 +21,14 @@
                 <!-- <span class="ml-1 text-caption">{{ tag.word_quantity }}</span> -->
             </v-chip>
         </div>
-        <div v-else class="pa-4 text-center">
-            <v-alert type="info" variant="tonal">
+        <div
+            v-else
+            class="pa-4 text-center"
+        >
+            <v-alert
+                type="info"
+                variant="tonal"
+            >
                 {{ emptyMessage }}
             </v-alert>
         </div>

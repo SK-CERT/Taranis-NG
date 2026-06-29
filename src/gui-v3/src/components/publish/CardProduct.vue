@@ -14,14 +14,24 @@
                 <v-row class="align-center">
                     <!-- Reserve space for an icon (products have none) so content aligns like Analyze -->
                     <v-col cols="auto">
-                        <div class="ms-2" style="width: 32px" />
+                        <div
+                            class="ms-2"
+                            style="width: 32px"
+                        />
                     </v-col>
                     <!-- Main content (grows to push actions to the right) -->
                     <v-col>
                         <!-- Label Row: Type Name, Description, Updated Info -->
-                        <v-row align="center" class="text-label-medium text-grey">
+                        <v-row
+                            align="center"
+                            class="text-label-medium text-grey"
+                        >
                             <!-- Type Name (label for title) -->
-                            <v-col cols="12" md="6" class="d-flex align-center">
+                            <v-col
+                                cols="12"
+                                md="6"
+                                class="d-flex align-center"
+                            >
                                 <span>{{ card.product_type_name }}</span>
                             </v-col>
                             <!-- Description label (for subtitle) -->
@@ -29,20 +39,37 @@
                                 <span>{{ t('card_item.description') }}</span>
                             </v-col>
                             <!-- Updated Info -->
-                            <v-col cols="auto" class="d-flex align-center">
+                            <v-col
+                                cols="auto"
+                                class="d-flex align-center"
+                            >
                                 <span>
                                     {{ t('card_item.updated') }}:
                                     {{ card.updated_at }}
-                                    <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
+                                    <span
+                                        v-if="card.updated_by"
+                                        class="ms-2"
+                                        >{{ card.updated_by }}</span
+                                    >
                                 </span>
                             </v-col>
                         </v-row>
                         <!-- Value Row: Title, Subtitle, State (below Updated) -->
-                        <v-row class="mt-2" align="center">
-                            <v-col cols="12" md="6">
+                        <v-row
+                            class="mt-2"
+                            align="center"
+                        >
+                            <v-col
+                                cols="12"
+                                md="6"
+                            >
                                 <div class="text-title-medium">
                                     {{ card.title }}
-                                    <span v-if="card.report_items_count" class="text-grey ms-1">({{ card.report_items_count }})</span>
+                                    <span
+                                        v-if="card.report_items_count"
+                                        class="text-grey ms-1"
+                                        >({{ card.report_items_count }})</span
+                                    >
                                 </div>
                             </v-col>
                             <v-col>
@@ -50,7 +77,12 @@
                                     {{ card.subtitle }}
                                 </div>
                             </v-col>
-                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center" :title="card.state.description">
+                            <v-col
+                                v-if="card.state"
+                                cols="auto"
+                                class="d-flex justify-end align-center"
+                                :title="card.state.description"
+                            >
                                 <v-icon :color="card.state.color">
                                     {{ card.state.icon }}
                                 </v-icon>
@@ -61,7 +93,10 @@
                         </v-row>
                     </v-col>
                     <!-- Actions - right side, vertically centered, like Analyze -->
-                    <v-col cols="auto" class="d-flex justify-end">
+                    <v-col
+                        cols="auto"
+                        class="d-flex justify-end"
+                    >
                         <!-- Delete -->
                         <ActionButton
                             v-if="canDelete"
@@ -75,7 +110,12 @@
         </BaseCard>
 
         <!-- Delete Confirmation Dialog -->
-        <ConfirmationDialog v-model="showDeleteDialog" :message="card.title || ''" max-width="500px" @confirm="handleDelete" />
+        <ConfirmationDialog
+            v-model="showDeleteDialog"
+            :message="card.title || ''"
+            max-width="500px"
+            @confirm="handleDelete"
+        />
     </div>
 </template>
 

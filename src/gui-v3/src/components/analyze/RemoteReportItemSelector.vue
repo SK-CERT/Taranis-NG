@@ -1,17 +1,34 @@
 <template>
     <v-container>
         <!-- Activate Button -->
-        <v-btn v-if="canModify && groups.length > 0" variant="elevated" size="small" class="mb-4" @click="openSelector">
+        <v-btn
+            v-if="canModify && groups.length > 0"
+            variant="elevated"
+            size="small"
+            class="mb-4"
+            @click="openSelector"
+        >
             <v-icon start> mdi-plus </v-icon>
             {{ t('report_item.select_remote') }}
         </v-btn>
 
         <!-- Dialog Container -->
-        <v-dialog v-model="selectorOpen" fullscreen persistent>
+        <v-dialog
+            v-model="selectorOpen"
+            fullscreen
+            persistent
+        >
             <v-card flat>
                 <!-- Fixed Toolbar -->
-                <v-toolbar color="primary" dark sticky>
-                    <v-btn icon @click="handleClose">
+                <v-toolbar
+                    color="primary"
+                    dark
+                    sticky
+                >
+                    <v-btn
+                        icon
+                        @click="handleClose"
+                    >
                         <v-icon>mdi-close-circle</v-icon>
                     </v-btn>
                     <v-toolbar-title>{{ t('report_item.select_remote') }}</v-toolbar-title>
@@ -30,10 +47,22 @@
                         class="bg-surface pa-0"
                         style="max-width: 96px; min-height: calc(100vh - 64px); border-right: 1px solid rgba(0, 0, 0, 0.12); overflow-y: auto"
                     >
-                        <v-list v-model:selected="selectedGroupList" density="compact">
-                            <v-list-item v-for="link in links" :key="link.id" :value="link.id" class="pa-2" @click="changeGroup(link.id)">
+                        <v-list
+                            v-model:selected="selectedGroupList"
+                            density="compact"
+                        >
+                            <v-list-item
+                                v-for="link in links"
+                                :key="link.id"
+                                :value="link.id"
+                                class="pa-2"
+                                @click="changeGroup(link.id)"
+                            >
                                 <div class="d-flex flex-column align-center text-center">
-                                    <v-icon :color="link.color || undefined" class="mb-2">
+                                    <v-icon
+                                        :color="link.color || undefined"
+                                        class="mb-2"
+                                    >
                                         {{ link.icon }}
                                     </v-icon>
                                     <span class="text-body-small">
@@ -46,8 +75,15 @@
 
                     <!-- Main content: Filter toolbar + ContentDataAnalyze -->
                     <v-col class="flex-grow-1 pa-0">
-                        <div class="bg-surface pa-3" style="position: sticky; top: 0; z-index: 100">
-                            <ToolbarFilterAnalyze ref="toolbarFilter" :show-group-toolbar="false" @update-filter="updateFilter" />
+                        <div
+                            class="bg-surface pa-3"
+                            style="position: sticky; top: 0; z-index: 100"
+                        >
+                            <ToolbarFilterAnalyze
+                                ref="toolbarFilter"
+                                :show-group-toolbar="false"
+                                @update-filter="updateFilter"
+                            />
                         </div>
                         <ContentDataAnalyze
                             ref="contentData"
@@ -67,7 +103,10 @@
         <RemoteReportItem ref="remoteReportItemDialog" />
 
         <!-- Selected Items Display -->
-        <div v-if="!selectorOpen" class="selected-items-container ml-4 pt-2">
+        <div
+            v-if="!selectorOpen"
+            class="selected-items-container ml-4 pt-2"
+        >
             <CardAnalyze
                 v-for="item in value"
                 :key="item.id"

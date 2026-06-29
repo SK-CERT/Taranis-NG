@@ -1,15 +1,35 @@
 <template>
-    <v-dialog v-model="dialogVisible" :max-width="maxWidth" persistent>
+    <v-dialog
+        v-model="dialogVisible"
+        :max-width="maxWidth"
+        persistent
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton v-if="showButton && canCreate" :label="buttonText || 'common.add_btn'" v-bind="activatorProps" />
+            <AddNewButton
+                v-if="showButton && canCreate"
+                :label="buttonText || 'common.add_btn'"
+                v-bind="activatorProps"
+            />
         </template>
 
         <v-card>
-            <DialogToolbar :title="dialogTitle" :saving="saving" @cancel="handleCancel" @save="handleSubmit" />
+            <DialogToolbar
+                :title="dialogTitle"
+                :saving="saving"
+                @cancel="handleCancel"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
-                    <slot name="form" :item="item" :is-edit="isEdit" />
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
+                    <slot
+                        name="form"
+                        :item="item"
+                        :is-edit="isEdit"
+                    />
                 </v-form>
 
                 <v-alert
@@ -23,7 +43,14 @@
                     {{ t('error.validation') }}
                 </v-alert>
 
-                <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
+                <v-alert
+                    v-if="showError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showError = false"
+                >
                     {{ errorMessage || t('common.error') }}
                 </v-alert>
             </v-card-text>

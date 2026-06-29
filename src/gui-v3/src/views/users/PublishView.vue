@@ -10,7 +10,11 @@
             />
         </template>
         <template #content>
-            <ContentDataPublish ref="contentRef" :selection="publishStore.getSelection" @update-showing-count="updateShowingCount" />
+            <ContentDataPublish
+                ref="contentRef"
+                :selection="publishStore.getSelection"
+                @update-showing-count="updateShowingCount"
+            />
         </template>
     </ViewLayout>
 

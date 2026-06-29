@@ -1,12 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="presets" :title="t('bots.presets.tab_description')">
-                <v-icon :icon="ICONS.ROBOT" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="presets"
+                :title="t('bots.presets.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.ROBOT"
+                    start
+                />
                 {{ t('nav_menu.bot_presets') }}
             </v-tab>
-            <v-tab value="nodes" :title="t('bots.nodes.tab_description')">
-                <v-icon :icon="ICONS.SERVER_NETWORK" start />
+            <v-tab
+                value="nodes"
+                :title="t('bots.nodes.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SERVER_NETWORK"
+                    start
+                />
                 {{ t('nav_menu.bots_nodes') }}
             </v-tab>
         </v-tabs>

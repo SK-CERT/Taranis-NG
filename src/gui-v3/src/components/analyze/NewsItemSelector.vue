@@ -1,11 +1,27 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <!-- Dialog Container -->
-        <v-dialog v-model="selectorOpen" fullscreen persistent>
-            <v-card flat class="selector-layout">
+        <v-dialog
+            v-model="selectorOpen"
+            fullscreen
+            persistent
+        >
+            <v-card
+                flat
+                class="selector-layout"
+            >
                 <!-- Fixed Toolbar -->
-                <v-toolbar color="primary" dark>
-                    <v-btn icon @click="handleClose">
+                <v-toolbar
+                    color="primary"
+                    dark
+                >
+                    <v-btn
+                        icon
+                        @click="handleClose"
+                    >
                         <v-icon>mdi-close-circle</v-icon>
                     </v-btn>
                     <v-toolbar-title>{{ t('assess.attached_news_items') }}</v-toolbar-title>
@@ -19,7 +35,11 @@
                 <!-- Main Content Row -->
                 <div class="selector-body">
                     <!-- Left Sidebar: Groups -->
-                    <GroupNavList :groups="groups" :active-id="selectedGroupId" @select="onGroupSelect" />
+                    <GroupNavList
+                        :groups="groups"
+                        :active-id="selectedGroupId"
+                        @select="onGroupSelect"
+                    />
 
                     <!-- Right Content Area: Toolbar + Items -->
                     <div class="selector-main">
@@ -52,13 +72,30 @@
 
         <!-- Items Display (outside dialog) -->
         <v-row v-if="!selectorOpen">
-            <v-col v-for="item in value" :key="item.id" cols="12">
-                <BaseCard :multi-select-active="false" :show-selection-checkbox="false" :preselected="false" card-class="card-item">
+            <v-col
+                v-for="item in value"
+                :key="item.id"
+                cols="12"
+            >
+                <BaseCard
+                    :multi-select-active="false"
+                    :show-selection-checkbox="false"
+                    :preselected="false"
+                    card-class="card-item"
+                >
                     <!-- Content Slot -->
                     <template #content>
-                        <div class="d-flex align-center" style="gap: 12px">
+                        <div
+                            class="d-flex align-center"
+                            style="gap: 12px"
+                        >
                             <!-- News Item Content (click to read) -->
-                            <div class="flex-grow-1" style="cursor: pointer" :title="t('assess.read_news_item')" @click="openDetail(item)">
+                            <div
+                                class="flex-grow-1"
+                                style="cursor: pointer"
+                                :title="t('assess.read_news_item')"
+                                @click="openDetail(item)"
+                            >
                                 <!-- Source and Date Info -->
                                 <div class="text-caption text-grey mb-2">
                                     <v-row align="center">
@@ -119,7 +156,10 @@
                 </BaseCard>
 
                 <!-- Child news items of the aggregate; click one to read it. -->
-                <div v-if="isExpanded(item.id) && getNewsItemCount(item) > 1" class="mt-1">
+                <div
+                    v-if="isExpanded(item.id) && getNewsItemCount(item) > 1"
+                    class="mt-1"
+                >
                     <CardAssessItem
                         v-for="child in item.news_items"
                         :key="child.id"
@@ -132,10 +172,18 @@
         </v-row>
 
         <!-- Confirmation Dialog: Remove Item -->
-        <v-dialog v-model="showRemoveConfirm" max-width="500">
+        <v-dialog
+            v-model="showRemoveConfirm"
+            max-width="500"
+        >
             <v-card>
                 <v-card-title class="d-flex align-center">
-                    <v-icon color="primary" class="mr-2"> mdi-help-circle </v-icon>
+                    <v-icon
+                        color="primary"
+                        class="mr-2"
+                    >
+                        mdi-help-circle
+                    </v-icon>
                     {{ t('common.messagebox.remove') }}
                 </v-card-title>
                 <v-card-text>
@@ -143,10 +191,17 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn variant="text" @click="showRemoveConfirm = false">
+                    <v-btn
+                        variant="text"
+                        @click="showRemoveConfirm = false"
+                    >
                         {{ t('common.cancel') }}
                     </v-btn>
-                    <v-btn color="primary" variant="text" @click="confirmRemoveItem">
+                    <v-btn
+                        color="primary"
+                        variant="text"
+                        @click="confirmRemoveItem"
+                    >
                         {{ t('common.remove') }}
                     </v-btn>
                 </v-card-actions>
@@ -155,7 +210,12 @@
 
         <!-- News item reader. Contained to the right column in side-by-side mode;
              a normal centered modal otherwise. Read-only (actions hidden). -->
-        <NewsItemDetailDialog v-model="detailDialog" :news-item="detailItem" :contained="verticalView" multi-select-active />
+        <NewsItemDetailDialog
+            v-model="detailDialog"
+            :news-item="detailItem"
+            :contained="verticalView"
+            multi-select-active
+        />
     </v-container>
 </template>
 

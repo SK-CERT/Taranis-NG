@@ -39,8 +39,18 @@
     </BaseToolbarFilter>
 
     <!-- Selection Group Toolbar -->
-    <v-toolbar v-if="showGroupToolbar" flat color="surface" density="compact">
-        <ToolbarGroup ref="toolbarGroup" view="analyze" :current-filter="filter" @update-data="handleUpdateData" />
+    <v-toolbar
+        v-if="showGroupToolbar"
+        flat
+        color="surface"
+        density="compact"
+    >
+        <ToolbarGroup
+            ref="toolbarGroup"
+            view="analyze"
+            :current-filter="filter"
+            @update-data="handleUpdateData"
+        />
 
         <v-spacer />
         <v-btn

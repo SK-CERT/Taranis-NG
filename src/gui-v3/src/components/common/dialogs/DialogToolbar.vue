@@ -1,11 +1,24 @@
 <template>
-    <v-toolbar color="primary" density="compact">
+    <v-toolbar
+        color="primary"
+        density="compact"
+    >
         <v-toolbar-title>{{ title }}</v-toolbar-title>
         <v-spacer />
-        <v-btn variant="text" :disabled="saving" @click="$emit('cancel')">
+        <v-btn
+            variant="text"
+            :disabled="saving"
+            @click="$emit('cancel')"
+        >
             {{ t('common.cancel') }}
         </v-btn>
-        <v-btn v-if="showSave" variant="text" :loading="saving" :disabled="saving || saveDisabled" @click="$emit('save')">
+        <v-btn
+            v-if="showSave"
+            variant="text"
+            :loading="saving"
+            :disabled="saving || saveDisabled"
+            @click="$emit('save')"
+        >
             <v-icon start>mdi-content-save</v-icon>
             {{ t('common.save') }}
         </v-btn>

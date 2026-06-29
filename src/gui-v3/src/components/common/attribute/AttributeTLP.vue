@@ -1,10 +1,25 @@
 <template>
-    <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="w-100">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="w-100"
+            >
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || value.remote" class="tlp-display d-flex align-center ga-3 py-2">
-                    <v-sheet :style="getTLPStyle(value.value)" rounded class="tlp-badge px-3 py-1 text-body-2 font-weight-bold">
+                <div
+                    v-if="readOnly || value.remote"
+                    class="tlp-display d-flex align-center ga-3 py-2"
+                >
+                    <v-sheet
+                        :style="getTLPStyle(value.value)"
+                        rounded
+                        class="tlp-badge px-3 py-1 text-body-2 font-weight-bold"
+                    >
                         {{ value.value || '—' }}
                     </v-sheet>
                     <span class="tlp-description text-body-2 text-medium-emphasis">{{ getTLPDescription(value.value) }}</span>
@@ -20,12 +35,20 @@
                     <div class="d-flex align-center ga-2">
                         <!-- Invisible phantom so both flanking elements are always the same width,
                              keeping the button group exactly centered regardless of delete visibility. -->
-                        <v-btn variant="text" size="small" style="visibility: hidden; pointer-events: none" tabindex="-1">
+                        <v-btn
+                            variant="text"
+                            size="small"
+                            style="visibility: hidden; pointer-events: none"
+                            tabindex="-1"
+                        >
                             <v-icon>{{ ICONS.CLOSE }}</v-icon>
                         </v-btn>
 
                         <!-- TLP button group - centered between the two equal-width flankers -->
-                        <div style="flex: 1" class="tlp-options d-flex ga-1">
+                        <div
+                            style="flex: 1"
+                            class="tlp-options d-flex ga-1"
+                        >
                             <button
                                 v-for="tlp in tlpOptions"
                                 :key="tlp"
@@ -52,7 +75,10 @@
                     </div>
 
                     <!-- Description centered under the button group -->
-                    <div v-if="value.value" class="text-caption text-medium-emphasis text-center mt-1">
+                    <div
+                        v-if="value.value"
+                        class="text-caption text-medium-emphasis text-center mt-1"
+                    >
                         {{ getTLPDescription(value.value) }}
                     </div>
                 </div>

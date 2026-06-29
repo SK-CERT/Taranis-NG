@@ -15,20 +15,36 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
-                        <AddNewButton :show="canCreate" @click="addItem" />
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
+                        <AddNewButton
+                            :show="canCreate"
+                            @click="addItem"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="filteredRecords" :search="search" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="filteredRecords"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.display_name="{ item }">
                     {{ t(`workflow.states.${item.display_name}`, item.display_name) }}
                 </template>
 
                 <template #item.color="{ item }">
-                    <v-chip :color="item.color" label :text-color="getContrastColor(item.color)">
+                    <v-chip
+                        :color="item.color"
+                        label
+                        :text-color="getContrastColor(item.color)"
+                    >
                         {{ item.color }}
                     </v-chip>
                 </template>
@@ -41,18 +57,33 @@
 
                 <template #item.actions="{ item }">
                     <template v-if="item.editable">
-                        <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="editItem(item)" />
-                        <ActionButton action="delete" :title="t('common.delete')" @click="deleteItem(item)" />
+                        <ActionButton
+                            action="edit"
+                            :title="t('common.edit')"
+                            class="mr-1"
+                            @click="editItem(item)"
+                        />
+                        <ActionButton
+                            action="delete"
+                            :title="t('common.delete')"
+                            @click="deleteItem(item)"
+                        />
                     </template>
                     <template v-else>
-                        <ActionButton action="lock" :title="t('workflow.states.cannot_edit_system_state')" />
+                        <ActionButton
+                            action="lock"
+                            :title="t('workflow.states.cannot_edit_system_state')"
+                        />
                     </template>
                 </template>
             </v-data-table>
         </v-card>
 
         <!-- Delete Dialog -->
-        <v-dialog v-model="dialogDelete" max-width="500">
+        <v-dialog
+            v-model="dialogDelete"
+            max-width="500"
+        >
             <v-card>
                 <v-card-title>{{ t('common.messagebox.delete') }}</v-card-title>
                 <v-card-text>
@@ -60,10 +91,18 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn color="grey" variant="text" @click="closeDelete">
+                    <v-btn
+                        color="grey"
+                        variant="text"
+                        @click="closeDelete"
+                    >
                         {{ t('common.cancel') }}
                     </v-btn>
-                    <v-btn color="error" variant="text" @click="deleteRecord">
+                    <v-btn
+                        color="error"
+                        variant="text"
+                        @click="deleteRecord"
+                    >
                         {{ t('common.delete') }}
                     </v-btn>
                 </v-card-actions>
@@ -71,7 +110,10 @@
         </v-dialog>
 
         <!-- Edit Dialog - Simplified for now -->
-        <v-dialog v-model="dialogEdit" max-width="700">
+        <v-dialog
+            v-model="dialogEdit"
+            max-width="700"
+        >
             <v-card>
                 <DialogToolbar
                     :title="editedIndex === -1 ? t('workflow.states.add_new') : t('workflow.states.edit')"

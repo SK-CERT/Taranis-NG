@@ -1,6 +1,16 @@
 <template>
-    <v-btn icon :size="size" :variant="variant" :disabled="disabled" :title="title" @click="handleClick">
-        <v-icon :color="color" :size="icon_size">
+    <v-btn
+        icon
+        :size="size"
+        :variant="variant"
+        :disabled="disabled"
+        :title="title"
+        @click="handleClick"
+    >
+        <v-icon
+            :color="color"
+            :size="icon_size"
+        >
             {{ icon }}
         </v-icon>
     </v-btn>

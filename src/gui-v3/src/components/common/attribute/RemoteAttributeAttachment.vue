@@ -1,7 +1,14 @@
 <template>
-    <AttributeItemLayout :add-button="false" :values="attributeGroup.attributes">
+    <AttributeItemLayout
+        :add-button="false"
+        :values="attributeGroup.attributes"
+    >
         <template #content>
-            <div v-for="value in attributeGroup.attributes" :key="value.id" class="remote-attachment-row">
+            <div
+                v-for="value in attributeGroup.attributes"
+                :key="value.id"
+                class="remote-attachment-row"
+            >
                 <!-- TODO: Display remote file attachment info -->
                 <!-- Phase 3: Show filename, size, download link -->
                 <!-- May need to fetch file metadata from API feed -->

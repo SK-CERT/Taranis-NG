@@ -4,10 +4,16 @@
             <v-col>
                 <span style="margin-right: 20px; font-size: 12px">{{ attribute.key }}</span>
                 <br />
-                <span v-if="attribute.binary_mime_type === ''" style="font-size: 16px">
+                <span
+                    v-if="attribute.binary_mime_type === ''"
+                    style="font-size: 16px"
+                >
                     {{ attribute.value }}
                 </span>
-                <v-row v-if="attribute.binary_mime_type !== ''" class="align-center">
+                <v-row
+                    v-if="attribute.binary_mime_type !== ''"
+                    class="align-center"
+                >
                     <v-col class="flex-grow-0">
                         <v-icon>mdi-file-document</v-icon>
                     </v-col>
@@ -15,7 +21,12 @@
                         <div>{{ attribute.value }}</div>
                     </v-col>
                     <v-col>
-                        <v-btn prepend-icon="mdi-cloud-download" variant="outlined" size="large" @click="downloadFile">
+                        <v-btn
+                            prepend-icon="mdi-cloud-download"
+                            variant="outlined"
+                            size="large"
+                            @click="downloadFile"
+                        >
                             {{ t('assess.download') }}
                         </v-btn>
                     </v-col>

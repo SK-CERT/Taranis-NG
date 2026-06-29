@@ -1,10 +1,24 @@
 <template>
-    <AttributeItemLayout :add-button="false" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="false"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
+            >
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || value.remote" class="attachment-display d-flex align-center pa-3">
-                    <v-icon color="primary" class="mr-3">
+                <div
+                    v-if="readOnly || value.remote"
+                    class="attachment-display d-flex align-center pa-3"
+                >
+                    <v-icon
+                        color="primary"
+                        class="mr-3"
+                    >
                         {{ ICONS.FILE_DOCUMENT }}
                     </v-icon>
                     <div class="flex-grow-1">
@@ -13,7 +27,11 @@
                         </div>
                         <div class="text-caption text-grey">{{ value.binary_mime_type }} - {{ formatFileSize(value.binary_size) }}</div>
                     </div>
-                    <v-btn size="small" variant="text" @click="downloadAttachmentNow(value)">
+                    <v-btn
+                        size="small"
+                        variant="text"
+                        @click="downloadAttachmentNow(value)"
+                    >
                         <v-icon>{{ ICONS.DOWNLOAD }}</v-icon>
                     </v-btn>
                 </div>
@@ -29,7 +47,10 @@
                 >
                     <template #col_middle>
                         <div class="d-flex align-center">
-                            <div v-if="value.binary_description" class="mr-3">
+                            <div
+                                v-if="value.binary_description"
+                                class="mr-3"
+                            >
                                 <div class="text-body-2">
                                     {{ value.binary_description }}
                                 </div>
@@ -37,7 +58,12 @@
                                     {{ value.binary_mime_type }} - {{ formatFileSize(value.binary_size) }}
                                 </div>
                             </div>
-                            <v-btn v-if="(value.id ?? 0) > 0" size="small" variant="text" @click="downloadAttachmentNow(value)">
+                            <v-btn
+                                v-if="(value.id ?? 0) > 0"
+                                size="small"
+                                variant="text"
+                                @click="downloadAttachmentNow(value)"
+                            >
                                 <v-icon>{{ ICONS.DOWNLOAD }}</v-icon>
                             </v-btn>
                         </div>

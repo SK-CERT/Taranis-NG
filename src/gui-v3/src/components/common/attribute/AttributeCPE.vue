@@ -1,10 +1,25 @@
 <template>
-    <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
+            >
                 <!-- Read-only or remote -->
-                <span v-if="readOnly || value.remote" class="numbered-cpe-value">
-                    <span v-if="values.length > 1" class="cpe-number text--disabled">{{ index + 1 }}.</span>
+                <span
+                    v-if="readOnly || value.remote"
+                    class="numbered-cpe-value"
+                >
+                    <span
+                        v-if="values.length > 1"
+                        class="cpe-number text--disabled"
+                        >{{ index + 1 }}.</span
+                    >
                     <span class="cpe-content">{{ value.value }}</span>
                 </span>
 
@@ -19,7 +34,11 @@
                     @del-value="del(index)"
                 >
                     <template #col_left>
-                        <span v-if="values.length > 1" class="cpe-number text--disabled">{{ index + 1 }}.</span>
+                        <span
+                            v-if="values.length > 1"
+                            class="cpe-number text--disabled"
+                            >{{ index + 1 }}.</span
+                        >
                     </template>
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-text-field
@@ -35,7 +54,10 @@
                             @keyup="onKeyUp(index)"
                         >
                             <template #append-inner>
-                                <AttributeFieldDeleteButton :visible="delVisible" @delete="onDelete" />
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
                             </template>
                         </v-text-field>
                     </template>

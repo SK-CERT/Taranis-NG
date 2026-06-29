@@ -1,7 +1,16 @@
 <template>
-    <v-dialog v-model="dialog" max-width="1200" persistent scrollable fullscreen>
+    <v-dialog
+        v-model="dialog"
+        max-width="1200"
+        persistent
+        scrollable
+        fullscreen
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+            />
         </template>
 
         <v-card>
@@ -13,7 +22,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-row>
                         <v-col cols="12">
                             <v-text-field
@@ -54,14 +66,26 @@
                                     {{ t('word_lists.categories') }}
                                 </h3>
                                 <v-spacer />
-                                <v-btn color="primary" prepend-icon="mdi-plus" :disabled="saving" @click="addCategory">
+                                <v-btn
+                                    color="primary"
+                                    prepend-icon="mdi-plus"
+                                    :disabled="saving"
+                                    @click="addCategory"
+                                >
                                     {{ t('word_lists.new_category') }}
                                 </v-btn>
                             </div>
 
                             <!-- Categories -->
-                            <v-expansion-panels v-model="expandedPanels" multiple>
-                                <v-expansion-panel v-for="(category, index) in localItem.categories" :key="index" :value="index">
+                            <v-expansion-panels
+                                v-model="expandedPanels"
+                                multiple
+                            >
+                                <v-expansion-panel
+                                    v-for="(category, index) in localItem.categories"
+                                    :key="index"
+                                    :value="index"
+                                >
                                     <v-expansion-panel-title>
                                         <div class="d-flex align-center w-100">
                                             <v-icon class="mr-2"> mdi-folder-outline </v-icon>
@@ -186,8 +210,16 @@
                                 </v-expansion-panel>
                             </v-expansion-panels>
 
-                            <div v-if="localItem.categories.length === 0" class="text-center pa-8 text-grey">
-                                <v-icon size="64" color="grey-lighten-1"> mdi-folder-open-outline </v-icon>
+                            <div
+                                v-if="localItem.categories.length === 0"
+                                class="text-center pa-8 text-grey"
+                            >
+                                <v-icon
+                                    size="64"
+                                    color="grey-lighten-1"
+                                >
+                                    mdi-folder-open-outline
+                                </v-icon>
                                 <div class="text-h6 mt-2">
                                     {{ t('word_lists.no_categories') }}
                                 </div>
@@ -198,11 +230,21 @@
                         </v-col>
                     </v-row>
 
-                    <v-alert v-if="showValidationError" type="error" density="compact" class="mb-3 mt-4">
+                    <v-alert
+                        v-if="showValidationError"
+                        type="error"
+                        density="compact"
+                        class="mb-3 mt-4"
+                    >
                         {{ t('error.validation') }}
                     </v-alert>
 
-                    <v-alert v-if="showError" type="error" density="compact" class="mb-3 mt-4">
+                    <v-alert
+                        v-if="showError"
+                        type="error"
+                        density="compact"
+                        class="mb-3 mt-4"
+                    >
                         {{ t('word_lists.error') }}
                     </v-alert>
                 </v-form>

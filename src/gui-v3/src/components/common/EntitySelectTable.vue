@@ -1,5 +1,8 @@
 <template>
-    <v-card variant="outlined" class="mt-2 mb-4">
+    <v-card
+        variant="outlined"
+        class="mt-2 mb-4"
+    >
         <v-card-title class="text-subtitle-1 bg-grey-lighten-4 d-flex align-center">
             <span>{{ title }}</span>
             <v-spacer />
@@ -16,7 +19,10 @@
                 :disabled="disabled"
             />
             <!-- Let callers add an action (e.g. "add new") at the top-right of the table header. -->
-            <div v-if="$slots['header-append']" class="ms-3">
+            <div
+                v-if="$slots['header-append']"
+                class="ms-3"
+            >
                 <slot name="header-append" />
             </div>
         </v-card-title>

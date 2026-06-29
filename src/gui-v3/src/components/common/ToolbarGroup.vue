@@ -12,7 +12,10 @@
         </v-btn>
 
         <!-- Divider -->
-        <v-divider vertical class="mx-2" />
+        <v-divider
+            vertical
+            class="mx-2"
+        />
 
         <!-- Action Buttons (only visible when multi-select is active) -->
         <template v-if="multiSelectActive">

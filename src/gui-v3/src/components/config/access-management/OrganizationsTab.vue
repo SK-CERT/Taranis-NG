@@ -15,14 +15,27 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
-                        <NewOrganization :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
+                        <NewOrganization
+                            :edit-item="editItem"
+                            @saved="handleSaved"
+                            @update:model-value="onDialogChange"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.organizations.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="configStore.organizations.items"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.name="{ item }">
                     <strong>{{ asOrganizationItem(item).name }}</strong>
                 </template>
@@ -32,13 +45,27 @@
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asOrganizationItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asOrganizationItem(item))" />
+                    <ActionButton
+                        action="edit"
+                        :title="t('common.edit')"
+                        class="mr-1"
+                        @click="handleEdit(asOrganizationItem(item))"
+                    />
+                    <ActionButton
+                        action="delete"
+                        :title="t('common.delete')"
+                        @click="handleDelete(asOrganizationItem(item))"
+                    />
                 </template>
             </v-data-table>
         </v-card>
 
-        <ConfirmationDialog v-model="deleteDialog" :message="itemToDelete?.name || ''" max-width="600px" @confirm="confirmDelete" />
+        <ConfirmationDialog
+            v-model="deleteDialog"
+            :message="itemToDelete?.name || ''"
+            max-width="600px"
+            @confirm="confirmDelete"
+        />
     </v-container>
 </template>
 

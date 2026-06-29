@@ -58,11 +58,18 @@
             :title="t('assess.tooltip.like_item')"
             @click.stop="$emit('action', 'like')"
         >
-            <v-icon :size="iconSize" :color="item.me_like ? 'warning' : undefined">
+            <v-icon
+                :size="iconSize"
+                :color="item.me_like ? 'warning' : undefined"
+            >
                 {{ item.me_like ? ICONS.LIKE : ICONS.LIKE_OUTLINE }}
             </v-icon>
         </v-btn>
-        <span v-if="showCounts && canModify" class="vote-count" :class="{ 'is-empty': Number(item.likes || 0) === 0 }">
+        <span
+            v-if="showCounts && canModify"
+            class="vote-count"
+            :class="{ 'is-empty': Number(item.likes || 0) === 0 }"
+        >
             {{ Number(item.likes || 0) > 0 ? Number(item.likes || 0) : '0' }}
         </span>
 
@@ -76,11 +83,18 @@
             :title="t('assess.tooltip.dislike_item')"
             @click.stop="$emit('action', 'dislike')"
         >
-            <v-icon :size="iconSize" :color="item.me_dislike ? 'warning' : undefined">
+            <v-icon
+                :size="iconSize"
+                :color="item.me_dislike ? 'warning' : undefined"
+            >
                 {{ item.me_dislike ? ICONS.UNLIKE : ICONS.UNLIKE_OUTLINE }}
             </v-icon>
         </v-btn>
-        <span v-if="showCounts && canModify" class="vote-count" :class="{ 'is-empty': Number(item.dislikes || 0) === 0 }">
+        <span
+            v-if="showCounts && canModify"
+            class="vote-count"
+            :class="{ 'is-empty': Number(item.dislikes || 0) === 0 }"
+        >
             {{ Number(item.dislikes || 0) > 0 ? Number(item.dislikes || 0) : '0' }}
         </span>
 
@@ -94,7 +108,10 @@
             :title="t('assess.tooltip.important_item')"
             @click.stop="$emit('action', 'important')"
         >
-            <v-icon :size="iconSize" :color="item.important ? 'warning' : undefined">
+            <v-icon
+                :size="iconSize"
+                :color="item.important ? 'warning' : undefined"
+            >
                 {{ item.important ? ICONS.IMPORTANT : ICONS.IMPORTANT_OUTLINE }}
             </v-icon>
         </v-btn>
@@ -109,7 +126,10 @@
             :title="t('assess.tooltip.read_item')"
             @click.stop="$emit('action', 'read')"
         >
-            <v-icon :size="iconSize" :color="item.read ? 'warning' : undefined">
+            <v-icon
+                :size="iconSize"
+                :color="item.read ? 'warning' : undefined"
+            >
                 {{ item.read ? ICONS.READ : ICONS.READ_OUTLINE }}
             </v-icon>
         </v-btn>

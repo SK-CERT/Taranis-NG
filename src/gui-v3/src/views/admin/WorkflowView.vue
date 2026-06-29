@@ -1,20 +1,51 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="states" :title="t('workflow.states.tab_description')">
-                <v-icon :icon="ICONS.STATE_MACHINE" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="states"
+                :title="t('workflow.states.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.STATE_MACHINE"
+                    start
+                />
                 {{ t('workflow.states_tab') }}
             </v-tab>
-            <v-tab value="state-workflow" :title="t('workflow.state_workflow.tab_description')">
-                <v-icon :icon="ICONS.SITEMAP" start />
+            <v-tab
+                value="state-workflow"
+                :title="t('workflow.state_workflow.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SITEMAP"
+                    start
+                />
                 {{ t('workflow.state_workflow_tab') }}
             </v-tab>
-            <v-tab value="tags" :title="t('workflow.tags.tab_description')">
-                <v-icon :icon="ICONS.TAG_MULTIPLE" start />
+            <v-tab
+                value="tags"
+                :title="t('workflow.tags.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.TAG_MULTIPLE"
+                    start
+                />
                 {{ t('workflow.tags_tab') }}
             </v-tab>
-            <v-tab value="tag-workflow" :title="t('workflow.tag_workflow.tab_description')">
-                <v-icon :icon="ICONS.TAG_ARROW_RIGHT" start />
+            <v-tab
+                value="tag-workflow"
+                :title="t('workflow.tag_workflow.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.TAG_ARROW_RIGHT"
+                    start
+                />
                 {{ t('workflow.tag_workflow_tab') }}
             </v-tab>
         </v-tabs>

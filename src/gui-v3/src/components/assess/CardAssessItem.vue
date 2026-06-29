@@ -1,5 +1,10 @@
 <template>
-    <BaseCard :multi-select-active="false" :show-selection-checkbox="false" card-class="aggregate-child-card" @card-click="showDetail">
+    <BaseCard
+        :multi-select-active="false"
+        :show-selection-checkbox="false"
+        card-class="aggregate-child-card"
+        @card-click="showDetail"
+    >
         <template #content>
             <div class="text-label-small text-grey mb-2">
                 <v-row align="center">
@@ -23,18 +28,32 @@
                 {{ itemTitle }}
             </h4>
 
-            <p v-if="!hideReviews && itemReview" class="text-grey mb-3">
+            <p
+                v-if="!hideReviews && itemReview"
+                class="text-grey mb-3"
+            >
                 {{ itemReview }}
             </p>
 
             <v-row align="center">
-                <v-col class="d-flex align-center flex-wrap" style="gap: 12px">
-                    <span v-if="!hideSourceLinks && itemLink" class="text-label-small text-primary source-link">
+                <v-col
+                    class="d-flex align-center flex-wrap"
+                    style="gap: 12px"
+                >
+                    <span
+                        v-if="!hideSourceLinks && itemLink"
+                        class="text-label-small text-primary source-link"
+                    >
                         {{ itemLink }}
                     </span>
                 </v-col>
 
-                <v-col v-if="!analyzeSelector" cols="auto" class="d-flex align-center" style="gap: 4px">
+                <v-col
+                    v-if="!analyzeSelector"
+                    cols="auto"
+                    class="d-flex align-center"
+                    style="gap: 4px"
+                >
                     <AssessItemActions
                         :item="displayItem"
                         size="small"

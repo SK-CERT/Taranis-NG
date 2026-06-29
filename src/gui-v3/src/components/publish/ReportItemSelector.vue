@@ -1,12 +1,29 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <!-- Dialog Container -->
-        <v-dialog v-model="selectorOpen" fullscreen persistent>
-            <v-card flat class="d-flex flex-column" style="height: 100vh">
+        <v-dialog
+            v-model="selectorOpen"
+            fullscreen
+            persistent
+        >
+            <v-card
+                flat
+                class="d-flex flex-column"
+                style="height: 100vh"
+            >
                 <!-- Fixed header (toolbar + filter stay put while the list below scrolls) -->
                 <div class="flex-grow-0 flex-shrink-0">
-                    <v-toolbar color="primary" dark>
-                        <v-btn icon @click="handleClose">
+                    <v-toolbar
+                        color="primary"
+                        dark
+                    >
+                        <v-btn
+                            icon
+                            @click="handleClose"
+                        >
                             <v-icon>{{ ICONS.CLOSE }}</v-icon>
                         </v-btn>
                         <v-toolbar-title>{{ t('report_item.select') }}</v-toolbar-title>
@@ -19,7 +36,11 @@
                         </v-btn>
                     </v-toolbar>
 
-                    <ToolbarFilterAnalyze ref="toolbarFilter" :show-group-toolbar="false" @update-filter="updateFilter" />
+                    <ToolbarFilterAnalyze
+                        ref="toolbarFilter"
+                        :show-group-toolbar="false"
+                        @update-filter="updateFilter"
+                    />
                 </div>
 
                 <!-- Main Content (scrollable area) -->
@@ -40,10 +61,17 @@
         </v-dialog>
 
         <!-- New Report Item Dialog -->
-        <NewReportItem ref="reportItemDialog" :show-button="false" :read-only="readOnlySelector" />
+        <NewReportItem
+            ref="reportItemDialog"
+            :show-button="false"
+            :read-only="readOnlySelector"
+        />
 
         <!-- Selected Items Display -->
-        <div v-if="!selectorOpen" class="pt-2">
+        <div
+            v-if="!selectorOpen"
+            class="pt-2"
+        >
             <CardAnalyze
                 v-for="item in displayItems"
                 :key="item.id"

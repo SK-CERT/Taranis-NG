@@ -1,9 +1,20 @@
 <template>
-    <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="value-holder">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
+            >
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || value.remote" class="richtext-display pa-3 rounded">
+                <div
+                    v-if="readOnly || value.remote"
+                    class="richtext-display pa-3 rounded"
+                >
                     <div v-html="sanitizeHtml(value.value)" />
                 </div>
 

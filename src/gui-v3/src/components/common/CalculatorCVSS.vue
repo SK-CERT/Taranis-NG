@@ -11,29 +11,59 @@
         <v-icon>{{ ICONS.CALCULATOR }}</v-icon>
     </v-btn>
 
-    <v-dialog v-model="visible" fullscreen transition="dialog-bottom-transition">
-        <v-card class="d-flex flex-column" style="height: 100vh">
+    <v-dialog
+        v-model="visible"
+        fullscreen
+        transition="dialog-bottom-transition"
+    >
+        <v-card
+            class="d-flex flex-column"
+            style="height: 100vh"
+        >
             <!-- Sticky header -->
             <div class="calculator-header">
                 <v-toolbar color="primary">
-                    <v-btn icon @click="cancel">
+                    <v-btn
+                        icon
+                        @click="cancel"
+                    >
                         <v-icon>{{ ICONS.CLOSE_BOX }}</v-icon>
                     </v-btn>
                     <v-toolbar-title>{{ $t('cvss_calculator.title') }}</v-toolbar-title>
                     <v-spacer />
 
                     <!-- Version selector tabs -->
-                    <v-btn-toggle v-model="selectedVersion" mandatory density="compact" variant="outlined" class="mr-4">
-                        <v-btn v-for="ver in versionOptions" :key="ver" :value="ver" size="small">
+                    <v-btn-toggle
+                        v-model="selectedVersion"
+                        mandatory
+                        density="compact"
+                        variant="outlined"
+                        class="mr-4"
+                    >
+                        <v-btn
+                            v-for="ver in versionOptions"
+                            :key="ver"
+                            :value="ver"
+                            size="small"
+                        >
                             {{ ver }}
                         </v-btn>
                     </v-btn-toggle>
 
-                    <v-switch v-model="showTooltips" label="Tooltip" density="compact" hide-details class="mr-4" />
+                    <v-switch
+                        v-model="showTooltips"
+                        label="Tooltip"
+                        density="compact"
+                        hide-details
+                        class="mr-4"
+                    />
                 </v-toolbar>
 
                 <!-- Score Header -->
-                <v-sheet class="text-center pa-2" color="surface-variant">
+                <v-sheet
+                    class="text-center pa-2"
+                    color="surface-variant"
+                >
                     <v-text-field
                         v-model="vectorInput"
                         density="compact"
@@ -44,7 +74,10 @@
                         @update:model-value="onVectorInput"
                     />
                     <v-row class="ga-1">
-                        <v-col v-for="scoreItem in scoreDisplay" :key="scoreItem.name">
+                        <v-col
+                            v-for="scoreItem in scoreDisplay"
+                            :key="scoreItem.name"
+                        >
                             <v-sheet
                                 :color="scoreItem.color"
                                 rounded
@@ -67,7 +100,10 @@
             </div>
 
             <!-- Scrollable Metric Groups -->
-            <v-container fluid class="pa-4 metric-scroll">
+            <v-container
+                fluid
+                class="pa-4 metric-scroll"
+            >
                 <v-card
                     v-for="(group, groupIndex) in metricGroups"
                     :key="groupIndex"
@@ -77,16 +113,30 @@
                 >
                     <v-card-title class="text-uppercase text-body-1 font-weight-bold pa-3">
                         {{ group.label }}
-                        <v-icon v-if="showTooltips && group.tooltipKey" size="x-small" class="ml-1" :title="$t(group.tooltipKey)">
+                        <v-icon
+                            v-if="showTooltips && group.tooltipKey"
+                            size="x-small"
+                            class="ml-1"
+                            :title="$t(group.tooltipKey)"
+                        >
                             {{ ICONS.INFORMATION_OUTLINE }}
                         </v-icon>
                     </v-card-title>
 
                     <v-card-text class="pt-0">
-                        <div v-for="metric in group.metrics" :key="metric.shortName" class="mb-3">
+                        <div
+                            v-for="metric in group.metrics"
+                            :key="metric.shortName"
+                            class="mb-3"
+                        >
                             <div class="d-flex align-center mb-1">
                                 <span class="text-primary text-body-2">{{ metric.label }}</span>
-                                <v-icon v-if="showTooltips && metric.tooltipKey" size="x-small" class="ml-1" :title="$t(metric.tooltipKey)">
+                                <v-icon
+                                    v-if="showTooltips && metric.tooltipKey"
+                                    size="x-small"
+                                    class="ml-1"
+                                    :title="$t(metric.tooltipKey)"
+                                >
                                     {{ ICONS.INFORMATION_OUTLINE }}
                                 </v-icon>
                             </div>
@@ -104,7 +154,11 @@
                                     :title="showTooltips && val.tooltipKey ? $t(val.tooltipKey) : undefined"
                                 >
                                     <span>{{ val.label }}</span>
-                                    <v-icon size="small" color="primary" class="ml-1">
+                                    <v-icon
+                                        size="small"
+                                        color="primary"
+                                        class="ml-1"
+                                    >
                                         {{ 'mdi-alpha-' + val.shortName.toLowerCase() + '-box' }}
                                     </v-icon>
                                 </v-btn>
