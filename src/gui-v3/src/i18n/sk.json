@@ -599,7 +599,6 @@
         "save_first": "Najprv uložte položku reportu, aby ste mohli pridať novinky",
         "created": "Analýza bola úspešne vytvorená",
         "attributes": "Atribúty",
-        "side_by_side": "Zobraziť vedľa seba",
         "confirm_close": {
             "message": "Máte neuložené zmeny. Naozaj chcete zatvoriť túto analýzu?"
         },
@@ -669,7 +668,7 @@
                 "LAST_31_DAYS": "Zobraziť analýzy za posledných 31 dní"
             },
             "sort": {
-                "time": {
+                "date": {
                     "ascending": "Zoradiť podľa dátumu vytvorenia vzostupne",
                     "descending": "Zoradiť podľa dátumu vytvorenia zostupne"
                 }
@@ -700,8 +699,8 @@
         "published": "Publikované",
         "author": "Autor",
         "add_news_item": "Pridať novinku",
+        "attached_news_items": "Priložené novinky",
         "read_news_item": "Kliknutím zobrazíte",
-        "select_news_item": "Vybrať novinku",
         "aggregate_detail": "Detail zlúčenej novinky",
         "aggregate_info": "Info",
         "aggregate_title": "Názov",
@@ -712,6 +711,12 @@
         "download": "Stiahnuť",
         "total_count": "Počet noviniek: ",
         "selected_count": "Počet vybraných noviniek: ",
+        "no_items": "Novinky sa nenašli",
+        "item_updated": "Novinka bola úspešne aktualizovaná",
+        "item_deleted": "Novinka bola úspešne zmazaná",
+        "error_updating": "Aktualizácia novinky zlyhala",
+        "error_deleting": "Mazanie novinky zlyhalo",
+        "delete_confirmation": "Naozaj chcete zmazať túto novinku?",
         "tooltip": {
             "filter_all": "Aktuálne zobrazené: všetko",
             "filter_read": "Aktuálne zobrazené: prečítané",
@@ -752,7 +757,7 @@
             "important_items": "Označiť novinky ako dôležité",
             "like_items": "Páči sa mi",
             "dislike_items": "Nepáči sa mi",
-            "delete_items": "Odstrániť novinky",
+            "delete_items": "Zmazať novinky",
             "open_source": "Otvoriť zdroj novinky v novej karte",
             "ungroup_item": "Oddeliť novinku zo skupiny",
             "analyze_item": "Vytvoriť z novinky analýzu",
@@ -760,7 +765,7 @@
             "important_item": "Označiť ako dôležité",
             "like_item": "Páči sa mi",
             "dislike_item": "Nepáči sa mi",
-            "delete_item": "Odstrániť novinku",
+            "delete_item": "Zmazať novinku",
             "remove_item": "Odstrániť novinku",
             "show_reports": "Zobraziť analýzy obsahujúce túto položku"
         },
@@ -773,7 +778,7 @@
         "reports_dialog": {
             "title": "Analýzy obsahujúce túto položku",
             "no_reports": "Táto položka nie je v žiadnych analýzach",
-            "error_loading": "Chyba pri načítavaní analýz"
+            "error_loading": "Načítavanie analýz zlyhalo"
         },
         "select_all_success": "{count} položiek vybraných",
         "groups": "SKUPINY"
@@ -798,9 +803,13 @@
                 }
             },
             "compact_mode": "Toggle compact mode",
+            "toggle_selection": "Režim výberu publikácií",
+            "select_all": "Vybrať všetko",
+            "unselect_all": "Zrušiť výber",
             "delete_items": "Odstrániť publikácie",
             "delete_item": "Odstrániť publikáciu"
-        }
+        },
+        "select_all_success": "Označených {count} publikácií"
     },
     "toolbar_filter": {
         "search": "Hľadanie",
@@ -810,7 +819,18 @@
         "this_month": "Tento mesiac",
         "last_7_days": "Posledných 7 dní",
         "last_31_days": "Posledných 31 dní",
-        "custom_filter": "Vlastné filtrovanie"
+        "custom_filter": "Vlastné filtrovanie",
+        "total_count": "Celkový počet",
+        "currently_showing": "Zobrazujem",
+        "selected_count": "Vybraný počet",
+        "tooltip": {
+            "sort": {
+                "date": {
+                    "ascending": "Zoradiť podľa dátumu vzostupne",
+                    "descending": "Zoradiť podľa dátumu zostupne"
+                }
+            }
+        }
     },
     "settings": {
         "user_settings": "Nastavenie užívateľa",
@@ -951,10 +971,15 @@
         "attachment_detail": "Detail prílohy"
     },
     "error": {
+        "required": "Povinné pole",
         "aggregate_in_use": "Niektoré vybrané novinky alebo zlúčené novinky sú už pripojené k analýze",
         "server_error": "Neznámá chyba serveru...",
         "validation": "Prosím vyplnte všetky povinné polia",
-        "select_all_failed": "Zlyhalo vybratie všetkých položiek"
+        "select_all_failed": "Zlyhalo vybratie všetkých položiek",
+        "save_failed": "Uloženie zlyhalo",
+        "loading_data": "Načítanie zlyhalo",
+        "delete_failed": "Zmazanie zlyhalo",
+        "load_groups": "Načítanie skupín zlyhalo"
     },
     "confirm_close": {
         "title": "Neuložené zmeny",
@@ -963,12 +988,14 @@
         "close": "Zavrieť bez uloženia"
     },
     "common": {
-        "add": "Pridať",
         "add_btn": "Pridať",
+        "add_items": "Pridať položky",
         "save": "Uložiť",
         "edit": "Upraviť",
+        "done": "Hotovo",
         "up": "Presunúť vyššie",
         "down": "Presunúť nižšie",
+        "remove": "Odobrať",
         "delete": "Zmazať",
         "yes": "Áno",
         "no": "Nie",
@@ -980,16 +1007,17 @@
         "updated_successfully": "Úspešne aktualizované",
         "deleted_successfully": "Úspešne vymazané",
         "action_completed": "Akcia bola úspešne dokončená",
-        "error_saving": "Chyba pri ukladaní",
-        "error_creating": "Chyba pri vytváraní",
-        "error_updating": "Chyba pri aktualizácii",
-        "error_deleting": "Chyba pri mazaní",
+        "error_saving": "Uloženie zlyhalo",
+        "error_creating": "Vytváranie zlyhalo",
+        "error_updating": "Aktualizácia zlyhala",
+        "error_deleting": "Mazanie zlyhalo",
         "loading_more": "Načítavam ďalšie položky...",
         "end_of_list": "Koniec zoznamu",
         "messagebox": {
             "delete": "Ste si istý, že chcete zmazať túto položku?",
             "remove": "Ste si istý, že chcete odstrániť túto položku?"
-        }
+        },
+        "coming_soon": "Už čoskoro..."
     },
     "collectors": {
         "groups": {

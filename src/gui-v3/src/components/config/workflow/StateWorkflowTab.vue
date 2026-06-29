@@ -54,7 +54,11 @@
                     >
                         {{ item.state.icon }}
                     </v-icon>
-                    {{ item.state ? t(`workflow.states.${item.state.display_name}`, item.state.display_name) : '-' }}
+                    {{
+                        $te(`workflow.states.${item.state.display_name}`)
+                            ? $t(`workflow.states.${item.state.display_name}`)
+                            : item.state.display_name
+                    }}
                 </template>
 
                 <template #item.state_type="{ item }">

@@ -671,10 +671,6 @@
                 "date": {
                     "ascending": "Sort report items by creation date ascending",
                     "descending": "Sort report items by creation date descending"
-                },
-                "time": {
-                    "ascending": "Sort report items by creation date ascending",
-                    "descending": "Sort report items by creation date descending"
                 }
             },
             "compact_mode": "Toggle compact mode",
@@ -712,18 +708,9 @@
         "attributes": "Attributes",
         "title": "Title",
         "description": "Description",
-        "add_comment": "Add Comment",
         "download": "Download",
         "total_count": "News item count",
         "selected_count": "Selected news item count",
-        "all": "All",
-        "today": "Today",
-        "week": "This Week",
-        "month": "This Month",
-        "unread": "Unread",
-        "important": "Important",
-        "relevant": "Relevant",
-        "select": "Select",
         "no_items": "No news items found",
         "item_updated": "News item updated successfully",
         "item_deleted": "News item deleted successfully",
@@ -738,7 +725,6 @@
             "filter_unimportant": "Currently showing: unimportant",
             "filter_relevant": "Currently showing: relevant",
             "filter_irrelevant": "Currently showing: irrelevant",
-            "filter_in_analyze": "Show/hide news items in analysis",
             "range": {
                 "ALL": "Show all news items",
                 "TODAY": "Show today's news items",
@@ -781,7 +767,6 @@
             "dislike_item": "Dislike news item",
             "delete_item": "Delete news item",
             "remove_item": "Remove news item",
-            "remove_from_report": "Remove from report item",
             "show_reports": "Show reports containing this item"
         },
         "shortcuts": {
@@ -902,6 +887,7 @@
         "api_key": "API key"
     },
     "settings_enum": {
+        "CASCADE_STATES_ENABLED": "Automatic cascade state changes",
         "DARK_THEME": "Dark theme",
         "DATE_FORMAT": "Date format",
         "HOTKEYS": "Enable hotkeys",
@@ -960,6 +946,12 @@
             "state_required": "State Required",
             "entity_type_required": "Entity Type Required"
         },
+        "tags": {
+            "tab_description": "Here you can manage tags."
+        },
+        "tag_workflow": {
+            "tab_description": "Here you can manage tag associations with entities."
+        },
         "entity_types": {
             "report_item": "Report Item",
             "product": "Product"
@@ -968,12 +960,6 @@
             "normal": "Normal",
             "initial": "Initial",
             "final": "Final"
-        },
-        "tags": {
-            "tab_description": "Here you can manage tags."
-        },
-        "tag_workflow": {
-            "tab_description": "Here you can manage tag associations with entities."
         }
     },
     "drop_zone": {
@@ -985,7 +971,7 @@
         "attachment_detail": "Attachment Detail"
     },
     "error": {
-        "required": "Error selection is required",
+        "required": "Required field",
         "aggregate_in_use": "Some of selected aggregates or news items are already assigned to a report item",
         "server_error": "Unknown server error...",
         "validation": "Please fill in all required fields",
@@ -1030,7 +1016,8 @@
         "messagebox": {
             "delete": "Are you sure you want to delete following item?",
             "remove": "Are you sure you want to remove following item?"
-        }
+        },
+        "coming_soon": "Coming soon..."
     },
     "collectors": {
         "groups": {

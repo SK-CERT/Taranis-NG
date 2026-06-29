@@ -279,8 +279,7 @@ describe('Config Store', () => {
             const groups = store.osintSourceGroupsForAssess
             expect(groups[1]).toMatchObject({
                 title: 'collectors.groups.default_group',
-                translate: '1',
-                color: '#BDBDBD'
+                translate: true
             })
         })
 

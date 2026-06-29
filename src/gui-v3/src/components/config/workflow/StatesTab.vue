@@ -36,7 +36,7 @@
                 class="elevation-1"
             >
                 <template #item.display_name="{ item }">
-                    {{ t(`workflow.states.${item.display_name}`, item.display_name) }}
+                    {{ $te(`workflow.states.${item.display_name}`) ? $t(`workflow.states.${item.display_name}`) : item.display_name }}
                 </template>
 
                 <template #item.color="{ item }">

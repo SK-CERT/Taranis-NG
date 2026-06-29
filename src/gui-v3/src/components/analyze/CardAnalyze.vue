@@ -65,7 +65,11 @@
                                     {{ card.state.icon }}
                                 </v-icon>
                                 <span class="text-body-large ms-2">
-                                    {{ t('workflow.states.' + (card.state.display_name || ''), card.state.display_name || '') }}
+                                    {{
+                                        $te('workflow.states.' + card.state.display_name)
+                                            ? $t('workflow.states.' + card.state.display_name)
+                                            : card.state.display_name
+                                    }}
                                 </span>
                             </v-col>
                         </v-row>

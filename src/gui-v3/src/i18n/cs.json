@@ -532,10 +532,6 @@
                 "date": {
                     "ascending": "Seřadit analýzy podle data vytvoření vzestupně",
                     "descending": "Seřadit analýzy podle data vytvoření sestupně"
-                },
-                "time": {
-                    "ascending": "Seřadit analýzy podle data vytvoření vzestupně",
-                    "descending": "Seřadit analýzy podle data vytvoření sestupně"
                 }
             },
             "compact_mode": "Přepnout kompaktní režim",
@@ -580,7 +576,6 @@
             "filter_read": "Zobrazit nepřečtené novinky",
             "filter_important": "Zobrazit důležité novinky",
             "filter_relevant": "Zobrazit relevantní novinky",
-            "filter_in_analyze": "Zobrazit/Skrýt analyzované novinky",
             "range": {
                 "ALL": "Zobrazit všechny novinky",
                 "TODAY": "Zobrazit dnešní novinky",
@@ -622,7 +617,6 @@
             "dislike_item": "To se mi nelíbí",
             "delete_item": "Smazat novinku",
             "remove_item": "Odstranit novinku",
-            "remove_from_report": "Odstranit z reportu",
             "show_reports": "Zobrazit reporty obsahující tuto položku"
         },
         "shortcuts": {
@@ -741,6 +735,7 @@
         "api_key": "API klíč"
     },
     "settings_enum": {
+        "CASCADE_STATES_ENABLED": "Automatické kaskádové změny stavů",
         "DARK_THEME": "Tmavý motiv",
         "DATE_FORMAT": "Formát data",
         "HOTKEYS": "Povolit klávesové zkratky",
@@ -824,11 +819,11 @@
         "attachment_detail": "Detaily přílohy"
     },
     "error": {
+        "required": "Výběr chyby je povinný",
         "aggregate_in_use": "Některé vybrané novinky nebo sloučené novinky jsou již připojeny k analýze",
         "server_error": "Neznámá chyba serveru...",
         "validation": "Prosím vyplňte všechna povinná pole",
         "select_all_failed": "Selhalo vybrání všech položek",
-        "required": "Výběr chyby je povinný",
         "save_failed": "Uložení se nezdařilo",
         "loading_data": "Načítání dat selhalo",
         "delete_failed": "Smazání se nezdařilo",
@@ -857,7 +852,8 @@
         "messagebox": {
             "delete": "Jste si jisti, že chcete smazat tuto položku?",
             "remove": "Jste si jisti, že chcete odstranit tuto položku?"
-        }
+        },
+        "coming_soon": "Již brzy..."
     },
     "collectors": {
         "groups": {

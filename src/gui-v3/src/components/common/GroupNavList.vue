@@ -38,7 +38,7 @@
         icon?: string
         color?: string | null
         title: string
-        translate?: boolean | string
+        translate?: boolean | null
         route?: string
     }
 

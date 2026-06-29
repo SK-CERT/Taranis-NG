@@ -54,7 +54,7 @@ type AssessOSINTGroup = {
     icon: string
     color: string | null
     title: string
-    translate: string
+    translate: boolean | null
     route: string
     id: string | number
 }
@@ -103,9 +103,9 @@ export const useConfigStore = defineStore('config', () => {
         const groups: AssessOSINTGroup[] = []
         groups.push({
             icon: 'mdi-folder-multiple',
-            color: '#81D4FA',
+            color: null,
             title: 'collectors.groups.all',
-            translate: '1',
+            translate: true,
             route: '/assess/group/all',
             id: 'all'
         })
@@ -117,12 +117,11 @@ export const useConfigStore = defineStore('config', () => {
                 continue
             }
             let title = g.name || ''
-            let translate = ''
-            let color: string | null = null
+            let translate = false
+            const color: string | null = null
             if (g.default === true) {
                 title = 'collectors.groups.default_group'
-                translate = '1'
-                color = '#BDBDBD'
+                translate = true
             }
             groups.push({
                 icon: 'mdi-folder-multiple',
