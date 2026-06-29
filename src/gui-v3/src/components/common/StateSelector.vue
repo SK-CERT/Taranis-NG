@@ -14,7 +14,10 @@
     >
         <template #item="{ item, props }">
             <v-list-item v-bind="props">
-                <template v-if="item" #prepend>
+                <template
+                    v-if="item"
+                    #prepend
+                >
                     <v-icon :color="asStateItem(item).color">
                         {{ asStateItem(item).icon }}
                     </v-icon>
@@ -23,7 +26,10 @@
         </template>
         <template #selection="{ item }">
             <template v-if="item">
-                <v-icon :color="asStateItem(item).color" class="mr-2">
+                <v-icon
+                    :color="asStateItem(item).color"
+                    class="mr-2"
+                >
                     {{ asStateItem(item).icon }}
                 </v-icon>
                 <span>{{ getStateTitle(asStateItem(item)) }}</span>

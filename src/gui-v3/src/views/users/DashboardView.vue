@@ -6,7 +6,10 @@
         <template #content>
             <v-row>
                 <!-- Main Content - News Items & Tag Cloud -->
-                <v-col cols="12" lg="8">
+                <v-col
+                    cols="12"
+                    lg="8"
+                >
                     <v-card class="mt-2">
                         <v-card-text>
                             <div class="text-headline-medium mb-2">
@@ -27,7 +30,12 @@
                             />
 
                             <v-divider class="my-2" />
-                            <v-icon class="me-2" color="primary"> mdi-email-multiple </v-icon>
+                            <v-icon
+                                class="me-2"
+                                color="primary"
+                            >
+                                mdi-email-multiple
+                            </v-icon>
                             <span class="text-caption text-medium-emphasis">
                                 <strong>{{ dashboardData.total_news_items || 0 }}</strong>
                                 {{ t('dashboard.assess.total') }}
@@ -37,7 +45,10 @@
                 </v-col>
 
                 <!-- Sidebar - Stats Cards -->
-                <v-col cols="12" lg="4">
+                <v-col
+                    cols="12"
+                    lg="4"
+                >
                     <!-- Collection Status -->
                     <v-card class="mt-2">
                         <v-card-text>
@@ -50,15 +61,28 @@
                             <v-divider class="my-2" />
 
                             <div class="d-flex align-center mb-2">
-                                <v-icon class="me-2" color="green"> mdi-lightbulb-off-outline </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="green"
+                                >
+                                    mdi-lightbulb-off-outline
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     {{ t('dashboard.collect.pending') }}
                                 </span>
                             </div>
-                            <v-divider inset class="mb-2 mt-2" />
+                            <v-divider
+                                inset
+                                class="mb-2 mt-2"
+                            />
 
                             <div class="d-flex align-center">
-                                <v-icon class="me-2" color="primary"> mdi-clock-check-outline </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="primary"
+                                >
+                                    mdi-clock-check-outline
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     {{ t('dashboard.collect.last_attempt') }}
                                     <strong>{{ dashboardData.latest_collected || 'N/A' }}</strong>
@@ -79,10 +103,17 @@
                             <v-divider class="my-2" />
 
                             <!-- Dynamic state display -->
-                            <template v-for="(stateData, stateName) in dashboardData.report_item_states" :key="stateName">
+                            <template
+                                v-for="(stateData, stateName) in dashboardData.report_item_states"
+                                :key="stateName"
+                            >
                                 <div v-if="stateData.count > 0">
                                     <div class="d-flex align-center mb-2">
-                                        <v-icon class="me-2" :color="stateData.color" size="small">
+                                        <v-icon
+                                            class="me-2"
+                                            :color="stateData.color"
+                                            size="small"
+                                        >
                                             {{ stateData.icon }}
                                         </v-icon>
                                         <span class="text-caption text-medium-emphasis">
@@ -91,13 +122,21 @@
                                             {{ t('dashboard.analyze.report_items') }}
                                         </span>
                                     </div>
-                                    <v-divider inset class="mb-2" />
+                                    <v-divider
+                                        inset
+                                        class="mb-2"
+                                    />
                                 </div>
                             </template>
 
                             <!-- Total summary -->
                             <div class="d-flex align-center mt-2">
-                                <v-icon class="me-2" color="primary"> mdi-file-document </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="primary"
+                                >
+                                    mdi-file-document
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     <strong>{{ dashboardData.total_report_items || 0 }}</strong>
                                     {{ t('dashboard.analyze.total') }}
@@ -118,10 +157,17 @@
                             <v-divider class="my-2" />
 
                             <!-- Dynamic state display -->
-                            <template v-for="(stateData, stateName) in dashboardData.product_states" :key="stateName">
+                            <template
+                                v-for="(stateData, stateName) in dashboardData.product_states"
+                                :key="stateName"
+                            >
                                 <div v-if="stateData.count > 0">
                                     <div class="d-flex align-center mb-2">
-                                        <v-icon class="me-2" :color="stateData.color" size="small">
+                                        <v-icon
+                                            class="me-2"
+                                            :color="stateData.color"
+                                            size="small"
+                                        >
                                             {{ stateData.icon }}
                                         </v-icon>
                                         <span class="text-caption text-medium-emphasis">
@@ -130,13 +176,21 @@
                                             {{ t('dashboard.publish.products') }}
                                         </span>
                                     </div>
-                                    <v-divider inset class="mb-2" />
+                                    <v-divider
+                                        inset
+                                        class="mb-2"
+                                    />
                                 </div>
                             </template>
 
                             <!-- Total summary -->
                             <div class="d-flex align-center mt-2">
-                                <v-icon class="me-2" color="primary"> mdi-package-variant </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="primary"
+                                >
+                                    mdi-package-variant
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     <strong>{{ dashboardData.total_products || 0 }}</strong>
                                     {{ t('dashboard.publish.total') }}
@@ -155,7 +209,12 @@
 
                             <!-- Version Info -->
                             <div class="d-flex align-center mb-2">
-                                <v-icon class="me-2" color="blue"> mdi-information-outline </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="blue"
+                                >
+                                    mdi-information-outline
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     {{ t('dashboard.about.version') }}
                                     <strong>{{ appVersion }}</strong>
@@ -164,9 +223,17 @@
                             </div>
 
                             <!-- Commit Info -->
-                            <v-divider inset class="my-2" />
+                            <v-divider
+                                inset
+                                class="my-2"
+                            />
                             <div class="d-flex align-center mb-2">
-                                <v-icon class="me-2" color="blue"> mdi-source-branch </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="blue"
+                                >
+                                    mdi-source-branch
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     {{ t('dashboard.about.commit') }}
                                     <strong>{{ commit }}</strong>
@@ -175,9 +242,17 @@
                             </div>
 
                             <!-- Database Records -->
-                            <v-divider inset class="my-2" />
+                            <v-divider
+                                inset
+                                class="my-2"
+                            />
                             <div class="d-flex align-center">
-                                <v-icon class="me-2" color="blue"> mdi-database </v-icon>
+                                <v-icon
+                                    class="me-2"
+                                    color="blue"
+                                >
+                                    mdi-database
+                                </v-icon>
                                 <span class="text-caption text-medium-emphasis">
                                     <strong>{{ dashboardData.total_database_items || 0 }}</strong>
                                     {{ t('dashboard.about.total') }}

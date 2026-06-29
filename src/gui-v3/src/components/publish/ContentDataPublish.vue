@@ -1,6 +1,14 @@
 <template>
-    <v-container id="selector_publish" fluid class="pa-2">
-        <TransitionGroup name="card-list" tag="div" class="w-100">
+    <v-container
+        id="selector_publish"
+        fluid
+        class="pa-2"
+    >
+        <TransitionGroup
+            name="card-list"
+            tag="div"
+            class="w-100"
+        >
             <component
                 :is="currentCard"
                 v-for="collection in collections"
@@ -16,13 +24,22 @@
             class="mt-4"
             style="min-height: 100px; display: flex; align-items: center; justify-content: center"
         >
-            <div v-if="!dataLoaded" class="text-center text-grey">
-                <v-progress-circular indeterminate size="small" />
+            <div
+                v-if="!dataLoaded"
+                class="text-center text-grey"
+            >
+                <v-progress-circular
+                    indeterminate
+                    size="small"
+                />
                 <p class="text-caption mt-2">
                     {{ t('common.loading_more') }}
                 </p>
             </div>
-            <div v-else class="text-caption text-grey">
+            <div
+                v-else
+                class="text-caption text-grey"
+            >
                 {{ t('common.end_of_list') }}
             </div>
         </div>

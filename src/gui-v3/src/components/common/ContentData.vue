@@ -1,5 +1,8 @@
 <template>
-    <v-container fluid class="pa-4">
+    <v-container
+        fluid
+        class="pa-4"
+    >
         <component
             :is="cardComponent"
             v-for="item in typedItems"
@@ -12,9 +15,19 @@
         />
 
         <!-- Empty state -->
-        <v-row v-if="items.length === 0" justify="center" class="mt-8">
-            <v-col cols="12" class="text-center">
-                <v-icon size="64" color="grey-lighten-1">
+        <v-row
+            v-if="items.length === 0"
+            justify="center"
+            class="mt-8"
+        >
+            <v-col
+                cols="12"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey-lighten-1"
+                >
                     {{ ICONS.DATABASE_OFF }}
                 </v-icon>
                 <p class="text-h6 text-grey-lighten-1 mt-4">
@@ -24,9 +37,19 @@
         </v-row>
 
         <!-- Loading indicator -->
-        <v-row v-if="loading" justify="center" class="mt-4">
-            <v-col cols="12" class="text-center">
-                <v-progress-circular indeterminate color="primary" />
+        <v-row
+            v-if="loading"
+            justify="center"
+            class="mt-4"
+        >
+            <v-col
+                cols="12"
+                class="text-center"
+            >
+                <v-progress-circular
+                    indeterminate
+                    color="primary"
+                />
             </v-col>
         </v-row>
     </v-container>

@@ -1,5 +1,9 @@
 <template>
-    <GroupNavList :groups="groups" :active-id="activeGroupId" @select="onSelect" />
+    <GroupNavList
+        :groups="groups"
+        :active-id="activeGroupId"
+        @select="onSelect"
+    />
 </template>
 
 <script setup lang="ts">

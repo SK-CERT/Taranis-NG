@@ -1,12 +1,25 @@
 <template>
-    <v-snackbar v-model="show" :color="color" :timeout="timeout === 0 ? -1 : timeout" location="top right" transition="slide-y-transition">
+    <v-snackbar
+        v-model="show"
+        :color="color"
+        :timeout="timeout === 0 ? -1 : timeout"
+        location="top right"
+        transition="slide-y-transition"
+    >
         <div class="d-flex align-center">
-            <v-icon :icon="icon" class="mr-3" />
+            <v-icon
+                :icon="icon"
+                class="mr-3"
+            />
             <span>{{ message }}</span>
         </div>
 
         <template #actions>
-            <v-btn variant="text" :icon="ICONS.CLOSE" @click="show = false" />
+            <v-btn
+                variant="text"
+                :icon="ICONS.CLOSE"
+                @click="show = false"
+            />
         </template>
     </v-snackbar>
 </template>

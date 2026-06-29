@@ -1,10 +1,20 @@
 <template>
-    <v-app class="taranis" :data-theme="theme.global.name.value">
+    <v-app
+        class="taranis"
+        :data-theme="theme.global.name.value"
+    >
         <!-- Main Menu (top bar) - only shown when authenticated -->
         <MainMenu v-if="isAuth" />
 
         <!-- Side navigation drawer - only shown when authenticated -->
-        <v-navigation-drawer v-if="isAuth" v-model="navVisible" width="100" rail rail-width="100" color="cx-drawer-bg">
+        <v-navigation-drawer
+            v-if="isAuth"
+            v-model="navVisible"
+            width="100"
+            rail
+            rail-width="100"
+            color="cx-drawer-bg"
+        >
             <router-view name="nav" />
         </v-navigation-drawer>
 

@@ -1,12 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="presets" :title="t('publishers.presets.tab_description')">
-                <v-icon :icon="ICONS.FILE_STAR_OUTLINE" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="presets"
+                :title="t('publishers.presets.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.FILE_STAR_OUTLINE"
+                    start
+                />
                 Publisher Presets
             </v-tab>
-            <v-tab value="nodes" :title="t('publishers.nodes.tab_description')">
-                <v-icon :icon="ICONS.SERVER_NETWORK" start />
+            <v-tab
+                value="nodes"
+                :title="t('publishers.nodes.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SERVER_NETWORK"
+                    start
+                />
                 Publishers Nodes
             </v-tab>
         </v-tabs>

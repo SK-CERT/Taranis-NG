@@ -1,5 +1,8 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <!-- Toolbar -->
         <ToolbarFilter
             :total-count="configStore.remoteAccess.total_count"
@@ -7,7 +10,10 @@
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
-                <NewRemoteAccess :edit-item="editItem" @saved="handleSaved" />
+                <NewRemoteAccess
+                    :edit-item="editItem"
+                    @saved="handleSaved"
+                />
             </template>
         </ToolbarFilter>
 

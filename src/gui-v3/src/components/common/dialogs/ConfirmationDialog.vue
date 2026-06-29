@@ -1,8 +1,17 @@
 <template>
-    <v-dialog v-model="isOpen" :max-width="maxWidth">
+    <v-dialog
+        v-model="isOpen"
+        :max-width="maxWidth"
+    >
         <v-card>
-            <v-card-title class="d-flex align-center" style="white-space: normal">
-                <v-icon color="error" class="mr-2">
+            <v-card-title
+                class="d-flex align-center"
+                style="white-space: normal"
+            >
+                <v-icon
+                    color="error"
+                    class="mr-2"
+                >
                     {{ ICONS.ALERT_CIRCLE }}
                 </v-icon>
                 {{ t(titleKey) }}
@@ -12,10 +21,17 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="text" @click="isOpen = false">
+                <v-btn
+                    variant="text"
+                    @click="isOpen = false"
+                >
                     {{ t('common.cancel') }}
                 </v-btn>
-                <v-btn color="error" variant="text" @click="confirmDelete">
+                <v-btn
+                    color="error"
+                    variant="text"
+                    @click="confirmDelete"
+                >
                     {{ t(confirmLabelKey) }}
                 </v-btn>
             </v-card-actions>

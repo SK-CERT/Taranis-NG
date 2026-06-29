@@ -9,7 +9,10 @@
             @click="emit('select', group)"
         >
             <div class="d-flex flex-column align-center text-center">
-                <v-icon :color="group.color || undefined" class="mb-2">
+                <v-icon
+                    :color="group.color || undefined"
+                    class="mb-2"
+                >
                     {{ group.icon }}
                 </v-icon>
                 <span class="text-body-small">

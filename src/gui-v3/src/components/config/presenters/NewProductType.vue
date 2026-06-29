@@ -1,7 +1,16 @@
 <template>
-    <v-dialog v-model="dialog" max-width="800" persistent scrollable>
+    <v-dialog
+        v-model="dialog"
+        max-width="800"
+        persistent
+        scrollable
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" @click="openCreateDialog" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+                @click="openCreateDialog"
+            />
         </template>
 
         <v-card>
@@ -14,7 +23,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-select
                         v-model="selectedNode"
                         :items="nodes"
@@ -72,13 +84,22 @@
                         <div class="d-flex align-center mb-3">
                             <h3 class="text-subtitle-1">Parameters</h3>
                             <v-spacer />
-                            <v-btn color="primary" variant="tonal" size="small" @click="helpDialog = true">
+                            <v-btn
+                                color="primary"
+                                variant="tonal"
+                                size="small"
+                                @click="helpDialog = true"
+                            >
                                 <v-icon start>mdi-help-circle</v-icon>
                                 {{ t('presenters.types.help') }}
                             </v-btn>
                         </div>
 
-                        <div v-for="(param, index) in selectedPresenter.parameters" :key="param.id ?? param.key ?? index" class="mb-3">
+                        <div
+                            v-for="(param, index) in selectedPresenter.parameters"
+                            :key="param.id ?? param.key ?? index"
+                            class="mb-3"
+                        >
                             <v-text-field
                                 v-model="parameterValues[index]"
                                 :label="String(param.name || param.key || '')"
@@ -87,8 +108,15 @@
                                 :disabled="saving || !canUpdate"
                                 :placeholder="String(param.default_value ?? '')"
                             >
-                                <template v-if="param.description" #append-inner>
-                                    <v-icon color="primary" :title="String(param.description)">mdi-help-circle</v-icon>
+                                <template
+                                    v-if="param.description"
+                                    #append-inner
+                                >
+                                    <v-icon
+                                        color="primary"
+                                        :title="String(param.description)"
+                                        >mdi-help-circle</v-icon
+                                    >
                                 </template>
                             </v-text-field>
                         </div>
@@ -106,14 +134,29 @@
                     {{ t('error.validation') }}
                 </v-alert>
 
-                <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
+                <v-alert
+                    v-if="showError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showError = false"
+                >
                     {{ t('presenters.types.error') }}
                 </v-alert>
 
                 <!-- Template variables help -->
-                <v-dialog v-model="helpDialog" max-width="1200" scrollable>
+                <v-dialog
+                    v-model="helpDialog"
+                    max-width="1200"
+                    scrollable
+                >
                     <v-card>
-                        <DialogToolbar :title="t('presenters.types.help')" :show-save="false" @cancel="helpDialog = false" />
+                        <DialogToolbar
+                            :title="t('presenters.types.help')"
+                            :show-save="false"
+                            @cancel="helpDialog = false"
+                        />
                         <v-card-text>
                             <v-select
                                 v-model="selectedReportType"
@@ -128,11 +171,18 @@
 
                             <div v-if="selectedReportType">
                                 <!-- Report items -->
-                                <v-card variant="outlined" class="mb-3">
+                                <v-card
+                                    variant="outlined"
+                                    class="mb-3"
+                                >
                                     <v-card-title class="text-subtitle-1">{{ t('presenters.types.report_items') }}</v-card-title>
                                     <v-card-text>
                                         <div class="tpl-line">{% for report_item in data.report_items %}</div>
-                                        <div v-for="key in reportItemVars" :key="key" class="tpl-row ml-4">
+                                        <div
+                                            v-for="key in reportItemVars"
+                                            :key="key"
+                                            class="tpl-row ml-4"
+                                        >
                                             <strong>{{ t('presenters.types.report_items_object.' + key) }}</strong
                                             >:
                                             <code class="tpl-var">{{ variableUsage(key) }}</code>
@@ -142,12 +192,19 @@
                                 </v-card>
 
                                 <!-- News items -->
-                                <v-card variant="outlined" class="mb-3">
+                                <v-card
+                                    variant="outlined"
+                                    class="mb-3"
+                                >
                                     <v-card-title class="text-subtitle-1">{{ t('presenters.types.news_items') }}</v-card-title>
                                     <v-card-text>
                                         <div class="tpl-line">{% for report_item in data.report_items %}</div>
                                         <div class="tpl-line ml-4">{% for news_item in report_item.news_items %}</div>
-                                        <div v-for="key in newsItemVars" :key="key" class="tpl-row ml-8">
+                                        <div
+                                            v-for="key in newsItemVars"
+                                            :key="key"
+                                            class="tpl-row ml-8"
+                                        >
                                             <strong>{{ t('presenters.types.news_items_object.' + key) }}</strong
                                             >:
                                             <code class="tpl-var">{{ variableUsageNewsItems(key) }}</code>

@@ -1,7 +1,14 @@
 <template>
-    <v-dialog v-model="dialog" max-width="600" persistent>
+    <v-dialog
+        v-model="dialog"
+        max-width="600"
+        persistent
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+            />
         </template>
 
         <v-card>
@@ -13,7 +20,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-text-field
                         v-model="localItem.username"
                         :label="t('external_user.username')"
@@ -54,7 +64,14 @@
                     {{ t('error.validation') }}
                 </v-alert>
 
-                <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
+                <v-alert
+                    v-if="showError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showError = false"
+                >
                     {{ t('external_user.error') }}
                 </v-alert>
             </v-card-text>

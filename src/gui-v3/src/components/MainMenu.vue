@@ -1,11 +1,26 @@
 <template>
-    <v-app-bar app clipped-left density="compact" color="surface">
+    <v-app-bar
+        app
+        clipped-left
+        density="compact"
+        color="surface"
+    >
         <!-- Menu toggle button -->
-        <v-app-bar-nav-icon v-if="isAuthenticated" color="white" @click="toggleNav" />
+        <v-app-bar-nav-icon
+            v-if="isAuthenticated"
+            color="white"
+            @click="toggleNav"
+        />
 
         <!-- Logo -->
         <div class="d-flex align-center justify-start">
-            <v-img :src="isDark ? darkLogo : lightLogo" alt="Taranis NG" contain height="48" width="auto" />
+            <v-img
+                :src="isDark ? darkLogo : lightLogo"
+                alt="Taranis NG"
+                contain
+                height="48"
+                width="auto"
+            />
         </div>
 
         <v-spacer />
@@ -26,7 +41,10 @@
             </v-btn>
         </template>
 
-        <v-divider vertical class="mx-2" />
+        <v-divider
+            vertical
+            class="mx-2"
+        />
 
         <!-- User menu -->
         <UserMenu v-if="isAuthenticated" />

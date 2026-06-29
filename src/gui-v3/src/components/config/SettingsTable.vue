@@ -12,12 +12,21 @@
     >
         <template #top>
             <v-row class="pa-2">
-                <v-col cols="12" md="4">
-                    <div v-if="globalSetting" class="text-h6">
+                <v-col
+                    cols="12"
+                    md="4"
+                >
+                    <div
+                        v-if="globalSetting"
+                        class="text-h6"
+                    >
                         {{ t('nav_menu.settings') }}
                     </div>
                 </v-col>
-                <v-col cols="12" md="8">
+                <v-col
+                    cols="12"
+                    md="8"
+                >
                     <v-text-field
                         v-model="search"
                         :label="t('toolbar_filter.search')"
@@ -60,14 +69,22 @@
 
             <!-- Text input with edit dialog -->
             <template v-else>
-                <v-chip :color="getColor(item.value, item.default_val)" label clickable @click="openEditDialog(item)">
+                <v-chip
+                    :color="getColor(item.value, item.default_val)"
+                    label
+                    clickable
+                    @click="openEditDialog(item)"
+                >
                     {{ item.value }}
                 </v-chip>
             </template>
         </template>
 
         <template #item.description="{ item }">
-            <span style="cursor: help" :title="`${t('settings.default_value')}: ${item.default_val}`">
+            <span
+                style="cursor: help"
+                :title="`${t('settings.default_value')}: ${item.default_val}`"
+            >
                 {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
             </span>
         </template>
@@ -78,7 +95,10 @@
     </v-data-table>
 
     <!-- Edit Dialog for text values -->
-    <v-dialog v-model="editDialog" max-width="500">
+    <v-dialog
+        v-model="editDialog"
+        max-width="500"
+    >
         <v-card>
             <v-card-title>{{ t('settings.update_value') }}</v-card-title>
             <v-card-text>
@@ -94,10 +114,17 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer />
-                <v-btn variant="text" @click="editDialog = false">
+                <v-btn
+                    variant="text"
+                    @click="editDialog = false"
+                >
                     {{ t('common.cancel') }}
                 </v-btn>
-                <v-btn color="primary" variant="text" @click="saveEdit">
+                <v-btn
+                    color="primary"
+                    variant="text"
+                    @click="saveEdit"
+                >
                     {{ t('common.save') }}
                 </v-btn>
             </v-card-actions>

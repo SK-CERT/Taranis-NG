@@ -1,25 +1,48 @@
 <template>
-    <v-dialog v-model="isOpen" max-width="900px" @click:outside="close">
+    <v-dialog
+        v-model="isOpen"
+        max-width="900px"
+        @click:outside="close"
+    >
         <v-card>
-            <v-toolbar color="primary" dark flat>
+            <v-toolbar
+                color="primary"
+                dark
+                flat
+            >
                 <v-toolbar-title>
                     {{ t('assess.reports_dialog.title') }}
                 </v-toolbar-title>
                 <v-spacer />
-                <v-btn icon @click="close">
+                <v-btn
+                    icon
+                    @click="close"
+                >
                     <v-icon>{{ ICONS.CLOSE_BOX }}</v-icon>
                 </v-btn>
             </v-toolbar>
 
             <v-card-text class="pa-4">
                 <!-- Loading state -->
-                <div v-if="loading" class="text-center pa-4">
-                    <v-progress-circular indeterminate color="primary" />
+                <div
+                    v-if="loading"
+                    class="text-center pa-4"
+                >
+                    <v-progress-circular
+                        indeterminate
+                        color="primary"
+                    />
                 </div>
 
                 <!-- Error state -->
-                <div v-else-if="error" class="text-center pa-4">
-                    <v-icon color="error" size="large">
+                <div
+                    v-else-if="error"
+                    class="text-center pa-4"
+                >
+                    <v-icon
+                        color="error"
+                        size="large"
+                    >
                         {{ ICONS.ALERT_CIRCLE }}
                     </v-icon>
                     <p class="mt-2">
@@ -28,7 +51,10 @@
                 </div>
 
                 <!-- List view -->
-                <div v-else-if="reports.length === 0" class="text-center pa-4">
+                <div
+                    v-else-if="reports.length === 0"
+                    class="text-center pa-4"
+                >
                     <v-icon size="large">
                         {{ ICONS.INFORMATION_OUTLINE }}
                     </v-icon>
@@ -37,8 +63,15 @@
                     </p>
                 </div>
 
-                <div v-else class="space-y-3">
-                    <div v-for="report in reports" :key="report.id" class="d-flex align-center ga-2">
+                <div
+                    v-else
+                    class="space-y-3"
+                >
+                    <div
+                        v-for="report in reports"
+                        :key="report.id"
+                        class="d-flex align-center ga-2"
+                    >
                         <div class="flex-grow-1">
                             <CardAnalyze
                                 :card="toAnalyzeCard(report)"

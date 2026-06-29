@@ -1,5 +1,8 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <!-- Toolbar -->
         <ToolbarFilter
             :total-count="configStore.osintSourceGroups.total_count"
@@ -7,7 +10,10 @@
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
-                <NewOSINTSourceGroup :edit-item="editItem" @saved="handleSaved" />
+                <NewOSINTSourceGroup
+                    :edit-item="editItem"
+                    @saved="handleSaved"
+                />
             </template>
         </ToolbarFilter>
 

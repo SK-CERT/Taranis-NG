@@ -1,15 +1,37 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab v-for="tab in availableTabs" :key="tab.value" :value="tab.value" :title="t(tab.description)">
-                <v-icon :icon="tab.icon" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+                :title="t(tab.description)"
+            >
+                <v-icon
+                    :icon="tab.icon"
+                    start
+                />
                 {{ t(tab.title) }}
             </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-            <v-window-item v-for="tab in availableTabs" :key="tab.value" :value="tab.value">
-                <component :is="tab.component" v-if="activeTab === tab.value" />
+            <v-window-item
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+            >
+                <component
+                    :is="tab.component"
+                    v-if="activeTab === tab.value"
+                />
             </v-window-item>
         </v-window>
     </v-container>

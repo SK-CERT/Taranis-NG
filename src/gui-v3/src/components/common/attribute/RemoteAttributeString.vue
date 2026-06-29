@@ -1,7 +1,14 @@
 <template>
-    <AttributeItemLayout :add-button="false" :values="attributeGroup.attributes">
+    <AttributeItemLayout
+        :add-button="false"
+        :values="attributeGroup.attributes"
+    >
         <template #content>
-            <div v-for="value in attributeGroup.attributes" :key="value.id" class="remote-value">
+            <div
+                v-for="value in attributeGroup.attributes"
+                :key="value.id"
+                class="remote-value"
+            >
                 <span class="text-sm text-gray-300">{{ value.value }}</span>
             </div>
         </template>

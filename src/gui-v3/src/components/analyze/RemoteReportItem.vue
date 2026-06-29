@@ -1,8 +1,19 @@
 <template>
-    <v-dialog v-model="visible" fullscreen persistent @keydown.esc="handleClose">
+    <v-dialog
+        v-model="visible"
+        fullscreen
+        persistent
+        @keydown.esc="handleClose"
+    >
         <v-card>
-            <v-toolbar color="primary" dark>
-                <v-btn icon @click="handleClose">
+            <v-toolbar
+                color="primary"
+                dark
+            >
+                <v-btn
+                    icon
+                    @click="handleClose"
+                >
                     <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
                 <v-toolbar-title>{{ reportItem.title }}</v-toolbar-title>
@@ -28,7 +39,10 @@
                         :report-item-id="Number(reportItem.id || 0)"
                     />
                 </v-container>
-                <v-alert v-else type="info">
+                <v-alert
+                    v-else
+                    type="info"
+                >
                     {{ t('report_item.no_attributes') }}
                 </v-alert>
             </v-card-text>

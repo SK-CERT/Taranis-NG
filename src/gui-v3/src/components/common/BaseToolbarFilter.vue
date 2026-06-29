@@ -1,14 +1,27 @@
 <template>
-    <v-container fluid class="py-0">
+    <v-container
+        fluid
+        class="py-0"
+    >
         <!-- Main Toolbar: Title and Search -->
-        <v-toolbar flat color="surface" density="compact">
+        <v-toolbar
+            flat
+            color="surface"
+            density="compact"
+        >
             <v-row align="center">
-                <v-col cols="12" md="3">
+                <v-col
+                    cols="12"
+                    md="3"
+                >
                     <div class="text-h6">
                         {{ t(title) }}
                     </div>
                 </v-col>
-                <v-col cols="6" md="4">
+                <v-col
+                    cols="6"
+                    md="4"
+                >
                     <v-text-field
                         v-model="localFilter.search"
                         :prepend-inner-icon="ICONS.MAGNIFY"
@@ -19,9 +32,20 @@
                         @update:model-value="handleSearch"
                     />
                 </v-col>
-                <v-col cols="12" md="5" style="display: flex; justify-content: flex-end; align-items: center">
-                    <AddNewButton v-if="showAddButton" label="common.add_btn" @click="emit('add-new')" />
-                    <slot v-else name="addbutton" />
+                <v-col
+                    cols="12"
+                    md="5"
+                    style="display: flex; justify-content: flex-end; align-items: center"
+                >
+                    <AddNewButton
+                        v-if="showAddButton"
+                        label="common.add_btn"
+                        @click="emit('add-new')"
+                    />
+                    <slot
+                        v-else
+                        name="addbutton"
+                    />
                 </v-col>
             </v-row>
         </v-toolbar>
@@ -29,10 +53,17 @@
         <v-divider />
 
         <!-- Filter Toolbar -->
-        <v-toolbar flat color="surface" density="compact">
+        <v-toolbar
+            flat
+            color="surface"
+            density="compact"
+        >
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%">
                 <!-- Day Range Filters (optional) -->
-                <div v-if="showDayRanges" style="display: flex; gap: 4px; flex-wrap: wrap">
+                <div
+                    v-if="showDayRanges"
+                    style="display: flex; gap: 4px; flex-wrap: wrap"
+                >
                     <v-chip
                         v-for="day in typedDayRanges"
                         :key="day.value"
@@ -46,16 +77,34 @@
                     </v-chip>
                 </div>
 
-                <v-divider v-if="showDayRanges && (hasCustomFilters || showSort)" vertical />
+                <v-divider
+                    v-if="showDayRanges && (hasCustomFilters || showSort)"
+                    vertical
+                />
 
                 <!-- Custom Filters Slot -->
-                <slot name="custom-filters" :filter="localFilter" :emit-filter="emitFilter" />
+                <slot
+                    name="custom-filters"
+                    :filter="localFilter"
+                    :emit-filter="emitFilter"
+                />
 
-                <div v-if="hasCustomFilters && showSort" style="flex-grow: 1" />
+                <div
+                    v-if="hasCustomFilters && showSort"
+                    style="flex-grow: 1"
+                />
 
                 <!-- Sort Buttons (optional) -->
-                <div v-if="showSort" style="display: flex; gap: 4px; flex-wrap: wrap">
-                    <slot name="sort-buttons" :filter="localFilter" :emit-filter="emitFilter" :toggle-date-sort="toggleDateSort">
+                <div
+                    v-if="showSort"
+                    style="display: flex; gap: 4px; flex-wrap: wrap"
+                >
+                    <slot
+                        name="sort-buttons"
+                        :filter="localFilter"
+                        :emit-filter="emitFilter"
+                        :toggle-date-sort="toggleDateSort"
+                    >
                         <!-- Default: Single date sort toggle button -->
                         <v-chip
                             :color="localFilter.sort === 'DATE_DESC' || localFilter.sort === 'DATE_ASC' ? 'primary' : 'default'"
@@ -77,14 +126,21 @@
         <v-divider />
 
         <!-- Count Information Toolbar (Total and Selected) -->
-        <v-toolbar flat color="surface" density="compact">
+        <v-toolbar
+            flat
+            color="surface"
+            density="compact"
+        >
             <span class="text-caption text-medium-emphasis">
                 {{ $t('toolbar_filter.total_count') }}: <strong>{{ totalCount }}</strong>
                 <span v-if="currentlyShowingCount !== undefined">
                     ({{ t('toolbar_filter.currently_showing') }}: <strong>{{ currentlyShowingCount }}</strong
                     >)
                 </span>
-                <span v-if="showSelectedCount" class="text-caption text-medium-emphasis">
+                <span
+                    v-if="showSelectedCount"
+                    class="text-caption text-medium-emphasis"
+                >
                     {{ $t('toolbar_filter.selected_count') }}: <strong>{{ selectedCount }}</strong>
                 </span>
             </span>

@@ -15,14 +15,27 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
-                        <NewUser :edit-item="editItem" @saved="handleSaved" @update:model-value="onDialogChange" />
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
+                        <NewUser
+                            :edit-item="editItem"
+                            @saved="handleSaved"
+                            @update:model-value="onDialogChange"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.users.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="configStore.users.items"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.username="{ item }">
                     <strong>{{ asUserItem(item).username }}</strong>
                 </template>
@@ -32,19 +45,38 @@
                 </template>
 
                 <template #item.organizations="{ item }">
-                    <v-chip v-for="org in asUserItem(item).organizations || []" :key="org.id" size="small" class="mr-1">
+                    <v-chip
+                        v-for="org in asUserItem(item).organizations || []"
+                        :key="org.id"
+                        size="small"
+                        class="mr-1"
+                    >
                         {{ org.name }}
                     </v-chip>
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asUserItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asUserItem(item))" />
+                    <ActionButton
+                        action="edit"
+                        :title="t('common.edit')"
+                        class="mr-1"
+                        @click="handleEdit(asUserItem(item))"
+                    />
+                    <ActionButton
+                        action="delete"
+                        :title="t('common.delete')"
+                        @click="handleDelete(asUserItem(item))"
+                    />
                 </template>
             </v-data-table>
         </v-card>
 
-        <ConfirmationDialog v-model="deleteDialog" :message="itemToDelete?.username || ''" max-width="600px" @confirm="confirmDelete" />
+        <ConfirmationDialog
+            v-model="deleteDialog"
+            :message="itemToDelete?.username || ''"
+            max-width="600px"
+            @confirm="confirmDelete"
+        />
     </v-container>
 </template>
 

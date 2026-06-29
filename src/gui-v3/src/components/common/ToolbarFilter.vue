@@ -1,8 +1,17 @@
 <template>
-    <v-container fluid class="pa-4">
+    <v-container
+        fluid
+        class="pa-4"
+    >
         <!-- Search and Counts -->
-        <v-row class="mb-2" align="center">
-            <v-col cols="12" md="9">
+        <v-row
+            class="mb-2"
+            align="center"
+        >
+            <v-col
+                cols="12"
+                md="9"
+            >
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap">
                     <v-text-field
                         v-model="filter.search"
@@ -15,17 +24,28 @@
                         style="flex: 0 1 auto; min-width: 250px"
                         @update:model-value="debounceSearch"
                     />
-                    <div class="text-caption text-grey" style="white-space: nowrap; flex-shrink: 0">
+                    <div
+                        class="text-caption text-grey"
+                        style="white-space: nowrap; flex-shrink: 0"
+                    >
                         {{ t(totalCountTitle) }}:
                         <strong>{{ totalCount }}</strong>
                     </div>
-                    <div v-if="showSelectedCount" class="text-caption text-grey" style="white-space: nowrap; flex-shrink: 0">
+                    <div
+                        v-if="showSelectedCount"
+                        class="text-caption text-grey"
+                        style="white-space: nowrap; flex-shrink: 0"
+                    >
                         {{ t(selectedCountTitle) }}:
                         <strong>{{ selectedCount }}</strong>
                     </div>
                 </div>
             </v-col>
-            <v-col cols="12" md="3" class="text-right">
+            <v-col
+                cols="12"
+                md="3"
+                class="text-right"
+            >
                 <slot name="addbutton" />
             </v-col>
         </v-row>

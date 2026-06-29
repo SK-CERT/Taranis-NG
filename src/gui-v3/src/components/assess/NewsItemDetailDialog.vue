@@ -11,8 +11,14 @@
     >
         <v-card style="min-height: 70vh; display: flex; flex-direction: column">
             <!-- Toolbar -->
-            <v-toolbar color="primary" dark>
-                <v-btn icon @click="isOpen = false">
+            <v-toolbar
+                color="primary"
+                dark
+            >
+                <v-btn
+                    icon
+                    @click="isOpen = false"
+                >
                     <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
                 <v-toolbar-title class="truncate">
@@ -36,7 +42,11 @@
             </v-toolbar>
 
             <!-- Tabs -->
-            <v-tabs v-model="activeTab" dark density="compact">
+            <v-tabs
+                v-model="activeTab"
+                dark
+                density="compact"
+            >
                 <!-- Single Item Tabs: Source, Attributes, Comments -->
                 <template v-if="!isAggregate">
                     <v-tab value="source">
@@ -62,11 +72,23 @@
             </v-tabs>
 
             <!-- Tab Content -->
-            <v-window v-model="activeTab" class="bg-surface" style="flex: 1; overflow-y: auto">
+            <v-window
+                v-model="activeTab"
+                class="bg-surface"
+                style="flex: 1; overflow-y: auto"
+            >
                 <!-- Single Item: Source Tab -->
-                <v-window-item v-if="!isAggregate" value="source" style="padding: 24px">
+                <v-window-item
+                    v-if="!isAggregate"
+                    value="source"
+                    style="padding: 24px"
+                >
                     <v-row class="mb-6">
-                        <v-col cols="12" md="3" class="text-center">
+                        <v-col
+                            cols="12"
+                            md="3"
+                            class="text-center"
+                        >
                             <div class="text-overline font-weight-bold">
                                 {{ t('assess.collected') }}
                             </div>
@@ -74,7 +96,11 @@
                                 {{ firstNewsItemData?.collected || 'N/A' }}
                             </div>
                         </v-col>
-                        <v-col cols="12" md="3" class="text-center">
+                        <v-col
+                            cols="12"
+                            md="3"
+                            class="text-center"
+                        >
                             <div class="text-overline font-weight-bold">
                                 {{ t('assess.published') }}
                             </div>
@@ -82,7 +108,11 @@
                                 {{ firstNewsItemData?.published || 'N/A' }}
                             </div>
                         </v-col>
-                        <v-col cols="12" md="3" class="text-center">
+                        <v-col
+                            cols="12"
+                            md="3"
+                            class="text-center"
+                        >
                             <div class="text-overline font-weight-bold">
                                 {{ t('assess.source') }}
                             </div>
@@ -90,7 +120,11 @@
                                 {{ firstNewsItemData?.source || 'N/A' }}
                             </div>
                         </v-col>
-                        <v-col cols="12" md="3" class="text-center">
+                        <v-col
+                            cols="12"
+                            md="3"
+                            class="text-center"
+                        >
                             <div class="text-overline font-weight-bold">
                                 {{ t('assess.author') }}
                             </div>
@@ -106,32 +140,61 @@
                         {{ firstNewsItemData?.title || 'N/A' }}
                     </div>
 
-                    <div class="text-body-2 text-medium-emphasis mb-4" v-html="firstNewsItemData?.content" />
+                    <div
+                        class="text-body-2 text-medium-emphasis mb-4"
+                        v-html="firstNewsItemData?.content"
+                    />
 
                     <v-divider class="my-4" />
 
-                    <div v-if="hasLink" class="text-caption">
+                    <div
+                        v-if="hasLink"
+                        class="text-caption"
+                    >
                         <strong>Link: </strong>
-                        <a :href="newsItemLink" target="_blank" rel="noreferrer">
+                        <a
+                            :href="newsItemLink"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
                             {{ newsItemLink }}
                         </a>
                     </div>
                 </v-window-item>
 
                 <!-- Single Item: Attributes Tab -->
-                <v-window-item v-if="!isAggregate" value="attributes" style="padding: 24px">
+                <v-window-item
+                    v-if="!isAggregate"
+                    value="attributes"
+                    style="padding: 24px"
+                >
                     <v-row>
-                        <v-col v-if="newsItemAttributes.length === 0" cols="12" class="text-center text-grey">
+                        <v-col
+                            v-if="newsItemAttributes.length === 0"
+                            cols="12"
+                            class="text-center text-grey"
+                        >
                             {{ t('common.no_data') }}
                         </v-col>
-                        <v-col v-for="attributeItem in newsItemAttributes" :key="attributeItem.id" cols="12">
-                            <NewsItemAttribute :attribute="attributeItem" :news-item-data="firstNewsItemData" />
+                        <v-col
+                            v-for="attributeItem in newsItemAttributes"
+                            :key="attributeItem.id"
+                            cols="12"
+                        >
+                            <NewsItemAttribute
+                                :attribute="attributeItem"
+                                :news-item-data="firstNewsItemData"
+                            />
                         </v-col>
                     </v-row>
                 </v-window-item>
 
                 <!-- Aggregate: Info Tab (Editable Form) -->
-                <v-window-item v-if="isAggregate" value="info" style="padding: 24px">
+                <v-window-item
+                    v-if="isAggregate"
+                    value="info"
+                    style="padding: 24px"
+                >
                     <v-form class="min-width-600">
                         <v-text-field
                             v-model="editTitle"
@@ -155,8 +218,15 @@
                 </v-window-item>
 
                 <!-- Comments Tab -->
-                <v-window-item value="comments" style="padding: 24px">
-                    <Editor v-model="commentText" editor-style="height: 250px" @text-change="debounceAutoSave" />
+                <v-window-item
+                    value="comments"
+                    style="padding: 24px"
+                >
+                    <Editor
+                        v-model="commentText"
+                        editor-style="height: 250px"
+                        @text-change="debounceAutoSave"
+                    />
                     <div class="text-caption text-grey mt-2">Auto-saves on changes</div>
                 </v-window-item>
             </v-window>

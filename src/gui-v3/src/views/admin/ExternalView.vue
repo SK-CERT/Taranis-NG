@@ -1,8 +1,21 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="users" :title="t('external_user.tab_description')">
-                <v-icon :icon="ICONS.ACCOUNT_GROUP" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="users"
+                :title="t('external_user.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.ACCOUNT_GROUP"
+                    start
+                />
                 External Users
             </v-tab>
         </v-tabs>

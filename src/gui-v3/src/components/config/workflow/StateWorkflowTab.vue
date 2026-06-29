@@ -15,16 +15,30 @@
                             hide-details
                         />
                     </v-col>
-                    <v-col cols="6" class="text-right">
-                        <AddNewButton :show="canCreate" @click="addItem" />
+                    <v-col
+                        cols="6"
+                        class="text-right"
+                    >
+                        <AddNewButton
+                            :show="canCreate"
+                            @click="addItem"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="filteredRecords" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="filteredRecords"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.entity_type="{ item }">
-                    <v-chip label :color="getEntityTypeColor(item.entity_type)">
+                    <v-chip
+                        label
+                        :color="getEntityTypeColor(item.entity_type)"
+                    >
                         <v-icon start>
                             {{ getEntityTypeIcon(item.entity_type) }}
                         </v-icon>
@@ -33,14 +47,21 @@
                 </template>
 
                 <template #item.state_name="{ item }">
-                    <v-icon v-if="item.state" start :color="item.state.color">
+                    <v-icon
+                        v-if="item.state"
+                        start
+                        :color="item.state.color"
+                    >
                         {{ item.state.icon }}
                     </v-icon>
                     {{ item.state ? t(`workflow.states.${item.state.display_name}`, item.state.display_name) : '-' }}
                 </template>
 
                 <template #item.state_type="{ item }">
-                    <v-chip label color="grey">
+                    <v-chip
+                        label
+                        color="grey"
+                    >
                         <v-icon start>
                             {{ getStateTypeIcon(item.state_type) }}
                         </v-icon>
@@ -56,18 +77,33 @@
 
                 <template #item.actions="{ item }">
                     <template v-if="item.editable">
-                        <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="editItem(item)" />
-                        <ActionButton action="delete" :title="t('common.delete')" @click="deleteItem(item)" />
+                        <ActionButton
+                            action="edit"
+                            :title="t('common.edit')"
+                            class="mr-1"
+                            @click="editItem(item)"
+                        />
+                        <ActionButton
+                            action="delete"
+                            :title="t('common.delete')"
+                            @click="deleteItem(item)"
+                        />
                     </template>
                     <template v-else>
-                        <ActionButton action="lock" :title="t('workflow.state_workflow.cannot_edit_system_association')" />
+                        <ActionButton
+                            action="lock"
+                            :title="t('workflow.state_workflow.cannot_edit_system_association')"
+                        />
                     </template>
                 </template>
             </v-data-table>
         </v-card>
 
         <!-- Delete Dialog -->
-        <v-dialog v-model="dialogDelete" max-width="500">
+        <v-dialog
+            v-model="dialogDelete"
+            max-width="500"
+        >
             <v-card>
                 <v-card-title>{{ t('common.messagebox.delete') }}</v-card-title>
                 <v-card-text>
@@ -75,10 +111,18 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn color="grey" variant="text" @click="closeDelete">
+                    <v-btn
+                        color="grey"
+                        variant="text"
+                        @click="closeDelete"
+                    >
                         {{ t('common.cancel') }}
                     </v-btn>
-                    <v-btn color="error" variant="text" @click="deleteRecord">
+                    <v-btn
+                        color="error"
+                        variant="text"
+                        @click="deleteRecord"
+                    >
                         {{ t('common.delete') }}
                     </v-btn>
                 </v-card-actions>
@@ -86,7 +130,10 @@
         </v-dialog>
 
         <!-- Edit Dialog - Simplified -->
-        <v-dialog v-model="dialogEdit" max-width="700">
+        <v-dialog
+            v-model="dialogEdit"
+            max-width="700"
+        >
             <v-card>
                 <DialogToolbar
                     :title="editedIndex === -1 ? t('workflow.state_workflow.add_new') : t('workflow.state_workflow.edit')"

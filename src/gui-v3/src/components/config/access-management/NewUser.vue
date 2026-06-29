@@ -1,7 +1,15 @@
 <template>
-    <v-dialog v-model="dialog" max-width="1000" persistent scrollable>
+    <v-dialog
+        v-model="dialog"
+        max-width="1000"
+        persistent
+        scrollable
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+            />
         </template>
 
         <v-card>
@@ -13,7 +21,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-row>
                         <v-col cols="6">
                             <v-text-field
@@ -99,11 +110,21 @@
                         :disabled="saving"
                     />
 
-                    <v-alert v-if="showValidationError" type="error" density="compact" class="mb-3">
+                    <v-alert
+                        v-if="showValidationError"
+                        type="error"
+                        density="compact"
+                        class="mb-3"
+                    >
                         {{ t('error.validation') }}
                     </v-alert>
 
-                    <v-alert v-if="showError" type="error" density="compact" class="mb-3">
+                    <v-alert
+                        v-if="showError"
+                        type="error"
+                        density="compact"
+                        class="mb-3"
+                    >
                         {{ t('access_management.users.error') }}
                     </v-alert>
                 </v-form>

@@ -39,7 +39,10 @@
                     {{ card.title }}
                 </span>
 
-                <p v-if="!hideReviews" class="text-body-medium text-grey mb-3">
+                <p
+                    v-if="!hideReviews"
+                    class="text-body-medium text-grey mb-3"
+                >
                     {{ card.description }}
                 </p>
 
@@ -53,14 +56,25 @@
                             {{ firstNewsItem?.news_item_data?.link }}
                         </span>
 
-                        <v-btn v-if="isAggregate" size="small" color="primary" variant="outlined" @click.stop="toggleOpen">
+                        <v-btn
+                            v-if="isAggregate"
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            @click.stop="toggleOpen"
+                        >
                             <v-icon start>
                                 {{ opened ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
                             </v-icon>
                             {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
                         </v-btn>
 
-                        <v-chip v-else-if="newsItemsCount > 1" size="small" color="primary" variant="outlined">
+                        <v-chip
+                            v-else-if="newsItemsCount > 1"
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                        >
                             <v-icon start> mdi-file-multiple </v-icon>
                             {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
                         </v-chip>
@@ -79,10 +93,21 @@
                             <span v-if="inReportsCount > 1">&nbsp;({{ inReportsCount }})</span>
                         </v-chip>
 
-                        <v-icon v-if="hasComments" color="orange" size="small"> mdi-comment </v-icon>
+                        <v-icon
+                            v-if="hasComments"
+                            color="orange"
+                            size="small"
+                        >
+                            mdi-comment
+                        </v-icon>
                     </v-col>
 
-                    <v-col v-if="!multiSelectActive && !analyzeSelector" cols="auto" class="d-flex align-center" style="gap: 4px">
+                    <v-col
+                        v-if="!multiSelectActive && !analyzeSelector"
+                        cols="auto"
+                        class="d-flex align-center"
+                        style="gap: 4px"
+                    >
                         <AssessItemActions
                             :item="card"
                             size="small"
@@ -100,7 +125,10 @@
         </BaseCard>
 
         <Transition name="aggregate-items">
-            <div v-if="opened && isAggregate" class="aggregate-items-list">
+            <div
+                v-if="opened && isAggregate"
+                class="aggregate-items-list"
+            >
                 <CardAssessItem
                     v-for="newsItem in childNewsItems"
                     :key="newsItem.id"

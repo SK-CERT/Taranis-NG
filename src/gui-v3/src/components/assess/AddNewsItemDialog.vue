@@ -1,5 +1,8 @@
 <template>
-    <v-dialog v-model="isOpen" max-width="800px">
+    <v-dialog
+        v-model="isOpen"
+        max-width="800px"
+    >
         <v-card>
             <v-card-title class="text-headline-medium">
                 {{ t('nav_menu.enter') }}
@@ -8,7 +11,10 @@
             <v-divider />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <!-- Manual OSINT Source Select -->
                     <v-select
                         v-if="manualSources && manualSources.length > 1"
@@ -65,7 +71,10 @@
                         <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
                             {{ t('enter.content') }}
                         </label>
-                        <Editor v-model="editorContent" editor-style="min-height: 250px" />
+                        <Editor
+                            v-model="editorContent"
+                            editor-style="min-height: 250px"
+                        />
                     </div>
 
                     <!-- Validation Error Alert -->
@@ -81,12 +90,26 @@
                     </v-alert>
 
                     <!-- Error Alert -->
-                    <v-alert v-if="showError" type="error" variant="tonal" class="mb-4" closable @click:close="showError = false">
+                    <v-alert
+                        v-if="showError"
+                        type="error"
+                        variant="tonal"
+                        class="mb-4"
+                        closable
+                        @click:close="showError = false"
+                    >
                         {{ t('enter.error') }}
                     </v-alert>
 
                     <!-- Success Alert -->
-                    <v-alert v-if="showSuccess" type="success" variant="tonal" class="mb-4" closable @click:close="showSuccess = false">
+                    <v-alert
+                        v-if="showSuccess"
+                        type="success"
+                        variant="tonal"
+                        class="mb-4"
+                        closable
+                        @click:close="showSuccess = false"
+                    >
                         {{ t('enter.successful') }}
                     </v-alert>
                 </v-form>
@@ -96,10 +119,17 @@
 
             <v-card-actions>
                 <v-spacer />
-                <v-btn color="default" @click="closeDialog">
+                <v-btn
+                    color="default"
+                    @click="closeDialog"
+                >
                     {{ t('common.cancel') }}
                 </v-btn>
-                <v-btn color="primary" :loading="isSubmitting" @click="handleSubmit">
+                <v-btn
+                    color="primary"
+                    :loading="isSubmitting"
+                    @click="handleSubmit"
+                >
                     {{ t('enter.create') }}
                 </v-btn>
             </v-card-actions>

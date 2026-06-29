@@ -1,7 +1,16 @@
 <template>
-    <v-dialog v-model="dialog" max-width="1000" persistent scrollable>
+    <v-dialog
+        v-model="dialog"
+        max-width="1000"
+        persistent
+        scrollable
+    >
         <template #activator="{ props: activatorProps }">
-            <AddNewButton :show="canCreate" v-bind="activatorProps" @click="openCreateDialog" />
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+                @click="openCreateDialog"
+            />
         </template>
 
         <v-card>
@@ -14,7 +23,10 @@
             />
 
             <v-card-text>
-                <v-form ref="formRef" @submit.prevent="handleSubmit">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSubmit"
+                >
                     <v-select
                         v-model="selectedNode"
                         :items="nodes"
@@ -71,7 +83,11 @@
                         <v-divider class="my-4" />
                         <h3 class="text-subtitle-1 mb-3">Parameters</h3>
 
-                        <div v-for="(param, index) in selectedCollector.parameters" :key="param.id ?? param.key ?? index" class="mb-3">
+                        <div
+                            v-for="(param, index) in selectedCollector.parameters"
+                            :key="param.id ?? param.key ?? index"
+                            class="mb-3"
+                        >
                             <v-text-field
                                 v-model="parameterValues[index]"
                                 :label="String(param.name || param.key || '')"
@@ -81,14 +97,24 @@
                                 :disabled="saving || !canUpdate"
                                 :placeholder="String(param.default_value ?? '')"
                             >
-                                <template v-if="param.description" #append-inner>
-                                    <v-icon color="primary" :title="String(param.description)">mdi-help-circle</v-icon>
+                                <template
+                                    v-if="param.description"
+                                    #append-inner
+                                >
+                                    <v-icon
+                                        color="primary"
+                                        :title="String(param.description)"
+                                        >mdi-help-circle</v-icon
+                                    >
                                 </template>
                             </v-text-field>
                         </div>
                     </div>
 
-                    <div v-if="selectedCollector" class="mt-4">
+                    <div
+                        v-if="selectedCollector"
+                        class="mt-4"
+                    >
                         <EntitySelectTable
                             v-model="selectedOSINTSourceGroupIds"
                             :title="t('collectors.sources.osint_source_groups')"
@@ -124,7 +150,14 @@
                     {{ t('error.validation') }}
                 </v-alert>
 
-                <v-alert v-if="showError" type="error" variant="tonal" class="mt-4" closable @click:close="showError = false">
+                <v-alert
+                    v-if="showError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showError = false"
+                >
                     {{ t('collectors.sources.error') }}
                 </v-alert>
             </v-card-text>

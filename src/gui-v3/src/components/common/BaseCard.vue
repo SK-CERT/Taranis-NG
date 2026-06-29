@@ -1,8 +1,20 @@
 <template>
-    <div class="card-container d-flex align-center" :class="{ 'ga-3': multiSelectActive && showSelectionCheckbox }">
+    <div
+        class="card-container d-flex align-center"
+        :class="{ 'ga-3': multiSelectActive && showSelectionCheckbox }"
+    >
         <!-- Checkbox outside card to prevent triggering card click -->
-        <div v-if="multiSelectActive && showSelectionCheckbox" class="checkbox-column" @click.stop>
-            <v-checkbox v-model="internalSelected" density="compact" hide-details @update:model-value="emitSelectionChange" />
+        <div
+            v-if="multiSelectActive && showSelectionCheckbox"
+            class="checkbox-column"
+            @click.stop
+        >
+            <v-checkbox
+                v-model="internalSelected"
+                density="compact"
+                hide-details
+                @update:model-value="emitSelectionChange"
+            />
         </div>
 
         <!-- Card content -->
@@ -18,10 +30,16 @@
                 <v-card-text class="pa-2">
                     <!-- Content slot -->
                     <div>
-                        <slot name="content" :is-hovering="isHovering" />
+                        <slot
+                            name="content"
+                            :is-hovering="isHovering"
+                        />
                     </div>
                     <!-- Actions slot (always visible if multiselect is not active) -->
-                    <div v-if="!multiSelectActive" class="d-flex ga-1 mt-2 justify-end">
+                    <div
+                        v-if="!multiSelectActive"
+                        class="d-flex ga-1 mt-2 justify-end"
+                    >
                         <slot name="actions" />
                     </div>
                 </v-card-text>

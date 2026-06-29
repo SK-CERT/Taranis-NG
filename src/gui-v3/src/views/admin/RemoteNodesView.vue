@@ -1,5 +1,8 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <!-- Toolbar -->
         <ToolbarFilter
             :total-count="configStore.remoteNodes.total_count"
@@ -7,7 +10,10 @@
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
-                <NewRemoteNode :edit-item="editItem" @saved="handleSaved" />
+                <NewRemoteNode
+                    :edit-item="editItem"
+                    @saved="handleSaved"
+                />
             </template>
         </ToolbarFilter>
 

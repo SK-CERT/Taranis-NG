@@ -9,7 +9,12 @@
             :attribute-group="attributeGroup"
             :report-item-id="reportItemId"
         />
-        <div v-else class="alert alert-warning">Unknown attribute type: {{ attributeGroup.attribute?.attribute_type }}</div>
+        <div
+            v-else
+            class="alert alert-warning"
+        >
+            Unknown attribute type: {{ attributeGroup.attribute?.attribute_type }}
+        </div>
     </div>
 </template>
 

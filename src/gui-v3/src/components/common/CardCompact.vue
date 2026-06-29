@@ -1,19 +1,45 @@
 <template>
-    <v-container fluid class="pa-2">
-        <div class="card-container d-flex align-center" :class="{ 'ga-3': multiSelectActive }">
+    <v-container
+        fluid
+        class="pa-2"
+    >
+        <div
+            class="card-container d-flex align-center"
+            :class="{ 'ga-3': multiSelectActive }"
+        >
             <!-- Checkbox for multi-select -->
-            <div v-if="multiSelectActive" class="checkbox-column" @click.stop>
-                <v-checkbox v-model="internalSelected" density="compact" hide-details @update:model-value="emitSelectionChange" />
+            <div
+                v-if="multiSelectActive"
+                class="checkbox-column"
+                @click.stop
+            >
+                <v-checkbox
+                    v-model="internalSelected"
+                    density="compact"
+                    hide-details
+                    @update:model-value="emitSelectionChange"
+                />
             </div>
 
             <!-- Card -->
             <v-hover v-slot="{ isHovering, props: hoverProps }">
-                <v-card v-bind="hoverProps" :elevation="isHovering ? 12 : 2" class="card-compact flex-grow-1" @click="handleClick">
+                <v-card
+                    v-bind="hoverProps"
+                    :elevation="isHovering ? 12 : 2"
+                    class="card-compact flex-grow-1"
+                    @click="handleClick"
+                >
                     <v-card-text>
                         <v-row align="center">
                             <!-- Icon/Tag -->
-                            <v-col cols="auto" class="pr-4">
-                                <v-icon size="large" color="primary">
+                            <v-col
+                                cols="auto"
+                                class="pr-4"
+                            >
+                                <v-icon
+                                    size="large"
+                                    color="primary"
+                                >
                                     {{ card.tag || ICONS.FILE_DOCUMENT }}
                                 </v-icon>
                             </v-col>
@@ -89,8 +115,15 @@
                             </v-col>
 
                             <!-- Actions -->
-                            <v-col v-if="canDelete" cols="auto">
-                                <ActionButton action="delete" :disabled="isProtected" @click.stop="showDeleteDialog" />
+                            <v-col
+                                v-if="canDelete"
+                                cols="auto"
+                            >
+                                <ActionButton
+                                    action="delete"
+                                    :disabled="isProtected"
+                                    @click.stop="showDeleteDialog"
+                                />
                             </v-col>
                         </v-row>
                     </v-card-text>
@@ -99,7 +132,10 @@
         </div>
 
         <!-- Delete confirmation dialog -->
-        <v-dialog v-model="deleteDialog" max-width="400">
+        <v-dialog
+            v-model="deleteDialog"
+            max-width="400"
+        >
             <v-card>
                 <v-card-title class="text-headline-small">
                     {{ t('common.messagebox.delete') }}
@@ -109,10 +145,17 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn text @click="deleteDialog = false">
+                    <v-btn
+                        text
+                        @click="deleteDialog = false"
+                    >
                         {{ t('common.cancel') }}
                     </v-btn>
-                    <v-btn color="error" text @click="handleDelete">
+                    <v-btn
+                        color="error"
+                        text
+                        @click="handleDelete"
+                    >
                         {{ t('common.delete') }}
                     </v-btn>
                 </v-card-actions>

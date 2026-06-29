@@ -1,12 +1,31 @@
 <template>
-    <v-container fluid class="pa-0">
-        <v-tabs v-model="activeTab" bg-color="transparent" color="primary">
-            <v-tab value="types" :title="t('reports.types.tab_description')">
-                <v-icon :icon="ICONS.FILE_TABLE" start />
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="types"
+                :title="t('reports.types.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.FILE_TABLE"
+                    start
+                />
                 {{ t('nav_menu.report_types') }}
             </v-tab>
-            <v-tab value="attributes" :title="t('reports.attributes.tab_description')">
-                <v-icon :icon="ICONS.APPLICATION_VARIABLE_OUTLINE" start />
+            <v-tab
+                value="attributes"
+                :title="t('reports.attributes.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.APPLICATION_VARIABLE_OUTLINE"
+                    start
+                />
                 {{ t('nav_menu.attributes') }}
             </v-tab>
         </v-tabs>

@@ -5,7 +5,10 @@
                 {{ t('workflow.tags') }}
             </v-card-title>
             <v-card-text>
-                <v-alert type="info" variant="outlined">
+                <v-alert
+                    type="info"
+                    variant="outlined"
+                >
                     {{ t('workflow.tags_coming_soon') }}
                 </v-alert>
                 <p class="mt-4">

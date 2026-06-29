@@ -15,14 +15,23 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
                         <NewAiProvider @saved="handleSaved" />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.aiProviders.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="configStore.aiProviders.items"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.name="{ item }">
                     <strong>{{ asAiProviderItem(item).name }}</strong>
                 </template>
@@ -46,15 +55,30 @@
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asAiProviderItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asAiProviderItem(item))" />
+                    <ActionButton
+                        action="edit"
+                        :title="t('common.edit')"
+                        class="mr-1"
+                        @click="handleEdit(asAiProviderItem(item))"
+                    />
+                    <ActionButton
+                        action="delete"
+                        :title="t('common.delete')"
+                        @click="handleDelete(asAiProviderItem(item))"
+                    />
                 </template>
             </v-data-table>
         </v-card>
 
         <!-- Edit Dialog -->
-        <v-dialog v-model="showEditDialog" max-width="600">
-            <NewAiProvider :edit-item="editItem" @saved="handleSaved" />
+        <v-dialog
+            v-model="showEditDialog"
+            max-width="600"
+        >
+            <NewAiProvider
+                :edit-item="editItem"
+                @saved="handleSaved"
+            />
         </v-dialog>
     </v-container>
 </template>

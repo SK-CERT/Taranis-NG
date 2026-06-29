@@ -83,8 +83,18 @@
     </BaseToolbarFilter>
 
     <!-- Additional Row: Selection Group and View Options (hidden in the attach-news-items selector) -->
-    <v-toolbar v-if="!analyze_selector" flat color="surface" density="compact">
-        <ToolbarGroup ref="toolbarGroup" view="assess" :current-filter="filter" @update-data="handleUpdateData" />
+    <v-toolbar
+        v-if="!analyze_selector"
+        flat
+        color="surface"
+        density="compact"
+    >
+        <ToolbarGroup
+            ref="toolbarGroup"
+            view="assess"
+            :current-filter="filter"
+            @update-data="handleUpdateData"
+        />
 
         <v-spacer />
 

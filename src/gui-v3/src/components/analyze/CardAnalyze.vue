@@ -13,7 +13,11 @@
             <template #content>
                 <v-row class="align-center">
                     <v-col cols="auto">
-                        <v-icon style="font-size: 32px" :icon="card.tag || ICONS.FILE_DOCUMENT" class="ms-2" />
+                        <v-icon
+                            style="font-size: 32px"
+                            :icon="card.tag || ICONS.FILE_DOCUMENT"
+                            class="ms-2"
+                        />
                     </v-col>
                     <v-col>
                         <v-row>
@@ -22,22 +26,41 @@
                                 {{ card.report_type_name }}
                             </v-col>
                             <!-- Updated Info, pushed to the right -->
-                            <v-col cols="auto" class="d-flex align-center text-label-medium text-grey">
+                            <v-col
+                                cols="auto"
+                                class="d-flex align-center text-label-medium text-grey"
+                            >
                                 {{ t('card_item.updated') }}:
                                 {{ card.last_updated }}
-                                <span v-if="card.updated_by" class="ms-2">{{ card.updated_by }}</span>
+                                <span
+                                    v-if="card.updated_by"
+                                    class="ms-2"
+                                    >{{ card.updated_by }}</span
+                                >
                             </v-col>
                         </v-row>
                         <!-- Title Row + State (below Updated) -->
-                        <v-row class="mt-2" align="center">
+                        <v-row
+                            class="mt-2"
+                            align="center"
+                        >
                             <v-col>
                                 <div class="text-title-medium">
                                     <span v-if="card.title_prefix">{{ card.title_prefix }} -</span>
                                     {{ card.title }}
-                                    <span v-if="card.news_items_count" class="text-grey ms-1">({{ card.news_items_count }})</span>
+                                    <span
+                                        v-if="card.news_items_count"
+                                        class="text-grey ms-1"
+                                        >({{ card.news_items_count }})</span
+                                    >
                                 </div>
                             </v-col>
-                            <v-col v-if="card.state" cols="auto" class="d-flex justify-end align-center" :title="card.state.description">
+                            <v-col
+                                v-if="card.state"
+                                cols="auto"
+                                class="d-flex justify-end align-center"
+                                :title="card.state.description"
+                            >
                                 <v-icon :color="card.state.color">
                                     {{ card.state.icon }}
                                 </v-icon>
@@ -48,7 +71,11 @@
                         </v-row>
                     </v-col>
                     <!-- Actions -->
-                    <v-col v-if="!disableActions" cols="auto" class="d-flex justify-end">
+                    <v-col
+                        v-if="!disableActions"
+                        cols="auto"
+                        class="d-flex justify-end"
+                    >
                         <!-- Publish -->
                         <ActionButton
                             v-if="canCreateProduct && !showRemoveAction"
@@ -76,7 +103,12 @@
         </BaseCard>
 
         <!-- Delete Confirmation Dialog -->
-        <ConfirmationDialog v-model="showDeleteDialog" :message="card.title || ''" max-width="500px" @confirm="handleDelete" />
+        <ConfirmationDialog
+            v-model="showDeleteDialog"
+            :message="card.title || ''"
+            max-width="500px"
+            @confirm="handleDelete"
+        />
 
         <!-- Remove Confirmation Dialog -->
         <ConfirmationDialog

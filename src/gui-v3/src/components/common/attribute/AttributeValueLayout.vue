@@ -1,14 +1,29 @@
 <template>
-    <v-row align="start" class="ga-2 pt-1" @mouseenter="itemHover = true" @mouseleave="itemHover = false">
-        <v-col v-if="$slots['col_left']" cols="auto">
+    <v-row
+        align="start"
+        class="ga-2 pt-1"
+        @mouseenter="itemHover = true"
+        @mouseleave="itemHover = false"
+    >
+        <v-col
+            v-if="$slots['col_left']"
+            cols="auto"
+        >
             <slot name="col_left" />
         </v-col>
         <v-col style="min-width: 200px">
             <!-- del-visible / on-delete let an attribute embed the delete button inside its
                  input (e.g. a text field's append-inner slot) instead of the col_right column. -->
-            <slot name="col_middle" :del-visible="delButtonVisible" :on-delete="handleDelete" />
+            <slot
+                name="col_middle"
+                :del-visible="delButtonVisible"
+                :on-delete="handleDelete"
+            />
         </v-col>
-        <v-col v-if="!embedDelete" cols="auto">
+        <v-col
+            v-if="!embedDelete"
+            cols="auto"
+        >
             <slot name="col_right">
                 <v-btn
                     v-if="delButtonVisible"

@@ -25,7 +25,11 @@
         </template>
     </ViewLayout>
 
-    <NewReportItem ref="newReportItemRef" :show-button="false" @data-updated="updateData" />
+    <NewReportItem
+        ref="newReportItemRef"
+        :show-button="false"
+        @data-updated="updateData"
+    />
 </template>
 
 <script setup lang="ts">

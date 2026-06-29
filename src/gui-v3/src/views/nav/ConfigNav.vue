@@ -1,11 +1,23 @@
 <template>
     <v-list density="compact">
         <!-- Config links with permission filtering -->
-        <v-list-item v-for="link in filteredLinks" :key="link.id" :to="link.route" class="pa-2" style="min-height: auto">
+        <v-list-item
+            v-for="link in filteredLinks"
+            :key="link.id"
+            :to="link.route"
+            class="pa-2"
+            style="min-height: auto"
+        >
             <template #default>
                 <v-divider v-if="link.separator" />
-                <div v-else class="d-flex flex-column align-center text-center">
-                    <v-icon :color="link.color || undefined" class="mb-2">
+                <div
+                    v-else
+                    class="d-flex flex-column align-center text-center"
+                >
+                    <v-icon
+                        :color="link.color || undefined"
+                        class="mb-2"
+                    >
                         {{ link.icon }}
                     </v-icon>
                     <span class="text-body-small">

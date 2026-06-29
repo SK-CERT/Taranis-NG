@@ -15,14 +15,23 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
                         <NewDataProvider @saved="handleSaved" />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.dataProviders.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="configStore.dataProviders.items"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.name="{ item }">
                     <strong>{{ asDataProviderItem(item).name }}</strong>
                 </template>
@@ -36,15 +45,30 @@
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asDataProviderItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asDataProviderItem(item))" />
+                    <ActionButton
+                        action="edit"
+                        :title="t('common.edit')"
+                        class="mr-1"
+                        @click="handleEdit(asDataProviderItem(item))"
+                    />
+                    <ActionButton
+                        action="delete"
+                        :title="t('common.delete')"
+                        @click="handleDelete(asDataProviderItem(item))"
+                    />
                 </template>
             </v-data-table>
         </v-card>
 
         <!-- Edit Dialog -->
-        <v-dialog v-model="showEditDialog" max-width="800">
-            <NewDataProvider :edit-item="editItem" @saved="handleSaved" />
+        <v-dialog
+            v-model="showEditDialog"
+            max-width="800"
+        >
+            <NewDataProvider
+                :edit-item="editItem"
+                @saved="handleSaved"
+            />
         </v-dialog>
     </v-container>
 </template>

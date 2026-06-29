@@ -19,8 +19,14 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
-                        <NewAttribute :edit-item="editItem" @saved="handleSaved" />
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
+                        <NewAttribute
+                            :edit-item="editItem"
+                            @saved="handleSaved"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -35,13 +41,26 @@
                 class="elevation-1"
             >
                 <template #item.name="{ item }">
-                    <v-icon :icon="typeIcon(asAttributeItem(item).type)" size="small" class="me-2 text-medium-emphasis" />
+                    <v-icon
+                        :icon="typeIcon(asAttributeItem(item).type)"
+                        size="small"
+                        class="me-2 text-medium-emphasis"
+                    />
                     <strong>{{ asAttributeItem(item).name }}</strong>
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asAttributeItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asAttributeItem(item))" />
+                    <ActionButton
+                        action="edit"
+                        :title="t('common.edit')"
+                        class="mr-1"
+                        @click="handleEdit(asAttributeItem(item))"
+                    />
+                    <ActionButton
+                        action="delete"
+                        :title="t('common.delete')"
+                        @click="handleDelete(asAttributeItem(item))"
+                    />
                 </template>
             </v-data-table>
         </v-card>

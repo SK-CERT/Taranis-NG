@@ -19,14 +19,23 @@
                             single-line
                         />
                     </v-col>
-                    <v-col cols="4" class="text-right">
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
                         <NewExternalUser @saved="handleSaved" />
                     </v-col>
                 </v-row>
             </v-card-text>
 
             <!-- Data Table -->
-            <v-data-table :headers="headers" :items="configStore.users.items" :search="search" item-key="id" class="elevation-1">
+            <v-data-table
+                :headers="headers"
+                :items="configStore.users.items"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
                 <template #item.username="{ item }">
                     <strong>{{ asExternalUserItem(item).username }}</strong>
                 </template>
@@ -36,15 +45,30 @@
                 </template>
 
                 <template #item.actions="{ item }">
-                    <ActionButton action="edit" :title="t('common.edit')" class="mr-1" @click="handleEdit(asExternalUserItem(item))" />
-                    <ActionButton action="delete" :title="t('common.delete')" @click="handleDelete(asExternalUserItem(item))" />
+                    <ActionButton
+                        action="edit"
+                        :title="t('common.edit')"
+                        class="mr-1"
+                        @click="handleEdit(asExternalUserItem(item))"
+                    />
+                    <ActionButton
+                        action="delete"
+                        :title="t('common.delete')"
+                        @click="handleDelete(asExternalUserItem(item))"
+                    />
                 </template>
             </v-data-table>
         </v-card>
 
         <!-- Edit Dialog -->
-        <v-dialog v-model="showEditDialog" max-width="800">
-            <NewExternalUser :edit-item="editItem" @saved="handleSaved" />
+        <v-dialog
+            v-model="showEditDialog"
+            max-width="800"
+        >
+            <NewExternalUser
+                :edit-item="editItem"
+                @saved="handleSaved"
+            />
         </v-dialog>
     </v-container>
 </template>

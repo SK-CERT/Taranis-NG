@@ -2,18 +2,34 @@
     <!-- Inner rows must be w-100: without a width, each row's flex-basis is its content's
          max-content size, so rows can end up sharing a flex line (off-center content) and the
          content width tracks text length (layout jumps when values change). -->
-    <v-row justify="center" class="attribute-item-layout pt-1">
+    <v-row
+        justify="center"
+        class="attribute-item-layout pt-1"
+    >
         <v-row class="w-100">
             <slot name="header">
                 <v-row justify="center">
                     <!-- SORT -->
-                    <v-chip-group v-if="values.length > 1" active-class="success" color="" class="pr-4">
-                        <v-chip class="mr-1" :title="t('report_item.tooltip.sort_time')" @click="sort(false)">
+                    <v-chip-group
+                        v-if="values.length > 1"
+                        active-class="success"
+                        color=""
+                        class="pr-4"
+                    >
+                        <v-chip
+                            class="mr-1"
+                            :title="t('report_item.tooltip.sort_time')"
+                            @click="sort(false)"
+                        >
                             <v-icon class="px-1">
                                 {{ ICONS.CLOCK }}
                             </v-icon>
                         </v-chip>
-                        <v-chip class="mr-1" :title="t('report_item.tooltip.sort_user')" @click="sort(true, currentUserName)">
+                        <v-chip
+                            class="mr-1"
+                            :title="t('report_item.tooltip.sort_user')"
+                            @click="sort(true, currentUserName)"
+                        >
                             <v-icon class="px-1">
                                 {{ ICONS.ACCOUNT }}
                             </v-icon>
@@ -26,7 +42,10 @@
             <slot name="content" />
         </v-row>
         <v-row class="ml-3 mr-5 w-100">
-            <slot name="footer" class="pr-0">
+            <slot
+                name="footer"
+                class="pr-0"
+            >
                 <v-btn
                     v-if="addButton"
                     variant="flat"

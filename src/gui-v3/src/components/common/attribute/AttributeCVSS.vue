@@ -1,16 +1,31 @@
 <template>
-    <AttributeItemLayout :add-button="addButtonVisible" :values="values" @add-value="add">
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
         <template #content>
-            <div v-for="(value, index) in values" :key="`${value.index}-${index}`" class="w-100 mb-1">
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="w-100 mb-1"
+            >
                 <!-- Read-only or remote -->
-                <div v-if="readOnly || value.remote" class="numbered-cvss-value d-flex align-center w-100 py-2">
+                <div
+                    v-if="readOnly || value.remote"
+                    class="numbered-cvss-value d-flex align-center w-100 py-2"
+                >
                     <span
                         v-if="values.length > 1"
                         class="mr-2 text-grey"
                         :style="{ userSelect: 'none', minWidth: '24px', display: 'inline-block' }"
                         >{{ index + 1 }}.</span
                     >
-                    <v-chip :color="getCVSSColor(value.value)" size="small" class="mr-2">
+                    <v-chip
+                        :color="getCVSSColor(value.value)"
+                        size="small"
+                        class="mr-2"
+                    >
                         {{ value.value }}
                     </v-chip>
                     <span class="text-caption text-grey">{{ getCVSSSeverity(value.value) }}</span>
@@ -46,13 +61,19 @@
                                     :disabled="value.locked || !canModify"
                                     @update:model-value="updateFromCalculator(index, $event)"
                                 />
-                                <AttributeFieldDeleteButton :visible="delVisible" @delete="onDelete" />
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
                             </template>
                         </v-text-field>
 
                         <!-- Score display — always rendered at fixed height to keep layout stable -->
                         <v-row class="mb-2 ga-1">
-                            <v-col v-for="scoreItem in getVectorScores(value.value) ?? placeholderScores" :key="scoreItem.name">
+                            <v-col
+                                v-for="scoreItem in getVectorScores(value.value) ?? placeholderScores"
+                                :key="scoreItem.name"
+                            >
                                 <v-sheet
                                     :color="scoreItem.color"
                                     rounded

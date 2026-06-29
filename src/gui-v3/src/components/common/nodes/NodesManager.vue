@@ -1,5 +1,8 @@
 <template>
-    <v-container fluid class="pa-0">
+    <v-container
+        fluid
+        class="pa-0"
+    >
         <!-- Toolbar -->
         <ToolbarFilter
             :total-count="list.total_count"
@@ -7,7 +10,11 @@
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
-                <NodeDialog :type="type" :edit-item="editItem" @saved="handleSaved" />
+                <NodeDialog
+                    :type="type"
+                    :edit-item="editItem"
+                    @saved="handleSaved"
+                />
             </template>
         </ToolbarFilter>
 

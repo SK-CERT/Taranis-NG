@@ -40,8 +40,17 @@
     </BaseToolbarFilter>
 
     <!-- Selection Group Toolbar -->
-    <v-toolbar flat color="surface" density="compact">
-        <ToolbarGroup ref="toolbarGroup" view="publish" :current-filter="filter" @update-data="handleUpdateData" />
+    <v-toolbar
+        flat
+        color="surface"
+        density="compact"
+    >
+        <ToolbarGroup
+            ref="toolbarGroup"
+            view="publish"
+            :current-filter="filter"
+            @update-data="handleUpdateData"
+        />
 
         <v-spacer />
         <v-btn

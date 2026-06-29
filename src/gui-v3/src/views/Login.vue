@@ -1,12 +1,23 @@
 <template>
-    <div v-if="!authStore.hasExternalLoginUrl" class="login-screen">
+    <div
+        v-if="!authStore.hasExternalLoginUrl"
+        class="login-screen"
+    >
         <!-- Logo -->
         <div class="logo-container pb-3">
-            <img :src="isDark ? darkLogo : lightLogo" alt="Taranis NG" class="login-logo" />
+            <img
+                :src="isDark ? darkLogo : lightLogo"
+                alt="Taranis NG"
+                class="login-logo"
+            />
         </div>
 
         <!-- Login Form -->
-        <v-form id="login-form" class="login-form" @submit.prevent="handleFormSubmit">
+        <v-form
+            id="login-form"
+            class="login-form"
+            @submit.prevent="handleFormSubmit"
+        >
             <div class="form-fields">
                 <v-text-field
                     v-model="username"
@@ -47,7 +58,13 @@
             </div>
 
             <div class="form-actions">
-                <v-btn type="submit" data-test="login-submit" prepend-icon="mdi-login-variant" size="large" class="login-btn">
+                <v-btn
+                    type="submit"
+                    data-test="login-submit"
+                    prepend-icon="mdi-login-variant"
+                    size="large"
+                    class="login-btn"
+                >
                     {{ t('login.login') }}
                 </v-btn>
             </div>
