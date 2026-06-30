@@ -55,7 +55,7 @@
         "eslint": "^5.16.0",
         "eslint-plugin-vue": "^5.2.3",
         "sass": "^1.80.4",
-        "vue-cli-plugin-vuetify": "^0.6.3",
+        "vue-cli-plugin-vuetify": "^2.5.8",
         "vue-template-compiler": "^2.7.16",
         "vuetify-loader": "^1.9.2",
         "webpack": "^4.47.0"
