@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <getopt.h>
 
 #define PEER_POOL_INCREMENT 1024

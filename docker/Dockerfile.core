@@ -7,9 +7,7 @@ COPY ./src/shared/. .
 RUN python -m build
 
 RUN apk add --no-cache  \
-    gcc \
     build-base\
-    libc-dev\
     linux-headers
 
 COPY ./src/core/sse/forward.c .
@@ -41,50 +39,37 @@ RUN uv pip install --system --no-cache-dir ./custom_packages/taranis_ng_shared-*
 # install other dependencies
 
 COPY ./src/core/pyproject.toml /app/pyproject.toml
-RUN \
-    apk add --no-cache --virtual .build-deps \
-    gcc \
-    g++ \
-    git \
-    build-base\
-    libc-dev\
-    zlib-dev \
-    linux-headers \
-    make \
-    glib-dev \
-    musl-dev \
-    python3-dev \
-    libffi-dev \
-    postgresql-dev && \
-    uv pip install --system --no-cache-dir . && \
-    apk --purge del .build-deps
-
+RUN apk add --no-cache --virtual .build-deps \
+        build-base \
+        python3-dev \
+        libffi-dev \
+        openssl-dev \
+        zlib-dev \
+        linux-headers \
+        postgresql-dev \
+        git \
+    && uv pip install --system --no-cache-dir . \
+    && apk del .build-deps
 
 COPY --from=build_shared /build_shared/forward /usr/local/bin/forward
 
-COPY ./docker/start.sh /start.sh
-RUN chmod +x /start.sh
-
-COPY ./docker/prestart_core.sh /app/prestart.sh
-RUN chmod +x /app/prestart.sh
-
-COPY ./docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY --chmod=755 ./docker/start.sh /start.sh
+COPY --chmod=755 ./docker/prestart_core.sh /app/prestart.sh
+COPY --chmod=755 ./docker/entrypoint.sh /entrypoint.sh
 
 COPY ./docker/gunicorn_conf.py /gunicorn_conf.py
 
 COPY ./src/core/. /app/
 
-RUN chmod +x /app/manage.py && \
-    chmod +x /app/db_migration.py
+RUN chmod +x /app/manage.py /app/db_migration.py
 
 EXPOSE 80
 
 # setup environment variables
-ENV PYTHONPATH=/app
-ENV MODULE_NAME run
-ENV VARIABLE_NAME app
-ENV GUNICORN_CMD_ARGS --timeout 120
+ENV PYTHONPATH="/app"
+ENV MODULE_NAME="run"
+ENV VARIABLE_NAME="app"
+ENV GUNICORN_CMD_ARGS="--timeout 120"
 
 VOLUME ["/data"]
 

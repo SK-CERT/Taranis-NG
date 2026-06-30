@@ -14,7 +14,7 @@ COPY ./src/gui/public /app/public
 COPY ./src/gui/src /app/src
 COPY ./src/gui/babel.config.js .
 
-ENV NODE_OPTIONS=--openssl-legacy-provider
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 RUN npm run build
 
 # production stage
