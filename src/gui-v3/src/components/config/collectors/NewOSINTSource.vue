@@ -4,6 +4,7 @@
         max-width="1000"
         persistent
         scrollable
+        @keydown.esc="requestClose"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -18,14 +19,14 @@
                 :title="isEdit ? t('collectors.sources.edit') : t('collectors.sources.add_new')"
                 :saving="saving"
                 :save-disabled="!selectedCollector || !canUpdate"
-                @cancel="handleCancel"
-                @save="handleSubmit"
+                @cancel="requestClose"
+                @save="saveAndClose"
             />
 
             <v-card-text>
                 <v-form
                     ref="formRef"
-                    @submit.prevent="handleSubmit"
+                    @submit.prevent="saveAndClose"
                 >
                     <v-select
                         v-model="selectedNode"
@@ -162,6 +163,13 @@
                 </v-alert>
             </v-card-text>
         </v-card>
+
+        <UnsavedChangesDialog
+            v-model="confirmVisible"
+            @continue="continueEditing"
+            @save="saveAndClose"
+            @discard="discardAndClose"
+        />
     </v-dialog>
 </template>
 
@@ -170,6 +178,8 @@
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { useAuth } from '@/composables/useAuth'
     import { useConfigStore } from '@/stores/config'
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
@@ -408,18 +418,19 @@
         await loadSourceGroups()
     }
 
-    async function handleSubmit(): Promise<void> {
+    // Persists the form. Returns true on success so the guard can decide whether to close.
+    async function persist(): Promise<boolean> {
         showValidationError.value = false
         showError.value = false
 
         if (!formRef.value?.validate) {
-            return
+            return false
         }
 
         const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid || !selectedCollector.value) {
             showValidationError.value = true
-            return
+            return false
         }
 
         saving.value = true
@@ -452,8 +463,8 @@
                 )
             }
 
-            dialog.value = false
             emit('saved')
+            return true
         } catch (error) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -461,14 +472,27 @@
                 })
             )
             showError.value = true
+            return false
         } finally {
             saving.value = false
         }
     }
 
-    function handleCancel(): void {
+    function closeDialog(): void {
         dialog.value = false
     }
+
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => ({
+            item: localItem.value,
+            collector: selectedCollector.value?.id ?? null,
+            params: parameterValues.value,
+            wordLists: selectedWordListIds.value,
+            groups: selectedOSINTSourceGroupIds.value
+        }),
+        save: persist,
+        close: closeDialog
+    })
 
     watch(
         () => props.editItem,
@@ -520,6 +544,9 @@
     watch(dialog, (newValue) => {
         if (!newValue) {
             resetFormState()
+        } else {
+            // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+            capture()
         }
     })
 

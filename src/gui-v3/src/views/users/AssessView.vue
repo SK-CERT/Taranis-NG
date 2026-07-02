@@ -6,11 +6,26 @@
                 title="nav_menu.newsitems"
                 total_count_title="toolbar_filter.total_count"
                 selected_count_title="toolbar_filter.selected_count"
-                :show-add-button="hasManualSources"
                 @update-filter="updateFilter"
                 @update-data="updateData"
-                @add-new="showAddNewsItemDialog = true"
-            />
+            >
+                <!-- Add News Item: the button is the dialog's activator so the open
+                     animation originates from it (matches the Configuration dialogs). -->
+                <template #addbutton>
+                    <AddNewsItemDialog
+                        v-model="showAddNewsItemDialog"
+                        :manual-sources="assessStore.getManualOSINTSourcesList"
+                        @news-item-added="handleNewsItemAdded"
+                    >
+                        <template #activator="{ props: activatorProps }">
+                            <AddNewButton
+                                :show="hasManualSources"
+                                v-bind="activatorProps"
+                            />
+                        </template>
+                    </AddNewsItemDialog>
+                </template>
+            </ToolbarFilterAssess>
         </template>
 
         <template #content>
@@ -28,13 +43,6 @@
         </template>
     </ViewLayout>
 
-    <!-- Add News Item Dialog -->
-    <AddNewsItemDialog
-        v-model="showAddNewsItemDialog"
-        :manual-sources="assessStore.getManualOSINTSourcesList"
-        @news-item-added="handleNewsItemAdded"
-    />
-
     <!-- New Report Item Dialog -->
     <NewReportItem ref="newReportItem" />
 </template>
@@ -48,6 +56,7 @@
     import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess.vue'
     import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
     import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
 
     const props = withDefaults(

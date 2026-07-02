@@ -13,13 +13,8 @@
                 md="9"
             >
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap">
-                    <v-text-field
+                    <SearchField
                         v-model="filter.search"
-                        :placeholder="t('toolbar_filter.search')"
-                        :prepend-inner-icon="ICONS.MAGNIFY"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
                         clearable
                         style="flex: 0 1 auto; min-width: 250px"
                         @update:model-value="debounceSearch"
@@ -57,7 +52,7 @@
 <script setup lang="ts">
     import { ref } from 'vue'
     import { useI18n } from 'vue-i18n'
-    import { ICONS } from '@/config/ui-constants'
+    import SearchField from '@/components/common/SearchField.vue'
 
     type FilterState = {
         search: string

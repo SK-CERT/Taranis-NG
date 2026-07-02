@@ -2,8 +2,6 @@
     <v-row
         align="start"
         class="ga-2 pt-1"
-        @mouseenter="itemHover = true"
-        @mouseleave="itemHover = false"
     >
         <v-col
             v-if="$slots['col_left']"
@@ -40,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed } from 'vue'
+    import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
@@ -64,13 +62,14 @@
     }>()
 
     const { t } = useI18n()
-    const itemHover = ref(false)
 
     const delButtonVisible = computed(() => {
         // Never allow deleting the last value: the effective minimum is at least 1,
         // but a higher min_occurrence from the attribute group is still respected.
+        // Shown persistently (not only on hover) so it's consistent across attributes and
+        // doesn't shift adjacent controls (e.g. the string open-link button) on hover.
         const minRequired = Math.max(props.occurrence ?? 0, 1)
-        return itemHover.value && minRequired < props.values.length
+        return minRequired < props.values.length
     })
 
     const handleDelete = (): void => {

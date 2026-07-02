@@ -3,6 +3,8 @@
         v-model="dialog"
         max-width="600"
         persistent
+        scrollable
+        @keydown.esc="requestClose"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -15,14 +17,14 @@
             <DialogToolbar
                 :title="isEdit ? t('data_providers.data.edit') : t('data_providers.data.add_new')"
                 :saving="saving"
-                @cancel="handleCancel"
-                @save="handleSubmit"
+                @cancel="requestClose"
+                @save="saveAndClose"
             />
 
             <v-card-text>
                 <v-form
                     ref="formRef"
-                    @submit.prevent="handleSubmit"
+                    @submit.prevent="saveAndClose"
                 >
                     <v-text-field
                         v-model="localItem.name"
@@ -112,6 +114,13 @@
                 </v-alert>
             </v-card-text>
         </v-card>
+
+        <UnsavedChangesDialog
+            v-model="confirmVisible"
+            @continue="continueEditing"
+            @save="saveAndClose"
+            @discard="discardAndClose"
+        />
     </v-dialog>
 </template>
 
@@ -120,7 +129,9 @@
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { createNewDataProvider, updateDataProvider } from '@/api/config'
 
     type DataProviderItem = {
@@ -140,14 +151,10 @@
 
     const props = withDefaults(
         defineProps<{
-            modelValue?: boolean
-            item?: Partial<DataProviderItem>
-            isEdit?: boolean
+            editItem?: Partial<DataProviderItem> | null
         }>(),
         {
-            modelValue: false,
-            item: () => ({}),
-            isEdit: false
+            editItem: null
         }
     )
 
@@ -176,20 +183,22 @@
     const localItem = ref<DataProviderItem>({ ...defaultItem })
 
     const canCreate = computed(() => checkPermission('CONFIG_DATA_PROVIDER_CREATE'))
+    const isEdit = computed(() => !!localItem.value.id)
 
-    async function handleSubmit(): Promise<void> {
+    // Persists the form. Returns true on success so the guard can decide whether to close.
+    async function persist(): Promise<boolean> {
         showValidationError.value = false
         showError.value = false
 
         const { valid } = (await formRef.value.validate()) as FormValidationResult
         if (!valid) {
             showValidationError.value = true
-            return
+            return false
         }
 
         saving.value = true
         try {
-            if (props.isEdit) {
+            if (isEdit.value) {
                 await updateDataProvider(localItem.value)
             } else {
                 // Backend create schema has no id field for the constructor; omit it (null fails validation).
@@ -198,7 +207,7 @@
                 await createNewDataProvider(payload)
             }
             emit('saved')
-            handleCancel()
+            return true
         } catch (error) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -206,12 +215,13 @@
                 })
             )
             showError.value = true
+            return false
         } finally {
             saving.value = false
         }
     }
 
-    function handleCancel(): void {
+    function closeDialog(): void {
         showValidationError.value = false
         showError.value = false
         formRef.value?.reset()
@@ -220,11 +230,19 @@
         showApiKey.value = false
     }
 
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => localItem.value,
+        save: persist,
+        close: closeDialog
+    })
+
     watch(
-        () => props.item,
+        () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
                 localItem.value = { ...defaultItem, ...newItem }
+                // Opening the dialog automatically when an item to edit is provided.
+                dialog.value = true
             } else {
                 localItem.value = { ...defaultItem }
             }
@@ -240,7 +258,11 @@
                 showError.value = false
                 saving.value = false
                 showApiKey.value = false
+            } else {
+                // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+                capture()
             }
+            emit('update:modelValue', newVal)
         }
     )
 </script>

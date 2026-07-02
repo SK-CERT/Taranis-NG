@@ -3,7 +3,7 @@
         color="primary"
         density="compact"
     >
-        <v-toolbar-title>{{ title }}</v-toolbar-title>
+        <v-toolbar-title class="dialog-toolbar-title">{{ title }}</v-toolbar-title>
         <v-spacer />
         <v-btn
             variant="text"
@@ -53,3 +53,12 @@
         (e: 'save'): void
     }>()
 </script>
+
+<style scoped>
+    /* Size the title to its content so the v-spacer (not the title) absorbs the
+       free space; otherwise the title shares space with the spacer and gets
+       truncated with an ellipsis even when there is room to show it in full. */
+    .dialog-toolbar-title {
+        flex: 0 1 auto;
+    }
+</style>

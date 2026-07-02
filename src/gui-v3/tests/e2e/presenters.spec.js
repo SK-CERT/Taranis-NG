@@ -13,7 +13,10 @@ import { login } from '../helpers/test-helpers'
 test.describe('Presenters', () => {
     test.beforeEach(async ({ page }) => {
         await login(page)
-        await page.goto('/v2/config/presenters')
+        // Go straight to the resolved tab URL. The bare /config/presenters path makes the
+        // view rewrite the URL to add ?tab=types on mount, and that redirect during initial
+        // navigation trips a WebKit "internal error".
+        await page.goto('/v2/config/presenters?tab=types')
         await page.getByRole('tab', { name: 'Product Types' }).waitFor({ state: 'visible', timeout: 5000 })
     })
 

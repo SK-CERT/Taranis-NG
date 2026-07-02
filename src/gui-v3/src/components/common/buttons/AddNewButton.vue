@@ -17,6 +17,11 @@
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
 
+    // The click handler is forwarded manually via onButtonClick and the remaining
+    // attrs are bound explicitly through sanitizedAttrs, so automatic fallthrough
+    // would attach onClick a second time and fire the handler twice.
+    defineOptions({ inheritAttrs: false })
+
     const props = defineProps({
         label: {
             type: String,

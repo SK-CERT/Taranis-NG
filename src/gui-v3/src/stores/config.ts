@@ -9,7 +9,6 @@ import {
     getAllBotsNodes,
     getAllCollectorsNodes,
     getAllExternalPermissions,
-    getAllExternalUsers,
     getAllOrganizations,
     getAllOSINTSourceGroups,
     getAllOSINTSources,
@@ -184,10 +183,6 @@ export const useConfigStore = defineStore('config', () => {
         return await loadListState(getAllUsers, data, users)
     }
 
-    async function loadExternalUsers(data: FilterPayload): Promise<ApiResponse<ListState>> {
-        return await loadListState(getAllExternalUsers, data, users)
-    }
-
     async function loadWordLists(data: FilterPayload): Promise<ApiResponse<ListState>> {
         return await loadListState(getAllWordLists, data, wordLists)
     }
@@ -298,7 +293,6 @@ export const useConfigStore = defineStore('config', () => {
         loadACLEntries,
         loadOrganizations,
         loadUsers,
-        loadExternalUsers,
         loadWordLists,
         loadRemoteAccesses,
         loadRemoteNodes,

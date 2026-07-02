@@ -5,21 +5,20 @@
             <v-card-text>
                 <v-row>
                     <v-col cols="8">
-                        <v-text-field
+                        <SearchField
                             v-model="search"
-                            :label="t('toolbar_filter.search')"
-                            prepend-inner-icon="mdi-magnify"
-                            variant="outlined"
-                            density="compact"
-                            hide-details
-                            single-line
+                            :width="350"
                         />
                     </v-col>
                     <v-col
                         cols="4"
                         class="text-right"
                     >
-                        <NewAiProvider @saved="handleSaved" />
+                        <NewAiProvider
+                            :edit-item="editItem"
+                            @saved="handleSaved"
+                            @update:model-value="onDialogChange"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -70,16 +69,12 @@
             </v-data-table>
         </v-card>
 
-        <!-- Edit Dialog -->
-        <v-dialog
-            v-model="showEditDialog"
-            max-width="600"
-        >
-            <NewAiProvider
-                :edit-item="editItem"
-                @saved="handleSaved"
-            />
-        </v-dialog>
+        <ConfirmationDialog
+            v-model="deleteDialog"
+            :message="itemToDelete?.name || ''"
+            max-width="600px"
+            @confirm="confirmDelete"
+        />
     </v-container>
 </template>
 
@@ -90,6 +85,8 @@
     import { deleteAiProvider } from '@/api/config'
     import NewAiProvider from '@/components/config/data-providers/NewAiProvider.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import SearchField from '@/components/common/SearchField.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
     type HeaderEntry = {
         title: string
@@ -112,8 +109,9 @@
     const configStore = useConfigStore()
 
     const search = ref('')
-    const showEditDialog = ref(false)
     const editItem = ref<AiProviderItem | null>(null)
+    const deleteDialog = ref(false)
+    const itemToDelete = ref<AiProviderItem | null>(null)
 
     const headers: HeaderEntry[] = [
         { title: t('data_providers.ai.name'), key: 'name' },
@@ -136,25 +134,40 @@
     }
 
     const handleEdit = (item: AiProviderItem): void => {
+        // Setting editItem triggers NewAiProvider's watcher to open its dialog in edit mode.
         editItem.value = item
-        showEditDialog.value = true
     }
 
-    const handleDelete = async (item: AiProviderItem): Promise<void> => {
-        if (confirm(t('common.messagebox.delete_confirm', { name: item.name }))) {
-            try {
-                await deleteAiProvider(item)
-                await loadData()
-            } catch (error) {
-                console.error('Error deleting AI provider:', error)
-            }
+    const handleDelete = (item: AiProviderItem): void => {
+        itemToDelete.value = item
+        deleteDialog.value = true
+    }
+
+    const confirmDelete = async (): Promise<void> => {
+        if (!itemToDelete.value) {
+            return
+        }
+        try {
+            await deleteAiProvider(itemToDelete.value)
+            await loadData()
+        } catch (error) {
+            console.error('Error deleting AI provider:', error)
+        } finally {
+            itemToDelete.value = null
         }
     }
 
     const handleSaved = (): void => {
-        showEditDialog.value = false
         editItem.value = null
         loadData()
+    }
+
+    // Reset editItem when the dialog closes so the same row can be edited again,
+    // and so the Add New button opens a blank form.
+    const onDialogChange = (open: boolean): void => {
+        if (!open) {
+            editItem.value = null
+        }
     }
 
     onMounted(() => {

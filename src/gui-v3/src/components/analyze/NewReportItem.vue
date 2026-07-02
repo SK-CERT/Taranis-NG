@@ -14,7 +14,7 @@
             v-model="visible"
             fullscreen
             persistent
-            @keydown.esc="cancel"
+            @keydown.esc.stop="cancel"
         >
             <v-dialog
                 v-model="showCloseConfirmation"
@@ -336,7 +336,7 @@
                     <v-col
                         v-if="verticalView"
                         :cols="6"
-                        style="height: 100%; overflow-y: auto"
+                        style="height: 100%"
                         class="pa-5 taranis-ng-vertical-view"
                     >
                         <NewsItemSelector

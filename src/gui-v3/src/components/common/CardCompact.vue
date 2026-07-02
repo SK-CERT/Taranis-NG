@@ -132,35 +132,12 @@
         </div>
 
         <!-- Delete confirmation dialog -->
-        <v-dialog
+        <ConfirmationDialog
             v-model="deleteDialog"
+            :message="card.title || card.name || ''"
             max-width="400"
-        >
-            <v-card>
-                <v-card-title class="text-headline-small">
-                    {{ t('common.messagebox.delete') }}
-                </v-card-title>
-                <v-card-text>
-                    {{ card.title || card.name }}
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn
-                        text
-                        @click="deleteDialog = false"
-                    >
-                        {{ t('common.cancel') }}
-                    </v-btn>
-                    <v-btn
-                        color="error"
-                        text
-                        @click="handleDelete"
-                    >
-                        {{ t('common.delete') }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+            @confirm="handleDelete"
+        />
     </v-container>
 </template>
 
@@ -171,6 +148,7 @@
     import type { PermissionKey } from '@/types/permissions'
     import { ICONS } from '@/config/ui-constants'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
     type CardData = {
         id?: string | number

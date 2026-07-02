@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { ref, onMounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteReportItemType } from '@/api/config'
@@ -83,7 +83,10 @@
         }
     }
 
-    const handleEdit = (reportType: ReportTypeItem): void => {
+    const handleEdit = async (reportType: ReportTypeItem): Promise<void> => {
+        // Reset first so re-selecting the same row reopens the dialog.
+        editItem.value = null
+        await nextTick()
         editItem.value = reportType
     }
 

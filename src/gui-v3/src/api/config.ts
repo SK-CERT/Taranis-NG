@@ -30,8 +30,8 @@ export function addAttributeEnum(attribute_id, data) {
     return ApiService.post('/config/attributes/' + attribute_id + '/enums', data)
 }
 
-export function updateAttributeEnum(attribute_id, data) {
-    return ApiService.put('/config/attributes/' + attribute_id + '/enums/' + data.id, data)
+export function updateAttributeEnum(attribute_id, enum_id, data) {
+    return ApiService.put('/config/attributes/' + attribute_id + '/enums/' + enum_id, data)
 }
 
 export function deleteAttributeEnum(attribute_id, attribute_enum_id) {
@@ -172,22 +172,6 @@ export function updateUser(user) {
 
 export function deleteUser(user) {
     return ApiService.delete('/config/users/' + user.id)
-}
-
-export function getAllExternalUsers(filter) {
-    return ApiService.get('/config/external-users?search=' + filter.search)
-}
-
-export function createNewExternalUser(user) {
-    return ApiService.post('/config/external-users', user)
-}
-
-export function updateExternalUser(user) {
-    return ApiService.put('/config/external-users/' + user.id, user)
-}
-
-export function deleteExternalUser(user) {
-    return ApiService.delete('/config/external-users/' + user.id)
 }
 
 export function getAllSettings(filter) {

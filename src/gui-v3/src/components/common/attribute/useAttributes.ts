@@ -37,7 +37,9 @@ type UseAttributesProps = {
     edit?: boolean
     modify?: boolean
     readOnly?: boolean
-    reportItemId: number
+    // Null while a report item is being created (not yet persisted). The API calls that
+    // consume it only run in edit mode (behind `props.edit === true`), where it is a real id.
+    reportItemId: number | null
     attributeGroup?: AttributeGroup
     values: AttributeValue[]
 }

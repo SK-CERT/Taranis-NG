@@ -5,14 +5,9 @@
             <v-card-text>
                 <v-row>
                     <v-col cols="8">
-                        <v-text-field
+                        <SearchField
                             v-model="search"
-                            :label="t('toolbar_filter.search')"
-                            prepend-inner-icon="mdi-magnify"
-                            variant="outlined"
-                            density="compact"
-                            hide-details
-                            single-line
+                            :width="350"
                         />
                     </v-col>
                     <v-col
@@ -88,6 +83,7 @@
     import NewUser from '@/components/config/access-management/NewUser.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import SearchField from '@/components/common/SearchField.vue'
 
     type HeaderEntry = {
         title: string

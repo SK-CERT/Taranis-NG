@@ -92,14 +92,6 @@ export const configLinks: ConfigLink[] = [
         route: '/config/data-providers',
         permission: 'CONFIG_DATA_PROVIDER_ACCESS',
         translate: true
-    },
-    {
-        id: 13,
-        icon: 'mdi-database-export',
-        title: 'nav_menu.external',
-        route: '/config/external',
-        permission: 'MY_ASSETS_CONFIG',
-        translate: true
     }
 ]
 

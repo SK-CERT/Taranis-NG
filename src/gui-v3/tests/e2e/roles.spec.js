@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, navigateToConfig, openDialog, closeDialog, saveDialog, generateTestName } from '../helpers/test-helpers'
+import { login, navigateToConfig, openDialog, saveDialog, generateTestName } from '../helpers/test-helpers'
 
 /**
  * Role Management CRUD E2E Tests
@@ -52,9 +52,15 @@ test.describe('Role Management', () => {
         // Save
         await saveDialog(page)
 
-        // Web-first assertion (auto-retries): a successful save closes the dialog
-        // and surfaces the new row; a rejected save keeps an inline alert open.
-        await expect(page.locator('tbody tr').filter({ hasText: roleName }).or(dialog.locator('.v-alert.text-error'))).toBeVisible()
+        // A successful save closes the dialog; a rejected save keeps it open with an inline alert.
+        // Vuetify keeps a booted dialog's root mounted, so assert on the active-overlay class
+        // (toggled with open state) rather than :visible, which still matches a closed dialog.
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+
+        // The list is paginated, so the new row may land on a later page. Filter by the
+        // (unique) name to surface it regardless of which page it's on.
+        await page.getByRole('textbox', { name: 'Search' }).fill(roleName)
+        await expect(page.locator('tbody tr').filter({ hasText: roleName })).toBeVisible()
     })
 
     test('should show validation error when creating role without name', async ({ page }) => {
@@ -98,14 +104,22 @@ test.describe('Role Management', () => {
         // Fill some data
         await page.locator('.v-dialog:visible input').first().fill('Cancelled Role')
 
-        // Cancel
-        await closeDialog(page)
+        // Cancel — with unsaved edits this raises the unsaved-changes prompt.
+        await page
+            .locator('.v-dialog:visible button')
+            .filter({ hasText: /^Cancel$/ })
+            .click()
 
-        // Dialog should close
-        await expect(page.locator('.v-dialog')).not.toBeVisible()
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+
+        // Both the prompt and the edit dialog close. Vuetify keeps a booted dialog's root
+        // mounted, so assert on the active-overlay class rather than :visible.
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
 
         // Role should not be created
-        await expect(page.locator('text=Cancelled Role')).not.toBeVisible()
+        await expect(page.locator('tbody tr').filter({ hasText: 'Cancelled Role' })).toHaveCount(0)
     })
 
     test('should filter/search roles', async ({ page }) => {

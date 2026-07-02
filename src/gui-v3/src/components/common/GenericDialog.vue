@@ -3,6 +3,7 @@
         v-model="dialogVisible"
         :max-width="maxWidth"
         persistent
+        scrollable
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton

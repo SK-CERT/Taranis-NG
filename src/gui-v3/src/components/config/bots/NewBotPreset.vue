@@ -4,6 +4,7 @@
         max-width="800"
         persistent
         scrollable
+        @keydown.esc="requestClose"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -17,14 +18,14 @@
                 :title="isEdit ? t('bots.presets.edit') : t('bots.presets.add_new')"
                 :saving="saving"
                 :save-disabled="!selectedBot"
-                @cancel="cancel"
-                @save="handleSubmit"
+                @cancel="requestClose"
+                @save="saveAndClose"
             />
 
             <v-card-text>
                 <v-form
                     ref="formRef"
-                    @submit.prevent="handleSubmit"
+                    @submit.prevent="saveAndClose"
                 >
                     <v-select
                         v-model="selectedNode"
@@ -90,26 +91,26 @@
                             :key="param.key || index"
                             class="mb-3"
                         >
-                            <v-row align="center">
-                                <v-col cols="11">
-                                    <v-text-field
-                                        v-model="parameterValues[index]"
-                                        :label="param.name"
-                                        :type="param.key && param.key.includes('PASSWORD') ? 'password' : 'text'"
-                                        variant="outlined"
-                                        density="comfortable"
-                                        :disabled="saving"
-                                        :placeholder="param.default_value"
-                                    />
-                                </v-col>
-                                <v-col cols="1">
+                            <v-text-field
+                                v-model="parameterValues[index]"
+                                :label="param.name"
+                                :type="param.key && param.key.includes('PASSWORD') ? 'password' : 'text'"
+                                variant="outlined"
+                                density="comfortable"
+                                :disabled="saving"
+                                :placeholder="param.default_value"
+                            >
+                                <template
+                                    v-if="param.description"
+                                    #append-inner
+                                >
                                     <v-icon
                                         color="primary"
                                         :title="param.description"
                                         >mdi-help-circle</v-icon
                                     >
-                                </v-col>
-                            </v-row>
+                                </template>
+                            </v-text-field>
                         </div>
                     </div>
 
@@ -133,6 +134,13 @@
                 </v-form>
             </v-card-text>
         </v-card>
+
+        <UnsavedChangesDialog
+            v-model="confirmVisible"
+            @continue="continueEditing"
+            @save="saveAndClose"
+            @discard="discardAndClose"
+        />
     </v-dialog>
 </template>
 
@@ -141,6 +149,8 @@
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { useAuth } from '@/composables/useAuth'
     import { createNewBotPreset, updateBotPreset, getAllBotsNodes } from '@/api/config'
 
@@ -270,6 +280,9 @@
     watch(dialog, (newVal) => {
         if (!newVal) {
             resetForm()
+        } else {
+            // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+            capture()
         }
         emit('update:modelValue', newVal)
     })
@@ -323,22 +336,23 @@
         }
     }
 
-    const cancel = (): void => {
+    const closeDialog = (): void => {
         dialog.value = false
     }
 
-    const handleSubmit = async (): Promise<void> => {
+    // Persists the form. Returns true on success so the guard can decide whether to close.
+    const persist = async (): Promise<boolean> => {
         showValidationError.value = false
         showError.value = false
 
         if (!formRef.value?.validate) {
-            return
+            return false
         }
         const { valid } = (await formRef.value.validate()) as FormValidationResult
 
         if (!valid || !selectedBot.value) {
             showValidationError.value = true
-            return
+            return false
         }
 
         saving.value = true
@@ -373,8 +387,8 @@
                 )
             }
 
-            dialog.value = false
             emit('saved')
+            return true
         } catch (error) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -382,8 +396,15 @@
                 })
             )
             showError.value = true
+            return false
         } finally {
             saving.value = false
         }
     }
+
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => ({ item: localItem.value, bot: selectedBot.value?.id ?? null, params: parameterValues.value }),
+        save: persist,
+        close: closeDialog
+    })
 </script>

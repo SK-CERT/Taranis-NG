@@ -12,7 +12,6 @@ vi.mock('@/api/config', () => ({
     getAllBotsNodes: vi.fn(),
     getAllCollectorsNodes: vi.fn(),
     getAllExternalPermissions: vi.fn(),
-    getAllExternalUsers: vi.fn(),
     getAllOrganizations: vi.fn(),
     getAllOSINTSourceGroups: vi.fn(),
     getAllOSINTSources: vi.fn(),
@@ -169,16 +168,6 @@ describe('Config Store', () => {
             await store.loadExternalPermissions()
 
             expect(store.allPermissions.items).toEqual(perms)
-        })
-
-        it('loadExternalUsers should update users', async () => {
-            const extUsers = [{ id: 'ext-u1', name: 'External User' }]
-            vi.mocked(configApi.getAllExternalUsers).mockResolvedValue(makeResponse(extUsers))
-
-            const store = useConfigStore()
-            await store.loadExternalUsers()
-
-            expect(store.users.items).toEqual(extUsers)
         })
 
         it('loadUserProductTypes should update productTypes from user API', async () => {
