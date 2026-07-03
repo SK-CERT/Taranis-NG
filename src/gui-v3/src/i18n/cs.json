@@ -250,6 +250,7 @@
         "removed": "Atribut byl smazán",
         "removed_error": "Atribut je používán a nemohl být smazán",
         "value": "Hodnota",
+        "description": "Popis",
         "value_text": "Popis hodnoty",
         "tlp_clear": "TLP:CLEAR",
         "tlp_green": "TLP:GREEN",

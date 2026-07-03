@@ -250,6 +250,7 @@
         "removed": "Attribute was successfully deleted",
         "removed_error": "Attribute is in use and could not be deleted",
         "value": "Value",
+        "description": "Description",
         "value_text": "Value text",
         "tlp_clear": "TLP:CLEAR",
         "tlp_green": "TLP:GREEN",

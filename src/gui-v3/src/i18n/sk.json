@@ -250,6 +250,7 @@
         "removed": "Atribút bol úspešne odstránený",
         "removed_error": "Atribút sa používa a nie je možné ho odstrániť",
         "value": "Hodnota",
+        "description": "Popis",
         "value_text": "Text hodnoty",
         "tlp_clear": "TLP:CLEAR",
         "tlp_green": "TLP:GREEN",

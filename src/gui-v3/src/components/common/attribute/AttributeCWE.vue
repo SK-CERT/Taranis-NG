@@ -28,6 +28,11 @@
                         {{ value.value }}
                         <v-icon size="x-small">{{ ICONS.OPEN }}</v-icon>
                     </a>
+                    <span
+                        v-if="value.value_description"
+                        class="cwe-description text--disabled"
+                        >&nbsp;&ndash; {{ value.value_description }}</span
+                    >
                 </span>
 
                 <!-- Editable -->
@@ -48,25 +53,41 @@
                         >
                     </template>
                     <template #col_middle="{ delVisible, onDelete }">
-                        <v-text-field
-                            v-model="value.value"
-                            density="compact"
-                            variant="outlined"
-                            hide-details="auto"
-                            label="CWE-NNN"
-                            :class="getLockedStyle(index)"
-                            :disabled="value.locked || !canModify"
-                            @focus="onFocus(index)"
-                            @blur="onBlur(index)"
-                            @keyup="onKeyUp(index)"
-                        >
-                            <template #append-inner>
-                                <AttributeFieldDeleteButton
-                                    :visible="delVisible"
-                                    @delete="onDelete"
-                                />
-                            </template>
-                        </v-text-field>
+                        <div class="cwe-fields">
+                            <v-text-field
+                                v-model="value.value"
+                                density="compact"
+                                variant="outlined"
+                                hide-details="auto"
+                                label="CWE"
+                                class="cwe-value-field"
+                                :class="getLockedStyle(index)"
+                                :disabled="value.locked || !canModify"
+                                @focus="onFocus(index)"
+                                @blur="onBlur(index)"
+                                @keyup="onKeyUp(index)"
+                            />
+                            <v-text-field
+                                v-model="value.value_description"
+                                density="compact"
+                                variant="outlined"
+                                hide-details="auto"
+                                :label="$t('attribute.description')"
+                                class="cwe-description-field"
+                                :class="getLockedStyle(index)"
+                                :disabled="value.locked || !canModify"
+                                @focus="onFocus(index)"
+                                @blur="onBlur(index)"
+                                @keyup="onKeyUp(index)"
+                            >
+                                <template #append-inner>
+                                    <AttributeFieldDeleteButton
+                                        :visible="delVisible"
+                                        @delete="onDelete"
+                                    />
+                                </template>
+                            </v-text-field>
+                        </div>
                     </template>
                 </AttributeValueLayout>
             </div>
@@ -85,6 +106,7 @@
     type AttributeValueItem = {
         index?: string | number
         value: string | null
+        value_description?: string
         remote?: boolean
         locked?: boolean
         [key: string]: unknown
@@ -138,6 +160,25 @@
         align-items: center;
         width: 100%;
         padding: 8px 0;
+    }
+
+    .cwe-description {
+        min-width: 0;
+    }
+
+    .cwe-fields {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .cwe-value-field {
+        flex: 0 0 130px;
+    }
+
+    .cwe-description-field {
+        flex: 1 1 auto;
+        min-width: 0;
     }
 
     .value-holder {
