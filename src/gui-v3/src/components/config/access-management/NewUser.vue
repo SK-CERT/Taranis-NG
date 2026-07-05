@@ -4,6 +4,7 @@
         max-width="1000"
         persistent
         scrollable
+        @keydown.esc="requestClose"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -16,14 +17,14 @@
             <DialogToolbar
                 :title="isEdit ? t('access_management.users.edit') : t('access_management.users.add_new')"
                 :saving="saving"
-                @cancel="cancel"
-                @save="handleSubmit"
+                @cancel="requestClose"
+                @save="saveAndClose"
             />
 
             <v-card-text>
                 <v-form
                     ref="formRef"
-                    @submit.prevent="handleSubmit"
+                    @submit.prevent="saveAndClose"
                 >
                     <v-row>
                         <v-col cols="6">
@@ -130,6 +131,13 @@
                 </v-form>
             </v-card-text>
         </v-card>
+
+        <UnsavedChangesDialog
+            v-model="confirmVisible"
+            @continue="continueEditing"
+            @save="saveAndClose"
+            @discard="discardAndClose"
+        />
     </v-dialog>
 </template>
 
@@ -139,6 +147,8 @@
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import EntitySelectTable from '@/components/common/EntitySelectTable.vue'
     import { createNewUser, updateUser, getAllOrganizations, getAllRoles, getAllPermissions } from '@/api/config'
 
@@ -293,6 +303,9 @@
     watch(dialog, (newVal) => {
         if (!newVal) {
             resetForm()
+        } else {
+            // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+            capture()
         }
         emit('update:modelValue', newVal)
     })
@@ -341,11 +354,12 @@
         }
     }
 
-    const cancel = (): void => {
+    const closeDialog = (): void => {
         dialog.value = false
     }
 
-    const handleSubmit = async (): Promise<void> => {
+    // Persists the form. Returns true on success so the guard can decide whether to close.
+    const persist = async (): Promise<boolean> => {
         showValidationError.value = false
         showError.value = false
 
@@ -353,7 +367,7 @@
 
         if (!valid) {
             showValidationError.value = true
-            return
+            return false
         }
 
         saving.value = true
@@ -391,8 +405,8 @@
                 )
             }
 
-            dialog.value = false
             emit('saved')
+            return true
         } catch (error) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -400,8 +414,22 @@
                 })
             )
             showError.value = true
+            return false
         } finally {
             saving.value = false
         }
     }
+
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => ({
+            item: localItem.value,
+            password: password.value,
+            passwordConfirm: passwordConfirm.value,
+            organizations: selectedOrganizations.value,
+            roles: selectedRoles.value,
+            permissions: selectedPermissions.value
+        }),
+        save: persist,
+        close: closeDialog
+    })
 </script>

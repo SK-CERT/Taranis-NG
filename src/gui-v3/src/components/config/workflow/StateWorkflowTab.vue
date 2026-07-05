@@ -55,9 +55,9 @@
                         {{ item.state.icon }}
                     </v-icon>
                     {{
-                        $te(`workflow.states.${item.state.display_name}`)
+                        item.state && $te(`workflow.states.${item.state.display_name}`)
                             ? $t(`workflow.states.${item.state.display_name}`)
-                            : item.state.display_name
+                            : item.state?.display_name
                     }}
                 </template>
 
@@ -104,43 +104,26 @@
         </v-card>
 
         <!-- Delete Dialog -->
-        <v-dialog
+        <ConfirmationDialog
             v-model="dialogDelete"
+            :message="t('common.messagebox.delete_confirm_item')"
             max-width="500"
-        >
-            <v-card>
-                <v-card-title>{{ t('common.messagebox.delete') }}</v-card-title>
-                <v-card-text>
-                    {{ t('common.messagebox.delete_confirm_item') }}
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn
-                        color="grey"
-                        variant="text"
-                        @click="closeDelete"
-                    >
-                        {{ t('common.cancel') }}
-                    </v-btn>
-                    <v-btn
-                        color="error"
-                        variant="text"
-                        @click="deleteRecord"
-                    >
-                        {{ t('common.delete') }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+            @confirm="deleteRecord"
+        />
 
         <!-- Edit Dialog - Simplified -->
         <v-dialog
             v-model="dialogEdit"
             max-width="700"
+            scrollable
         >
             <v-card>
                 <DialogToolbar
-                    :title="editedIndex === -1 ? t('workflow.state_workflow.add_new') : t('workflow.state_workflow.edit')"
+                    :title="
+                        editedIndex === -1
+                            ? t('workflow.state_workflow.add_state_association')
+                            : t('workflow.state_workflow.edit_state_association')
+                    "
                     :show-save="isEditable"
                     @cancel="closeEdit"
                     @save="saveRecord"
@@ -210,6 +193,7 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { createNewStateEntityType, updateStateEntityType, deleteStateEntityType } from '@/api/config'
@@ -366,20 +350,15 @@
         dialogDelete.value = true
     }
 
+    // No close-time reset: addItem/editItem/deleteItem fully set editedItem/editedIndex
+    // before opening, so resetting here is unnecessary. A deferred reset (to avoid the
+    // close-animation flicker) would also race the next dialog open and clobber its state.
     function closeEdit(): void {
         dialogEdit.value = false
-        setTimeout(() => {
-            editedItem.value = { ...defaultItem }
-            editedIndex.value = -1
-        }, 300)
     }
 
     function closeDelete(): void {
         dialogDelete.value = false
-        setTimeout(() => {
-            editedItem.value = { ...defaultItem }
-            editedIndex.value = -1
-        }, 300)
     }
 
     async function saveRecord(): Promise<void> {
@@ -387,10 +366,21 @@
         if (!valid) return
 
         try {
+            // Send only the persisted fields. The record also carries a nested `state`
+            // object (and updated_by/at) which the backend schema feeds straight into the
+            // StateEntityType constructor, where the extra keys raise and the save 400s.
+            const payload = {
+                entity_type: editedItem.value.entity_type,
+                state_id: editedItem.value.state_id,
+                state_type: editedItem.value.state_type,
+                is_active: editedItem.value.is_active,
+                editable: editedItem.value.editable,
+                sort_order: editedItem.value.sort_order
+            }
             if (editedIndex.value > -1) {
-                await updateStateEntityType(editedItem.value)
+                await updateStateEntityType({ ...payload, id: editedItem.value.id })
             } else {
-                await createNewStateEntityType(editedItem.value)
+                await createNewStateEntityType(payload)
             }
             await fetchRecords()
             closeEdit()
@@ -414,7 +404,15 @@
             await fetchRecords()
             closeDelete()
         } catch (error) {
+            // Surface the failure and close the dialog instead of leaving it silently stuck
+            // open (which otherwise looks like a hang to the user and to E2E).
             console.error('Error deleting state entity type:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'common.error_deleting' }
+                })
+            )
+            closeDelete()
         }
     }
 

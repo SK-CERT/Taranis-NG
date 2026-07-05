@@ -144,7 +144,7 @@ export const BUTTON_CONFIGS = Object.freeze({
     },
     REMOVE: {
         icon: ICONS.REMOVE,
-        color: 'accent',
+        color: 'error',
         variant: 'text',
         size: 'small'
     },

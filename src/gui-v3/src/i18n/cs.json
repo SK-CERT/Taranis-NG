@@ -250,6 +250,7 @@
         "removed": "Atribut byl smazán",
         "removed_error": "Atribut je používán a nemohl být smazán",
         "value": "Hodnota",
+        "description": "Popis",
         "value_text": "Popis hodnoty",
         "tlp_clear": "TLP:CLEAR",
         "tlp_green": "TLP:GREEN",
@@ -476,7 +477,8 @@
             "auto_generate": "Automaticky generovat",
             "drag_to_reorder": "Přetažením změníte pořadí",
             "move_up": "Posunout nahoru",
-            "move_down": "Posunout dolů"
+            "move_down": "Posunout dolů",
+            "open_link": "Otevřít odkaz v novém okně"
         }
     },
     "product": {
@@ -827,10 +829,16 @@
         "save_failed": "Uložení se nezdařilo",
         "loading_data": "Načítání dat selhalo",
         "delete_failed": "Smazání se nezdařilo",
-        "load_groups": "Načítání skupin selhalo"
+        "load_groups": "Načítání skupin selhalo",
+        "not_found": {
+            "title": "Stránka nenalezena",
+            "message": "Stránka, kterou hledáte, neexistuje nebo byla přesunuta.",
+            "home": "Přejít na úvod"
+        }
     },
     "confirm_close": {
         "title": "Neuložené změny",
+        "message": "Máte neuložené změny. Co chcete udělat?",
         "continue": "Pokračovat v úpravách",
         "save_and_close": "Uložit a zavřít",
         "close": "Zavřít bez uložení"
@@ -851,6 +859,8 @@
         "end_of_list": "Konec seznamu",
         "messagebox": {
             "delete": "Jste si jisti, že chcete smazat tuto položku?",
+            "delete_confirm": "Opravdu chcete smazat „{name}“?",
+            "delete_confirm_item": "Opravdu chcete smazat tuto položku?",
             "remove": "Jste si jisti, že chcete odstranit tuto položku?"
         },
         "coming_soon": "Již brzy..."
@@ -1003,6 +1013,7 @@
             "name": "Název",
             "description": "Popis",
             "use_for_notifications": "Použit pro všechna globální upozornění",
+            "parameters": "Parametry",
             "successful": "Nové přednastavení bylo přidáno",
             "successful_edit": "Přednastavení bylo upraveno",
             "removed": "Přednastavení bylo smazáno",
@@ -1034,6 +1045,7 @@
             "edit": "Upravit přednastavení robota",
             "node": "Instance robotů",
             "bot": "Robot",
+            "parameters": "Parametry",
             "error": "Nepodařilo se vytvořit tohoto robota.",
             "name": "Název",
             "description": "Popis",
@@ -1052,7 +1064,7 @@
             "error": "Nepodařilo se uložit vzdálený přístup",
             "name": "Název",
             "description": "Popis",
-            "enabled": "Enabled",
+            "enabled": "Zapnuto",
             "successful": "Nový vzdálený přístup byl přidán",
             "successful_edit": "Vzdálený přístup byl upraven",
             "removed": "Vzdálený přístup byl smazán",
@@ -1134,6 +1146,14 @@
         "new_word": "Nové slovo",
         "words": "Slova",
         "new_category": "Nová kategorie",
+        "add_category": "Přidat kategorii",
+        "edit_category": "Upravit kategorii",
+        "categories": "Kategorie",
+        "category": "Kategorie",
+        "no_words": "Zatím žádná slova",
+        "no_categories": "Zatím žádné kategorie",
+        "add_category_hint": "Přidejte kategorii a začněte vytvářet tento seznam slov",
+        "link_hint": "Volitelná URL pro stažení slovních položek",
         "total_count": "Počet seznamů slov: ",
         "file_has_header": "Soubor má hlavičku",
         "import_from_csv": "Importovat z CSV",
@@ -1154,6 +1174,7 @@
             "description": "Popis",
             "section_title": "Název sekce",
             "new_group": "Nová skupina atributů",
+            "attribute_groups": "Skupiny atributů",
             "successful": "Nový typ analýzy byl přidán",
             "successful_edit": "Typ analýzy byl upraven",
             "removed_error": "Typ analýzy je používán a nemohl být smazán",
@@ -1167,6 +1188,14 @@
             "name": "Název",
             "description": "Popis",
             "type": "Typ",
+            "default_value": "Výchozí hodnota",
+            "validator": "Validátor",
+            "validator_parameter": "Parametr validátoru",
+            "constants": "Konstanty atributu",
+            "search": "Hledat",
+            "add_constant": "Přidat konstantu",
+            "edit_constant": "Upravit konstantu",
+            "value": "Hodnota",
             "error": "Nepodařilo se vytvořit tento atribut",
             "total_count": "Počet atributů: "
         }

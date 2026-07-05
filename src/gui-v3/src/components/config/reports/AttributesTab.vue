@@ -1,22 +1,13 @@
 <template>
     <v-container fluid>
         <v-card>
-            <v-card-title class="d-flex align-center">
-                <span>{{ t('nav_menu.attributes') }}</span>
-            </v-card-title>
-
             <!-- Toolbar -->
             <v-card-text>
                 <v-row>
                     <v-col cols="8">
-                        <v-text-field
+                        <SearchField
                             v-model="search"
-                            :label="t('toolbar_filter.search')"
-                            prepend-inner-icon="mdi-magnify"
-                            variant="outlined"
-                            density="compact"
-                            hide-details
-                            single-line
+                            :width="350"
                         />
                     </v-col>
                     <v-col
@@ -75,6 +66,7 @@
     import { ICONS } from '@/config/ui-constants'
     import NewAttribute from '@/components/config/reports/NewAttribute.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import SearchField from '@/components/common/SearchField.vue'
 
     // Representative icon per attribute type.
     const TYPE_ICONS: Record<string, string> = {
@@ -83,7 +75,7 @@
         BOOLEAN: 'mdi-toggle-switch-outline',
         DATE: 'mdi-calendar',
         TIME: 'mdi-clock-outline',
-        DATETIME: 'mdi-calendar-clock',
+        DATE_TIME: 'mdi-calendar-clock',
         TEXT: 'mdi-text-long',
         RICH_TEXT: 'mdi-text-box-outline',
         ENUM: 'mdi-format-list-bulleted',

@@ -50,7 +50,7 @@
                     <v-col class="d-flex align-center flex-wrap">
                         <span
                             v-if="!isAggregate && !hideSourceLinks && firstNewsItem?.news_item_data?.link"
-                            class="text-label-small text-primary"
+                            class="text-label-small text-primary pr-2"
                             style="display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
                         >
                             {{ firstNewsItem?.news_item_data?.link }}
@@ -61,6 +61,7 @@
                             size="small"
                             color="primary"
                             variant="outlined"
+                            class="mr-2"
                             @click.stop="toggleOpen"
                         >
                             <v-icon start>
@@ -74,6 +75,7 @@
                             size="small"
                             color="primary"
                             variant="outlined"
+                            class="mr-2"
                         >
                             <v-icon start> mdi-file-multiple </v-icon>
                             {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
@@ -84,6 +86,7 @@
                             size="small"
                             color="orange"
                             variant="outlined"
+                            class="mr-2"
                             :disabled="analyzeSelector"
                             :style="analyzeSelector ? '' : 'cursor: pointer'"
                             @click.stop="!analyzeSelector && showInReports()"

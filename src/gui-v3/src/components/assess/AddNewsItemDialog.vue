@@ -2,13 +2,27 @@
     <v-dialog
         v-model="isOpen"
         max-width="800px"
+        scrollable
     >
-        <v-card>
-            <v-card-title class="text-headline-medium">
-                {{ t('nav_menu.enter') }}
-            </v-card-title>
+        <!-- Optional activator: when a parent supplies one (e.g. the Assess "Add New"
+             button), the open transition originates from it, matching the config dialogs. -->
+        <template
+            v-if="$slots['activator']"
+            #activator="activatorProps"
+        >
+            <slot
+                name="activator"
+                v-bind="activatorProps"
+            />
+        </template>
 
-            <v-divider />
+        <v-card>
+            <DialogToolbar
+                :title="t('nav_menu.enter')"
+                :saving="isSubmitting"
+                @cancel="closeDialog"
+                @save="handleSubmit"
+            />
 
             <v-card-text>
                 <v-form
@@ -114,25 +128,6 @@
                     </v-alert>
                 </v-form>
             </v-card-text>
-
-            <v-divider />
-
-            <v-card-actions>
-                <v-spacer />
-                <v-btn
-                    color="default"
-                    @click="closeDialog"
-                >
-                    {{ t('common.cancel') }}
-                </v-btn>
-                <v-btn
-                    color="primary"
-                    :loading="isSubmitting"
-                    @click="handleSubmit"
-                >
-                    {{ t('enter.create') }}
-                </v-btn>
-            </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
@@ -141,6 +136,7 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import Editor from 'primevue/editor'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { addNewsItem } from '@/api/assess'
     import { useUserStore } from '@/stores/user'
 

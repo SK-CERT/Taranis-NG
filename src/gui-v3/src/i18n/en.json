@@ -250,6 +250,7 @@
         "removed": "Attribute was successfully deleted",
         "removed_error": "Attribute is in use and could not be deleted",
         "value": "Value",
+        "description": "Description",
         "value_text": "Value text",
         "tlp_clear": "TLP:CLEAR",
         "tlp_green": "TLP:GREEN",
@@ -612,7 +613,8 @@
             "auto_generate": "Auto generate",
             "drag_to_reorder": "Drag to reorder",
             "move_up": "Move up",
-            "move_down": "Move down"
+            "move_down": "Move down",
+            "open_link": "Open link in a new tab"
         }
     },
     "product": {
@@ -979,10 +981,16 @@
         "save_failed": "Failed to save",
         "loading_data": "Failed to load data",
         "delete_failed": "Failed to delete",
-        "load_groups": "Failed to load groups"
+        "load_groups": "Failed to load groups",
+        "not_found": {
+            "title": "Page not found",
+            "message": "The page you are looking for doesn’t exist or may have been moved.",
+            "home": "Go to home"
+        }
     },
     "confirm_close": {
         "title": "Unsaved Changes",
+        "message": "You have unsaved changes. What would you like to do?",
         "continue": "Continue editing",
         "save_and_close": "Save and Close",
         "close": "Close without saving"
@@ -1015,6 +1023,8 @@
         "end_of_list": "End of list",
         "messagebox": {
             "delete": "Are you sure you want to delete following item?",
+            "delete_confirm": "Are you sure you want to delete \"{name}\"?",
+            "delete_confirm_item": "Are you sure you want to delete this item?",
             "remove": "Are you sure you want to remove following item?"
         },
         "coming_soon": "Coming soon..."
@@ -1167,6 +1177,7 @@
             "name": "Name",
             "description": "Description",
             "use_for_notifications": "Use for all global notifications",
+            "parameters": "Parameters",
             "successful": "New publisher preset was successfully added",
             "successful_edit": "Publisher preset was successfully updated",
             "removed": "Publisher preset was successfully deleted",
@@ -1198,6 +1209,7 @@
             "edit": "Edit bot preset",
             "node": "Bots Node",
             "bot": "Bot",
+            "parameters": "Parameters",
             "error": "Could not create this bot.",
             "name": "Name",
             "description": "Description",
@@ -1298,6 +1310,14 @@
         "new_word": "New Word",
         "words": "Words",
         "new_category": "New Category",
+        "add_category": "Add Category",
+        "edit_category": "Edit Category",
+        "categories": "Categories",
+        "category": "Category",
+        "no_words": "No words yet",
+        "no_categories": "No categories yet",
+        "add_category_hint": "Add a category to start building this word list",
+        "link_hint": "Optional URL for downloading word entries",
         "total_count": "Word lists count",
         "file_has_header": "File has header",
         "import_from_csv": "Import from CSV",
@@ -1318,6 +1338,7 @@
             "description": "Description",
             "section_title": "Section",
             "new_group": "New Attribute Group",
+            "attribute_groups": "Attribute Groups",
             "successful": "New report item type was successfully added",
             "successful_edit": "Report item type was successfully updated",
             "removed_error": "Report item type is in use and could not be deleted",
@@ -1331,6 +1352,14 @@
             "name": "Name",
             "description": "Description",
             "type": "Type",
+            "default_value": "Default Value",
+            "validator": "Validator",
+            "validator_parameter": "Validator Parameter",
+            "constants": "Attribute Constants",
+            "search": "Search",
+            "add_constant": "Add Constant",
+            "edit_constant": "Edit Constant",
+            "value": "Value",
             "error": "Could not create this attribute",
             "total_count": "Attributes count"
         }

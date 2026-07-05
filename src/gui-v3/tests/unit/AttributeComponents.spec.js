@@ -168,6 +168,31 @@ describe('AttributeString', () => {
         const wrapper = mountAttr(AttributeString, baseProps())
         expect(wrapper.find('.reorder-controls').exists()).toBe(false)
     })
+
+    it('renders a read-only URL value as a link opening in a new tab', () => {
+        const wrapper = mountAttr(AttributeString, readOnlyProps({ value: 'https://example.com/path' }))
+        const link = wrapper.find('.string-content a')
+        expect(link.exists()).toBe(true)
+        expect(link.attributes('href')).toBe('https://example.com/path')
+        expect(link.attributes('target')).toBe('_blank')
+        expect(link.attributes('rel')).toContain('noopener')
+    })
+
+    it('renders a non-URL read-only value as plain text (no link)', () => {
+        const wrapper = mountAttr(AttributeString, readOnlyProps({ value: 'not a url' }))
+        expect(wrapper.find('.string-content a').exists()).toBe(false)
+        expect(wrapper.text()).toContain('not a url')
+    })
+
+    it('shows an open-link button when an editable value is a URL', () => {
+        const wrapper = mountAttr(AttributeString, baseProps({ value: 'https://example.com' }))
+        expect(wrapper.find('a[href="https://example.com"][target="_blank"]').exists()).toBe(true)
+    })
+
+    it('does not show an open-link button when an editable value is not a URL', () => {
+        const wrapper = mountAttr(AttributeString, baseProps({ value: 'plain text' }))
+        expect(wrapper.find('a[target="_blank"]').exists()).toBe(false)
+    })
 })
 
 // ── AttributeNumber ───────────────────────────────────────────────────────────
@@ -203,12 +228,43 @@ describe('AttributeText', () => {
     it('shows read-only text', () => {
         const wrapper = mountAttr(AttributeText, readOnlyProps({ value: 'long text here' }))
         expect(wrapper.text()).toContain('long text here')
-        expect(wrapper.find('.text-value').exists()).toBe(true)
+        expect(wrapper.find('.numbered-text-value').exists()).toBe(true)
     })
 
     it('shows VTextarea in edit mode', () => {
         const wrapper = mountAttr(AttributeText, baseProps())
         expect(wrapper.findComponent({ name: 'VTextarea' }).exists()).toBe(true)
+    })
+
+    it('hides editable field when readOnly=true', () => {
+        const wrapper = mountAttr(AttributeText, readOnlyProps())
+        expect(wrapper.findComponent({ name: 'VTextarea' }).exists()).toBe(false)
+    })
+
+    it('numbers values when there are multiple', () => {
+        const props = {
+            ...readOnlyProps(),
+            values: [makeValue({ value: 'first' }), makeValue({ id: 2, index: 1, value: 'second' })]
+        }
+        const wrapper = mountAttr(AttributeText, props)
+        expect(wrapper.text()).toContain('1.')
+        expect(wrapper.text()).toContain('2.')
+    })
+
+    it('shows reorder controls (drag handle + arrows) when there are multiple editable values', () => {
+        const props = {
+            ...baseProps(),
+            values: [makeValue({ value: 'first' }), makeValue({ id: 2, index: 1, value: 'second' })]
+        }
+        const wrapper = mountAttr(AttributeText, props)
+        expect(wrapper.findAll('.reorder-controls').length).toBe(2)
+        expect(wrapper.find('.drag-handle').exists()).toBe(true)
+        expect(wrapper.findAll('.reorder-arrows').length).toBe(2)
+    })
+
+    it('does not show reorder controls for a single value', () => {
+        const wrapper = mountAttr(AttributeText, baseProps())
+        expect(wrapper.find('.reorder-controls').exists()).toBe(false)
     })
 })
 

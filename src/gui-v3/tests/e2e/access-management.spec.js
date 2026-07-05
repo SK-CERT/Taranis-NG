@@ -68,11 +68,18 @@ test.describe('Access Management', () => {
         await openDialog(page, 'New')
         await page.locator('.v-dialog:visible input').first().fill('cancelled-user')
 
+        // Cancel with unsaved edits raises the unsaved-changes prompt; discard to close.
         await page
             .locator('.v-dialog:visible button')
             .filter({ hasText: /^Cancel$/ })
             .click()
 
-        await expect(page.locator('.v-dialog')).not.toBeVisible()
+        // Vuetify keeps a booted dialog's root mounted, so match on the active-overlay class
+        // (toggled with open state) rather than :visible, which still matches a closed dialog.
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
     })
 })

@@ -12,14 +12,14 @@
                 dark
                 density="compact"
             >
-                <v-btn
-                    icon
-                    @click="close"
-                >
-                    <v-icon>mdi-close-circle</v-icon>
-                </v-btn>
                 <v-toolbar-title>{{ t('settings.user_settings') }}</v-toolbar-title>
                 <v-spacer />
+                <v-btn
+                    variant="text"
+                    @click="close"
+                >
+                    {{ t('common.cancel') }}
+                </v-btn>
                 <v-btn
                     variant="text"
                     @click="save"

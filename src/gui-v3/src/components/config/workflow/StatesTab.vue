@@ -5,14 +5,9 @@
             <v-card-text>
                 <v-row>
                     <v-col cols="8">
-                        <v-text-field
+                        <SearchField
                             v-model="search"
-                            :label="t('toolbar_filter.search')"
-                            prepend-inner-icon="mdi-magnify"
-                            variant="outlined"
-                            density="compact"
-                            hide-details
-                            single-line
+                            :width="350"
                         />
                     </v-col>
                     <v-col
@@ -80,39 +75,18 @@
         </v-card>
 
         <!-- Delete Dialog -->
-        <v-dialog
+        <ConfirmationDialog
             v-model="dialogDelete"
+            :message="editedItem.display_name"
             max-width="500"
-        >
-            <v-card>
-                <v-card-title>{{ t('common.messagebox.delete') }}</v-card-title>
-                <v-card-text>
-                    {{ t('common.messagebox.delete_confirm', { name: editedItem.display_name }) }}
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn
-                        color="grey"
-                        variant="text"
-                        @click="closeDelete"
-                    >
-                        {{ t('common.cancel') }}
-                    </v-btn>
-                    <v-btn
-                        color="error"
-                        variant="text"
-                        @click="deleteRecord"
-                    >
-                        {{ t('common.delete') }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+            @confirm="deleteRecord"
+        />
 
         <!-- Edit Dialog - Simplified for now -->
         <v-dialog
             v-model="dialogEdit"
             max-width="700"
+            scrollable
         >
             <v-card>
                 <DialogToolbar
@@ -174,6 +148,8 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import SearchField from '@/components/common/SearchField.vue'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
     import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from '@/api/config'
@@ -265,20 +241,15 @@
         dialogDelete.value = true
     }
 
+    // No close-time reset: addItem/editItem/deleteItem fully set editedItem/editedIndex
+    // before opening, so resetting here is unnecessary. A deferred reset (to avoid the
+    // close-animation flicker) would also race the next dialog open and clobber its state.
     function closeEdit(): void {
         dialogEdit.value = false
-        setTimeout(() => {
-            editedItem.value = { ...defaultItem }
-            editedIndex.value = -1
-        }, 300)
     }
 
     function closeDelete(): void {
         dialogDelete.value = false
-        setTimeout(() => {
-            editedItem.value = { ...defaultItem }
-            editedIndex.value = -1
-        }, 300)
     }
 
     async function saveRecord(): Promise<void> {
@@ -286,10 +257,20 @@
         if (!valid) return
 
         try {
+            // Send only editable fields. On create, omit id entirely so the backend
+            // assigns a real auto-increment id; sending id (e.g. -1) inserts a row with
+            // that id, which the delete route (/<int>) can then never match -> 404.
+            const payload = {
+                display_name: editedItem.value.display_name,
+                description: editedItem.value.description,
+                color: editedItem.value.color,
+                icon: editedItem.value.icon,
+                editable: editedItem.value.editable
+            }
             if (editedIndex.value > -1) {
-                await updateStateDefinition(editedItem.value)
+                await updateStateDefinition({ ...payload, id: editedItem.value.id })
             } else {
-                await createNewStateDefinition(editedItem.value)
+                await createNewStateDefinition(payload)
             }
             await configStore.loadStateDefinitions({ search: '' })
             closeEdit()

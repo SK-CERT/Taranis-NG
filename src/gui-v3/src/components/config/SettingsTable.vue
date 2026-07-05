@@ -1,98 +1,93 @@
 <template>
-    <v-data-table
-        :headers="headers"
-        :items="records"
-        :search="search"
-        :items-per-page="-1"
-        item-key="id"
-        :sort-by="[{ key: 'description', order: 'asc' }]"
-        density="compact"
-        disable-pagination
-        hide-default-footer
+    <!-- Application Settings uses the same card + toolbar layout as the Access
+         Management tabs. Inside the User Settings dialog (globalSetting = false) the
+         wrapper stays flat/padding-free so it doesn't nest a card in a card. -->
+    <v-container
+        fluid
+        :class="{ 'pa-0': !globalSetting }"
     >
-        <template #top>
-            <v-row class="pa-2">
-                <v-col
-                    cols="12"
-                    md="4"
-                >
-                    <div
-                        v-if="globalSetting"
-                        class="text-h6"
-                    >
-                        {{ t('nav_menu.settings') }}
-                    </div>
-                </v-col>
-                <v-col
-                    cols="12"
-                    md="8"
-                >
-                    <v-text-field
-                        v-model="search"
-                        :label="t('toolbar_filter.search')"
-                        prepend-inner-icon="mdi-magnify"
-                        variant="outlined"
-                        density="compact"
-                        single-line
-                        hide-details
-                        clearable
+        <v-card :flat="!globalSetting">
+            <!-- Toolbar -->
+            <v-card-text>
+                <v-row>
+                    <v-col cols="8">
+                        <SearchField
+                            v-model="search"
+                            :width="350"
+                        />
+                    </v-col>
+                    <v-col
+                        cols="4"
+                        class="text-right"
                     />
-                </v-col>
-            </v-row>
-        </template>
+                </v-row>
+            </v-card-text>
 
-        <template #item.value="{ item }">
-            <!-- Boolean setting (switch) -->
-            <template v-if="item.type === 'B'">
-                <v-switch
-                    :model-value="item.value === 'true'"
-                    color="primary"
-                    hide-details
-                    density="compact"
-                    @update:model-value="(val) => updateSetting(item, val ? 'true' : 'false')"
-                />
-            </template>
-
-            <!-- Select with options -->
-            <template v-else-if="item.options">
-                <v-select
-                    :model-value="item.value"
-                    :items="getDisplayOptions(item)"
-                    item-title="txt"
-                    item-value="id"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    @update:model-value="(val) => updateSetting(item, val)"
-                />
-            </template>
-
-            <!-- Text input with edit dialog -->
-            <template v-else>
-                <v-chip
-                    :color="getColor(item.value, item.default_val)"
-                    label
-                    clickable
-                    @click="openEditDialog(item)"
-                >
-                    {{ item.value }}
-                </v-chip>
-            </template>
-        </template>
-
-        <template #item.description="{ item }">
-            <span
-                style="cursor: help"
-                :title="`${t('settings.default_value')}: ${item.default_val}`"
+            <v-data-table
+                :headers="headers"
+                :items="records"
+                :search="search"
+                :items-per-page="-1"
+                item-key="id"
+                :sort-by="[{ key: 'description', order: 'asc' }]"
+                density="compact"
+                hide-default-footer
+                :class="{ 'elevation-1': globalSetting }"
             >
-                {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
-            </span>
-        </template>
+                <template #item.value="{ item }">
+                    <!-- Boolean setting (switch) -->
+                    <template v-if="item.type === 'B'">
+                        <v-switch
+                            :model-value="item.value === 'true'"
+                            color="primary"
+                            hide-details
+                            density="compact"
+                            @update:model-value="(val) => updateSetting(item, val ? 'true' : 'false')"
+                        />
+                    </template>
 
-        <template #item.updated_at="{ item }">
-            <span>{{ formatDate(item.updated_at) }}</span>
-        </template>
-    </v-data-table>
+                    <!-- Select with options -->
+                    <template v-else-if="item.options">
+                        <v-select
+                            :model-value="item.value"
+                            :items="getDisplayOptions(item)"
+                            item-title="txt"
+                            item-value="id"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            @update:model-value="(val) => updateSetting(item, val)"
+                        />
+                    </template>
+
+                    <!-- Text input with edit dialog -->
+                    <template v-else>
+                        <v-chip
+                            :color="getColor(item.value, item.default_val)"
+                            label
+                            clickable
+                            @click="openEditDialog(item)"
+                        >
+                            {{ item.value }}
+                        </v-chip>
+                    </template>
+                </template>
+
+                <template #item.description="{ item }">
+                    <span
+                        style="cursor: help"
+                        :title="`${t('settings.default_value')}: ${item.default_val}`"
+                    >
+                        {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
+                    </span>
+                </template>
+
+                <template #item.updated_at="{ item }">
+                    <span>{{ formatDate(item.updated_at) }}</span>
+                </template>
+            </v-data-table>
+        </v-card>
+    </v-container>
 
     <!-- Edit Dialog for text values -->
     <v-dialog
@@ -137,8 +132,8 @@
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
     import { useSettingsStore } from '@/stores/settings'
-    import Settings from '@/services/settings'
     import type { SettingEntry } from '@/types/settings'
+    import SearchField from '@/components/common/SearchField.vue'
 
     type SettingType = 'B' | 'I' | 'N' | string
 
@@ -266,9 +261,6 @@
 
     const initRecords = (): void => {
         const allSettings = settingsStore.getSettings || []
-        console.log('[SettingsTable] initRecords - globalSetting:', props.globalSetting)
-        console.log('[SettingsTable] initRecords - allSettings:', allSettings)
-        console.log('[SettingsTable] initRecords - allSettings.length:', allSettings.length)
 
         if (!Array.isArray(allSettings)) {
             console.warn('[SettingsTable] allSettings is not an array:', typeof allSettings)
@@ -278,11 +270,9 @@
 
         const filtered = allSettings.filter((item: SettingEntry) => {
             const settingsItem = item as SettingsRecord
-            console.log('[SettingsTable] item:', item.key, 'is_global:', settingsItem.is_global, 'checking against:', props.globalSetting)
             return settingsItem.is_global === props.globalSetting
         })
 
-        console.log('[SettingsTable] filtered records:', filtered.length)
         records.value = filtered as SettingsRecord[]
     }
 
@@ -366,7 +356,6 @@
     watch(
         () => props.globalSetting,
         () => {
-            console.log('[SettingsTable] globalSetting changed, re-filtering records')
             initRecords()
         }
     )

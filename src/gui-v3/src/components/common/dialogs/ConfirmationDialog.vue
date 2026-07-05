@@ -3,10 +3,10 @@
         v-model="isOpen"
         :max-width="maxWidth"
     >
-        <v-card>
+        <v-card style="min-width: min(500px, calc(100vw - 48px))">
             <v-card-title
                 class="d-flex align-center"
-                style="white-space: normal"
+                style="white-space: normal; font-size: 1.1rem; line-height: 1.4"
             >
                 <v-icon
                     color="error"

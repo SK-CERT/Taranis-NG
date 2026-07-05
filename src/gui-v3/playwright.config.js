@@ -16,8 +16,12 @@ export default defineConfig({
     /* Retry on CI only */
     retries: process.env.CI ? 2 : 0,
 
-    /* Opt out of parallel tests on CI */
-    workers: process.env.CI ? 1 : undefined,
+    /* Single worker everywhere. The suite mutates a single shared backend (create/edit/
+       delete of states, associations, orgs, roles, ...); running specs in parallel workers
+       makes concurrent writes race and intermittently fail (e.g. a state-entity-type insert
+       racing concurrent state-definition writes). CI already ran serially; this makes local
+       runs match so results are reproducible. */
+    workers: 1,
 
     /* Reporter to use */
     reporter: [['html'], ['list'], ['json', { outputFile: 'test-results/results.json' }]],

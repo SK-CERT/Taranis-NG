@@ -80,7 +80,7 @@
             readOnly?: boolean
             edit?: boolean
             modify?: boolean
-            reportItemId: number
+            reportItemId: number | null
         }>(),
         {
             readOnly: false,

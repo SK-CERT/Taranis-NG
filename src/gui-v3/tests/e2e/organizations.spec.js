@@ -34,9 +34,13 @@ test.describe('Organization Management', () => {
 
         await saveDialog(page)
 
-        // Web-first assertion (auto-retries): a successful save closes the dialog
-        // and surfaces the new row; a rejected save keeps an inline alert open.
-        await expect(page.locator('tbody tr').filter({ hasText: orgName }).or(dialog.locator('.v-alert'))).toBeVisible()
+        // A successful save closes the dialog; a rejected save keeps it open with an inline alert.
+        await expect(dialog).toHaveCount(0)
+
+        // The list is paginated, so the new row may land on a later page. Filter by the
+        // (unique) name to surface it regardless of which page it's on.
+        await page.getByRole('textbox', { name: 'Search' }).fill(orgName)
+        await expect(page.locator('tbody tr').filter({ hasText: orgName })).toBeVisible()
     })
 
     test('should require name field', async ({ page }) => {
@@ -68,18 +72,71 @@ test.describe('Organization Management', () => {
         await expect(page.locator('.v-data-table.elevation-1')).toBeVisible()
     })
 
-    test('should cancel creation', async ({ page }) => {
+    test('should cancel creation of an untouched form without prompting', async ({ page }) => {
+        // Cancelling a pristine form closes straight away (no unsaved-changes prompt).
         await openDialog(page, 'New')
-        await page.locator('.v-dialog:visible input').first().fill('Cancelled Organization')
 
-        // Click cancel
         await page
             .locator('.v-dialog:visible button')
             .filter({ hasText: /^Cancel$/ })
             .click()
 
-        await expect(page.locator('.v-dialog')).not.toBeVisible()
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+    })
+
+    // ── Unsaved-changes guard ─────────────────────
+    // Cancelling / Escaping a dialog with edits prompts before discarding.
+    test('should prompt and discard unsaved changes on cancel', async ({ page }) => {
+        await openDialog(page, 'New')
+        await page.locator('.v-dialog:visible input').first().fill('Cancelled Organization')
+
+        await page
+            .locator('.v-dialog:visible button')
+            .filter({ hasText: /^Cancel$/ })
+            .click()
+
+        // The unsaved-changes prompt appears instead of closing immediately.
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
         await expect(page.locator('tbody tr').filter({ hasText: 'Cancelled Organization' })).toHaveCount(0)
+    })
+
+    test('should keep editing when choosing "Continue editing" on the prompt', async ({ page }) => {
+        await openDialog(page, 'New')
+        await page.locator('.v-dialog:visible input').first().fill('Kept Organization')
+
+        await page
+            .locator('.v-dialog:visible button')
+            .filter({ hasText: /^Cancel$/ })
+            .click()
+
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+
+        // Continue editing dismisses the prompt and leaves the edit dialog open with data intact.
+        await prompt.getByRole('button', { name: 'Continue editing' }).click()
+        await expect(prompt).toHaveCount(0)
+
+        const editDialog = page.locator('.v-overlay--active')
+        await expect(editDialog).toBeVisible()
+        await expect(editDialog.locator('input').first()).toHaveValue('Kept Organization')
+    })
+
+    test('should prompt when pressing Escape with unsaved changes', async ({ page }) => {
+        await openDialog(page, 'New')
+        await page.locator('.v-dialog:visible input').first().fill('Escaped Organization')
+
+        await page.keyboard.press('Escape')
+
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
     })
 })
 

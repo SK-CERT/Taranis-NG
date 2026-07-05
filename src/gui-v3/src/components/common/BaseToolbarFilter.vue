@@ -22,12 +22,12 @@
                     cols="6"
                     md="4"
                 >
-                    <v-text-field
+                    <!-- Underlined, label-less variant used by the content toolbars
+                         (Assess / Analyze / Publish); preserves the existing look. -->
+                    <SearchField
                         v-model="localFilter.search"
-                        :prepend-inner-icon="ICONS.MAGNIFY"
+                        :label="''"
                         variant="underlined"
-                        density="compact"
-                        hide-details
                         clearable
                         @update:model-value="handleSearch"
                     />
@@ -153,6 +153,7 @@
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import SearchField from '@/components/common/SearchField.vue'
 
     type FilterState = {
         search?: string

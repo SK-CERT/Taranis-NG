@@ -3,6 +3,7 @@
         v-model="dialog"
         max-width="600"
         persistent
+        scrollable
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton

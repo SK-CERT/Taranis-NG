@@ -67,15 +67,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS] }
     },
     {
-        path: '/config/external',
-        name: 'external',
-        components: {
-            default: () => import('./views/admin/ExternalView.vue'),
-            nav: () => import('./views/nav/ConfigNav.vue')
-        },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
-    },
-    {
         path: '/config',
         name: 'config',
         // Redirect to the first accessible config menu item.
@@ -211,6 +202,15 @@ const routes: RouteRecordRaw[] = [
         path: '/login',
         name: 'login',
         component: () => import('./views/Login.vue')
+    },
+    {
+        // Catch-all for unknown paths (e.g. /config/does-not-exist or /nope): show a 404 page.
+        path: '/:pathMatch(.*)*',
+        name: 'not_found',
+        components: {
+            default: () => import('./views/NotFoundView.vue')
+        },
+        meta: { requiresAuth: true }
     }
 ]
 

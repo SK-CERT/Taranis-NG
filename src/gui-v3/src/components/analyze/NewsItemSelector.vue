@@ -2,6 +2,7 @@
     <v-container
         fluid
         class="pa-0"
+        :class="{ 'nis-vertical-fill': verticalView }"
     >
         <!-- Dialog Container -->
         <v-dialog
@@ -70,143 +71,122 @@
             </v-card>
         </v-dialog>
 
-        <!-- Items Display (outside dialog) -->
-        <v-row v-if="!selectorOpen">
-            <v-col
-                v-for="item in value"
-                :key="item.id"
-                cols="12"
-            >
-                <BaseCard
-                    :multi-select-active="false"
-                    :show-selection-checkbox="false"
-                    :preselected="false"
-                    card-class="card-item"
+        <!-- Items Display (outside dialog). In side-by-side view this area scrolls on its
+             own, independently of the contained reader which is anchored to the root.
+             Kept mounted while the selector is open (it is covered by the fullscreen
+             dialog anyway): unmounting it on open collapses this block and reflows the
+             report form below it, making the report attributes flash up through the
+             dialog's open transition. -->
+        <div :class="{ 'nis-scroll-area': verticalView }">
+            <v-row>
+                <v-col
+                    v-for="item in value"
+                    :key="item.id"
+                    cols="12"
                 >
-                    <!-- Content Slot -->
-                    <template #content>
-                        <div
-                            class="d-flex align-center"
-                            style="gap: 12px"
-                        >
-                            <!-- News Item Content (click to read) -->
+                    <BaseCard
+                        :multi-select-active="false"
+                        :show-selection-checkbox="false"
+                        :preselected="false"
+                        card-class="card-item"
+                    >
+                        <!-- Content Slot -->
+                        <template #content>
                             <div
-                                class="flex-grow-1"
-                                style="cursor: pointer"
-                                :title="t('assess.read_news_item')"
-                                @click="openDetail(item)"
+                                class="d-flex align-center"
+                                style="gap: 12px"
                             >
-                                <!-- Source and Date Info -->
-                                <div class="text-caption text-grey mb-2">
-                                    <v-row align="center">
-                                        <v-col cols="auto">
-                                            <span v-if="getNewsItemCount(item) > 0">
-                                                {{
-                                                    getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
-                                                    getFirstNewsItem(item)?.news_item_data?.source ||
-                                                    'Unknown'
-                                                }}
-                                            </span>
-                                        </v-col>
-                                        <v-spacer />
-                                        <v-col cols="auto">
-                                            <span v-if="getNewsItemCount(item) > 0">
-                                                {{ t('card_item.published') }}:
-                                                {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
-                                            </span>
-                                        </v-col>
-                                    </v-row>
-                                </div>
-                                <div class="text-h6 font-weight-medium mb-2">
-                                    {{ item.title }}
-                                </div>
-                                <div class="text-body-2 mb-3">
-                                    {{ item.description }}
+                                <!-- News Item Content (click to read) -->
+                                <div
+                                    class="flex-grow-1"
+                                    style="cursor: pointer"
+                                    :title="t('assess.read_news_item')"
+                                    @click="openDetail(item)"
+                                >
+                                    <!-- Source and Date Info -->
+                                    <div class="text-caption text-grey mb-2">
+                                        <v-row align="center">
+                                            <v-col cols="auto">
+                                                <span v-if="getNewsItemCount(item) > 0">
+                                                    {{
+                                                        getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
+                                                        getFirstNewsItem(item)?.news_item_data?.source ||
+                                                        'Unknown'
+                                                    }}
+                                                </span>
+                                            </v-col>
+                                            <v-spacer />
+                                            <v-col cols="auto">
+                                                <span v-if="getNewsItemCount(item) > 0">
+                                                    {{ t('card_item.published') }}:
+                                                    {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
+                                                </span>
+                                            </v-col>
+                                        </v-row>
+                                    </div>
+                                    <div class="text-h6 font-weight-medium mb-2">
+                                        {{ item.title }}
+                                    </div>
+                                    <div class="text-body-2 mb-3">
+                                        {{ item.description }}
+                                    </div>
+
+                                    <!-- Aggregate: expand to reveal the child news items (like Assess) -->
+                                    <v-btn
+                                        v-if="getNewsItemCount(item) > 1"
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                        @click.stop="toggleExpand(item.id)"
+                                    >
+                                        <v-icon start>
+                                            {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                                        </v-icon>
+                                        {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
+                                    </v-btn>
                                 </div>
 
-                                <!-- Aggregate: expand to reveal the child news items (like Assess) -->
+                                <!-- Remove Button on the Right, Centered -->
                                 <v-btn
-                                    v-if="getNewsItemCount(item) > 1"
                                     size="small"
-                                    color="primary"
-                                    variant="outlined"
-                                    @click.stop="toggleExpand(item.id)"
+                                    variant="text"
+                                    :title="t('common.remove')"
+                                    style="flex-shrink: 0"
+                                    @click.stop="handleRemoveItem(item)"
                                 >
-                                    <v-icon start>
-                                        {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                                    <v-icon :color="'error'">
+                                        {{ ICONS.REMOVE }}
                                     </v-icon>
-                                    {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
                                 </v-btn>
                             </div>
+                        </template>
+                    </BaseCard>
 
-                            <!-- Remove Button on the Right, Centered -->
-                            <v-btn
-                                size="small"
-                                variant="text"
-                                :title="t('common.remove')"
-                                style="flex-shrink: 0"
-                                @click.stop="handleRemoveItem(item)"
-                            >
-                                <v-icon :color="'error'">
-                                    {{ ICONS.REMOVE }}
-                                </v-icon>
-                            </v-btn>
-                        </div>
-                    </template>
-                </BaseCard>
-
-                <!-- Child news items of the aggregate; click one to read it. -->
-                <div
-                    v-if="isExpanded(item.id) && getNewsItemCount(item) > 1"
-                    class="mt-1"
-                >
-                    <CardAssessItem
-                        v-for="child in item.news_items"
-                        :key="child.id"
-                        :news-item="child"
-                        :analyze-selector="true"
-                        @show-detail="openDetail"
-                    />
-                </div>
-            </v-col>
-        </v-row>
+                    <!-- Child news items of the aggregate; click one to read it. -->
+                    <div
+                        v-if="isExpanded(item.id) && getNewsItemCount(item) > 1"
+                        class="mt-1"
+                    >
+                        <CardAssessItem
+                            v-for="child in item.news_items"
+                            :key="child.id"
+                            :news-item="child"
+                            :analyze-selector="true"
+                            @show-detail="openDetail"
+                        />
+                    </div>
+                </v-col>
+            </v-row>
+        </div>
 
         <!-- Confirmation Dialog: Remove Item -->
-        <v-dialog
+        <ConfirmationDialog
             v-model="showRemoveConfirm"
-            max-width="500"
-        >
-            <v-card>
-                <v-card-title class="d-flex align-center">
-                    <v-icon
-                        color="primary"
-                        class="mr-2"
-                    >
-                        mdi-help-circle
-                    </v-icon>
-                    {{ t('common.messagebox.remove') }}
-                </v-card-title>
-                <v-card-text>
-                    {{ itemToDelete?.title }}
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn
-                        variant="text"
-                        @click="showRemoveConfirm = false"
-                    >
-                        {{ t('common.cancel') }}
-                    </v-btn>
-                    <v-btn
-                        color="primary"
-                        variant="text"
-                        @click="confirmRemoveItem"
-                    >
-                        {{ t('common.remove') }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+            title-key="common.messagebox.remove"
+            confirm-label-key="common.remove"
+            :message="itemToDelete?.title ?? ''"
+            @confirm="confirmRemoveItem"
+        />
 
         <!-- News item reader. Contained to the right column in side-by-side mode;
              a normal centered modal otherwise. Read-only (actions hidden). -->
@@ -234,6 +214,7 @@
     import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
     import BaseCard from '@/components/common/BaseCard.vue'
     import GroupNavList from '@/components/common/GroupNavList.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
 
     type SelectorItem = {
         id: number | string
@@ -337,7 +318,9 @@
     }
 
     // Open the news item for reading. In side-by-side mode the dialog is contained to the
-    // right-hand column so the user can read it next to the report form.
+    // right-hand column so the user can read it next to the report form. The list scrolls
+    // inside `.nis-scroll-area`, while the contained dialog is anchored to the non-scrolling
+    // `.nis-vertical-fill` root, so it stays centred in view without moving the list.
     const openDetail = (item: SelectorItem): void => {
         detailItem.value = item
         detailDialog.value = true
@@ -594,6 +577,22 @@
 <style scoped>
     .item-selector {
         cursor: pointer;
+    }
+
+    /* Side-by-side view: the root fills the column and does NOT scroll, so the contained
+       news-item reader (anchored to it) stays pinned to the visible area. The list scrolls
+       inside .nis-scroll-area instead, so opening the reader never moves the list. */
+    .nis-vertical-fill {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nis-vertical-fill .nis-scroll-area {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     .selector-layout {

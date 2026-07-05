@@ -87,7 +87,10 @@ test.describe('Navigation', () => {
     })
 
     test('should navigate to assess view', async ({ page }) => {
-        await page.goto('/v2/assess')
+        // /assess redirects to /assess/group/all; page.goto() onto a redirect during
+        // initial navigation trips a WebKit "internal error", so navigate in-app.
+        await page.goto('/v2/dashboard')
+        await page.getByRole('link', { name: 'Assess' }).click()
         await expect(page).toHaveURL(/\/assess/)
 
         // Should show assess content
@@ -100,7 +103,10 @@ test.describe('Navigation', () => {
     })
 
     test('should navigate to analyze view', async ({ page }) => {
-        await page.goto('/v2/analyze')
+        // /analyze redirects to /analyze/local; page.goto() onto a redirect during
+        // initial navigation trips a WebKit "internal error", so navigate in-app.
+        await page.goto('/v2/dashboard')
+        await page.getByRole('link', { name: 'Analyze' }).click()
         await expect(page).toHaveURL(/\/analyze/)
     })
 
@@ -112,8 +118,8 @@ test.describe('Navigation', () => {
     test('should handle 404 for invalid routes', async ({ page }) => {
         await page.goto('/v2/invalid-route-that-does-not-exist')
 
-        // Current router has no catch-all. Verify app remains interactive.
-        await expect(page).toHaveURL(/\/v2\//)
+        // The catch-all route renders the NotFound view for unknown paths.
+        await expect(page.getByText('Page not found')).toBeVisible()
     })
 
     test('should maintain navigation state after page reload', async ({ page }) => {

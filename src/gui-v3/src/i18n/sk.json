@@ -250,6 +250,7 @@
         "removed": "Atribút bol úspešne odstránený",
         "removed_error": "Atribút sa používa a nie je možné ho odstrániť",
         "value": "Hodnota",
+        "description": "Popis",
         "value_text": "Text hodnoty",
         "tlp_clear": "TLP:CLEAR",
         "tlp_green": "TLP:GREEN",
@@ -612,7 +613,8 @@
             "auto_generate": "Automaticky vygenerovať",
             "drag_to_reorder": "Presunutím zmeníte poradie",
             "move_up": "Posunúť nahor",
-            "move_down": "Posunúť nadol"
+            "move_down": "Posunúť nadol",
+            "open_link": "Otvoriť odkaz v novom okne"
         }
     },
     "product": {
@@ -979,10 +981,16 @@
         "save_failed": "Uloženie zlyhalo",
         "loading_data": "Načítanie zlyhalo",
         "delete_failed": "Zmazanie zlyhalo",
-        "load_groups": "Načítanie skupín zlyhalo"
+        "load_groups": "Načítanie skupín zlyhalo",
+        "not_found": {
+            "title": "Stránka sa nenašla",
+            "message": "Stránka, ktorú hľadáte, neexistuje alebo bola presunutá.",
+            "home": "Prejsť na úvod"
+        }
     },
     "confirm_close": {
         "title": "Neuložené zmeny",
+        "message": "Máte neuložené zmeny. Čo chcete urobiť?",
         "continue": "Pokračovať v úpravách",
         "save_and_close": "Uložiť a zavrieť",
         "close": "Zavrieť bez uloženia"
@@ -1015,6 +1023,8 @@
         "end_of_list": "Koniec zoznamu",
         "messagebox": {
             "delete": "Ste si istý, že chcete zmazať túto položku?",
+            "delete_confirm": "Naozaj chcete zmazať „{name}“?",
+            "delete_confirm_item": "Naozaj chcete zmazať túto položku?",
             "remove": "Ste si istý, že chcete odstrániť túto položku?"
         },
         "coming_soon": "Už čoskoro..."
@@ -1167,6 +1177,7 @@
             "name": "Názov",
             "description": "Popis",
             "use_for_notifications": "Použiť pre všetky globálne notifikácie",
+            "parameters": "Parametre",
             "successful": "Nový publikačný kanál bol úspešne pridaný",
             "successful_edit": "Publikačný kanál bol úspešne aktualizovaný",
             "removed": "Publikačný kanál bol úspešne odstránený",
@@ -1198,6 +1209,7 @@
             "edit": "Upraviť robota",
             "node": "Inštancia robota",
             "bot": "Robot",
+            "parameters": "Parametre",
             "error": "Nepodarilo sa vytvoriť robota.",
             "name": "Názov",
             "description": "Popis",
@@ -1298,6 +1310,14 @@
         "new_word": "Nové slovo",
         "words": "Slová",
         "new_category": "Nová kategória",
+        "add_category": "Pridať kategóriu",
+        "edit_category": "Upraviť kategóriu",
+        "categories": "Kategórie",
+        "category": "Kategória",
+        "no_words": "Zatiaľ žiadne slová",
+        "no_categories": "Zatiaľ žiadne kategórie",
+        "add_category_hint": "Pridajte kategóriu a začnite vytvárať tento slovník",
+        "link_hint": "Voliteľná URL na stiahnutie slovných položiek",
         "total_count": "Počet slovníkov: ",
         "file_has_header": "Súbor obsahuje hlavičku",
         "import_from_csv": "Import z CSV",
@@ -1318,6 +1338,7 @@
             "description": "Popis",
             "section_title": "Názov sekcie",
             "new_group": "Nová skupina atribútov",
+            "attribute_groups": "Skupiny atribútov",
             "successful": "Nový typ analýzy bol úspešne pridaný",
             "successful_edit": "Typ analýzy bol úspešne aktualizovaný",
             "removed_error": "Typ analýzy sa používa a nie je možné ho odstrániť",
@@ -1331,6 +1352,14 @@
             "name": "Názov",
             "description": "Popis",
             "type": "Typ",
+            "default_value": "Predvolená hodnota",
+            "validator": "Validátor",
+            "validator_parameter": "Parameter validátora",
+            "constants": "Konštanty atribútu",
+            "search": "Hľadať",
+            "add_constant": "Pridať konštantu",
+            "edit_constant": "Upraviť konštantu",
+            "value": "Hodnota",
             "error": "Nepodarilo sa vytvoriť atribút",
             "total_count": "Počet atribútov: "
         }

@@ -24,7 +24,16 @@
                         class="string-number text--disabled"
                         >{{ index + 1 }}.</span
                     >
-                    <span class="string-content">{{ value.value }}</span>
+                    <span class="string-content">
+                        <a
+                            v-if="isUrl(value.value)"
+                            :href="value.value ?? undefined"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >{{ value.value }}</a
+                        >
+                        <template v-else>{{ value.value }}</template>
+                    </span>
                 </span>
 
                 <!-- Editable -->
@@ -88,6 +97,22 @@
                             @keyup="onKeyUp(index)"
                         >
                             <template #append-inner>
+                                <!-- When the value is a URL, offer to open it in a new tab. -->
+                                <v-btn
+                                    v-if="isUrl(value.value)"
+                                    icon
+                                    variant="text"
+                                    density="compact"
+                                    tabindex="-1"
+                                    :href="value.value ?? undefined"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    :title="$t('report_item.tooltip.open_link')"
+                                    @mousedown.stop
+                                    @click.stop
+                                >
+                                    <v-icon>{{ ICONS.OPEN }}</v-icon>
+                                </v-btn>
                                 <AttributeFieldDeleteButton
                                     :visible="delVisible"
                                     @delete="onDelete"
@@ -130,7 +155,7 @@
             readOnly?: boolean
             edit?: boolean
             modify?: boolean
-            reportItemId: number
+            reportItemId: number | null
         }>(),
         {
             readOnly: false,
@@ -142,6 +167,24 @@
     const { t } = useI18n()
 
     const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } = useAttributes(props)
+
+    // Treat a value as a link only when it is an explicit http(s) URL — avoids false positives
+    // and never produces javascript:/data: links.
+    const isUrl = (value: unknown): boolean => {
+        if (typeof value !== 'string') {
+            return false
+        }
+        const trimmed = value.trim()
+        if (!/^https?:\/\//i.test(trimmed)) {
+            return false
+        }
+        try {
+            const url = new URL(trimmed)
+            return url.protocol === 'http:' || url.protocol === 'https:'
+        } catch {
+            return false
+        }
+    }
 
     // Drag-and-drop reordering state.
     const dragIndex = ref<number | null>(null)
@@ -212,6 +255,11 @@
     .string-content {
         flex: 1;
         word-break: break-word;
+    }
+
+    .string-content a {
+        color: rgb(var(--v-theme-primary));
+        word-break: break-all;
     }
 
     .value-holder {

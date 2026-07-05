@@ -6,17 +6,11 @@
         <v-card-title class="text-subtitle-1 bg-grey-lighten-4 d-flex align-center">
             <span>{{ title }}</span>
             <v-spacer />
-            <v-text-field
+            <SearchField
                 v-model="search"
-                :label="t('toolbar_filter.search')"
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                density="compact"
-                hide-details
-                single-line
-                class="flex-grow-0"
-                style="width: 350px"
+                :width="350"
                 :disabled="disabled"
+                class="flex-grow-0"
             />
             <!-- Let callers add an action (e.g. "add new") at the top-right of the table header. -->
             <div
@@ -49,6 +43,7 @@
 <script setup lang="ts">
     import { ref, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import SearchField from '@/components/common/SearchField.vue'
 
     type SelectableEntity = {
         id: string | number
