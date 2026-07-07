@@ -24,7 +24,7 @@
         "installdropzone": "npm install vue2-dropzone"
     },
     "dependencies": {
-        "axios": "^1.13.2",
+        "axios": "^1.18.1",
         "core-js": "^3.47.0",
         "iso-639-1": "^2.1.15",
         "js-base64": "^3.7.8",
