@@ -46,7 +46,7 @@
         "@intlify/eslint-plugin-vue-i18n": "^4.5.1",
         "@playwright/test": "^1.61.0",
         "@types/node": "^26.0.0",
-        "@vitejs/plugin-vue": "^6.0.5",
+        "@vitejs/plugin-vue": "^6.0.7",
         "@typescript-eslint/parser": "^8.46.1",
         "@vitest/coverage-v8": "^4.1.2",
         "@vitest/ui": "^4.1.9",
