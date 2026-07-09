@@ -37,6 +37,19 @@ class BasePresenter:
     parameters: ClassVar[list] = []
     JINJA_TEMPLATES_ROOT = os.getenv("JINJA_TEMPLATES_ROOT", "/app/templates")
 
+    @property
+    def type(self) -> str:
+        """Alias for ``presenter_type``.
+
+        ``PresenterSchema`` serializes a field named ``type``, but each concrete
+        presenter declares its kind as the class attribute ``presenter_type``.
+        Without this alias Marshmallow's ``dump`` omits ``type`` from the output,
+        which in turn makes core's ``Presenter(**data)`` fail with
+        ``__init__() missing 1 required positional argument: 'type'`` when a
+        presenters node is created.
+        """
+        return self.presenter_type
+
     @staticmethod
     def json_default(value: any) -> dict:
         """Serialize a value to JSON.
