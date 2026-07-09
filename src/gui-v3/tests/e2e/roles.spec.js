@@ -59,7 +59,14 @@ test.describe('Role Management', () => {
 
         // The list is paginated, so the new row may land on a later page. Filter by the
         // (unique) name to surface it regardless of which page it's on.
-        await page.getByRole('textbox', { name: 'Search' }).fill(roleName)
+        //
+        // Scope the search field to the *active* Access Management window item. The view
+        // (Users/Roles/ACL/Organizations tabs) renders a SearchField per tab; Vuetify's
+        // v-window-item transition leaves the previous tab's search input cloned in the
+        // DOM (hidden) on tab switch, so a page-wide `getByRole('textbox', { name: 'Search' })`
+        // is ambiguous (strict-mode violation: resolved to 2 elements).
+        const activePanel = page.locator('.v-window-item--active')
+        await activePanel.getByRole('textbox', { name: 'Search' }).fill(roleName)
         await expect(page.locator('tbody tr').filter({ hasText: roleName })).toBeVisible()
     })
 
@@ -123,17 +130,16 @@ test.describe('Role Management', () => {
     })
 
     test('should filter/search roles', async ({ page }) => {
-        // Look for search input (if implemented)
-        const searchInput = page.locator('input[aria-label*="search" i], input[placeholder*="search" i]').first()
-        const searchExists = await searchInput.isVisible().catch(() => false)
+        // Scope to the active Access Management window item — see the create test for why a
+        // page-wide search locator is ambiguous (Vuetify leaves a cloned input from the
+        // previous tab in the DOM).
+        const searchInput = page.locator('.v-window-item--active').getByRole('textbox', { name: 'Search' })
+        await expect(searchInput).toBeVisible()
 
-        if (searchExists) {
-            // Use search
-            await searchInput.fill('Admin')
+        await searchInput.fill('Admin')
 
-            // Should show only matching role
-            await expect(page.locator('tbody tr').filter({ hasText: 'Admin' })).toBeVisible()
-        }
+        // Should show only matching role
+        await expect(page.locator('tbody tr').filter({ hasText: 'Admin' })).toBeVisible()
     })
 
     test('should handle duplicate role names', async ({ page }) => {

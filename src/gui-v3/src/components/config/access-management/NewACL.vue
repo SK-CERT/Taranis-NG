@@ -479,6 +479,11 @@
                 localItem.value = { ...defaultItem }
                 selectedUsers.value = []
                 selectedRoles.value = []
+            } else {
+                // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+                // Without this capture(), baseline stays null and isDirty() always returns false,
+                // so the "Unsaved Changes" prompt never shows — even after real edits.
+                capture()
             }
             emit('update:modelValue', newVal)
         }

@@ -331,6 +331,13 @@
         if (collectorId === undefined || collectorId === null) {
             selectedNode.value = nodes.value[0] ?? null
             selectedCollector.value = selectedNode.value?.collectors?.[0] ?? null
+            // Initialize parameter values from the freshly-selected collector's defaults here, not
+            // in the selectedCollector watcher. The watcher is queued AFTER the dialog watcher
+            // (which calls capture() to snapshot the dirty-tracking baseline) because dialog=true
+            // is mutated first, so leaving this to the async watcher snapshots params:[] while the
+            // live state becomes the collector's defaults — every subsequent create-open would
+            // spuriously report unsaved changes. The edit path below already sets this synchronously.
+            parameterValues.value = selectedCollector.value?.parameters?.map((param) => String(param.default_value ?? '')) || []
             return
         }
 

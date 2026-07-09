@@ -402,6 +402,13 @@
         if (presenterId === undefined || presenterId === null) {
             selectedNode.value = nodes.value[0] ?? null
             selectedPresenter.value = selectedNode.value?.presenters?.[0] ?? null
+            // Initialize parameter values from the freshly-selected presenter's defaults here, not
+            // in the selectedPresenter watcher. The watcher is queued AFTER the dialog watcher
+            // (which calls capture() to snapshot the dirty-tracking baseline) because dialog=true
+            // is mutated first, so leaving this to the async watcher snapshots params:[] while the
+            // live state becomes the presenter's defaults — every subsequent create-open would
+            // spuriously report unsaved changes. The edit path below already sets this synchronously.
+            parameterValues.value = selectedPresenter.value?.parameters?.map((param) => String(param.default_value ?? '')) || []
             return
         }
 

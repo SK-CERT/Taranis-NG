@@ -4,6 +4,7 @@
         max-width="600"
         persistent
         scrollable
+        @keydown.esc="requestClose"
     >
         <template #activator="{ props: activatorProps }">
             <AddNewButton
@@ -16,14 +17,14 @@
             <DialogToolbar
                 :title="isEdit ? t(`${config.i18nPrefix}.edit`) : t(`${config.i18nPrefix}.add_new`)"
                 :saving="saving"
-                @cancel="handleCancel"
-                @save="handleSubmit"
+                @cancel="requestClose"
+                @save="saveAndClose"
             />
 
             <v-card-text>
                 <v-form
                     ref="formRef"
-                    @submit.prevent="handleSubmit"
+                    @submit.prevent="saveAndClose"
                 >
                     <v-text-field
                         v-model="localItem.name"
@@ -91,6 +92,13 @@
                 </v-alert>
             </v-card-text>
         </v-card>
+
+        <UnsavedChangesDialog
+            v-model="confirmVisible"
+            @continue="continueEditing"
+            @save="saveAndClose"
+            @discard="discardAndClose"
+        />
     </v-dialog>
 </template>
 
@@ -99,7 +107,9 @@
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useAuth } from '@/composables/useAuth'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import type { PermissionKey } from '@/types/permissions'
     import { NODE_TYPES, type NodeType } from './nodeTypes'
 
@@ -157,14 +167,16 @@
 
     const canCreate = computed(() => checkPermission(`${config.value.permissionPrefix}_CREATE` as PermissionKey))
 
-    async function handleSubmit(): Promise<void> {
+    // Persists the form. Returns true on success so the unsaved-changes guard can
+    // decide whether to close the dialog (it closes only on a successful save).
+    async function persist(): Promise<boolean> {
         showValidationError.value = false
         showError.value = false
 
-        const { valid } = (await formRef.value.validate()) as FormValidationResult
+        const { valid } = (await formRef.value?.validate()) as FormValidationResult
         if (!valid) {
             showValidationError.value = true
-            return
+            return false
         }
 
         saving.value = true
@@ -180,7 +192,7 @@
                 })
             )
             emit('saved')
-            handleCancel()
+            return true
         } catch (error) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -188,6 +200,7 @@
                 })
             )
             showError.value = true
+            return false
         } finally {
             saving.value = false
         }
@@ -201,6 +214,16 @@
         localItem.value = { ...defaultItem }
         dialog.value = false
     }
+
+    // Unsaved-changes guard. capture() snapshots the freshly-loaded form as the clean
+    // baseline on open; requestClose() shows the prompt only when real edits exist.
+    // Without capture() the baseline stays null and isDirty() always returns false, so
+    // the prompt never shows — even after the user edits fields then clicks cancel.
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => localItem.value,
+        save: persist,
+        close: handleCancel
+    })
 
     watch(
         () => props.editItem,
@@ -223,6 +246,11 @@
                 showError.value = false
                 showApiKey.value = false
                 saving.value = false
+            } else {
+                // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+                // Without this capture(), baseline stays null and isDirty() always returns false,
+                // so the "Unsaved Changes" prompt never shows — even after real edits.
+                capture()
             }
         }
     )

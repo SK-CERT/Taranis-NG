@@ -10,6 +10,7 @@
             <AddNewButton
                 :show="canCreate"
                 v-bind="activatorProps"
+                @click="openCreateDialog"
             />
         </template>
 
@@ -310,6 +311,25 @@
     onMounted(async () => {
         await loadNodes()
     })
+
+    const openCreateDialog = (): void => {
+        localItem.value = { ...defaultItem }
+        showValidationError.value = false
+        showError.value = false
+
+        // Re-select the first node/publisher on every open. resetForm() (called on close) nulls
+        // these, so without re-seeding here the second+ open shows ONLY the Publishers Node field
+        // (the publisher select / parameter fields are gated behind v-if="selectedNode/selectedPublisher").
+        selectedNode.value = nodes.value[0] ?? null
+        selectedPublisher.value = selectedNode.value?.publishers?.[0] ?? null
+        // Initialize parameter values synchronously from the freshly-selected publisher's defaults
+        // rather than in the deferred selectedPublisher watcher. The watcher is queued AFTER the
+        // dialog watcher (which calls capture() to snapshot the dirty-tracking baseline) because
+        // dialog=true is mutated first, so leaving this to the async watcher would snapshot
+        // params:[] while the live state becomes the publisher's defaults — every subsequent
+        // create-open would spuriously report unsaved changes.
+        parameterValues.value = selectedPublisher.value?.parameters?.map((param) => String(param.default_value ?? '')) || []
+    }
 
     const loadNodes = async (): Promise<void> => {
         loadingNodes.value = true

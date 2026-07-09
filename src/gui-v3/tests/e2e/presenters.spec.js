@@ -77,4 +77,38 @@ test.describe('Presenters', () => {
         await expect(dialog.locator('.v-alert')).toBeVisible()
         await expect(dialog).toBeVisible()
     })
+
+    // ── Unsaved-changes guard ─────────────────────
+    // NodeDialog (the shared node create/edit dialog used by Collectors / Presenters /
+    // Publishers / Bots Nodes tabs). Cancel with edits must raise the prompt instead of
+    // closing silently. Covers the mode-2 fix (missing `capture()` ⇒ prompt never showed).
+    test('should prompt and discard unsaved changes when cancelling a new presenters node', async ({ page }) => {
+        await page.goto('/v2/config/presenters?tab=nodes')
+        await page.getByRole('button', { name: 'Add New' }).click()
+
+        const dialog = page.locator('.v-dialog:visible')
+        await expect(dialog).toBeVisible()
+        await dialog.locator('input').first().fill('Cancelled Presenters Node')
+
+        await dialog.getByRole('button', { name: 'Cancel' }).click()
+
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+    })
+
+    test('cancel without edits closes immediately (no false prompt) for a new presenters node', async ({ page }) => {
+        // Regression guard for failure mode 1: opening the create dialog and cancelling
+        // with NO edits must close right away, without a spurious prompt.
+        await page.goto('/v2/config/presenters?tab=nodes')
+        await page.getByRole('button', { name: 'Add New' }).click()
+
+        const dialog = page.locator('.v-dialog:visible')
+        await expect(dialog).toBeVisible()
+
+        await dialog.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+    })
 })
