@@ -279,7 +279,8 @@
         "data_providers": "Zdroje dát",
         "reports": "Reporty",
         "login_methods": "Spôsoby prihlásenia",
-        "security": "Zabezpečenie"
+        "security": "Zabezpečenie",
+        "public_web": "Verejný web"
     },
     "notification": {
         "close": "Zavrieť"
@@ -708,6 +709,7 @@
         "report_type": "Typ publikácie",
         "state": "Stav",
         "publisher_presets": "Publikačné kanály",
+        "public_web_targets": "Verejné weby",
         "successful": "Nová publikácia bola úspešne vytvorená",
         "successful_edit": "Publikácia bola úspešne uložená",
         "created_successfully": "Nová publikácia bola úspešne vytvorená",
@@ -1638,5 +1640,84 @@
         "passkey_last_used": "Naposledy použité",
         "passkey_added": "Passkey zaregistrovaný.",
         "no_passkeys": "Žiadne passkeys."
+    },
+    "public_web": {
+        "nodes": {
+            "total_count": "Celkovo uzlov public-web",
+            "add_new": "Pridať uzol public-web",
+            "edit": "Upraviť uzol public-web",
+            "name": "Názov",
+            "description": "Popis",
+            "api_key_hint": "Zdieľaný ApiKey uzla; pri úprave nechajte prázdne pre zachovanie súčasného kľúča.",
+            "api_url": "API URL",
+            "api_url_hint": "URL, cez ktorú core kontaktuje management API tohto uzla (health check + reset cache) — napr. http://public-web v Dockeri, alebo verejná URL pri vzdialenom behu. Nechajte prázdne pre vypnutie kanála core->uzol."
+        },
+        "webs": {
+            "total_count": "Celkovo webov",
+            "add_new": "Pridať web",
+            "edit": "Upraviť web",
+            "enabled": "Povolené",
+            "name": "Názov",
+            "hostname": "Hostname",
+            "hostname_hint": "Verejný host, na ktorom tento web beží (napr. cyberfeed.example.org).",
+            "feed_settings": "Nastavenia feedu",
+            "max_reports_homepage": "Reportov na domovskej stránke",
+            "max_reports_rss": "Reportov v RSS",
+            "logo_width": "Šírka loga",
+            "logo_height": "Výška loga",
+            "organization_url": "URL organizácie",
+            "organization": "Organizácia",
+            "organization_hint": "Zobrazí sa ako text odkazu na organizáciu; vyberte existujúcu organizáciu Taranis alebo zadajte vlastný názov",
+            "email_settings": "Nastavenia e-mailu",
+            "feedback_recipients": "Príjemcovia spätnej väzby",
+            "feedback_recipients_hint": "E-mailové adresy oddelené čiarkou pre spätnú väzbu z tohto webu.",
+            "smtp_username": "Používateľské meno SMTP",
+            "smtp_password": "Heslo SMTP",
+            "smtp_url": "SMTP URL",
+            "smtp_port": "SMTP port",
+            "email_sender": "Odosielateľ e-mailu",
+            "email_subject": "Predmet e-mailu",
+            "send_test_email": "Odoslať testovací e-mail",
+            "send_test_email_success": "Testovací e-mail bol úspešne odoslaný",
+            "send_test_email_error": "Testovací e-mail sa nepodarilo odoslať",
+            "service_description_url": "URL popisu služby",
+            "languages": "Jazyky",
+            "languages_hint": "ISO kódy jazykov, ktoré web ponúka (napr. en, sk). Jazyk bez dodaného prekladu zobrazí anglické rozhranie.",
+            "default_language": "Predvolený jazyk",
+            "branding": "Branding (pre každý jazyk)",
+            "images": "Obrázky",
+            "image_logo": "Logo",
+            "image_favicon": "Favicon",
+            "image_preview": "Náhľad (sociálny obrázok)",
+            "upload": "Nahrať obrázok",
+            "remove_image": "Odstrániť",
+            "images_after_save": "Obrázky je možné nahrať po uložení webu.",
+            "actions": "Akcie",
+            "none": "Zatiaľ žiadne weby."
+        },
+        "text": {
+            "site_name": "Názov webu",
+            "rss_title": "Názov RSS",
+            "rss_description": "Popis RSS",
+            "meta_description": "Meta popis",
+            "meta_keywords": "Meta kľúčové slová",
+            "homepage_title": "Nadpis domovskej stránky",
+            "service_description_title": "Názov služby",
+            "organization": "Organizácia",
+            "service_warning": "Upozornenie služby",
+            "feedback_question1": "Otázka spätnej väzby 1",
+            "feedback_question2": "Otázka spätnej väzby 2",
+            "feedback_question3": "Otázka spätnej väzby 3",
+            "feedback_comment": "Popisok komentára"
+        },
+        "confirm_delete_title": "Potvrdiť zmazanie",
+        "confirm_delete_node": "Zmazať uzol public-web '{name}' a všetky jeho weby?",
+        "confirm_delete_web": "Zmazať web '{name}'?",
+        "status": {
+            "alive": "Dostupný",
+            "late": "Pomalá odozva",
+            "unreachable": "Nedostupný",
+            "last_seen": "naposledy videný"
+        }
     }
 }

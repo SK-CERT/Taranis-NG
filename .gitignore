@@ -13,6 +13,7 @@ build/
 .ruff_cache/
 src/gui/git-info.json
 src/gui-v3/git-info.json
+src/public_web/.venv
 
 
 # temporary files of editors

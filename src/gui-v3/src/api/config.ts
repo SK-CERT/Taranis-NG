@@ -283,6 +283,56 @@ export function connectRemoteNode(remote_node) {
     return ApiService.get('/config/remote-nodes/' + remote_node.id + '/connect')
 }
 
+// -- Public-web nodes and their webs (branded feeds) --------------------------
+
+export function getAllPublicWebNodes(filter) {
+    return ApiService.get('/config/public-web-nodes?search=' + (filter?.search || ''))
+}
+
+export function createNewPublicWebNode(node) {
+    return ApiService.post('/config/public-web-nodes', node)
+}
+
+export function updatePublicWebNode(node) {
+    return ApiService.put('/config/public-web-nodes/' + node.id, node)
+}
+
+export function deletePublicWebNode(node) {
+    return ApiService.delete('/config/public-web-nodes/' + node.id)
+}
+
+export function getPublicWebs(nodeId, filter: { search?: string } = {}) {
+    return ApiService.get('/config/public-web-nodes/' + nodeId + '/webs?search=' + (filter.search || ''))
+}
+
+export function createNewPublicWeb(nodeId, web) {
+    return ApiService.post('/config/public-web-nodes/' + nodeId + '/webs', web)
+}
+
+export function updatePublicWeb(nodeId, web) {
+    return ApiService.put('/config/public-web-nodes/' + nodeId + '/webs/' + web.id, web)
+}
+
+export function deletePublicWeb(nodeId, web) {
+    return ApiService.delete('/config/public-web-nodes/' + nodeId + '/webs/' + web.id)
+}
+
+export function getPublicWebImage(nodeId, webId, kind) {
+    return ApiService.get('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind, { responseType: 'blob' })
+}
+
+export function uploadPublicWebImage(nodeId, webId, kind, formData) {
+    return ApiService.upload('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind, formData)
+}
+
+export function deletePublicWebImage(nodeId, webId, kind) {
+    return ApiService.delete('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind)
+}
+
+export function testPublicWebEmail(nodeId, payload) {
+    return ApiService.post('/config/public-web-nodes/' + nodeId + '/webs/test-email', payload)
+}
+
 export function getAllCollectorsNodes(filter) {
     return ApiService.get('/config/collectors-nodes?search=' + filter.search)
 }

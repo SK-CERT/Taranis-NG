@@ -82,6 +82,8 @@ services:
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       DEBUG_SQL: "false"
+      # Used only to give the auto-seeded default public-web web a sensible hostname.
+      PUBLIC_WEB_HOSTNAME: "${PUBLIC_WEB_HOSTNAME}"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
@@ -318,6 +320,51 @@ services:
       traefik.http.routers.taranis-gui-v3-443.tls: "true"
       traefik.http.routers.taranis-gui-v3-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
       traefik.http.routers.taranis-gui-v3-443.service: "taranis-gui-v3"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+  public-web:
+    # Gated behind a compose profile so it can be switched off from .env:
+    # COMPOSE_PROFILES=public-web enables it (build + run); empty disables it.
+    profiles:
+      - "public-web"
+    depends_on:
+      core:
+        condition: service_healthy
+    restart: unless-stopped
+    image: "skcert/taranis-ng-public-web:${TARANIS_NG_TAG}"
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.public-web
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+    environment:
+      TARANIS_NG_CORE_URL: "http://core"
+      TZ: "${TZ}"
+      MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
+    secrets:
+      - api_key
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.taranis-public-web.loadbalancer.server.port: "80"
+
+      traefik.http.routers.taranis-public-web-80.entrypoints: "web"
+      traefik.http.routers.taranis-public-web-80.rule: "Host(`${PUBLIC_WEB_HOSTNAME}`)"
+      traefik.http.routers.taranis-public-web-80.middlewares: "redirect-to-443"
+
+      traefik.http.routers.taranis-public-web-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-public-web-443.rule: "PathPrefix(`/`)"
+      traefik.http.routers.taranis-public-web-443.tls: "true"
+      traefik.http.routers.taranis-public-web-443.priority: "1"
+      traefik.http.routers.taranis-public-web-443.middlewares: "public-web-security-headers@file"
+      traefik.http.routers.taranis-public-web-443.service: "taranis-public-web"
 
     logging:
       driver: "json-file"

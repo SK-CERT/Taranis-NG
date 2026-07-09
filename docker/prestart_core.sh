@@ -26,6 +26,16 @@ if [ "$(python ./manage.py bot --list | grep 'Total:' | cut -d ' ' -f2)" == 0 ];
     ) &
 fi
 
+(
+    if [ "$(python ./manage.py public-web --list | grep 'Total:' | cut -d ' ' -f2)" == 0 ]; then
+        echo "Creating default public-web node..."
+        python ./manage.py public-web --create --name "Default Public Web" --description "A local public-web feed node configured as a part of Taranis NG default installation." --api-url "http://public-web" --api-key "$API_KEY"
+    fi
+    # Ensure the default node has a web so the running feed is represented in the GUI.
+    echo "Ensuring default public-web web..."
+    python ./manage.py public-web --ensure-web --name "Default Public Web" --web-name "Default Web" --hostname "${PUBLIC_WEB_HOSTNAME:-}" --api-url "http://public-web"
+) &
+
 echo "Starting scheduler..."
 python ./scheduler.py &
 

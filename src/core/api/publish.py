@@ -27,6 +27,7 @@ from model.product_type import ProductType
 from model.publisher_preset import PublisherPreset
 from model.report_item import ReportItem
 from remote.presenters_api import PresentersApi
+from remote.public_web_api import PublicWebApi
 from shared.schema.presenter import PresenterInput, PresenterInputSchema
 
 
@@ -79,6 +80,7 @@ class ProductsResource(Resource):
         """
         user = auth_manager.get_user_from_jwt()
         new_product = Product.add_product(request.json, user)
+        _reset_public_web_cache_if_published_changed(new_state_id=new_product.state_id)
         return new_product.id
 
 
@@ -109,7 +111,12 @@ class ProductResource(Resource):
             product_id (int): The ID of the product to be updated.
         """
         user = auth_manager.get_user_from_jwt()
+        original_product = Product.find(product_id)
+        original_state_id = original_product.state_id if original_product else None
         Product.update_product(product_id, request.json, user)
+        updated_product = Product.find(product_id)
+        updated_state_id = updated_product.state_id if updated_product else None
+        _reset_public_web_cache_if_published_changed(old_state_id=original_state_id, new_state_id=updated_state_id)
 
     @auth_required("PUBLISH_DELETE", ACLCheck.PRODUCT_TYPE_MODIFY)
     def delete(self, product_id: int) -> None:
@@ -118,7 +125,61 @@ class ProductResource(Resource):
         Args:
             product_id (int): The ID of the product to be deleted.
         """
-        return Product.delete(product_id)
+        product = Product.find(product_id)
+        was_published = _is_published_state(product.state_id) if product else False
+        result = Product.delete(product_id)
+        if was_published:
+            _notify_public_web_nodes()
+        return result
+
+
+def _is_published_state(state_id: int | None) -> bool:
+    """Return whether a product state is the public-web published state."""
+    if state_id is None:
+        return False
+    try:
+        from model.state import StateDefinition, StateEnum
+
+        published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+    except Exception:
+        return False
+    return bool(published_state and state_id == published_state.id)
+
+
+def _notify_public_web_nodes() -> None:
+    """Best-effort: tell every public-web node to drop its cached feed data."""
+    try:
+        from model.public_web_node import PublicWebNode
+
+        for node in PublicWebNode.get_all():
+            if node.api_url:
+                PublicWebApi(node.api_url, node.api_key).reset_cache()
+    except Exception as ex:
+        logger.debug(f"Could not notify public-web nodes about a product change: {ex}")
+
+
+def _reset_public_web_cache_if_published_changed(
+    old_state_id: int | None = None,
+    new_state_id: int | None = None,
+) -> None:
+    """Reset public-web cache when a mutation touches the published state.
+
+    This fires when a product is already published and is edited, or when a
+    product transitions from or to the published state.
+    """
+    try:
+        from model.state import StateDefinition, StateEnum
+
+        published_state = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+        if not published_state:
+            return
+        published_id = published_state.id
+    except Exception:
+        return
+
+    candidates = [old_state_id, new_state_id]
+    if any(candidate == published_id for candidate in candidates if candidate is not None):
+        _notify_public_web_nodes()
 
 
 def prepare_product(product_data: dict, user: User, token: str) -> tuple[dict, HTTPStatus, dict]:

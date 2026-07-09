@@ -42,6 +42,8 @@ from model import (
     osint_source,
     presenters_node,
     product_type,
+    public_web,
+    public_web_node,
     publisher_preset,
     publishers_node,
     remote,
@@ -1543,6 +1545,230 @@ class RemoteAccessResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+class PublicWebNodesResource(Resource):
+    """Public-web nodes API endpoint."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """Get all public-web nodes.
+
+        Returns:
+            (dict): The public-web nodes
+        """
+        search = request.args.get("search")
+        return public_web_node.PublicWebNode.get_all_json(search)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus] | None:
+        """Create a public-web node.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            public_web_node.PublicWebNode.add(request.json)
+        except Exception as ex:
+            msg = "Could not create public-web node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebNodeResource(Resource):
+    """Public-web node API endpoint."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            public_web_node.PublicWebNode.update(node_id, request.json)
+        except Exception as ex:
+            msg = "Could not update public-web node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_DELETE")
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            return public_web_node.PublicWebNode.delete(node_id)
+        except Exception as ex:
+            msg = "Could not delete public-web node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+def _notify_public_web_node(node_id: int) -> None:
+    """Best-effort: push a cache reset to the node so a config change shows now.
+
+    Never raises — a down/unreachable node just means the change appears after the
+    node's cache TTL instead of immediately.
+    """
+    try:
+        node = db.session.get(public_web_node.PublicWebNode, node_id)
+        if node and node.api_url:
+            from remote.public_web_api import PublicWebApi  # noqa: PLC0415 (avoid import cycle at load)
+
+            PublicWebApi(node.api_url, node.api_key).reset_cache()
+    except Exception as ex:
+        log_manager.store_data_error_activity(get_user_from_jwt(), "Could not notify public-web node", ex)
+
+
+class PublicWebsResource(Resource):
+    """The webs (branded feeds) hosted by a public-web node."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self, node_id: int) -> dict:
+        """Get all webs of a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (dict): The webs
+        """
+        search = request.args.get("search")
+        return public_web.PublicWeb.get_all_json_for_node(node_id, search)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_CREATE")
+    def post(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Create a web under a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (dict, int): The id of the created web
+        """
+        try:
+            web = public_web.PublicWeb.add(node_id, request.json)
+            _notify_public_web_node(node_id)
+            return {"id": web.id}, HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not create public web"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebResource(Resource):
+    """A single web of a public-web node."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self, node_id: int, web_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a web.
+
+        Args:
+            node_id (int): The public-web node ID
+            web_id (int): The web ID
+        """
+        try:
+            public_web.PublicWeb.update(web_id, request.json)
+            _notify_public_web_node(node_id)
+        except Exception as ex:
+            msg = "Could not update public web"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_DELETE")
+    def delete(self, node_id: int, web_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a web.
+
+        Args:
+            node_id (int): The public-web node ID
+            web_id (int): The web ID
+        """
+        try:
+            result = public_web.PublicWeb.delete(web_id)
+            _notify_public_web_node(node_id)
+            return result
+        except Exception as ex:
+            msg = "Could not delete public web"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebImageResource(Resource):
+    """Upload / preview / remove one image (logo, favicon, preview) of a web."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self, node_id: int, web_id: int, kind: str):  # noqa: ANN201, ARG002
+        """Serve the image binary for previewing in the configuration UI."""
+        web = public_web.PublicWeb.find(web_id)
+        image = web.get_image(kind) if web else None
+        if image is None or image.data is None:
+            return {"error": "Image not found"}, HTTPStatus.NOT_FOUND
+        return send_file(io.BytesIO(image.data), mimetype=image.mime_type, download_name=image.filename or kind)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self, node_id: int, web_id: int, kind: str) -> tuple[dict, HTTPStatus] | None:
+        """Upload (create/replace) an image of the given kind."""
+        try:
+            if kind not in public_web.IMAGE_KINDS:
+                return {"error": "Invalid image kind"}, HTTPStatus.BAD_REQUEST
+            web = public_web.PublicWeb.find(web_id)
+            if web is None:
+                return {"error": "Web not found"}, HTTPStatus.NOT_FOUND
+            file = request.files.get("file")
+            if not file:
+                return {"error": "No file provided"}, HTTPStatus.BAD_REQUEST
+            web.set_image(kind, file.mimetype, file.filename, file.read())
+            _notify_public_web_node(node_id)
+        except Exception as ex:
+            msg = "Could not upload public web image"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def delete(self, node_id: int, web_id: int, kind: str) -> tuple[dict, HTTPStatus] | None:
+        """Remove an image of the given kind."""
+        try:
+            web = public_web.PublicWeb.find(web_id)
+            if web is not None:
+                web.remove_image(kind)
+            _notify_public_web_node(node_id)
+        except Exception as ex:
+            msg = "Could not delete public web image"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebEmailTestResource(Resource):
+    """Send a test e-mail via a public-web node using provided SMTP settings."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self, node_id: int) -> tuple[dict, HTTPStatus]:
+        """Send a test e-mail through the given public-web node.
+
+        The payload is forwarded to the node management API without persistence,
+        so admins can validate SMTP credentials/settings before saving a web.
+        """
+        try:
+            node = db.session.get(public_web_node.PublicWebNode, node_id)
+            if node is None:
+                return {"error": "Public-web node not found"}, HTTPStatus.NOT_FOUND
+            if not node.api_url:
+                return {"error": "Public-web node API URL is not configured"}, HTTPStatus.BAD_REQUEST
+
+            from remote.public_web_api import PublicWebApi  # noqa: PLC0415
+
+            payload = request.json if isinstance(request.json, dict) else {}
+            body, status = PublicWebApi(node.api_url, node.api_key).test_email(payload)
+            return body, status
+        except Exception as ex:
+            msg = "Could not send public-web test e-mail"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
 class RemoteNodesResource(Resource):
     """Remote nodes API endpoint."""
 
@@ -2202,6 +2428,16 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(RemoteAccessesResource, "/api/v1/config/remote-accesses")
     api.add_resource(RemoteAccessResource, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
+    api.add_resource(PublicWebNodesResource, "/api/v1/config/public-web-nodes")
+    api.add_resource(PublicWebNodeResource, "/api/v1/config/public-web-nodes/<int:node_id>")
+    api.add_resource(PublicWebsResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs")
+    api.add_resource(PublicWebResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs/<int:web_id>")
+    api.add_resource(PublicWebEmailTestResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs/test-email")
+    api.add_resource(
+        PublicWebImageResource,
+        "/api/v1/config/public-web-nodes/<int:node_id>/webs/<int:web_id>/images/<string:kind>",
+    )
+
     api.add_resource(RemoteNodesResource, "/api/v1/config/remote-nodes")
     api.add_resource(RemoteNodeResource, "/api/v1/config/remote-nodes/<int:remote_node_id>")
     api.add_resource(RemoteNodeConnectResource, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
@@ -2307,6 +2543,11 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_REMOTE_ACCESS_CREATE", "Config remote access create", "Create remote access configuration")
     Permission.add("CONFIG_REMOTE_ACCESS_UPDATE", "Config remote access update", "Update remote access configuration")
     Permission.add("CONFIG_REMOTE_ACCESS_DELETE", "Config remote access delete", "Delete remote access configuration")
+
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_ACCESS", "Config public-web nodes access", "Access to public-web nodes configuration")
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_CREATE", "Config public-web node create", "Create public-web node configuration")
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_UPDATE", "Config public-web node update", "Update public-web node configuration")
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_DELETE", "Config public-web node delete", "Delete public-web node configuration")
 
     Permission.add("CONFIG_REMOTE_NODE_ACCESS", "Config remote nodes access", "Access to remote nodes configuration")
     Permission.add("CONFIG_REMOTE_NODE_CREATE", "Config remote node create", "Create remote node configuration")

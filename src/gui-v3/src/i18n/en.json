@@ -279,7 +279,8 @@
         "data_providers": "Data providers",
         "reports": "Reports",
         "login_methods": "Login Methods",
-        "security": "Security"
+        "security": "Security",
+        "public_web": "Public Web"
     },
     "notification": {
         "close": "Close"
@@ -708,6 +709,7 @@
         "report_type": "Product Type",
         "state": "State",
         "publisher_presets": "Publisher Presets",
+        "public_web_targets": "Public Websites",
         "successful": "New product was successfully added",
         "successful_edit": "Product was successfully saved",
         "created_successfully": "Product created successfully",
@@ -1638,5 +1640,84 @@
         "passkey_last_used": "Last used",
         "passkey_added": "Passkey registered.",
         "no_passkeys": "No passkeys registered."
+    },
+    "public_web": {
+        "nodes": {
+            "total_count": "Total public-web nodes",
+            "add_new": "Add public-web node",
+            "edit": "Edit public-web node",
+            "name": "Name",
+            "description": "Description",
+            "api_key_hint": "Shared node ApiKey; leave blank when editing to keep the current key.",
+            "api_url": "API URL",
+            "api_url_hint": "URL core uses to reach this node's management API (health check + cache reset) — e.g. http://public-web in Docker, or its public URL when remote. Leave empty to disable the core->node channel."
+        },
+        "webs": {
+            "total_count": "Total webs",
+            "add_new": "Add web",
+            "edit": "Edit web",
+            "enabled": "Enabled",
+            "name": "Name",
+            "hostname": "Hostname",
+            "hostname_hint": "The public host this web answers on (e.g. cyberfeed.example.org).",
+            "feed_settings": "Feed settings",
+            "max_reports_homepage": "Reports on homepage",
+            "max_reports_rss": "Reports in RSS",
+            "logo_width": "Logo width",
+            "logo_height": "Logo height",
+            "organization_url": "Organization URL",
+            "organization": "Organization",
+            "organization_hint": "Shown as the organization link label; pick an existing Taranis organization or type a custom name",
+            "email_settings": "Email settings",
+            "feedback_recipients": "Feedback recipients",
+            "feedback_recipients_hint": "Comma-separated e-mail addresses for feedback from this website.",
+            "smtp_username": "SMTP username",
+            "smtp_password": "SMTP password",
+            "smtp_url": "SMTP URL",
+            "smtp_port": "SMTP port",
+            "email_sender": "E-mail sender",
+            "email_subject": "E-mail subject",
+            "send_test_email": "Send test e-mail",
+            "send_test_email_success": "Test e-mail sent successfully",
+            "send_test_email_error": "Could not send test e-mail",
+            "service_description_url": "Service description URL",
+            "languages": "Languages",
+            "languages_hint": "ISO codes this feed offers (e.g. en, cs). A language without a shipped translation shows English UI chrome.",
+            "default_language": "Default language",
+            "branding": "Branding (per language)",
+            "images": "Images",
+            "image_logo": "Logo",
+            "image_favicon": "Favicon",
+            "image_preview": "Preview (social image)",
+            "upload": "Upload image",
+            "remove_image": "Remove",
+            "images_after_save": "Images can be uploaded once the web is saved.",
+            "actions": "Actions",
+            "none": "No webs yet."
+        },
+        "text": {
+            "site_name": "Site name",
+            "rss_title": "RSS title",
+            "rss_description": "RSS description",
+            "meta_description": "Meta description",
+            "meta_keywords": "Meta keywords",
+            "homepage_title": "Homepage title",
+            "service_description_title": "Service title",
+            "organization": "Organization",
+            "service_warning": "Service warning",
+            "feedback_question1": "Feedback question 1",
+            "feedback_question2": "Feedback question 2",
+            "feedback_question3": "Feedback question 3",
+            "feedback_comment": "Feedback comment label"
+        },
+        "confirm_delete_title": "Confirm deletion",
+        "confirm_delete_node": "Delete public-web node '{name}' and all its webs?",
+        "confirm_delete_web": "Delete web '{name}'?",
+        "status": {
+            "alive": "Reachable",
+            "late": "Slow to respond",
+            "unreachable": "Unreachable",
+            "last_seen": "last seen"
+        }
     }
 }

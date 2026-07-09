@@ -68,6 +68,14 @@ export const configLinks: ConfigLink[] = [
         translate: true
     },
     {
+        id: 13,
+        icon: 'mdi-web',
+        title: 'nav_menu.public_web',
+        route: '/config/public-web',
+        permission: 'CONFIG_PUBLIC_WEB_NODE_ACCESS',
+        translate: true
+    },
+    {
         id: 9,
         icon: 'mdi-application-cog-outline',
         title: 'nav_menu.settings',

@@ -14,6 +14,7 @@ import sqlalchemy
 from managers.db_manager import db
 from marshmallow import fields, post_load
 from model.acl_entry import ACLEntry
+from model.public_web import PublicWeb
 from model.report_item import ReportItem
 from model.state import (
     StateDefinition,
@@ -86,8 +87,18 @@ class Product(db.Model):
     state = db.relationship(StateDefinition, lazy="select")  # must be "select" to avoid join issues in get()
 
     report_items = db.relationship("ReportItem", secondary="product_report_item")
+    public_webs = db.relationship(PublicWeb, secondary="product_public_web")
 
-    def __init__(self, id: int, title: str, description: str, product_type_id: int, state_id: int, report_items: list[ReportItem]) -> None:  # noqa: A002
+    def __init__(
+        self,
+        id: int,
+        title: str,
+        description: str,
+        product_type_id: int,
+        state_id: int,
+        report_items: list[ReportItem],
+        public_web_ids: list[int] | None = None,
+    ) -> None:
         """Initialize a product."""
         if id != -1:
             self.id = id
@@ -104,6 +115,13 @@ class Product(db.Model):
         self.report_items = []
         for report_item in report_items:
             self.report_items.append(ReportItem.find(report_item.id))
+
+        self.public_webs = []
+        if public_web_ids:
+            for web_id in public_web_ids:
+                web = PublicWeb.find(web_id)
+                if web:
+                    self.public_webs.append(web)
 
     @orm.reconstructor
     def reconstruct(self) -> None:
@@ -177,11 +195,12 @@ class Product(db.Model):
             dict: Product detail
         """
         product = db.session.get(cls, product_id)
+        product.public_web_ids = [web.id for web in product.public_webs] if product else []
         products_schema = ProductPresentationSchema()
         return products_schema.dump(product)
 
     @classmethod
-    def get(cls, filter: dict, offset: int, limit: int, user: User) -> tuple[list, int]:  # noqa: A002
+    def get(cls, filter: dict, offset: int, limit: int, user: User) -> tuple[list, int]:
         """Get products.
 
         Args:
@@ -258,7 +277,7 @@ class Product(db.Model):
         return query.offset(offset).limit(limit).all(), query.count()
 
     @classmethod
-    def get_json(cls, filter: dict, offset: int, limit: int, user: User) -> dict:  # noqa: A002
+    def get_json(cls, filter: dict, offset: int, limit: int, user: User) -> dict:
         """Get products.
 
         Args:
@@ -277,6 +296,7 @@ class Product(db.Model):
             product.access = result.access > 0 or result.acls == 0
             product.modify = result.modify > 0 or result.acls == 0
             product.report_items_count = len(product.report_items)
+            product.public_web_ids = [web.id for web in product.public_webs]
             products.append(product)
 
             for report_item in product.report_items:
@@ -286,6 +306,34 @@ class Product(db.Model):
 
         products_schema = ProductPresentationSchema(many=True)
         return {"total_count": count, "items": products_schema.dump(products)}
+
+    @classmethod
+    def get_published(cls, limit: int, web_id: int | None = None) -> list[Product]:
+        """Get the most recently published products, newest first.
+
+        No user/ACL context — intended for trusted node access to the public feed.
+
+        Args:
+            limit: Maximum number of products to return.
+            web_id: Public-web id to filter for. Products with no selected
+                webs are considered global and included for every web.
+
+        Returns:
+            list[Product]: Published products ordered by creation date descending.
+        """
+        published = StateDefinition.get_by_name(StateEnum.PUBLISHED.value)
+        if not published:
+            return []
+        query = cls.query.filter(cls.state_id == published.id)
+
+        if web_id is not None:
+            query = (
+                query.outerjoin(ProductPublicWeb, ProductPublicWeb.product_id == cls.id)
+                .filter(or_(ProductPublicWeb.public_web_id.is_(None), ProductPublicWeb.public_web_id == web_id))
+                .distinct()
+            )
+
+        return query.order_by(db.desc(cls.created)).limit(limit).all()
 
     @classmethod
     def _auto_complete_reports_on_publish(cls, product_id: int, new_state_id: int, user: User) -> None:
@@ -431,6 +479,8 @@ class Product(db.Model):
         original_product.state_id = product.state_id
         original_product.report_items = []
         original_product.report_items.extend(product.report_items)
+        original_product.public_webs = []
+        original_product.public_webs.extend(product.public_webs)
         original_product.updated_at = datetime.now(TZ)
         original_product.updated_by = user.name
 
@@ -447,7 +497,7 @@ class Product(db.Model):
             cls._auto_complete_reports_on_publish(product_id, product.state_id, user)
 
     @classmethod
-    def delete(cls, id: int) -> None:  # noqa: A002
+    def delete(cls, id: int) -> None:
         """Delete product by id.
 
         Args:
@@ -469,3 +519,10 @@ class ProductReportItem(db.Model):
 
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), primary_key=True)
     report_item_id = db.Column(db.Integer, db.ForeignKey("report_item.id"), primary_key=True)
+
+
+class ProductPublicWeb(db.Model):
+    """Product to PublicWeb mapping for targeted publication."""
+
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
+    public_web_id = db.Column(db.Integer, db.ForeignKey("public_web.id", ondelete="CASCADE"), primary_key=True)
