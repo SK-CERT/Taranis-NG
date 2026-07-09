@@ -19,6 +19,7 @@ import {
     getAllPublishersNodes,
     getAllRemoteAccesses,
     getAllRemoteNodes,
+    getAllPublicWebNodes,
     getAllReportItemTypes,
     getAllRoles,
     getAllUsers,
@@ -79,6 +80,7 @@ export const useConfigStore = defineStore('config', () => {
     const wordLists = ref<ListState>(emptyListState())
     const remoteAccess = ref<ListState>(emptyListState())
     const remoteNodes = ref<ListState>(emptyListState())
+    const publicWebNodes = ref<ListState>(emptyListState())
     const collectorsNodes = ref<ListState>(emptyListState())
     const osintSources = ref<ListState>(emptyListState())
     const osintSourceGroups = ref<ListState<OSINTGroupItem>>(emptyListState())
@@ -193,6 +195,10 @@ export const useConfigStore = defineStore('config', () => {
         return await loadListState(getAllRemoteNodes, data, remoteNodes)
     }
 
+    async function loadPublicWebNodes(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllPublicWebNodes, data, publicWebNodes)
+    }
+
     async function loadCollectorsNodes(data: FilterPayload): Promise<ApiResponse<ListState>> {
         return await loadListState(getAllCollectorsNodes, data, collectorsNodes)
     }
@@ -265,6 +271,7 @@ export const useConfigStore = defineStore('config', () => {
         wordLists,
         remoteAccess,
         remoteNodes,
+        publicWebNodes,
         collectorsNodes,
         osintSources,
         osintSourceGroups,
@@ -296,6 +303,7 @@ export const useConfigStore = defineStore('config', () => {
         loadWordLists,
         loadRemoteAccesses,
         loadRemoteNodes,
+        loadPublicWebNodes,
         loadCollectorsNodes,
         loadOSINTSources,
         loadOSINTSourceGroups,

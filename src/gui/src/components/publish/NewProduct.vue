@@ -214,9 +214,12 @@
                         </v-col>
                     </v-row>
 
-                    <!-- Publisher Presets -->
+                    <!-- Publisher Presets + Public Websites -->
                     <v-row>
-                        <v-col cols="12">
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
                             <div class="text-title-medium mb-2">
                                 {{ $t('product.publisher_presets') }}
                             </div>
@@ -237,6 +240,27 @@
                             >
                                 {{ $t('common.no_data') }}
                             </div>
+                        </v-col>
+
+                        <v-col
+                            v-if="showPublicWebSelection"
+                            cols="12"
+                            md="6"
+                        >
+                            <div class="text-title-medium mb-2">
+                                {{ $t('product.public_web_targets') }}
+                            </div>
+                            <v-checkbox
+                                v-for="web in publicWebOptions"
+                                :key="web.id"
+                                v-model="product.public_web_ids"
+                                :label="web.name"
+                                :value="web.id"
+                                :disabled="!canModify"
+                                hide-details
+                                density="compact"
+                                @update:model-value="handlePublicWebSelectionChange"
+                            />
                         </v-col>
                     </v-row>
 
@@ -289,11 +313,12 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, onUnmounted } from 'vue'
+    import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuthStore } from '@/stores/auth'
     import { ICONS } from '@/config/ui-constants'
-    import { createProduct, updateProduct, publishProduct, previewProduct } from '@/api/publish'
+    import { createProduct, updateProduct, publishProduct, previewProduct, getProductById } from '@/api/publish'
+    import { getAllPublicWebNodes, getPublicWebs } from '@/api/config'
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
@@ -308,6 +333,7 @@
         product_type_id: number | string | undefined
         state_id: number | string | undefined
         report_items: Array<{ id: number | string }>
+        public_web_ids: Array<number | string>
     }
 
     type FormRef = {
@@ -341,6 +367,20 @@
         [key: string]: unknown
     }
 
+    type PublicWebNode = {
+        id: number | string
+    }
+
+    type PublicWeb = {
+        id: number | string
+        name?: string
+    }
+
+    type PublicWebOption = {
+        id: number | string
+        name: string
+    }
+
     type ProductEditPayload = {
         id: number
         title: string
@@ -348,8 +388,19 @@
         product_type_id: number | string | undefined
         state_id: number | string | undefined
         report_items?: ReportItem[]
+        public_web_ids?: Array<number | string>
         modify: boolean
         access: boolean
+    }
+
+    type ProductDetailPayload = {
+        id: number
+        title: string
+        description?: string
+        product_type_id: number | string | undefined
+        state_id: number | string | undefined
+        report_items?: ReportItem[]
+        public_web_ids?: Array<number | string>
     }
 
     const { t } = useI18n()
@@ -375,13 +426,15 @@
         description: '',
         product_type_id: undefined,
         state_id: undefined,
-        report_items: []
+        report_items: [],
+        public_web_ids: []
     })
 
     const selectedType = ref<ProductType | null>(null)
     const reportItems = ref<ReportItem[]>([])
     const productTypes = ref<ProductType[]>([])
     const publisherPresets = ref<PublisherPreset[]>([])
+    const publicWebOptions = ref<PublicWebOption[]>([])
     const availableStates = ref<AvailableState[]>([])
     const reportItemSelector = ref<{ openSelector?: () => void } | null>(null)
 
@@ -412,6 +465,8 @@
         publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.name)
     )
 
+    const showPublicWebSelection = computed(() => publicWebOptions.value.length > 1)
+
     // Methods
     function resetForm() {
         product.value = {
@@ -420,7 +475,8 @@
             description: '',
             product_type_id: undefined,
             state_id: undefined,
-            report_items: []
+            report_items: [],
+            public_web_ids: []
         }
         selectedType.value = null
         isEditMode.value = false
@@ -428,10 +484,31 @@
         canModifyFlag.value = false
         canAccessFlag.value = false
         reportItems.value = []
+        normalizePublicWebSelection()
         formRef.value?.reset?.()
         resetPublisherPresets()
         selectDefaultState()
         initialFormState.value = snapshotForm()
+    }
+
+    function normalizePublicWebIds(ids: Array<number | string> | undefined | null): Array<number | string> {
+        if (!Array.isArray(ids)) {
+            return []
+        }
+
+        return Array.from(new Set(ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))))
+    }
+
+    function normalizePublicWebSelection() {
+        const validIds = new Set(normalizePublicWebIds(publicWebOptions.value.map((web) => web.id)))
+        const selectedIds = normalizePublicWebIds(product.value.public_web_ids)
+
+        product.value.public_web_ids = selectedIds.filter((id) => validIds.has(Number(id)))
+
+        // Keep legacy behavior visible in UI: no explicit mapping means all websites.
+        if (showPublicWebSelection.value && product.value.public_web_ids.length === 0) {
+            product.value.public_web_ids = publicWebOptions.value.map((web) => web.id)
+        }
     }
 
     function resetPublisherPresets() {
@@ -473,6 +550,14 @@
         showError.value = false
         product.value.product_type_id = selectedType.value?.id
         product.value.report_items = reportItems.value.map((item) => ({ id: item.id }))
+        product.value.public_web_ids = normalizePublicWebIds(product.value.public_web_ids)
+    }
+
+    async function handlePublicWebSelectionChange(): Promise<void> {
+        await nextTick()
+        if (isEditMode.value && product.value.id !== -1) {
+            await handleUpdateRecord()
+        }
     }
 
     function openReportItemSelector(): void {
@@ -487,8 +572,8 @@
         }
     }
 
-    function getSelectedPublisherIds(): Array<number | string> {
-        return publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.id)
+    function getSelectedPublisherIds(): never[] {
+        return publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.id) as unknown as never[]
     }
 
     function validatePublisherSelection(): boolean {
@@ -612,7 +697,7 @@
         if (!valid) return
 
         prepareProduct()
-        const selectedPublisherIds = getSelectedPublisherIds()
+        const selectedPublisherIds: any = getSelectedPublisherIds()
 
         try {
             const response = await publishProduct(product.value, selectedPublisherIds)
@@ -708,30 +793,67 @@
         }
     }
 
+    async function loadPublicWebOptions() {
+        try {
+            const nodesResponse = await getAllPublicWebNodes({ search: '' })
+            const nodes: PublicWebNode[] = nodesResponse.data?.items || []
+
+            const webResponses = await Promise.all(
+                nodes.filter((node) => node.id !== undefined && node.id !== null).map((node) => getPublicWebs(node.id, { search: '' }))
+            )
+
+            const options: PublicWebOption[] = webResponses.flatMap((response) => {
+                const items: PublicWeb[] = response.data?.items || []
+                return items
+                    .filter((web) => web.id !== undefined && web.id !== null)
+                    .map((web) => ({
+                        id: Number(web.id),
+                        name: web.name || String(web.id)
+                    }))
+            })
+
+            const deduplicated = new Map<number | string, PublicWebOption>()
+            options.forEach((option) => {
+                if (!deduplicated.has(option.id)) {
+                    deduplicated.set(option.id, option)
+                }
+            })
+
+            publicWebOptions.value = Array.from(deduplicated.values())
+            normalizePublicWebSelection()
+        } catch (error: unknown) {
+            console.error('Failed to load public-web websites:', error)
+            publicWebOptions.value = []
+            product.value.public_web_ids = []
+        }
+    }
+
     // Public methods for opening dialog
     function openDialog(): void {
         visible.value = true
         resetForm()
     }
 
-    function openEditDialog(data: ProductEditPayload): void {
+    function openEditDialog(data: ProductEditPayload | ProductDetailPayload, editMeta?: { modify: boolean; access: boolean }): void {
         visible.value = true
         isEditMode.value = true
-        canModifyFlag.value = data.modify
-        canAccessFlag.value = data.access
+        canModifyFlag.value = editMeta?.modify ?? (data as ProductEditPayload).modify ?? true
+        canAccessFlag.value = editMeta?.access ?? (data as ProductEditPayload).access ?? true
         showError.value = false
 
         product.value = {
             id: data.id,
             title: data.title,
-            description: data.description,
+            description: data.description || '',
             product_type_id: data.product_type_id,
             state_id: data.state_id,
-            report_items: data.report_items || []
+            report_items: data.report_items || [],
+            public_web_ids: normalizePublicWebIds(data.public_web_ids)
         }
 
         reportItems.value = Array.isArray(data.report_items) ? [...data.report_items] : []
         selectedType.value = productTypes.value.find((type) => type.id === data.product_type_id) || null
+        normalizePublicWebSelection()
         initialFormState.value = snapshotForm()
     }
 
@@ -744,10 +866,21 @@
         }
     }
 
-    const handleShowProductEdit = (event: Event): void => {
+    const handleShowProductEdit = async (event: Event): Promise<void> => {
         const data = (event as CustomEvent<unknown>).detail
-        if (data && typeof data === 'object') {
-            openEditDialog(data as ProductEditPayload)
+        if (!data || typeof data !== 'object') {
+            return
+        }
+
+        const editData = data as ProductEditPayload
+
+        try {
+            const response = await getProductById(editData.id)
+            openEditDialog(response.data as ProductDetailPayload, { modify: editData.modify, access: editData.access })
+        } catch (error: unknown) {
+            console.error('Failed to load product detail:', error)
+            // Fallback keeps previous behavior if detail endpoint fails.
+            openEditDialog(editData)
         }
     }
 
@@ -755,6 +888,7 @@
         loadAvailableStates()
         loadProductTypes()
         loadPublisherPresets()
+        loadPublicWebOptions()
         window.addEventListener('new-product', handleNewProduct)
         window.addEventListener('show-product-edit', handleShowProductEdit)
     })

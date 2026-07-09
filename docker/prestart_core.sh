@@ -26,6 +26,32 @@ if [ "$(python ./manage.py bot --list | grep 'Total:' | cut -d ' ' -f2)" == 0 ];
     ) &
 fi
 
+# The public-web feed is optional (compose profile "public-web"), so unlike the
+# collector and bot nodes its default node is only seeded when the service is
+# actually part of this deployment. Seeding it regardless would put a node in
+# Configuration -> Public Web that nothing backs: it can never be reached, and
+# core would keep dialling a host that does not resolve.
+PUBLIC_WEB_PROFILES=$(echo "${COMPOSE_PROFILES:-}" | tr -d ' ')
+case ",${PUBLIC_WEB_PROFILES}," in
+    *,public-web,*)
+        (
+            if [ "$(python ./manage.py public-web --list | grep 'Total:' | cut -d ' ' -f2)" == 0 ]; then
+                echo "Creating default public-web node..."
+                python ./manage.py public-web --create --name "Default Public Web" --description "A local public-web feed node configured as a part of Taranis NG default installation." --api-url "http://public-web" --api-key "$API_KEY"
+            fi
+            # Ensure the default node has a web so the running feed is represented in
+            # the GUI. It is created without a hostname: a node can serve several
+            # webs on several hostnames, so that belongs in Configuration ->
+            # Public Web, next to the rest of the web's settings.
+            echo "Ensuring default public-web web..."
+            python ./manage.py public-web --ensure-web --name "Default Public Web" --web-name "Default Web" --api-url "http://public-web"
+        ) &
+        ;;
+    *)
+        echo "Public-web feed is not enabled (COMPOSE_PROFILES=\"${COMPOSE_PROFILES:-}\"); skipping its default node."
+        ;;
+esac
+
 echo "Starting scheduler..."
 python ./scheduler.py &
 

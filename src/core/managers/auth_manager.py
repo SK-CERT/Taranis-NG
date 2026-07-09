@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
+
     import Flask
     from shared.time_manager import SchedulerManager
 
@@ -38,6 +41,7 @@ from model.news_item import NewsItem
 from model.osint_source import OSINTSourceGroup
 from model.permission import Permission
 from model.product_type import ProductType
+from model.public_web_node import PublicWebNode
 from model.publishers_node import PublishersNode
 from model.remote import RemoteAccess
 from model.report_item import ReportItem
@@ -860,7 +864,7 @@ def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
         return None
 
 
-def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tuple[dict, HTTPStatus]:
+def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Check if the user has the required permissions and ACL access.
 
     Args:
@@ -926,7 +930,7 @@ def auth_required(required_permissions: str | list, *acl_args: ACLCheck) -> tupl
     return auth_required_wrap
 
 
-def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
+def api_key_required(key_type: str | None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Enforce API key authentication with additional resource type parameter.
 
     Args:
@@ -963,6 +967,8 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
                 master_class = BotsNode
             elif key_type == "remote":
                 master_class = RemoteAccess
+            elif key_type == "public_web":
+                master_class = PublicWebNode
             else:
                 log_manager.store_auth_error_activity(f"Incorrect validation type: {key_type}")
                 return error
@@ -992,7 +998,7 @@ def api_key_required(key_type: str | None) -> tuple[dict, HTTPStatus]:
     return decorator
 
 
-def jwt_token_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
+def jwt_token_required(fn: Callable[..., Any]) -> Callable[..., Any]:
     """Check if a valid JWT is present in the request headers.
 
     Args:

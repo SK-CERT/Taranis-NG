@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from flask_restful import Api
 
 import io
+import os
 from http import HTTPStatus
 
 import requests
@@ -19,6 +20,7 @@ from flask_restful import Resource
 from managers import (
     auth_manager,
     bots_manager,
+    certificate_manager,
     collectors_manager,
     external_auth_manager,
     log_manager,
@@ -42,6 +44,8 @@ from model import (
     osint_source,
     presenters_node,
     product_type,
+    public_web,
+    public_web_node,
     publisher_preset,
     publishers_node,
     remote,
@@ -49,6 +53,7 @@ from model import (
     role,
     security_settings,
     setting,
+    traefik_settings,
     user,
     word_list,
 )
@@ -61,6 +66,7 @@ from shared.schema.data_provider import DataProviderSchema
 from shared.schema.role import PermissionSchema
 from shared.schema.security_settings import SecuritySettingsSchema
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
+from shared.schema.traefik_settings import TraefikSettingsSchema
 
 # Fetching an admin-supplied metadata URL is a server-side request: keep it tight.
 SAML_METADATA_TIMEOUT = 10
@@ -1543,6 +1549,367 @@ class RemoteAccessResource(Resource):
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
+class PublicWebNodesResource(Resource):
+    """Public-web nodes API endpoint."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self) -> dict:
+        """Get all public-web nodes.
+
+        Returns:
+            (dict): The public-web nodes
+        """
+        search = request.args.get("search")
+        return public_web_node.PublicWebNode.get_all_json(search)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus] | None:
+        """Create a public-web node.
+
+        The node is contacted before it is stored (as for the collector/publisher
+        nodes), so a mistyped URL or API key is reported instead of being saved
+        as a node that can never work.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
+
+            data = request.json or {}
+            api_url = (data.get("api_url") or "").strip()
+            if api_url:
+                problem = public_web_manager.verify_node(api_url, data.get("api_key") or "")
+                if problem:
+                    return {"error": problem}, HTTPStatus.BAD_REQUEST
+            node = public_web_node.PublicWebNode.add(data)
+            if node and api_url:
+                # It just answered, so start it off green rather than leaving it
+                # red until the next health ping.
+                node.update_last_seen()
+        except Exception as ex:
+            msg = "Could not create public-web node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebNodeResource(Resource):
+    """Public-web node API endpoint."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a public-web node.
+
+        The node is re-contacted only when the connection details actually
+        change: renaming a node whose container happens to be down must not be
+        blocked, but pointing it at a new URL or key is verified like a create.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
+
+            data = request.json or {}
+            node = db.session.get(public_web_node.PublicWebNode, node_id)
+            if node is None:
+                return {"error": "Public-web node not found"}, HTTPStatus.NOT_FOUND
+
+            api_url = (data.get("api_url") or "").strip()
+            # An empty api_key means "keep the stored one" (see PublicWebNode.update).
+            api_key = data.get("api_key") or node.api_key
+            connection_changed = api_url != (node.api_url or "") or api_key != node.api_key
+            if api_url and connection_changed:
+                problem = public_web_manager.verify_node(api_url, api_key)
+                if problem:
+                    return {"error": problem}, HTTPStatus.BAD_REQUEST
+
+            public_web_node.PublicWebNode.update(node_id, data)
+            if api_url and connection_changed:
+                node.update_last_seen()
+        except Exception as ex:
+            msg = "Could not update public-web node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_DELETE")
+    def delete(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            return public_web_node.PublicWebNode.delete(node_id)
+        except Exception as ex:
+            msg = "Could not delete public-web node"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+def _notify_public_web_node(node_id: int) -> None:
+    """Best-effort: push a cache reset to the node so a config change shows now.
+
+    Never raises and never blocks the request — a down or unreachable node is
+    skipped entirely, which just means the change appears after the node's cache
+    TTL instead of immediately.
+    """
+    try:
+        from managers import public_web_manager  # noqa: PLC0415 (avoid import cycle at load)
+
+        node = db.session.get(public_web_node.PublicWebNode, node_id)
+        if node:
+            public_web_manager.notify_nodes([node])
+    except Exception as ex:
+        log_manager.store_data_error_activity(get_user_from_jwt(), "Could not notify public-web node", ex)
+
+
+def _invalid_web_routing(data: dict) -> str | None:
+    """Reject routing values Traefik could not serve.
+
+    A web's hostname is what Traefik routes on (it becomes a ``Host()`` rule via
+    the provider endpoint in :mod:`api.traefik`), so a malformed one would leave
+    the web quietly unreachable. Empty stays allowed: a web without a hostname is
+    simply not published yet. The per-web overrides are checked the same way the
+    instance-wide settings are - a bad value interpolated into the provider
+    payload would cost more than this web.
+
+    Args:
+        data (dict): The submitted web.
+
+    Returns:
+        (str | None): A message describing what is wrong, or None if it is fine.
+    """
+    from api.traefik import is_valid_hostname  # noqa: PLC0415 (avoid import cycle at load)
+    from model.traefik_settings import _validated_resolver  # noqa: PLC0415 (avoid import cycle at load)
+
+    hostname = (data.get("hostname") or "").strip()
+    if hostname and not is_valid_hostname(hostname):
+        return f"'{hostname}' is not a valid hostname"
+    try:
+        _validated_resolver(data.get("cert_resolver"))
+    except ValueError as ex:
+        return str(ex)
+    hsts = (data.get("hsts") or "").strip()
+    if hsts not in ("", "on", "off"):
+        return f"'{hsts}' is not an HSTS setting; expected 'on', 'off' or empty to inherit"
+    return None
+
+
+class PublicWebsResource(Resource):
+    """The webs (branded feeds) hosted by a public-web node."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self, node_id: int) -> dict:
+        """Get all webs of a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (dict): The webs
+        """
+        search = request.args.get("search")
+        return public_web.PublicWeb.get_all_json_for_node(node_id, search)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_CREATE")
+    def post(self, node_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Create a web under a public-web node.
+
+        Args:
+            node_id (int): The public-web node ID
+        Returns:
+            (dict, int): The id of the created web
+        """
+        try:
+            data = request.json or {}
+            problem = _invalid_web_routing(data)
+            if problem:
+                return {"error": problem}, HTTPStatus.BAD_REQUEST
+            web = public_web.PublicWeb.add(node_id, data)
+            _notify_public_web_node(node_id)
+            return {"id": web.id}, HTTPStatus.OK
+        except ValueError as ex:
+            # Raised by the certificate check - the message names what is wrong,
+            # so it belongs on the form rather than in the log alone.
+            log_manager.store_data_error_activity(get_user_from_jwt(), str(ex), ex)
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not create public web"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebResource(Resource):
+    """A single web of a public-web node."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def put(self, node_id: int, web_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update a web.
+
+        Args:
+            node_id (int): The public-web node ID
+            web_id (int): The web ID
+        """
+        try:
+            data = request.json or {}
+            problem = _invalid_web_routing(data)
+            if problem:
+                return {"error": problem}, HTTPStatus.BAD_REQUEST
+            public_web.PublicWeb.update(web_id, data)
+            _notify_public_web_node(node_id)
+        except ValueError as ex:
+            log_manager.store_data_error_activity(get_user_from_jwt(), str(ex), ex)
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = "Could not update public web"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_DELETE")
+    def delete(self, node_id: int, web_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete a web.
+
+        Args:
+            node_id (int): The public-web node ID
+            web_id (int): The web ID
+        """
+        try:
+            result = public_web.PublicWeb.delete(web_id)
+            _notify_public_web_node(node_id)
+            return result
+        except Exception as ex:
+            msg = "Could not delete public web"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebImageResource(Resource):
+    """Upload / preview / remove one image (logo, favicon, preview) of a web."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_ACCESS")
+    def get(self, node_id: int, web_id: int, kind: str):  # noqa: ANN201, ARG002
+        """Serve the image binary for previewing in the configuration UI."""
+        web = public_web.PublicWeb.find(web_id)
+        image = web.get_image(kind) if web else None
+        if image is None or image.data is None:
+            return {"error": "Image not found"}, HTTPStatus.NOT_FOUND
+        return send_file(io.BytesIO(image.data), mimetype=image.mime_type, download_name=image.filename or kind)
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self, node_id: int, web_id: int, kind: str) -> tuple[dict, HTTPStatus] | None:
+        """Upload (create/replace) an image of the given kind."""
+        try:
+            if kind not in public_web.IMAGE_KINDS:
+                return {"error": "Invalid image kind"}, HTTPStatus.BAD_REQUEST
+            web = public_web.PublicWeb.find(web_id)
+            if web is None:
+                return {"error": "Web not found"}, HTTPStatus.NOT_FOUND
+            file = request.files.get("file")
+            if not file:
+                return {"error": "No file provided"}, HTTPStatus.BAD_REQUEST
+            web.set_image(kind, file.mimetype, file.filename, file.read())
+            _notify_public_web_node(node_id)
+        except Exception as ex:
+            msg = "Could not upload public web image"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def delete(self, node_id: int, web_id: int, kind: str) -> tuple[dict, HTTPStatus] | None:
+        """Remove an image of the given kind."""
+        try:
+            web = public_web.PublicWeb.find(web_id)
+            if web is not None:
+                web.remove_image(kind)
+            _notify_public_web_node(node_id)
+        except Exception as ex:
+            msg = "Could not delete public web image"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class PublicWebEmailTestResource(Resource):
+    """Send a test e-mail via a public-web node using provided SMTP settings."""
+
+    @auth_required("CONFIG_PUBLIC_WEB_NODE_UPDATE")
+    def post(self, node_id: int) -> tuple[dict, HTTPStatus]:
+        """Send a test e-mail through the given public-web node.
+
+        The payload is forwarded to the node management API without persistence,
+        so admins can validate SMTP credentials/settings before saving a web.
+        """
+        try:
+            node = db.session.get(public_web_node.PublicWebNode, node_id)
+            if node is None:
+                return {"error": "Public-web node not found"}, HTTPStatus.NOT_FOUND
+            if not node.api_url:
+                return {"error": "Public-web node API URL is not configured"}, HTTPStatus.BAD_REQUEST
+
+            from remote.public_web_api import PublicWebApi  # noqa: PLC0415
+
+            payload = request.json if isinstance(request.json, dict) else {}
+            body, status = PublicWebApi(node.api_url, node.api_key).test_email(payload)
+            return body, status
+        except Exception as ex:
+            msg = "Could not send public-web test e-mail"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class TraefikCertificatesResource(Resource):
+    """What Traefik actually serves, per hostname."""
+
+    @auth_required("CONFIG_TRAEFIK_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Report the certificate in force for the main hostname and every web.
+
+        Read directly from Traefik over TLS rather than from the database, because
+        the database does not know which certificate won - ACME, an uploaded one,
+        the instance default or Traefik's self-signed fallback.
+
+        Returns:
+            (dict, HTTPStatus): ``{"items": [...]}``, one entry per hostname.
+        """
+        hostnames = [os.getenv("TARANIS_NG_HOSTNAME") or ""]
+        hostnames += [web.hostname for web in public_web.PublicWeb.get_all_enabled()]
+        return {"items": certificate_manager.collect_certificates(hostnames)}, HTTPStatus.OK
+
+
+class TraefikSettingsResource(Resource):
+    """Routing and TLS settings API endpoint (the Traefik configuration core serves)."""
+
+    @auth_required("CONFIG_TRAEFIK_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get the routing and TLS settings.
+
+        Returns:
+            (dict): The routing and TLS settings
+        """
+        return traefik_settings.TraefikSettings.get_json(), HTTPStatus.OK
+
+    @auth_required("CONFIG_TRAEFIK_UPDATE")
+    def put(self) -> tuple[dict, HTTPStatus]:
+        """Update the routing and TLS settings.
+
+        Traefik picks the change up on its next poll; nothing is restarted.
+
+        Returns:
+            (dict, HTTPStatus): The updated settings, or the reason they were rejected
+        """
+        try:
+            user_object = auth_manager.get_user_from_jwt()
+            record = traefik_settings.TraefikSettings.update(request.json, user_object.name)
+            return TraefikSettingsSchema().dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = f"Could not update routing and TLS settings: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
 class RemoteNodesResource(Resource):
     """Remote nodes API endpoint."""
 
@@ -2202,6 +2569,18 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(RemoteAccessesResource, "/api/v1/config/remote-accesses")
     api.add_resource(RemoteAccessResource, "/api/v1/config/remote-accesses/<int:remote_access_id>")
 
+    api.add_resource(PublicWebNodesResource, "/api/v1/config/public-web-nodes")
+    api.add_resource(PublicWebNodeResource, "/api/v1/config/public-web-nodes/<int:node_id>")
+    api.add_resource(PublicWebsResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs")
+    api.add_resource(PublicWebResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs/<int:web_id>")
+    api.add_resource(PublicWebEmailTestResource, "/api/v1/config/public-web-nodes/<int:node_id>/webs/test-email")
+    api.add_resource(
+        PublicWebImageResource,
+        "/api/v1/config/public-web-nodes/<int:node_id>/webs/<int:web_id>/images/<string:kind>",
+    )
+    api.add_resource(TraefikSettingsResource, "/api/v1/config/traefik")
+    api.add_resource(TraefikCertificatesResource, "/api/v1/config/traefik/certificates")
+
     api.add_resource(RemoteNodesResource, "/api/v1/config/remote-nodes")
     api.add_resource(RemoteNodeResource, "/api/v1/config/remote-nodes/<int:remote_node_id>")
     api.add_resource(RemoteNodeConnectResource, "/api/v1/config/remote-nodes/<int:remote_node_id>/connect")
@@ -2307,6 +2686,14 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_REMOTE_ACCESS_CREATE", "Config remote access create", "Create remote access configuration")
     Permission.add("CONFIG_REMOTE_ACCESS_UPDATE", "Config remote access update", "Update remote access configuration")
     Permission.add("CONFIG_REMOTE_ACCESS_DELETE", "Config remote access delete", "Delete remote access configuration")
+
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_ACCESS", "Config public-web nodes access", "Access to public-web nodes configuration")
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_CREATE", "Config public-web node create", "Create public-web node configuration")
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_UPDATE", "Config public-web node update", "Update public-web node configuration")
+    Permission.add("CONFIG_PUBLIC_WEB_NODE_DELETE", "Config public-web node delete", "Delete public-web node configuration")
+
+    Permission.add("CONFIG_TRAEFIK_ACCESS", "Config routing and TLS access", "Access to routing and TLS configuration")
+    Permission.add("CONFIG_TRAEFIK_UPDATE", "Config routing and TLS update", "Update routing and TLS configuration")
 
     Permission.add("CONFIG_REMOTE_NODE_ACCESS", "Config remote nodes access", "Access to remote nodes configuration")
     Permission.add("CONFIG_REMOTE_NODE_CREATE", "Config remote node create", "Create remote node configuration")

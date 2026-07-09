@@ -90,52 +90,43 @@ TARANIS_NG_TAG=build docker compose up
 For initial configuration instructions, please continue to the main
 [README](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
 
-## Enabling ACME/Let's Encrypt for automatic HTTPS certificates
+## Enabling ACME for automatic HTTPS certificates
 
-Taranis NG supports automatic HTTPS certificate provisioning via Let's Encrypt using ACME protocol. This requires your instance to be publicly accessible on the internet.
+Taranis NG gets certificates from any ACME certificate authority. This requires your instance to be publicly accessible on the internet, with port 80 open for the HTTP-01 challenge.
 
-**Step 1:** Copy the Docker Compose override file to enable the ACME storage volume:
-
-```bash
-cp docker/docker-compose.override.yml.example docker/docker-compose.override.yml
-```
-
-**Step 2:** Edit `docker/traefik/traefik.yml` and uncomment the ACME configuration section according to your certificate provider.
-
-**Step 3:** Restart Traefik:
+**Step 1:** Copy the CA templates and uncomment the block for the authority you use:
 
 ```bash
 cd docker
-docker compose restart traefik
+cp acme.env.example acme.env
 ```
+
+`acme.env` is gitignored, so the account e-mail and any EAB credentials stay out of git. Each block defines one *resolver*; the name is yours to choose and is what everything else refers to. Several may be defined at once.
+
+**Step 2:** Set `TRAEFIK_CERT_RESOLVER` in `docker/.env` to that name, e.g. `letsencrypt`. That one variable puts the resolver on every router: the main hostname (GUI, API, SSE) and each public web. A public web can use a different one — set *ACME certificate resolver* in its dialog under *Configuration → Public Web*.
+
+**Step 3:** Recreate Traefik — this is static configuration, read once at startup:
+
+```bash
+docker compose up -d traefik
+```
+
+Check it worked in the GUI, under *Configuration → Application Settings → Routing & TLS*: the certificate panel lists every hostname with the certificate actually being served, its issuer and expiry. `docker compose logs traefik | grep -i "certificate resolver"` should also be silent — "Router uses a nonexistent certificate resolver" means `TRAEFIK_CERT_RESOLVER` names a resolver `acme.env` does not define.
+
+**Choosing a CA:**
+- **Let's Encrypt** needs no External Account Binding and validates any domain that passes the challenge. Test against its staging server first — untrusted certificates, but forgiving rate limits
+- **Other CAs** need their own directory URL, and most commercial ones need External Account Binding credentials from your account. Many also expect the domain to be authorised on the account beforehand — such a CA rejects the order outright rather than failing the challenge, and the Traefik log carries the CA's own message
+
+**Changing CA:** add a **new resolver** under a new name and point `TRAEFIK_CERT_RESOLVER` at it. Do not repoint an existing resolver — an ACME account is bound to the CA that registered it, so the stored account would be meaningless to the new CA. A new name gets its own account, leaves the previous certificates in `acme.json` untouched, and is undone by putting the variable back.
 
 **Important notes:**
-- ACME configuration must be in `traefik.yml` (static config), not in the `dynamic/` directory
-- `docker-compose.override.yml` is gitignored, so it won't be tracked
-- **Always run commands from the `docker/` directory** or the override file won't be loaded automatically
-- If you use `-f docker/docker-compose.yml` explicitly, you must also specify `-f docker/docker-compose.override.yml`
-- Changes to `traefik.yml` will show as modified in git - avoid committing your personal ACME settings
-- For testing, use Let's Encrypt staging server: `caServer: https://acme-staging-v02.api.letsencrypt.org/directory`
-- Ensure your `TARANIS_NG_HOSTNAME` is publicly accessible and ports 80/443 are open
-
-**Advanced ACME options:**
-
-For custom Certificate Authorities like ZeroSSL or HARICA that require External Account Binding (EAB):
-
-```yaml
-certificatesResolvers:
-  myresolver:
-    acme:
-      email: your-email@example.com
-      storage: /letsencrypt/acme.json
-      caServer: https://your-ca-server.com/acme/directory
-      keyType: EC384  # or RSA4096
-      eab:
-        kid: your-eab-key-id
-        hmacEncoded: your-eab-hmac-key
-      httpChallenge:
-        entryPoint: web
-```
+- **Do not create a `docker/traefik/traefik.yml`.** Traefik takes its static configuration from exactly one source, in the order file → command-line flags → environment variables, and whichever wins makes the others invisible without any warning. Only `traefik/dynamic/` is mounted, so the `TRAEFIK_*` variables are the single source. A static config file would silently disable all of them, and the first symptom is every router serving the self-signed certificate
+- The non-secret Traefik settings — entrypoints, providers, logging, dashboard — live in `docker-compose.yml`, so upgrades reach your deployment on a pull
+- Changes only take effect at the **next** issuance. Traefik does not re-issue a hostname that already holds a valid certificate — neither for a new `keyType` nor for a switch to a different resolver — it logs `No ACME certificate generation required for domains`. The renewal date in the certificate panel is when a change lands; to force it sooner, remove that domain's entry from `acme.json` in the `acme_storage` volume and recreate Traefik
+- Ensure `TARANIS_NG_HOSTNAME` is publicly reachable and ports 80/443 are open. Each public web needs its own DNS record pointing here
+- Certificates live in the `acme_storage` volume and survive a recreate
+- A hostname that needs to bypass ACME entirely can carry its own certificate: paste the PEM pair into that web's dialog, or set an instance-wide default under *Routing & TLS*
+- Turn on HSTS only *after* certificates are being issued. It is in the GUI under *Routing & TLS* — Traefik sends it, since it terminates TLS. HSTS makes a certificate error impossible to click through for the whole `max-age`, so enabling it while still on the self-signed certificate locks browsers out. Turning it back off sends `max-age=0`, which releases browsers already pinned
 
 ## Advanced build methods
 

@@ -12,6 +12,8 @@ build/
 .pytest_cache/
 .ruff_cache/
 src/gui/git-info.json
+# public_web is a Python service with its own venv
+src/public_web/.venv
 
 
 # temporary files of editors
@@ -23,8 +25,11 @@ src/gui/git-info.json
 
 # sensitive data not to be commited
 docker/.env
+docker/acme.env
 docker/secrets/*.txt
+# Local Traefik dynamic overrides; fallback.yml is tracked (see its header).
 docker/traefik/dynamic/*.yml
+!docker/traefik/dynamic/fallback.yml
 docker/docker-compose.override.yml
 .env.local
 .env.*.local

@@ -1,0 +1,145 @@
+{% extends "main.html" %}
+{%- import '_macros.html' as macros with context -%}
+
+{%- block title %}
+    {{ translate_ui('reports') }} – {{ metadata["site_name"] }}
+{%- endblock %}
+
+{%- block content %}
+    <div class="m-3">
+        <div class="d-flex align-items-start">
+            <h3 class="text-primary mb-1 fw-bolder">
+                {{ content["homepage_title"] }}
+            </h3>
+            <a href="{{ url_for('reports.feed') }}"
+               class="d-flex align-items-center ms-auto text-primary fw-normal h5 text-decoration-none">
+                <span class="mdi mdi-rss-box fs-4" aria-hidden="true"></span>
+                <p class="m-0 ms-1">
+                    RSS
+                </p>
+            </a>
+        </div>
+        {%- if content["service_description_url"] and content["service_description_title"] -%}
+            <p class="m-0 mb-2">
+                Tato služba je blíže popsána na webu
+                <a href="{{ content['service_description_url'] }}" target="_blank">
+                    {{- content["service_description_title"] -}}
+                </a>.
+            </p>
+        {%- endif -%}
+        {{ macros.services_warning(warning_seen) }}
+        <form class="input-group search-form my-2">
+            <input type="text"
+                   name="search"
+                   value="{{ search_arg or '' }}"
+                   class="form-control text-field"
+                   onfocus="this.style.boxShadow='none';">
+            <button type="submit" class="btn btn-secondary btn-sm">
+                {{ translate_ui("homepage_search") }}
+            </button>
+            <span class="btn btn-sm btn-info text-light ms-1"
+                    data-bs-toggle="popover"
+                    data-bs-trigger="hover click"
+                    data-bs-html="true"
+                    data-bs-container="body"
+                    data-bs-placement="bottom"
+                    title="{{ translate_ui('search_help_title') }}"
+                    data-bs-content="{{ get_search_help() | safe }}">
+                <span class="mdi mdi-help-circle fs-3" aria-hidden="true"></span>
+            </span>
+        </form>
+        {% if reports %}
+            <div class="list-group border border-dark">
+                {% for report in reports %}
+                    <a class="list-group-item d-flex m-0"
+                       href="{{ url_for('reports.show', report_id=report.get_id()) }}">
+                        <p class="me-3 ms-1 my-auto text-primary">
+                            <span class="mdi mdi-file-table-outline fs-4" aria-hidden="true"></span>
+                        </p>
+                        <div class="d-flex flex-column w-100">
+                            <div class="d-flex flex-column flex-md-row mt-1">
+                                <h5 class="m-0 me-2 mb-1">
+                                    {{ report.get_title() }}
+                                </h5>
+                                {{ macros.render_severity_badge(report.get_max_cvss_number(), True) }}
+                            </div>
+                            {%- if report.get_publish_date() %}
+                                <div class="text-secondary me-4 mb-1">
+                                    {{ translate_report(report, 'published') }}
+                                    {{ translate_report(report, 'on_day') }}
+                                    {{ report.get_publish_date() }}.
+                                </div>
+                            {%- endif %}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                <span class="mdi mdi-alert me-2 fs-4 flex-shrink-0" role="img" aria-label="Warning"></span>
+                <p class="m-0">
+                    {% if search_arg %}
+                        {{ translate_ui("homepage_no_reports_search") }}
+                        <a href="{{ url_for('reports.home') }}">{{ translate_ui("to_homepage") }}</a>.
+                    {% else %}
+                        {{ translate_ui("homepage_no_reports") }}
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+        <div class="d-flex mt-3 justify-content-center">
+            {% if reports -%}
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        <li class="page-item {{ 'disabled' if page == 1 else '' }}">
+                            <a class="page-link" href="{{ build_url(1) }}">
+                                <span class="mdi mdi-chevron-double-left" aria-hidden="true"></span>
+                            </a>
+                        </li>
+                        {% for i in range([1, page-2]|max, [page+3, pages+1]|min) %}
+                            <li class="page-item {{ 'active' if i == page else '' }}">
+                                <a class="page-link" href="{{ build_url(i) }}">{{ i }}</a>
+                            </li>
+                        {% endfor %}
+                        <li class="page-item {{ 'disabled' if page == pages else '' }}">
+                            <a class="page-link" href="{{ build_url(pages) }}">
+                                <span class="mdi mdi-chevron-double-right" aria-hidden="true"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            {%- endif %}
+            <div class="d-none d-md-flex flex-row ms-auto">
+               {{ macros.render_logo() }}
+            </div>
+        </div>
+    </div>
+{%- endblock %}
+
+{%- block javascript %}
+    <!-- Enable popovers -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.forEach(function(popoverTriggerEl) {
+                new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+{%- endblock javascript %}
+
+{% macro get_search_help() -%}
+    <span>{{ translate_ui("search_help_introduction") }}</span>
+    <ul>
+        <li><i>{{ translate_ui("search_help_keywords") }}</i> (Gitlab, Apple...)</li>
+        <li><i>{{ translate_ui("search_help_severity") }}</i> (9.1, critical...)</li>
+        <li><i>CVE</i> (CVE-2025-26399)</li>
+        <li><i>CWE</i> (CWE-416)</li>
+        <li><i>{{ translate_ui("search_help_published") }}</i> (2025, 9. 2025, 15. 9. 2025...)</li>
+        <li>{{ translate_ui("search_help_other") }}</li>
+    </ul>
+{%- endmacro %}
+
+{% macro build_url(new_page) -%}
+    /{{ '?search=' + search_arg + '&' if search_arg else '?' }}page={{ new_page }}
+{%- endmacro %}

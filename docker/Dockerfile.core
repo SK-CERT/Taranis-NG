@@ -70,7 +70,12 @@ ENV GUNICORN_CMD_ARGS="--timeout 120"
 
 VOLUME ["/data"]
 
-HEALTHCHECK --interval=5s --timeout=3s --retries=5 CMD curl --fail http://localhost/api/v1/isalive || exit 1
+# start-period covers the boot work before gunicorn answers (migrations, seeding,
+# worker start): failures during it do not count towards --retries. Without it the
+# 5 retries give core only ~25s to come up before it is declared unhealthy, and
+# everything gating on it - collectors, bots, presenters, publishers, public-web,
+# traefik - then refuses to start on a slow or busy machine.
+HEALTHCHECK --interval=5s --timeout=3s --retries=5 --start-period=90s CMD curl --fail http://localhost/api/v1/isalive || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]

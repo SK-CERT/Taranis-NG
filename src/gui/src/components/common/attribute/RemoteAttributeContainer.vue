@@ -50,7 +50,3 @@
         return (type && componentMap[type]) || null
     }
 </script>
-
-<style scoped>
-    /* TODO: Add remote container styling if needed */
-</style>
