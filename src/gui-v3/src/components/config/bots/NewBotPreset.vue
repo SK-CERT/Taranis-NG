@@ -10,6 +10,7 @@
             <AddNewButton
                 :show="canCreate"
                 v-bind="activatorProps"
+                @click="openCreateDialog"
             />
         </template>
 
@@ -298,6 +299,25 @@
     onMounted(async () => {
         await loadNodes()
     })
+
+    const openCreateDialog = (): void => {
+        localItem.value = { ...defaultItem }
+        showValidationError.value = false
+        showError.value = false
+
+        // Re-select the first node/bot on every open. resetForm() (called on close) nulls
+        // these, so without re-seeding here the second+ open shows ONLY the Bots Node field
+        // (the bot select / parameter fields are gated behind v-if="selectedNode/selectedBot").
+        selectedNode.value = nodes.value[0] ?? null
+        selectedBot.value = selectedNode.value?.bots?.[0] ?? null
+        // Initialize parameter values synchronously from the freshly-selected bot's defaults
+        // rather than in the deferred selectedBot watcher. The watcher is queued AFTER the
+        // dialog watcher (which calls capture() to snapshot the dirty-tracking baseline) because
+        // dialog=true is mutated first, so leaving this to the async watcher would snapshot
+        // params:[] while the live state becomes the bot's defaults — every subsequent
+        // create-open would spuriously report unsaved changes.
+        parameterValues.value = selectedBot.value?.parameters?.map((param) => String(param.default_value ?? '')) || []
+    }
 
     const loadNodes = async (): Promise<void> => {
         loadingNodes.value = true

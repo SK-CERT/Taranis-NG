@@ -68,6 +68,71 @@ test.describe('Workflow - States', () => {
         await expect(dialog.locator('.v-input--error').first()).toBeVisible()
     })
 
+    // ── Unsaved-changes guard ─────────────────────
+    // Cancel with edits raises the prompt rather than closing silently. Covers the
+    // mode-2 fix (missing `capture()` ⇒ prompt never showed) for StatesTab.vue.
+    test('should prompt and discard unsaved changes on cancel', async ({ page }) => {
+        await page.getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await expect(dialog).toBeVisible()
+        await dialog.locator('input').first().fill('Cancelled State')
+
+        await dialog.getByRole('button', { name: 'Cancel' }).click()
+
+        // The prompt appears instead of closing immediately.
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+        await expect(page.locator('tbody tr').filter({ hasText: 'Cancelled State' })).toHaveCount(0)
+    })
+
+    test('should keep editing when choosing "Continue editing" on the prompt', async ({ page }) => {
+        await page.getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await dialog.locator('input').first().fill('Kept State')
+
+        await dialog.getByRole('button', { name: 'Cancel' }).click()
+
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+
+        // Continue editing dismisses the prompt and leaves the edit dialog open with data intact.
+        await prompt.getByRole('button', { name: 'Continue editing' }).click()
+        await expect(prompt).toHaveCount(0)
+
+        const editDialog = page.locator('.v-overlay--active')
+        await expect(editDialog).toBeVisible()
+        await expect(editDialog.locator('input').first()).toHaveValue('Kept State')
+    })
+
+    test('should prompt when pressing Escape with unsaved changes', async ({ page }) => {
+        await page.getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await dialog.locator('input').first().fill('Escaped State')
+
+        await page.keyboard.press('Escape')
+
+        const prompt = page.locator('.v-overlay--active').filter({ hasText: 'Unsaved Changes' })
+        await expect(prompt).toBeVisible()
+        // Discard via the prompt.
+        await prompt.getByRole('button', { name: 'Close without saving' }).click()
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+    })
+
+    test('cancel without edits closes immediately (no false prompt)', async ({ page }) => {
+        // Regression guard for failure mode 1: opening the create dialog and cancelling
+        // with NO edits must close right away, without a spurious prompt.
+        await page.getByRole('button', { name: 'Add New' }).click()
+        const dialog = page.locator('.v-dialog.v-overlay--active')
+        await expect(dialog).toBeVisible()
+
+        await dialog.getByRole('button', { name: 'Cancel' }).click()
+        await expect(page.locator('.v-overlay--active')).toHaveCount(0)
+    })
+
     test('should create a new state and remove it again', async ({ page }) => {
         const stateName = generateTestName('E2E State')
 

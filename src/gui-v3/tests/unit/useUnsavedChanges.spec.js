@@ -65,6 +65,19 @@ describe('useUnsavedChanges', () => {
             expect(close).not.toHaveBeenCalled()
             expect(guard.confirmVisible.value).toBe(true)
         })
+
+        // Regression guard for "mode 2": a dialog that never calls capture() (the bug
+        // fixed in StatesTab / StateWorkflowTab / NodeDialog / NewACL) must close
+        // silently on requestClose() — its baseline stays null so isDirty() is always
+        // false, hence the prompt never shows even after real edits.
+        it('closes immediately (never prompts) when capture() was never called', () => {
+            const { guard, close, state } = setup()
+            // Simulate a dialog that omitted `else { capture() }`: edit the form without a baseline.
+            state.name = 'edited-but-never-captured'
+            guard.requestClose()
+            expect(close).toHaveBeenCalledTimes(1)
+            expect(guard.confirmVisible.value).toBe(false)
+        })
     })
 
     // ── Prompt actions ────────────────────────────

@@ -83,17 +83,24 @@
         />
 
         <!-- Edit Dialog - Simplified for now -->
+        <!-- `persistent`: blocks Vuetify's native close-on-Escape so Escape routes only
+             through @keydown.esc="requestClose" (the unsaved-changes guard). Without it,
+             Escape both opens the prompt AND closes this dialog — the prompt (rendered
+             inside this dialog) unmounts mid-click, so "Close without saving" detaches. -->
         <v-dialog
             v-model="dialogEdit"
             max-width="700"
+            persistent
             scrollable
+            @keydown.esc="requestClose"
         >
             <v-card>
                 <DialogToolbar
                     :title="editedIndex === -1 ? t('workflow.states.add_new') : t('workflow.states.edit')"
                     :show-save="isEditable"
-                    @cancel="closeEdit"
-                    @save="saveRecord"
+                    :saving="saving"
+                    @cancel="requestClose"
+                    @save="saveAndClose"
                 />
                 <v-card-text>
                     <v-form ref="formRef">
@@ -138,20 +145,29 @@
                     </v-form>
                 </v-card-text>
             </v-card>
+
+            <UnsavedChangesDialog
+                v-model="confirmVisible"
+                @continue="continueEditing"
+                @save="saveAndClose"
+                @discard="discardAndClose"
+            />
         </v-dialog>
     </v-container>
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted } from 'vue'
+    import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import SearchField from '@/components/common/SearchField.vue'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from '@/api/config'
 
     type StateDefinition = {
@@ -183,6 +199,7 @@
     const dialogDelete = ref(false)
     const editedIndex = ref(-1)
     const formRef = ref<any>(null)
+    const saving = ref(false)
 
     const defaultItem: StateDefinition = {
         id: -1,
@@ -252,10 +269,15 @@
         dialogDelete.value = false
     }
 
-    async function saveRecord(): Promise<void> {
-        const { valid } = (await formRef.value.validate()) as FormValidationResult
-        if (!valid) return
+    // Persists the form. Returns true on success so the unsaved-changes guard can
+    // decide whether to close the dialog (it closes only on a successful save).
+    async function persist(): Promise<boolean> {
+        const { valid } = (await formRef.value?.validate()) as FormValidationResult
+        if (!valid) {
+            return false
+        }
 
+        saving.value = true
         try {
             // Send only editable fields. On create, omit id entirely so the backend
             // assigns a real auto-increment id; sending id (e.g. -1) inserts a row with
@@ -273,15 +295,40 @@
                 await createNewStateDefinition(payload)
             }
             await configStore.loadStateDefinitions({ search: '' })
-            closeEdit()
+            return true
         } catch (error) {
             window.dispatchEvent(
                 new CustomEvent('notification', {
                     detail: { type: 'error', loc: 'common.error_saving' }
                 })
             )
+            return false
+        } finally {
+            saving.value = false
         }
     }
+
+    // Unsaved-changes guard. capture() snapshots the freshly-loaded form as the clean
+    // baseline on open; requestClose() shows the prompt only when real edits exist.
+    // Without capture() the baseline stays null and isDirty() always returns false, so
+    // the prompt never shows — even after the user edits fields then clicks cancel.
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => editedItem.value,
+        save: persist,
+        close: closeEdit
+    })
+
+    watch(
+        () => dialogEdit.value,
+        (newVal: boolean) => {
+            if (!newVal) {
+                saving.value = false
+            } else {
+                // Snapshot the form as the clean baseline for dirty-tracking.
+                capture()
+            }
+        }
+    )
 
     async function deleteRecord(): Promise<void> {
         if (!editedItem.value.editable) {
