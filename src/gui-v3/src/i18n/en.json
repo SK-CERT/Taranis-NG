@@ -225,6 +225,7 @@
         "node": "Node",
         "description": "Description",
         "in_analyze": "Analysis in progress",
+        "analyzed": "Analyzed",
         "url": "URL",
         "name": "Name",
         "username": "Username",
@@ -636,6 +637,9 @@
         "preview": "Show product preview",
         "publish": "Publish product",
         "publish_confirmation": "Are you sure you want to publish following product?",
+        "publish_confirmation_message": "Do you really want to publish this product?",
+        "no_type": "No type selected",
+        "no_publisher_in_dialog": "None",
         "publish_successful": "Product was successfully published",
         "publish_failed": "Failed to publish product",
         "publish_error": "An error occurred while publishing the product",
@@ -650,6 +654,14 @@
             "close": "Close",
             "save_and_publish": "Save and Publish",
             "publish_only": "Publish without Saving"
+        },
+        "add_incomplete_reports": {
+            "title": "Add Incomplete Reports",
+            "message": "You are adding reports that are not yet completed. Completing the product later will automatically mark these reports as completed. Do you want to proceed?",
+            "message_published": "This product is already published. Adding incomplete reports will automatically mark them as completed. Do you want to proceed?",
+            "confirm": "Add Reports",
+            "confirm_published": "Add and Complete",
+            "untitled": "Untitled report"
         }
     },
     "analyze": {
@@ -657,6 +669,7 @@
         "from": "From",
         "to": "To",
         "total_count": "Report item count",
+        "no_items": "No report items found",
         "tooltip": {
             "filter_all": "Currently showing: all",
             "filter_completed": "Currently showing: completed",
@@ -780,7 +793,10 @@
         "reports_dialog": {
             "title": "Reports Containing This Item",
             "no_reports": "This item is not in any reports",
-            "error_loading": "Error loading reports"
+            "no_completed_reports": "This item is not in any completed reports",
+            "no_in_progress_reports": "This item is not in any in-progress reports",
+            "error_loading": "Error loading reports",
+            "error_removing": "Error removing report from aggregate"
         },
         "select_all_success": "Selected {count} news item(s)",
         "groups": "GROUPS"
@@ -811,7 +827,8 @@
             "delete_items": "Delete products",
             "delete_item": "Delete product"
         },
-        "select_all_success": "Selected {count} product(s)"
+        "select_all_success": "Selected {count} product(s)",
+        "no_items": "No products found"
     },
     "toolbar_filter": {
         "search": "Search",
@@ -1027,6 +1044,7 @@
             "delete_confirm_item": "Are you sure you want to delete this item?",
             "remove": "Are you sure you want to remove following item?"
         },
+        "required": "This field is required",
         "coming_soon": "Coming soon..."
     },
     "collectors": {

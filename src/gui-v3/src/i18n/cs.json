@@ -225,6 +225,7 @@
         "node": "Instance",
         "description": "Popis",
         "in_analyze": "Probíhá analýza",
+        "analyzed": "Analyzováno",
         "url": "URL",
         "name": "Jméno",
         "username": "Uživatelské jméno",
@@ -497,6 +498,9 @@
         "preview": "Zobrazit náhled publikace",
         "publish": "Zveřejnit publikaci",
         "publish_confirmation": "Opravdu chcete zveřejnit tuto publikaci?",
+        "publish_confirmation_message": "Opravdu chcete tuto publikaci zveřejnit?",
+        "no_type": "Není vybrán typ",
+        "no_publisher_in_dialog": "Žádné",
         "publish_successful": "Publikace byla úspěšně zveřejněna",
         "publish_failed": "Nepodařilo se zveřejnit publikaci",
         "publish_error": "Při zveřejňování publikace došlo k chybě",
@@ -511,6 +515,14 @@
             "close": "Zavřít",
             "save_and_publish": "Uložit a zveřejnit",
             "publish_only": "Zveřejnit bez uložení"
+        },
+        "add_incomplete_reports": {
+            "title": "Přidat nedokončené reporty",
+            "message": "Přidáváte reporty, které ještě nejsou dokončené. Dokončení publikace později tyto reporty automaticky označí jako dokončené. Chcete pokračovat?",
+            "message_published": "Tato publikace je již zveřejněna. Přidání nedokončených reportů je automaticky označí jako dokončené. Chcete pokračovat?",
+            "confirm": "Přidat reporty",
+            "confirm_published": "Přidat a dokončit",
+            "untitled": "Report bez názvu"
         }
     },
     "analyze": {
@@ -518,6 +530,7 @@
         "from": "Od",
         "to": "Do",
         "total_count": "Počet analýz: ",
+        "no_items": "Nebyly nalezeny žádné analýzy",
         "tooltip": {
             "filter_all": "Aktuálně zobrazeno: vše",
             "filter_completed": "Aktuálně zobrazeno: hotové",
@@ -630,7 +643,10 @@
         "reports_dialog": {
             "title": "Reporty obsahující tuto položku",
             "no_reports": "Tato položka není v žádných reportech",
-            "error_loading": "Chyba při načítání reportů"
+            "no_completed_reports": "Tato položka není v žádných dokončených reportech",
+            "no_in_progress_reports": "Tato položka není v žádných rozpracovaných reportech",
+            "error_loading": "Chyba při načítání reportů",
+            "error_removing": "Chyba při odebírání reportu z agregátu"
         },
         "select_all_success": "Vybráno {count} novinek",
         "groups": "SKUPINY"
@@ -659,7 +675,8 @@
             "unselect_all": "Zrušit výběr všeho",
             "delete_item": "Smazat report"
         },
-        "select_all_success": "Vybráno {count} produktů"
+        "select_all_success": "Vybráno {count} produktů",
+        "no_items": "Nebyly nalezeny žádné produkty"
     },
     "toolbar_filter": {
         "search": "Hledání",
@@ -863,6 +880,7 @@
             "delete_confirm_item": "Opravdu chcete smazat tuto položku?",
             "remove": "Jste si jisti, že chcete odstranit tuto položku?"
         },
+        "required": "Toto pole je povinné",
         "coming_soon": "Již brzy..."
     },
     "collectors": {

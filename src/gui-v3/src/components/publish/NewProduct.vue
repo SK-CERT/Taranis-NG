@@ -46,30 +46,36 @@
             </v-card>
         </v-dialog>
 
-        <v-dialog
+        <ConfirmationDialog
             v-model="showPublishConfirmation"
+            title-key="product.publish_confirmation"
+            confirm-label-key="common.yes"
             max-width="500px"
-            persistent
+            @confirm="handlePublish"
         >
-            <v-card>
-                <v-card-title class="text-h5">
-                    {{ $t('product.publish_confirmation') }}
-                </v-card-title>
-                <v-card-text>{{ product.title }}</v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn @click="showPublishConfirmation = false">
-                        {{ $t('common.cancel') }}
-                    </v-btn>
-                    <v-btn
-                        color="primary"
-                        @click="handlePublish"
-                    >
-                        {{ $t('common.yes') }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+            <div class="text-body-1 font-weight-bold mb-2">
+                {{ product.title }}
+            </div>
+            <div class="mb-1">
+                <span class="font-weight-medium">{{ $t('product.report_type') }}:</span>
+                {{ selectedType?.title || $t('product.no_type') }}
+            </div>
+            <div class="mb-1">
+                <span class="font-weight-medium">{{ $t('product.publisher_presets') }}:</span>
+                <span v-if="selectedPublisherPresetNames.length > 0">
+                    {{ selectedPublisherPresetNames.join(', ') }}
+                </span>
+                <span
+                    v-else
+                    class="text-grey"
+                >
+                    {{ $t('product.no_publisher_in_dialog') }}
+                </span>
+            </div>
+            <div class="text-body-2 text-grey mt-3">
+                {{ $t('product.publish_confirmation_message') }}
+            </div>
+        </ConfirmationDialog>
 
         <v-dialog
             v-model="showPublishUnsavedConfirmation"
@@ -202,6 +208,7 @@
                                 :values="reportItems"
                                 :modify="canModify"
                                 :edit="isEditMode"
+                                :product-state-is-final="productStateIsFinal"
                                 @items-changed="handleReportItemsChanged"
                             />
                         </v-col>
@@ -291,6 +298,7 @@
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
     import StateSelector from '@/components/common/StateSelector.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
 
     type ProductModel = {
@@ -323,6 +331,7 @@
         id: number | string
         title?: string
         is_default?: boolean
+        state_type?: string
         [key: string]: unknown
     }
 
@@ -390,6 +399,18 @@
         if (!isEditMode.value) return true
         return checkPermission('PUBLISH_PRODUCT') && canAccessFlag.value
     })
+
+    // True when the product's current state is a FINAL state (e.g. published),
+    // so newly-added non-final reports will be auto-completed by the backend cascade.
+    const productStateIsFinal = computed(() => {
+        if (product.value.state_id === undefined || product.value.state_id === null) return false
+        return availableStates.value.some((s) => s.id === product.value.state_id && s.state_type === 'final')
+    })
+
+    // The full names of the selected publisher presets, used in the publish dialog.
+    const selectedPublisherPresetNames = computed<string[]>(() =>
+        publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.name)
+    )
 
     // Methods
     function resetForm() {

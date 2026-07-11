@@ -67,6 +67,59 @@
             :read-only="readOnlySelector"
         />
 
+        <!-- Confirm adding non-final reports to a final/published product -->
+        <v-dialog
+            v-model="showCompletionConfirm"
+            max-width="500px"
+            persistent
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    {{ t('product.add_incomplete_reports.title') }}
+                </v-card-title>
+                <v-card-text>
+                    <p class="mb-2">{{ confirmMessage }}</p>
+                    <v-list
+                        v-if="incompleteReportTitles.length > 0"
+                        density="compact"
+                        class="mb-2"
+                        style="max-height: 200px; overflow-y: auto"
+                    >
+                        <v-list-item
+                            v-for="(title, index) in incompleteReportTitles"
+                            :key="index"
+                            class="px-0"
+                        >
+                            <template #prepend>
+                                <v-icon
+                                    color="orange"
+                                    size="small"
+                                >
+                                    {{ ICONS.FILE_DOCUMENT }}
+                                </v-icon>
+                            </template>
+                            <v-list-item-title class="text-body-2">
+                                {{ title }}
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn @click="cancelAddReports">
+                        {{ t('common.cancel') }}
+                    </v-btn>
+                    <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="confirmAddReports"
+                    >
+                        {{ confirmButton }}
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
         <!-- Selected Items Display -->
         <div
             v-if="!selectorOpen"
@@ -93,28 +146,41 @@
     import CardAnalyze from '@/components/analyze/CardAnalyze.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import { useAnalyzeStore } from '@/stores/analyze'
+    import { useSettingsStore } from '@/stores/settings'
+    import { getEntityTypeStates } from '@/api/state'
 
     type ReportItem = {
         id: number | string
+        title?: string
         tag?: string
         report_item_type_id?: number | string
         report_type_name?: string
+        state?: {
+            name?: string
+            display_name?: string
+            color?: string
+            icon?: string
+            description?: string
+        } | null
         [key: string]: any
     }
 
     const { t } = useI18n()
     const analyzeStore = useAnalyzeStore()
+    const settingsStore = useSettingsStore()
 
     const props = withDefaults(
         defineProps<{
             values?: ReportItem[]
             modify?: boolean
             edit?: boolean
+            productStateIsFinal?: boolean
         }>(),
         {
             values: () => [],
             modify: false,
-            edit: false
+            edit: false,
+            productStateIsFinal: false
         }
     )
 
@@ -128,6 +194,13 @@
     const toolbarFilter = ref<any>(null)
     const contentData = ref<any>(null)
     const reportItemDialog = ref<any>(null)
+    // Display names of report-item states marked as FINAL (state_type === 'final').
+    // Loaded once from /state/entity-types/report_item/states so we can detect
+    // non-final reports when adding them to an already-published product.
+    const finalReportStateNames = ref<Set<string>>(new Set())
+    // Pending selection awaiting confirmation when adding non-final reports to a final product.
+    const pendingSelection = ref<ReportItem[] | null>(null)
+    const showCompletionConfirm = ref<boolean>(false)
 
     watch(
         () => props.values,
@@ -151,9 +224,41 @@
         })
     })
 
+    const isReportFinal = (item: ReportItem): boolean => {
+        const displayName = item.state?.display_name
+        if (!displayName) return false
+        return finalReportStateNames.value.has(displayName)
+    }
+
+    // Whether the backend "Automatic cascade state changes" (CASCADE_STATES_ENABLED)
+    // app setting is on. The completion-confirmation dialog only makes sense when
+    // the backend would actually auto-complete newly-added non-final reports.
+    const cascadeStatesEnabled = computed(() => {
+        const setting = settingsStore.getSetting('CASCADE_STATES_ENABLED')
+        return setting?.value === 'true'
+    })
+
+    const loadReportItemStates = async (): Promise<void> => {
+        try {
+            const response = await getEntityTypeStates('report_item')
+            const states = Array.isArray(response?.data?.states) ? response.data.states : []
+            finalReportStateNames.value = new Set(
+                states
+                    .filter((s: { state_type?: string; display_name?: string }) => s.state_type === 'final')
+                    .map((s: { display_name?: string }) => s.display_name)
+                    .filter((name?: string): name is string => Boolean(name))
+            )
+        } catch (error: unknown) {
+            console.error('Failed to load report item states:', error)
+        }
+    }
+
     onMounted(async () => {
         if (!analyzeStore.getReportItemTypes.items?.length) {
             await analyzeStore.loadReportItemTypes({})
+        }
+        if (finalReportStateNames.value.size === 0) {
+            await loadReportItemStates()
         }
     })
 
@@ -172,7 +277,7 @@
         }
     }
 
-    const handleAdd = (): void => {
+    const collectNewItems = (): ReportItem[] => {
         const rawSelection = analyzeStore.getSelectionReport
         const selection: Array<{ item: ReportItem }> = Array.isArray(rawSelection)
             ? rawSelection
@@ -186,16 +291,71 @@
                   })
                   .filter((entry): entry is { item: ReportItem } => entry !== null)
             : []
+        const newItems: ReportItem[] = []
         selection.forEach((selectedItem: { item: ReportItem }) => {
             const found = value.value.some((item) => item.id === selectedItem.item.id)
             if (!found) {
                 selectedItem.item.tag = ICONS.FILE_TABLE_OUTLINE
-                value.value.push(selectedItem.item)
+                newItems.push(selectedItem.item)
             }
         })
+        return newItems
+    }
 
+    const handleAdd = (): void => {
+        const newItems = collectNewItems()
+
+        // Confirm whenever any non-completed report is being added, but only when
+        // the backend "Automatic cascade state changes" setting is enabled —
+        // otherwise adding incomplete reports has no cascade side effect.
+        if (cascadeStatesEnabled.value && newItems.some((item) => !isReportFinal(item))) {
+            pendingSelection.value = newItems
+            showCompletionConfirm.value = true
+            return
+        }
+
+        applySelection(newItems)
+    }
+
+    const confirmMessage = computed(() => {
+        if (props.productStateIsFinal) {
+            return t('product.add_incomplete_reports.message_published')
+        }
+        return t('product.add_incomplete_reports.message')
+    })
+
+    // Display titles of the non-final reports pending confirmation.
+    const incompleteReportTitles = computed<string[]>(() => {
+        if (!pendingSelection.value) return []
+        return pendingSelection.value
+            .filter((item) => !isReportFinal(item))
+            .map((item) => item.title || item.report_type_name || t('product.add_incomplete_reports.untitled'))
+    })
+
+    const confirmButton = computed(() => {
+        if (props.productStateIsFinal) {
+            return t('product.add_incomplete_reports.confirm_published')
+        }
+        return t('product.add_incomplete_reports.confirm')
+    })
+
+    const applySelection = (newItems: ReportItem[]): void => {
+        value.value.push(...newItems)
         handleClose()
         emit('items-changed', value.value)
+    }
+
+    const confirmAddReports = (): void => {
+        showCompletionConfirm.value = false
+        if (pendingSelection.value) {
+            applySelection(pendingSelection.value)
+            pendingSelection.value = null
+        }
+    }
+
+    const cancelAddReports = (): void => {
+        showCompletionConfirm.value = false
+        pendingSelection.value = null
     }
 
     const handleClose = (): void => {

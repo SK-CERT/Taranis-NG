@@ -82,18 +82,33 @@
                         </v-chip>
 
                         <v-chip
-                            v-if="inReportsCount > 0"
+                            v-if="inProgressReportsCount > 0"
                             size="small"
                             color="orange"
                             variant="outlined"
                             class="mr-2"
                             :disabled="analyzeSelector"
                             :style="analyzeSelector ? '' : 'cursor: pointer'"
-                            @click.stop="!analyzeSelector && showInReports()"
+                            @click.stop="!analyzeSelector && showInReports('in_progress')"
                         >
                             <v-icon start> mdi-file-document </v-icon>
                             {{ t('card_item.in_analyze') }}
-                            <span v-if="inReportsCount > 1">&nbsp;({{ inReportsCount }})</span>
+                            <span v-if="inProgressReportsCount > 1">&nbsp;({{ inProgressReportsCount }})</span>
+                        </v-chip>
+
+                        <v-chip
+                            v-if="completedReportsCount > 0"
+                            size="small"
+                            color="green"
+                            variant="outlined"
+                            class="mr-2"
+                            :disabled="analyzeSelector"
+                            :style="analyzeSelector ? '' : 'cursor: pointer'"
+                            @click.stop="!analyzeSelector && showInReports('completed')"
+                        >
+                            <v-icon start>{{ ICONS.CHECK_CIRCLE }}</v-icon>
+                            {{ t('card_item.analyzed') }}
+                            <span v-if="completedReportsCount > 1">&nbsp;({{ completedReportsCount }})</span>
                         </v-chip>
 
                         <v-icon
@@ -194,6 +209,7 @@
         modify?: boolean
         access?: boolean
         in_reports_count?: number
+        completed_reports_count?: number
         news_items?: NewsItemEntry[]
         [key: string]: any
     }
@@ -222,7 +238,7 @@
         (e: 'show-detail', card: AssessCard): void
         (e: 'update-item', card: AssessCard, action: string): void
         (e: 'delete-item', card: AssessCard): void
-        (e: 'show-reports-for-item', card: AssessCard): void
+        (e: 'show-reports-for-item', card: AssessCard, mode: 'all' | 'completed' | 'in_progress'): void
     }>()
 
     const { t } = useI18n()
@@ -233,6 +249,8 @@
     const firstNewsItem = computed(() => props.card.news_items?.[0])
     const newsItemsCount = computed(() => props.card.news_items?.length ?? 0)
     const inReportsCount = computed(() => props.card.in_reports_count ?? 0)
+    const completedReportsCount = computed(() => props.card.completed_reports_count ?? 0)
+    const inProgressReportsCount = computed(() => Math.max(0, inReportsCount.value - completedReportsCount.value))
     const isAggregate = computed(() => newsItemsCount.value > 1)
     const childNewsItems = computed(() => props.card.news_items ?? [])
 
@@ -264,8 +282,8 @@
         emit('show-detail', item)
     }
 
-    const showInReports = (): void => {
-        emit('show-reports-for-item', props.card)
+    const showInReports = (mode: 'all' | 'completed' | 'in_progress' = 'all'): void => {
+        emit('show-reports-for-item', props.card, mode)
     }
 
     const toggleOpen = (): void => {

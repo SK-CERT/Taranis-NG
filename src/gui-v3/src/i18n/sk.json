@@ -225,6 +225,7 @@
         "node": "Inštancia",
         "description": "Popis",
         "in_analyze": "Analýza prebieha",
+        "analyzed": "Analyzované",
         "url": "URL",
         "name": "Názov",
         "username": "Meno používateľa",
@@ -636,6 +637,9 @@
         "preview": "Náhľad",
         "publish": "Zverejniť",
         "publish_confirmation": "Ste si istý, že chcete zverejniť túto publikáciu?",
+        "publish_confirmation_message": "Naozaj chcete túto publikáciu zverejniť?",
+        "no_type": "Nie je vybraný typ",
+        "no_publisher_in_dialog": "Žiadne",
         "publish_successful": "Publikácia bola úspešne zverejnená",
         "publish_failed": "Nepodarilo sa zverejniť publikáciu",
         "publish_error": "Pri zverejňovaní nastala chyba",
@@ -650,6 +654,14 @@
             "close": "Zavrieť",
             "save_and_publish": "Uložiť a zverejniť",
             "publish_only": "Zverejniť bez uloženia"
+        },
+        "add_incomplete_reports": {
+            "title": "Pridať nedokončené analýzy",
+            "message": "Pridávate analýzy, ktoré ešte nie sú dokončené. Dokončenie publikácie neskôr tieto analýzy automaticky označí ako dokončené. Chcete pokračovať?",
+            "message_published": "Táto publikácia je už zverejnená. Pridanie nedokončených analýz ich automaticky označí ako dokončené. Chcete pokračovať?",
+            "confirm": "Pridať analýzy",
+            "confirm_published": "Pridať a dokončiť",
+            "untitled": "Analýza bez názvu"
         }
     },
     "analyze": {
@@ -657,6 +669,7 @@
         "from": "Od",
         "to": "Do",
         "total_count": "Počet analýz: ",
+        "no_items": "Neboli nájdené žiadne analýzy",
         "tooltip": {
             "filter_all": "Aktuálne zobrazené: všetko",
             "filter_completed": "Aktuálne zobrazené: hotové",
@@ -780,7 +793,10 @@
         "reports_dialog": {
             "title": "Analýzy obsahujúce túto položku",
             "no_reports": "Táto položka nie je v žiadnych analýzach",
-            "error_loading": "Načítavanie analýz zlyhalo"
+            "no_completed_reports": "Táto položka nie je v žiadnych dokončených analýzach",
+            "no_in_progress_reports": "Táto položka nie je v žiadnych rozpracovaných analýzach",
+            "error_loading": "Načítavanie analýz zlyhalo",
+            "error_removing": "Chyba pri odoberaní analýzy z agregátu"
         },
         "select_all_success": "{count} položiek vybraných",
         "groups": "SKUPINY"
@@ -811,7 +827,8 @@
             "delete_items": "Odstrániť publikácie",
             "delete_item": "Odstrániť publikáciu"
         },
-        "select_all_success": "Označených {count} publikácií"
+        "select_all_success": "Označených {count} publikácií",
+        "no_items": "Neboli nájdené žiadne publikácie"
     },
     "toolbar_filter": {
         "search": "Hľadanie",
@@ -1027,6 +1044,7 @@
             "delete_confirm_item": "Naozaj chcete zmazať túto položku?",
             "remove": "Ste si istý, že chcete odstrániť túto položku?"
         },
+        "required": "Toto pole je povinné",
         "coming_soon": "Už čoskoro..."
     },
     "collectors": {

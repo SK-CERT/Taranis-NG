@@ -334,6 +334,60 @@ class Product(db.Model):
             logger.exception(f"Failed to auto-complete reports on product publish: {error}")
 
     @classmethod
+    def _auto_complete_added_reports(
+        cls,
+        product_state_id: int,
+        user: User,
+        added_report_item_ids: set[int],
+    ) -> None:
+        """Auto-complete newly-added non-FINAL reports when the product is already FINAL.
+
+        This closes the gap left by ``_auto_complete_reports_on_publish``, which only
+        fires on a product *state change*. When a report is added to a product that
+        is *already* in a FINAL state (e.g. already published), the product's state
+        does not change, so the existing cascade is skipped. This method completes
+        only the newly-added non-FINAL reports, mirroring the publish cascade for
+        the add-to-published-product path.
+
+        Args:
+            product_id: The product ID being updated
+            product_state_id: The current state ID of the product
+            user: The user performing the update
+            added_report_item_ids: IDs of report items newly attached in this update
+
+        Returns:
+            None
+        """
+        try:
+            # Check if cascade states feature is enabled
+            if not StateManager.is_cascade_states_enabled(user):
+                return
+
+            # Only act when the product is already in a FINAL state.
+            if not StateManager.is_final_state(product_state_id, StateEntityTypeEnum.PRODUCT.value):
+                return
+
+            if not added_report_item_ids:
+                return
+
+            # Get the FINAL state for REPORT_ITEM
+            final_state = StateDefinition.get_final_state(StateEntityTypeEnum.REPORT_ITEM.value)
+            if not final_state:
+                return
+
+            # Auto-complete only newly-added non-FINAL reports.
+            for report_item_id in added_report_item_ids:
+                report_item = ReportItem.find(report_item_id)
+                if not report_item:
+                    continue
+                if not StateManager.is_final_state(report_item.state_id, StateEntityTypeEnum.REPORT_ITEM.value):
+                    update_data = {"update": True, "state_id": final_state.id}
+                    ReportItem.update_report_item(report_item.id, update_data, user)
+
+        except Exception as error:
+            logger.exception(f"Failed to auto-complete newly-added reports on product update: {error}")
+
+    @classmethod
     def add_product(cls, product_data: dict, user: User) -> Product:
         """Add a product.
 
@@ -367,6 +421,10 @@ class Product(db.Model):
 
         original_product = Product.find(product_id)
         old_state_id = original_product.state_id
+        # Capture existing report-item ids before reassignment so the cascade
+        # can target only newly-added reports (Option B: a report added to an
+        # already-published product should be auto-completed too).
+        existing_report_item_ids = {ri.id for ri in original_product.report_items} if original_product.report_items else set()
         original_product.title = product.title
         original_product.description = product.description
         original_product.product_type_id = product.product_type_id
@@ -378,7 +436,13 @@ class Product(db.Model):
 
         db.session.commit()
 
-        # Handle cascade state changes for reports if product is published
+        # Handle cascade state changes for reports:
+        #  - When the product's state changed toward FINAL, complete all non-FINAL reports.
+        #  - When the product is already in a FINAL state and new reports were added,
+        #    complete only those newly-added non-FINAL reports.
+        added_report_item_ids = {ri.id for ri in product.report_items} - existing_report_item_ids if product.report_items else set()
+        if user and added_report_item_ids:
+            cls._auto_complete_added_reports(product.state_id, user, added_report_item_ids)
         if user and old_state_id != product.state_id:
             cls._auto_complete_reports_on_publish(product_id, product.state_id, user)
 

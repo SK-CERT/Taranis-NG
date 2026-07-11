@@ -12,7 +12,7 @@
                     color="error"
                     class="mr-2"
                 >
-                    {{ ICONS.ALERT_CIRCLE }}
+                    {{ icon }}
                 </v-icon>
                 {{ t(titleKey) }}
             </v-card-title>
@@ -51,13 +51,15 @@
             titleKey?: string
             confirmLabelKey?: string
             maxWidth?: string
+            icon?: string
         }>(),
         {
             modelValue: false,
             message: '',
             titleKey: 'common.messagebox.delete',
             confirmLabelKey: 'common.delete',
-            maxWidth: '600px'
+            maxWidth: '600px',
+            icon: ICONS.ALERT_CIRCLE
         }
     )
 

@@ -43,18 +43,29 @@ export default defineConfig({
 
     /* Configure projects for major browsers */
     projects: [
+        // Setup project: seeds the E2E environment (collectors/presenters/publishers nodes,
+        // manual OSINT source, product type, publisher preset) before any other test runs.
+        {
+            name: 'setup',
+            testMatch: /00-config-seed\.spec\.js/,
+            use: { ...devices['Desktop Chrome'] }
+        },
+
         {
             name: 'chromium',
+            dependencies: ['setup'],
             use: { ...devices['Desktop Chrome'] }
         },
 
         {
             name: 'firefox',
+            dependencies: ['setup'],
             use: { ...devices['Desktop Firefox'] }
         },
 
         {
             name: 'webkit',
+            dependencies: ['setup'],
             use: { ...devices['Desktop Safari'] }
         }
 

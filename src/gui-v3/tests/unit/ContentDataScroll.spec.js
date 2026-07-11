@@ -150,7 +150,6 @@ describe('Content data scroll guards', () => {
     })
 
     it('ContentDataAnalyze stops append loading when all report items are already loaded', async () => {
-        vi.useFakeTimers()
         const wrapper = mountWithPlugins(ContentDataAnalyze, {
             props: { remoteReports: false },
             global: {
@@ -160,8 +159,6 @@ describe('Content data scroll guards', () => {
 
         try {
             await flushPromises()
-            await vi.runAllTimersAsync()
-            await flushPromises()
 
             expect(mockAnalyzeStore.loadReportItems).toHaveBeenCalledTimes(1)
             expect(mockAnalyzeStore.loadReportItemTypes).toHaveBeenCalledTimes(1)
@@ -173,12 +170,10 @@ describe('Content data scroll guards', () => {
             expect(mockAnalyzeStore.loadReportItemTypes).toHaveBeenCalledTimes(1)
         } finally {
             wrapper.unmount()
-            vi.useRealTimers()
         }
     })
 
     it('ContentDataPublish stops append loading when all products are already loaded', async () => {
-        vi.useFakeTimers()
         const wrapper = mountWithPlugins(ContentDataPublish, {
             props: { selection: [] },
             global: {
@@ -188,8 +183,6 @@ describe('Content data scroll guards', () => {
 
         try {
             await flushPromises()
-            await vi.runAllTimersAsync()
-            await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
             expect(mockGetAllProductTypes).toHaveBeenCalledTimes(1)
@@ -201,7 +194,6 @@ describe('Content data scroll guards', () => {
             expect(mockGetAllProductTypes).toHaveBeenCalledTimes(1)
         } finally {
             wrapper.unmount()
-            vi.useRealTimers()
         }
     })
 })

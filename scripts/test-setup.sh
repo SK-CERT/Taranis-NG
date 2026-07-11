@@ -13,7 +13,7 @@ echo "Starting Taranis-NG backend services for E2E tests..."
 # Start core, postgres, redis with localhost port exposure for the frontend dev server.
 # Build the core image from the current workspace so new backend routes are available in E2E runs.
 cd "$COMPOSE_DIR"
-docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e up -d --build postgres redis core
+docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e up -d --build postgres redis core collectors presenters publishers
 
 echo "Waiting for services to be ready..."
 
@@ -55,6 +55,23 @@ for i in {1..30}; do
     exit 1
   fi
   sleep 1
+done
+
+# Wait for collectors, presenters, and publishers containers to be running.
+# The core container needs to reach these via Docker DNS when the test adds nodes.
+for service in collectors presenters publishers; do
+  for i in {1..30}; do
+    status=$(docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e ps --format json "$service" 2>/dev/null | tr -d '\n')
+    if echo "$status" | grep -q '"running":true'; then
+      echo "✓ $service container is running"
+      break
+    fi
+    if [ $i -eq 30 ]; then
+      echo "✗ $service container failed to start"
+      exit 1
+    fi
+    sleep 1
+  done
 done
 
 echo "✓ All services ready"
