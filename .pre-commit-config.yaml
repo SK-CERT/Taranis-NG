@@ -1,13 +1,13 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.0
+    rev: v0.15.21
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.36.4
+    rev: v1.40.4
     hooks:
       - id: djlint
         files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
@@ -25,6 +25,18 @@ repos:
 
   - repo: local
     hooks:
+      - id: check-tool-versions-lockstep
+        name: Dev tool version lockstep (pyproject / pre-commit / CI)
+        entry: python3 scripts/check_tool_versions.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: check-version-lockstep
+        name: Release version lockstep (VERSION.md / pyprojects / package.json)
+        entry: python3 scripts/bump_version.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: gui3-precommit
         name: gui3-precommit
         entry: node src/gui-v3/scripts/precommit.cjs

@@ -1,12 +1,12 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "taranis-ng_shared"
+name = "taranis-ng-shared"
 version = "26.05.1"
 description = "Taranis-NG Shared Classes"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "marshmallow==4.0.0"
+    "marshmallow==4.3.0"
 ]

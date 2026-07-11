@@ -1,19 +1,16 @@
-FROM python:3.13-alpine3.22 AS build_shared
+FROM python:3.13-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
 
-RUN pip install --no-cache-dir build
+RUN apk add --no-cache uv
 COPY ./src/shared/. .
-RUN python -m build
+RUN uv build
 
 
 
-FROM python:3.13-alpine3.22 AS production
+FROM python:3.13-alpine3.24 AS production
 
 WORKDIR /app/
-
-# Install uv (fast Python installer)
-RUN pip install uv
 
 # install common packages
 RUN \
@@ -30,7 +27,8 @@ RUN \
     dbus-x11 \
     font-noto-emoji \
     freetype \
-    ttf-freefont && \
+    ttf-freefont \
+    uv && \
     apk add --no-cache --virtual .build-deps \
     wget \
     tar && \
@@ -41,22 +39,23 @@ RUN \
     apk del .build-deps
 
 # install "shared" package from build_shared stage
-# TODO: somehow squash the following two layers into one to conserve space
+COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl /tmp/custom_packages/
+RUN uv pip install --system --no-cache-dir /tmp/custom_packages/taranis_ng_shared-*.whl \
+    && rm -rf /tmp/custom_packages/
 
-COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl custom_packages/
-RUN uv pip install --system --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
-
-# install dependencies
-
-COPY ./src/collectors/pyproject.toml /app/pyproject.toml
-RUN apk add --no-cache --virtual .build-deps \
+# install dependencies (frozen, reproducible from uv.lock)
+COPY ./src/collectors/pyproject.toml ./src/collectors/uv.lock /app/
+RUN uv export --frozen --no-dev --no-emit-project --no-emit-package taranis-ng-shared \
+        --output-file /tmp/requirements.txt \
+    && apk add --no-cache --virtual .build-deps \
         build-base \
         python3-dev \
         libxslt-dev \
         libxml2-dev \
         libffi-dev \
-    && uv pip install --system --no-cache-dir . \
-    && apk del .build-deps
+    && uv pip install --system --no-cache-dir -r /tmp/requirements.txt \
+    && apk del .build-deps \
+    && rm -f /tmp/requirements.txt
 
 COPY --chmod=755 ./docker/start.sh /start.sh
 COPY --chmod=755 ./docker/prestart.sh /app/prestart.sh

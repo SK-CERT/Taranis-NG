@@ -3,7 +3,7 @@ name = "TARANIS-NG"
 version = "26.05.1"
 description = "OSINT gathering and analysis tool for CSIRT teams and organisations."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "EUPL-1.2" }
 authors = [
     { name = "Ján Polonský", email = "jan.polonsky@nbu.gov.sk" },
@@ -40,11 +40,30 @@ classifiers = [
 "Issue Tracker" = "https://github.com/SK-CERT/Taranis-NG/issues"
 "Changelog" = "https://github.com/SK-CERT/Taranis-NG/blob/main/CHANGELOG.md"
 
+# Central source of truth for dev/CI tooling versions.
+# These pins are kept in lockstep with:
+#   - .pre-commit-config.yaml  (ruff-pre-commit / djLint rev: → stripped of leading "v")
+#   - .github/workflows/linting.yaml (djlint and ruff versions)
+#   - .github/dependabot.yml uv ecosystem entry (auto-bumps these)
+# Lockstep is enforced by scripts/check_tool_versions.py (run as a pre-commit hook).
+[dependency-groups]
+dev = [
+    "djlint==1.40.4",
+    "ruff==0.15.21",
+]
+
 [tool.uv]
-required-version = "0.8.14"
+required-version = "0.11.19"
+
+# uv workspace: each backend service is an independent member with its own uv.lock.
+# The `shared` package is consumed as a path source by all services via their
+# own [tool.uv.sources] entries; listing it here makes it a workspace member
+# so `uv` commands at the repo root resolve it locally.
+[tool.uv.workspace]
+members = ["src/shared"]
 
 [tool.ruff]
-required-version = ">=0.15.0"
+required-version = "0.15.21"
 line-length = 142
 target-version = "py313"
 fix = true
@@ -69,6 +88,9 @@ ignore = [
 "src/collectors/run.py" = ["E402"]
 "src/presenters/run.py" = ["E402"]
 "src/publishers/run.py" = ["E402"]
+"scripts/check_tool_versions.py" = ["T201"]
+"scripts/check_shared_lock_consistency.py" = ["T201"]
+"scripts/bump_version.py" = ["T201", "S603"]
 
 [tool.ruff.format]
 line-ending = "lf"

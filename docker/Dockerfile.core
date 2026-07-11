@@ -1,26 +1,22 @@
-FROM python:3.13-alpine3.22 AS build_shared
+FROM python:3.13-alpine3.24 AS build_shared
 
 WORKDIR /build_shared/
 
-RUN pip install --no-cache-dir build
+RUN apk add --no-cache uv
 COPY ./src/shared/. .
-RUN python -m build
+RUN uv build
 
-RUN apk add --no-cache  \
-    build-base\
-    linux-headers
+RUN apk add --no-cache \
+    build-base
 
 COPY ./src/core/sse/forward.c .
 
 RUN gcc -o forward forward.c
 
 
-FROM python:3.13-alpine3.22 AS production
+FROM python:3.13-alpine3.24 AS production
 
 WORKDIR /app/
-
-# Install uv (fast Python installer)
-RUN pip install uv
 
 # install common packages
 RUN \
@@ -28,18 +24,19 @@ RUN \
     postgresql-libs \
     libpq \
     curl \
-    openssl
+    openssl \
+    uv
 
 # install "shared" package from build_shared stage
-# TODO: somehow squash the following two layers into one to conserve space
+COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl /tmp/custom_packages/
+RUN uv pip install --system --no-cache-dir /tmp/custom_packages/taranis_ng_shared-*.whl \
+    && rm -rf /tmp/custom_packages/
 
-COPY --from=build_shared /build_shared/dist/taranis_ng_shared-*.whl custom_packages/
-RUN uv pip install --system --no-cache-dir ./custom_packages/taranis_ng_shared-*.whl && rm -rf ./custom_packages/
-
-# install other dependencies
-
-COPY ./src/core/pyproject.toml /app/pyproject.toml
-RUN apk add --no-cache --virtual .build-deps \
+# install dependencies (frozen, reproducible from uv.lock)
+COPY ./src/core/pyproject.toml ./src/core/uv.lock /app/
+RUN uv export --frozen --no-dev --no-emit-project --no-emit-package taranis-ng-shared \
+        --output-file /tmp/requirements.txt \
+    && apk add --no-cache --virtual .build-deps \
         build-base \
         python3-dev \
         libffi-dev \
@@ -47,9 +44,9 @@ RUN apk add --no-cache --virtual .build-deps \
         zlib-dev \
         linux-headers \
         postgresql-dev \
-        git \
-    && uv pip install --system --no-cache-dir . \
-    && apk del .build-deps
+    && uv pip install --system --no-cache-dir -r /tmp/requirements.txt \
+    && apk del .build-deps \
+    && rm -f /tmp/requirements.txt
 
 COPY --from=build_shared /build_shared/forward /usr/local/bin/forward
 

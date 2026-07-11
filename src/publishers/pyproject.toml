@@ -1,8 +1,8 @@
 [project]
-name = "TARANIS-NG-publishers"
+name = "taranis-ng-publishers"
 version = "26.05.1"
 description = "Taranis-NG Publishers service."
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4==4.15.0",
     "envelope==2.3.1",
@@ -18,9 +18,13 @@ dependencies = [
     "requests==2.34.2",
     "tweepy==4.17.0",
     "urllib3==2.7.0",
-    "pymisp==2.5.34.1"
+    "pymisp==2.5.34.1",
+    "taranis-ng-shared==26.05.1",
 ]
 
 [build-system]
-requires = ["setuptools>=82.0.1"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.uv.sources]
+taranis-ng-shared = { path = "../shared" }

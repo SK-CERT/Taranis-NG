@@ -30,7 +30,9 @@ const possibleVersionPaths = [
   '/app/VERSION.md'
 ]
 
-let version = '26.02.1'
+// Fallback: the package.json version, kept in lockstep with VERSION.md
+// by scripts/bump_version.py.
+let version = require('../package.json').version
 for (const p of possibleVersionPaths) {
   if (fs.existsSync(p)) {
     try {
