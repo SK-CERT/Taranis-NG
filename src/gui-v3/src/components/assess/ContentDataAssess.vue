@@ -47,7 +47,7 @@
                 </p>
             </div>
             <div
-                v-else
+                v-else-if="news_items_data.length > 0"
                 class="text-caption text-grey"
             >
                 {{ t('common.end_of_list') }}
@@ -312,9 +312,9 @@
         return null
     }
 
-    const showReportsForItem = (card: NewsItem): void => {
+    const showReportsForItem = (card: NewsItem, mode: 'all' | 'completed' | 'in_progress'): void => {
         if (reportsListDialogRef.value) {
-            reportsListDialogRef.value.open(card)
+            reportsListDialogRef.value.open(card, mode)
         }
     }
 

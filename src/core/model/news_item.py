@@ -874,6 +874,12 @@ class NewsItemAggregate(db.Model):
             dict: News item aggregates JSON
         """
         news_item_aggregates, count = cls.get_by_group(group_id, filters, offset, limit, user)
+
+        # Batch-compute report counts for all aggregates on the page in two
+        # grouped queries instead of N+1 per-aggregate count() calls.
+        aggregate_ids = [nia.id for nia in news_item_aggregates]
+        report_counts = ReportItemNewsItemAggregate.counts_for_aggregates(aggregate_ids)
+
         for news_item_aggregate in news_item_aggregates:
             news_item_aggregate.me_like = False
             news_item_aggregate.me_dislike = False
@@ -896,7 +902,9 @@ class NewsItemAggregate(db.Model):
                 if news_item.me_dislike is True:
                     news_item_aggregate.me_dislike = True
 
-            news_item_aggregate.in_reports_count = ReportItemNewsItemAggregate.count(news_item_aggregate.id)
+            total_reports, completed_reports = report_counts.get(news_item_aggregate.id, (0, 0))
+            news_item_aggregate.in_reports_count = total_reports
+            news_item_aggregate.completed_reports_count = completed_reports
 
         news_item_aggregate_schema = NewsItemAggregateSchema(many=True)
         items = news_item_aggregate_schema.dump(news_item_aggregates)
@@ -1590,3 +1598,66 @@ class ReportItemNewsItemAggregate(db.Model):
             int: Count
         """
         return cls.query.filter_by(news_item_aggregate_id=aggregate_id).count()
+
+    @classmethod
+    def counts_for_aggregates(cls, aggregate_ids: list[int]) -> dict[int, tuple[int, int]]:
+        """Batch-compute (total_reports, completed_reports) per aggregate.
+
+        Replaces the previous N+1 pattern of calling ``count()`` once per
+        aggregate by issuing a single grouped query over the association
+        table joined to ``ReportItem``. The COMPLETED state is resolved once
+        via ``StateDefinition`` (matching the semantics used elsewhere, e.g.
+        ``ReportItem.get_by_filter``).
+
+        Args:
+            aggregate_ids: Aggregate IDs to compute counts for.
+
+        Returns:
+            dict mapping aggregate_id -> (total_reports, completed_reports).
+            Aggregates with no report items are absent from the dict; callers
+            should default missing keys to (0, 0).
+        """
+        if not aggregate_ids:
+            return {}
+
+        # Late import to avoid circular dependency (report_item imports news_item).
+        from model.report_item import ReportItem  # noqa: PLC0415
+        from model.state import StateDefinition, StateEnum  # noqa: PLC0415
+
+        completed_state = StateDefinition.get_by_name(StateEnum.COMPLETED.value)
+        completed_state_id = completed_state.id if completed_state else None
+
+        # Total reports per aggregate (one grouped query).
+        total_rows = (
+            db.session.query(ReportItemNewsItemAggregate.news_item_aggregate_id, db.func.count(ReportItemNewsItemAggregate.report_item_id))
+            .filter(ReportItemNewsItemAggregate.news_item_aggregate_id.in_(aggregate_ids))
+            .group_by(ReportItemNewsItemAggregate.news_item_aggregate_id)
+            .all()
+        )
+
+        result: dict[int, tuple[int, int]] = {}
+        for agg_id, total in total_rows:
+            result[agg_id] = (total, 0)
+
+        # Completed reports per aggregate (one grouped query on a joined query).
+        # Only run when a COMPLETED state exists; otherwise completed stays 0 for all.
+        if completed_state_id is not None:
+            completed_rows = (
+                db.session.query(
+                    ReportItemNewsItemAggregate.news_item_aggregate_id,
+                    db.func.count(ReportItemNewsItemAggregate.report_item_id),
+                )
+                .join(ReportItem, ReportItemNewsItemAggregate.report_item_id == ReportItem.id)
+                .filter(
+                    ReportItemNewsItemAggregate.news_item_aggregate_id.in_(aggregate_ids),
+                    ReportItem.state_id == completed_state_id,
+                )
+                .group_by(ReportItemNewsItemAggregate.news_item_aggregate_id)
+                .all()
+            )
+            for agg_id, completed in completed_rows:
+                if agg_id in result:
+                    total_existing = result[agg_id][0]
+                    result[agg_id] = (total_existing, completed)
+
+        return result

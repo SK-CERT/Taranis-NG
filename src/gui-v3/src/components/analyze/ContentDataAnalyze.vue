@@ -30,7 +30,7 @@
             style="min-height: 100px; display: flex; align-items: center; justify-content: center"
         >
             <div
-                v-if="!dataLoaded"
+                v-if="!dataLoaded && collections.length > 0"
                 class="text-center text-grey"
             >
                 <v-progress-circular
@@ -42,12 +42,35 @@
                 </p>
             </div>
             <div
-                v-else
+                v-else-if="collections.length > 0"
                 class="text-caption text-grey"
             >
                 {{ t('common.end_of_list') }}
             </div>
         </div>
+
+        <!-- Empty State -->
+        <v-row
+            v-if="dataLoaded && collections.length === 0"
+            justify="center"
+            class="my-8"
+        >
+            <v-col
+                cols="12"
+                md="6"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey"
+                >
+                    {{ ICONS.FILE_TABLE_OUTLINE }}
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('analyze.no_items') }}
+                </p>
+            </v-col>
+        </v-row>
     </v-container>
 </template>
 
@@ -55,6 +78,7 @@
     import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
+    import { ICONS } from '@/config/ui-constants'
     import { useAnalyzeStore } from '@/stores/analyze'
     import CardAnalyze from './CardAnalyze.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
@@ -98,7 +122,7 @@
     const analyzeStore = useAnalyzeStore()
 
     const collections = ref<ReportItem[]>([])
-    const dataLoaded = ref(false)
+    const dataLoaded = ref(true)
     const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
@@ -133,6 +157,10 @@
 
     const infiniteScrolling = (isIntersecting: boolean): void => {
         const totalCount = analyzeStore.getReportItems.total_count || 0
+        // Don't attempt to load more when there are no items to load
+        if (totalCount === 0) {
+            return
+        }
         if (dataLoaded.value && isIntersecting && collections.value.length < totalCount) {
             updateData(true, false)
         }
@@ -175,14 +203,17 @@
         }
 
         try {
-            await analyzeStore.loadReportItems({
-                group: group,
-                filter: filter.value,
-                offset: offset,
-                limit: limit
-            })
-
-            await analyzeStore.loadReportItemTypes({})
+            // Load the report items list and the report-item-type catalog in
+            // parallel, since the type enrichment below only needs both results.
+            await Promise.all([
+                analyzeStore.loadReportItems({
+                    group: group,
+                    filter: filter.value,
+                    offset: offset,
+                    limit: limit
+                }),
+                analyzeStore.loadReportItemTypes({})
+            ])
 
             const reportTypes = Array.isArray(analyzeStore.getReportItemTypes.items)
                 ? (analyzeStore.getReportItemTypes.items as ReportItem[])
@@ -214,12 +245,9 @@
             const totalCount = analyzeStore.getReportItems.total_count || 0
             emit('new-data-loaded', totalCount)
             emit('update-showing-count', collections.value.length)
-
-            setTimeout(() => {
-                dataLoaded.value = true
-            }, 1000)
         } catch (error) {
             console.error('Error loading report items:', error)
+        } finally {
             dataLoaded.value = true
         }
     }

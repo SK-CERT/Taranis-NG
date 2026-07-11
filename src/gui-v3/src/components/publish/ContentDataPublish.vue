@@ -25,7 +25,7 @@
             style="min-height: 100px; display: flex; align-items: center; justify-content: center"
         >
             <div
-                v-if="!dataLoaded"
+                v-if="!dataLoaded && collections.length > 0"
                 class="text-center text-grey"
             >
                 <v-progress-circular
@@ -37,18 +37,42 @@
                 </p>
             </div>
             <div
-                v-else
+                v-else-if="collections.length > 0"
                 class="text-caption text-grey"
             >
                 {{ t('common.end_of_list') }}
             </div>
         </div>
+
+        <!-- Empty State -->
+        <v-row
+            v-if="dataLoaded && collections.length === 0"
+            justify="center"
+            class="my-8"
+        >
+            <v-col
+                cols="12"
+                md="6"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey"
+                >
+                    {{ ICONS.SEND_OUTLINE }}
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('publish.no_items') }}
+                </p>
+            </v-col>
+        </v-row>
     </v-container>
 </template>
 
 <script setup lang="ts">
     import { ref, onMounted, onUnmounted, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { ICONS } from '@/config/ui-constants'
     import { usePublishStore } from '@/stores/publish'
     import { getAllProductTypes } from '@/api/config'
     import CardProduct from './CardProduct.vue'
@@ -90,7 +114,7 @@
     const publishStore = usePublishStore()
 
     const collections = ref<ProductItem[]>([])
-    const dataLoaded = ref(false)
+    const dataLoaded = ref(true)
     const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
@@ -115,6 +139,10 @@
                   : entries?.isIntersecting === true
 
         const totalCount = publishStore.getProducts.total_count || 0
+        // Don't attempt to load more when there are no items to load
+        if (totalCount === 0) {
+            return
+        }
 
         if (dataLoaded.value && isIntersecting && collections.value.length < totalCount) {
             updateData(true, false)
@@ -142,14 +170,17 @@
         }
 
         try {
-            await publishStore.loadProducts({
-                filter: filter.value,
-                offset: offset,
-                limit: limit
-            })
+            // Load the list and the product-type catalog in parallel, since the
+            // type enrichment below only needs both results to be available.
+            const [, productTypesResponse] = await Promise.all([
+                publishStore.loadProducts({
+                    filter: filter.value,
+                    offset: offset,
+                    limit: limit
+                }),
+                getAllProductTypes({ search: '' })
+            ])
 
-            // Load product types
-            const productTypesResponse = await getAllProductTypes({ search: '' })
             const productTypes = Array.isArray(productTypesResponse?.data?.items) ? (productTypesResponse.data.items as ProductType[]) : []
 
             const newItems = Array.isArray(publishStore.getProducts.items) ? (publishStore.getProducts.items as ProductItem[]) : []
@@ -177,12 +208,9 @@
             }
 
             emit('update-showing-count', collections.value.length)
-
-            setTimeout(() => {
-                dataLoaded.value = true
-            }, 1000)
         } catch (error) {
             console.error('Error loading products:', error)
+        } finally {
             dataLoaded.value = true
         }
     }

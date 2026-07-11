@@ -5,19 +5,48 @@
  */
 
 /**
+ * Wait for the backend API to be reachable and responsive.
+ *
+ * The Playwright webServer boots the backend via test-setup.sh, but the dev-server
+ * `url` check only confirms the frontend is up — the backend login endpoint may still
+ * be warming up. This helper polls until the backend responds or times out.
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ * @param {number} timeoutMs - max time to wait (default 60s)
+ */
+export async function waitForBackendReady(page, timeoutMs = 60000) {
+    const deadline = Date.now() + timeoutMs
+    // Poll the /isalive endpoint via page.request (shares the browser context).
+    while (Date.now() < deadline) {
+        try {
+            const res = await page.request.get('/api/v1/isalive')
+            if (res.ok()) return
+        } catch {
+            // backend not yet reachable — keep polling
+        }
+        await page.waitForTimeout(1000)
+    }
+    throw new Error(`Backend did not become ready within ${timeoutMs}ms`)
+}
+
+/**
  * Login helper - authenticates user and stores credentials
  * @param {import('@playwright/test').Page} page - Playwright page object
  * @param {string} username - Username (default: 'admin')
  * @param {string} password - Password (default: 'admin')
  */
 export async function login(page, username = 'admin', password = 'admin') {
+    // Ensure the backend is ready before attempting login — the first test in a
+    // run can race the just-booted backend (webServer only checks the frontend URL).
+    await waitForBackendReady(page)
+
     await page.goto('/v2/login')
     await page.locator('[data-test="login-username"] input').fill(username)
     await page.locator('[data-test="login-password"] input').fill(password)
     await page.locator('[data-test="login-submit"]').click()
 
-    // Wait for navigation to complete
-    await page.waitForURL(/\/v2\/(dashboard)?$/)
+    // Wait for navigation to complete — allow extra time for the initial login
+    // (first test after webServer boot may be slower due to cold backend caches).
+    await page.waitForURL(/\/v2\/(dashboard)?$/, { timeout: 30000 })
 }
 
 /**

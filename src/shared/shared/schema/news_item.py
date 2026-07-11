@@ -228,6 +228,7 @@ class NewsItemAggregateSchema(Schema):
     me_like = fields.Bool()
     me_dislike = fields.Bool()
     in_reports_count = fields.Int()
+    completed_reports_count = fields.Int()
     news_items = fields.Nested(NewsItemPresentationSchema, many=True)
 
 

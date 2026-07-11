@@ -80,6 +80,19 @@ describe('DeleteConfirmationDialog', () => {
             const dialog = wrapper.findComponent(VDialogStub)
             expect(dialog.props('maxWidth')).toBe('600px')
         })
+
+        it('should show the default ALERT_CIRCLE icon when no icon prop is passed', async () => {
+            const wrapper = mountDialog()
+
+            expect(wrapper.html()).toContain('mdi-alert-circle')
+        })
+
+        it('should render a custom icon when the icon prop is passed', async () => {
+            const wrapper = mountDialog({ icon: 'mdi-send-outline' })
+
+            expect(wrapper.html()).toContain('mdi-send-outline')
+            expect(wrapper.html()).not.toContain('mdi-alert-circle')
+        })
     })
 
     // ── Slot Content ──────────────────────────────

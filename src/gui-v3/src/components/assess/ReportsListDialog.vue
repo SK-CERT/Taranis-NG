@@ -59,7 +59,7 @@
                         {{ ICONS.INFORMATION_OUTLINE }}
                     </v-icon>
                     <p class="mt-2">
-                        {{ t('assess.reports_dialog.no_reports') }}
+                        {{ emptyMessage }}
                     </p>
                 </div>
 
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue'
+    import { ref, computed } from 'vue'
     import { ICONS } from '@/config/ui-constants'
     import { useI18n } from 'vue-i18n'
     import { getReportItemsByAggregate, updateReportItem } from '@/api/analyze'
@@ -128,6 +128,7 @@
     const error = ref<string | null>(null)
     const reports = ref<ReportItem[]>([])
     const currentCard = ref<AggregateCard | null>(null)
+    const filterMode = ref<'all' | 'completed' | 'in_progress'>('all')
 
     const emit = defineEmits<{
         (e: 'view-report-detail', report: ReportItem): void
@@ -144,36 +145,34 @@
         return []
     }
 
-    const open = async (card: AggregateCard): Promise<void> => {
-        currentCard.value = card
-
-        // If only one report, open it directly without dialog
-        if (card.in_reports_count === 1) {
-            try {
-                const response = (await getReportItemsByAggregate(card.id)) as ReportResponse
-                const reportItems = normalizeReportItems(response)
-
-                if (reportItems && reportItems.length === 1) {
-                    const firstReportItem = reportItems[0]
-                    if (firstReportItem) {
-                        emit('view-report-detail', firstReportItem)
-                    }
-                    return
-                }
-            } catch (err) {
-                console.error('Error fetching report:', err)
-            }
-        }
-
-        // Show dialog for multiple or fallback cases
-        showDialog(card)
+    const isReportCompleted = (report: ReportItem): boolean => {
+        const state = report['state'] as { display_name?: string } | undefined | null
+        return state?.display_name === 'completed'
     }
 
-    const showDialog = async (card: AggregateCard): Promise<void> => {
-        isOpen.value = true
-        loading.value = true
-        error.value = null
-        reports.value = []
+    const applyFilter = (items: ReportItem[]): ReportItem[] => {
+        if (filterMode.value === 'completed') {
+            return items.filter(isReportCompleted)
+        }
+        if (filterMode.value === 'in_progress') {
+            return items.filter((r) => !isReportCompleted(r))
+        }
+        return items
+    }
+
+    const emptyMessage = computed(() => {
+        if (filterMode.value === 'completed') {
+            return t('assess.reports_dialog.no_completed_reports')
+        }
+        if (filterMode.value === 'in_progress') {
+            return t('assess.reports_dialog.no_in_progress_reports')
+        }
+        return t('assess.reports_dialog.no_reports')
+    })
+
+    const open = async (card: AggregateCard, mode: 'all' | 'completed' | 'in_progress' = 'all'): Promise<void> => {
+        currentCard.value = card
+        filterMode.value = mode
 
         try {
             // Report item types are needed to resolve the type name shown on each card
@@ -184,11 +183,28 @@
 
             const response = (await getReportItemsByAggregate(card.id)) as ReportResponse
             const reportItems = normalizeReportItems(response)
-            reports.value = reportItems || []
+            const filtered = applyFilter(reportItems)
+
+            // If exactly one report matches the filter (or all), open it directly without the dialog.
+            // This covers: single total report, single completed report, or single in-progress report
+            // (the latter derived by subtraction: in_reports_count - completed_reports_count === 1).
+            if (filtered.length === 1) {
+                const singleReport = filtered[0]
+                if (singleReport) {
+                    emit('view-report-detail', singleReport)
+                }
+                return
+            }
+
+            // Show dialog for multiple or zero matches
+            reports.value = filtered
+            isOpen.value = true
             loading.value = false
         } catch (err) {
             console.error('Error fetching reports:', err)
             error.value = t('assess.reports_dialog.error_loading')
+            reports.value = []
+            isOpen.value = true
             loading.value = false
         }
     }
@@ -221,6 +237,7 @@
         reports.value = []
         currentCard.value = null
         error.value = null
+        filterMode.value = 'all'
     }
 
     const removeReport = async (report: ReportItem): Promise<void> => {

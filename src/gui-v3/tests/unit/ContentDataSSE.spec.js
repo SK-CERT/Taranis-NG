@@ -176,7 +176,6 @@ describe('SSE consumer components', () => {
     })
 
     it('ContentDataPublish reloads on product-updated and stops after unmount', async () => {
-        vi.useFakeTimers()
         let wrapper
 
         try {
@@ -188,15 +187,11 @@ describe('SSE consumer components', () => {
             })
 
             await flushPromises()
-            await vi.runAllTimersAsync()
-            await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
             expect(mockGetAllProductTypes).toHaveBeenCalledTimes(1)
 
             window.dispatchEvent(new CustomEvent('product-updated', { detail: {} }))
-            await flushPromises()
-            await vi.runAllTimersAsync()
             await flushPromises()
 
             const productReloadCalls = mockPublishStore.loadProducts.mock.calls.length
@@ -213,7 +208,6 @@ describe('SSE consumer components', () => {
             expect(mockGetAllProductTypes).toHaveBeenCalledTimes(productTypeReloadCalls)
         } finally {
             wrapper?.unmount()
-            vi.useRealTimers()
         }
     })
 })
