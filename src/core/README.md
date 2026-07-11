@@ -2,9 +2,9 @@
 1. Install **Postgresql** database and create database e.g. taranisdb
 2. Install **Python 3.13** or later
 3. In taranis-ng-common, taranis-ng-collectors and taranis-ng-core install and activate python virtual environment:
-    `virtualenv -p python3.7 venv`
+    `virtualenv -p python3.13 venv`
     `source venv/bin/activate`
-    `pip3 install -r requirements.txt`
+    `uv sync --frozen --no-dev`
 4. Set environment variables for taranis-ng-core:
     DB_URL=127.0.0.1:5432;DB_DATABASE=taranisdb;DB_USER=<YOUR-DB-USER>
 5. Set secrets (passwords) for taranis-ng-core:

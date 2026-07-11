@@ -1,5 +1,3 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
@@ -11,38 +9,56 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies docker"
+  # Dev/CI tooling (ruff, djlint) pinned in the root [dependency-groups] dev.
+  # Kept in lockstep with .pre-commit-config.yaml rev: by scripts/check_tool_versions.py.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies dev-tools"
+  # Shared library (taranis-ng-shared). It is a uv workspace member consumed as a
+  # path source by all 5 services, so it has no uv.lock of its own. Use the "pip"
+  # ecosystem to bump its PEP 621 [project] dependencies directly. Service-side
+  # uv.lock updates then pick up the new shared pin via their own entries below.
   - package-ecosystem: "pip"
+    directory: "/src/shared"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies pip"
+  - package-ecosystem: "uv"
     directory: "/src/bots"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies pip"
-  - package-ecosystem: "pip"
+      - "dependencies uv"
+  - package-ecosystem: "uv"
     directory: "/src/collectors"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies pip"
+      - "dependencies uv"
     ignore:
       - dependency-name: "slackclient"
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/src/core"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies pip"
-  - package-ecosystem: "pip"
+      - "dependencies uv"
+  - package-ecosystem: "uv"
     directory: "/src/presenters"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies pip"
-  - package-ecosystem: "pip"
+      - "dependencies uv"
+  - package-ecosystem: "uv"
     directory: "/src/publishers"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies pip"
+      - "dependencies uv"
   - package-ecosystem: "npm"
     directory: "/src/gui"
     schedule:
@@ -55,3 +71,9 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies npm"
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies pre-commit"

@@ -1,0 +1,40 @@
+# Reduce Docker build context to only what the Dockerfiles COPY.
+# Keeps `docker build` fast and avoids leaking .git/secrets into the daemon.
+
+# Version control & metadata
+.gitignore
+.github/
+.pre-commit-config.yaml
+.prettierignore
+.ruff_cache/
+.pytest_cache/
+.vscode/
+.vscode-server/
+.claude/
+.idea/
+
+# Python build/runtime artifacts
+.venv/
+**/__pycache__/
+**/*.pyc
+**/*.egg-info/
+**/dist/
+**/build/
+
+# Node artifacts (GUIs are built in their own docker images, not here)
+**/node_modules/
+
+# Documentation, ops, data — not needed for backend image builds
+*.md
+# ...but keep VERSION.md (copied into gui / gui-v3 images at build time)
+!VERSION.md
+ansible/
+docs/
+local/
+resources/
+
+# Editor/OS cruft
+.DS_Store
+*.swp
+*.swo
+*~

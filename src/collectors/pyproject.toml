@@ -1,8 +1,8 @@
 [project]
-name = "TARANIS-NG-collectors"
+name = "taranis-ng-collectors"
 version = "26.05.1"
 description = "Taranis-NG Collectors service."
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4==4.15.0",
     "dateparser==1.4.1",
@@ -20,9 +20,13 @@ dependencies = [
     "schedule==1.2.2",
     "selenium==4.45.0",
     "slackclient==2.9.4",
-    "tweepy==4.17.0"
+    "tweepy==4.17.0",
+    "taranis-ng-shared==26.05.1",
 ]
 
 [build-system]
-requires = ["setuptools>=82.0.1"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.uv.sources]
+taranis-ng-shared = { path = "../shared" }

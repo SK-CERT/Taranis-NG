@@ -4,25 +4,78 @@ on:
   workflow_dispatch:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Code linting and formatting
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.13']
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Depth 2 so the PR merge commit's parents are available for the
+          # changed-files diff in the ruff lint step below.
+          fetch-depth: 2
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: Install djlint
-        run: pip install djlint
-      - name: Run djlint lint
-        run: djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021
-      - name: ruff-action
-        uses: astral-sh/ruff-action@v3.5.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          version: "latest"
-          args: "format --check --diff"
+          # Pinned to match [tool.uv] required-version in root pyproject.toml.
+          version: "0.11.19"
+          enable-cache: true
+      - name: Install dev tools (ruff, djlint) from lockstepped dependency group
+        run: uv sync --group dev --no-install-project
+      - name: Run djlint lint
+        run: uv run --group dev djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021
+      - name: Run ruff lint check (changed files only)
+        if: github.event_name == 'pull_request'
+        # The legacy codebase is not yet clean under select = ["ALL"], so lint
+        # only the files this PR touches — the same incremental policy the
+        # pre-commit ruff-check hook applies locally. HEAD is the PR merge
+        # commit, so HEAD^1..HEAD is exactly the PR's diff against the base.
+        run: |
+          changed=$(git diff --name-only --diff-filter=ACMR HEAD^1 HEAD -- 'src/**/*.py' 'src/**/*.wsgi')
+          if [ -n "$changed" ]; then
+            echo "$changed" | xargs uv run --group dev ruff check --no-fix
+          else
+            echo "No Python changes to lint."
+          fi
+      - name: Run ruff format check
+        run: uv run --group dev ruff format --check --diff
+
+  check-locks:
+    name: Verify uv.lock files are up to date
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # "." is the root workspace lock (dev tool group + the shared member).
+        directory: ['.', src/bots, src/collectors, src/core, src/presenters, src/publishers]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.19"
+          enable-cache: true
+      - name: Check uv.lock is up to date
+        working-directory: ${{ matrix.directory }}
+        run: uv lock --check
+
+  check-shared:
+    name: Verify src/shared dependency pins match service locks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check shared deps are reflected in all service uv.lock files
+        run: |
+          set -euo pipefail
+          # src/shared is a uv workspace member with no uv.lock of its own; its
+          # dependency pins flow into the 5 service locks via [tool.uv.sources].
+          # Verify each shared dep pin matches the version recorded in every
+          # service uv.lock so a shared bump that isn't relocked gets caught.
+          python3 scripts/check_shared_lock_consistency.py
