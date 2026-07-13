@@ -38,6 +38,11 @@ class BaseCollector:
         """Initialize the BaseCollector object."""
         self.osint_sources = []
 
+    @property
+    def type(self) -> str:
+        """Alias for ``collector_type``."""
+        return self.collector_type
+
     def get_info(self) -> dict:
         """Get information about the collector.
 

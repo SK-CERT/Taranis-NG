@@ -30,6 +30,11 @@ class BaseBot:
         self.parameters = []
         self.bot_presets = []
 
+    @property
+    def type(self) -> str:
+        """Alias for ``bot_type``."""
+        return self.bot_type
+
     def get_info(self) -> dict:
         """Return the information of the bot.
 
