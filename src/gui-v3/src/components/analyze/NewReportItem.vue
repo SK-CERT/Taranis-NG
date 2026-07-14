@@ -256,6 +256,8 @@
                                                         v-for="attribute_item in attribute_group.attribute_group_items"
                                                         :key="attribute_item.attribute_group_item.id"
                                                         :class="['item-panel', { 'item-panel--half': isHalfWidth(attribute_item) }]"
+                                                        :hide-actions="isLabelOnlyAttribute(attribute_item)"
+                                                        :readonly="isLabelOnlyAttribute(attribute_item)"
                                                     >
                                                         <v-expansion-panel-title class="font-weight-bold text-primary rounded-0">
                                                             <div class="d-flex align-center w-100">
@@ -270,7 +272,7 @@
                                                                 </span>
                                                             </div>
                                                         </v-expansion-panel-title>
-                                                        <v-expansion-panel-text>
+                                                        <v-expansion-panel-text v-if="!isLabelOnlyAttribute(attribute_item)">
                                                             <v-row align="center">
                                                                 <v-col>
                                                                     <AttributeContainer
@@ -378,6 +380,7 @@
     } from '@/api/analyze'
     import { getEntityTypeStates } from '@/api/state'
     import AttributeContainer from '@/components/common/attribute/AttributeContainer.vue'
+    import { isLabelOnly } from '@/components/common/attribute/useAttributes'
     import NewsItemSelector from '@/components/analyze/NewsItemSelector.vue'
     import RemoteReportItemSelector from '@/components/analyze/RemoteReportItemSelector.vue'
     import StateSelector from '@/components/common/StateSelector.vue'
@@ -879,6 +882,11 @@
     const isHalfWidth = (attributeItem) => {
         const type = attributeItem?.attribute_group_item?.attribute?.type
         return HALF_WIDTH_TYPES.includes(type)
+    }
+
+    // Label-only attributes hold no values, so the panel shows its title and nothing else.
+    const isLabelOnlyAttribute = (attributeItem) => {
+        return isLabelOnly(attributeItem?.attribute_group_item)
     }
 
     const getAttributeMeta = (attributeItem) => {

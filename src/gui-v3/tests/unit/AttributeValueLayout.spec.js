@@ -21,9 +21,13 @@ describe('AttributeValueLayout', () => {
         expect(deleteBtn(wrapper).exists()).toBe(true)
     })
 
-    it('hides the delete button for a single value (the last cannot be deleted)', () => {
-        const wrapper = mountLayout({ values: makeValues(1) })
-        expect(deleteBtn(wrapper).exists()).toBe(false)
+    it('hides the delete button for the last value when one is required', () => {
+        expect(deleteBtn(mountLayout({ values: makeValues(1), occurrence: 1 })).exists()).toBe(false)
+    })
+
+    it('allows deleting the last value when min_occurrence is 0', () => {
+        // min_occurrence 0 -> the attribute may end up with no values at all.
+        expect(deleteBtn(mountLayout({ values: makeValues(1), occurrence: 0 })).exists()).toBe(true)
     })
 
     it('respects a higher min_occurrence', () => {

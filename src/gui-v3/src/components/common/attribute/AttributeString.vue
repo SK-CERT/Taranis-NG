@@ -166,7 +166,8 @@
 
     const { t } = useI18n()
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } =
+        useAttributes(props)
 
     // Treat a value as a link only when it is an explicit http(s) URL — avoids false positives
     // and never produces javascript:/data: links.
@@ -229,12 +230,7 @@
         dragOverIndex.value = null
     }
 
-    // Always show one (possibly empty) field, even when the attribute starts with no values.
-    onMounted(() => {
-        if (props.values?.length === 0 && canModify.value && !props.readOnly) {
-            add()
-        }
-    })
+    onMounted(addInitialValues)
 </script>
 
 <style scoped>

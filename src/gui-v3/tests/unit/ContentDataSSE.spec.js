@@ -46,7 +46,7 @@ const mockPublishStore = {
     deselect: vi.fn()
 }
 
-const mockGetAllProductTypes = vi.fn()
+const mockGetAllUserProductTypes = vi.fn()
 
 vi.mock('vue-router', () => ({
     useRoute: () => mockRoute
@@ -64,8 +64,8 @@ vi.mock('@/stores/publish', () => ({
     usePublishStore: () => mockPublishStore
 }))
 
-vi.mock('@/api/config', () => ({
-    getAllProductTypes: (...args) => mockGetAllProductTypes(...args)
+vi.mock('@/api/user', () => ({
+    getAllUserProductTypes: (...args) => mockGetAllUserProductTypes(...args)
 }))
 
 const commonStubs = {
@@ -120,7 +120,7 @@ describe('SSE consumer components', () => {
             ]
         }
         mockPublishStore.loadProducts.mockResolvedValue({ data: mockPublishStore.getProducts })
-        mockGetAllProductTypes.mockResolvedValue({
+        mockGetAllUserProductTypes.mockResolvedValue({
             data: {
                 items: [{ id: 20, title: 'Product Type' }]
             }
@@ -189,13 +189,13 @@ describe('SSE consumer components', () => {
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
-            expect(mockGetAllProductTypes).toHaveBeenCalledTimes(1)
+            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
 
             window.dispatchEvent(new CustomEvent('product-updated', { detail: {} }))
             await flushPromises()
 
             const productReloadCalls = mockPublishStore.loadProducts.mock.calls.length
-            const productTypeReloadCalls = mockGetAllProductTypes.mock.calls.length
+            const productTypeReloadCalls = mockGetAllUserProductTypes.mock.calls.length
 
             expect(productReloadCalls).toBeGreaterThan(1)
             expect(productTypeReloadCalls).toBeGreaterThan(1)
@@ -205,7 +205,7 @@ describe('SSE consumer components', () => {
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(productReloadCalls)
-            expect(mockGetAllProductTypes).toHaveBeenCalledTimes(productTypeReloadCalls)
+            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(productTypeReloadCalls)
         } finally {
             wrapper?.unmount()
         }

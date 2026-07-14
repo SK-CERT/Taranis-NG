@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+    import { onMounted } from 'vue'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
@@ -96,7 +97,7 @@
         }
     )
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
 
     const formatDateTime = (value: string | null | undefined): string => {
         if (!value) return '–'
@@ -114,6 +115,8 @@
             return value
         }
     }
+
+    onMounted(addInitialValues)
 </script>
 
 <style scoped>

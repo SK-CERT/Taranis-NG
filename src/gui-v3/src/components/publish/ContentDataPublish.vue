@@ -74,7 +74,7 @@
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import { usePublishStore } from '@/stores/publish'
-    import { getAllProductTypes } from '@/api/config'
+    import { getAllUserProductTypes } from '@/api/user'
     import CardProduct from './CardProduct.vue'
     import CardCompact from '@/components/common/CardCompact.vue'
 
@@ -178,7 +178,7 @@
                     offset: offset,
                     limit: limit
                 }),
-                getAllProductTypes({ search: '' })
+                getAllUserProductTypes()
             ])
 
             const productTypes = Array.isArray(productTypesResponse?.data?.items) ? (productTypesResponse.data.items as ProductType[]) : []

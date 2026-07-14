@@ -64,11 +64,11 @@
     const { t } = useI18n()
 
     const delButtonVisible = computed(() => {
-        // Never allow deleting the last value: the effective minimum is at least 1,
-        // but a higher min_occurrence from the attribute group is still respected.
+        // The attribute group's min_occurrence is the only floor: with a minimum of 0 even
+        // the last value can be deleted, leaving the attribute empty.
         // Shown persistently (not only on hover) so it's consistent across attributes and
         // doesn't shift adjacent controls (e.g. the string open-link button) on hover.
-        const minRequired = Math.max(props.occurrence ?? 0, 1)
+        const minRequired = props.occurrence ?? 0
         return minRequired < props.values.length
     })
 

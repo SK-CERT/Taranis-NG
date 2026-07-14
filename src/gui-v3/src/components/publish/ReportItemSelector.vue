@@ -147,6 +147,7 @@
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { useSettingsStore } from '@/stores/settings'
+    import Settings, { getSettingBoolean } from '@/services/settings'
     import { getEntityTypeStates } from '@/api/state'
 
     type ReportItem = {
@@ -190,7 +191,6 @@
 
     const selectorOpen = ref<boolean>(false)
     const value = ref<ReportItem[]>(props.values || [])
-    const readOnlySelector = ref<boolean>(true)
     const toolbarFilter = ref<any>(null)
     const contentData = ref<any>(null)
     const reportItemDialog = ref<any>(null)
@@ -229,6 +229,10 @@
         if (!displayName) return false
         return finalReportStateNames.value.has(displayName)
     }
+
+    // REPORT_SELECTOR_READ_ONLY decides whether a report item opened from the selector is
+    // just viewable or editable. Read-only is the safer default if the setting is missing.
+    const readOnlySelector = computed(() => getSettingBoolean(Settings.REPORT_SELECTOR_READ_ONLY, true))
 
     // Whether the backend "Automatic cascade state changes" (CASCADE_STATES_ENABLED)
     // app setting is on. The completion-confirmation dialog only makes sense when

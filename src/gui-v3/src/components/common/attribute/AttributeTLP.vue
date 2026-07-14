@@ -127,7 +127,7 @@
     )
 
     const { t } = useI18n()
-    const { canModify, addButtonVisible, add, del, onEdit } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, onEdit } = useAttributes(props)
 
     const itemHovers = ref<Record<number, boolean>>({})
 
@@ -142,11 +142,7 @@
         )
     }
 
-    onMounted(() => {
-        if (props.values?.length === 0 && canModify.value && !props.readOnly) {
-            add()
-        }
-    })
+    onMounted(addInitialValues)
 
     watch(
         () => props.values,

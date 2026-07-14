@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { effectScope } from 'vue'
-import { useAttributes } from '@/components/common/attribute/useAttributes'
+import { useAttributes, isLabelOnly } from '@/components/common/attribute/useAttributes'
 
 // Mock dependencies
 const { mockHasPermission } = vi.hoisted(() => ({
@@ -147,6 +147,138 @@ describe('useAttributes', () => {
                 })
             )
             expect(result.delButtonVisible.value).toBe(false)
+            scope.stop()
+        })
+
+        it('should be true for the last value when min_occurrence is 0 (the attribute may be emptied)', () => {
+            const values = [{ id: 1, value: '' }]
+            const { result, scope } = setupComposable(
+                makeProps({
+                    values,
+                    attributeGroup: { id: 'ag', min_occurrence: 0, max_occurrence: 10, attribute: { type: 'TEXT' } }
+                })
+            )
+            expect(result.delButtonVisible.value).toBe(true)
+            scope.stop()
+        })
+    })
+
+    // ── addInitialValues (seeding on mount) ───────
+    describe('addInitialValues', () => {
+        it('should seed as many empty values as min_occurrence requires', async () => {
+            const props = makeProps({
+                edit: false,
+                values: [],
+                attributeGroup: { id: 'ag', min_occurrence: 3, max_occurrence: 10, attribute: { type: 'TEXT' } }
+            })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(3)
+            expect(props.values.map((v) => v.index)).toEqual([0, 1, 2])
+            scope.stop()
+        })
+
+        it('should top up an attribute that holds fewer values than min_occurrence', async () => {
+            const props = makeProps({
+                edit: false,
+                values: [{ id: 1, index: 0, value: 'existing' }],
+                attributeGroup: { id: 'ag', min_occurrence: 2, max_occurrence: 10, attribute: { type: 'TEXT' } }
+            })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(2)
+            expect(props.values[0].value).toBe('existing')
+            scope.stop()
+        })
+
+        it('should seed nothing when min_occurrence is 0', async () => {
+            const props = makeProps({ edit: false, values: [] })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(0)
+            scope.stop()
+        })
+
+        it('should seed nothing when readOnly', async () => {
+            const props = makeProps({
+                readOnly: true,
+                values: [],
+                attributeGroup: { id: 'ag', min_occurrence: 2, max_occurrence: 10, attribute: { type: 'TEXT' } }
+            })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(0)
+            scope.stop()
+        })
+
+        it('should seed nothing when the user cannot modify the report item', async () => {
+            const props = makeProps({
+                edit: false,
+                modify: false,
+                values: [],
+                attributeGroup: { id: 'ag', min_occurrence: 2, max_occurrence: 10, attribute: { type: 'TEXT' } }
+            })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(0)
+            scope.stop()
+        })
+
+        it('should stop seeding when the API rejects instead of looping forever', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockRejectedValue(new Error('fail'))
+
+            const props = makeProps({
+                edit: true,
+                values: [],
+                attributeGroup: { id: 'ag-1', min_occurrence: 3, max_occurrence: 10, attribute: { type: 'TEXT' } }
+            })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(0)
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledTimes(1)
+            scope.stop()
+        })
+    })
+
+    // ── label-only attributes (max_occurrence 0) ──
+    describe('label-only attributes (max_occurrence 0)', () => {
+        const labelOnlyGroup = { id: 'ag', min_occurrence: 0, max_occurrence: 0, attribute: { type: 'RADIO' } }
+
+        it('isLabelOnly is true only for max_occurrence 0', () => {
+            expect(isLabelOnly(labelOnlyGroup)).toBe(true)
+            expect(isLabelOnly({ max_occurrence: 1 })).toBe(false)
+            // A missing max_occurrence means unbounded, not zero.
+            expect(isLabelOnly({ min_occurrence: 0 })).toBe(false)
+            expect(isLabelOnly(undefined)).toBe(false)
+        })
+
+        it('hides the add button', () => {
+            const { result, scope } = setupComposable(makeProps({ values: [], attributeGroup: labelOnlyGroup }))
+            expect(result.addButtonVisible.value).toBe(false)
+            scope.stop()
+        })
+
+        it('add() does not create a value', async () => {
+            const props = makeProps({ edit: false, values: [], attributeGroup: labelOnlyGroup })
+            const { result, scope } = setupComposable(props)
+            await result.add()
+
+            expect(props.values).toHaveLength(0)
+            scope.stop()
+        })
+
+        it('seeds nothing on mount', async () => {
+            const props = makeProps({ edit: false, values: [], attributeGroup: labelOnlyGroup })
+            const { result, scope } = setupComposable(props)
+            await result.addInitialValues()
+
+            expect(props.values).toHaveLength(0)
             scope.stop()
         })
     })
