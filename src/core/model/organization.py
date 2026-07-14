@@ -1,11 +1,12 @@
 """Organization model."""
 
+from __future__ import annotations
+
 from managers.db_manager import db
 from marshmallow import fields, post_load
-from model.address import NewAddressSchema
-from sqlalchemy import or_, orm
-
+from model.address import Address, NewAddressSchema
 from shared.schema.organization import OrganizationPresentationSchema, OrganizationSchema
+from sqlalchemy import or_, orm
 
 
 class NewOrganizationSchema(OrganizationSchema):
@@ -18,11 +19,12 @@ class NewOrganizationSchema(OrganizationSchema):
     address = fields.Nested(NewAddressSchema)
 
     @post_load
-    def make(self, data, **kwargs):
+    def make(self, data: dict, **kwargs) -> Organization:  # noqa: ANN003, ARG002
         """Create a new organization object.
 
         Args:
             data (dict): The data to create the organization object.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             Organization: The new organization object.
@@ -37,6 +39,7 @@ class Organization(db.Model):
         id (int): The organization id.
         name (str): The organization name.
         description (str): The organization description.
+        require_mfa (bool): Whether members must have a second factor.
         address_id (int): The address id.
         address (Address): The address of the organization.
     """
@@ -44,29 +47,38 @@ class Organization(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
     description = db.Column(db.String())
+    require_mfa = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
 
     address_id = db.Column(db.Integer, db.ForeignKey("address.id"))
     address = db.relationship("Address", cascade="all")
 
-    def __init__(self, id, name, description, address):
+    def __init__(
+        self,
+        id: int | None,  # noqa: A002, ARG002
+        name: str,
+        description: str,
+        address: Address,
+        require_mfa: bool = False,
+    ) -> None:
         """Initialize the organization object."""
         self.id = None
         self.name = name
         self.description = description
+        self.require_mfa = bool(require_mfa)
         self.address = address
         self.title = ""
         self.subtitle = ""
         self.tag = ""
 
     @orm.reconstructor
-    def reconstruct(self):
+    def reconstruct(self) -> None:
         """Reconstruct the organization object."""
         self.title = self.name
         self.subtitle = self.description
         self.tag = "mdi-office-building"
 
     @classmethod
-    def find(cls, organization_id):
+    def find(cls, organization_id: int) -> Organization | None:
         """Find an organization by id.
 
         Args:
@@ -75,11 +87,10 @@ class Organization(db.Model):
         Returns:
             Organization: The organization object.
         """
-        organization = db.session.get(cls, organization_id)
-        return organization
+        return db.session.get(cls, organization_id)
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls) -> list[Organization]:
         """Get all organizations.
 
         Returns:
@@ -88,7 +99,7 @@ class Organization(db.Model):
         return cls.query.order_by(db.asc(Organization.name)).all()
 
     @classmethod
-    def get(cls, search):
+    def get(cls, search: str | None) -> tuple[list[Organization], int]:
         """Get all organizations with search.
 
         Args:
@@ -106,7 +117,7 @@ class Organization(db.Model):
         return query.order_by(db.asc(Organization.name)).all(), query.count()
 
     @classmethod
-    def get_all_json(cls, search):
+    def get_all_json(cls, search: str | None) -> dict:
         """Get all organizations with search in JSON format.
 
         Args:
@@ -120,7 +131,7 @@ class Organization(db.Model):
         return {"total_count": count, "items": organizations_schema.dump(organizations)}
 
     @classmethod
-    def add_new(cls, data):
+    def add_new(cls, data: dict) -> None:
         """Add a new organization.
 
         Args:
@@ -133,7 +144,7 @@ class Organization(db.Model):
         db.session.commit()
 
     @classmethod
-    def update(cls, organization_id, data):
+    def update(cls, organization_id: int, data: dict) -> None:
         """Update an organization.
 
         Args:
@@ -145,6 +156,7 @@ class Organization(db.Model):
         organization = db.session.get(cls, organization_id)
         organization.name = updated_organization.name
         organization.description = updated_organization.description
+        organization.require_mfa = updated_organization.require_mfa
         organization.address.street = updated_organization.address.street
         organization.address.city = updated_organization.address.city
         organization.address.zip = updated_organization.address.zip
@@ -152,7 +164,7 @@ class Organization(db.Model):
         db.session.commit()
 
     @classmethod
-    def delete(cls, id):
+    def delete(cls, id: int) -> None:  # noqa: A002
         """Delete an organization.
 
         Args:

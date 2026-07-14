@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import ApiService from '@/services/api_service'
-import { login as loginApi, logout as logoutApi, refresh } from '@/api/auth'
+import { getLoginMethods, login as loginApi, logout as logoutApi, refresh } from '@/api/auth'
 import { parseJwtClaims } from '@/services/jwt'
 import { useUserStore } from './user'
-import type { AuthTokenResponse, JwtClaims, LoginPayload, UserClaims } from '@/types/auth'
+import type { AuthTokenResponse, JwtClaims, LoginMethod, LoginMethodsResponse, LoginPayload, UserClaims } from '@/types/auth'
 
 type ApiResponse<T> = {
     data: T
@@ -30,6 +30,11 @@ const parseJwtPayload = (token: string): JwtClaims | null => parseJwtClaims(toke
 export const useAuthStore = defineStore('auth', () => {
     // State - Initialize from localStorage if available
     const jwt = ref(getStoredAccessToken())
+
+    // Enabled login methods (providers) fetched from the backend for the login page
+    const loginMethods = ref<LoginMethod[]>([])
+    // Passkeys are a site-wide capability (a security setting), not a provider.
+    const passkeyEnabled = ref(false)
 
     // Getters
     const getUserData = computed(() => {
@@ -160,9 +165,34 @@ export const useAuthStore = defineStore('auth', () => {
         // Don't dispatch logged-in event here - it's handled after cookie processing in App.vue
     }
 
+    async function loadLoginMethods(): Promise<LoginMethod[]> {
+        try {
+            const response = (await getLoginMethods()) as ApiResponse<LoginMethodsResponse>
+            loginMethods.value = response.data?.items || []
+            passkeyEnabled.value = !!response.data?.passkey_enabled
+        } catch (error) {
+            console.error('[Auth] Failed to load login methods:', error)
+            loginMethods.value = []
+            passkeyEnabled.value = false
+        }
+        return loginMethods.value
+    }
+
+    // Complete a multi-step login (MFA / passkey) with the received access token.
+    function finishLogin(access_token: string): void {
+        setJwtToken(access_token)
+
+        const userStore = useUserStore()
+        userStore.setUser(getUserData.value)
+
+        window.dispatchEvent(new Event('logged-in'))
+    }
+
     return {
         // State
         jwt,
+        loginMethods,
+        passkeyEnabled,
 
         // Getters
         getUserData,
@@ -180,6 +210,8 @@ export const useAuthStore = defineStore('auth', () => {
         setToken,
         logout,
         setJwtToken,
-        clearJwtToken
+        clearJwtToken,
+        loadLoginMethods,
+        finishLogin
     }
 })

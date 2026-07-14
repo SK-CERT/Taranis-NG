@@ -38,6 +38,17 @@ echo "Starting Taranis-NG backend services for E2E tests (project=taranis-e2e, c
 cd "$COMPOSE_DIR"
 docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e down -v --remove-orphans >/dev/null 2>&1 || true
 
+# docker/secrets/*.txt is gitignored (developers copy the .example files). Seed any
+# missing secret from its example so a fresh checkout - or a checkout predating a
+# newly added secret - can boot the stack without manual steps.
+for example in "$COMPOSE_DIR"/secrets/*.txt.example; do
+  secret="${example%.example}"
+  if [ ! -f "$secret" ]; then
+    echo "Seeding missing secret $(basename "$secret") from its example"
+    cp "$example" "$secret"
+  fi
+done
+
 # Start core, postgres, redis with localhost port exposure for the frontend dev server.
 # Build the core image from the current workspace so new backend routes are available in E2E runs.
 docker compose --env-file "$E2E_ENV_FILE" -f docker-compose.yml -f docker-compose.e2e.yml -p taranis-e2e up -d --build postgres redis core collectors presenters publishers

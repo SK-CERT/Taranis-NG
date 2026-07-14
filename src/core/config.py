@@ -92,6 +92,14 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = 14400
     DEBUG = True
 
+    # Key used to encrypt secrets stored in the database (auth provider client
+    # secrets, LDAP bind passwords, TOTP seeds). Falls back to JWT_SECRET_KEY so
+    # existing deployments keep booting; a dedicated secret is strongly recommended.
+    try:
+        SECRETS_ENCRYPTION_KEY = read_secret("secrets_encryption_key")
+    except RuntimeError:
+        SECRETS_ENCRYPTION_KEY = JWT_SECRET_KEY
+
     SECRET_KEY = ""
     OIDC_CLIENT_SECRETS = "client_secrets.json"
     OIDC_ID_TOKEN_COOKIE_SECURE = False

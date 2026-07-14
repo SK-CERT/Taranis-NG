@@ -39,6 +39,11 @@
                     {{ t('settings.tab_general') }}
                 </v-tab>
 
+                <!-- Security Tab -->
+                <v-tab value="security">
+                    {{ t('settings.tab_security') }}
+                </v-tab>
+
                 <!-- Word Lists Tab -->
                 <v-tab value="wordlists">
                     {{ t('settings.tab_wordlists') }}
@@ -50,11 +55,16 @@
                 </v-tab>
             </v-tabs>
 
-            <v-card-text style="max-height: 70vh; overflow-y: auto">
+            <v-card-text style="height: 70vh; overflow-y: auto">
                 <v-window v-model="activeTab">
                     <!-- General Settings -->
                     <v-window-item value="general">
                         <SettingsTable :global-setting="false" />
+                    </v-window-item>
+
+                    <!-- Security (TOTP, passkeys) -->
+                    <v-window-item value="security">
+                        <SecuritySettings :load-trigger="securityLoadTrigger" />
                     </v-window-item>
 
                     <!-- Word Lists -->
@@ -163,6 +173,7 @@
     import { useI18n } from 'vue-i18n'
     import { useSettingsStore } from '@/stores/settings'
     import SettingsTable from './config/SettingsTable.vue'
+    import SecuritySettings from './SecuritySettings.vue'
 
     type HotkeyItem = {
         alias: string
@@ -194,9 +205,12 @@
     const { t } = useI18n()
     const settingsStore = useSettingsStore()
 
-    const activeTab = ref<'general' | 'wordlists' | 'hotkeys'>('general')
+    const activeTab = ref<'general' | 'security' | 'wordlists' | 'hotkeys'>('general')
     const keyDialogVisible = ref<boolean>(false)
     const currentHotkeyAlias = ref<string>('')
+    // Bumped whenever the Security tab becomes visible so SecuritySettings
+    // reloads its TOTP/passkey state (mirrors the old dialog-open behavior).
+    const securityLoadTrigger = ref<number>(0)
 
     // Word lists
     const wordListHeaders = [
@@ -325,6 +339,13 @@
     watch(visible, (newValue: boolean) => {
         if (newValue) {
             loadSettings()
+        }
+    })
+
+    // Reload Security tab data whenever it becomes active
+    watch(activeTab, (tab) => {
+        if (tab === 'security') {
+            securityLoadTrigger.value++
         }
     })
 </script>

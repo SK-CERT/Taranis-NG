@@ -64,7 +64,12 @@
     import lightLogo from '@/assets/taranis-logo-nav.svg'
     import darkLogo from '@/assets/taranis-logo-nav-dark.svg'
 
-    const isDark = computed(() => useTheme().global.current.value.dark)
+    // useTheme() must be called at the top of setup, NOT inside a computed()
+    // getter — the getter runs lazily during async re-computation (e.g. an
+    // axios response updating the auth store), where getCurrentInstance() is
+    // null, and Vuetify's useTheme() asserts its presence. See Login.vue.
+    const { global: themeGlobal } = useTheme()
+    const isDark = computed(() => themeGlobal.current.value.dark)
     const { t } = useI18n()
     const { isAuth, checkPermission } = useAuth()
     const route = useRoute()

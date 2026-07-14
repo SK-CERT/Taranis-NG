@@ -1,0 +1,372 @@
+"""SAML 2.0 authenticator driven by a database-configured provider.
+
+Provider ``config`` keys:
+    idp_sso_url (str): The IdP single-sign-on endpoint (HTTP-Redirect binding).
+    idp_entity_id (str): The IdP entityID (issuer of the SAML response).
+    idp_certificate (str): Certificate(s) the IdP signs responses with. A PEM
+        bundle (several are kept so a key rollover does not break logins) or a
+        bare base64 blob as it appears in the IdP metadata.
+    sp_entity_id (str): Our entityID / audience (what the IdP is configured
+        to issue assertions for).
+    acs_url_override (str): Assertion Consumer Service URL when the derived
+        one is wrong behind a proxy.
+    username_attr (str): Assertion attribute holding the username; empty uses
+        the NameID.
+    external_id_attr (str): Assertion attribute holding a *stable* subject
+        identifier, used to recognize a returning user. Empty uses the NameID,
+        which only works when the IdP issues a persistent one - with a
+        transient NameID the identity would change on every login.
+    name_attr (str): Assertion attribute holding the display name.
+    email_attr (str): Assertion attribute holding the e-mail address.
+    nameid_format (str): NameID format advertised in our metadata.
+
+Attributes are looked up by their SAML ``Name`` (an OID when the IdP uses the
+URI name-format), never by ``FriendlyName``.
+
+The flow uses the HTTP-Redirect binding for the AuthnRequest and the
+HTTP-POST binding for the response. CSRF/replay protection: the RelayState is
+a short-lived signed JWT carrying the AuthnRequest ID, which must match the
+InResponseTo of the (signature-verified) response.
+"""
+
+from __future__ import annotations
+
+import base64
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
+from xml.sax.saxutils import quoteattr
+
+from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
+from auth.saml_xml import decrypt_assertion, extract_signed_assertion
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
+from managers import log_manager
+from minisaml.request import get_request_redirect_url
+from minisaml.response import TimeDriftLimits, validate_response
+
+if TYPE_CHECKING:
+    from cryptography.x509 import Certificate
+    from model.auth_provider import AuthProvider
+
+# Tolerated clock skew between Taranis NG and the IdP when checking the
+# assertion's NotBefore/NotOnOrAfter conditions.
+CLOCK_SKEW = timedelta(minutes=2)
+
+PEM_HEADER = "-----BEGIN CERTIFICATE-----"
+PEM_FOOTER = "-----END CERTIFICATE-----"
+
+# Persistent by default: a transient NameID cannot identify a returning user.
+DEFAULT_NAMEID_FORMAT = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+# Attribute names are OIDs when the IdP uses the URI name-format, which is what
+# federated deployments do; advertise the requested attributes accordingly.
+ATTRIBUTE_NAME_FORMAT = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+
+SP_KEY_SIZE = 2048
+SP_CERTIFICATE_DAYS = 3650
+# What we tell an IdP it may encrypt with. RSA-1_5 is deliberately absent.
+SUPPORTED_ENCRYPTION_METHODS = (
+    "http://www.w3.org/2009/xmlenc11#aes256-gcm",
+    "http://www.w3.org/2009/xmlenc11#aes128-gcm",
+    "http://www.w3.org/2001/04/xmlenc#aes256-cbc",
+    "http://www.w3.org/2001/04/xmlenc#aes128-cbc",
+    "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p",
+    "http://www.w3.org/2009/xmlenc11#rsa-oaep",
+)
+
+
+def generate_sp_keypair(entity_id: str) -> dict:
+    """Generate the service provider keypair an identity provider encrypts to.
+
+    The certificate is self-signed: an IdP only uses it to encrypt the assertion
+    to our public key, so no chain of trust is involved - the federation pins the
+    certificate we register with it.
+
+    Args:
+        entity_id (str): Our entityID, used as the certificate's common name.
+
+    Returns:
+        dict: private_key and certificate, both PEM.
+    """
+    key = rsa.generate_private_key(public_exponent=65537, key_size=SP_KEY_SIZE)
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, entity_id or "taranis-ng")])
+    now = datetime.now(UTC)
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=SP_CERTIFICATE_DAYS))
+        .sign(key, hashes.SHA256())
+    )
+    return {
+        "private_key": key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode(),
+        "certificate": certificate.public_bytes(serialization.Encoding.PEM).decode(),
+    }
+
+
+def validate_sp_keypair(private_key_pem: str, certificate_pem: str) -> None:
+    """Check that an SP keypair parses and that the two halves belong together.
+
+    Args:
+        private_key_pem (str): The private key.
+        certificate_pem (str): The certificate.
+
+    Raises:
+        ValueError: When either half is unparsable or they do not match.
+    """
+    try:
+        key = serialization.load_pem_private_key(private_key_pem.encode(), password=None)
+    except Exception as ex:
+        msg = f"The service provider private key could not be parsed: {ex}"
+        raise ValueError(msg) from ex
+    try:
+        certificate = x509.load_pem_x509_certificate(certificate_pem.encode())
+    except Exception as ex:
+        msg = f"The service provider certificate could not be parsed: {ex}"
+        raise ValueError(msg) from ex
+
+    if certificate.public_key().public_numbers() != key.public_key().public_numbers():
+        msg = "The service provider certificate does not match the private key"
+        raise ValueError(msg)
+
+
+def load_idp_certificates(value: str) -> list[Certificate]:
+    """Load the IdP signing certificate(s) from whatever form they were pasted in.
+
+    Accepts a PEM bundle (one or more certificates - an IdP publishes two during
+    a key rollover) as well as the bare base64 blob that appears inside
+    ``<ds:X509Certificate>`` in the metadata, which is what an admin copying from
+    the IdP actually has in hand.
+
+    Args:
+        value (str): The configured certificate material.
+
+    Returns:
+        list[Certificate]: Every certificate found, in the order given.
+
+    Raises:
+        ValueError: When no certificate can be parsed.
+    """
+    text = (value or "").strip()
+    if not text:
+        msg = "No IdP signing certificate configured"
+        raise ValueError(msg)
+
+    if PEM_HEADER not in text:
+        # bare base64 (possibly wrapped across lines): add the armor ourselves
+        body = "".join(text.split())
+        text = f"{PEM_HEADER}\n{body}\n{PEM_FOOTER}\n"
+
+    certificates = []
+    for block in text.split(PEM_HEADER)[1:]:
+        pem = f"{PEM_HEADER}{block.split(PEM_FOOTER)[0]}{PEM_FOOTER}\n"
+        try:
+            certificates.append(x509.load_pem_x509_certificate(pem.encode()))
+        except Exception as ex:
+            msg = f"The IdP signing certificate could not be parsed: {ex}"
+            raise ValueError(msg) from ex
+
+    if not certificates:
+        msg = "The IdP signing certificate could not be parsed"
+        raise ValueError(msg)
+    return certificates
+
+
+class SamlAuthenticator(BaseAuthenticator):
+    """SP-side SAML 2.0 web browser SSO against a configured identity provider."""
+
+    def __init__(self, provider: AuthProvider) -> None:
+        """Initialize the authenticator from a provider row.
+
+        Args:
+            provider (AuthProvider): The saml-kind provider configuration.
+        """
+        self.provider = provider
+        self.config = provider.config or {}
+
+    def sp_entity_id(self) -> str:
+        """Return our entityID (the audience the IdP issues assertions for)."""
+        return self.config.get("sp_entity_id") or "taranis-ng"
+
+    def nameid_format(self) -> str:
+        """Return the NameID format we advertise in our metadata."""
+        return self.config.get("nameid_format") or DEFAULT_NAMEID_FORMAT
+
+    def sp_certificate(self) -> str:
+        """Return our (public) certificate, the one the IdP encrypts assertions to."""
+        return (self.config.get("sp_certificate") or "").strip()
+
+    def load_sp_private_key(self) -> object | None:
+        """Load our private key, or None when no keypair is configured.
+
+        The key lives in the provider's Fernet-encrypted ``secret`` column, which
+        no other SAML setting uses.
+        """
+        pem = self.provider.get_secret_plaintext()
+        if not pem:
+            return None
+        return serialization.load_pem_private_key(pem.encode(), password=None)
+
+    def get_metadata_xml(self, acs_url: str) -> str:
+        """Build the SP metadata XML to register at the identity provider.
+
+        The descriptor declares what this SP can actually do: it never signs
+        AuthnRequests (minisaml cannot) and it requires signed assertions - the
+        signature is what we verify, so an assertion without one is unusable even
+        when it decrypts.
+
+        When a keypair is configured, the certificate is published as an
+        encryption KeyDescriptor: that is what an identity provider encrypts the
+        assertion to, and what a federation's registration form asks for. Without
+        a keypair no key is advertised, and a well-behaved IdP then sends the
+        assertion in clear.
+
+        Args:
+            acs_url (str): Our Assertion Consumer Service URL.
+
+        Returns:
+            str: The SP metadata document.
+        """
+        requested = ""
+        for key in ("external_id_attr", "username_attr", "name_attr", "email_attr"):
+            name = (self.config.get(key) or "").strip()
+            if name:
+                requested += (
+                    f"\n      <md:RequestedAttribute Name={quoteattr(name)} "
+                    f'NameFormat="{ATTRIBUTE_NAME_FORMAT}" isRequired="{"true" if key == "external_id_attr" else "false"}"/>'
+                )
+        attribute_service = ""
+        if requested:
+            attribute_service = f'\n    <md:AttributeConsumingService index="0">{requested}\n    </md:AttributeConsumingService>'
+
+        key_descriptor = ""
+        certificate = self.sp_certificate()
+        if certificate:
+            body = "".join(line for line in certificate.splitlines() if "CERTIFICATE" not in line).strip()
+            methods = "".join(f'\n        <md:EncryptionMethod Algorithm="{method}"/>' for method in SUPPORTED_ENCRYPTION_METHODS)
+            key_descriptor = (
+                '\n    <md:KeyDescriptor use="encryption">'
+                '\n      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+                f"\n        <ds:X509Data><ds:X509Certificate>{body}</ds:X509Certificate></ds:X509Data>"
+                "\n      </ds:KeyInfo>"
+                f"{methods}"
+                "\n    </md:KeyDescriptor>"
+            )
+
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" '
+            f"entityID={quoteattr(self.sp_entity_id())}>\n"
+            '  <md:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" '
+            'protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">'
+            f"{key_descriptor}\n"
+            f"    <md:NameIDFormat>{self.nameid_format()}</md:NameIDFormat>\n"
+            '    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" '
+            f'Location={quoteattr(acs_url)} index="0" isDefault="true"/>'
+            f"{attribute_service}\n"
+            "  </md:SPSSODescriptor>\n"
+            "</md:EntityDescriptor>\n"
+        )
+
+    def get_login_redirect_url(self, acs_url: str, relay_state: str, request_id: str) -> str:
+        """Build the IdP SSO URL carrying the AuthnRequest (HTTP-Redirect binding).
+
+        Args:
+            acs_url (str): Our Assertion Consumer Service URL.
+            relay_state (str): Signed state token round-tripped by the IdP.
+            request_id (str): The AuthnRequest ID (verified against InResponseTo).
+
+        Returns:
+            str: The URL to redirect the browser to.
+        """
+        return get_request_redirect_url(
+            saml_endpoint=self.config.get("idp_sso_url"),
+            expected_audience=self.sp_entity_id(),
+            acs_url=acs_url,
+            request_id=request_id,
+            relay_state=relay_state,
+        )
+
+    def handle_response(self, saml_response: str, request_id: str | None) -> ExternalIdentity | None:
+        """Validate a posted SAMLResponse and resolve the external identity.
+
+        The response signature is verified against the configured IdP
+        certificate; issuer, audience, validity window and InResponseTo are
+        checked before any attribute is trusted.
+
+        Args:
+            saml_response (str): The base64 SAMLResponse form field.
+            request_id (str): The AuthnRequest ID from the signed RelayState.
+
+        Returns:
+            ExternalIdentity: The authenticated identity, or None on failure.
+        """
+        try:
+            # every certificate is tried, so an IdP key rollover (metadata
+            # carries the old and the new one) keeps working
+            certificates = load_idp_certificates(self.config.get("idp_certificate", ""))
+
+            # minisaml accepts a document whose signed root is the Assertion, and both
+            # of the awkward real-world shapes reduce to exactly that: an assertion
+            # encrypted to our public key (a federation requirement), and a response
+            # signed alongside its assertion (which minisignxml refuses - it verifies a
+            # single signature). Everything else is passed through as it arrived.
+            raw_response = base64.b64decode(saml_response)
+            assertion = decrypt_assertion(raw_response, self.load_sp_private_key()) or extract_signed_assertion(raw_response)
+
+            # validate_response base64-decodes its input; raw XML would be mangled
+            data = base64.b64encode(assertion) if assertion is not None else saml_response
+
+            response = validate_response(
+                data=data,
+                certificate=certificates,
+                expected_audience=self.sp_entity_id(),
+                idp_issuer=self.config.get("idp_entity_id"),
+                allowed_time_drift=TimeDriftLimits(not_before_max_drift=CLOCK_SKEW, not_on_or_after_max_drift=CLOCK_SKEW),
+            )
+        except Exception as ex:
+            log_manager.store_auth_error_activity(f"SAML response validation failed for provider '{self.provider.name}'", ex)
+            return None
+
+        if request_id and response.in_response_to and response.in_response_to != request_id:
+            log_manager.store_auth_error_activity(f"SAML InResponseTo mismatch for provider '{self.provider.name}'")
+            return None
+
+        attributes = response.attrs
+        username_attr = self.config.get("username_attr")
+        username = attributes.get(username_attr) if username_attr else response.name_id
+        if not username:
+            source = username_attr or "NameID"
+            log_manager.store_auth_error_activity(
+                f"SAML provider '{self.provider.name}' returned no '{source}' value; attributes: {sorted(attributes.keys())}",
+            )
+            return None
+
+        # The stable identifier recognizes a returning user. Falling back to the
+        # NameID is only safe when the IdP issues a persistent one, so a
+        # configured attribute that the assertion does not carry is an error
+        # rather than a silent downgrade - the fallback would strand the user
+        # with a new identity on every login.
+        external_id_attr = self.config.get("external_id_attr")
+        external_id = attributes.get(external_id_attr) if external_id_attr else response.name_id
+        if external_id_attr and not external_id:
+            log_manager.store_auth_error_activity(
+                f"SAML provider '{self.provider.name}' returned no '{external_id_attr}' value to identify the user by; "
+                f"attributes: {sorted(attributes.keys())}",
+            )
+            return None
+
+        return ExternalIdentity(
+            username=str(username),
+            external_id=str(external_id) if external_id else None,
+            name=attributes.get(self.config.get("name_attr") or "displayName"),
+            email=attributes.get(self.config.get("email_attr") or "mail"),
+        )

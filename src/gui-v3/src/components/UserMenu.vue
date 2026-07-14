@@ -47,7 +47,7 @@
             </v-list>
         </v-menu>
 
-        <!-- User Settings Dialog -->
+        <!-- User Settings Dialog (includes Security tab) -->
         <UserSettings v-model="settingsVisible" />
     </div>
 </template>

@@ -77,6 +77,24 @@
         }
     }
 
+    // On startup, before the user's saved DARK_THEME preference is loaded (which
+    // happens in initUserSettings after login), follow the browser's
+    // prefers-color-scheme so the pre-login Login page renders in the OS theme.
+    // Once initUserSettings runs, the saved preference overrides this. The
+    // listener keeps the Login page in sync if the user changes the OS theme
+    // while sitting on it.
+    const browserDarkMedia = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyBrowserTheme = (): void => {
+        // Only follow the browser if the user hasn't already pinned a preference
+        // this session (authStore.isAuthenticated becomes true after login, at
+        // which point initUserSettings owns the theme).
+        if (!authStore.isAuthenticated) {
+            applyTheme(browserDarkMedia.matches ? 'dark' : 'light')
+        }
+    }
+    browserDarkMedia.addEventListener('change', applyBrowserTheme)
+    applyBrowserTheme()
+
     const initializeSSE = async (): Promise<void> => {
         try {
             await connect()
@@ -161,41 +179,17 @@
         })
     }
 
-    /**
-     * Handle JWT from cookie (e.g., from external auth)
-     */
-    const handleJWTFromCookie = async (): Promise<boolean> => {
-        const testingToken = import.meta.env.VITE_APP_TARANIS_NG_TESTING_TOKEN
-        if (testingToken && typeof testingToken === 'string') {
-            document.cookie = `jwt=${testingToken}; path=/`
-        }
-
-        const cookies = document.cookie.split(';').reduce<Record<string, string>>((acc, cookie) => {
-            const [key, value] = cookie.trim().split('=')
-            if (!key) {
-                return acc
-            }
-            acc[key] = value ?? ''
-            return acc
-        }, {})
-
-        if (cookies['jwt']) {
-            authStore.setToken(cookies['jwt'])
-            document.cookie = 'jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-
-            await initializeAuthenticatedSession()
-            return true
-        }
-
-        return false
-    }
-
     const handleLoggedIn = (): void => {
         initializeAuthenticatedSession()
     }
 
     const handleLoggedOut = (): void => {
         disconnect()
+        // After logout, fall back to the browser's prefers-color-scheme for the
+        // pre-login Login screen, so a user who picked "light" in-app (against a
+        // dark OS) gets the OS theme back rather than dragging their in-app
+        // choice onto the unauthenticated page.
+        applyBrowserTheme()
     }
 
     const handleNavClicked = (): void => {
@@ -240,7 +234,8 @@
         console.log('[App] API:', import.meta.env.VITE_APP_TARANIS_NG_CORE_API)
         console.log('[App] SSE:', import.meta.env.VITE_APP_TARANIS_NG_CORE_SSE)
 
-        // Initialize from stored token if available
+        // Initialize from the stored token, which main.ts has already seeded from the
+        // "jwt" cookie when we arrived here from a redirect login.
         if (authStore.jwt && !userStore.user.id) {
             // Token exists but user data not loaded - restore from JWT
             const userData = authStore.getUserData
@@ -250,9 +245,7 @@
             }
         }
 
-        const initializedFromCookie = await handleJWTFromCookie()
-
-        if (!initializedFromCookie && isAuthenticated()) {
+        if (isAuthenticated()) {
             await initializeAuthenticatedSession()
         }
 
@@ -273,6 +266,8 @@
         if (refreshInterval) {
             clearInterval(refreshInterval)
         }
+
+        browserDarkMedia.removeEventListener('change', applyBrowserTheme)
 
         window.removeEventListener('logged-in', handleLoggedIn)
         window.removeEventListener('logged-out', handleLoggedOut)

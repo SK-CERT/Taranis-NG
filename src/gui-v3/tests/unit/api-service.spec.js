@@ -75,7 +75,12 @@ describe('ApiService', () => {
 
         it('delete should call axios.delete', () => {
             ApiService.delete('/items/1')
-            expect(axios.delete).toHaveBeenCalledWith('/items/1')
+            expect(axios.delete).toHaveBeenCalledWith('/items/1', undefined)
+        })
+
+        it('delete should forward a request config (e.g. a body for DELETE)', () => {
+            ApiService.delete('/users/my-totp', { data: { code: '123456' } })
+            expect(axios.delete).toHaveBeenCalledWith('/users/my-totp', { data: { code: '123456' } })
         })
     })
 

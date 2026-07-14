@@ -11,6 +11,7 @@ from managers import (
     sse_manager,
     tagcloud_manager,
 )
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 def create_app() -> Flask:
@@ -22,6 +23,13 @@ def create_app() -> Flask:
     """
     app = Flask(__name__)
     app.config.from_object("config.Config")
+
+    # Honor X-Forwarded-* headers from the reverse proxy (Traefik terminates
+    # TLS and forwards to core over plain HTTP). Without this, request.scheme
+    # resolves to "http" and request.host to the internal address, which
+    # breaks places that build absolute URLs from the request (e.g. the OAuth2
+    # redirect_uri sent to the IdP).
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     with app.app_context():
         CORS(app, supports_credentials=True)

@@ -145,12 +145,13 @@ describe('App SSE boot flow', () => {
         ])
     })
 
-    it('should bootstrap from jwt cookie and call authStore.setToken before connecting', async () => {
+    it('should not start a session when the stored token is absent', async () => {
+        // the "jwt" cookie is adopted by main.ts before the router runs, so App only
+        // ever sees the resulting store state
         mockAuthStore.jwt = ''
         mockAuthStore.isAuthenticated = false
         mockAuthStore.getUserData = null
         mockIsAuthenticated.mockReturnValue(false)
-        document.cookie = 'jwt=cookie-token; path=/'
 
         wrapper = mountWithPlugins(App, {
             global: {
@@ -164,10 +165,8 @@ describe('App SSE boot flow', () => {
         await flushPromises()
         await flushPromises()
 
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('cookie-token')
-        await vi.waitFor(() => {
-            expect(mockConnect).toHaveBeenCalledTimes(1)
-        })
+        expect(mockSettingsStore.loadSettings).not.toHaveBeenCalled()
+        expect(mockConnect).not.toHaveBeenCalled()
     })
 
     it('should reconnect SSE after token refresh when refresh is needed', async () => {
