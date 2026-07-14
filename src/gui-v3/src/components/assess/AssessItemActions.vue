@@ -55,14 +55,14 @@
             :disabled="disabled"
             :size="size"
             :variant="variant"
-            :title="t('assess.tooltip.like_item')"
+            :title="likeState === 'others' ? t('assess.tooltip.liked_by_others') : t('assess.tooltip.like_item')"
             @click.stop="$emit('action', 'like')"
         >
             <v-icon
                 :size="iconSize"
-                :color="item.me_like ? 'warning' : undefined"
+                :color="voteColor(likeState)"
             >
-                {{ item.me_like ? ICONS.LIKE : ICONS.LIKE_OUTLINE }}
+                {{ likeState === 'none' ? ICONS.LIKE_OUTLINE : ICONS.LIKE }}
             </v-icon>
         </v-btn>
         <span
@@ -80,14 +80,14 @@
             :disabled="disabled"
             :size="size"
             :variant="variant"
-            :title="t('assess.tooltip.dislike_item')"
+            :title="dislikeState === 'others' ? t('assess.tooltip.disliked_by_others') : t('assess.tooltip.dislike_item')"
             @click.stop="$emit('action', 'dislike')"
         >
             <v-icon
                 :size="iconSize"
-                :color="item.me_dislike ? 'warning' : undefined"
+                :color="voteColor(dislikeState)"
             >
-                {{ item.me_dislike ? ICONS.UNLIKE : ICONS.UNLIKE_OUTLINE }}
+                {{ dislikeState === 'none' ? ICONS.UNLIKE_OUTLINE : ICONS.UNLIKE }}
             </v-icon>
         </v-btn>
         <span
@@ -231,6 +231,34 @@
     const hasLink = computed(() => {
         return !!itemLink.value
     })
+
+    /**
+     * Who cast the vote: yourself, a colleague, or nobody. `me_like` / `me_dislike` are this
+     * user's own vote, while `likes` / `dislikes` count the whole team's - so a vote that is not
+     * yours but is counted was cast by someone else.
+     */
+    type VoteState = 'me' | 'others' | 'none'
+
+    const likeState = computed<VoteState>(() => {
+        if (props.item.me_like) {
+            return 'me'
+        }
+        return Number(props.item.likes || 0) > 0 ? 'others' : 'none'
+    })
+
+    const dislikeState = computed<VoteState>(() => {
+        if (props.item.me_dislike) {
+            return 'me'
+        }
+        return Number(props.item.dislikes || 0) > 0 ? 'others' : 'none'
+    })
+
+    const voteColor = (state: VoteState): string | undefined => {
+        if (state === 'me') {
+            return 'warning'
+        }
+        return state === 'others' ? 'primary' : undefined
+    }
 
     const canModify = computed(() => {
         return checkPermission(PERMISSIONS.ASSESS_UPDATE)
