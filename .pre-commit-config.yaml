@@ -27,14 +27,14 @@ repos:
     hooks:
       - id: check-tool-versions-lockstep
         name: Dev tool version lockstep (pyproject / pre-commit / CI)
-        entry: python3 scripts/check_tool_versions.py
-        language: system
+        entry: scripts/check_tool_versions.py
+        language: python
         pass_filenames: false
         always_run: true
       - id: check-version-lockstep
         name: Release version lockstep (VERSION.md / pyprojects / package.json)
-        entry: python3 scripts/bump_version.py --check
-        language: system
+        entry: scripts/bump_version.py --check
+        language: python
         pass_filenames: false
         always_run: true
       - id: gui3-precommit

@@ -8,7 +8,7 @@ updates:
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies docker"
+      - "dependencies"
   # Dev/CI tooling (ruff, djlint) pinned in the root [dependency-groups] dev.
   # Kept in lockstep with .pre-commit-config.yaml rev: by scripts/check_tool_versions.py.
   - package-ecosystem: "uv"
@@ -16,7 +16,13 @@ updates:
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies dev-tools"
+      - "dependencies"
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
   # Shared library (taranis-ng-shared). It is a uv workspace member consumed as a
   # path source by all 5 services, so it has no uv.lock of its own. Use the "pip"
   # ecosystem to bump its PEP 621 [project] dependencies directly. Service-side
@@ -26,19 +32,19 @@ updates:
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies pip"
+      - "dependencies"
   - package-ecosystem: "uv"
     directory: "/src/bots"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies uv"
+      - "dependencies"
   - package-ecosystem: "uv"
     directory: "/src/collectors"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies uv"
+      - "dependencies"
     ignore:
       - dependency-name: "slackclient"
   - package-ecosystem: "uv"
@@ -46,34 +52,29 @@ updates:
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies uv"
+      - "dependencies"
   - package-ecosystem: "uv"
     directory: "/src/presenters"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies uv"
+      - "dependencies"
   - package-ecosystem: "uv"
     directory: "/src/publishers"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies uv"
+      - "dependencies"
   - package-ecosystem: "npm"
     directory: "/src/gui"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies npm"
+      - "dependencies"
   - package-ecosystem: "npm"
     directory: "/src/gui-v3"
     schedule:
       interval: "weekly"
     labels:
-      - "dependencies npm"
-  - package-ecosystem: "pre-commit"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies pre-commit"
+      - "dependencies"
+
