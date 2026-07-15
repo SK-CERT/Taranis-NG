@@ -70,10 +70,17 @@ test.describe('Assess report badges', () => {
         const dialog = page.locator('.v-dialog.v-overlay--active')
         await expect(dialog).toBeVisible({ timeout: 5000 })
 
-        // Fill in the form. The title field is the first text input in the form.
-        await dialog.locator('input[type="text"]').first().fill(NEWS_ITEM_TITLE)
-        await dialog.locator('textarea').first().fill('News item for dual-badge testing')
-        await dialog.locator('input[type="text"]').nth(1).fill('E2E')
+        // Fill the form by label (NOT by positional nth).
+        // The AddNewsItemDialog may render a v-select for the manual OSINT source even when
+        // only one source exists — the v-select's internal <input type="text"> is at index 0
+        // in the DOM, so positional .first() targets that hidden input (not the visible Title
+        // text-field), and .nth(1) lands on Title — leaving Source empty. Label-based fills
+        // target the correct v-text-field regardless of v-select presence.
+        // Use exact: true to avoid matching the v-select labelled "Manual OSINT Source"
+        // (which contains the substring "Source" — would be returned before the Source v-text-field).
+        await dialog.getByLabel('Title', { exact: true }).fill(NEWS_ITEM_TITLE)
+        await dialog.getByLabel('Review', { exact: true }).fill('News item for dual-badge testing')
+        await dialog.getByLabel('Source', { exact: true }).fill('E2E')
 
         // Save — the dialog closes after a short success delay.
         await dialog.getByRole('button', { name: 'Save' }).click()

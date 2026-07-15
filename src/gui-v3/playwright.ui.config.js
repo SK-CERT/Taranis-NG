@@ -27,13 +27,20 @@ export default defineConfig({
 
     webServer: [
         {
+            // boot/rebuild the E2E Docker stack. The `url` probe is essential: without it
+            // Playwright could RE-RUN test-setup.sh mid-test, whose `down -v` wipes the postgres
+            // volume while tests run (the recurring 'Could not connect to X node.' cause). With
+            // `url`, Playwright reuses the running stack if isalive responds (see playwright.config.js).
             command: 'bash ../../scripts/test-setup.sh',
+            url: `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1/isalive`,
             reuseExistingServer: true,
             timeout: 120 * 1000
         },
         {
-            command:
-                'VITE_DEV_BACKEND_ORIGIN=http://127.0.0.1:8082 VITE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:8082/api/v1 VITE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:8082/sse npm run dev:remote',
+            // Vite dev server proxies /api and /sse to the E2E core. Use E2E_CORE_PORT
+            // (default 8090, see docker/.env.e2e) so the test stack doesn't collide with a
+            // production stack's published ports. Override via the real env if needed.
+            command: `VITE_DEV_BACKEND_ORIGIN=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'} VITE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1 VITE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/sse npm run dev:remote`,
             url: 'http://localhost:4444',
             reuseExistingServer: false,
             timeout: 120 * 1000

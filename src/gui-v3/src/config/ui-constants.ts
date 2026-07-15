@@ -128,43 +128,50 @@ export const BUTTON_CONFIGS = Object.freeze({
         icon: ICONS.DELETE,
         color: 'error',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Delete'
     },
     EDIT: {
         icon: ICONS.EDIT,
         color: 'primary',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Edit'
     },
     PUBLISH: {
         icon: ICONS.PUBLISH,
         color: 'info',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Publish'
     },
     REMOVE: {
         icon: ICONS.REMOVE,
         color: 'error',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Remove'
     },
     LOCK: {
         icon: ICONS.LOCK,
         color: 'warning',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Lock'
     },
     OPEN: {
         icon: ICONS.OPEN,
         color: 'primary',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Open'
     },
     OPEN_SOURCE: {
         icon: ICONS.OPEN,
         color: 'primary',
         variant: 'text',
-        size: 'small'
+        size: 'small',
+        title: 'Open source'
     }
 })
 

@@ -45,11 +45,32 @@ test.describe('Publish confirmation dialog', () => {
         const presetCheckbox = form.locator('.v-checkbox').first()
         await presetCheckbox.locator('input').check()
 
-        // Click Publish — this triggers handlePublishConfirmation → showPublishConfirmation.
+        // Click Publish — this triggers handlePublishConfirmation. Because the form is dirty
+        // (we just typed the title), it first opens the "Publish Unsaved Product" unsaved-changes
+        // dialog (`showPublishUnsavedConfirmation`), NOT the ConfirmationDialog. We must click
+        // "Save and Publish" to save the product first, which then opens the actual
+        // ConfirmationDialog (showPublishConfirmation) showing the product title, type, and
+        // publisher-preset names — the content this test asserts.
         await dialog.getByRole('button', { name: 'Publish product' }).click()
 
-        // The ConfirmationDialog appears.
-        const confirmDialog = page.locator('.v-dialog.v-overlay--active')
+        // Unsaved-changes dialog ("Publish Unsaved Product") appears ON TOP OF the New Product
+        // dialog. Both are .v-dialog.v-overlay--active — scope to the last (topmost) one.
+        const unsavedDialog = page.locator('.v-dialog.v-overlay--active').last()
+        await expect(unsavedDialog).toBeVisible({ timeout: 5000 })
+        await expect(unsavedDialog).toContainText(/Publish Unsaved Product/i)
+
+        // Click "Save and Publish" → saveAndPublish() saves the product, then opens
+        // showPublishConfirmation (the ConfirmationDialog whose content we assert below).
+        await unsavedDialog.getByRole('button', { name: /Save and Publish/i }).click()
+
+        // The ConfirmationDialog appears ON TOP OF the now-saved New Product dialog (and the
+        // unsaved-changes dialog has just closed). Scope by the unique publish-confirmation
+        // marker so the Cancel-step assertion below tracks THIS dialog specifically rather
+        // than re-evaluating `.last()` (which would resolve to the New Product dialog after
+        // the confirmation closes, false-failing the `toHaveCount(0)` check).
+        const confirmDialog = page.locator('.v-dialog.v-overlay--active').filter({
+            hasText: /Do you really want to publish this product/i
+        })
         await expect(confirmDialog).toBeVisible({ timeout: 5000 })
 
         // The confirmation should contain the product title.
@@ -61,6 +82,7 @@ test.describe('Publish confirmation dialog', () => {
 
         // Cancel — don't actually publish a throwaway product.
         await confirmDialog.getByRole('button', { name: 'Cancel' }).click()
+        // After cancel only the New Product dialog remains; the confirmation overlay is gone.
         await expect(confirmDialog).toHaveCount(0)
     })
 

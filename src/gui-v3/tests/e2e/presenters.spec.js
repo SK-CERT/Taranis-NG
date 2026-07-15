@@ -61,7 +61,11 @@ test.describe('Presenters', () => {
         if (await helpButton.count()) {
             await helpButton.first().click()
             const helpDialog = page.locator('.v-dialog:visible').last()
-            await expect(helpDialog.getByText(/Report Items/i)).toBeVisible()
+            // The help dialog has a "Choose report type" dropdown; the "Report Items" section
+            // only renders AFTER a report type is selected (v-if="selectedReportType"). Just
+            // assert the dialog title appeared — that proves the help button works without
+            // depending on report-type selection.
+            await expect(helpDialog).toContainText(/Template parameters description/i)
         }
     })
 

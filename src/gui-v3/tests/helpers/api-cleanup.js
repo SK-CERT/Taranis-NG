@@ -11,9 +11,9 @@
  * rather than failing the suite on cleanup.
  */
 
-// The core API base. Defaults to the backend the Playwright webServer boots; override
-// with E2E_CORE_API if your setup differs.
-const CORE_API = process.env.E2E_CORE_API || 'http://127.0.0.1:8082/api/v1'
+// The core API base. Defaults to the backend the Playwright webServer boots (E2E_CORE_PORT,
+// default 8090 — see docker/.env.e2e); override with E2E_CORE_API if your setup differs.
+const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1`
 
 async function getToken(request, username = 'admin', password = 'admin') {
     const res = await request.post(`${CORE_API}/auth/login`, { data: { username, password } })

@@ -80,22 +80,36 @@ test.describe('Add Incomplete Reports confirmation', () => {
         // Click the "Add report items" button to open the ReportItemSelector.
         await dialog.getByRole('button', { name: /select/i }).click()
 
-        // Wait for the fullscreen selector to appear.
-        const selector = page.locator('.v-dialog.v-overlay--active')
+        // Wait for the fullscreen selector to appear. It opens ON TOP OF the New Product
+        // dialog (both are .v-dialog.v-overlay--active), so scope to the last (topmost) one
+        // to avoid a strict-mode violation resolving 2 dialogs.
+        const selector = page.locator('.v-dialog.v-overlay--active').last()
         await expect(selector).toBeVisible({ timeout: 5000 })
 
-        // Find and click the seeded in-progress report item card to select it.
-        const reportCard = selector.locator('.card-analyze-stub, [class*="card-analyze"]').filter({ hasText: reportTitle })
-        // If the card is rendered as a stub (unit), or a full card (e2e), try clicking by title text.
-        if ((await reportCard.count()) > 0) {
-            await reportCard.first().click()
-        } else {
-            // Fallback: click anywhere matching the report title in the selector.
-            await selector.getByText(reportTitle).first().click()
-        }
+        // Find and click the seeded in-progress report item's SELECTION CHECKBOX
+        // (NOT the card body — clicking the card opens the report-item detail dialog).
+        // CardAnalyze.vue → BaseCard.vue renders the checkbox as a `v-checkbox` in a
+        // `.checkbox-column` to the LEFT of the card. The card itself has class `.card-item`.
+        // The checkbox is OUTSIDE the card DOM, so we need to grab it via the same parent
+        // `.card-container` that wraps both. Click the `.v-selection-control__input` element
+        // (the actual clickable area of a Vuetify 3 v-checkbox) — clicking the outer `.v-checkbox`
+        // wrapper works, but the input wrapper is the more precise target that Vuetify's
+        // click handler binds to, avoiding interference from the card's click-catch-all.
+        const reportCard = selector.locator('.card-item').filter({ hasText: reportTitle }).first()
+        await expect(reportCard).toBeVisible({ timeout: 10000 })
+        const cardContainer = reportCard.locator('xpath=ancestor::div[contains(@class,"card-container")][1]')
+        const checkboxInput = cardContainer.locator('.v-selection-control__input').first()
+        await checkboxInput.click()
 
-        // Click "Add Items" to confirm the selection.
-        await selector.getByRole('button', { name: /add items/i }).click()
+        // Click "Add item(s)" to confirm the selection. The button label is the i18n key
+        // `common.add_items` = "Add item(s)" (parenthesised, apostrophe, pluralisation),
+        // NOT "Add items" — match loosely with case-insensitive `add item` so both
+        // current and historical label variants match.
+        // Use `force: true` because the ReportItemSelector's fullscreen toolbar has a
+        // `v-field__input` (the SearchField text-input) that Playwright sees as "intercepting
+        // pointer events" from the Add Items button on the same toolbar row. The button is
+        // visible & enabled — force-click bypasses the strict pointer-events check.
+        await selector.getByRole('button', { name: /add item/i }).click({ force: true })
 
         // The "Add Incomplete Reports" confirmation dialog should appear
         // (CASCADE_STATES_ENABLED defaults to on in the E2E environment).

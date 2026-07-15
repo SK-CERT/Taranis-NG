@@ -7,7 +7,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.40.4
+    rev: v1.40.6
     hooks:
       - id: djlint
         files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
@@ -17,6 +17,11 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-yaml
+        # Docker Compose YAMLs use the !override / !reset / !reset tag extensions (e.g.
+        # `ports: !override` to REPLACE rather than APPEND) that PyYAML cannot construct.
+        # Skip them here — they are validated by `docker compose config` (which knows the
+        # custom tags) during `scripts/test-setup.sh` runs and CI.
+        exclude: '^docker/docker-compose.*\.yml$'
       - id: end-of-file-fixer
         exclude: '.*\.(example|svg|yml|j2)$'
       - id: trailing-whitespace
