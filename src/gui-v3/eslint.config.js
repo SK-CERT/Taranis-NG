@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import pluginVueI18n from '@intlify/eslint-plugin-vue-i18n'
+import eslintConfigPrettier from 'eslint-config-prettier'
 import tsParser from '@typescript-eslint/parser'
 import vueParser from 'vue-eslint-parser'
 
@@ -163,5 +164,11 @@ export default [
     },
     {
         ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'playwright-report/**', 'test-results/**', '*.min.js']
-    }
+    },
+    // Prettier owns formatting (self-closing tags, indentation, attribute layout,
+    // quotes, etc.); ESLint owns logic (no-unused-vars, no-mutating-props,
+    // vue-i18n/no-missing-keys, ...). config-prettier disables the formatting-side
+    // ESLint rules so the two tools never fight. It MUST be the last entry: it only
+    // turns rules off, so anything earlier in the array can still set logic rules.
+    eslintConfigPrettier
 ]

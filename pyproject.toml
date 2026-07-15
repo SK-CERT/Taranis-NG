@@ -48,7 +48,7 @@ classifiers = [
 # Lockstep is enforced by scripts/check_tool_versions.py (run as a pre-commit hook).
 [dependency-groups]
 dev = [
-    "djlint==1.40.4",
+    "djlint==1.40.6",
     "ruff==0.15.21",
 ]
 
