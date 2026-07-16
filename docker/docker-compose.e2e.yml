@@ -1,18 +1,41 @@
+# E2E test overlay.
+#
+# Publishes each backend service to a distinct 127.0.0.1 host port so Playwright
+# (and the Vite dev server / api helpers) can reach them. Ports are parameterized
+# via E2E_* vars (see docker/.env.e2e) so a test stack can run side-by-side with
+# a production stack: the defaults here deliberately avoid production's published
+# ports (traefik 8080/4443, ${PRESENTER_PORT}=5002, postgres/redis which are not
+# host-published). `traefik.enable: "false"` on core keeps the E2E core off the
+# production Traefik router; traefik itself is neither started by test-setup.sh
+# nor needed (Playwright hits core directly on E2E_CORE_PORT).
+#
+# IMPORTANT: presenters' port list is RESET here (the bare `!reset` tag clears the
+# base compose's `127.0.0.1:${PRESENTER_PORT}:80` binding) and replaced with the
+# E2E port. Without the reset, the E2E stack would publish BOTH 5002 (production)
+# and 5092 (E2E), colliding with any concurrently-running production stack.
+# All bindings are loopback-only.
 services:
   core:
     labels:
       traefik.enable: "false"
-    ports:
-      - "127.0.0.1:8082:80"
+    ports: !override
+      - "127.0.0.1:${E2E_CORE_PORT:-8090}:80"
 
   collectors:
-    ports:
-      - "127.0.0.1:5001:80"
+    ports: !override
+      - "127.0.0.1:${E2E_COLLECTORS_PORT:-5091}:80"
 
   presenters:
-    ports:
-      - "127.0.0.1:5002:80"
+    ports: !override
+      - "127.0.0.1:${E2E_PRESENTERS_PORT:-5092}:80"
 
   publishers:
-    ports:
-      - "127.0.0.1:5003:80"
+    ports: !override
+      - "127.0.0.1:${E2E_PUBLISHERS_PORT:-5093}:80"
+
+  # Traefik runs in production but is unnecessary for E2E (Playwright talks to core
+  # directly). Disable it so it can't bind 8080/4443/8081 and clash with a production
+  # stack, and so `up -d` doesn't start it.
+  traefik:
+    profiles:
+      - never

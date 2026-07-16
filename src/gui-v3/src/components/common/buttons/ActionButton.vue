@@ -39,6 +39,7 @@
         icon?: string
         color?: string
         variant?: ButtonVariant
+        title?: string
     }
 
     const props = defineProps({
@@ -114,6 +115,11 @@
     const icon = props.icon || config.icon || ICONS.HELP
     const color = props.color || config.color || 'primary'
     const variant = ((props.variant as ButtonVariant | null) || config.variant || 'text') as ButtonVariant
+    // Title: explicit prop wins, otherwise the action config's title (e.g. 'Delete'), so callers
+    // that render <ActionButton action="delete" /> without :title still get a correct tooltip
+    // (CardCompact omits it; its button would otherwise have title="", breaking button[title=]
+    // selectors and leaving the tooltip empty).
+    const title = props.title || config.title || ''
     const disabled = props.action === 'lock' ? true : props.disabled
 
     const handleClick = (event: MouseEvent): void => {

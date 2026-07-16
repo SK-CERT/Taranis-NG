@@ -782,7 +782,9 @@
             "dislike_item": "Nepáči sa mi",
             "delete_item": "Zmazať novinku",
             "remove_item": "Odstrániť novinku",
-            "show_reports": "Zobraziť analýzy obsahujúce túto položku"
+            "show_reports": "Zobraziť analýzy obsahujúce túto položku",
+            "liked_by_others": "Páči sa kolegovi",
+            "disliked_by_others": "Nepáči sa kolegovi"
         },
         "shortcuts": {
             "enter_filter_mode": "Zapnúť mód klávesových skratiek 'filter'. Ukončite klávesou Escape.",
@@ -799,7 +801,8 @@
             "error_removing": "Chyba pri odoberaní analýzy z agregátu"
         },
         "select_all_success": "{count} položiek vybraných",
-        "groups": "SKUPINY"
+        "groups": "SKUPINY",
+        "show_new_items": "Zobraziť nové položky ({count})"
     },
     "publish": {
         "tooltip": {

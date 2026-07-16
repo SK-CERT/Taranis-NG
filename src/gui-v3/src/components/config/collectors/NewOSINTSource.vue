@@ -234,6 +234,21 @@
         [key: string]: unknown
     }
 
+    // Exactly the editable fields the backend's NewOSINTSourceSchema accepts.
+    // The OSINTSource db-model __init__ takes ONLY these kwargs; any extra
+    // runtime field (last_attempted, last_collected, state, modified, nested
+    // collector, ...) sent back in the PUT payload crashes the constructor with
+    // `__init__() got an unexpected keyword argument '<field>'`.
+    const EDITABLE_KEYS: ReadonlyArray<keyof OSINTSourceItem> = [
+        'id',
+        'name',
+        'description',
+        'collector_id',
+        'parameter_values',
+        'word_lists',
+        'osint_source_groups'
+    ]
+
     type FormValidationResult = {
         valid: boolean
     }
@@ -442,8 +457,16 @@
 
         saving.value = true
         try {
+            // Minimal payload: only the editable fields the backend's
+            // NewOSINTSourceSchema + OSINTSource.__init__ accept. Do NOT spread
+            // localItem wholesale — it (and the source API record for edits)
+            // may carry runtime fields (last_attempted, last_collected,
+            // state, modified, nested collector, ...) that crash
+            // OSINTSource(**data) on the server.
             const payload: OSINTSourceItem = {
-                ...localItem.value,
+                id: localItem.value.id,
+                name: localItem.value.name,
+                description: localItem.value.description,
                 collector_id: selectedCollector.value.id,
                 parameter_values:
                     selectedCollector.value.parameters?.map((param, index) => ({
@@ -505,7 +528,18 @@
         () => props.editItem,
         (newItem) => {
             if (newItem && Object.keys(newItem).length > 0) {
-                localItem.value = { ...defaultItem, ...newItem }
+                // Whitelist editable keys: the API record also carries runtime
+                // fields (last_attempted, last_collected, state, modified, nested
+                // collector, ...) that the backend's NewOSINTSourceSchema would
+                // forward to OSINTSource(**data), crashing the model __init__.
+                // Keep only the keys the db model accepts.
+                const sanitized: Partial<OSINTSourceItem> = { ...defaultItem }
+                for (const key of EDITABLE_KEYS) {
+                    if (newItem[key] !== undefined) {
+                        sanitized[key] = newItem[key] as OSINTSourceItem[typeof key]
+                    }
+                }
+                localItem.value = sanitized as OSINTSourceItem
                 selectedWordListIds.value = extractIds(newItem.word_lists)
                 selectedOSINTSourceGroupIds.value = extractIds(newItem.osint_source_groups)
                 syncCollectorSelection(localItem.value.collector_id)

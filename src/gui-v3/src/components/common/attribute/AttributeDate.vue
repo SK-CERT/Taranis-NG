@@ -95,13 +95,9 @@
 
     const { t } = useI18n()
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
 
-    onMounted(() => {
-        if (props.values?.length === 0 && canModify.value && !props.readOnly) {
-            add()
-        }
-    })
+    onMounted(addInitialValues)
 
     const formatDate = (dateStr: string | null | undefined): string => {
         if (!dateStr) return ''

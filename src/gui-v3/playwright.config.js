@@ -54,18 +54,24 @@ export default defineConfig({
         {
             name: 'chromium',
             dependencies: ['setup'],
+            // The seed spec (00-config-seed) is the setup project's job; it must NOT re-run
+            // here — a second run would hit the UniqueViolation (nodes already created) and
+            // needlessly purge+recreate seeded data the other specs rely on.
+            testIgnore: /00-config-seed\.spec\.js/,
             use: { ...devices['Desktop Chrome'] }
         },
 
         {
             name: 'firefox',
             dependencies: ['setup'],
+            testIgnore: /00-config-seed\.spec\.js/,
             use: { ...devices['Desktop Firefox'] }
         },
 
         {
             name: 'webkit',
             dependencies: ['setup'],
+            testIgnore: /00-config-seed\.spec\.js/,
             use: { ...devices['Desktop Safari'] }
         }
 
@@ -83,13 +89,24 @@ export default defineConfig({
     /* Start backend services and frontend dev server before tests */
     webServer: [
         {
+            // boot/rebuild the E2E Docker stack. The `url` probe is essential: without it
+            // Playwright can't tell the stack is already up, so when the earlier bash process
+            // that ran test-setup.sh has exited it RE-RUNS test-setup.sh. test-setup.sh starts
+            // with `down -v`, which would wipe the postgres volume WHILE tests are running —
+            // that mid-test teardown was the real cause of the recurring 'Could not connect to
+            // X node.' failures (the POST hit a half-rebuilt backend → 400/500). With `url`,                                                                                                                                // Playwright checks isalive: if 200, it reuses the running stack and never re-runs setup;
+            // only if isalive is unreachable does it run setup. reuseExistingServer:true then
+            // behaves as documented across repeated VS Code 'Run Tests' clicks.
             command: 'bash ../../scripts/test-setup.sh',
+            url: `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1/isalive`,
             reuseExistingServer: true,
             timeout: 120 * 1000
         },
         {
-            command:
-                'VITE_DEV_BACKEND_ORIGIN=http://127.0.0.1:8082 VITE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:8082/api/v1 VITE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:8082/sse npm run dev:remote',
+            // Vite dev server proxies /api and /sse to the E2E core. Use E2E_CORE_PORT
+            // (default 8090, see docker/.env.e2e) so the test stack doesn't collide with a
+            // production stack's published ports. Override via the real env if needed.
+            command: `VITE_DEV_BACKEND_ORIGIN=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'} VITE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1 VITE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/sse npm run dev:remote`,
             url: 'http://localhost:4444',
             reuseExistingServer: false,
             timeout: 120 * 1000

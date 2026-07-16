@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 
 import AttributeString from '@/components/common/attribute/AttributeString.vue'
@@ -612,5 +613,62 @@ describe('AttributeAttachment', () => {
         const wrapper = mountAttr(AttributeAttachment, baseProps(attachmentValue))
         // Attachment edit mode shows a value-layout stub with file info / download button
         expect(wrapper.find('.value-layout-stub').exists()).toBe(true)
+    })
+})
+
+// ── min_occurrence seeding (shared useAttributes hook) ────────────────────────
+
+describe('min_occurrence seeding on mount', () => {
+    beforeEach(() => setActivePinia(createPinia()))
+
+    // Every editable attribute type seeds the rows its attribute group requires. Types are
+    // listed explicitly (rather than derived) so a new type without the hook is a failure here.
+    const seedingTypes = [
+        ['AttributeString', AttributeString],
+        ['AttributeText', AttributeText],
+        ['AttributeEnum', AttributeEnum],
+        ['AttributeRadio', AttributeRadio],
+        ['AttributeBoolean', AttributeBoolean],
+        ['AttributeNumber', AttributeNumber],
+        ['AttributeDate', AttributeDate],
+        ['AttributeTime', AttributeTime],
+        ['AttributeDateTime', AttributeDateTime],
+        ['AttributeRichText', AttributeRichText],
+        ['AttributeTLP', AttributeTLP],
+        ['AttributeCVE', AttributeCVE],
+        ['AttributeCWE', AttributeCWE],
+        ['AttributeCPE', AttributeCPE],
+        ['AttributeCVSS', AttributeCVSS]
+    ]
+
+    const emptyProps = (minOccurrence) => ({
+        ...baseProps(),
+        values: [],
+        attributeGroup: makeAttributeGroup({ min_occurrence: minOccurrence, max_occurrence: 10 })
+    })
+
+    it.each(seedingTypes)('%s seeds one value per min_occurrence', async (_name, component) => {
+        const props = emptyProps(2)
+        mountAttr(component, props)
+        await flushPromises()
+        expect(props.values).toHaveLength(2)
+    })
+
+    it.each(seedingTypes)('%s seeds nothing when min_occurrence is 0', async (_name, component) => {
+        const props = emptyProps(0)
+        mountAttr(component, props)
+        await flushPromises()
+        expect(props.values).toHaveLength(0)
+    })
+
+    it.each(seedingTypes)('%s seeds nothing for a label-only attribute (max_occurrence 0)', async (_name, component) => {
+        const props = {
+            ...baseProps(),
+            values: [],
+            attributeGroup: makeAttributeGroup({ min_occurrence: 0, max_occurrence: 0 })
+        }
+        mountAttr(component, props)
+        await flushPromises()
+        expect(props.values).toHaveLength(0)
     })
 })

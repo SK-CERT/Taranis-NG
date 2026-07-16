@@ -782,7 +782,9 @@
             "dislike_item": "Dislike news item",
             "delete_item": "Delete news item",
             "remove_item": "Remove news item",
-            "show_reports": "Show reports containing this item"
+            "show_reports": "Show reports containing this item",
+            "liked_by_others": "Liked by a colleague",
+            "disliked_by_others": "Disliked by a colleague"
         },
         "shortcuts": {
             "enter_filter_mode": "Entered shortcut mode \"filter\". Exit with Escape.",
@@ -799,7 +801,8 @@
             "error_removing": "Error removing report from aggregate"
         },
         "select_all_success": "Selected {count} news item(s)",
-        "groups": "GROUPS"
+        "groups": "GROUPS",
+        "show_new_items": "Show new items ({count})"
     },
     "publish": {
         "tooltip": {

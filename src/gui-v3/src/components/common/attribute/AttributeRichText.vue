@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+    import { onMounted } from 'vue'
     import Editor from 'primevue/editor'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
@@ -78,7 +79,7 @@
         }
     )
 
-    const { canModify, addButtonVisible, add, del, onBlur } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, onBlur } = useAttributes(props)
 
     // Basic HTML sanitization - removes potentially dangerous tags/attributes
     const sanitizeHtml = (html: string | null | undefined): string => {
@@ -177,6 +178,8 @@
         const text = html.replace(/<[^>]*>/g, '').trim()
         return text.split(/\s+/).filter((w) => w.length > 0).length
     }
+
+    onMounted(addInitialValues)
 </script>
 
 <style scoped>

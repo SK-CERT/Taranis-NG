@@ -83,6 +83,15 @@ type DataUpdatePayload = {
 }
 
 /**
+ * An attribute with max_occurrence 0 can hold no values at all: it is a label-only
+ * field (a caption/separator in the report form), so it gets no inputs and no add
+ * button. A missing max_occurrence means "unbounded", not zero.
+ */
+export function isLabelOnly(attributeGroup?: AttributeGroup | null): boolean {
+    return (attributeGroup?.max_occurrence ?? Infinity) === 0
+}
+
+/**
  * Composable for shared attribute editing logic.
  * Handles add/delete operations, locking, and API synchronization.
  */
@@ -100,7 +109,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
     })
 
     const addButtonVisible = computed(() => {
-        return props.values.length < (props.attributeGroup?.max_occurrence || Infinity) && !props.readOnly && canModify.value
+        return props.values.length < (props.attributeGroup?.max_occurrence ?? Infinity) && !props.readOnly && canModify.value
     })
 
     const delButtonVisible = computed(() => {
@@ -109,6 +118,10 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
     })
 
     const add = async () => {
+        if (isLabelOnly(props.attributeGroup)) {
+            return
+        }
+
         if (props.edit === true) {
             try {
                 const data = {
@@ -144,6 +157,31 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
         props.values.forEach((val, idx) => {
             val.index = idx
         })
+    }
+
+    /**
+     * Seed empty values until the attribute holds its min_occurrence, so every required
+     * row is ready to type into. min_occurrence 0 means no value is required: such an
+     * attribute starts empty (with only the add button) and can be emptied again via the
+     * delete button, which is why nothing may be seeded for it — in edit mode `add()`
+     * persists the value server-side and would resurrect what the user just deleted.
+     */
+    const addInitialValues = async () => {
+        if (props.readOnly || !canModify.value) {
+            return
+        }
+
+        const required = props.attributeGroup?.min_occurrence ?? 0
+        // add() appends one value, so re-read the length each round rather than
+        // firing all the (awaited, API-backed) adds up front.
+        while (props.values.length < required) {
+            const before = props.values.length
+            await add()
+            if (props.values.length === before) {
+                // add() failed (e.g. the API rejected it); stop instead of looping forever.
+                break
+            }
+        }
     }
 
     const del = async (index: number) => {
@@ -470,6 +508,7 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
         addButtonVisible,
         delButtonVisible,
         add,
+        addInitialValues,
         del,
         getLockedStyle,
         onFocus,

@@ -141,14 +141,9 @@
         }
     )
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
 
-    // Auto-add first empty entry so the text field is always visible
-    onMounted(() => {
-        if (props.values?.length === 0 && canModify.value && !props.readOnly) {
-            add()
-        }
-    })
+    onMounted(addInitialValues)
 
     const NA_COLOR = SEVERITY_COLORS.na
 

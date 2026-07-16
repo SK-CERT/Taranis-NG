@@ -3,30 +3,58 @@
         fluid
         class="pa-2"
     >
+        <!-- Scrolling back up to the top brings in whatever was collected in the meantime. -->
+        <div v-intersect="onTopIntersect" />
+
+        <!-- Items collected while the user is reading are held back, so they cannot push the
+             list around. The pill floats over the first card: giving it layout space of its
+             own would shift the cards down the moment it appeared. -->
+        <div class="new-items-banner">
+            <v-btn
+                v-if="pendingNewItems.length > 0"
+                class="new-items-banner__button"
+                size="small"
+                color="primary"
+                variant="flat"
+                @click="showPendingNewItems"
+            >
+                <v-icon start>
+                    {{ ICONS.ARROW_UP }}
+                </v-icon>
+                {{ t('assess.show_new_items', { count: pendingNewItems.length }) }}
+            </v-btn>
+        </div>
+
         <!-- News Items Cards -->
-        <TransitionGroup
-            name="card-list"
-            tag="div"
-            class="w-100"
+        <div
+            ref="listRef"
+            class="card-list"
         >
-            <component
-                :is="currentCard"
-                v-for="news_item in news_items_data"
-                :key="news_item.id"
-                :card="news_item"
-                :analyze-selector="analyze_selector"
-                :data_set="data_set"
-                :multi-select-active="multiSelectActive"
-                :preselected="isPreselected(news_item.id)"
-                :hide-reviews="filter.hide_reviews"
-                :hide-source-links="filter.hide_source_links"
-                :highlight-wordlist="filter.highlight_wordlist"
-                @show-detail="showDetail"
-                @show-reports-for-item="showReportsForItem"
-                @update-item="updateItem"
-                @delete-item="handleDelete"
-            />
-        </TransitionGroup>
+            <TransitionGroup
+                name="card-list"
+                :move-class="moveClass"
+                tag="div"
+                class="w-100"
+            >
+                <component
+                    :is="currentCard"
+                    v-for="news_item in news_items_data"
+                    :key="news_item.id"
+                    :card="news_item"
+                    :analyze-selector="analyze_selector"
+                    :data_set="data_set"
+                    :multi-select-active="multiSelectActive"
+                    :preselected="isPreselected(news_item.id)"
+                    :hide-reviews="filter.hide_reviews"
+                    :hide-source-links="filter.hide_source_links"
+                    :highlight-wordlist="filter.highlight_wordlist"
+                    @show-detail="showDetail"
+                    @show-reports-for-item="showReportsForItem"
+                    @update-item="updateItem"
+                    @delete-item="handleDelete"
+                />
+            </TransitionGroup>
+        </div>
 
         <!-- Infinite Scroll Trigger -->
         <div
@@ -115,7 +143,7 @@
 
 <script setup lang="ts">
     import type { AxiosError } from 'axios'
-    import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+    import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
     import { ICONS } from '@/config/ui-constants'
@@ -135,6 +163,11 @@
         description?: string
         comments?: string
         [key: string]: unknown
+    }
+
+    type ListState = {
+        total_count: number
+        items: unknown[]
     }
 
     type DetailActionPayload = {
@@ -182,17 +215,54 @@
     const assessStore = useAssessStore()
 
     const news_items_data = ref<NewsItem[]>([])
-    const loading = ref(false)
+
+    // Items the collector produced since the user last looked at the top of the list. They are
+    // deliberately NOT rendered: the feed is sorted DATE_DESC, so injecting them would push
+    // every card the user is reading down the viewport. They come in when the user scrolls
+    // back to the top, or clicks the pill - so the rendered list stays a stable window.
+    const pendingNewItems = ref<NewsItem[]>([])
+
+    // Empty means the shared .card-list-move FLIP animation (BaseCard.vue), which slides a card
+    // from where it was to where it now is - the gap closing when an item leaves the list. It is
+    // swapped for a no-op class while held-back items are prepended; see mergePendingNewItems().
+    const NO_MOVE_CLASS = 'card-list-no-move'
+    const moveClass = ref('')
+
+    // Where our window starts in the server's list. Everything held back sits above it.
+    const windowOffset = computed(() => pendingNewItems.value.length)
+    const loadedCount = computed(() => windowOffset.value + news_items_data.value.length)
+
+    const total_count = ref(0)
     const news_items_data_loaded = ref(false)
     const detailDialog = ref(false)
     const selectedItem = ref<NewsItem | null>(null)
     const detailActionPending = ref(false)
+    const listRef = ref<HTMLElement | null>(null)
     const reportsListDialogRef = ref<any>(null)
     const reportItemModalRef = ref<any>(null)
     const current_group_id = ref('')
     const detailActionRequestId = ref(0)
     const lastIntersectTime = ref(0)
     const INTERSECT_DEBOUNCE_MS = 500
+    const PAGE_SIZE = 20
+
+    // How many times a refresh may ask for a wider page to reach past freshly collected items.
+    // Each attempt at least doubles the reach, so this covers a very large collector batch.
+    const REFRESH_WIDEN_ATTEMPTS = 4
+
+    // Loads that replace the list under the user (item actions, server events) run silently:
+    // toggling the spinners would change the page height and move the scroll position.
+    const visibleLoads = ref(0)
+    const activeLoads = ref(0)
+    const loadSequence = ref(0)
+    const loading = computed(() => visibleLoads.value > 0)
+
+    // The server echoes an SSE event back for our own updates, and fires one per collector
+    // run. Coalesce those refreshes, and skip the echo of a refresh we just did ourselves.
+    const SSE_REFRESH_COALESCE_MS = 400
+    const SELF_REFRESH_ECHO_MS = 1000
+    let sseRefreshTimer: ReturnType<typeof setTimeout> | undefined
+    let lastSelfRefresh = 0
     const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
@@ -236,14 +306,14 @@
             isIntersecting = entries.isIntersecting === true
         }
 
-        const totalCount = assessStore.getNewsItems.total_count || 0
-
-        if (isIntersecting && news_items_data_loaded.value && !loading.value && news_items_data.value.length < totalCount) {
+        // Gate on activeLoads, not on the spinner: appending on top of an in-flight reload
+        // mixes two different pages of the same list together.
+        if (isIntersecting && news_items_data_loaded.value && activeLoads.value === 0 && loadedCount.value < total_count.value) {
             // Debounce: only trigger if enough time has passed since last trigger
             const now = Date.now()
             if (now - lastIntersectTime.value >= INTERSECT_DEBOUNCE_MS) {
                 lastIntersectTime.value = now
-                updateData(true, false)
+                loadData('append')
             }
         }
     }
@@ -431,7 +501,7 @@
             }
 
             // Reload current view
-            await updateData(false, true)
+            await refreshData()
 
             // Ignore stale completions from older requests.
             if (requestId !== detailActionRequestId.value) {
@@ -489,7 +559,7 @@
             // Close dialog and reload
             detailDialog.value = false
             selectedItem.value = null
-            await updateData(false, true)
+            await refreshData()
 
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -588,7 +658,7 @@
             }
 
             // Reload current view
-            await updateData(false, true)
+            await refreshData()
 
             window.dispatchEvent(
                 new CustomEvent('notification', {
@@ -620,7 +690,7 @@
     const handleDelete = async (): Promise<void> => {
         // Reload current view after successful deletion
         // The animation will trigger when the deleted item is missing from the new data
-        await updateData(false, true)
+        await refreshData()
     }
 
     const updateFilter = (newFilter: Partial<FilterState>): void => {
@@ -629,7 +699,24 @@
     }
 
     const handleNewsItemsUpdated = (): void => {
-        updateData(false, true)
+        // Coalesce bursts (a collector run emits one event per batch) into a single reload.
+        // Deliberately not a debounce: a steady stream of events would keep pushing the
+        // timer back and the list would never refresh at all.
+        if (sseRefreshTimer) {
+            return
+        }
+
+        sseRefreshTimer = setTimeout(() => {
+            sseRefreshTimer = undefined
+
+            // The server echoes an SSE event back to us for our own updates, which we have
+            // already reloaded for - refetching would be a second full reload per click.
+            if (Date.now() - lastSelfRefresh < SELF_REFRESH_ECHO_MS) {
+                return
+            }
+
+            refreshData()
+        }, SSE_REFRESH_COALESCE_MS)
     }
 
     const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
@@ -644,26 +731,124 @@
         }
     }
 
-    const updateData = async (append = false, reload_all = false): Promise<void> => {
-        loading.value = true
-        news_items_data_loaded.value = false
+    const getScroller = (): HTMLElement | null => {
+        let el = listRef.value?.parentElement ?? null
+        while (el) {
+            if (/(auto|scroll)/.test(window.getComputedStyle(el).overflowY)) {
+                return el
+            }
+            el = el.parentElement
+        }
+        return null
+    }
 
-        const totalCount = assessStore.getNewsItems.total_count || 0
-        if (append && totalCount > 0 && news_items_data.value.length >= totalCount) {
-            loading.value = false
-            news_items_data_loaded.value = true
-            return
+    const sameId = (a: NewsItem, b: NewsItem): boolean => String(a.id) === String(b.id)
+
+    /** Index of the first card in `page` that we are currently rendering, or -1. */
+    const windowStartIn = (page: NewsItem[]): number =>
+        page.findIndex((item) => news_items_data.value.some((current) => sameId(current, item)))
+
+    /**
+     * A refresh can only ask for "the newest N", because that is all the API offers. Items
+     * collected in the meantime sit above the window and push its tail out of that page - and the
+     * cards past the end would then keep their stale state, so the star the user just clicked
+     * would not change colour. Ask for a wider page until it reaches the end of the window.
+     */
+    const widenUntilWindowIsCovered = async (
+        page: ListState,
+        limit: number,
+        fetchPage: (limit: number) => Promise<ListState | null>
+    ): Promise<ListState | null> => {
+        let current: ListState | null = page
+        let currentLimit = limit
+
+        for (let attempt = 0; attempt < REFRESH_WIDEN_ATTEMPTS; attempt++) {
+            const items = (current?.items ?? []) as NewsItem[]
+            const rendered = news_items_data.value
+
+            // The server ran out of items (or capped the page): a wider ask cannot return more.
+            if (items.length < currentLimit) {
+                return current
+            }
+
+            const start = windowStartIn(items)
+            if (start >= 0 && items.length - start >= rendered.length) {
+                return current
+            }
+
+            // Widen by exactly how far the window slipped when we can see it; when the page does
+            // not reach the window at all, we cannot tell how many arrived, so double and look again.
+            const widened = start >= 0 ? start + rendered.length : currentLimit * 2
+            if (widened <= currentLimit) {
+                return current
+            }
+
+            currentLimit = widened
+            current = await fetchPage(currentLimit)
+            if (!current) {
+                return null
+            }
         }
 
-        let offset = 0
-        let limit = 20
+        return current
+    }
 
-        if (reload_all) {
-            if (news_items_data.value.length > limit) {
-                limit = news_items_data.value.length
+    /**
+     * Fold a fresh server page (always fetched from offset 0, newest first) into the rendered
+     * window without moving it: everything above the window is held back, everything inside it
+     * is refreshed in place. Returns the new window.
+     */
+    const mergeRefreshedPage = (page: NewsItem[]): NewsItem[] => {
+        const rendered = news_items_data.value
+        if (rendered.length === 0) {
+            pendingNewItems.value = []
+            return page
+        }
+
+        // Anchor on the first rendered card that still exists on the server. Anything the page
+        // lists above it is newer than everything we render, i.e. freshly collected.
+        const anchorIndex = windowStartIn(page)
+        if (anchorIndex < 0) {
+            // Nothing we render came back: the window has drifted out of the fetched range.
+            // Leave the screen alone rather than guess - a filter or route change will reset it.
+            return rendered
+        }
+
+        pendingNewItems.value = page.slice(0, anchorIndex)
+        const refreshed = page.slice(anchorIndex)
+
+        // The page can stop short of our window (the API caps limit at 200, and held-back items
+        // eat into the range). Keep the cards past that point instead of dropping them, which
+        // would shorten the list and clamp the scroller.
+        const last = refreshed[refreshed.length - 1]
+        const cut = last ? rendered.findIndex((current) => sameId(current, last)) : -1
+        return cut < 0 ? refreshed : refreshed.concat(rendered.slice(cut + 1))
+    }
+
+    /**
+     * reset:   start a fresh window at the top (filter/route change).
+     * reload:  re-read the whole window from the top, showing anything new (explicit refresh).
+     * refresh: re-read it silently, holding new items back (card actions, server events).
+     * append:  next page of older items (infinite scroll).
+     */
+    type LoadMode = 'reset' | 'reload' | 'refresh' | 'append'
+
+    const loadData = async (mode: LoadMode): Promise<void> => {
+        const silent = mode === 'refresh'
+
+        let offset = 0
+        let limit = PAGE_SIZE
+
+        if (mode === 'append') {
+            offset = loadedCount.value
+            if (total_count.value > 0 && offset >= total_count.value) {
+                news_items_data_loaded.value = true
+                return
             }
-        } else if (append) {
-            offset = news_items_data.value.length
+        } else if (mode === 'reload' || mode === 'refresh') {
+            // Cover the held-back items as well, or the page would stop short of our window.
+            limit = Math.max(limit, loadedCount.value)
+            lastSelfRefresh = Date.now()
         }
 
         // Get group from route or store
@@ -678,34 +863,133 @@
         }
         current_group_id.value = group
 
-        try {
+        const requestId = ++loadSequence.value
+        activeLoads.value++
+        if (!silent) {
+            visibleLoads.value++
+            news_items_data_loaded.value = false
+        }
+
+        const fetchPage = async (pageLimit: number): Promise<ListState | null> => {
             const response = await assessStore.loadNewsItemsByGroup({
                 group_id: group,
                 data: {
                     filter: filter.value,
                     offset: offset,
-                    limit: limit
+                    limit: pageLimit
                 }
             })
 
-            if (response) {
-                const newItems = Array.isArray(assessStore.getNewsItems.items) ? (assessStore.getNewsItems.items as NewsItem[]) : []
-                if (append) {
-                    news_items_data.value = news_items_data.value.concat(newItems)
-                } else {
-                    // Directly assign new data - Vue will detect removed items and animate them
-                    news_items_data.value = newItems
-                }
+            // Read the page we asked for off the response: the store holds a single shared
+            // list that a concurrent load (or another component) may already have replaced.
+            //
+            // And drop it if a newer load has superseded this one - applying it now would
+            // resurrect a stale page and, if it is shorter than what is on screen, yank the
+            // scroll position.
+            return requestId === loadSequence.value ? (response?.data ?? null) : null
+        }
 
-                emit('new-data-loaded', assessStore.getNewsItems.total_count)
-                emit('update-showing-count', news_items_data.value.length)
-                emit('card-items-reindex')
+        try {
+            let page = await fetchPage(limit)
+            if (!page) {
+                return
             }
+
+            if (mode === 'refresh') {
+                page = await widenUntilWindowIsCovered(page, limit, fetchPage)
+                if (!page) {
+                    return
+                }
+            }
+
+            const items = Array.isArray(page.items) ? (page.items as NewsItem[]) : []
+            total_count.value = page.total_count || 0
+
+            let nextItems: NewsItem[]
+            if (mode === 'append') {
+                // Items collected since the last refresh shift every offset down, so a page can
+                // hand back cards we already show. Dropping them keeps the keys unique.
+                const rendered = news_items_data.value
+                nextItems = rendered.concat(items.filter((item) => !rendered.some((current) => sameId(current, item))))
+            } else if (mode === 'refresh') {
+                nextItems = mergeRefreshedPage(items)
+            } else {
+                // reset/reload both start the window at the top, so nothing is held back.
+                pendingNewItems.value = []
+                nextItems = items
+            }
+
+            // Directly assign new data - Vue will detect removed items and animate them
+            news_items_data.value = nextItems
+
+            emit('new-data-loaded', total_count.value)
+            emit('update-showing-count', news_items_data.value.length)
+            emit('card-items-reindex')
         } catch (error) {
             console.error('Error loading news items:', error)
         } finally {
-            loading.value = false
+            activeLoads.value--
+            if (!silent) {
+                visibleLoads.value--
+            }
             news_items_data_loaded.value = true
+        }
+    }
+
+    /** Silent reload after a card action or a server event: the window must not move. */
+    const refreshData = (): Promise<void> => loadData('refresh')
+
+    /** Kept for the toolbar and the analyze selector, which drive this component by ref. */
+    const updateData = (append = false, reload_all = false): Promise<void> => loadData(append ? 'append' : reload_all ? 'reload' : 'reset')
+
+    /**
+     * Put the held-back items on screen without moving what the user is reading: the cards keep
+     * their place and the new ones simply add scrollable space above, to scroll up into.
+     */
+    const mergePendingNewItems = async (): Promise<void> => {
+        if (pendingNewItems.value.length === 0) {
+            return
+        }
+
+        const scroller = getScroller()
+        const scrollBefore = scroller?.scrollTop ?? 0
+        const heightBefore = scroller?.scrollHeight ?? 0
+
+        // Prepending pushes every card down. A FLIP move would animate that as one long slide of
+        // the whole list, and it measures positions before the scroll correction below, so the two
+        // would each apply the same offset. Nothing may move for this one update.
+        moveClass.value = NO_MOVE_CLASS
+        news_items_data.value = pendingNewItems.value.concat(news_items_data.value)
+        pendingNewItems.value = []
+
+        await nextTick()
+        if (scroller) {
+            // Everything we added sits above the viewport, so the growth in scrollHeight is exactly
+            // how far the content moved down, and following it leaves the view untouched.
+            //
+            // Chrome does that by itself (scroll anchoring) - but only off the top of the scroller,
+            // and Safari never does it. So aim at the position rather than adding an offset: adding
+            // one on top of Chrome's would double it and throw the list down the page.
+            const target = scrollBefore + (scroller.scrollHeight - heightBefore)
+            if (Math.abs(scroller.scrollTop - target) > 1) {
+                scroller.scrollTop = target
+            }
+        }
+        moveClass.value = ''
+
+        emit('update-showing-count', news_items_data.value.length)
+        emit('card-items-reindex')
+    }
+
+    /** The pill says "show me what is new", so it also takes the user there. */
+    const showPendingNewItems = async (): Promise<void> => {
+        await mergePendingNewItems()
+        getScroller()?.scrollTo({ top: 0 })
+    }
+
+    const onTopIntersect = (isIntersecting: boolean): void => {
+        if (isIntersecting && news_items_data_loaded.value) {
+            mergePendingNewItems()
         }
     }
 
@@ -724,6 +1008,7 @@
     })
 
     onUnmounted(() => {
+        clearTimeout(sseRefreshTimer)
         window.removeEventListener('news-items-updated', handleNewsItemsUpdated)
     })
 
@@ -732,3 +1017,38 @@
         updateData
     })
 </script>
+
+<style scoped>
+    /* A card leaving the list is positioned absolutely while it fades out (.card-list-leave-active
+       in BaseCard.vue). Give it a containing block: against the viewport its width:100% overshoots
+       the content column by the width of the nav drawer, and the page grows a horizontal scrollbar
+       for as long as the animation runs. */
+    .card-list {
+        position: relative;
+    }
+
+    .new-items-banner {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        justify-content: center;
+        /* No height of its own: the pill floats over the first card, so showing and hiding it
+           cannot push the list up and down. */
+        height: 0;
+    }
+
+    .new-items-banner__button {
+        position: absolute;
+        top: 4px;
+    }
+</style>
+
+<style>
+    /* Vue skips the whole FLIP pass when the move class carries no transition, so the cards do not
+       animate to their new positions - see mergePendingNewItems(). Not scoped: the class lands on
+       the card components' root elements. */
+    .card-list-no-move {
+        transition: none;
+    }
+</style>

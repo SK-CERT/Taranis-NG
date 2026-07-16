@@ -143,7 +143,8 @@
 
     const { t } = useI18n()
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } =
+        useAttributes(props)
 
     // Drag-and-drop reordering state.
     const dragIndex = ref<number | null>(null)
@@ -188,12 +189,7 @@
         dragOverIndex.value = null
     }
 
-    // Always show one (possibly empty) field, even when the attribute starts with no values.
-    onMounted(() => {
-        if (props.values?.length === 0 && canModify.value && !props.readOnly) {
-            add()
-        }
-    })
+    onMounted(addInitialValues)
 </script>
 
 <style scoped>

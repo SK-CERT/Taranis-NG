@@ -632,7 +632,9 @@
             "dislike_item": "To se mi nelíbí",
             "delete_item": "Smazat novinku",
             "remove_item": "Odstranit novinku",
-            "show_reports": "Zobrazit reporty obsahující tuto položku"
+            "show_reports": "Zobrazit reporty obsahující tuto položku",
+            "liked_by_others": "Líbí se kolegovi",
+            "disliked_by_others": "Nelíbí se kolegovi"
         },
         "shortcuts": {
             "enter_filter_mode": "Zapnut mód zkratek 'filtr'. Ukončete klávesou Escape.",
@@ -649,7 +651,8 @@
             "error_removing": "Chyba při odebírání reportu z agregátu"
         },
         "select_all_success": "Vybráno {count} novinek",
-        "groups": "SKUPINY"
+        "groups": "SKUPINY",
+        "show_new_items": "Zobrazit nové položky ({count})"
     },
     "publish": {
         "tooltip": {

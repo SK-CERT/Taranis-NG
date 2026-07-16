@@ -105,7 +105,7 @@
 
     const { t } = useI18n()
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
 
     const radioOptions = computed<RadioOption[]>(() => {
         return (
@@ -130,11 +130,7 @@
         return option
     }
 
-    onMounted(() => {
-        if (props.values?.length === 0 && canModify.value && !props.readOnly) {
-            add()
-        }
-    })
+    onMounted(addInitialValues)
 </script>
 
 <style scoped>

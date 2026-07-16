@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+    import { onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
@@ -91,7 +92,9 @@
 
     const { t } = useI18n()
 
-    const { canModify, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+
+    onMounted(addInitialValues)
 </script>
 
 <style scoped>

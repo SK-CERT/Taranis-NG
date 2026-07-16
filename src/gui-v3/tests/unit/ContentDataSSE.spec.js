@@ -46,7 +46,7 @@ const mockPublishStore = {
     deselect: vi.fn()
 }
 
-const mockGetAllProductTypes = vi.fn()
+const mockGetAllUserProductTypes = vi.fn()
 
 vi.mock('vue-router', () => ({
     useRoute: () => mockRoute
@@ -64,8 +64,8 @@ vi.mock('@/stores/publish', () => ({
     usePublishStore: () => mockPublishStore
 }))
 
-vi.mock('@/api/config', () => ({
-    getAllProductTypes: (...args) => mockGetAllProductTypes(...args)
+vi.mock('@/api/user', () => ({
+    getAllUserProductTypes: (...args) => mockGetAllUserProductTypes(...args)
 }))
 
 const commonStubs = {
@@ -120,7 +120,7 @@ describe('SSE consumer components', () => {
             ]
         }
         mockPublishStore.loadProducts.mockResolvedValue({ data: mockPublishStore.getProducts })
-        mockGetAllProductTypes.mockResolvedValue({
+        mockGetAllUserProductTypes.mockResolvedValue({
             data: {
                 items: [{ id: 20, title: 'Product Type' }]
             }
@@ -128,6 +128,8 @@ describe('SSE consumer components', () => {
     })
 
     it('ContentDataAssess reloads on news-items-updated and stops after unmount', async () => {
+        vi.useFakeTimers()
+
         const wrapper = mountWithPlugins(ContentDataAssess, {
             props: { analyze_selector: false },
             global: {
@@ -135,17 +137,54 @@ describe('SSE consumer components', () => {
             }
         })
 
-        await flushPromises()
-        expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(1)
+        try {
+            await flushPromises()
+            expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(1)
 
-        window.dispatchEvent(new CustomEvent('news-items-updated', { detail: {} }))
-        await flushPromises()
-        expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(2)
+            // SSE refreshes are coalesced behind a short timer, so they need to be waited out.
+            window.dispatchEvent(new CustomEvent('news-items-updated', { detail: {} }))
+            await vi.advanceTimersByTimeAsync(500)
+            await flushPromises()
+            expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(2)
 
-        wrapper.unmount()
-        window.dispatchEvent(new CustomEvent('news-items-updated', { detail: {} }))
-        await flushPromises()
-        expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(2)
+            wrapper.unmount()
+            window.dispatchEvent(new CustomEvent('news-items-updated', { detail: {} }))
+            await vi.advanceTimersByTimeAsync(500)
+            await flushPromises()
+            expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(2)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('ContentDataAssess coalesces a burst of news-items-updated events into one reload', async () => {
+        vi.useFakeTimers()
+
+        const wrapper = mountWithPlugins(ContentDataAssess, {
+            props: { analyze_selector: false },
+            global: {
+                stubs: commonStubs
+            }
+        })
+
+        try {
+            await flushPromises()
+            expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(1)
+
+            // A collector run emits one event per batch; reloading the whole list for each
+            // of them re-renders the cards under the user and moves the scroll position.
+            for (let i = 0; i < 10; i++) {
+                window.dispatchEvent(new CustomEvent('news-items-updated', { detail: {} }))
+                await vi.advanceTimersByTimeAsync(20)
+            }
+            await vi.advanceTimersByTimeAsync(500)
+            await flushPromises()
+
+            expect(mockAssessStore.loadNewsItemsByGroup).toHaveBeenCalledTimes(2)
+        } finally {
+            wrapper.unmount()
+            vi.useRealTimers()
+        }
     })
 
     it('ContentDataAnalyze reloads on report-item-updated and report-items-updated, then stops after unmount', async () => {
@@ -189,13 +228,13 @@ describe('SSE consumer components', () => {
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(1)
-            expect(mockGetAllProductTypes).toHaveBeenCalledTimes(1)
+            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(1)
 
             window.dispatchEvent(new CustomEvent('product-updated', { detail: {} }))
             await flushPromises()
 
             const productReloadCalls = mockPublishStore.loadProducts.mock.calls.length
-            const productTypeReloadCalls = mockGetAllProductTypes.mock.calls.length
+            const productTypeReloadCalls = mockGetAllUserProductTypes.mock.calls.length
 
             expect(productReloadCalls).toBeGreaterThan(1)
             expect(productTypeReloadCalls).toBeGreaterThan(1)
@@ -205,7 +244,7 @@ describe('SSE consumer components', () => {
             await flushPromises()
 
             expect(mockPublishStore.loadProducts).toHaveBeenCalledTimes(productReloadCalls)
-            expect(mockGetAllProductTypes).toHaveBeenCalledTimes(productTypeReloadCalls)
+            expect(mockGetAllUserProductTypes).toHaveBeenCalledTimes(productTypeReloadCalls)
         } finally {
             wrapper?.unmount()
         }
