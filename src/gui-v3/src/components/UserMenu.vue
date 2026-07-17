@@ -7,7 +7,6 @@
                     data-test="user-menu"
                     icon
                     v-bind="props"
-                    color="white"
                 >
                     <v-icon>mdi-shield-account</v-icon>
                 </v-btn>
