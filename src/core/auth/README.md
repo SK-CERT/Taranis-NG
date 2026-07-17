@@ -59,6 +59,12 @@ with, even if the provider config has since changed.
 
 ## SAML 2.0
 
+A SAML provider works in one of two modes: pointed at a **single identity
+provider** (the default, described here), or connected to a whole **federation**
+through a discovery service (see [Federation mode](#federation-mode-discovery-service--wayf)
+below). The single-IdP setup comes first; everything in it about the SP keypair,
+attribute mapping and returning-user identification applies to federation mode too.
+
 Give the identity provider these two URLs (both are shown in the provider
 dialog once the provider has been saved, since they contain its id):
 
@@ -154,6 +160,96 @@ than silently falling back to the NameID.
 AuthnRequests are not signed, single logout is not supported, and IdP-initiated
 SSO is not supported (the RelayState must be one this SP minted when the login
 started).
+
+### Service information in the metadata
+
+A federation registration form (eduID.cz's included) validates the SP metadata
+and requires human-readable service information in it: a **display name**, a
+**description**, an **information URL**, an **organization** and a **technical
+contact**. The provider dialog has optional fields for these under *Service
+information*; each is emitted into the metadata only when set, and the values a
+federation lists in several languages are published for each (the same text).
+The entityID must also be an **`https://` URL** for eduID.cz - and it must stay
+stable, because the IdP registration is keyed on it. It should therefore **not**
+include the login method's ID: moving or recreating the method changes that ID,
+which would force a new registration. The SAML endpoint base
+(`https://<your-host>/api/v1/auth/saml`) is a good choice, which is also what the
+provider dialog suggests.
+
+### Federation mode (discovery service / WAYF)
+
+Instead of one identity provider, a SAML provider can join a whole **federation**
+(eduID.cz, eduGAIN, InCommon, DFN-AAI, ...). Turn on *Connect to a federation
+(discovery service)* in the provider dialog. The user is then sent to the
+federation's **discovery service** - a WAYF, "Where Are You From" - to pick their
+home institution, and the chosen IdP is resolved from the federation's signed
+metadata, so no IdP is registered by hand.
+
+The flow adds a discovery hop in front of the ordinary one:
+
+```
+login  ->  discovery service (user picks an institution)
+       ->  AuthnRequest to the chosen IdP  ->  HTTP-POST response to the ACS
+```
+
+so a third URL joins the two above, likewise shown once the provider is saved:
+
+```
+discovery response:  https://<your-host>/api/v1/auth/saml/<provider_id>/disco
+```
+
+It is published in our metadata as an `<idpdisc:DiscoveryResponse>`, which is how
+the discovery service validates the `return` address we hand it - registering the
+metadata URL is enough. This follows the SAML Identity Provider Discovery Service
+protocol, so it works with any federation's discovery service, not just eduID.cz.
+
+Federation mode replaces the single IdP's SSO URL and certificate with:
+
+- **Discovery service (WAYF) URL** - where the user picks an IdP, e.g.
+  `https://ds.eduid.cz/wayf.php`.
+- **Federation metadata URL** - the signed aggregate, e.g.
+  `https://metadata.eduid.cz/entities/eduid`.
+- **Federation metadata signing certificate** - the **trust anchor** (below).
+
+Everything else - the SP entityID, the attribute mapping, the SP keypair for
+encrypted assertions - is shared with the single-IdP mode.
+
+#### The trust anchor is everything
+
+The federation metadata is fetched over the network, so it is trusted only after
+its XML signature verifies against the certificate pinned in the *Federation
+metadata signing certificate* field, and an identity provider is only ever
+resolved from the **verified** document. An IdP that is not in the verified
+metadata can never be used - neither to redirect the user to, nor to accept a
+response from. Skipping that check would let anyone able to intercept the fetch
+inject a rogue IdP and forge logins.
+
+Obtain the trust anchor **out of band** from the federation operator - not from
+the metadata itself - and cross-check its fingerprint against their published
+value. A metadata-signing key rollover is handled by pasting the old and the new
+certificate together (a PEM bundle). The same signature profile as for assertions
+applies: exclusive canonicalization, an enveloped signature and SHA-256; a
+federation that signs its metadata with SHA-1 or a different transform set is out
+of scope.
+
+The verified metadata is cached in memory and refreshed automatically, never past
+the document's own `validUntil`. Press *Verify federation* in the dialog to fetch
+and verify the metadata and report how many identity providers it yields before
+saving.
+
+#### Restricting the identity provider list (eduID.cz `filter`/`efilter`)
+
+By default the discovery service lists every IdP in the federation. The optional
+**Discovery service parameters** field is appended to the discovery URL verbatim.
+For eduID.cz this is where the `filter` / `efilter` that restrict the listed IdPs
+go - generate one at `https://ds.eduid.cz/filter.php` and paste it in URL-ready:
+
+```
+filter=eyAgImFsbG93SG9zdGVsIjogdHJ1ZSB9
+```
+
+This is the only eduID.cz-specific setting; the field is an opaque pass-through,
+so another federation's discovery parameters go in exactly the same place.
 
 ## User provisioning and identity linking
 

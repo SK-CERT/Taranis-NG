@@ -24,6 +24,7 @@ class AuthProviderSchema(Schema):
 
     id = fields.Int()
     name = fields.Str()
+    slug = fields.Str(load_default=None, allow_none=True)
     kind = fields.Str(validate=lambda k: k in AUTH_PROVIDER_KINDS)
     enabled = fields.Bool()
     organization = fields.Nested(OrganizationSchema, allow_none=True)

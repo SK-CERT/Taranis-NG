@@ -11,7 +11,7 @@ import io
 from http import HTTPStatus
 
 import requests
-from auth import saml_authenticator, saml_metadata
+from auth import saml_authenticator, saml_federation, saml_metadata
 from flask import request, send_file
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
@@ -432,6 +432,37 @@ class SamlKeypairResource(Resource):
         """
         entity_id = (request.json or {}).get("sp_entity_id") or "taranis-ng"
         return saml_authenticator.generate_sp_keypair(entity_id), HTTPStatus.OK
+
+
+class SamlFederationVerifyResource(Resource):
+    """Fetch and signature-verify a SAML federation's metadata for the admin preview."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Verify federation metadata and report the resolvable identity providers.
+
+        Accepts ``federation_metadata_url`` and ``federation_metadata_cert``.
+        Nothing is stored: the metadata is fetched, its signature verified against
+        the given trust anchor, and the number of usable identity providers (plus
+        the document's validUntil) handed back so the admin can confirm the URL and
+        anchor before saving.
+
+        Returns:
+            (dict, int): ``entity_count`` and ``valid_until``, or an error.
+        """
+        data = request.json or {}
+        try:
+            result = saml_federation.verify_metadata(
+                data.get("federation_metadata_url", ""),
+                data.get("federation_metadata_cert", ""),
+            )
+            return result, HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = f"The federation metadata could not be verified: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
 
 
 class SecuritySettingsResource(Resource):
@@ -2145,6 +2176,7 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     api.add_resource(AuthProviderResource, "/api/v1/config/auth-providers/<int:auth_provider_id>")
     api.add_resource(SamlMetadataImportResource, "/api/v1/config/auth-providers/saml/import-metadata")
     api.add_resource(SamlKeypairResource, "/api/v1/config/auth-providers/saml/generate-keypair")
+    api.add_resource(SamlFederationVerifyResource, "/api/v1/config/auth-providers/saml/verify-federation")
     api.add_resource(SecuritySettingsResource, "/api/v1/config/security")
 
     api.add_resource(ExternalUsersResource, "/api/v1/config/external-users")

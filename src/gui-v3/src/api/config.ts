@@ -78,6 +78,10 @@ export function generateSamlKeypair(sp_entity_id) {
     return ApiService.post('/config/auth-providers/saml/generate-keypair', { sp_entity_id })
 }
 
+export function verifySamlFederation(payload) {
+    return ApiService.post('/config/auth-providers/saml/verify-federation', payload)
+}
+
 export function getSecuritySettings() {
     return ApiService.get('/config/security')
 }

@@ -5,6 +5,11 @@ A second factor is required when *any* level demands it - the auth provider
 organization, or the user themselves. The passkey switch splits in two: sign-in
 (passwordless) and second factor can be enabled independently.
 
+The IdP-facing auth URLs (SAML metadata/ACS/discovery, OAuth redirect) embed the
+provider identifier, so using the database id would make them change when a provider
+is recreated or moved between environments - breaking the registration at the
+identity provider. A stable, admin-controlled slug is used there instead.
+
 Revision ID: e3f9d1a7c8b5
 Revises: d2b016063dc7
 Create Date: 2026-07-13 12:00:00.000000
@@ -13,6 +18,7 @@ Create Date: 2026-07-13 12:00:00.000000
 
 import logging
 import os
+import re
 from pathlib import Path
 
 import sqlalchemy as sa
@@ -37,6 +43,12 @@ NEW_PERMISSIONS = [
     ("CONFIG_AUTH_PROVIDER_UPDATE", "Config auth provider update", "Update authentication provider configuration"),
     ("CONFIG_AUTH_PROVIDER_DELETE", "Config auth provider delete", "Delete authentication provider configuration"),
 ]
+
+
+def _slugify(value: str) -> str:
+    """Turn a display name into a URL-safe slug (lowercase, hyphen-separated)."""
+    slug = re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-")
+    return slug or "provider"
 
 
 class PermissionAP(Base):
@@ -122,6 +134,7 @@ class AuthProviderAP(Base):
     __tablename__ = "auth_provider"
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(), unique=True, nullable=False)
+    slug = sa.Column(sa.String(), unique=True, nullable=False)
     kind = sa.Column(sa.String(16), nullable=False)
     enabled = sa.Column(sa.Boolean, nullable=False)
     organization_id = sa.Column(sa.Integer, nullable=True)
@@ -141,12 +154,33 @@ class AuthProviderAP(Base):
             config (dict): Kind-specific non-secret settings.
         """
         self.name = name
+        self.slug = _slugify(name)
         self.kind = kind
         self.enabled = True
         self.provisioning_mode = provisioning_mode
         self.allowed_domains = ""
         self.require_mfa = False
         self.config = config
+
+
+def _add_slug_column(conn: sa.engine.Connection) -> None:
+    """Add the slug column to a pre-existing auth_provider table, backfilling it uniquely from the name."""
+    op.add_column("auth_provider", sa.Column("slug", sa.String(), nullable=True))
+
+    rows = conn.execute(sa.text("SELECT id, name FROM auth_provider ORDER BY id")).fetchall()
+    used: set[str] = set()
+    for row in rows:
+        base = _slugify(row.name)
+        candidate = base
+        suffix = 2
+        while candidate in used:
+            candidate = f"{base}-{suffix}"
+            suffix += 1
+        used.add(candidate)
+        conn.execute(sa.text("UPDATE auth_provider SET slug = :slug WHERE id = :id"), {"slug": candidate, "id": row.id})
+
+    op.alter_column("auth_provider", "slug", existing_type=sa.String(), nullable=False)
+    op.create_unique_constraint("uq_auth_provider_slug", "auth_provider", ["slug"])
 
 
 def _seed_providers(session: Session) -> None:
@@ -183,6 +217,7 @@ def upgrade() -> None:
             "auth_provider",
             sa.Column("id", sa.INTEGER(), autoincrement=True, nullable=False),
             sa.Column("name", sa.VARCHAR(), nullable=False),
+            sa.Column("slug", sa.VARCHAR(), nullable=False),
             sa.Column("kind", sa.VARCHAR(length=16), nullable=False),
             sa.Column("enabled", sa.BOOLEAN(), nullable=False, server_default="true"),
             sa.Column("organization_id", sa.INTEGER(), nullable=True),
@@ -196,7 +231,12 @@ def upgrade() -> None:
             sa.ForeignKeyConstraint(["organization_id"], ["organization.id"], name="auth_provider_organization_id_fkey"),
             sa.PrimaryKeyConstraint("id", name="auth_provider_pkey"),
             sa.UniqueConstraint("name", name="auth_provider_name_key"),
+            sa.UniqueConstraint("slug", name="uq_auth_provider_slug"),
         )
+    else:
+        auth_provider_columns = [column["name"] for column in inspector.get_columns("auth_provider")]
+        if "slug" not in auth_provider_columns:
+            _add_slug_column(conn)
 
     if "auth_provider_role" not in tables:
         op.create_table(

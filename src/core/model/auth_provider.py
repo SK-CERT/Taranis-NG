@@ -6,8 +6,13 @@ Kind-specific non-secret settings live in the ``config`` JSON column:
   redirect_uri_override, logout_url
 - oauth2: authorize_url, token_url, userinfo_url, client_id, scopes,
   username_claim, name_claim, email_claim
-- saml: idp_sso_url, idp_entity_id, idp_certificate, sp_entity_id,
+- saml (single IdP): idp_sso_url, idp_entity_id, idp_certificate, sp_entity_id,
   acs_url_override, username_attr, name_attr, email_attr
+- saml (federation / discovery mode, when discovery_url is set): discovery_url,
+  discovery_params (raw query string appended to the WAYF, e.g. eduID.cz
+  filter/efilter), federation_metadata_url, federation_metadata_cert (PEM trust
+  anchor), federation_metadata_refresh_hours; the idp_* fields are then unused,
+  the chosen IdP being resolved from the verified federation metadata
 - ldap: server_url, use_tls, ca_cert, user_dn_template OR (bind_dn, search_base,
   search_filter, username_attr, name_attr)
 - local: (empty)
@@ -22,6 +27,7 @@ is stored Fernet-encrypted in the ``secret`` column.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 
 from managers import crypto_manager
@@ -33,6 +39,18 @@ from shared.common import TZ
 from shared.schema.auth_provider import AUTH_PROVIDER_KINDS, AuthProviderSchema
 from shared.schema.organization import OrganizationIdSchema
 from shared.schema.role import RoleIdSchema
+
+# A slug is a URL-safe, stable identifier used in the IdP-facing auth URLs
+# (metadata/ACS/discovery, OAuth redirect) instead of the database id, so those
+# URLs survive recreating a provider or moving between environments.
+SLUG_PATTERN = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
+
+
+def slugify(value: str) -> str:
+    """Turn a display name into a URL-safe slug (lowercase, hyphen-separated)."""
+    slug = re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-")
+    return slug or "provider"
+
 
 SINGLETON_KINDS = ("local",)
 FORM_KINDS = ("local", "ldap")
@@ -68,6 +86,9 @@ class AuthProvider(db.Model):
     Attributes:
         id (int): Provider ID.
         name (str): Display name (unique, shown on the login page).
+        slug (str): URL-safe stable identifier (unique) used in the IdP-facing
+            auth URLs instead of the database id, so registering the provider at
+            an IdP survives recreation and moving between environments.
         kind (str): One of local | oidc | oauth2 | ldap | passkey.
         enabled (bool): Whether the provider can be used for login.
         organization_id (int): Organization assigned to auto-created users.
@@ -84,6 +105,7 @@ class AuthProvider(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False, unique=True)
+    slug = db.Column(db.String(), nullable=False, unique=True)
     kind = db.Column(db.String(16), nullable=False)
     enabled = db.Column(db.Boolean, nullable=False, default=True, server_default="true")
     organization_id = db.Column(db.Integer, db.ForeignKey("organization.id"), nullable=True)
@@ -102,6 +124,7 @@ class AuthProvider(db.Model):
         self,
         name: str,
         kind: str,
+        slug: str | None = None,
         enabled: bool = True,
         organization: object | None = None,
         default_roles: list | None = None,
@@ -114,6 +137,7 @@ class AuthProvider(db.Model):
     ) -> None:
         """Create a new authentication provider."""
         self.name = name
+        self.slug = (slug or "").strip()
         self.kind = kind
         self.enabled = enabled
         self.organization = Organization.find(organization.id) if organization else None
@@ -150,6 +174,33 @@ class AuthProvider(db.Model):
             AuthProvider: Provider object or None.
         """
         return db.session.get(cls, provider_id)
+
+    @classmethod
+    def find_by_slug(cls, slug: str) -> AuthProvider | None:
+        """Find an authentication provider by its URL slug.
+
+        Args:
+            slug (str): Provider slug.
+
+        Returns:
+            AuthProvider: Provider object or None.
+        """
+        if not slug:
+            return None
+        return cls.query.filter_by(slug=slug).first()
+
+    @classmethod
+    def _unique_slug(cls, base: str, provider_id: int | None = None) -> str:
+        """Return a unique slug derived from ``base`` (appending -2, -3, ... on collision)."""
+        base = slugify(base)
+        candidate = base
+        suffix = 2
+        while True:
+            existing = cls.query.filter_by(slug=candidate).first()
+            if not existing or existing.id == provider_id:
+                return candidate
+            candidate = f"{base}-{suffix}"
+            suffix += 1
 
     @classmethod
     def get_all(cls) -> list[AuthProvider]:
@@ -212,10 +263,19 @@ class AuthProvider(db.Model):
 
         Raises:
             ValueError: When the kind is unknown, a singleton kind already
-                exists, or a SAML certificate cannot be parsed.
+                exists, the slug is malformed or taken, or a SAML certificate
+                cannot be parsed.
         """
         if provider.kind not in AUTH_PROVIDER_KINDS:
             msg = f"Unknown authentication provider kind: {provider.kind}"
+            raise ValueError(msg)
+        slug = (provider.slug or "").strip()
+        if not SLUG_PATTERN.match(slug):
+            msg = "The slug may contain only lowercase letters, digits and hyphens, and must start and end with one"
+            raise ValueError(msg)
+        taken = cls.query.filter_by(slug=slug).first()
+        if taken and taken.id != provider_id:
+            msg = f"The slug '{slug}' is already used by another login method"
             raise ValueError(msg)
         if provider.kind in SINGLETON_KINDS:
             existing = cls.query.filter_by(kind=provider.kind).first()
@@ -229,9 +289,23 @@ class AuthProvider(db.Model):
                 load_idp_certificates,
                 validate_sp_keypair,
             )
+            from auth.saml_federation import is_federation_mode  # noqa: PLC0415
 
             config = provider.config or {}
-            load_idp_certificates(config.get("idp_certificate", ""))
+            if is_federation_mode(config):
+                # No single pinned IdP certificate in federation mode: the chosen
+                # IdP is resolved from the federation metadata, whose signature is
+                # verified against this pinned trust anchor. Both must be present
+                # and the anchor must parse.
+                if not config.get("federation_metadata_url"):
+                    msg = "Federation mode needs a federation metadata URL"
+                    raise ValueError(msg)
+                if not (config.get("federation_metadata_cert") or "").strip():
+                    msg = "Federation mode needs the federation metadata signing certificate (the trust anchor)"
+                    raise ValueError(msg)
+                load_idp_certificates(config["federation_metadata_cert"])
+            else:
+                load_idp_certificates(config.get("idp_certificate", ""))
 
             # The SP private key (in the encrypted secret column) and its certificate must
             # belong together, or the IdP encrypts to a key we cannot use. On edit an empty
@@ -261,6 +335,9 @@ class AuthProvider(db.Model):
         """
         schema = NewAuthProviderSchema()
         new = schema.load(data)
+        # An admin-supplied slug is respected (and validated); a blank one is
+        # auto-generated from the name and made unique.
+        new.slug = (new.slug or "").strip() or cls._unique_slug(new.name)
         cls._validate(new)
         new.updated_by = user_name
         new.updated_at = datetime.now(TZ)
@@ -286,8 +363,10 @@ class AuthProvider(db.Model):
         new = schema.load(data)
         old = db.session.get(cls, provider_id)
         new.kind = old.kind  # kind is immutable after creation
+        new.slug = (new.slug or "").strip() or cls._unique_slug(new.name, provider_id)
         cls._validate(new, provider_id)
         old.name = new.name
+        old.slug = new.slug
         old.enabled = new.enabled
         old.organization = new.organization
         old.default_roles = new.default_roles
@@ -300,6 +379,11 @@ class AuthProvider(db.Model):
         old.updated_by = user_name
         old.updated_at = datetime.now(TZ)
         db.session.commit()
+        if old.kind == "saml":
+            # a changed metadata URL/cert or discovery setting must take effect now
+            from auth.saml_federation import invalidate  # noqa: PLC0415 - avoid an import cycle at module load
+
+            invalidate(provider_id)
         return old
 
     @classmethod
@@ -313,6 +397,9 @@ class AuthProvider(db.Model):
         record = db.session.get(cls, provider_id)
         db.session.delete(record)
         db.session.commit()
+        from auth.saml_federation import invalidate  # noqa: PLC0415 - avoid an import cycle at module load
+
+        invalidate(provider_id)
 
 
 class AuthProviderRole(db.Model):

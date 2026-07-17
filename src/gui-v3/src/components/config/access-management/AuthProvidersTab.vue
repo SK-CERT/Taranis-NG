@@ -36,7 +36,7 @@
                     <code class="text-body-2 font-weight-medium">{{ item.id }}</code>
                 </template>
                 <template #item.name="{ item }">
-                    <strong>{{ item.name }}</strong>
+                    <strong>{{ providerName(item) }}</strong>
                 </template>
                 <template #item.kind="{ item }">
                     <v-chip
@@ -76,7 +76,7 @@
                         @click="handleEdit(item)"
                     />
                     <ActionButton
-                        v-if="canDelete"
+                        v-if="canDelete && !isLocal(item)"
                         action="delete"
                         :title="t('common.delete')"
                         @click="askDelete(item)"
@@ -98,6 +98,7 @@
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { useAuth } from '@/composables/useAuth'
+    import { useProviderDisplay } from '@/composables/useProviderDisplay'
     import { deleteAuthProvider } from '@/api/config'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
@@ -106,6 +107,7 @@
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
+    const { isLocal, providerName } = useProviderDisplay()
     const configStore = useConfigStore()
 
     type AuthProviderItem = {
@@ -144,18 +146,17 @@
             return ''
         }
         const count = deleteTarget.value.linked_identity_count ?? 0
-        return count > 0
-            ? t('auth_provider.delete_message_linked', { name: deleteTarget.value.name, count })
-            : t('auth_provider.delete_message', { name: deleteTarget.value.name })
+        const name = providerName(deleteTarget.value)
+        return count > 0 ? t('auth_provider.delete_message_linked', { name, count }) : t('auth_provider.delete_message', { name })
     })
 
     const kindColor = (kind: string): string => {
         const colors: Record<string, string> = {
             local: 'primary',
-            oidc: 'teal',
-            oauth2: 'indigo',
-            saml: 'blue',
-            ldap: 'orange'
+            oidc: 'orange',
+            oauth2: 'red',
+            saml: 'purple',
+            ldap: 'green'
         }
         return colors[kind] || 'grey'
     }

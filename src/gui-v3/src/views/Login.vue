@@ -272,6 +272,7 @@
     import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
     import { useAuthStore } from '@/stores/auth'
     import { useAuth } from '@/composables/useAuth'
+    import { useProviderDisplay } from '@/composables/useProviderDisplay'
     import {
         mfaTotp,
         mfaTotpEnroll,
@@ -300,6 +301,7 @@
     const { t } = useI18n()
     const authStore = useAuthStore()
     const { isAuthenticated } = useAuth()
+    const { providerName } = useProviderDisplay()
 
     type LoginStep = 'credentials' | 'mfa' | 'enroll'
 
@@ -327,8 +329,18 @@
     const usernameError = ref<string | null>(null)
     const passwordError = ref<string | null>(null)
 
-    const formMethods = computed(() => authStore.loginMethods.filter((method: LoginMethod) => method.form))
-    const redirectMethods = computed(() => authStore.loginMethods.filter((method: LoginMethod) => !!method.login_url))
+    // The local provider's stored name is English; show every method through the
+    // display helper so the built-in local method is localized on the login page too.
+    const formMethods = computed(() =>
+        authStore.loginMethods
+            .filter((method: LoginMethod) => method.form)
+            .map((method: LoginMethod) => ({ ...method, name: providerName(method) }))
+    )
+    const redirectMethods = computed(() =>
+        authStore.loginMethods
+            .filter((method: LoginMethod) => !!method.login_url)
+            .map((method: LoginMethod) => ({ ...method, name: providerName(method) }))
+    )
     // Passkeys are a site-wide capability (a security setting), not a provider.
     const passkeyEnabled = computed(() => authStore.passkeyEnabled)
     // Fall back to a plain credentials form when the methods endpoint is unavailable (older backend)
@@ -340,7 +352,14 @@
     // authentication faults. The IdP authn itself succeeded (or it's a local
     // provider deliberately refusing a known user); the system is working as
     // designed and denying entry, so the login alert is shown as a warning.
-    const WARNING_CODES = new Set(['pending_approval', 'account_disabled', 'username_collision', 'account_not_linked', 'domain_not_allowed'])
+    const WARNING_CODES = new Set([
+        'pending_approval',
+        'account_disabled',
+        'username_collision',
+        'account_not_linked',
+        'domain_not_allowed',
+        'auth_cancelled'
+    ])
 
     // Maps backend error codes (POST payload code / redirect login_error param) to i18n keys
     const errorKeyForCode = (code: string): string => {
@@ -350,6 +369,7 @@
             username_collision: 'login.username_collision',
             account_not_linked: 'login.account_not_linked',
             domain_not_allowed: 'login.domain_not_allowed',
+            auth_cancelled: 'login.auth_cancelled',
             totp_invalid: 'login.totp_invalid'
         }
         return keys[code.toLowerCase()] || 'login.error'

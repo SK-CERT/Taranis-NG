@@ -49,6 +49,7 @@ const OIDC_PROVIDER = {
 const SAML_PROVIDER = {
     id: 3,
     name: 'Corp SAML',
+    slug: 'corp-saml',
     kind: 'saml',
     enabled: true,
     provisioning_mode: 'automatic',
@@ -159,12 +160,12 @@ describe('NewAuthProvider dialog', () => {
         const wrapper = await mountDialog()
         await openEdit(wrapper, SAML_PROVIDER)
 
-        // both carry the provider id, so they only exist in edit mode
-        expect(wrapper.vm.samlMetadataUrl).toBe(`${window.location.origin}/api/v1/auth/saml/3/metadata`)
-        expect(wrapper.vm.samlAcsUrl).toBe(`${window.location.origin}/api/v1/auth/saml/3/acs`)
+        // both carry the provider slug (stable across recreation), so they only exist in edit mode
+        expect(wrapper.vm.samlMetadataUrl).toBe(`${window.location.origin}/api/v1/auth/saml/corp-saml/metadata`)
+        expect(wrapper.vm.samlAcsUrl).toBe(`${window.location.origin}/api/v1/auth/saml/corp-saml/acs`)
         // v-dialog teleports its content to the body, so assert on the rendered overlay
-        expect(document.body.textContent).toContain('/api/v1/auth/saml/3/metadata')
-        expect(document.body.textContent).toContain('/api/v1/auth/saml/3/acs')
+        expect(document.body.textContent).toContain('/api/v1/auth/saml/corp-saml/metadata')
+        expect(document.body.textContent).toContain('/api/v1/auth/saml/corp-saml/acs')
     })
 
     it('prefers a configured ACS override over the derived URL', async () => {

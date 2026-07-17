@@ -173,9 +173,9 @@ def get_login_methods() -> dict:
     items = []
     for provider in AuthProvider.get_enabled():
         if provider.kind in OAUTH_KINDS:
-            login_url = f"/api/v1/auth/oauth/{provider.id}/login"
+            login_url = f"/api/v1/auth/oauth/{provider.slug}/login"
         elif provider.kind == "saml":
-            login_url = f"/api/v1/auth/saml/{provider.id}/login"
+            login_url = f"/api/v1/auth/saml/{provider.slug}/login"
         else:
             login_url = None
         items.append(
@@ -588,31 +588,31 @@ def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) ->
     return BaseAuthenticator.generate_jwt(owner)
 
 
-def get_oauth_authenticator(provider_id: int) -> OAuth2Authenticator | None:
+def get_oauth_authenticator(slug: str) -> OAuth2Authenticator | None:
     """Build the OAuth2/OIDC authenticator for an enabled oauth-kind provider.
 
     Args:
-        provider_id (int): The provider ID.
+        slug (str): The provider slug (from the auth URL).
 
     Returns:
         OAuth2Authenticator: The authenticator, or None for unknown/disabled providers.
     """
-    provider = AuthProvider.find(provider_id)
+    provider = AuthProvider.find_by_slug(slug)
     if not provider or not provider.enabled or provider.kind not in OAUTH_KINDS:
         return None
     return OAuth2Authenticator(provider)
 
 
-def get_saml_authenticator(provider_id: int) -> SamlAuthenticator | None:
+def get_saml_authenticator(slug: str) -> SamlAuthenticator | None:
     """Build the SAML authenticator for an enabled saml-kind provider.
 
     Args:
-        provider_id (int): The provider ID.
+        slug (str): The provider slug (from the auth URL).
 
     Returns:
         SamlAuthenticator: The authenticator, or None for unknown/disabled providers.
     """
-    provider = AuthProvider.find(provider_id)
+    provider = AuthProvider.find_by_slug(slug)
     if not provider or not provider.enabled or provider.kind != "saml":
         return None
     return SamlAuthenticator(provider)

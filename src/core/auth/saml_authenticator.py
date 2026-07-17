@@ -20,6 +20,18 @@ Provider ``config`` keys:
     email_attr (str): Assertion attribute holding the e-mail address.
     nameid_format (str): NameID format advertised in our metadata.
 
+Optional human-readable SP metadata (a federation such as eduID.cz requires it
+to register, and an IdP's schema validator rejects the metadata without the
+ServiceName that ``sp_display_name`` provides). Each is emitted only when set:
+    sp_display_name (str): Service display name (UIInfo DisplayName, and the
+        AttributeConsumingService ServiceName). Falls back to the provider name.
+    sp_description (str): UIInfo Description.
+    sp_information_url (str): UIInfo InformationURL.
+    sp_organization_name (str): md:Organization name/display name.
+    sp_organization_url (str): md:Organization URL.
+    sp_contact_email (str): Technical contact e-mail (md:ContactPerson).
+    sp_contact_name (str): Technical contact name (md:GivenName).
+
 Attributes are looked up by their SAML ``Name`` (an OID when the IdP uses the
 URI name-format), never by ``FriendlyName``.
 
@@ -34,7 +46,8 @@ from __future__ import annotations
 import base64
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
-from xml.sax.saxutils import quoteattr
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from xml.sax.saxutils import escape, quoteattr
 
 from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
 from auth.saml_xml import decrypt_assertion, extract_signed_assertion
@@ -62,6 +75,19 @@ DEFAULT_NAMEID_FORMAT = "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
 # Attribute names are OIDs when the IdP uses the URI name-format, which is what
 # federated deployments do; advertise the requested attributes accordingly.
 ATTRIBUTE_NAME_FORMAT = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+
+# SAML Identity Provider Discovery protocol (federation mode): the profile URI is
+# used both as the DiscoveryResponse binding and to name the endpoint. The return
+# ID parameter is the query key the discovery service echoes the chosen IdP
+# entityID back to us in.
+IDP_DISCOVERY_PROTOCOL = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
+DISCOVERY_RETURN_ID_PARAM = "idp_entity_id"
+
+# Human-readable SP metadata (UIInfo, Organization, ServiceName). A federation
+# such as eduID.cz requires these and wants every language it lists an entity in;
+# the same admin-supplied text is emitted for each language here.
+MDUI_NAMESPACE = "urn:oasis:names:tc:SAML:metadata:ui"
+METADATA_LANGS = ("en", "cs")
 
 SP_KEY_SIZE = 2048
 SP_CERTIFICATE_DAYS = 3650
@@ -200,6 +226,15 @@ class SamlAuthenticator(BaseAuthenticator):
         """Return the NameID format we advertise in our metadata."""
         return self.config.get("nameid_format") or DEFAULT_NAMEID_FORMAT
 
+    def is_federation(self) -> bool:
+        """Tell whether this provider federates through a discovery service.
+
+        A configured ``discovery_url`` switches the provider from targeting one
+        identity provider to sending the user to a WAYF and resolving whichever
+        IdP they pick out of the federation metadata.
+        """
+        return bool(self.config.get("discovery_url"))
+
     def sp_certificate(self) -> str:
         """Return our (public) certificate, the one the IdP encrypts assertions to."""
         return (self.config.get("sp_certificate") or "").strip()
@@ -215,7 +250,69 @@ class SamlAuthenticator(BaseAuthenticator):
             return None
         return serialization.load_pem_private_key(pem.encode(), password=None)
 
-    def get_metadata_xml(self, acs_url: str) -> str:
+    @staticmethod
+    def _localized(prefix: str, tag: str, value: str, indent: str) -> str:
+        """Emit an XML element once per advertised language, or '' when unset.
+
+        A federation lists an entity in several languages (eduID.cz wants both
+        Czech and English); the same admin-supplied text is repeated for each.
+        """
+        if not value:
+            return ""
+        text = escape(value)
+        return "".join(f'\n{indent}<{prefix}:{tag} xml:lang="{lang}">{text}</{prefix}:{tag}>' for lang in METADATA_LANGS)
+
+    def _metadata_organization(self, service_name: str) -> str:
+        """Build the ``<md:Organization>`` block, or '' when none is configured.
+
+        A federation such as eduID.cz requires it. All three child elements are
+        mandatory, so a missing display name or URL falls back to the service name
+        and the SP entityID.
+        """
+        name = (self.config.get("sp_organization_name") or "").strip()
+        url = (self.config.get("sp_organization_url") or "").strip()
+        if not name and not url:
+            return ""
+        name = name or service_name
+        url = url or (self.config.get("sp_information_url") or "").strip() or self.sp_entity_id()
+        return (
+            "\n  <md:Organization>"
+            f"{self._localized('md', 'OrganizationName', name, '    ')}"
+            f"{self._localized('md', 'OrganizationDisplayName', name, '    ')}"
+            f"{self._localized('md', 'OrganizationURL', url, '    ')}"
+            "\n  </md:Organization>"
+        )
+
+    def _metadata_contact(self) -> str:
+        """Build the technical ``<md:ContactPerson>`` block, or '' with no e-mail configured.
+
+        A federation such as eduID.cz requires a ``SurName`` on the technical
+        contact. It is taken from ``sp_contact_surname`` when set; otherwise it is
+        derived from the last token of ``sp_contact_name`` ("Jane Doe" -> "Doe"),
+        so the warning clears even when only the name field is filled. The whole
+        block is omitted when no e-mail is configured, matching the schema's
+        optionality (SurName and GivenName are both optional in SAML itself).
+        """
+        email = (self.config.get("sp_contact_email") or "").strip()
+        if not email:
+            return ""
+        name = (self.config.get("sp_contact_name") or "").strip()
+        given = f"\n    <md:GivenName>{escape(name)}</md:GivenName>" if name else ""
+        surname = (self.config.get("sp_contact_surname") or "").strip()
+        if not surname and name:
+            # eduID requires a SurName; fall back to the last token of the name.
+            surname = name.rsplit(maxsplit=1)[-1]
+        surname_el = f"\n    <md:SurName>{escape(surname)}</md:SurName>" if surname else ""
+        address = email if email.startswith("mailto:") else f"mailto:{email}"
+        return (
+            '\n  <md:ContactPerson contactType="technical">'
+            f"{given}"
+            f"{surname_el}"
+            f"\n    <md:EmailAddress>{escape(address)}</md:EmailAddress>"
+            "\n  </md:ContactPerson>"
+        )
+
+    def get_metadata_xml(self, acs_url: str, disco_url: str | None = None) -> str:
         """Build the SP metadata XML to register at the identity provider.
 
         The descriptor declares what this SP can actually do: it never signs
@@ -231,6 +328,9 @@ class SamlAuthenticator(BaseAuthenticator):
 
         Args:
             acs_url (str): Our Assertion Consumer Service URL.
+            disco_url (str): Our DiscoveryResponse URL. In federation mode it is
+                advertised as an ``<idpdisc:DiscoveryResponse>`` so the discovery
+                service accepts it as the ``return`` target; ignored otherwise.
 
         Returns:
             str: The SP metadata document.
@@ -243,9 +343,17 @@ class SamlAuthenticator(BaseAuthenticator):
                     f"\n      <md:RequestedAttribute Name={quoteattr(name)} "
                     f'NameFormat="{ATTRIBUTE_NAME_FORMAT}" isRequired="{"true" if key == "external_id_attr" else "false"}"/>'
                 )
+
+        # A human-readable name for this service, used as the AttributeConsumingService
+        # ServiceName and as the UIInfo/Organization display fallback.
+        service_name = (self.config.get("sp_display_name") or "").strip() or self.provider.name or "Taranis NG"
+
         attribute_service = ""
         if requested:
-            attribute_service = f'\n    <md:AttributeConsumingService index="0">{requested}\n    </md:AttributeConsumingService>'
+            # The schema requires ServiceName before RequestedAttribute; omitting it
+            # makes an IdP's schema validator reject the metadata.
+            names = self._localized("md", "ServiceName", service_name, "      ")
+            attribute_service = f'\n    <md:AttributeConsumingService index="0">{names}{requested}\n    </md:AttributeConsumingService>'
 
         key_descriptor = ""
         certificate = self.sp_certificate()
@@ -261,25 +369,53 @@ class SamlAuthenticator(BaseAuthenticator):
                 "\n    </md:KeyDescriptor>"
             )
 
+        # SPSSODescriptor/Extensions carries the UIInfo a federation asks for and,
+        # in federation mode, the DiscoveryResponse endpoint. The schema allows a
+        # single Extensions element (before KeyDescriptor), so they share one.
+        ui_parts = (
+            self._localized("mdui", "DisplayName", (self.config.get("sp_display_name") or "").strip(), "        ")
+            + self._localized("mdui", "Description", (self.config.get("sp_description") or "").strip(), "        ")
+            + self._localized("mdui", "InformationURL", (self.config.get("sp_information_url") or "").strip(), "        ")
+        )
+        ui_info = f'\n      <mdui:UIInfo xmlns:mdui="{MDUI_NAMESPACE}">{ui_parts}\n      </mdui:UIInfo>' if ui_parts else ""
+
+        discovery_response = ""
+        if self.is_federation() and disco_url:
+            discovery_response = (
+                f'\n      <idpdisc:DiscoveryResponse xmlns:idpdisc="{IDP_DISCOVERY_PROTOCOL}" '
+                f'Binding="{IDP_DISCOVERY_PROTOCOL}" Location={quoteattr(disco_url)} index="0" isDefault="true"/>'
+            )
+
+        extensions = f"\n    <md:Extensions>{ui_info}{discovery_response}\n    </md:Extensions>" if (ui_info or discovery_response) else ""
+
+        # Organization and ContactPerson sit at the EntityDescriptor level, after
+        # the role descriptor; a federation such as eduID.cz requires both.
+        organization = self._metadata_organization(service_name)
+        contact = self._metadata_contact()
+
         return (
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             '<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" '
             f"entityID={quoteattr(self.sp_entity_id())}>\n"
             '  <md:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" '
             'protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">'
-            f"{key_descriptor}\n"
+            f"{extensions}{key_descriptor}\n"
             f"    <md:NameIDFormat>{self.nameid_format()}</md:NameIDFormat>\n"
             '    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" '
             f'Location={quoteattr(acs_url)} index="0" isDefault="true"/>'
             f"{attribute_service}\n"
-            "  </md:SPSSODescriptor>\n"
+            "  </md:SPSSODescriptor>"
+            f"{organization}{contact}\n"
             "</md:EntityDescriptor>\n"
         )
 
-    def get_login_redirect_url(self, acs_url: str, relay_state: str, request_id: str) -> str:
-        """Build the IdP SSO URL carrying the AuthnRequest (HTTP-Redirect binding).
+    def get_authn_request_url(self, sso_url: str, acs_url: str, relay_state: str, request_id: str) -> str:
+        """Build the SSO URL carrying the AuthnRequest (HTTP-Redirect binding).
 
         Args:
+            sso_url (str): The identity provider single sign-on endpoint. In
+                federation mode this is the endpoint resolved for the IdP the user
+                chose at the discovery service.
             acs_url (str): Our Assertion Consumer Service URL.
             relay_state (str): Signed state token round-tripped by the IdP.
             request_id (str): The AuthnRequest ID (verified against InResponseTo).
@@ -288,31 +424,106 @@ class SamlAuthenticator(BaseAuthenticator):
             str: The URL to redirect the browser to.
         """
         return get_request_redirect_url(
-            saml_endpoint=self.config.get("idp_sso_url"),
+            saml_endpoint=sso_url,
             expected_audience=self.sp_entity_id(),
             acs_url=acs_url,
             request_id=request_id,
             relay_state=relay_state,
         )
 
-    def handle_response(self, saml_response: str, request_id: str | None) -> ExternalIdentity | None:
+    def get_login_redirect_url(self, acs_url: str, relay_state: str, request_id: str) -> str:
+        """Build the AuthnRequest redirect to the single configured identity provider."""
+        return self.get_authn_request_url(self.config.get("idp_sso_url"), acs_url, relay_state, request_id)
+
+    def get_discovery_redirect_url(self, return_url: str) -> str:
+        """Build the discovery-service (WAYF) URL that lets the user pick their IdP.
+
+        Follows the SAML Identity Provider Discovery Service protocol: it carries
+        our entityID, a ``return`` URL the service sends the browser back to, and
+        the name of the query parameter it must report the chosen IdP entityID in.
+        Any federation-specific extras the admin configured - for eduID.cz the
+        ``filter``/``efilter`` that restrict which IdPs are listed - are appended
+        verbatim as an already-URL-ready query fragment, so nothing here is
+        specific to one federation.
+
+        Args:
+            return_url (str): Absolute URL of our DiscoveryResponse endpoint,
+                already carrying our signed state token.
+
+        Returns:
+            str: The discovery-service URL to redirect the browser to.
+        """
+        parsed = urlparse(self.config["discovery_url"])
+        query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        query["entityID"] = self.sp_entity_id()
+        query["return"] = return_url
+        query["returnIDParam"] = DISCOVERY_RETURN_ID_PARAM
+        encoded = urlencode(query)
+        extra = (self.config.get("discovery_params") or "").strip().lstrip("?&")
+        if extra:
+            encoded = f"{encoded}&{extra}"
+        return urlunparse(parsed._replace(query=encoded))
+
+    def _idp_trust_material(self, chosen_entity_id: str | None) -> tuple[str, str]:
+        """Return the (certificate, expected issuer) the IdP response must verify against.
+
+        In single-IdP mode these are the pinned config values. In federation mode
+        both come from the verified federation metadata for the IdP the user chose
+        at the discovery service, so a chosen entity that is not in the federation
+        raises rather than being trusted.
+
+        Args:
+            chosen_entity_id (str): The IdP entityID from the signed RelayState
+                (federation mode only).
+
+        Returns:
+            tuple[str, str]: The IdP signing certificate(s) (PEM) and the issuer.
+
+        Raises:
+            ValueError: When the chosen IdP is not in the federation metadata.
+        """
+        if not self.is_federation():
+            return self.config.get("idp_certificate", ""), self.config.get("idp_entity_id")
+
+        from auth import saml_federation  # noqa: PLC0415 - avoid an import cycle at module load
+
+        resolved = saml_federation.resolve_idp(self.provider, chosen_entity_id or "")
+        if resolved is None:
+            msg = f"the response is from '{chosen_entity_id}', not an identity provider in the federation"
+            raise ValueError(msg)
+        return resolved.certificates, resolved.entity_id
+
+    def handle_response(
+        self,
+        saml_response: str,
+        request_id: str | None,
+        chosen_entity_id: str | None = None,
+    ) -> ExternalIdentity | None:
         """Validate a posted SAMLResponse and resolve the external identity.
 
-        The response signature is verified against the configured IdP
-        certificate; issuer, audience, validity window and InResponseTo are
-        checked before any attribute is trusted.
+        The response signature is verified against the IdP's certificate; issuer,
+        audience, validity window and InResponseTo are checked before any
+        attribute is trusted. In federation mode the certificate and expected
+        issuer are not fixed config - they are resolved from the verified
+        federation metadata for the IdP the user chose at the discovery service,
+        which is why an assertion from an entity not in the federation is refused
+        here rather than trusted.
 
         Args:
             saml_response (str): The base64 SAMLResponse form field.
             request_id (str): The AuthnRequest ID from the signed RelayState.
+            chosen_entity_id (str): In federation mode, the IdP entityID carried
+                in the signed RelayState (set at the DiscoveryResponse step).
 
         Returns:
             ExternalIdentity: The authenticated identity, or None on failure.
         """
         try:
+            idp_certificate, idp_issuer = self._idp_trust_material(chosen_entity_id)
+
             # every certificate is tried, so an IdP key rollover (metadata
             # carries the old and the new one) keeps working
-            certificates = load_idp_certificates(self.config.get("idp_certificate", ""))
+            certificates = load_idp_certificates(idp_certificate)
 
             # minisaml accepts a document whose signed root is the Assertion, and both
             # of the awkward real-world shapes reduce to exactly that: an assertion
@@ -329,7 +540,7 @@ class SamlAuthenticator(BaseAuthenticator):
                 data=data,
                 certificate=certificates,
                 expected_audience=self.sp_entity_id(),
-                idp_issuer=self.config.get("idp_entity_id"),
+                idp_issuer=idp_issuer,
                 allowed_time_drift=TimeDriftLimits(not_before_max_drift=CLOCK_SKEW, not_on_or_after_max_drift=CLOCK_SKEW),
             )
         except Exception as ex:

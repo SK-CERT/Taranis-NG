@@ -4,6 +4,7 @@ import urllib
 import uuid
 from http import HTTPStatus
 
+from auth import saml_authenticator, saml_federation
 from config import Config
 from flask import Response, make_response, redirect
 from flask_jwt_extended import get_jwt
@@ -134,14 +135,15 @@ class LoginMethods(Resource):
         return auth_manager.get_login_methods(), HTTPStatus.OK
 
 
-def _oauth_redirect_uri(provider_id: int, config: dict) -> str:
+def _oauth_redirect_uri(provider_slug: str, config: dict) -> str:
     """Build the OAuth callback URL for a provider.
 
     Uses the configured override when present, otherwise derives it from the
-    request (requires correct X-Forwarded-* handling behind a reverse proxy).
+    request (requires correct X-Forwarded-* handling behind a reverse proxy). The
+    slug (not the database id) keeps this URL stable across recreation.
 
     Args:
-        provider_id (int): The provider ID.
+        provider_slug (str): The provider slug.
         config (dict): The provider configuration.
 
     Returns:
@@ -150,7 +152,7 @@ def _oauth_redirect_uri(provider_id: int, config: dict) -> str:
     override = (config or {}).get("redirect_uri_override")
     if override:
         return override
-    return f"{request.scheme}://{request.host}/api/v1/auth/oauth/{provider_id}/callback"
+    return f"{request.scheme}://{request.host}/api/v1/auth/oauth/{provider_slug}/callback"
 
 
 def _login_error_redirect(goto_url: str, code: str) -> Response:
@@ -207,18 +209,19 @@ class OAuthLoginRedirect(Resource):
     """Start the authorization-code flow for a redirect-based (OIDC/OAuth2) provider."""
 
     @no_auth
-    def get(self, provider_id: int) -> Response:
+    def get(self, provider_slug: str) -> Response:
         """Redirect the browser to the identity provider's authorization endpoint.
 
         Args:
-            provider_id (int): The auth provider to log in with.
+            provider_slug (str): The auth provider to log in with.
 
         Returns:
             Response: A redirect to the IdP, or an error for unknown providers.
         """
-        authenticator = auth_manager.get_oauth_authenticator(provider_id)
+        authenticator = auth_manager.get_oauth_authenticator(provider_slug)
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
+        provider_id = authenticator.provider.id
         goto_url = request.args.get("gotoUrl", "/")
         nonce = uuid.uuid4().hex
         # When PKCE is enabled for this provider, generate a fresh
@@ -235,7 +238,7 @@ class OAuthLoginRedirect(Resource):
             code_verifier=code_verifier,
             pkce_method=authenticator.pkce_method(),
         )
-        redirect_uri = _oauth_redirect_uri(provider_id, authenticator.config)
+        redirect_uri = _oauth_redirect_uri(provider_slug, authenticator.config)
         try:
             return redirect(authenticator.get_authorization_url(redirect_uri, state, nonce, code_verifier=code_verifier))
         except Exception as ex:
@@ -247,7 +250,7 @@ class OAuthCallback(Resource):
     """Handle the IdP redirect back: exchange the code and hand the JWT to the GUI."""
 
     @no_auth
-    def get(self, provider_id: int) -> Response:
+    def get(self, provider_slug: str) -> Response:
         """Finish the authorization-code flow and redirect to the GUI.
 
         The verdict reaches the GUI in cookies: the JWT on success, or the scoped
@@ -255,25 +258,22 @@ class OAuthCallback(Resource):
         login page receives a login_error query parameter.
 
         Args:
-            provider_id (int): The auth provider the flow was started with.
+            provider_slug (str): The auth provider the flow was started with.
 
         Returns:
             Response: A redirect response.
         """
+        authenticator = auth_manager.get_oauth_authenticator(provider_slug)
         state = auth_manager.decode_scoped_token(request.args.get("state", ""), "oauth_state")
-        if not state or state.get("pid") != provider_id:
+        if not authenticator or not state or state.get("pid") != authenticator.provider.id:
             return {"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED
         goto_url = state.get("gotoUrl") or "/"
-
-        authenticator = auth_manager.get_oauth_authenticator(provider_id)
-        if not authenticator:
-            return _login_error_redirect(goto_url, "auth_failed")
 
         code = request.args.get("code")
         if not code:
             return _login_error_redirect(goto_url, "auth_failed")
 
-        redirect_uri = _oauth_redirect_uri(provider_id, authenticator.config)
+        redirect_uri = _oauth_redirect_uri(provider_slug, authenticator.config)
         identity = authenticator.handle_callback(redirect_uri, code, state.get("nonce"), code_verifier=state.get("code_verifier"))
         if not identity:
             return _login_error_redirect(goto_url, "auth_failed")
@@ -282,14 +282,14 @@ class OAuthCallback(Resource):
         return _finish_redirect_login(goto_url, response)
 
 
-def _saml_acs_url(provider_id: int, config: dict) -> str:
+def _saml_acs_url(provider_slug: str, config: dict) -> str:
     """Build the Assertion Consumer Service URL for a SAML provider.
 
     Uses the configured override when present, otherwise derives it from the
     request (requires correct X-Forwarded-* handling behind a reverse proxy).
 
     Args:
-        provider_id (int): The provider ID.
+        provider_slug (str): The provider slug.
         config (dict): The provider configuration.
 
     Returns:
@@ -298,42 +298,126 @@ def _saml_acs_url(provider_id: int, config: dict) -> str:
     override = (config or {}).get("acs_url_override")
     if override:
         return override
-    return f"{request.scheme}://{request.host}/api/v1/auth/saml/{provider_id}/acs"
+    return f"{request.scheme}://{request.host}/api/v1/auth/saml/{provider_slug}/acs"
+
+
+def _saml_disco_url(provider_slug: str) -> str:
+    """Build the DiscoveryResponse URL for a federation-mode SAML provider.
+
+    Derived from the request (correct X-Forwarded-* handling required behind a
+    proxy). Both the login redirect and the published metadata use this, so the
+    ``return`` we hand the discovery service always matches the DiscoveryResponse
+    the service validates it against.
+
+    Args:
+        provider_slug (str): The provider slug.
+
+    Returns:
+        str: The DiscoveryResponse endpoint URL.
+    """
+    return f"{request.scheme}://{request.host}/api/v1/auth/saml/{provider_slug}/disco"
 
 
 class SamlLoginRedirect(Resource):
     """Start the SAML web browser SSO flow for a saml-kind provider."""
 
     @no_auth
-    def get(self, provider_id: int) -> Response:
-        """Redirect the browser to the identity provider's SSO endpoint.
+    def get(self, provider_slug: str) -> Response:
+        """Redirect the browser to the IdP, or to the discovery service in federation mode.
 
         Args:
-            provider_id (int): The auth provider to log in with.
+            provider_slug (str): The auth provider to log in with.
 
         Returns:
-            Response: A redirect to the IdP, or an error for unknown providers.
+            Response: A redirect to the IdP or WAYF, or an error for unknown providers.
         """
-        authenticator = auth_manager.get_saml_authenticator(provider_id)
+        authenticator = auth_manager.get_saml_authenticator(provider_slug)
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
+        provider_id = authenticator.provider.id
         goto_url = request.args.get("gotoUrl", "/")
-        # xsd:ID values must not start with a digit; the AuthnRequest ID is
-        # verified against the response's InResponseTo at the ACS.
-        request_id = f"_{uuid.uuid4().hex}"
-        relay_state = auth_manager.make_scoped_token(
-            f"provider:{provider_id}",
-            "saml_state",
-            expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
-            pid=provider_id,
-            gotoUrl=goto_url,
-            request_id=request_id,
-        )
-        acs_url = _saml_acs_url(provider_id, authenticator.config)
         try:
+            if authenticator.is_federation():
+                # Send the user to the discovery service to pick their IdP. Our
+                # state rides along in the return URL; the WAYF preserves that
+                # query string and appends the chosen entityID to it.
+                disco_state = auth_manager.make_scoped_token(
+                    f"provider:{provider_id}",
+                    "saml_disco",
+                    expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
+                    pid=provider_id,
+                    gotoUrl=goto_url,
+                )
+                return_url = f"{_saml_disco_url(provider_slug)}?state={urllib.parse.quote(disco_state)}"
+                return redirect(authenticator.get_discovery_redirect_url(return_url))
+
+            # xsd:ID values must not start with a digit; the AuthnRequest ID is
+            # verified against the response's InResponseTo at the ACS.
+            request_id = f"_{uuid.uuid4().hex}"
+            relay_state = auth_manager.make_scoped_token(
+                f"provider:{provider_id}",
+                "saml_state",
+                expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
+                pid=provider_id,
+                gotoUrl=goto_url,
+                request_id=request_id,
+            )
+            acs_url = _saml_acs_url(provider_slug, authenticator.config)
             return redirect(authenticator.get_login_redirect_url(acs_url, relay_state, request_id))
         except Exception as ex:
             logger.exception(f"Building the SAML request failed: {ex}")
+            return _login_error_redirect(goto_url, "auth_failed")
+
+
+class SamlDisco(Resource):
+    """DiscoveryResponse endpoint: receive the IdP the user picked at the WAYF."""
+
+    @no_auth
+    def get(self, provider_slug: str) -> Response:
+        """Turn the chosen IdP entityID into an AuthnRequest to that IdP.
+
+        The discovery service sends the browser here with the chosen entityID; we
+        resolve it against the verified federation metadata (an entity not in the
+        federation is refused), then build and redirect to the AuthnRequest just
+        as the single-IdP flow does.
+
+        Args:
+            provider_slug (str): The auth provider the flow was started with.
+
+        Returns:
+            Response: A redirect to the chosen IdP, or a login-error redirect.
+        """
+        authenticator = auth_manager.get_saml_authenticator(provider_slug)
+        state = auth_manager.decode_scoped_token(request.args.get("state", ""), "saml_disco")
+        if not authenticator or not state or state.get("pid") != authenticator.provider.id:
+            return {"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED
+        provider_id = authenticator.provider.id
+        goto_url = state.get("gotoUrl") or "/"
+
+        entity_id = request.args.get(saml_authenticator.DISCOVERY_RETURN_ID_PARAM)
+        if not entity_id:
+            # the user cancelled at the discovery service, or it returned nothing
+            return _login_error_redirect(goto_url, "auth_cancelled")
+
+        try:
+            resolved = saml_federation.resolve_idp(authenticator.provider, entity_id)
+            if not resolved:
+                logger.warning(f"SAML discovery: '{entity_id}' is not an IdP in the federation for provider {provider_id}")
+                return _login_error_redirect(goto_url, "auth_failed")
+            request_id = f"_{uuid.uuid4().hex}"
+            relay_state = auth_manager.make_scoped_token(
+                f"provider:{provider_id}",
+                "saml_state",
+                expires_minutes=auth_manager.OAUTH_STATE_MINUTES,
+                pid=provider_id,
+                gotoUrl=goto_url,
+                request_id=request_id,
+                idp_entity_id=entity_id,
+            )
+            acs_url = _saml_acs_url(provider_slug, authenticator.config)
+            return redirect(authenticator.get_authn_request_url(resolved.sso_url, acs_url, relay_state, request_id))
+        except Exception as ex:
+            logger.exception(f"Building the SAML request after discovery failed: {ex}")
             return _login_error_redirect(goto_url, "auth_failed")
 
 
@@ -341,20 +425,21 @@ class SamlMetadata(Resource):
     """Publish the SP metadata an identity provider needs to register this service."""
 
     @no_auth
-    def get(self, provider_id: int) -> Response:
+    def get(self, provider_slug: str) -> Response:
         """Serve the SAML SP metadata document.
 
         Args:
-            provider_id (int): The auth provider to describe.
+            provider_slug (str): The auth provider to describe.
 
         Returns:
             Response: The metadata XML, or an error for unknown providers.
         """
-        authenticator = auth_manager.get_saml_authenticator(provider_id)
+        authenticator = auth_manager.get_saml_authenticator(provider_slug)
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
-        acs_url = _saml_acs_url(provider_id, authenticator.config)
-        metadata = authenticator.get_metadata_xml(acs_url)
+        acs_url = _saml_acs_url(provider_slug, authenticator.config)
+        disco_url = _saml_disco_url(provider_slug)
+        metadata = authenticator.get_metadata_xml(acs_url, disco_url)
         return Response(metadata, mimetype="application/samlmetadata+xml")
 
 
@@ -362,7 +447,7 @@ class SamlAcs(Resource):
     """Assertion Consumer Service: validate the posted SAMLResponse and log in."""
 
     @no_auth
-    def post(self, provider_id: int) -> Response:
+    def post(self, provider_slug: str) -> Response:
         """Finish the SAML flow and redirect to the GUI.
 
         The verdict reaches the GUI in cookies: the JWT on success, or the scoped
@@ -370,25 +455,22 @@ class SamlAcs(Resource):
         login page receives a login_error query parameter.
 
         Args:
-            provider_id (int): The auth provider the flow was started with.
+            provider_slug (str): The auth provider the flow was started with.
 
         Returns:
             Response: A redirect response.
         """
+        authenticator = auth_manager.get_saml_authenticator(provider_slug)
         relay_state = auth_manager.decode_scoped_token(request.form.get("RelayState", ""), "saml_state")
-        if not relay_state or relay_state.get("pid") != provider_id:
+        if not authenticator or not relay_state or relay_state.get("pid") != authenticator.provider.id:
             return {"error": "Invalid state"}, HTTPStatus.UNAUTHORIZED
         goto_url = relay_state.get("gotoUrl") or "/"
-
-        authenticator = auth_manager.get_saml_authenticator(provider_id)
-        if not authenticator:
-            return _login_error_redirect(goto_url, "auth_failed")
 
         saml_response = request.form.get("SAMLResponse")
         if not saml_response:
             return _login_error_redirect(goto_url, "auth_failed")
 
-        identity = authenticator.handle_response(saml_response, relay_state.get("request_id"))
+        identity = authenticator.handle_response(saml_response, relay_state.get("request_id"), relay_state.get("idp_entity_id"))
         if not identity:
             return _login_error_redirect(goto_url, "auth_failed")
 
@@ -514,11 +596,12 @@ def initialize(api: Api) -> None:
     """
     api.add_resource(Login, "/api/v1/auth/login")
     api.add_resource(LoginMethods, "/api/v1/auth/methods")
-    api.add_resource(OAuthLoginRedirect, "/api/v1/auth/oauth/<int:provider_id>/login")
-    api.add_resource(OAuthCallback, "/api/v1/auth/oauth/<int:provider_id>/callback")
-    api.add_resource(SamlLoginRedirect, "/api/v1/auth/saml/<int:provider_id>/login")
-    api.add_resource(SamlAcs, "/api/v1/auth/saml/<int:provider_id>/acs")
-    api.add_resource(SamlMetadata, "/api/v1/auth/saml/<int:provider_id>/metadata")
+    api.add_resource(OAuthLoginRedirect, "/api/v1/auth/oauth/<string:provider_slug>/login")
+    api.add_resource(OAuthCallback, "/api/v1/auth/oauth/<string:provider_slug>/callback")
+    api.add_resource(SamlLoginRedirect, "/api/v1/auth/saml/<string:provider_slug>/login")
+    api.add_resource(SamlDisco, "/api/v1/auth/saml/<string:provider_slug>/disco")
+    api.add_resource(SamlAcs, "/api/v1/auth/saml/<string:provider_slug>/acs")
+    api.add_resource(SamlMetadata, "/api/v1/auth/saml/<string:provider_slug>/metadata")
     api.add_resource(MfaTotp, "/api/v1/auth/mfa/totp")
     api.add_resource(MfaTotpEnroll, "/api/v1/auth/mfa/totp/enroll")
     api.add_resource(MfaWebauthnEnroll, "/api/v1/auth/mfa/webauthn/enroll")

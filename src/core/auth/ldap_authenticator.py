@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from auth.base_authenticator import BaseAuthenticator, ExternalIdentity
 from ldap3 import ALL, BASE, SUBTREE, Connection, Server, Tls
 from ldap3.utils.conv import escape_filter_chars
+from ldap3.utils.dn import escape_rdn
 from managers import log_manager
 
 if TYPE_CHECKING:
@@ -97,6 +98,30 @@ class LDAPAuthenticator(BaseAuthenticator):
             email=first("mail"),
         )
 
+    @staticmethod
+    def _bind_failure_reason(conn: Connection) -> str:
+        """Best-effort readable reason why ``conn.bind()`` returned False.
+
+        ldap3 populates ``conn.last_error`` and ``conn.result`` (a dict whose
+        ``description`` carries the server's LDAP result code, e.g.
+        ``invalidCredentials``) when a bind is rejected. Surface both so an
+        admin debugging a misconfigured provider sees what the LDAP server
+        actually said instead of a bare "Authentication failed".
+        """
+        parts: list[str] = []
+        error = getattr(conn, "last_error", None)
+        if error:
+            parts.append(f"last_error={error}")
+        result = getattr(conn, "result", None) or {}
+        if isinstance(result, dict):
+            description = result.get("description")
+            if description:
+                parts.append(f"description={description}")
+            code = result.get("result")
+            if code not in (None, "", 0, "success"):
+                parts.append(f"code={code}")
+        return ", ".join(parts).strip() or "no error reported"
+
     def verify(self, credentials: dict) -> ExternalIdentity | None:
         """Try to authenticate the user against the LDAP server.
 
@@ -123,11 +148,40 @@ class LDAPAuthenticator(BaseAuthenticator):
             log_manager.store_auth_error_activity(f"LDAP authentication error for provider '{self.provider.name}'", ex)
         return None
 
+    def _direct_bind_dn(self, username: str) -> str:
+        r"""Build the user DN for direct bind from the configured template or base DN.
+
+        ``user_dn_template`` may be either:
+          * a full template with a ``{username}`` placeholder, e.g.
+            ``uid={username},ou=people,dc=example,dc=org`` (explicit form), or
+          * a plain base DN, e.g. ``ou=people,dc=example,dc=org`` (base-DN
+            form), in which case the bind DN is auto-constructed as
+            ``<username_attr>=<username>,<base_dn>`` using the configured
+            ``username_attr`` (default ``uid``). This avoids asking the admin
+            to repeat the RDN attribute they already declared in
+            ``username_attr``.
+
+        The username is escaped per RFC 4514 (ldap3 ``escape_rdn`` for the
+        auto-constructed RDN, ``escape_filter_chars`` for the explicit
+        ``{username}`` placeholder to preserve backward compatibility) so a
+        username containing ``,`` ``+`` ``\"`` etc. cannot inject DN
+        components.
+        """
+        template = self.config["user_dn_template"]
+        if "{username}" in template:
+            return template.format(username=escape_filter_chars(username))
+        username_attr = self.config.get("username_attr") or "uid"
+        return f"{username_attr}={escape_rdn(username)},{template}"
+
     def _verify_direct_bind(self, server: Server, username: str, password: str) -> ExternalIdentity | None:
         """Authenticate by binding directly with a DN built from the template."""
-        dn = self.config["user_dn_template"].format(username=escape_filter_chars(username))
+        dn = self._direct_bind_dn(username)
         conn = Connection(server, user=dn, password=password, read_only=True)
         if not conn.bind():
+            log_manager.store_auth_error_activity(
+                f"LDAP user bind failed for provider '{self.provider.name}', user '{username}' (DN: '{dn}'): "
+                f"{self._bind_failure_reason(conn)}",
+            )
             return None
         entry = self._fetch_entry(conn, dn)
         conn.unbind()
@@ -137,7 +191,10 @@ class LDAPAuthenticator(BaseAuthenticator):
         """Authenticate by finding the user with a service account, then rebinding."""
         service_conn = Connection(server, user=self.config["bind_dn"], password=self.provider.get_secret_plaintext(), read_only=True)
         if not service_conn.bind():
-            log_manager.store_auth_error_activity(f"LDAP service bind failed for provider '{self.provider.name}'")
+            log_manager.store_auth_error_activity(
+                f"LDAP service bind failed for provider '{self.provider.name}' (bind_dn: '{self.config['bind_dn']}'): "
+                f"{self._bind_failure_reason(service_conn)}",
+            )
             return None
         search_filter = (self.config.get("search_filter") or "(uid={username})").format(username=escape_filter_chars(username))
         found = service_conn.search(
@@ -147,6 +204,10 @@ class LDAPAuthenticator(BaseAuthenticator):
             attributes=[self.config.get("username_attr") or "uid", self.config.get("name_attr") or "cn", "mail"],
         )
         if not found or not service_conn.entries:
+            log_manager.store_auth_error_activity(
+                f"LDAP search matched no entries for provider '{self.provider.name}', user '{username}' "
+                f"(search_base: '{self.config['search_base']}', filter: '{search_filter}')",
+            )
             service_conn.unbind()
             return None
         entry = service_conn.entries[0]
@@ -156,6 +217,10 @@ class LDAPAuthenticator(BaseAuthenticator):
 
         user_conn = Connection(server, user=dn, password=password, read_only=True)
         if not user_conn.bind():
+            log_manager.store_auth_error_activity(
+                f"LDAP user bind failed for provider '{self.provider.name}', user '{username}' (DN: '{dn}'): "
+                f"{self._bind_failure_reason(user_conn)}",
+            )
             return None
         user_conn.unbind()
         return self._identity_from_entry(username, dn, attributes)

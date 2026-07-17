@@ -101,7 +101,7 @@
         },
         {
             value: 'login-methods',
-            title: 'nav_menu.auth_providers',
+            title: 'nav_menu.login_methods',
             icon: 'mdi-login-variant',
             description: 'auth_provider.tab_description',
             component: AuthProvidersTab,

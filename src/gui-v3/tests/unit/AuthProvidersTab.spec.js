@@ -80,8 +80,8 @@ describe('AuthProvidersTab', () => {
 
     it('colours the kind chips distinctly (SAML has its own colour)', async () => {
         const { wrapper } = await mountTab()
-        expect(wrapper.vm.kindColor('saml')).toBe('blue')
-        expect(wrapper.vm.kindColor('oidc')).toBe('teal')
+        expect(wrapper.vm.kindColor('saml')).toBe('purple')
+        expect(wrapper.vm.kindColor('oidc')).toBe('orange')
         expect(wrapper.vm.kindColor('local')).toBe('primary')
         expect(wrapper.vm.kindColor('unknown-kind')).toBe('grey')
     })

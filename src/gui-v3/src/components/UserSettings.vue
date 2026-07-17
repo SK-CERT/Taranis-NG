@@ -36,21 +36,37 @@
             >
                 <!-- General Tab -->
                 <v-tab value="general">
+                    <v-icon
+                        :icon="ICONS.COG"
+                        start
+                    />
                     {{ t('settings.tab_general') }}
                 </v-tab>
 
                 <!-- Security Tab -->
                 <v-tab value="security">
+                    <v-icon
+                        :icon="ICONS.SHIELD_LOCK"
+                        start
+                    />
                     {{ t('settings.tab_security') }}
                 </v-tab>
 
                 <!-- Word Lists Tab -->
                 <v-tab value="wordlists">
+                    <v-icon
+                        :icon="ICONS.TEXT_BOX_OUTLINE"
+                        start
+                    />
                     {{ t('settings.tab_wordlists') }}
                 </v-tab>
 
                 <!-- Hotkeys Tab -->
                 <v-tab value="hotkeys">
+                    <v-icon
+                        :icon="ICONS.KEYBOARD"
+                        start
+                    />
                     {{ t('settings.tab_hotkeys') }}
                 </v-tab>
             </v-tabs>
@@ -172,6 +188,7 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useSettingsStore } from '@/stores/settings'
+    import { ICONS } from '@/config/ui-constants'
     import SettingsTable from './config/SettingsTable.vue'
     import SecuritySettings from './SecuritySettings.vue'
 

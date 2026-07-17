@@ -41,9 +41,11 @@ def parse_idp_metadata(xml: str) -> dict:
               several signing certificates survive an IdP key rollover).
 
     Raises:
-        ValueError: When the document is not parsable, is a multi-entity
-            aggregate, describes no IdP, or lacks an SSO endpoint or a
-            signing certificate.
+        ValueError: When the document is not parsable, describes several
+            identity providers, describes no IdP, or lacks an SSO endpoint or a
+            signing certificate. A single-entity aggregate (a signed
+            ``EntitiesDescriptor`` wrapping one IdP, as MDQ services return) is
+            accepted and unwrapped.
     """
     try:
         root = ElementTree.fromstring(xml.strip())
@@ -52,18 +54,33 @@ def parse_idp_metadata(xml: str) -> dict:
         raise ValueError(msg) from ex
 
     if root.tag == MD + "EntitiesDescriptor":
-        msg = "This is a federation aggregate describing several entities. Provide the metadata of the single identity provider."
-        raise ValueError(msg)
-    if root.tag != MD + "EntityDescriptor":
+        # A metadata query service (eduID.cz and other MDQ endpoints) wraps even a
+        # single entity in a signed EntitiesDescriptor. Unwrap it when exactly one
+        # identity provider is inside; a genuine multi-IdP aggregate is the
+        # federation case and belongs to a federation login method instead.
+        idp_entities = [entity for entity in root.findall(MD + "EntityDescriptor") if entity.find(MD + "IDPSSODescriptor") is not None]
+        if len(idp_entities) > 1:
+            msg = (
+                "This metadata describes several identity providers (a federation aggregate). "
+                "Provide the metadata of a single identity provider, or configure a federation login method instead."
+            )
+            raise ValueError(msg)
+        if not idp_entities:
+            msg = "This metadata aggregate contains no identity provider (no IDPSSODescriptor element)"
+            raise ValueError(msg)
+        entity = idp_entities[0]
+    elif root.tag == MD + "EntityDescriptor":
+        entity = root
+    else:
         msg = "This does not look like SAML metadata (no EntityDescriptor element)"
         raise ValueError(msg)
 
-    entity_id = root.get("entityID")
+    entity_id = entity.get("entityID")
     if not entity_id:
         msg = "The metadata has no entityID"
         raise ValueError(msg)
 
-    idp = root.find(MD + "IDPSSODescriptor")
+    idp = entity.find(MD + "IDPSSODescriptor")
     if idp is None:
         msg = "The metadata describes no identity provider (no IDPSSODescriptor element)"
         raise ValueError(msg)
