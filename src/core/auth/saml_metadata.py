@@ -54,10 +54,11 @@ def parse_idp_metadata(xml: str) -> dict:
         raise ValueError(msg) from ex
 
     if root.tag == MD + "EntitiesDescriptor":
-        # A metadata query service (eduID.cz and other MDQ endpoints) wraps even a
-        # single entity in a signed EntitiesDescriptor. Unwrap it when exactly one
-        # identity provider is inside; a genuine multi-IdP aggregate is the
-        # federation case and belongs to a federation login method instead.
+        # A metadata query service (MDQ endpoints such as those run by eduGAIN,
+        # InCommon or DFN-AAI) wraps even a single entity in a signed
+        # EntitiesDescriptor. Unwrap it when exactly one identity provider is
+        # inside; a genuine multi-IdP aggregate is the federation case and
+        # belongs to a federation login method instead.
         idp_entities = [entity for entity in root.findall(MD + "EntityDescriptor") if entity.find(MD + "IDPSSODescriptor") is not None]
         if len(idp_entities) > 1:
             msg = (

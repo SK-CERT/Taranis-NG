@@ -325,7 +325,7 @@ export async function cleanupSeedData(request, token, { reportItemIds = [], aggr
 // ─── Idempotent seed-entity helpers ─────────────────────────────────────────
 // The 00-config-seed spec creates nodes / product types / presets with FIXED names
 // (e.g. "E2E Presenters Node") on UNIQUE columns. If the E2E environment is reused
-// across runs (Playwright's reuseExistingServer keeps test-setup.sh from re-running,
+// across runs (Playwright's reuseExistingServer keeps test-setup.py from re-running,
 // and `down -v` doesn't fire on every click in the VS Code runner), a previous run's
 // entity lingers and the next add trips a UniqueViolation → HTTP 500 → the misleading
 // "Could not connect to X node." Vue alert. These helpers delete any pre-existing
@@ -459,7 +459,7 @@ export async function deletePublisherPresetsByName(request, token, matches) {
 
 /**
  * Purge the fixed-name seed entities the 00-config-seed spec creates, so each run starts
- * from a clean slate regardless of whether test-setup.sh re-wiped the DB. Self-contained:
+ * from a clean slate regardless of whether test-setup.py re-wiped the DB. Self-contained:
  * builds its own API request context, never throws. Call from the spec's beforeEach.
  *
  * The product-type / publisher-preset / manual-source seed tests already use

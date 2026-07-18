@@ -148,7 +148,7 @@
                             :label="t('auth_provider.discovery_url')"
                             variant="outlined"
                             density="comfortable"
-                            placeholder="https://ds.eduid.cz/wayf.php"
+                            placeholder="https://discovery.example.org/wayf"
                             :hint="t('auth_provider.discovery_url_hint')"
                             persistent-hint
                             :rules="[(v) => !!v || t('error.required')]"
@@ -164,7 +164,7 @@
                             :label="t('auth_provider.federation_metadata_url')"
                             variant="outlined"
                             density="comfortable"
-                            placeholder="https://metadata.eduid.cz/entities/eduid"
+                            placeholder="https://metadata.example.org"
                             :hint="t('auth_provider.federation_metadata_url_hint')"
                             persistent-hint
                             :rules="[(v) => !!v || t('error.required')]"
@@ -341,8 +341,9 @@
             </v-alert>
         </v-window-item>
 
-        <!-- Service information published in the SP metadata. A federation
-             (eduID.cz, ...) requires these to accept the registration. -->
+        <!-- Service information published in the SP metadata. Federations
+             (eduGAIN, InCommon, DFN-AAI, ...) require these to accept the
+             registration. -->
         <v-window-item value="service">
             <div class="text-caption text-medium-emphasis mb-2">{{ t('auth_provider.sp_metadata_info_hint') }}</div>
             <v-row>

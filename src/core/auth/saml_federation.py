@@ -1,10 +1,10 @@
 """Resolve identity providers out of a federation's signed metadata aggregate.
 
-Federation mode connects the service provider to a whole federation (eduGAIN,
-eduID.cz, InCommon, ...) instead of a single identity provider: the user picks
-their institution at a discovery service (WAYF), and this module turns the
-chosen ``entityID`` into the HTTP-Redirect SSO URL and signing certificate(s)
-needed to build the AuthnRequest and, later, verify the response.
+Federation mode connects the service provider to a whole federation
+(eduGAIN, InCommon, DFN-AAI, ...) instead of a single identity provider:
+the user picks their institution at a discovery service (WAYF), and this module
+turns the chosen ``entityID`` into the HTTP-Redirect SSO URL and signing
+certificate(s) needed to build the AuthnRequest and, later, verify the response.
 
 The trust anchor is everything. The aggregate is fetched over the network, so
 its enveloped XML signature is verified against a certificate the admin pinned
@@ -14,7 +14,7 @@ anyone able to intercept the metadata fetch inject a rogue IdP and forge
 logins.
 
 The verifier is the same ``minisignxml`` the assertion path already relies on;
-a real eduID.cz aggregate (5+ MB, hundreds of entities) verifies in a fraction
+a real federation aggregate (5+ MB, hundreds of entities) verifies in a fraction
 of a second, so the metadata is simply fetched, verified and cached in process
 with a short TTL - no background refresh machinery. The TTL never outlives the
 document's own ``validUntil``.

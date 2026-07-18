@@ -9,7 +9,12 @@ import { login, navigateToConfig, generateTestName } from '../helpers/test-helpe
  * and the last-admin lockout guard.
  */
 
-const CORE_API = process.env.E2E_CORE_API || 'http://127.0.0.1:8082/api/v1'
+// See api-seed.js / api-cleanup.js: the E2E stack exposes core on
+// E2E_CORE_PORT (default 8090, see docker/.env.e2e). Earlier revisions
+// hardcoded 'http://127.0.0.1:8082/...', which the E2E stack does not expose,
+// so direct page.request.get(...)/`request.post(${CORE_API}/...)` calls failed
+// with ECONNREFUSED while the Vite-proxied GUI flow worked.
+const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1`
 
 const activePanel = (page) => page.locator('.v-window-item--active')
 

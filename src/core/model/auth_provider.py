@@ -9,10 +9,11 @@ Kind-specific non-secret settings live in the ``config`` JSON column:
 - saml (single IdP): idp_sso_url, idp_entity_id, idp_certificate, sp_entity_id,
   acs_url_override, username_attr, name_attr, email_attr
 - saml (federation / discovery mode, when discovery_url is set): discovery_url,
-  discovery_params (raw query string appended to the WAYF, e.g. eduID.cz
-  filter/efilter), federation_metadata_url, federation_metadata_cert (PEM trust
-  anchor), federation_metadata_refresh_hours; the idp_* fields are then unused,
-  the chosen IdP being resolved from the verified federation metadata
+  discovery_params (raw query string appended to the WAYF; some federations
+  accept a filter parameter here), federation_metadata_url,
+  federation_metadata_cert (PEM trust anchor), federation_metadata_refresh_hours;
+  the idp_* fields are then unused, the chosen IdP being resolved from the
+  verified federation metadata
 - ldap: server_url, use_tls, ca_cert, user_dn_template OR (bind_dn, search_base,
   search_filter, username_attr, name_attr)
 - local: (empty)

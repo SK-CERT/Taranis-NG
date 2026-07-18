@@ -526,7 +526,10 @@
         }
     )
 
-    const suggestedEntityId = computed(() => `${window.location.origin}/api/v1/auth/saml/cesnet-federation/metadata`)
+    // The suggested SP entity ID is the SP's own metadata URL — it is the canonical
+    // identifier for a SAML service provider (the metadata URL itself is stable across
+    // environments, since it carries the provider slug rather than the database id).
+    const suggestedEntityId = computed(() => samlMetadataUrl.value)
     // Auto-creation settings (domain filter, default roles) only apply when unknown users get accounts
     const isAutoCreate = computed(() => localItem.value.provisioning_mode !== 'manual')
 

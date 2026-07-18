@@ -163,23 +163,31 @@ started).
 
 ### Service information in the metadata
 
-A federation registration form (eduID.cz's included) validates the SP metadata
-and requires human-readable service information in it: a **display name**, a
-**description**, an **information URL**, an **organization** and a **technical
-contact**. The provider dialog has optional fields for these under *Service
-information*; each is emitted into the metadata only when set, and the values a
-federation lists in several languages are published for each (the same text).
-The entityID must also be an **`https://` URL** for eduID.cz - and it must stay
-stable, because the IdP registration is keyed on it. It should therefore **not**
-include the login method's ID: moving or recreating the method changes that ID,
-which would force a new registration. The SAML endpoint base
-(`https://<your-host>/api/v1/auth/saml`) is a good choice, which is also what the
-provider dialog suggests.
+A federation registration form validates the SP metadata and requires
+human-readable service information in it: a **display name**, a
+**description**, an **information URL**, an **organization** and a
+**technical contact**. The provider dialog has optional fields for these under
+*Service information*; each is emitted into the metadata only when set, and
+the values a federation lists in several languages are published for each
+(the same text). The entityID must also be an **`https://` URL** (most
+federations require this, and an IdP's schema validator may otherwise reject
+the metadata) - and it must stay stable, because the IdP registration is keyed
+on it. It should therefore **not** include the login method's database ID:
+moving or recreating the method changes that ID, which would force a new
+registration. The SP's own metadata URL is the canonical choice, and also what
+the provider dialog suggests:
+
+```
+https://<your-host>/api/v1/auth/saml/<provider_slug>/metadata
+```
+
+It carries the provider *slug* (a URL-safe identifier derived from the
+provider name).
 
 ### Federation mode (discovery service / WAYF)
 
 Instead of one identity provider, a SAML provider can join a whole **federation**
-(eduID.cz, eduGAIN, InCommon, DFN-AAI, ...). Turn on *Connect to a federation
+(e.g. eduGAIN, InCommon, DFN-AAI). Turn on *Connect to a federation
 (discovery service)* in the provider dialog. The user is then sent to the
 federation's **discovery service** - a WAYF, "Where Are You From" - to pick their
 home institution, and the chosen IdP is resolved from the federation's signed
@@ -201,14 +209,14 @@ discovery response:  https://<your-host>/api/v1/auth/saml/<provider_id>/disco
 It is published in our metadata as an `<idpdisc:DiscoveryResponse>`, which is how
 the discovery service validates the `return` address we hand it - registering the
 metadata URL is enough. This follows the SAML Identity Provider Discovery Service
-protocol, so it works with any federation's discovery service, not just eduID.cz.
+protocol, so it works with any federation's discovery service.
 
 Federation mode replaces the single IdP's SSO URL and certificate with:
 
 - **Discovery service (WAYF) URL** - where the user picks an IdP, e.g.
-  `https://ds.eduid.cz/wayf.php`.
+  `https://discovery.example.org/wayf`.
 - **Federation metadata URL** - the signed aggregate, e.g.
-  `https://metadata.eduid.cz/entities/eduid`.
+  `https://metadata.example.org/entities/federation`.
 - **Federation metadata signing certificate** - the **trust anchor** (below).
 
 Everything else - the SP entityID, the attribute mapping, the SP keypair for
@@ -237,18 +245,19 @@ the document's own `validUntil`. Press *Verify federation* in the dialog to fetc
 and verify the metadata and report how many identity providers it yields before
 saving.
 
-#### Restricting the identity provider list (eduID.cz `filter`/`efilter`)
+#### Restricting the identity provider list (discovery filter)
 
 By default the discovery service lists every IdP in the federation. The optional
 **Discovery service parameters** field is appended to the discovery URL verbatim.
-For eduID.cz this is where the `filter` / `efilter` that restrict the listed IdPs
-go - generate one at `https://ds.eduid.cz/filter.php` and paste it in URL-ready:
+Many federations accept a `filter` (or similar) parameter here that restricts
+the listed IdPs - obtain the value from the federation operator and paste it in
+URL-ready:
 
 ```
 filter=eyAgImFsbG93SG9zdGVsIjogdHJ1ZSB9
 ```
 
-This is the only eduID.cz-specific setting; the field is an opaque pass-through,
+This is the only federation-specific setting; the field is an opaque pass-through,
 so another federation's discovery parameters go in exactly the same place.
 
 ## User provisioning and identity linking

@@ -20,9 +20,10 @@ Provider ``config`` keys:
     email_attr (str): Assertion attribute holding the e-mail address.
     nameid_format (str): NameID format advertised in our metadata.
 
-Optional human-readable SP metadata (a federation such as eduID.cz requires it
-to register, and an IdP's schema validator rejects the metadata without the
-ServiceName that ``sp_display_name`` provides). Each is emitted only when set:
+Optional human-readable SP metadata (a federation such as eduGAIN, InCommon or
+DFN-AAI requires it to register, and an IdP's schema validator rejects the
+metadata without the ServiceName that ``sp_display_name`` provides). Each is
+emitted only when set:
     sp_display_name (str): Service display name (UIInfo DisplayName, and the
         AttributeConsumingService ServiceName). Falls back to the provider name.
     sp_description (str): UIInfo Description.
@@ -83,9 +84,9 @@ ATTRIBUTE_NAME_FORMAT = "urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
 IDP_DISCOVERY_PROTOCOL = "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"
 DISCOVERY_RETURN_ID_PARAM = "idp_entity_id"
 
-# Human-readable SP metadata (UIInfo, Organization, ServiceName). A federation
-# such as eduID.cz requires these and wants every language it lists an entity in;
-# the same admin-supplied text is emitted for each language here.
+# Human-readable SP metadata (UIInfo, Organization, ServiceName). Federations
+# such as eduGAIN, InCommon or DFN-AAI require these and want every language they
+# list an entity in; the same admin-supplied text is emitted for each language here.
 MDUI_NAMESPACE = "urn:oasis:names:tc:SAML:metadata:ui"
 METADATA_LANGS = ("en", "cs")
 
@@ -254,8 +255,9 @@ class SamlAuthenticator(BaseAuthenticator):
     def _localized(prefix: str, tag: str, value: str, indent: str) -> str:
         """Emit an XML element once per advertised language, or '' when unset.
 
-        A federation lists an entity in several languages (eduID.cz wants both
-        Czech and English); the same admin-supplied text is repeated for each.
+        A federation lists an entity in several languages (typically both the
+        local language and English); the same admin-supplied text is repeated
+        for each.
         """
         if not value:
             return ""
@@ -265,7 +267,7 @@ class SamlAuthenticator(BaseAuthenticator):
     def _metadata_organization(self, service_name: str) -> str:
         """Build the ``<md:Organization>`` block, or '' when none is configured.
 
-        A federation such as eduID.cz requires it. All three child elements are
+        A federation typically requires it. All three child elements are
         mandatory, so a missing display name or URL falls back to the service name
         and the SP entityID.
         """
@@ -286,12 +288,12 @@ class SamlAuthenticator(BaseAuthenticator):
     def _metadata_contact(self) -> str:
         """Build the technical ``<md:ContactPerson>`` block, or '' with no e-mail configured.
 
-        A federation such as eduID.cz requires a ``SurName`` on the technical
-        contact. It is taken from ``sp_contact_surname`` when set; otherwise it is
-        derived from the last token of ``sp_contact_name`` ("Jane Doe" -> "Doe"),
-        so the warning clears even when only the name field is filled. The whole
-        block is omitted when no e-mail is configured, matching the schema's
-        optionality (SurName and GivenName are both optional in SAML itself).
+        A federation typically requires a ``SurName`` on the technical contact.
+        It is taken from ``sp_contact_surname`` when set; otherwise it is derived
+        from the last token of ``sp_contact_name`` ("Jane Doe" -> "Doe"), so the
+        warning clears even when only the name field is filled. The whole block
+        is omitted when no e-mail is configured, matching the schema's optionality
+        (SurName and GivenName are both optional in SAML itself).
         """
         email = (self.config.get("sp_contact_email") or "").strip()
         if not email:
@@ -300,7 +302,8 @@ class SamlAuthenticator(BaseAuthenticator):
         given = f"\n    <md:GivenName>{escape(name)}</md:GivenName>" if name else ""
         surname = (self.config.get("sp_contact_surname") or "").strip()
         if not surname and name:
-            # eduID requires a SurName; fall back to the last token of the name.
+            # A federation typically requires a SurName; fall back to the last
+            # token of the name.
             surname = name.rsplit(maxsplit=1)[-1]
         surname_el = f"\n    <md:SurName>{escape(surname)}</md:SurName>" if surname else ""
         address = email if email.startswith("mailto:") else f"mailto:{email}"
@@ -389,7 +392,8 @@ class SamlAuthenticator(BaseAuthenticator):
         extensions = f"\n    <md:Extensions>{ui_info}{discovery_response}\n    </md:Extensions>" if (ui_info or discovery_response) else ""
 
         # Organization and ContactPerson sit at the EntityDescriptor level, after
-        # the role descriptor; a federation such as eduID.cz requires both.
+        # the role descriptor; federations (eduGAIN, InCommon, DFN-AAI, ...) require
+        # both.
         organization = self._metadata_organization(service_name)
         contact = self._metadata_contact()
 
@@ -441,10 +445,10 @@ class SamlAuthenticator(BaseAuthenticator):
         Follows the SAML Identity Provider Discovery Service protocol: it carries
         our entityID, a ``return`` URL the service sends the browser back to, and
         the name of the query parameter it must report the chosen IdP entityID in.
-        Any federation-specific extras the admin configured - for eduID.cz the
-        ``filter``/``efilter`` that restrict which IdPs are listed - are appended
-        verbatim as an already-URL-ready query fragment, so nothing here is
-        specific to one federation.
+        Any federation-specific extras the admin configured - for federations that
+        support it, a ``filter`` parameter that restricts which IdPs are listed -
+        are appended verbatim as an already-URL-ready query fragment, so nothing
+        here is specific to one federation.
 
         Args:
             return_url (str): Absolute URL of our DiscoveryResponse endpoint,

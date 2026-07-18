@@ -1,8 +1,8 @@
 """parse_idp_metadata extracts single-IdP settings, incl. from a wrapped aggregate.
 
-A metadata query service (eduID.cz and other MDQ endpoints) returns even one
-entity inside a signed ``EntitiesDescriptor``; the importer must unwrap that but
-still refuse a genuine multi-IdP aggregate.
+A metadata query service (MDQ endpoints such as those run by eduGAIN, InCommon
+or DFN-AAI) returns even one entity inside a signed ``EntitiesDescriptor``; the
+importer must unwrap that but still refuse a genuine multi-IdP aggregate.
 """
 
 from __future__ import annotations
@@ -61,7 +61,8 @@ def test_single_entity_descriptor_is_parsed() -> None:
 
 
 def test_single_entity_aggregate_is_unwrapped() -> None:
-    # eduID.cz's /entities/<one-idp> returns a signed EntitiesDescriptor wrapping one entity
+    # A metadata query service (MDQ endpoint) returns a signed
+    # EntitiesDescriptor wrapping a single entity.
     result = parse_idp_metadata(_aggregate(_idp("https://idp.example.org/idp")))
     assert result["idp_entity_id"] == "https://idp.example.org/idp"
 

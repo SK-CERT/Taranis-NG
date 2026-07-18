@@ -40,8 +40,8 @@ ENRICH = {
     "sp_contact_name": "Example CERT Team",
 }
 FEDERATION = {
-    "discovery_url": "https://ds.eduid.cz/wayf.php",
-    "federation_metadata_url": "https://metadata.eduid.cz/entities/eduid",
+    "discovery_url": "https://ds.example.org/wayf",
+    "federation_metadata_url": "https://metadata.example.org/entities/federation",
     "federation_metadata_cert": "unused-when-only-building-metadata",
 }
 
@@ -102,8 +102,9 @@ def test_enriched_metadata_carries_uiinfo_organization_and_contact() -> None:
     contact = document.find(f"{{{MD}}}ContactPerson")
     assert contact is not None
     assert contact.get("contactType") == "technical"
-    # eduID.cz and similar federations require a SurName on the technical contact.
-    # It is derived from sp_contact_name's last token when sp_contact_surname is unset.
+    # Federations (eduGAIN, InCommon, DFN-AAI, ...) require a SurName on the
+    # technical contact. It is derived from sp_contact_name's last token when
+    # sp_contact_surname is unset.
     assert contact.find(f"{{{MD}}}SurName") is not None, "technical contact has no SurName"
     assert contact.find(f"{{{MD}}}SurName").text == "Team"  # last token of "Example CERT Team"
 
