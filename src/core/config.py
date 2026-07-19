@@ -92,6 +92,18 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = 14400
     DEBUG = True
 
+    # Key used to encrypt secrets stored in the database (auth provider client
+    # secrets, LDAP bind passwords, TOTP seeds). Falls back to JWT_SECRET_KEY so
+    # existing deployments keep booting; a dedicated secret is strongly recommended.
+    # The explicit flag records whether the fallback was taken - a deployment that
+    # deliberately sets the two secrets to the same value must not be warned.
+    try:
+        SECRETS_ENCRYPTION_KEY = read_secret("secrets_encryption_key")
+        SECRETS_ENCRYPTION_KEY_IS_FALLBACK = False
+    except RuntimeError:
+        SECRETS_ENCRYPTION_KEY = JWT_SECRET_KEY
+        SECRETS_ENCRYPTION_KEY_IS_FALLBACK = True
+
     SECRET_KEY = ""
     OIDC_CLIENT_SECRETS = "client_secrets.json"
     OIDC_ID_TOKEN_COOKIE_SECURE = False

@@ -23,6 +23,7 @@ class ProductSchemaBase(Schema):
     updated_at = fields.DateTime("%d.%m.%Y - %H:%M")
     product_type_id = fields.Int()
     state_id = fields.Int(allow_none=True)
+    public_web_ids = fields.List(fields.Int(), allow_none=True)
 
 
 class ProductSchema(ProductSchemaBase):

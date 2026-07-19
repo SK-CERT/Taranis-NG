@@ -21,7 +21,13 @@ export const configLinks: ConfigLink[] = [
         icon: 'mdi-account-key',
         title: 'nav_menu.access_management',
         route: '/config/access-management',
-        permissions: ['CONFIG_USER_ACCESS', 'CONFIG_ROLE_ACCESS', 'CONFIG_ACL_ACCESS', 'CONFIG_ORGANIZATION_ACCESS'],
+        permissions: [
+            'CONFIG_USER_ACCESS',
+            'CONFIG_ROLE_ACCESS',
+            'CONFIG_ACL_ACCESS',
+            'CONFIG_ORGANIZATION_ACCESS',
+            'CONFIG_AUTH_PROVIDER_ACCESS'
+        ],
         translate: true
     },
     {
@@ -59,6 +65,14 @@ export const configLinks: ConfigLink[] = [
         icon: 'mdi-remote',
         title: 'nav_menu.remote',
         route: '/config/remote',
+        translate: true
+    },
+    {
+        id: 13,
+        icon: 'mdi-web',
+        title: 'nav_menu.public_web',
+        route: '/config/public-web',
+        permission: 'CONFIG_PUBLIC_WEB_NODE_ACCESS',
         translate: true
     },
     {

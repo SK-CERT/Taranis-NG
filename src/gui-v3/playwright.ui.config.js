@@ -28,10 +28,13 @@ export default defineConfig({
     webServer: [
         {
             // boot/rebuild the E2E Docker stack. The `url` probe is essential: without it
-            // Playwright could RE-RUN test-setup.sh mid-test, whose `down -v` wipes the postgres
+            // Playwright could RE-RUN test-setup mid-test, whose `down -v` wipes the postgres
             // volume while tests run (the recurring 'Could not connect to X node.' cause). With
             // `url`, Playwright reuses the running stack if isalive responds (see playwright.config.js).
-            command: 'bash ../../scripts/test-setup.sh',
+            //
+            // scripts/test-setup.py is the cross-platform setup; use `python` on win32
+            // (no python3 alias there). See playwright.config.js for the full rationale.
+            command: process.platform === 'win32' ? 'python ../../scripts/test-setup.py' : 'python3 ../../scripts/test-setup.py',
             url: `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1/isalive`,
             reuseExistingServer: true,
             timeout: 120 * 1000

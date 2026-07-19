@@ -1,0 +1,157 @@
+{% macro homepage_button(href=None) %}
+    <div class="d-flex justify-content-center">
+        <a href="{{ href or url_for('reports.home') }}"
+           class="btn btn-lg btn-primary w-auto d-flex align-items-center mt-2">
+            <span class="mdi mdi-home fs-4" aria-hidden="true"></span>
+            <p class="m-0 ms-1">
+                {{ translate_ui("homepage") }}
+            </p>
+        </a>
+    </div>
+{% endmacro %}
+
+{% macro required() -%}
+    <span class="text-danger">*</span>
+{%- endmacro %}
+
+{% macro feedback_modal(feedback_q) -%}
+    <div class="modal fade" id="feedback-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">
+                        {{ translate_ui("feedback") }}
+                    </h1>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="feedback-form">
+                        <div class="form-group">
+                            {% for key, question in feedback_q.items() if "question" in key %}
+                                <div class="{{ 'mt-3' if not loop.first else '' }}">
+                                    <label for="{{ key }}">
+                                        {{ question }}
+                                        {% if key != "question3" %}{{ required() }}{% endif %}
+                                    </label>
+                                    <div id="{{ key }}">
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-{{ key }}"
+                                                                                                     id="{{ key }}-yes"
+                                                                                                     value="yes"
+                                                                                                     {% if key != "question3" %}required{% endif %}>
+                                                                                        <label class="form-check-label" for="{{ key }}-yes">
+                                                                                                {{ translate_ui("form_yes") }}
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                                                                        <input class="form-check-input"
+                                                                                                     type="radio"
+                                                                                                     name="feedback-{{ key }}"
+                                                                                                     id="{{ key }}-no"
+                                                                                                     value="no"
+                                                                                                     {% if key != "question3" %}required{% endif %}>
+                                                                                        <label class="form-check-label" for="{{ key }}-no">
+                                                                                                {{ translate_ui("form_no") }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            <div class="mt-3">
+                                <label for="feedback-comment">
+                                    {{ feedback_q["comment"] }}
+                                </label>
+                                <textarea class="form-control text-field"
+                                          id="feedback-comment"
+                                          name="feedback-comment"
+                                          rows="3"
+                                          onfocus="this.style.boxShadow='none';"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <span id="feedback-message" class="form-text form-error text-danger d-none"></span>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{ translate_ui("form_close") }}
+                    </button>
+                    <button type="submit"
+                            form="feedback-form"
+                            id="feedback-submit"
+                            class="btn btn-primary">
+                        {{ translate_ui("form_send") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro services_warning(warning_seen) -%}
+    {%- if content["service_warning"] and warning_seen is none -%}
+        <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+            <div class="d-flex align-items-center">
+                <span class="mdi mdi-alert me-2 fs-4 flex-shrink-0" role="img" aria-label="Info"></span>
+                <span class="px-1">
+                    {{ content["service_warning"] }}
+                </span>
+            </div>
+            <button id="services-warning-close"
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const hideWarningBtn = document.getElementById('services-warning-close');
+                if (hideWarningBtn) {
+                    hideWarningBtn.addEventListener('click', () => {
+                        document.cookie = "warning-seen=True; path=/; max-age=" + (100 * 365 * 24 * 60 * 60);
+                    });
+                }
+            });
+        </script>
+    {%- endif -%}
+{%- endmacro %}
+
+{%- macro render_severity_badge(cvss, render_max=False) -%}
+    {% if cvss %}
+        {% set severity = get_cvss_severity(cvss) %}
+        {%- set badge_colors = {
+            "low": "#ffc107",
+            "medium": "#fd7e14",
+            "high": "#dc3545",
+            "critical": "#b02a37"
+        } -%}
+
+        <h5 class="m-0 fw-normal">
+            <span class="badge"
+                  title="Common Vulnerability Scoring System Base Score"
+                  style="background-color: {{ badge_colors[severity|lower] }}; color: white;">
+                {%- if render_max %}Max {% endif -%}
+                CVSS {{ cvss }} ({{ severity }})
+            </span>
+        </h5>
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro render_logo() -%}
+    {%- if images["logo"] and images["logo_height"] and images["logo_width"] -%}
+        <a href="{{ content['organization_url'] }}"
+           target="_blank"
+           class="ms-auto">
+            <img src="{{ images['logo'] }}"
+                 height="{{ images['logo_height'] }}"
+                 width="{{ images['logo_width'] }}"
+                 alt="{{ content['organization'] }} Logo">
+        </a>
+    {%- endif -%}
+{%- endmacro -%}

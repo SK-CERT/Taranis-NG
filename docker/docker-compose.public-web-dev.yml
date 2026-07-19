@@ -1,0 +1,37 @@
+# Dev overlay for the public-web service — the Flask equivalent of `npm run dev`.
+#
+# It bind-mounts the source into the container and runs Flask's auto-reloading
+# debug server, so edits to files under src/public_web/ are picked up live
+# (Python code AND Jinja templates) with no image rebuild.
+#
+# Usage (core stack should already be up):
+#   docker compose -f docker-compose.yml -f docker-compose.public-web-dev.yml up public-web
+#
+# Then open http://localhost:5001/ (published directly — no Traefik/DNS needed).
+# The container still reaches Taranis core over the internal network at
+# http://core, so report data works exactly as in production.
+#
+# Note: passing explicit -f files disables auto-loading of
+# docker-compose.override.yml, so the dev server runs without the ACME labels.
+
+services:
+  public-web:
+    # Reuse the same image (built from Dockerfile.public-web); only the runtime
+    # differs. Deps live in the image's site-packages; the mount shadows /app.
+    volumes:
+      - ../src/public_web:/app
+    environment:
+      # Development mode: no outgoing e-mail, debug-friendly behaviour.
+      PUBLIC_WEB_PRODUCTION: "false"
+      TARANIS_NG_CORE_URL: "http://core"
+      # Keep the host source tree free of __pycache__ clutter.
+      PYTHONDONTWRITEBYTECODE: "1"
+    # Flask's dev server: --debug enables the reloader, template auto-reload
+    # and the interactive debugger. Watches the bind-mounted source.
+    command: ["flask", "--app", "run:app", "run", "--host", "0.0.0.0", "--port", "80", "--debug"]
+    ports:
+      - "127.0.0.1:5001:80"
+    # The image HEALTHCHECK expects gunicorn; the dev server is equivalent for
+    # a simple GET, so leave it, but relax the start period a touch.
+    healthcheck:
+      start_period: 30s

@@ -54,6 +54,51 @@ export function deleteAiProvider(ai_provider) {
     return ApiService.delete('/config/aiprovider/' + ai_provider.id)
 }
 
+export function getAllAuthProviders(filter) {
+    return ApiService.get('/config/auth-providers?search=' + filter.search)
+}
+
+export function createNewAuthProvider(auth_provider) {
+    return ApiService.post('/config/auth-providers', auth_provider)
+}
+
+export function updateAuthProvider(auth_provider) {
+    return ApiService.put('/config/auth-providers/' + auth_provider.id, auth_provider)
+}
+
+export function deleteAuthProvider(auth_provider) {
+    return ApiService.delete('/config/auth-providers/' + auth_provider.id)
+}
+
+export function importSamlMetadata(payload) {
+    return ApiService.post('/config/auth-providers/saml/import-metadata', payload)
+}
+
+export function generateSamlKeypair(sp_entity_id) {
+    return ApiService.post('/config/auth-providers/saml/generate-keypair', { sp_entity_id })
+}
+
+export function verifySamlFederation(payload) {
+    return ApiService.post('/config/auth-providers/saml/verify-federation', payload)
+}
+
+export function getSecuritySettings() {
+    return ApiService.get('/config/security')
+}
+
+export function updateSecuritySettings(settings) {
+    return ApiService.put('/config/security', settings)
+}
+
+export function updateUserStatus(user_id, status) {
+    return ApiService.put('/config/users/' + user_id + '/status', { status: status })
+}
+
+export function resetUserMfa(user_id, options) {
+    const body = options ? { reset_totp: !!options.reset_totp, reset_passkeys: !!options.reset_passkeys } : {}
+    return ApiService.post('/config/users/' + user_id + '/reset-mfa', body)
+}
+
 export function getAllDataProviders(filter) {
     return ApiService.get('/config/data-providers?search=' + filter.search)
 }
@@ -236,6 +281,56 @@ export function deleteRemoteNode(remote_node) {
 
 export function connectRemoteNode(remote_node) {
     return ApiService.get('/config/remote-nodes/' + remote_node.id + '/connect')
+}
+
+// -- Public-web nodes and their webs (branded feeds) --------------------------
+
+export function getAllPublicWebNodes(filter) {
+    return ApiService.get('/config/public-web-nodes?search=' + (filter?.search || ''))
+}
+
+export function createNewPublicWebNode(node) {
+    return ApiService.post('/config/public-web-nodes', node)
+}
+
+export function updatePublicWebNode(node) {
+    return ApiService.put('/config/public-web-nodes/' + node.id, node)
+}
+
+export function deletePublicWebNode(node) {
+    return ApiService.delete('/config/public-web-nodes/' + node.id)
+}
+
+export function getPublicWebs(nodeId, filter: { search?: string } = {}) {
+    return ApiService.get('/config/public-web-nodes/' + nodeId + '/webs?search=' + (filter.search || ''))
+}
+
+export function createNewPublicWeb(nodeId, web) {
+    return ApiService.post('/config/public-web-nodes/' + nodeId + '/webs', web)
+}
+
+export function updatePublicWeb(nodeId, web) {
+    return ApiService.put('/config/public-web-nodes/' + nodeId + '/webs/' + web.id, web)
+}
+
+export function deletePublicWeb(nodeId, web) {
+    return ApiService.delete('/config/public-web-nodes/' + nodeId + '/webs/' + web.id)
+}
+
+export function getPublicWebImage(nodeId, webId, kind) {
+    return ApiService.get('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind, { responseType: 'blob' })
+}
+
+export function uploadPublicWebImage(nodeId, webId, kind, formData) {
+    return ApiService.upload('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind, formData)
+}
+
+export function deletePublicWebImage(nodeId, webId, kind) {
+    return ApiService.delete('/config/public-web-nodes/' + nodeId + '/webs/' + webId + '/images/' + kind)
+}
+
+export function testPublicWebEmail(nodeId, payload) {
+    return ApiService.post('/config/public-web-nodes/' + nodeId + '/webs/test-email', payload)
 }
 
 export function getAllCollectorsNodes(filter) {

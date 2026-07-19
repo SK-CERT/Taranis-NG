@@ -19,9 +19,11 @@ import {
     getAllPublishersNodes,
     getAllRemoteAccesses,
     getAllRemoteNodes,
+    getAllPublicWebNodes,
     getAllReportItemTypes,
     getAllRoles,
     getAllUsers,
+    getAllAuthProviders,
     getAllWordLists,
     getAllStateDefinitions,
     createNewStateDefinition,
@@ -82,9 +84,11 @@ export const useConfigStore = defineStore('config', () => {
     const acls = ref<ListState>(emptyListState())
     const organizations = ref<ListState>(emptyListState())
     const users = ref<ListState>(emptyListState())
+    const authProviders = ref<ListState>(emptyListState())
     const wordLists = ref<ListState>(emptyListState())
     const remoteAccess = ref<ListState>(emptyListState())
     const remoteNodes = ref<ListState>(emptyListState())
+    const publicWebNodes = ref<ListState>(emptyListState())
     const collectorsNodes = ref<ListState>(emptyListState())
     const osintSources = ref<ListState>(emptyListState())
     const osintSourceGroups = ref<ListState<OSINTGroupItem>>(emptyListState())
@@ -183,6 +187,10 @@ export const useConfigStore = defineStore('config', () => {
         return await loadListState(getAllUsers, data, users)
     }
 
+    async function loadAuthProviders(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllAuthProviders, data, authProviders)
+    }
+
     async function loadWordLists(data: FilterPayload): Promise<ApiResponse<ListState>> {
         return await loadListState(getAllWordLists, data, wordLists)
     }
@@ -193,6 +201,10 @@ export const useConfigStore = defineStore('config', () => {
 
     async function loadRemoteNodes(data: FilterPayload): Promise<ApiResponse<ListState>> {
         return await loadListState(getAllRemoteNodes, data, remoteNodes)
+    }
+
+    async function loadPublicWebNodes(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllPublicWebNodes, data, publicWebNodes)
     }
 
     async function loadCollectorsNodes(data: FilterPayload): Promise<ApiResponse<ListState>> {
@@ -263,9 +275,11 @@ export const useConfigStore = defineStore('config', () => {
         acls,
         organizations,
         users,
+        authProviders,
         wordLists,
         remoteAccess,
         remoteNodes,
+        publicWebNodes,
         collectorsNodes,
         osintSources,
         osintSourceGroups,
@@ -293,9 +307,11 @@ export const useConfigStore = defineStore('config', () => {
         loadACLEntries,
         loadOrganizations,
         loadUsers,
+        loadAuthProviders,
         loadWordLists,
         loadRemoteAccesses,
         loadRemoteNodes,
+        loadPublicWebNodes,
         loadCollectorsNodes,
         loadOSINTSources,
         loadOSINTSourceGroups,

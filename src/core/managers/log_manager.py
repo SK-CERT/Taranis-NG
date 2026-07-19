@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from model.user import User
 
 import hashlib
+import json
 import logging.handlers
 import os
 import re
@@ -119,7 +120,14 @@ def decrypt(enc_dict: str, password: str) -> str:
 def generate_escaped_data(request_data: dict) -> str:
     """Generate escaped data from the given request data.
 
-    Prepare the "data" argument for logging: use request.body or supplied parameter, strip whitespace, truncate to 4k of text
+    Prepare the "data" argument for logging: use request.body or supplied parameter, strip whitespace, truncate to 4k of text.
+
+    When ``request_data`` is ``None``, the raw request body (``request.data``)
+    is used. Because login and other auth endpoints put credentials directly in
+    the JSON body (e.g. ``{"username": ..., "password": ...}``) and many auth
+    error call sites pass no ``request_data``, the fallback body is parsed and
+    known-sensitive keys are redacted via :func:`sensitive_value` before logging
+    — never dump the raw body verbatim.
 
     Args:
         request_data: The request data to generate escaped data from.
@@ -133,9 +141,61 @@ def generate_escaped_data(request_data: dict) -> str:
     if request_data is None:
         return ""
 
-    data = str(request_data)[:4096]
+    data = request_data
+    data = _redact_sensitive_body(data.decode("utf-8", errors="replace")) if isinstance(data, (bytes, bytearray)) else str(data)
+
+    data = data[:4096]
     data = re.sub(r"\s+", " ", data)
     return re.sub(r"(^\s+)|(\s+$)", "", data)
+
+
+# Keys whose values are redacted from logged request bodies. Lower-cased for
+# case-insensitive matching. Covers login forms and other credential payloads.
+_SENSITIVE_JSON_KEYS = {
+    "password",
+    "passwd",
+    "secret",
+    "client_secret",
+    "api_key",
+    "apikey",
+    "token",
+    "access_token",
+    "refresh_token",
+    "mfa_token",
+    "credential",
+    "credentials",
+    "totp",
+    "otp",
+}
+
+
+def _redact_sensitive_body(raw: str) -> str:
+    """Redact known-sensitive values from a JSON request body string.
+
+    Falls back to the original string if the body is not valid JSON, so logging
+    of non-JSON payloads is unaffected.
+
+    Args:
+        raw (str): The raw request body text.
+
+    Returns:
+        str: The body with sensitive values redacted (or the original text).
+    """
+    try:
+        parsed = json.loads(raw)
+    except (ValueError, TypeError):
+        return raw
+    parsed = _redact_dict(parsed)
+    return json.dumps(parsed, ensure_ascii=False)
+
+
+def _redact_dict(obj: object) -> object:
+    """Return a copy of ``obj`` with sensitive key values redacted recursively."""
+    if isinstance(obj, dict):
+        return {key: (sensitive_value(value) if key.lower() in _SENSITIVE_JSON_KEYS else _redact_dict(value)) for key, value in obj.items()}
+    if isinstance(obj, list):
+        return [_redact_dict(item) for item in obj]
+    return obj
 
 
 def resolve_ip_address() -> str:
@@ -269,6 +329,12 @@ def store_data_error_activity_no_user(activity_detail: str, exception: Exception
 def store_auth_error_activity(activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
     """Store an authentication error activity record in the log.
 
+    Use for genuine authentication faults (bad tokens, callback exceptions,
+    missing credentials). For expected security-policy rejections (disabled
+    users, pending approval, domain filter, etc.) use
+    :func:`store_auth_warning_activity` instead, so the error stream stays
+    focused on real faults.
+
     Args:
         activity_detail (str): The details of the activity.
         exception (Exception): Exception object.
@@ -288,6 +354,36 @@ def store_auth_error_activity(activity_detail: str, exception: Exception | None 
             logger.exception(f"Storing authentication error failed: {ex}")
 
     store_record(None, None, None, None, None, None, "AUTH_ERROR", activity_detail, request_data)
+
+
+def store_auth_warning_activity(activity_detail: str, exception: Exception | None = None, request_data: dict | None = None) -> None:
+    """Store an authentication warning activity record in the log.
+
+    Use for expected security-policy rejections that are auditor-relevant but
+    not system faults — e.g. a disabled user or a user pending administrator
+    approval attempting to log in. These represent the system working as
+    designed, so they are logged at WARNING severity rather than ERROR to keep
+    the error stream focused on real failures.
+
+    Args:
+        activity_detail (str): The details of the activity.
+        exception (Exception): Exception object.
+        request_data (dict, optional): The data associated with the request.
+    """
+    if exception:
+        logger.exception(f"{activity_detail}: {exception}")
+    db.session.rollback()
+    log_text = (
+        f"TARANIS NG Auth Warning (Method: {resolve_method()}, Resource: {resolve_resource()}, Activity Detail: {activity_detail}, "
+        f"Activity Data: {generate_escaped_data(request_data)})"
+    )
+    if sys_logger is not None:
+        try:
+            sys_logger.warning(log_text)
+        except Exception as ex:
+            logger.exception(f"Storing authentication warning failed: {ex}")
+
+    store_record(None, None, None, None, None, None, "AUTH_WARNING", activity_detail, request_data)
 
 
 def store_user_auth_error_activity(user: User, activity_detail: str, request_data: dict | None = None) -> None:

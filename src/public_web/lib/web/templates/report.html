@@ -1,0 +1,308 @@
+{% extends "main.html" %}
+{%- import '_macros.html' as macros with context -%}
+
+{%- block title %}
+    {{ report.get_title() or translate_report(report, 'alternative_title') }}
+{%- endblock %}
+
+{%- block content %}
+    <div class="m-3">
+        <div class="d-flex justify-content-between mb-2">
+            <nav class="me-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('reports.home') }}"
+                           class="d-flex align-items-center text-decoration-none">
+                            <span class="mdi mdi-home" aria-hidden="true"></span>
+                            <p class="m-0 ms-1">
+                                {{ translate_ui("home") }}
+                            </p>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">
+                        {{ translate_ui("report") }} {{ report.get_id() }}
+                    </li>
+                </ol>
+            </nav>
+            <button id="feedback-button"
+                    type="button"
+                    class="btn btn-primary h-75"
+                    data-bs-toggle="modal"
+                    data-bs-target="#feedback-modal">
+                {{ translate_ui("give_feedback") }}
+            </button>
+
+            {{ macros.feedback_modal(feedback_q) }}
+        </div>
+        {{ macros.services_warning(warning_seen) }}
+
+        {%- if items -%}
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <span class="mdi mdi-alert me-2 fs-4 flex-shrink-0" role="img" aria-label="Warning"></span>
+                <p class="m-0">
+                    {{ translate_ui("report_incomplete_warning") }}
+                    <a href="{{ url_for('reports.show', report_id=report.get_id()) }}">
+                        {{ translate_ui("report_here") -}}
+                    </a>.
+                </p>
+            </div>
+        {%- endif -%}
+
+        <div class="d-flex flex-column flex-md-row mb-1">
+            <h4 class="text-body me-3">
+                {{ report.get_formatted_tlp(with_space=True) or '' }}{{ report.get_title() or translate_report(report, 'alternative_title') }}
+            </h4>
+        </div>
+        {%- if report.get_one_description() -%}
+            <p class="mb-3 fw-normal h5 pre-wrap">
+                {{- transform_link_references(report.get_one_description(), report.get_links()) | clean -}}
+            </p>
+        {%- endif -%}
+
+        <!-- CVEs and their description -->
+        <div class="accordion my-3">
+            {%- for item in report.get_report_items() %}
+                {%- if not items or loop.index in items %}
+                    <div class="accordion-item" id="accordionCVE-{{ loop.index }}">
+                        <div class="accordion-header" id="heading{{ loop.index }}">
+                            <div class="accordion-button"
+                                 role="button"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#collapse{{ loop.index }}"
+                                 aria-expanded="true"
+                                 aria-controls="collapse{{ loop.index }}">
+                                <h5 class="m-0 text-body">
+                                    {%- if item.get_name().strip() %}
+                                        {% set item_name = item.get_name() %}
+                                    {%- elif item.get_CVEs() %}
+                                        {% set item_name = item.get_CVEs() | join(", ") %}
+                                    {%- else %}
+                                        {% set item_name = translate_report(report, "vulnerability") + " " + (loop.index|string) %}
+                                    {%- endif %}
+                                    <b class="fw-bolder me-4">{{ item_name }}</b>
+                                    {{ macros.render_severity_badge(item.get_cvss_number(), False) }}
+                                </h5>
+                            </div>
+                        </div>
+                        <div id="collapse{{ loop.index }}"
+                             class="accordion-collapse collapse show"
+                             aria-labelledby="heading{{ loop.index }}">
+                            <div class="accordion-body">
+                                {%- if item.get_description() %}
+                                    <p class="mt-1 mb-0 pre-wrap">
+                                        {{- transform_link_references(item.get_description(), report.get_links()) | clean -}}
+                                    </p>
+                                {%- endif %}
+                                {%- if item.get_affected_systems() %}
+                                    {%- if item.get_affected_systems()|length == 1 %}
+                                        {%- if item.get_product_display(1) -%}
+                                            <p class="mt-1 mb-0">
+                                                {{ translate_report(report, 'vulnerability_in') }} {{ translate_report(report, 'in_product') }}
+                                                <span class="fw-light">{{ item.get_product_display(1) }}</span>
+                                                {%- if item.get_formatted_versions(1) %}
+                                                    {{ render_versions(item, 1, dot=True) }}
+                                                {%- else -%}
+                                                    .
+                                                {%- endif %}
+                                            </p>
+                                        {%- endif %}
+                                    {%- else %}
+                                        <p class="mt-1 mb-0">
+                                            {{ translate_report(report, 'vulnerability_in') }} {{ translate_report(report, 'in_products') }}:
+                                        </p>
+                                        <ul class="m-0">
+                                            {%- for system in item.get_affected_systems() %}
+                                                {%- if item.get_product_display(loop.index) -%}
+                                                    <li>
+                                                        <span class="fw-light">{{ item.get_product_display(loop.index) }}</span>
+                                                        {%- if item.get_formatted_versions(loop.index) %}
+                                                            {{ render_versions(item, loop.index) }}
+                                                        {%- endif %}
+                                                    </li>
+                                                {%- endif %}
+                                            {%- endfor %}
+                                        </ul>
+                                    {%- endif %}
+                                {%- endif %}
+                                {%- if item.get_recommendations() %}
+                                    <p class="mt-1 mb-0 pre-wrap">
+                                        {{- transform_link_references(item.get_recommendations(), report.get_links()) | clean -}}
+                                    </p>
+                                {%- endif %}
+                                {%- if item.get_cvss_vector() %}
+                                    <p class="mt-1 mb-0 text-break">
+                                        <b>CVSS:</b>
+                                        {{ item.get_cvss_vector() }}
+                                    </p>
+                                {%- endif %}
+                                {%- if item.get_iocs() %}
+                                    <p class="mt-1 mb-0">
+                                        <b data-bs-toggle="tooltip"
+                                           title="{{ translate_report(report, 'ioc_tooltip') }}">
+                                            {{ translate_report(report, 'ioc') }}:
+                                        </b> {{ item.get_iocs() }}
+                                    </p>
+                                {%- endif %}
+                                <p class="mt-1 mb-0">
+                                    <b>{{ translate_report(report, 'more_info') }}:</b>
+                                </p>
+                                <ul class="m-0">
+                                    {%- for cve in item.get_CVEs() %}
+                                        <li>
+                                            {{ cve }} at
+                                            <a href="https://cve.org/CVERecord?id={{ cve }}">cve.org</a>,
+                                            <a href="https://nvd.nist.gov/vuln/detail/{{ cve }}">NVD</a>,
+                                            <a href="https://github.com/advisories?query={{ cve }}">GitHub</a>,
+                                            <a href="https://cve.circl.lu/cve/{{ cve }}">CIRCL.LU</a>,
+                                            <a href="https://security-tracker.debian.org/tracker/{{ cve }}">Debian</a>,
+                                            <a href="https://ubuntu.com/security/{{ cve }}">Ubuntu</a>,
+                                            <a href="https://access.redhat.com/security/cve/{{ cve }}">Red Hat</a>,
+                                            <a href="https://suse.com/security/cve/{{ cve }}">SUSE</a>
+                                        </li>
+                                    {%- endfor %}
+                                    {%- for cwe in item.get_CWEs() %}
+                                        {%- if cwe -%}
+                                            <li>
+                                                {%- set cwe_name = item.get_cwe_name(loop.index) %}
+                                                <span>
+                                                    CWE-{{ cwe }}{% if cwe_name %}: {{ cwe_name }}{% endif %}
+                                                </span> at
+                                                <a href="https://cwe.mitre.org/data/definitions/{{ cwe }}">
+                                                    cwe.mitre.org
+                                                </a>
+                                            </li>
+                                        {%- endif -%}
+                                    {%- endfor %}
+                                </ul>
+                                {%- if item.get_exposure_date() or item.get_update_date() %}
+                                    <p class="mt-3 mb-1 text-secondary">
+                                        {%- if item.get_exposure_date() %}
+                                            {{ translate_report(report, 'vulnerability_exposed') }}
+                                            {{ item.get_exposure_date() }}.
+                                        {%- endif %}
+                                        {%- if item.get_update_date() %}
+                                            {{ translate_report(report, 'vulnerability_updated') }}
+                                            {{ item.get_update_date() }}.
+                                        {%- endif %}
+                                    </p>
+                                {%- endif %}
+                            </div>
+                        </div>
+                    </div>
+                {%- endif %}
+            {%- endfor %}
+        </div>
+
+        {%- if report.get_links() %}
+            <div class="my-4" id="links">
+                <h5>
+                    {{ translate_report(report, 'links') }}
+                </h5>
+                <ul>
+                    {%- for link in report.get_links(items) %}
+                        {%- if link is not none -%}
+                            <li>
+                                [{{ loop.index }}]
+                                <a href="{{ link }}" class="text-break">{{ link }}</a>
+                            </li>
+                        {%- endif -%}
+                    {%- endfor %}
+                </ul>
+            </div>
+        {%- endif %}
+
+        <hr>
+        <div class="d-flex flex-row">
+            {%- if report.get_author() or report.get_publish_date() %}
+                <p class="m-0 me-4">
+                    {%- if report.get_author() %}
+                        {{ translate_report(report, 'author_prefix') }} <a href="{{ content['organization_url'] }}" target="_blank">{{ content["organization"] }}</a>
+                        {{ report.get_author() }}
+                    {%- else %}
+                        <a href="{{ content['organization_url'] }}" target="_blank">{{ content["organization"] }}</a>
+                    {% endif %}
+                    {{ translate_report(report, 'on_day') }} {{ report.get_publish_date() }}.
+                </p>
+            {%- endif %}
+            {{ macros.render_logo() }}
+        </div>
+    </div>
+{%- endblock content %}
+
+{%- macro render_versions(item, index, dot=False) -%}
+    {% if item.get_versions(index) %}
+        {{ translate_report(report, 'in_versions') }}
+        <span class="fw-light"
+              data-bs-toggle="popover"
+              data-bs-container="body"
+              data-bs-placement="top"
+              title="{{ translate_report(report, 'original_version_format') }}"
+              data-bs-content="{{ item.get_affected_system(index) }}">
+            {{ item.get_formatted_versions(index) -}}
+        </span>
+        {%- if dot %}.{% endif %}
+    {% endif %}
+{%- endmacro -%}
+
+{%- block javascript %}
+    <script>
+        const ajax_feedback_post_url = "{{ url_for('reports.feedback', report_id = report.get_id()) }}";
+        const something_went_wrong_message = "{{ translate_ui('feedback_sent_fail') }}";
+        const ok_message = "{{ translate_ui('feedback_sent_success') }}";
+
+        const form = document.getElementById('feedback-form')
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const feedback_comment = document.getElementById(`feedback-comment`);
+            const feedback_submit = document.getElementById(`feedback-submit`);
+
+            feedback_comment.readonly = true;
+            feedback_submit.disabled = true;
+            try {
+                const response = await fetch(ajax_feedback_post_url, {
+                    method: "POST",
+                    body: new URLSearchParams(new FormData(form))
+                });
+
+                const feedback_message = document.getElementById(`feedback-message`);
+
+                let data;
+                if (response.ok) {
+                    data = await response.json();
+                    console.log(`Feedback ended with status: '${response.status}'`);
+                    feedback_message.innerHTML = ok_message;
+                    feedback_message.classList.remove('text-danger');
+                    feedback_message.classList.add('text-success');
+                } else {
+                    console.log(`Feedback ended with error: '${response.status}', '${response.statusText}'`);
+                    feedback_message.innerHTML = something_went_wrong_message;
+                }
+
+                feedback_message.classList.remove('d-none');
+
+                if (!response.ok || data.form_errors) {
+                    feedback_comment.readonly = false;
+                    feedback_submit.disabled = false;
+                }
+            } catch (error) {
+                console.log(`Feedback ended with error: '${error.message}'`);
+                const feedback_message = document.getElementById(`feedback-message`);
+                feedback_message.innerHTML = something_went_wrong_message;
+                feedback_message.classList.remove('d-none');
+                feedback_comment.readonly = false;
+                feedback_submit.disabled = false;
+            }
+        });
+    </script>
+
+    <!-- Enable popovers -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.forEach(function(popoverTriggerEl) {
+                new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+{%- endblock javascript %}

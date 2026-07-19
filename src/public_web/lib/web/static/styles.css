@@ -1,0 +1,28 @@
+a {
+    text-decoration: none;
+}
+
+input[type='radio'] {
+    accent-color: blue;
+}
+
+.text-field {
+    border: 1px solid var(--bs-border-color);
+}
+
+.pre-wrap {
+    white-space: pre-wrap;
+}
+
+.search-form {
+    max-width: 28rem;
+}
+
+.popover {
+  max-width: 500px;
+}
+
+.mdi {
+        line-height: 1;
+        vertical-align: middle;
+}

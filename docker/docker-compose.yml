@@ -56,10 +56,18 @@ services:
       DB_POOL_SIZE: 100
       DB_POOL_RECYCLE: 300
       DB_POOL_TIMEOUT: 30
-      TARANIS_NG_AUTHENTICATOR: "${TARANIS_NG_AUTHENTICATOR}"
-      LDAP_SERVER: "${LDAP_SERVER}"
-      LDAP_BASE_DN: "${LDAP_BASE_DN}"
+      # DEPRECATED: login methods are configured in the GUI (Access Management ->
+      # Login Methods). These are only read when upgrading a deployment that still
+      # sets them: TARANIS_NG_AUTHENTICATOR=keycloak|openid keeps the old env-based
+      # flow alive, and the LDAP_* values seed an LDAP provider once, at migration.
+      TARANIS_NG_AUTHENTICATOR: "${TARANIS_NG_AUTHENTICATOR:-}"
+      LDAP_SERVER: "${LDAP_SERVER:-}"
+      LDAP_BASE_DN: "${LDAP_BASE_DN:-}"
       LDAP_CA_CERT_PATH:
+      # Number of trusted reverse-proxy hops in front of core, for X-Forwarded-*
+      # handling. Default 1 matches this bundled single-Traefik setup; raise it
+      # only if you add another proxy/LB/CDN in front (see src/core/app.py).
+      TRUSTED_PROXY_HOPS: "${TRUSTED_PROXY_HOPS:-1}"
       SQLALCHEMY_WARN_20: "1"
       PYTHONWARNINGS: "default"
 
@@ -74,6 +82,8 @@ services:
       TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
       MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
       DEBUG_SQL: "false"
+      # Used only to give the auto-seeded default public-web web a sensible hostname.
+      PUBLIC_WEB_HOSTNAME: "${PUBLIC_WEB_HOSTNAME}"
     labels:
       traefik.enable: "true"
       traefik.http.services.taranis-api.loadbalancer.server.port: "80"
@@ -100,6 +110,7 @@ services:
       - postgres_password
       - jwt_secret_key
       - api_key
+      - secrets_encryption_key
 
   bots:
     depends_on:
@@ -266,60 +277,105 @@ services:
         max-size: "200k"
         max-file: "10"
 
-#   gui-v3:
-#     depends_on:
-#       - "core"
-#     restart: unless-stopped
-#     image: "skcert/taranis-ng-gui-v3:${TARANIS_NG_TAG}"
-#     build:
-#       context: ..
-#       dockerfile: ./docker/Dockerfile.gui-v3
-#       args:
-#         HTTP_PROXY: "${HTTP_PROXY}"
-#         HTTPS_PROXY: "${HTTPS_PROXY}"
-#         http_proxy: "${HTTP_PROXY}"
-#         https_proxy: "${HTTPS_PROXY}"
-# #    ports:
-# #      - "8081:80"
-#     environment:
-#       NGINX_WORKERS: "4"
-#       NGINX_CONNECTIONS: "16"
-#       VITE_APP_TARANIS_NG_URL: "${TARANIS_NG_HTTPS_URI}"
-#       VITE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
-#       VITE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
-#       VITE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
-#       VITE_APP_VERSION: "3.0.0-beta"
-#       TZ: "${TZ}"
-#       NGINX_LOG_LEVEL: "warn"
-#       NGINX_ACCESS_LOG: "on"
-#     labels:
-#       traefik.enable: "true"
-#       traefik.http.services.taranis-gui-v3.loadbalancer.server.port: "80"
+  gui-v3:
+    depends_on:
+      - "core"
+    restart: unless-stopped
+    image: "skcert/taranis-ng-gui-v3:${TARANIS_NG_TAG}"
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.gui-v3
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+#    ports:
+#      - "8081:80"
+    environment:
+      NGINX_WORKERS: "4"
+      NGINX_CONNECTIONS: "16"
+      VITE_APP_TARANIS_NG_URL: "${TARANIS_NG_HTTPS_URI}"
+      VITE_APP_TARANIS_NG_CORE_API: "${TARANIS_NG_HTTPS_URI}/api/v1"
+      VITE_APP_TARANIS_NG_CORE_SSE: "${TARANIS_NG_HTTPS_URI}/sse"
+      VITE_APP_TARANIS_NG_LOCALE: "${VUE_APP_TARANIS_NG_LOCALE}"
+      VITE_APP_VERSION: "3.0.0-beta"
+      TZ: "${TZ}"
+      NGINX_LOG_LEVEL: "warn"
+      NGINX_ACCESS_LOG: "on"
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.taranis-gui-v3.loadbalancer.server.port: "80"
 
-#       traefik.http.middlewares.redirect-v2-to-443.redirectscheme.scheme: "https"
-#       traefik.http.middlewares.redirect-v2-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
-#       traefik.http.middlewares.redirect-v2-to-443.redirectscheme.permanent: "true"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.scheme: "https"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.port: "${TARANIS_NG_HTTPS_PORT}"
+      traefik.http.middlewares.redirect-v2-to-443.redirectscheme.permanent: "true"
 
-#       traefik.http.routers.taranis-gui-v3-80.entrypoints: "web"
-#       traefik.http.routers.taranis-gui-v3-80.rule: "PathPrefix(`/v2`)"
-#       traefik.http.routers.taranis-gui-v3-80.middlewares: "redirect-v2-to-443"
+      traefik.http.routers.taranis-gui-v3-80.entrypoints: "web"
+      traefik.http.routers.taranis-gui-v3-80.rule: "PathPrefix(`/v2`)"
+      traefik.http.routers.taranis-gui-v3-80.middlewares: "redirect-v2-to-443"
 
-#       traefik.http.routers.taranis-gui-v3-443.entrypoints: "websecure"
-#       traefik.http.routers.taranis-gui-v3-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/v2`)"
-#       traefik.http.routers.taranis-gui-v3-443.tls: "true"
-#       traefik.http.routers.taranis-gui-v3-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
-#       traefik.http.routers.taranis-gui-v3-443.service: "taranis-gui-v3"
+      traefik.http.routers.taranis-gui-v3-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-gui-v3-443.rule: "Host(`${TARANIS_NG_HOSTNAME}`) && PathPrefix(`/v2`)"
+      traefik.http.routers.taranis-gui-v3-443.tls: "true"
+      traefik.http.routers.taranis-gui-v3-443.tls.domains[0].main: "${TARANIS_NG_HOSTNAME}"
+      traefik.http.routers.taranis-gui-v3-443.service: "taranis-gui-v3"
 
-#     logging:
-#       driver: "json-file"
-#       options:
-#         max-size: "200k"
-#         max-file: "10"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+  public-web:
+    # Gated behind a compose profile so it can be switched off from .env:
+    # COMPOSE_PROFILES=public-web enables it (build + run); empty disables it.
+    profiles:
+      - "public-web"
+    depends_on:
+      core:
+        condition: service_healthy
+    restart: unless-stopped
+    image: "skcert/taranis-ng-public-web:${TARANIS_NG_TAG}"
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.public-web
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        http_proxy: "${HTTP_PROXY}"
+        https_proxy: "${HTTPS_PROXY}"
+    environment:
+      TARANIS_NG_CORE_URL: "http://core"
+      TZ: "${TZ}"
+      MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
+    secrets:
+      - api_key
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.taranis-public-web.loadbalancer.server.port: "80"
+
+      traefik.http.routers.taranis-public-web-80.entrypoints: "web"
+      traefik.http.routers.taranis-public-web-80.rule: "Host(`${PUBLIC_WEB_HOSTNAME}`)"
+      traefik.http.routers.taranis-public-web-80.middlewares: "redirect-to-443"
+
+      traefik.http.routers.taranis-public-web-443.entrypoints: "websecure"
+      traefik.http.routers.taranis-public-web-443.rule: "PathPrefix(`/`)"
+      traefik.http.routers.taranis-public-web-443.tls: "true"
+      traefik.http.routers.taranis-public-web-443.priority: "1"
+      traefik.http.routers.taranis-public-web-443.middlewares: "public-web-security-headers@file"
+      traefik.http.routers.taranis-public-web-443.service: "taranis-public-web"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
 
   traefik:
     depends_on:
       - "gui"
-#      - "gui-v3"
+      - "gui-v3"
       - "core"
     restart: unless-stopped
     image: "traefik:3.6.9"
@@ -347,6 +403,10 @@ secrets:
     file: ./secrets/jwt_secret_key.txt
   api_key:
     file: ./secrets/api_key.txt
+  # Encrypts auth provider secrets and TOTP seeds stored in the database.
+  # Falls back to jwt_secret_key when missing (a dedicated key is recommended).
+  secrets_encryption_key:
+    file: ./secrets/secrets_encryption_key.txt
 
 volumes:
   redis_conf:

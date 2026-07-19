@@ -30,6 +30,11 @@ services:
       # Enable ACME cert resolver for GUI endpoint
       traefik.http.routers.taranis-gui-443.tls.certresolver: "myresolver"
 
+  public-web:
+    labels:
+      # Enable ACME cert resolver for the public web feed endpoint
+      traefik.http.routers.taranis-public-web-443.tls.certresolver: "myresolver"
+
   traefik:
     volumes:
       # Enable ACME storage volume for Let's Encrypt certificates

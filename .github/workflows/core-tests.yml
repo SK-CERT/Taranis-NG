@@ -1,0 +1,45 @@
+name: Core Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/core/**'
+      - 'src/shared/**'
+      - '.github/workflows/core-tests.yml'
+  pull_request:
+    paths:
+      - 'src/core/**'
+      - 'src/shared/**'
+      - '.github/workflows/core-tests.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pytest:
+    name: Core Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          # Pinned to match [tool.uv] required-version in root pyproject.toml.
+          version: "0.11.19"
+          enable-cache: true
+      - name: Install core dependencies and the test group
+        working-directory: src/core
+        # --no-install-project: the flat-layout core package is imported via
+        # pytest's pythonpath, not installed; installing it would trip
+        # setuptools' multi-top-level-package auto-discovery.
+        run: uv sync --group test --no-install-project
+      - name: Run pytest
+        working-directory: src/core
+        run: uv run --no-sync python -m pytest

@@ -13,7 +13,7 @@ import { createApiContext, purgeSeedEntitiesBestEffort } from '../helpers/api-se
  * tests the configuration UI and seeds data for the publish-confirm spec.
  *
  * Prerequisites: the presenters and publishers Docker services must be running
- * (started by test-setup.sh). The presenters service is reachable at
+ * (started by test-setup.py). The presenters service is reachable at
  * http://presenters:80 (Docker DNS) from the core container; from the host it's
  * at http://127.0.0.1:${E2E_PRESENTERS_PORT} (default 5092, see docker/.env.e2e).
  * The test stack runs as the `taranis-e2e` compose project on distinct host ports
@@ -29,17 +29,17 @@ const API_KEY = readFileSync(resolve(__dirname, '../../../../docker/secrets/api_
 test.describe('Configure environment: nodes + product type + publisher preset', () => {
     // Nodes, product types, and publisher presets are created via the GUI and
     // intentionally left in the E2E environment for downstream specs. They are
-    // not cleaned up per-run — the environment is ephemeral (rebuilt by test-setup.sh).
+    // not cleaned up per-run — the environment is ephemeral (rebuilt by test-setup.py).
     //
     // Adding a node makes the core contact the corresponding service (collectors/presenters/
-    // publishers) via Docker DNS. test-setup.sh probes each service's /api/v1/isalive before
+    // publishers) via Docker DNS. test-setup.py probes each service's /api/v1/isalive before
     // the suite starts so the core→service path is ready; the seed tests therefore don't
     // need an in-test retry (which would fight the dialog's own unsaved-changes guard —
     // cancelling a dirty NodeDialog raises the "Unsaved Changes" prompt, layering dialogs).
     //
     // IDEMPOTENCY GUARD: the three node-add tests below use FIXED names ("E2E Presenters
     // Node" etc.) on unique=True columns. If the E2E stack is reused across runs without a
-    // `down -v` wipe (e.g. Playwright's reuseExistingServer keeps test-setup.sh from re-running
+    // `down -v` wipe (e.g. Playwright's reuseExistingServer keeps test-setup.py from re-running
     // when you click "Run Tests" repeatedly in VS Code), a previous run's node lingers and the
     // next add hits a UniqueViolation → HTTP 500 → the misleading "Could not connect to X
     // node." alert. So ONCE before the whole suite, purge any pre-existing fixed-name nodes.

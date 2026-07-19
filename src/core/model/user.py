@@ -9,17 +9,18 @@ if TYPE_CHECKING:
 
 from managers.db_manager import db
 from marshmallow import EXCLUDE, Schema, fields, post_load
+from model.auth_provider import AuthProvider, UserAuthIdentity
 from model.organization import Organization
 from model.permission import Permission
 from model.role import Role
+from model.webauthn_credential import WebauthnCredential
 from model.word_list import WordList
-from sqlalchemy import or_, orm
-from werkzeug.security import generate_password_hash
-
 from shared.schema.organization import OrganizationIdSchema
 from shared.schema.role import PermissionIdSchema, RoleIdSchema
-from shared.schema.user import HotkeySchema, UserPresentationSchema, UserSchemaBase
+from shared.schema.user import USER_STATUSES, HotkeySchema, UserIdentitySchema, UserPresentationSchema, UserSchemaBase
 from shared.schema.word_list import WordListSchema
+from sqlalchemy import or_, orm
+from werkzeug.security import generate_password_hash
 
 
 class Hotkey(db.Model):
@@ -116,23 +117,34 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     name = db.Column(db.String(), nullable=False)
-    password = db.Column(db.String(), nullable=False)
+    password = db.Column(db.String(), nullable=True)
+    email = db.Column(db.String(), nullable=True)
+    status = db.Column(db.String(16), nullable=False, default="active", server_default="active")
+    require_mfa = db.Column(db.Boolean, nullable=False, default=False, server_default="false")
+    totp_secret = db.Column(db.String(), nullable=True)
+    totp_last_used_step = db.Column(db.BigInteger, nullable=True)
 
     organizations = db.relationship("Organization", secondary="user_organization")
     roles = db.relationship(Role, secondary="user_role")
     permissions = db.relationship(Permission, secondary="user_permission", lazy="joined")
     hotkeys = db.relationship(Hotkey, cascade="all, delete-orphan", lazy="joined")
     word_lists = db.relationship(WordList, secondary="user_word_list", lazy="joined")
+    auth_identities = db.relationship(UserAuthIdentity, back_populates="user", cascade="all, delete-orphan")
+    webauthn_credentials = db.relationship(WebauthnCredential, back_populates="user", cascade="all, delete-orphan")
 
     def __init__(
         self,
         id: int,  # noqa: A002, ARG002
         username: str,
         name: str,
-        password: str,
-        organizations: list,
-        roles: list,
-        permissions: list,
+        password: str | None = None,
+        organizations: list | None = None,
+        roles: list | None = None,
+        permissions: list | None = None,
+        email: str | None = None,
+        status: str = "active",
+        identities: list | None = None,
+        require_mfa: bool = False,
     ) -> None:
         """Initialize a User object with the given parameters.
 
@@ -140,10 +152,17 @@ class User(db.Model):
             id (int): The unique identifier of the user.
             username (str): The username of the user.
             name (str): The name of the user.
-            password (str): The password of the user.
+            password (str): The password of the user; None for externally
+                authenticated users (disables local password login).
             organizations (list): The organizations the user belongs to.
             roles (list): The roles assigned to the user.
             permissions (list): The permissions granted to the user.
+            email (str): The e-mail address of the user.
+            status (str): Account status (pending | active | disabled).
+            identities (list): Identity links as dicts with auth_provider_id
+                and external_username.
+            require_mfa (bool): Whether this user must have a second factor,
+                regardless of what the site, organization or provider demand.
 
         Returns:
             None
@@ -151,7 +170,13 @@ class User(db.Model):
         self.id = None
         self.username = username
         self.name = name
-        self.password = generate_password_hash(password)
+        self.password = generate_password_hash(password) if password else None
+        self.email = email
+        self.status = status if status in USER_STATUSES else "active"
+        self.require_mfa = bool(require_mfa)
+        self.auth_identities = [
+            UserAuthIdentity(None, identity["auth_provider_id"], identity["external_username"]) for identity in identities or []
+        ]
         self.organizations = []
         if organizations:
             for organization in organizations:
@@ -276,15 +301,145 @@ class User(db.Model):
         return {"total_count": count, "items": user_schema.dump(users)}
 
     @classmethod
+    def _validate_identities(cls, user_id: int | None, identities: list[dict]) -> None:
+        """Ensure none of the requested identity links belongs to another user.
+
+        An identity maps one person at one provider, so it can only ever point at a
+        single account - otherwise two Taranis users would answer to the same login.
+
+        Args:
+            user_id (int): The user being created/updated (None for new users).
+            identities (list): Dicts with auth_provider_id and external_username.
+
+        Raises:
+            ValueError: When an identity is already linked to a different user.
+        """
+        for identity in identities:
+            existing = UserAuthIdentity.query.filter_by(
+                auth_provider_id=identity["auth_provider_id"],
+                external_username=identity["external_username"],
+            ).first()
+            if existing and existing.user_id != user_id:
+                # Name the account holding it: without that, resolving this means
+                # hunting through every user's login identities by hand.
+                owner = db.session.get(cls, existing.user_id)
+                provider = db.session.get(AuthProvider, identity["auth_provider_id"])
+                owner_name = f"'{owner.username}'" if owner else "another user"
+                provider_name = f"'{provider.name}'" if provider else "this login method"
+                msg = (
+                    f"The identity '{identity['external_username']}' at {provider_name} is already linked to {owner_name}. "
+                    f"An identity can belong to only one account - remove it from {owner_name} first, "
+                    f"or link this account to a different identity."
+                )
+                raise ValueError(msg)
+
+    @classmethod
     def add_new(cls, data: dict) -> None:
         """Add a new user to the database.
 
         Args:
             data: A dictionary containing the user data.
         """
+        cls._validate_identities(None, data.get("identities") or [])
         new_user_schema = NewUserSchema()
         user = new_user_schema.load(data)
         db.session.add(user)
+        db.session.commit()
+
+    @classmethod
+    def provision_external(cls, provider: AuthProvider, username: str, name: str | None, email: str | None, external_id: str | None) -> User:
+        """Auto-create a user account at first login through an external provider.
+
+        The new account gets the provider's organization and default roles. Its
+        status follows the provider's provisioning mode: pending for "approval"
+        (admin must approve), active for "automatic".
+
+        Args:
+            provider (AuthProvider): The provider the user authenticated against.
+            username (str): Username reported by the provider.
+            name (str): Display name reported by the provider.
+            email (str): E-mail address reported by the provider.
+            external_id (str): Stable subject identifier at the provider.
+
+        Returns:
+            User: The newly created user.
+        """
+        status = "active" if provider.provisioning_mode == "automatic" else "pending"
+        user = cls(-1, username, name or username, None, None, None, None, email=email, status=status)
+        if provider.organization:
+            user.organizations = [provider.organization]
+        user.roles = list(provider.default_roles)
+        user.auth_identities = [UserAuthIdentity(None, provider.id, username, external_id)]
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    @classmethod
+    def set_status(cls, user_id: int, status: str) -> User:
+        """Set the account status of a user (approve / disable / re-enable).
+
+        Args:
+            user_id (int): The ID of the user.
+            status (str): New status (pending | active | disabled).
+
+        Returns:
+            User: The updated user.
+
+        Raises:
+            ValueError: For unknown statuses, unknown users, or when the change
+                would deactivate the last active user manager.
+        """
+        if status not in USER_STATUSES:
+            msg = f"Unknown user status: {status}"
+            raise ValueError(msg)
+        user = db.session.get(cls, user_id)
+        if not user:
+            msg = f"User {user_id} not found"
+            raise ValueError(msg)
+        cls._check_status_change(user, status)
+        user.status = status
+        db.session.commit()
+        return user
+
+    @classmethod
+    def _check_status_change(cls, user: User, status: str) -> None:
+        """Refuse a status change that would deactivate the last active user administrator.
+
+        Args:
+            user (User): The user whose status is changing.
+            status (str): The requested new status.
+
+        Raises:
+            ValueError: When no other active user with CONFIG_USER_UPDATE would remain.
+        """
+        if status == "active" or user.status != "active" or "CONFIG_USER_UPDATE" not in user.get_permissions():
+            return
+        other_admins = [
+            other
+            for other in cls.query.filter(User.id != user.id, User.status == "active").all()
+            if "CONFIG_USER_UPDATE" in other.get_permissions()
+        ]
+        if not other_admins:
+            msg = "Cannot deactivate the last active user administrator"
+            raise ValueError(msg)
+
+    @classmethod
+    def reset_mfa(cls, user_id: int, *, reset_totp: bool = True, reset_passkeys: bool = True) -> None:
+        """Reset a user's MFA enrollments (admin recovery action).
+
+        Args:
+            user_id (int): The ID of the user.
+            reset_totp (bool): Clear the TOTP enrollment.
+            reset_passkeys (bool): Remove all registered passkeys.
+        """
+        user = db.session.get(cls, user_id)
+        if not user:
+            return
+        if reset_totp:
+            user.totp_secret = None
+            user.totp_last_used_step = None
+        if reset_passkeys:
+            WebauthnCredential.delete_for_user(user_id)
         db.session.commit()
 
     @classmethod
@@ -325,6 +480,23 @@ class User(db.Model):
         user.name = updated_user["name"]
         if updated_user["password"]:  # update password only when user fill it
             user.password = generate_password_hash(updated_user["password"])
+        elif updated_user.get("clear_password"):  # explicitly remove local password login
+            user.password = None
+        if "email" in updated_user:
+            user.email = updated_user["email"]
+        user.require_mfa = bool(updated_user.get("require_mfa"))
+        if updated_user.get("status") in USER_STATUSES and updated_user["status"] != user.status:
+            cls._check_status_change(user, updated_user["status"])
+            user.status = updated_user["status"]
+        if updated_user.get("identities") is not None:
+            cls._validate_identities(user_id, updated_user["identities"])
+            desired = {(identity["auth_provider_id"], identity["external_username"]) for identity in updated_user["identities"]}
+            user.auth_identities = [
+                identity for identity in user.auth_identities if (identity.auth_provider_id, identity.external_username) in desired
+            ]
+            existing = {(identity.auth_provider_id, identity.external_username) for identity in user.auth_identities}
+            for provider_id, external_username in desired - existing:
+                user.auth_identities.append(UserAuthIdentity(user_id, provider_id, external_username))
         user.organizations = []
         for o in updated_user["organizations"]:
             org = Organization.find(o.id)
@@ -411,6 +583,16 @@ class User(db.Model):
 
         return list(all_permissions)
 
+    @property
+    def has_password(self) -> bool:
+        """Tell whether local password login is available for this user."""
+        return bool(self.password)
+
+    @property
+    def mfa(self) -> dict:
+        """Summarize the user's MFA enrollments for the GUI."""
+        return {"totp": bool(self.totp_secret), "passkeys": len(self.webauthn_credentials)}
+
     def get_current_organization_name(self) -> str:
         """Return the name of the current organization.
 
@@ -437,6 +619,7 @@ class NewUserSchema(UserSchemaBase):
     roles = fields.Nested(RoleIdSchema, many=True)
     permissions = fields.Nested(PermissionIdSchema, many=True)
     organizations = fields.Nested(OrganizationIdSchema, many=True)
+    identities = fields.Nested(UserIdentitySchema, many=True, load_default=None, allow_none=True)
 
     @post_load
     def make(self, data: dict, **kwargs) -> User:  # noqa: ANN003, ARG002
@@ -457,15 +640,19 @@ class UpdateUserSchema(UserSchemaBase):
 
     Attributes:
         password (str): The user's password. If not provided, the password will not be updated.
+        clear_password (bool): When true and no password is given, remove the local password.
         roles (list): A list of role IDs assigned to the user.
         permissions (list): A list of permission IDs assigned to the user.
         organizations (list): A list of organization IDs associated with the user.
+        identities (list): Identity links (auth_provider_id + external_username).
     """
 
     password = fields.Str(load_default=None, allow_none=True)
+    clear_password = fields.Bool(load_default=False)
     roles = fields.Nested(RoleIdSchema, many=True)
     permissions = fields.Nested(PermissionIdSchema, many=True)
     organizations = fields.Nested(OrganizationIdSchema, many=True)
+    identities = fields.Nested(UserIdentitySchema, many=True, load_default=None, allow_none=True)
 
 
 class UserOrganization(db.Model):
