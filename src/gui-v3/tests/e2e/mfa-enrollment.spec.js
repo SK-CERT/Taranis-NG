@@ -645,6 +645,15 @@ async function cleanupRegisteredPasskeys(request) {
  * auth-providers.spec.js's `Public login methods contract` block).
  */
 async function setupPasskeyRelyingParty(page, request, { rpId, origins }) {
+    // Seed the baseline via the API first: on a virgin database the settings
+    // row is created lazily with `updated_by = NULL`, so the "Last updated by"
+    // caption the guard below waits on would never render and this helper
+    // would time out on the first run of a fresh CI stack (observed as a
+    // flaky first attempt whose `finally` cleanup PUT then let the retry
+    // pass). The baseline PUT populates updated_by, making the guard
+    // deterministic. security-settings.spec.js seeds the same way.
+    await cleanupPasskeyRelyingParty(request)
+
     await login(page)
     await navigateToConfig(page, 'Security')
     const panel = activePanel(page)

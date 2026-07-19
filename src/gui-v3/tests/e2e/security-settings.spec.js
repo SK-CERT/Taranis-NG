@@ -40,8 +40,41 @@ const CORE_API = process.env.E2E_CORE_API || `http://127.0.0.1:${process.env.E2E
 /** Scope queries to the active tab: Vuetify keeps the previous tab's DOM around. */
 const activePanel = (page) => page.locator('.v-window-item--active')
 
+/**
+ * PUT the baseline security settings via the API so every test starts from a
+ * known state (passkeys off, empty relying-party fields) — and, crucially, so
+ * `updated_by`/`updated_at` are populated. On a virgin database the settings
+ * row is lazily created with `updated_by = NULL` and the "Last updated by"
+ * caption the beforeEach guard waits on never renders. The only other writer
+ * of /config/security is mfa-enrollment.spec.js, whose tests are
+ * chromium-only — so on the firefox/webkit CI jobs (fresh stack per matrix
+ * browser, workers: 1) nothing had saved the settings before this spec ran
+ * and all three tests timed out on the guard. Seeding here makes the spec
+ * self-contained instead of order-dependent.
+ */
+async function seedSecurityBaseline(request) {
+    const loginRes = await request.post(`${CORE_API}/auth/login`, {
+        data: { username: 'admin', password: 'admin' }
+    })
+    expect(loginRes.ok(), `seed login failed: ${loginRes.status()} ${await loginRes.text()}`).toBe(true)
+    const { access_token: token } = await loginRes.json()
+    const seedRes = await request.put(`${CORE_API}/config/security`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: {
+            passkey_enabled: false,
+            passkey_second_factor: true,
+            require_mfa: false,
+            rp_id: '',
+            rp_name: '',
+            origins: ''
+        }
+    })
+    expect(seedRes.ok(), `seed PUT /config/security failed: ${seedRes.status()} ${await seedRes.text()}`).toBe(true)
+}
+
 test.describe('Security settings (passkey relying party)', () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, request }) => {
+        await seedSecurityBaseline(request)
         await login(page)
         await navigateToConfig(page, 'Security')
         // SecurityTab.vue's onMounted fires loadData() (GET /config/security)
