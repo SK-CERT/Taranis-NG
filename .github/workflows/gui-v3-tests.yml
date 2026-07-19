@@ -82,7 +82,11 @@ jobs:
       # resolution and every test fails with a webServer launch error. Same reason
       # the unit-tests job runs this step.
       - run: node scripts/update-version.cjs
-      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      # Always install chromium alongside the matrix browser: the `setup` project
+      # in playwright.config.js (which seeds the E2E data and is a dependency of
+      # every browser project) runs in Desktop Chrome, so even the firefox job
+      # needs chromium's chrome-headless-shell to run setup.
+      - run: npx playwright install --with-deps chromium ${{ matrix.browser }}
       # The Playwright webServer boots scripts/test-setup.py, which runs
       # `docker compose up -d --build` of postgres/redis/core/collectors/presenters/
       # publishers on the E2E compose project (taranis-e2e). On a cold GitHub runner

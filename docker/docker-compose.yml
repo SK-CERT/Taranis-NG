@@ -64,6 +64,10 @@ services:
       LDAP_SERVER: "${LDAP_SERVER:-}"
       LDAP_BASE_DN: "${LDAP_BASE_DN:-}"
       LDAP_CA_CERT_PATH:
+      # Number of trusted reverse-proxy hops in front of core, for X-Forwarded-*
+      # handling. Default 1 matches this bundled single-Traefik setup; raise it
+      # only if you add another proxy/LB/CDN in front (see src/core/app.py).
+      TRUSTED_PROXY_HOPS: "${TRUSTED_PROXY_HOPS:-1}"
       SQLALCHEMY_WARN_20: "1"
       PYTHONWARNINGS: "default"
 

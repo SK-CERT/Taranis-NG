@@ -211,6 +211,10 @@ def finish_authentication(challenge_id: str, credential: dict) -> User | None:
     except Exception as ex:
         logger.warning(f"Passkey assertion verification failed: {ex}")
         return None
+    # Detect-only, not enforced: a non-increasing counter can signal a cloned
+    # authenticator, but many legitimate authenticators (most passkeys/FIDO2
+    # platform credentials) keep it at 0, so rejecting the login here would lock
+    # those users out. We log the anomaly for auditing and let the login proceed.
     if verification.new_sign_count and record.sign_count and verification.new_sign_count <= record.sign_count:
         logger.warning(f"Passkey sign count did not increase for credential {record.id} - possible cloned authenticator")
     record.touch(verification.new_sign_count)

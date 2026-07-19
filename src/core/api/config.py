@@ -12,6 +12,7 @@ from http import HTTPStatus
 
 import requests
 from auth import saml_authenticator, saml_federation, saml_metadata
+from auth import url_guard as saml_url_guard
 from flask import request, send_file
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
@@ -368,14 +369,15 @@ def _read_idp_metadata_xml(data: dict) -> str:
         str: The metadata XML document.
 
     Raises:
-        ValueError: If neither is provided, the URL is not http(s), or the document is too large.
+        ValueError: If neither is provided, the URL is not http(s), points at a
+            non-public host, or the document is too large.
     """
     xml = data.get("xml")
     url = (data.get("url") or "").strip()
     if url:
-        if not url.startswith(("http://", "https://")):
-            msg = "The metadata URL must be an http(s) URL"
-            raise ValueError(msg)
+        # Rejects http(s)-only and, crucially, non-public hosts: this endpoint
+        # reflects the fetched document back, so an unguarded fetch is an SSRF.
+        saml_url_guard.assert_public_url(url)
         response = requests.get(url, timeout=SAML_METADATA_TIMEOUT, stream=True)
         response.raise_for_status()
         xml = response.raw.read(SAML_METADATA_MAX_BYTES + 1, decode_content=True).decode("utf-8", errors="replace")

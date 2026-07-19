@@ -33,8 +33,8 @@ class Login(Resource):
         """
         response = auth_manager.authenticate(None)
         if not isinstance(response, ResponseBase) and "gotoUrl" in request.args and "access_token" in response:
-            redirect_response = make_response(redirect(request.args["gotoUrl"]))
-            redirect_response.set_cookie("jwt", response["access_token"])
+            redirect_response = make_response(redirect(_safe_goto_url(request.args["gotoUrl"])))
+            redirect_response.set_cookie("jwt", response["access_token"], **_login_cookie_kwargs())
             return redirect_response
 
         return response
@@ -100,11 +100,8 @@ class Logout(Resource):
             response = auth_manager.logout(jwt_id)
 
             if not isinstance(response, ResponseBase) and "gotoUrl" in request.args:
-                url = (
-                    Config.OPENID_LOGOUT_URL.replace("GOTO_URL", urllib.parse.quote(request.args["gotoUrl"]))
-                    if Config.OPENID_LOGOUT_URL
-                    else request.args["gotoUrl"]
-                )
+                goto_url = _safe_goto_url(request.args["gotoUrl"])
+                url = Config.OPENID_LOGOUT_URL.replace("GOTO_URL", urllib.parse.quote(goto_url)) if Config.OPENID_LOGOUT_URL else goto_url
                 resp = redirect(url)
             else:
                 resp = make_response({}, HTTPStatus.OK) if response is None else response
@@ -133,6 +130,50 @@ class LoginMethods(Resource):
             dict: The available login methods.
         """
         return auth_manager.get_login_methods(), HTTPStatus.OK
+
+
+def _is_safe_goto_url(goto_url: str) -> bool:
+    r"""Tell whether a gotoUrl is a same-origin destination we may redirect to.
+
+    The login flows redirect the browser to ``gotoUrl`` and, on the legacy path,
+    plant the JWT cookie right before doing so. Without this check that turns the
+    endpoint into an open redirect (phishing, and the bearer cookie landing on an
+    attacker's host). Only two shapes are accepted:
+
+    - a relative path (``/dashboard``), rejecting protocol-relative (``//host``)
+      and backslash (``/\host``) forms browsers may normalize to another origin;
+    - an absolute http(s) URL whose host matches the current request host.
+
+    Args:
+        goto_url (str): The candidate return URL.
+
+    Returns:
+        bool: True when the URL is safe to redirect to.
+    """
+    if not goto_url:
+        return False
+    parsed = urllib.parse.urlparse(goto_url)
+    if not parsed.scheme and not parsed.netloc:
+        return goto_url.startswith("/") and goto_url[1:2] not in ("/", "\\")
+    return parsed.scheme in ("http", "https") and parsed.netloc == request.host
+
+
+def _safe_goto_url(goto_url: str | None) -> str:
+    """Return ``goto_url`` when it is same-origin, otherwise the site root."""
+    return goto_url if goto_url and _is_safe_goto_url(goto_url) else "/"
+
+
+def _login_cookie_kwargs() -> dict:
+    """Cookie flags for the tokens handed to the GUI across a redirect login.
+
+    ``Secure`` follows the request scheme (ProxyFix reflects the proxy's
+    ``X-Forwarded-Proto``), so the cookie is protected over HTTPS in production
+    without breaking plain-HTTP local/E2E runs. ``SameSite=Lax`` lets the cookie
+    survive the top-level redirect back from the IdP while blocking cross-site
+    POSTs. ``HttpOnly`` is deliberately NOT set: the GUI reads the value from
+    ``document.cookie`` to adopt it and then clears it.
+    """
+    return {"secure": request.is_secure, "samesite": "Lax"}
 
 
 def _oauth_redirect_uri(provider_slug: str, config: dict) -> str:
@@ -201,7 +242,7 @@ def _finish_redirect_login(goto_url: str, response: dict) -> Response:
 
     redirect_response = make_response(redirect(goto_url))
     for name, value in cookies.items():
-        redirect_response.set_cookie(name, value)
+        redirect_response.set_cookie(name, value, **_login_cookie_kwargs())
     return redirect_response
 
 
@@ -222,7 +263,7 @@ class OAuthLoginRedirect(Resource):
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
         provider_id = authenticator.provider.id
-        goto_url = request.args.get("gotoUrl", "/")
+        goto_url = _safe_goto_url(request.args.get("gotoUrl"))
         nonce = uuid.uuid4().hex
         # When PKCE is enabled for this provider, generate a fresh
         # code_verifier per login attempt and carry it inside the signed state
@@ -335,7 +376,7 @@ class SamlLoginRedirect(Resource):
         if not authenticator:
             return {"error": "Unknown login method"}, HTTPStatus.NOT_FOUND
         provider_id = authenticator.provider.id
-        goto_url = request.args.get("gotoUrl", "/")
+        goto_url = _safe_goto_url(request.args.get("gotoUrl"))
         try:
             if authenticator.is_federation():
                 # Send the user to the discovery service to pick their IdP. Our

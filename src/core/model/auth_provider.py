@@ -90,7 +90,7 @@ class AuthProvider(db.Model):
         slug (str): URL-safe stable identifier (unique) used in the IdP-facing
             auth URLs instead of the database id, so registering the provider at
             an IdP survives recreation and moving between environments.
-        kind (str): One of local | oidc | oauth2 | ldap | passkey.
+        kind (str): One of local | oidc | oauth2 | saml | ldap.
         enabled (bool): Whether the provider can be used for login.
         organization_id (int): Organization assigned to auto-created users.
         provisioning_mode (str): manual (linked identities only) | approval

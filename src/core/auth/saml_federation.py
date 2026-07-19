@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 
 import requests
 from auth.saml_authenticator import PEM_FOOTER, PEM_HEADER, load_idp_certificates
+from auth.url_guard import assert_public_url
 from managers import log_manager
 from minisignxml.config import VerifyConfig
 from minisignxml.verify import extract_verified_element_and_certificate
@@ -133,8 +134,10 @@ def _fetch(url: str) -> bytes:
         bytes: The raw document.
 
     Raises:
-        ValueError: When the response exceeds :data:`MAX_METADATA_BYTES`.
+        ValueError: When the host is non-public or the response exceeds
+            :data:`MAX_METADATA_BYTES`.
     """
+    assert_public_url(url)
     with requests.get(url, timeout=HTTP_TIMEOUT, stream=True) as response:
         response.raise_for_status()
         chunks: list[bytes] = []

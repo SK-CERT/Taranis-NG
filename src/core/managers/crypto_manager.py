@@ -9,7 +9,7 @@ from managers.log_manager import logger
 
 _fernet = Fernet(base64.urlsafe_b64encode(hashlib.sha256(Config.SECRETS_ENCRYPTION_KEY.encode()).digest()))
 
-if Config.SECRETS_ENCRYPTION_KEY == Config.JWT_SECRET_KEY:
+if Config.SECRETS_ENCRYPTION_KEY_IS_FALLBACK:
     logger.warning(
         "Secret 'secrets_encryption_key' is not set; falling back to jwt_secret_key for encrypting stored secrets. "
         "Configure a dedicated secrets_encryption_key Docker secret.",
