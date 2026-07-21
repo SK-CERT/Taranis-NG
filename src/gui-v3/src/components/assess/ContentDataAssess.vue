@@ -797,8 +797,13 @@
      * Fold a fresh server page (always fetched from offset 0, newest first) into the rendered
      * window without moving it: everything above the window is held back, everything inside it
      * is refreshed in place. Returns the new window.
+     *
+     * `pageIsComplete` says the fetch covered the whole filtered list, so a rendered card the
+     * page does not list is genuinely gone - marked read under the unread filter, deleted, or
+     * filtered out - and must not be carried over. Without it, marking the last card read left
+     * it on screen with its stale (unread) state.
      */
-    const mergeRefreshedPage = (page: NewsItem[]): NewsItem[] => {
+    const mergeRefreshedPage = (page: NewsItem[], pageIsComplete: boolean): NewsItem[] => {
         const rendered = news_items_data.value
         if (rendered.length === 0) {
             pendingNewItems.value = []
@@ -809,15 +814,24 @@
         // lists above it is newer than everything we render, i.e. freshly collected.
         const anchorIndex = windowStartIn(page)
         if (anchorIndex < 0) {
-            // Nothing we render came back: the window has drifted out of the fetched range.
-            // Leave the screen alone rather than guess - a filter or route change will reset it.
+            if (pageIsComplete) {
+                // Nothing we render is on the server any more: the whole window is gone.
+                pendingNewItems.value = []
+                return page
+            }
+            // The window has drifted out of the fetched range. Leave the screen alone rather
+            // than guess - a filter or route change will reset it.
             return rendered
         }
 
         pendingNewItems.value = page.slice(0, anchorIndex)
         const refreshed = page.slice(anchorIndex)
 
-        // The page can stop short of our window (the API caps limit at 200, and held-back items
+        if (pageIsComplete) {
+            return refreshed
+        }
+
+        // The page stopped short of our window (the API caps limit at 200, and held-back items
         // eat into the range). Keep the cards past that point instead of dropping them, which
         // would shorten the list and clamp the scroller.
         const last = refreshed[refreshed.length - 1]
@@ -912,7 +926,8 @@
                 const rendered = news_items_data.value
                 nextItems = rendered.concat(items.filter((item) => !rendered.some((current) => sameId(current, item))))
             } else if (mode === 'refresh') {
-                nextItems = mergeRefreshedPage(items)
+                // The page holds the whole filtered list, so anything missing from it is gone.
+                nextItems = mergeRefreshedPage(items, items.length >= total_count.value)
             } else {
                 // reset/reload both start the window at the top, so nothing is held back.
                 pendingNewItems.value = []
