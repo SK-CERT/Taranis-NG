@@ -74,3 +74,42 @@ describe('AssessItemActions vote colours', () => {
         }
     })
 })
+
+/**
+ * The confirmation dialog's own heading asks the question ("...delete following item?"), so its
+ * message has to name the item - a second generic sentence told the user nothing about what they
+ * were about to delete.
+ */
+describe('AssessItemActions delete confirmation', () => {
+    const confirmationMessage = (wrapper) => wrapper.findComponent({ name: 'ConfirmationDialog' }).props('message')
+
+    it('names the item the user is about to delete', () => {
+        const wrapper = mountActions({ id: 1, title: 'Critical vulnerability in OpenSSL' })
+
+        try {
+            expect(confirmationMessage(wrapper)).toBe('Critical vulnerability in OpenSSL')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('falls back to the source data title when the item carries none', () => {
+        const wrapper = mountActions({ id: 1, news_items: [{ news_item_data: { title: 'Reported by the collector' } }] })
+
+        try {
+            expect(confirmationMessage(wrapper)).toBe('Reported by the collector')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('falls back to an empty message rather than rendering undefined', () => {
+        const wrapper = mountActions({ id: 1 })
+
+        try {
+            expect(confirmationMessage(wrapper)).toBe('')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+})

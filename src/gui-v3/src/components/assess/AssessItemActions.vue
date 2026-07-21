@@ -145,10 +145,11 @@
             @click.stop="showDeleteDialog = true"
         />
 
-        <!-- Delete Confirmation Dialog -->
+        <!-- Delete Confirmation Dialog. The dialog's own heading asks the question, so the
+             message names the item the user is about to delete - as every other card does. -->
         <ConfirmationDialog
             v-model="showDeleteDialog"
-            :message="t('assess.delete_confirmation')"
+            :message="itemTitle"
             max-width="600px"
             @confirm="$emit('action', 'delete')"
         />
@@ -166,6 +167,7 @@
 
     type AssessItem = {
         id?: number | string
+        title?: string
         me_like?: boolean
         me_dislike?: boolean
         likes?: number
@@ -176,6 +178,7 @@
         news_items?: Array<{
             news_item_data?: {
                 link?: string
+                title?: string
                 [key: string]: unknown
             }
         }>
@@ -226,6 +229,11 @@
             return firstNewsItem?.news_item_data?.link || ''
         }
         return props.item.link || ''
+    })
+
+    /** Aggregates and child items both carry `title`; fall back to the source data for either. */
+    const itemTitle = computed(() => {
+        return props.item.title || newsItems.value[0]?.news_item_data?.title || ''
     })
 
     const hasLink = computed(() => {

@@ -731,7 +731,6 @@
         "item_deleted": "Novinka bola úspešne zmazaná",
         "error_updating": "Aktualizácia novinky zlyhala",
         "error_deleting": "Mazanie novinky zlyhalo",
-        "delete_confirmation": "Naozaj chcete zmazať túto novinku?",
         "tooltip": {
             "filter_all": "Aktuálne zobrazené: všetko",
             "filter_read": "Aktuálne zobrazené: prečítané",

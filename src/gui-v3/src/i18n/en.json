@@ -731,7 +731,6 @@
         "item_deleted": "News item deleted successfully",
         "error_updating": "Error updating news item",
         "error_deleting": "Error deleting news item",
-        "delete_confirmation": "Are you sure you want to delete this news item?",
         "tooltip": {
             "filter_all": "Currently showing: all",
             "filter_read": "Currently showing: read",

@@ -459,4 +459,62 @@ describe('ContentDataAssess list reloads', () => {
             wrapper.unmount()
         }
     })
+
+    /**
+     * There is nothing behind the last card to pull in, so the refreshed page ends one card
+     * short of the window. That is indistinguishable from a page the API truncated - and the
+     * tail-preserving branch used to re-append the very card the user had just read, which
+     * left it on screen still showing its stale unread eye.
+     */
+    it('drops the last card of the list when it no longer matches the filter', async () => {
+        const wrapper = mountAssess()
+
+        try {
+            mockAssessStore.loadNewsItemsByGroup.mockResolvedValue({
+                data: { total_count: 3, items: makeItems(3) }
+            })
+
+            await wrapper.vm.updateData()
+            await flushPromises()
+            expect(idsOf(wrapper.vm.news_items_data)).toEqual([1, 2, 3])
+
+            // Item 3 - the last card - is marked read: the whole remaining list is 2 items.
+            mockAssessStore.loadNewsItemsByGroup.mockResolvedValue({
+                data: { total_count: 2, items: makeItems(2) }
+            })
+
+            await wrapper.vm.refreshData()
+            await flushPromises()
+
+            expect(idsOf(wrapper.vm.news_items_data)).toEqual([1, 2])
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('empties the window when its last remaining card is acted on', async () => {
+        const wrapper = mountAssess()
+
+        try {
+            mockAssessStore.loadNewsItemsByGroup.mockResolvedValue({
+                data: { total_count: 1, items: makeItems(1) }
+            })
+
+            await wrapper.vm.updateData()
+            await flushPromises()
+            expect(idsOf(wrapper.vm.news_items_data)).toEqual([1])
+
+            // Nothing we render comes back, and the page proves it: the list really is empty.
+            mockAssessStore.loadNewsItemsByGroup.mockResolvedValue({
+                data: { total_count: 0, items: [] }
+            })
+
+            await wrapper.vm.refreshData()
+            await flushPromises()
+
+            expect(wrapper.vm.news_items_data).toEqual([])
+        } finally {
+            wrapper.unmount()
+        }
+    })
 })
