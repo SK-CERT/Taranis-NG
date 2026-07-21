@@ -311,7 +311,7 @@ class ProductSetPreview(Resource):
             cache_value = json.dumps(
                 {"data": base64.b64encode(preview_data).decode("utf-8"), "mime": preview_mime, "filename": file_name},
             )
-            redis_client.setex(cache_key, cache_ttl, cache_value)
+            redis_client.set(cache_key, cache_value, ex=cache_ttl)
 
             logger.debug(f"Preview token generated: {token}")
             return {"token": token}, HTTPStatus.OK

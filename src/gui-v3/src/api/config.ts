@@ -54,6 +54,51 @@ export function deleteAiProvider(ai_provider) {
     return ApiService.delete('/config/aiprovider/' + ai_provider.id)
 }
 
+export function getAllAuthProviders(filter) {
+    return ApiService.get('/config/auth-providers?search=' + filter.search)
+}
+
+export function createNewAuthProvider(auth_provider) {
+    return ApiService.post('/config/auth-providers', auth_provider)
+}
+
+export function updateAuthProvider(auth_provider) {
+    return ApiService.put('/config/auth-providers/' + auth_provider.id, auth_provider)
+}
+
+export function deleteAuthProvider(auth_provider) {
+    return ApiService.delete('/config/auth-providers/' + auth_provider.id)
+}
+
+export function importSamlMetadata(payload) {
+    return ApiService.post('/config/auth-providers/saml/import-metadata', payload)
+}
+
+export function generateSamlKeypair(sp_entity_id) {
+    return ApiService.post('/config/auth-providers/saml/generate-keypair', { sp_entity_id })
+}
+
+export function verifySamlFederation(payload) {
+    return ApiService.post('/config/auth-providers/saml/verify-federation', payload)
+}
+
+export function getSecuritySettings() {
+    return ApiService.get('/config/security')
+}
+
+export function updateSecuritySettings(settings) {
+    return ApiService.put('/config/security', settings)
+}
+
+export function updateUserStatus(user_id, status) {
+    return ApiService.put('/config/users/' + user_id + '/status', { status: status })
+}
+
+export function resetUserMfa(user_id, options) {
+    const body = options ? { reset_totp: !!options.reset_totp, reset_passkeys: !!options.reset_passkeys } : {}
+    return ApiService.post('/config/users/' + user_id + '/reset-mfa', body)
+}
+
 export function getAllDataProviders(filter) {
     return ApiService.get('/config/data-providers?search=' + filter.search)
 }

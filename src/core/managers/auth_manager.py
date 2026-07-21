@@ -9,22 +9,29 @@ if TYPE_CHECKING:
     from shared.time_manager import SchedulerManager
 
 import os
+import random
+import time
+import uuid
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from functools import wraps
 from http import HTTPStatus
 
 import jwt
+from auth.base_authenticator import BaseAuthenticator
 from auth.keycloak_authenticator import KeycloakAuthenticator
 from auth.ldap_authenticator import LDAPAuthenticator
+from auth.oauth2_authenticator import OAuth2Authenticator
 from auth.openid_authenticator import OpenIDAuthenticator
 from auth.password_authenticator import PasswordAuthenticator
+from auth.saml_authenticator import SamlAuthenticator
 from config import Config
 from flask import request
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
-from managers import log_manager
+from managers import log_manager, totp_manager, webauthn_manager
 from model.apikey import ApiKey
+from model.auth_provider import FORM_KINDS, OAUTH_KINDS, AuthProvider, UserAuthIdentity
 from model.bots_node import BotsNode
 from model.collectors_node import CollectorsNode
 from model.news_item import NewsItem
@@ -34,11 +41,15 @@ from model.product_type import ProductType
 from model.publishers_node import PublishersNode
 from model.remote import RemoteAccess
 from model.report_item import ReportItem
+from model.security_settings import SecuritySettings
 from model.token_blacklist import TokenBlacklist
 from model.user import User
 from shared.common import TZ
 
 current_authenticator = None
+
+SCOPED_TOKEN_MINUTES = 5
+OAUTH_STATE_MINUTES = 10
 
 
 def cleanup_token_blacklist(app: Flask) -> None:
@@ -63,6 +74,10 @@ def initialize(app: Flask) -> None:
 
     JWTManager(app)
 
+    # DEPRECATED: env-based keycloak/openid stay supported for existing deployments.
+    # All other values are handled by the auth providers configured in the database
+    # (a "Local accounts" provider - and an LDAP provider when previously configured
+    # via env - are seeded by migration).
     which = os.getenv("TARANIS_NG_AUTHENTICATOR")
     if which is not None:
         which = which.lower()
@@ -70,14 +85,11 @@ def initialize(app: Flask) -> None:
         current_authenticator = OpenIDAuthenticator()
     elif which == "keycloak":
         current_authenticator = KeycloakAuthenticator()
-    elif which == "password":
-        current_authenticator = PasswordAuthenticator()
-    elif which == "ldap":
-        current_authenticator = LDAPAuthenticator()
     else:
-        current_authenticator = PasswordAuthenticator()
+        current_authenticator = None
 
-    current_authenticator.initialize(app)
+    if current_authenticator:
+        current_authenticator.initialize(app)
 
 
 def schedule(manager: SchedulerManager, app: Flask) -> None:
@@ -98,7 +110,9 @@ def get_required_credentials() -> list:
     Returns:
         The required credentials for the current authenticator.
     """
-    return current_authenticator.get_required_credentials()
+    if current_authenticator:
+        return current_authenticator.get_required_credentials()
+    return ["username", "password", "provider_id"]
 
 
 def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
@@ -110,7 +124,9 @@ def authenticate(credentials: dict) -> tuple[dict, HTTPStatus]:
     Returns:
         The result of the authentication process.
     """
-    return current_authenticator.authenticate(credentials)
+    if current_authenticator:
+        return current_authenticator.authenticate(credentials)
+    return authenticate_with_provider((credentials or {}).get("provider_id"), credentials)
 
 
 def refresh(user: User) -> tuple[dict, HTTPStatus]:
@@ -122,7 +138,9 @@ def refresh(user: User) -> tuple[dict, HTTPStatus]:
     Returns:
         The refreshed authentication token.
     """
-    return current_authenticator.refresh(user)
+    if current_authenticator:
+        return current_authenticator.refresh(user)
+    return BaseAuthenticator.generate_jwt(user)
 
 
 def logout(jwt_id: str) -> None:
@@ -137,7 +155,467 @@ def logout(jwt_id: str) -> None:
         None: This function does not return any value.
     """
     if jwt_id is not None:
-        current_authenticator.logout(jwt_id)
+        if current_authenticator:
+            current_authenticator.logout(jwt_id)
+        else:
+            BaseAuthenticator.logout(jwt_id)
+
+
+def get_login_methods() -> dict:
+    """List the enabled login methods for the (anonymous) login page.
+
+    Returns:
+        dict: Items with id, name, kind, form (credentials form applies) and
+              login_url (redirect-based kinds only), plus passkey_enabled -
+              passkeys are a site-wide capability, not a provider. No
+              configuration or secrets are exposed.
+    """
+    items = []
+    for provider in AuthProvider.get_enabled():
+        if provider.kind in OAUTH_KINDS:
+            login_url = f"/api/v1/auth/oauth/{provider.slug}/login"
+        elif provider.kind == "saml":
+            login_url = f"/api/v1/auth/saml/{provider.slug}/login"
+        else:
+            login_url = None
+        items.append(
+            {
+                "id": provider.id,
+                "name": provider.name,
+                "kind": provider.kind,
+                "form": provider.kind in FORM_KINDS,
+                "login_url": login_url,
+            },
+        )
+    return {"items": items, "passkey_enabled": webauthn_manager.passkeys_enabled()}
+
+
+def make_scoped_token(username: str, scope: str, expires_minutes: int = SCOPED_TOKEN_MINUTES, **claims: str) -> str:
+    """Mint a short-lived single-purpose token (MFA step, TOTP enrollment, OAuth state).
+
+    These tokens carry a ``scope`` claim and no flask-jwt ``type`` claim, so they
+    can never be used as API access tokens.
+
+    Args:
+        username (str): Subject username.
+        scope (str): Purpose of the token (e.g. "mfa", "mfa_enroll", "oauth_state").
+        expires_minutes (int): Token lifetime.
+        **claims: Additional claims to embed.
+
+    Returns:
+        str: The encoded token.
+    """
+    payload = {
+        "sub": username,
+        "scope": scope,
+        "jti": str(uuid.uuid4()),
+        "exp": datetime.now(TZ) + timedelta(minutes=expires_minutes),
+        **claims,
+    }
+    return jwt.encode(payload, Config.JWT_SECRET_KEY, algorithm="HS256")
+
+
+def decode_scoped_token(token: str, scope: str) -> dict | None:
+    """Decode and validate a single-purpose token.
+
+    Args:
+        token (str): The encoded token.
+        scope (str): The required scope.
+
+    Returns:
+        dict: The token payload, or None when invalid/expired/wrong scope.
+    """
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
+    except Exception as ex:
+        log_manager.store_auth_error_activity(f"Invalid scoped token: {ex!s}")
+        return None
+    if payload.get("scope") != scope:
+        log_manager.store_auth_error_activity(f"Scoped token used with wrong scope: expected {scope}")
+        return None
+    return payload
+
+
+def mfa_required(provider: AuthProvider, user: User) -> bool:
+    """Tell whether this user must hold a second factor.
+
+    Four levels can demand it and they are OR-ed - the site, the user's
+    organization, the login method, and the user themselves. Enforcement is the
+    strictest of them: a level that requires MFA cannot be relaxed by another
+    that does not.
+
+    Args:
+        provider (AuthProvider): The provider used for the first factor.
+        user (User): The authenticated user.
+
+    Returns:
+        bool: Whether a second factor is mandatory for this user.
+    """
+    return bool(
+        SecuritySettings.mfa_required()
+        or any(organization.require_mfa for organization in user.organizations)
+        or provider.require_mfa
+        or user.require_mfa,
+    )
+
+
+def _mfa_gate(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus] | None:
+    """Decide whether a login must complete a second factor.
+
+    Triggered when any level requires MFA (see :func:`mfa_required`) or the user
+    has a usable factor enrolled - one they enrolled themselves is always asked
+    for, even where nothing requires it.
+
+    A passkey only counts when passkeys are accepted as a second factor
+    site-wide; with that switch off, TOTP is the only way to satisfy the step,
+    and a user who owns nothing but passkeys is walked through TOTP enrollment.
+
+    Args:
+        provider (AuthProvider): The provider used for the first factor.
+        user (User): The authenticated user.
+
+    Returns:
+        tuple | None: The MFA challenge response, or None when no MFA applies.
+    """
+    totp_enrolled = bool(user.totp_secret)
+    has_passkeys = len(user.webauthn_credentials) > 0 and webauthn_manager.passkey_second_factor_enabled()
+    if not (mfa_required(provider, user) or totp_enrolled or has_passkeys):
+        return None
+    if totp_enrolled or has_passkeys:
+        methods = [method for method, enrolled in (("totp", totp_enrolled), ("passkey", has_passkeys)) if enrolled]
+        return BaseAuthenticator.generate_error_code(
+            "Additional authentication required",
+            "MFA_REQUIRED",
+            methods=methods,
+            mfa_token=make_scoped_token(user.username, "mfa"),
+        )
+    # Nothing enrolled yet: offer every factor this installation accepts, so a user
+    # forced to set one up is not pushed into an authenticator app when a passkey
+    # would do.
+    enrollable = ["totp", "passkey"] if webauthn_manager.passkey_second_factor_enabled() else ["totp"]
+    return BaseAuthenticator.generate_error_code(
+        "Two-factor authentication enrollment is required",
+        "MFA_ENROLLMENT_REQUIRED",
+        methods=enrollable,
+        enroll_token=make_scoped_token(user.username, "mfa_enroll"),
+    )
+
+
+def _finalize_login(provider: AuthProvider, user: User) -> tuple[dict, HTTPStatus]:
+    """Run the status gate, then the MFA gate, then issue the JWT.
+
+    The MFA gate applies to every provider kind. A factor the user enrolled is
+    theirs, not the provider's: skipping it for redirect logins would leave the
+    external path weaker than the local one, and an attacker holding the account
+    at the identity provider could then bypass the second factor by choosing it.
+
+    Args:
+        provider (AuthProvider): The provider the user authenticated against.
+        user (User): The authenticated user.
+
+    Returns:
+        tuple: The login response.
+    """
+    status_error = BaseAuthenticator.check_user_status(user)
+    if status_error:
+        return status_error
+    mfa_challenge = _mfa_gate(provider, user)
+    if mfa_challenge:
+        return mfa_challenge
+    return BaseAuthenticator.generate_jwt(user)
+
+
+def provision_and_issue_jwt(provider: AuthProvider, identity: object) -> tuple[dict, HTTPStatus]:
+    """Resolve an externally authenticated identity to a local user and issue the JWT.
+
+    Matching order: existing identity link (by external id, then external
+    username) -> otherwise provisioning per the provider's mode: "manual"
+    rejects unlinked identities, "approval"/"automatic" auto-create the user
+    (pending/active) when the optional domain filter passes and the username
+    is free.
+
+    Args:
+        provider (AuthProvider): The provider the subject authenticated against.
+        identity (ExternalIdentity): The externally authenticated identity.
+
+    Returns:
+        tuple: The login response.
+    """
+    identity_row = UserAuthIdentity.find_by_external(provider.id, identity.external_id, identity.username)
+    if identity_row:
+        user = identity_row.user
+        identity_row.touch_login()
+        return _finalize_login(provider, user)
+
+    if provider.provisioning_mode == "manual":
+        log_manager.store_auth_error_activity(
+            f"Unlinked identity '{identity.username}' rejected by provider '{provider.name}' (linked users only)",
+        )
+        return BaseAuthenticator.generate_error_code(
+            "This identity is not linked to any account. Contact your administrator.",
+            "ACCOUNT_NOT_LINKED",
+        )
+
+    allowed_domains = provider.get_allowed_domains()
+    if allowed_domains:
+        domain = identity.email.rsplit("@", 1)[1].lower() if identity.email and "@" in identity.email else None
+        if not domain or domain not in allowed_domains:
+            log_manager.store_auth_error_activity(f"Identity '{identity.username}' rejected by provider '{provider.name}' domain filter")
+            return BaseAuthenticator.generate_error_code(
+                "Your e-mail domain is not allowed to sign up. Contact your administrator.",
+                "DOMAIN_NOT_ALLOWED",
+            )
+
+    if User.find(identity.username):
+        log_manager.store_auth_error_activity(
+            f"Provisioning of '{identity.username}' via provider '{provider.name}' collides with an existing username",
+        )
+        return BaseAuthenticator.generate_error_code(
+            "An account with this username already exists. Ask your administrator to link this identity to it.",
+            "USERNAME_COLLISION",
+        )
+
+    user = User.provision_external(provider, identity.username, identity.name, identity.email, identity.external_id)
+    log_manager.store_user_activity(user, "PROVISION", f"Auto-created via auth provider '{provider.name}' with status '{user.status}'")
+    return _finalize_login(provider, user)
+
+
+def authenticate_with_provider(provider_id: object, credentials: dict) -> tuple[dict, HTTPStatus]:
+    """Authenticate form credentials against one (or the fallback chain of) providers.
+
+    Without a provider_id (legacy clients), local providers are tried first,
+    then LDAP providers, in id order.
+
+    Args:
+        provider_id: The chosen provider ID (may be None or a string).
+        credentials (dict): username/password credentials.
+
+    Returns:
+        tuple: The login response.
+    """
+    credentials = credentials or {}
+    username = credentials.get("username")
+    password = credentials.get("password")
+    if not username or not password:
+        return BaseAuthenticator.generate_error()
+
+    if provider_id:
+        try:
+            provider = AuthProvider.find(int(provider_id))
+        except (TypeError, ValueError):
+            provider = None
+        providers = [provider] if provider and provider.enabled and provider.kind in FORM_KINDS else []
+    else:
+        providers = AuthProvider.get_enabled_by_kind(("local",)) + AuthProvider.get_enabled_by_kind(("ldap",))
+
+    for provider in providers:
+        if provider.kind == "local":
+            user = PasswordAuthenticator.verify(credentials)
+            if user:
+                return _finalize_login(provider, user)
+        elif provider.kind == "ldap":
+            identity = LDAPAuthenticator(provider).verify(credentials)
+            if identity:
+                return provision_and_issue_jwt(provider, identity)
+
+    data = request.get_json(silent=True) or {}
+    if data.get("password"):
+        data["password"] = log_manager.sensitive_value(data["password"])
+    log_manager.store_auth_error_activity(f"Authentication failed for user: {username}", request_data=data)
+    time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
+    return BaseAuthenticator.generate_error()
+
+
+def complete_mfa_totp(mfa_token: str, code: str) -> tuple[dict, HTTPStatus]:
+    """Complete a login by verifying the TOTP code of the MFA step.
+
+    Args:
+        mfa_token (str): The scoped token from the MFA_REQUIRED response.
+        code (str): The submitted TOTP code.
+
+    Returns:
+        tuple: The login response.
+    """
+    payload = decode_scoped_token(mfa_token, "mfa")
+    user = User.find(payload["sub"]) if payload else None
+    if not user:
+        return BaseAuthenticator.generate_error()
+    if not totp_manager.verify_code(user, code):
+        log_manager.store_auth_error_activity(f"Invalid TOTP code for user: {user.username}")
+        time.sleep(random.uniform(1, 3))  # noqa: S311 - timing jitter, not cryptographic
+        return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
+    return BaseAuthenticator.generate_jwt(user)
+
+
+def complete_totp_enrollment(enroll_token: str, code: str | None) -> tuple[dict, HTTPStatus]:
+    """Handle forced TOTP enrollment during login.
+
+    Without a code, starts the enrollment and returns the otpauth URI for the
+    QR code; with a code, confirms the enrollment and issues the JWT.
+
+    Args:
+        enroll_token (str): The scoped token from the MFA_ENROLLMENT_REQUIRED response.
+        code (str): The confirmation TOTP code (None to begin enrollment).
+
+    Returns:
+        tuple: The enrollment payload or the login response.
+    """
+    payload = decode_scoped_token(enroll_token, "mfa_enroll")
+    user = User.find(payload["sub"]) if payload else None
+    if not user:
+        return BaseAuthenticator.generate_error()
+    if not code:
+        return {"otpauth_uri": totp_manager.begin_enrollment(user.username)}, HTTPStatus.OK
+    if not totp_manager.confirm_enrollment(user, code):
+        return BaseAuthenticator.generate_error_code("Invalid authentication code", "TOTP_INVALID")
+    return BaseAuthenticator.generate_jwt(user)
+
+
+def complete_passkey_enrollment(enroll_token: str, challenge_id: str | None, credential: dict | None, name: str) -> tuple[dict, HTTPStatus]:
+    """Handle forced enrollment during login when the user picks a passkey over TOTP.
+
+    Without a credential, starts the registration ceremony and returns the WebAuthn
+    creation options; with one, stores the passkey and issues the JWT - registering
+    it *is* the second factor, so no further step is needed.
+
+    The user is mid-login and holds no access token, which is why this is driven by
+    the same scoped enrollment token as the TOTP path rather than by a session.
+
+    Args:
+        enroll_token (str): The scoped token from the MFA_ENROLLMENT_REQUIRED response.
+        challenge_id (str): Handle from the begin step (None to begin).
+        credential (dict): The authenticator's response (None to begin).
+        name (str): User-facing label for the passkey.
+
+    Returns:
+        tuple: The creation options or the login response.
+    """
+    if not webauthn_manager.passkey_second_factor_enabled():
+        return BaseAuthenticator.generate_error_code("Passkeys are not accepted as a second factor", "PASSKEY_NOT_ALLOWED")
+
+    payload = decode_scoped_token(enroll_token, "mfa_enroll")
+    user = User.find(payload["sub"]) if payload else None
+    if not user:
+        return BaseAuthenticator.generate_error()
+
+    try:
+        if not credential:
+            return webauthn_manager.begin_registration(user), HTTPStatus.OK
+        # the WebAuthn library raises its own exception types on a bad attestation
+        webauthn_manager.finish_registration(user, challenge_id or "", credential, name or "Passkey")
+    except Exception as ex:
+        log_manager.store_auth_error_activity(f"Passkey enrollment failed for user: {user.username}", ex)
+        return BaseAuthenticator.generate_error_code(f"Passkey registration failed: {ex}", "PASSKEY_INVALID")
+    return BaseAuthenticator.generate_jwt(user)
+
+
+def get_user_from_scoped_token(token: str, scope: str) -> User | None:
+    """Resolve the user of a scoped token (for MFA passkey ceremonies).
+
+    Args:
+        token (str): The scoped token.
+        scope (str): The required scope.
+
+    Returns:
+        User: The subject user, or None.
+    """
+    payload = decode_scoped_token(token, scope)
+    return User.find(payload["sub"]) if payload else None
+
+
+def begin_passkey_authentication(mfa_token: str | None) -> tuple[dict, HTTPStatus]:
+    """Start a passkey ceremony for passwordless login or the MFA step.
+
+    Args:
+        mfa_token (str): Scoped MFA token (second-factor mode); None for
+            passwordless (discoverable credential) login.
+
+    Returns:
+        tuple: WebAuthn request options and challenge handle, or an error.
+    """
+    user = None
+    if mfa_token:
+        user = get_user_from_scoped_token(mfa_token, "mfa")
+        if not user:
+            return BaseAuthenticator.generate_error()
+    try:
+        return webauthn_manager.begin_authentication(user), HTTPStatus.OK
+    except ValueError as ex:
+        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+
+
+def complete_passkey_login(challenge_id: str, credential: dict) -> tuple[dict, HTTPStatus]:
+    """Complete a passwordless passkey login.
+
+    Args:
+        challenge_id (str): Handle from begin_passkey_authentication.
+        credential (dict): The authenticator's assertion.
+
+    Returns:
+        tuple: The login response.
+    """
+    try:
+        user = webauthn_manager.finish_authentication(challenge_id, credential)
+    except ValueError as ex:
+        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+    if not user:
+        return BaseAuthenticator.generate_error()
+    return BaseAuthenticator.generate_jwt(user)
+
+
+def complete_mfa_passkey(mfa_token: str, challenge_id: str, credential: dict) -> tuple[dict, HTTPStatus]:
+    """Complete a login by verifying a passkey assertion as the second factor.
+
+    Args:
+        mfa_token (str): The scoped token from the MFA_REQUIRED response.
+        challenge_id (str): Handle from begin_passkey_authentication.
+        credential (dict): The authenticator's assertion.
+
+    Returns:
+        tuple: The login response.
+    """
+    payload = decode_scoped_token(mfa_token, "mfa")
+    if not payload:
+        return BaseAuthenticator.generate_error()
+    try:
+        owner = webauthn_manager.finish_authentication(challenge_id, credential)
+    except ValueError as ex:
+        return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+    if not owner or owner.username != payload["sub"]:
+        return BaseAuthenticator.generate_error()
+    return BaseAuthenticator.generate_jwt(owner)
+
+
+def get_oauth_authenticator(slug: str) -> OAuth2Authenticator | None:
+    """Build the OAuth2/OIDC authenticator for an enabled oauth-kind provider.
+
+    Args:
+        slug (str): The provider slug (from the auth URL).
+
+    Returns:
+        OAuth2Authenticator: The authenticator, or None for unknown/disabled providers.
+    """
+    provider = AuthProvider.find_by_slug(slug)
+    if not provider or not provider.enabled or provider.kind not in OAUTH_KINDS:
+        return None
+    return OAuth2Authenticator(provider)
+
+
+def get_saml_authenticator(slug: str) -> SamlAuthenticator | None:
+    """Build the SAML authenticator for an enabled saml-kind provider.
+
+    Args:
+        slug (str): The provider slug (from the auth URL).
+
+    Returns:
+        SamlAuthenticator: The authenticator, or None for unknown/disabled providers.
+    """
+    provider = AuthProvider.find_by_slug(slug)
+    if not provider or not provider.enabled or provider.kind != "saml":
+        return None
+    return SamlAuthenticator(provider)
 
 
 class ACLCheck(Enum):
@@ -257,6 +735,32 @@ def get_id_name_by_acl(acl: ACLCheck) -> str:
     return None
 
 
+def _find_active_user(identity: str) -> User | None:
+    """Find a user by username and require an active account.
+
+    Central status enforcement: pending/disabled users are rejected here, so
+    disabling a user also invalidates their existing sessions.
+
+    Args:
+        identity (str): The username from the token.
+
+    Returns:
+        User: The active user, or None.
+    """
+    user = User.find(identity)
+    if not user:
+        log_manager.store_auth_error_activity(f"Unknown identity: {identity}")
+        return None
+    if user.status != "active":
+        # Expected policy rejection: a previously-issued token for an account
+        # that was later disabled (or is still pending approval) being refused.
+        # This fires on every authenticated call with the stale token, so it is
+        # logged as a warning rather than an error.
+        log_manager.store_auth_warning_activity(f"Access of non-active user blocked: {identity}")
+        return None
+    return user
+
+
 def get_user_from_api_key() -> User:
     """Try to authenticate the user by API key.
 
@@ -270,7 +774,14 @@ def get_user_from_api_key() -> User:
         apikey = ApiKey.find_by_key(api_key)
         if not apikey:
             return None
-        return User.find_by_id(apikey.user_id)
+        user = User.find_by_id(apikey.user_id)
+        if user and user.status != "active":
+            # Expected policy rejection: an API key for an account that was
+            # disabled (or is still pending approval) being refused. See the
+            # matching note in _find_active_user for why this is a warning.
+            log_manager.store_auth_warning_activity(f"API key access of non-active user blocked: {user.username}")
+            return None
+        return user
 
     except Exception as ex:
         log_manager.store_auth_error_activity("API key check presence error", ex)
@@ -299,7 +810,7 @@ def get_perm_from_user(user: User) -> set:
         return None
 
 
-def get_user_from_jwt_token() -> User:
+def get_user_from_jwt_token() -> User | None:
     """Try to authenticate the user by API key.
 
     This function verifies the JWT token in the request and retrieves the user object associated with the token's identity.
@@ -319,14 +830,10 @@ def get_user_from_jwt_token() -> User:
         log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
         return None
 
-    user = User.find(identity)
-    if not user:
-        log_manager.store_auth_error_activity(f"Unknown identity in JWT: {identity}")
-        return None
-    return user
+    return _find_active_user(identity)
 
 
-def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set:
+def get_perm_from_jwt_token(user: User, jwt_data: dict) -> set | None:
     """Get user permissions from JWT token.
 
     Args:
@@ -514,9 +1021,8 @@ def jwt_token_required(fn) -> tuple[dict, HTTPStatus]:  # noqa: ANN001
             log_manager.store_auth_error_activity(f"Missing identity in JWT: {get_jwt()}")
             return {"error": "authorization failed"}, HTTPStatus.UNAUTHORIZED
 
-        user = User.find(identity)
+        user = _find_active_user(identity)
         if user is None:
-            log_manager.store_auth_error_activity(f"Unknown identity: {identity}")
             return {"error": "authorization failed"}, HTTPStatus.UNAUTHORIZED
 
         log_manager.store_user_activity(user, "API_ACCESS", "Access permitted")
@@ -569,7 +1075,11 @@ def decode_user_from_jwt(jwt_token: str) -> User:
         log_manager.store_auth_error_activity(f"Invalid JWT: {ex!s}")
     if decoded is None:
         return None
-    return User.find(decoded["sub"])
+    if decoded.get("scope"):
+        # single-purpose tokens (MFA step, OAuth state) must never open a session
+        log_manager.store_auth_error_activity("Scoped token rejected as session JWT")
+        return None
+    return _find_active_user(decoded["sub"])
 
 
 def get_external_permissions_ids() -> list[str]:

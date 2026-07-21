@@ -7,7 +7,7 @@
 /**
  * Wait for the backend API to be reachable and responsive.
  *
- * The Playwright webServer boots the backend via test-setup.sh, but the dev-server
+ * The Playwright webServer boots the backend via test-setup.py, but the dev-server
  * `url` check only confirms the frontend is up — the backend login endpoint may still
  * be warming up. This helper polls until the backend responds or times out.
  * @param {import('@playwright/test').Page} page - Playwright page object
@@ -172,6 +172,56 @@ export async function saveDialog(page) {
 }
 
 /**
+ * Find a row in the active config table by typing its name into the Search box.
+ *
+ * Why this exists: the config tables are server-side paginated (default 10 per
+ * page). When the E2E stack already has seeded rows from earlier runs/specs,
+ * a newly-created item lands past page 1 and is invisible to a row locator on
+ * page 1 — `expect(row).toBeVisible()` then times out even though the save
+ * succeeded. Filtering via the visible Search textbox mirrors real user
+ * behavior (you'd search to find your just-created item) and makes the test
+ * robust regardless of how many leftover rows the table holds.
+ *
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ * @param {string} name - Exact row name to search for
+ * @returns {import('@playwright/test').Locator} The matching row, scoped to the
+ *   active panel (Vuetify keeps previous tabs' DOM around).
+ */
+export async function findRowByName(page, name) {
+    // Scope the search box to `.v-window-item--active` so a leftover (closed
+    // but not yet unmounted) NewAuthProvider-style dialog — which embeds its
+    // own EntitySelectTable with ANOTHER "Search" textbox — does not collide.
+    // Vuetify's `<v-dialog v-model="false">` leaves the dialog's DOM in the
+    // outgoing transition for a moment; the dialog's Search box is `disabled`
+    // but Playwright's `getByRole('textbox', { name })` includes disabled
+    // textbox elements in its match set, so without a scope this throws
+    // `strict mode violation: ... resolved to 2 elements`.
+    //
+    // Scoping to `.v-window-item--active` matches only the active Access
+    // Management panel's main Search box (the row table it sits above is
+    // always inside the active panel). Avoids `getByRole`'s broad match.
+    const search = page.locator('.v-window-item--active').getByRole('textbox', { name: 'Search' }).first()
+    // Intentionally NO explicit wait here. The search GET the fill() triggers
+    // is followed (at every call site) by `expect(row).toBeVisible()` or
+    // `expect(row).toHaveCount(0)`, which Playwright AUTO-RETRIES until the row
+    // appears / disappears. Auto-retry already syncs on the row-re-render, so
+    // an explicit wait would be redundant — and history showed it to be fragile:
+    //
+    //   - waitForLoadState('networkidle')  → deadlocks (Vite HMR + /sse EventSource
+    //     keep the page permanently network-busy; the dev stack is NEVER idle).
+    //   - waitForResponse(predicate)       → deadlocks on encoding mismatch:
+    //     axios form-encodes query-string spaces as '+', but `decodeURIComponent`
+    //     does NOT decode '+' to space (only '%20' decodes), so the predicate
+    //     `decodeURIComponent(url).includes('search=E2E SAML_...')` always
+    //     rejected the real response that had `search=E2E+SAML_...`.
+    //
+    // Brief debounce + GET + re-render is well under the default 5 s assertion
+    // timeout; auto-retry is the simplest and most robust synchronization here.
+    await search.fill(name)
+    return page.locator('.v-window-item--active').locator('tbody tr').filter({ hasText: name })
+}
+
+/**
  * Delete an item by clicking its delete button
  * @param {import('@playwright/test').Page} page - Playwright page object
  * @param {string} itemIdentifier - Text or locator to identify the item
@@ -190,9 +240,15 @@ export async function deleteItem(page, itemIdentifier) {
 /**
  * Wait for page to load completely
  * @param {import('@playwright/test').Page} page - Playwright page object
+ *
+ * NOTE: this helper intentionally avoids `waitForLoadState('networkidle')`.
+ * The gui-v3 dev stack keeps two long-lived connections permanently open
+ * (Vite's HMR WebSocket and the app's /sse EventSource), so the page is NEVER
+ * network-idle and `networkidle` hangs to the test timeout. Prefer
+ * `waitForResponse(predicate)` for the specific request you are waiting on,
+ * or `waitForLoadState('domcontentloaded')` / `waitForSelector(...)`.
  */
 export async function waitForPageLoad(page) {
-    await page.waitForLoadState('networkidle')
     await page.waitForLoadState('domcontentloaded')
 }
 

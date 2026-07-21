@@ -59,12 +59,14 @@ jobs:
 
   e2e-tests:
     name: E2E Tests (${{ matrix.browser }})
-    if: false # Temporarily disabled
     runs-on: ubuntu-latest
     needs: unit-tests
     strategy:
       fail-fast: false
       matrix:
+        # Chromium + Firefox only: webkit's cumulative-load timeouts against
+        # the single shared backend (workers:1) make it too flaky to gate on.
+        # The mfa-enrollment.spec.js tests self-skip on non-chromium.
         browser: [chromium, firefox]
     steps:
       - uses: actions/checkout@v5
@@ -74,9 +76,29 @@ jobs:
           cache: npm
           cache-dependency-path: src/gui-v3/package-lock.json
       - run: npm ci
+      # Generate git-info.json BEFORE the Vite dev server starts: DashboardView.vue
+      # does `import gitMeta from '../../../git-info.json'` at module load, and the
+      # file is gitignored — without this step the dev server crashes on import
+      # resolution and every test fails with a webServer launch error. Same reason
+      # the unit-tests job runs this step.
       - run: node scripts/update-version.cjs
-      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      # Always install chromium alongside the matrix browser: the `setup` project
+      # in playwright.config.js (which seeds the E2E data and is a dependency of
+      # every browser project) runs in Desktop Chrome, so even the firefox job
+      # needs chromium's chrome-headless-shell to run setup.
+      - run: npx playwright install --with-deps chromium ${{ matrix.browser }}
+      # The Playwright webServer boots scripts/test-setup.py, which runs
+      # `docker compose up -d --build` of postgres/redis/core/collectors/presenters/
+      # publishers on the E2E compose project (taranis-e2e). On a cold GitHub runner
+      # with no Docker layer cache, the Dockerfile.core build (Python uv/pip
+      # installs) can take several minutes; playwright.config.js sets
+      # `webServer.timeout: process.env.CI ? 600_000 : 120_000` so the cold build
+      # completes before Playwright times out waiting for the isalive probe. CI
+      # retries (retries: process.env.CI ? 2 : 0) absorb the residual load-induced
+      # flakiness from running the whole serial suite against one shared backend.
       - run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          CI: 'true'
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

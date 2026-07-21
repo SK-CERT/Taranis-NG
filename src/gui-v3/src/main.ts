@@ -13,6 +13,7 @@ import 'primeicons/primeicons.css'
 import App from './App.vue'
 import router from './router'
 import ApiService from './services/api_service'
+import { consumeJwtCookie } from './services/jwt_cookie'
 
 // Import i18n locale messages (JSON format for Weblate compatibility)
 import en from './i18n/en.json'
@@ -153,6 +154,11 @@ const pinia = createPinia()
 const app = createApp(App)
 
 app.use(pinia)
+
+// Before the router runs: a redirect login lands here with the JWT in a cookie, and
+// the auth guard would otherwise treat that arrival as anonymous.
+consumeJwtCookie(pinia)
+
 app.use(router)
 app.use(vuetify)
 app.use(i18n)

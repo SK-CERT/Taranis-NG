@@ -91,6 +91,17 @@ ignore = [
 "scripts/check_tool_versions.py" = ["T201"]
 "scripts/check_shared_lock_consistency.py" = ["T201"]
 "scripts/bump_version.py" = ["T201", "S603"]
+# test-setup.py: E2E Docker orchestration script — prints status lines (T201,
+# like bump_version.py), runs known docker compose subprocesses (S603), opens
+# the localhost E2E isalive URL via urllib (S310), uses literal HTTP status
+# codes and loop counts (PLR2004), and main() is the standard CLI entry point
+# (D103). chmod +x in-tree so the shebang is honored (EXE001 handled by file mode).
+"scripts/test-setup.py" = ["T201", "S603", "S310", "PLR2004", "D103"]
+# Tests: asserts are the point (S101), magic numbers are fine in fixtures
+# (PLR2004), a test directory is not an importable package (INP001), tests
+# legitimately reach into module internals (SLF001), test names document
+# themselves (D103), and fixture parameters need no annotation (ANN001).
+"src/core/tests/**" = ["S101", "PLR2004", "INP001", "SLF001", "D103", "ANN001"]
 
 [tool.ruff.format]
 line-ending = "lf"

@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 
 const abortControllers = {}
 
@@ -49,8 +49,8 @@ const ApiService = {
         return axios.put(resource, data)
     },
 
-    delete(resource) {
-        return axios.delete(resource)
+    delete(resource, config?: AxiosRequestConfig) {
+        return axios.delete(resource, config)
     },
 
     upload(resource, form_data) {
