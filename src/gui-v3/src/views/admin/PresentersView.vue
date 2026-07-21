@@ -16,7 +16,7 @@
                     :icon="ICONS.FILE_DOCUMENT_OUTLINE"
                     start
                 />
-                Product Types
+                {{ t('nav_menu.product_types') }}
             </v-tab>
             <v-tab
                 value="nodes"
@@ -26,7 +26,7 @@
                     :icon="ICONS.SERVER_NETWORK"
                     start
                 />
-                Presenters Nodes
+                {{ t('nav_menu.presenters_nodes') }}
             </v-tab>
         </v-tabs>
 

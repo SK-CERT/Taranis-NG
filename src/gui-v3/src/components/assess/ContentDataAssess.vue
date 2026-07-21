@@ -42,7 +42,6 @@
                     :key="news_item.id"
                     :card="news_item"
                     :analyze-selector="analyze_selector"
-                    :data_set="data_set"
                     :multi-select-active="multiSelectActive"
                     :preselected="isPreselected(news_item.id)"
                     :hide-reviews="filter.hide_reviews"
@@ -59,8 +58,7 @@
         <!-- Infinite Scroll Trigger -->
         <div
             v-intersect="onIntersect"
-            class="mt-4"
-            style="min-height: 100px; display: flex; align-items: center; justify-content: center"
+            class="mt-4 infinite-scroll-trigger"
         >
             <div
                 v-if="loading"
@@ -81,18 +79,6 @@
                 {{ t('common.end_of_list') }}
             </div>
         </div>
-
-        <!-- Loading Indicator -->
-        <v-row
-            v-if="loading"
-            justify="center"
-            class="my-4"
-        >
-            <v-progress-circular
-                indeterminate
-                color="primary"
-            />
-        </v-row>
 
         <!-- Empty State -->
         <v-row
@@ -165,6 +151,8 @@
         [key: string]: unknown
     }
 
+    type ReportsMode = 'all' | 'completed' | 'in_progress'
+
     type ListState = {
         total_count: number
         items: unknown[]
@@ -195,16 +183,10 @@
         defineProps<{
             analyze_selector?: boolean
             selection?: Array<{ id: string | number }>
-            cardItem?: string
-            selfID?: string
-            data_set?: string
         }>(),
         {
             analyze_selector: false,
-            selection: () => [],
-            cardItem: '',
-            selfID: '',
-            data_set: ''
+            selection: () => []
         }
     )
 
@@ -238,8 +220,8 @@
     const selectedItem = ref<NewsItem | null>(null)
     const detailActionPending = ref(false)
     const listRef = ref<HTMLElement | null>(null)
-    const reportsListDialogRef = ref<any>(null)
-    const reportItemModalRef = ref<any>(null)
+    const reportsListDialogRef = ref<{ open: (card: NewsItem, mode: ReportsMode) => void } | null>(null)
+    const reportItemModalRef = ref<{ openDialog: (items: NewsItem[]) => void; showDetail: (report: unknown) => void } | null>(null)
     const current_group_id = ref('')
     const detailActionRequestId = ref(0)
     const lastIntersectTime = ref(0)
@@ -294,18 +276,7 @@
         return 'all'
     }
 
-    const onIntersect = (entries: boolean | IntersectionObserverEntry[] | IntersectionObserverEntry): void => {
-        // v-intersect passes a boolean directly
-        let isIntersecting = false
-        if (typeof entries === 'boolean') {
-            isIntersecting = entries
-        } else if (Array.isArray(entries) && entries.length > 0) {
-            const firstEntry = entries[0]
-            isIntersecting = firstEntry?.isIntersecting === true
-        } else if (!Array.isArray(entries) && entries && typeof entries === 'object') {
-            isIntersecting = entries.isIntersecting === true
-        }
-
+    const onIntersect = (isIntersecting: boolean): void => {
         // Gate on activeLoads, not on the spinner: appending on top of an in-flight reload
         // mixes two different pages of the same list together.
         if (isIntersecting && news_items_data_loaded.value && activeLoads.value === 0 && loadedCount.value < total_count.value) {
@@ -350,30 +321,15 @@
         return news_item
     }
 
-    const findUpdatedSelectedItem = (currentItem: NewsItem): NewsItem | null => {
-        const currentId = normalizeId(currentItem.id)
+    const findTopLevelById = (id: string): NewsItem | null => {
+        const match = news_items_data.value.find((item) => normalizeId(item.id) === id)
+        return match ? toDetailNewsItem(match) : null
+    }
 
-        if (currentItem.entityType === 'news_item') {
-            // Child item dialogs must resolve from nested items first.
-            for (const aggregate of news_items_data.value) {
-                const nestedItems = Array.isArray(aggregate['news_items']) ? (aggregate['news_items'] as NewsItem[]) : []
-                const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === currentId)
-                if (nestedMatch) {
-                    return toDetailNewsItem({ ...nestedMatch, entityType: 'news_item' })
-                }
-            }
-        }
-
-        // Aggregate dialogs (or fallback) resolve from top-level list.
-        const topLevelMatch = news_items_data.value.find((item) => normalizeId(item.id) === currentId)
-        if (topLevelMatch) {
-            return toDetailNewsItem(topLevelMatch)
-        }
-
-        // Fallback for child items if entity type metadata is missing.
+    const findNestedById = (id: string): NewsItem | null => {
         for (const aggregate of news_items_data.value) {
             const nestedItems = Array.isArray(aggregate['news_items']) ? (aggregate['news_items'] as NewsItem[]) : []
-            const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === currentId)
+            const nestedMatch = nestedItems.find((item) => normalizeId(item.id) === id)
             if (nestedMatch) {
                 return toDetailNewsItem({ ...nestedMatch, entityType: 'news_item' })
             }
@@ -382,10 +338,24 @@
         return null
     }
 
-    const showReportsForItem = (card: NewsItem, mode: 'all' | 'completed' | 'in_progress'): void => {
-        if (reportsListDialogRef.value) {
-            reportsListDialogRef.value.open(card, mode)
+    const findUpdatedSelectedItem = (currentItem: NewsItem): NewsItem | null => {
+        const currentId = normalizeId(currentItem.id)
+
+        // A child item dialog resolves from the nested items, an aggregate one from the top level.
+        // Either way fall back to the other list, in case the entity type metadata is missing.
+        if (currentItem.entityType === 'news_item') {
+            return findNestedById(currentId) ?? findTopLevelById(currentId)
         }
+
+        return findTopLevelById(currentId) ?? findNestedById(currentId)
+    }
+
+    const showReportsForItem = (card: NewsItem, mode: ReportsMode): void => {
+        reportsListDialogRef.value?.open(card, mode)
+    }
+
+    const notify = (detail: { type: 'success' | 'error'; loc?: string; message?: string }): void => {
+        window.dispatchEvent(new CustomEvent('notification', { detail }))
     }
 
     const isAggregateInUseError = (error: unknown): boolean => {
@@ -402,11 +372,60 @@
         )
     }
 
+    /**
+     * An aggregate the user tried to change may be locked by a report item, which the server
+     * reports rather than a generic failure - it is the user's own doing, so no console noise.
+     */
+    const notifyActionError = (error: unknown, logMessage: string, loc: string): void => {
+        if (isAggregateInUseError(error)) {
+            notify({ type: 'error', message: t('error.aggregate_in_use') })
+            return
+        }
+
+        console.error(logMessage, error)
+        notify({ type: 'error', loc })
+    }
+
     const handleViewReportDetail = (report: unknown): void => {
         // Open report in NewReportItem modal without navigation
-        if (reportItemModalRef.value) {
-            reportItemModalRef.value.showDetail(report)
+        reportItemModalRef.value?.showDetail(report)
+    }
+
+    /**
+     * The actions a card and the detail dialog can fire are the same, and each one only differs
+     * in whether the target is a child news item or an aggregate. Returns false when the action
+     * was handled on the spot and there is nothing to reload.
+     */
+    const applyItemAction = async (action: string, item: NewsItem, group_id: string): Promise<boolean> => {
+        const isChildNewsItem = item.entityType === 'news_item'
+
+        switch (action) {
+            case 'like':
+                await (isChildNewsItem ? voteNewsItem(group_id, item.id, 1) : assessStore.voteNewsItemAggregate(group_id, item.id, 1))
+                break
+            case 'dislike':
+                await (isChildNewsItem ? voteNewsItem(group_id, item.id, -1) : assessStore.voteNewsItemAggregate(group_id, item.id, -1))
+                break
+            case 'important':
+                await (isChildNewsItem ? importantNewsItem(group_id, item.id) : assessStore.importantNewsItemAggregate(group_id, item.id))
+                break
+            case 'read':
+                await (isChildNewsItem ? readNewsItem(group_id, item.id) : assessStore.readNewsItemAggregate(group_id, item.id))
+                break
+            case 'ungroup':
+                await groupAction({
+                    group: group_id,
+                    action: 'UNGROUP',
+                    items: [{ type: isChildNewsItem ? 'ITEM' : 'AGGREGATE', id: item.id }]
+                })
+                break
+            case 'create-report':
+                reportItemModalRef.value?.openDialog([item])
+                return false
         }
+
+        // 'refresh' - and anything unrecognised - falls through to a plain reload.
+        return true
     }
 
     const handleDetailAction = async (payload: DetailActionPayload) => {
@@ -427,55 +446,8 @@
         }
 
         try {
+            // The two editing actions are the dialog's own; everything else is shared with the cards.
             switch (action) {
-                case 'like':
-                    if (isChildNewsItem) {
-                        await voteNewsItem(group_id, newsItem.id, 1)
-                    } else {
-                        await assessStore.voteNewsItemAggregate(group_id, newsItem.id, 1)
-                    }
-                    break
-                case 'dislike':
-                    if (isChildNewsItem) {
-                        await voteNewsItem(group_id, newsItem.id, -1)
-                    } else {
-                        await assessStore.voteNewsItemAggregate(group_id, newsItem.id, -1)
-                    }
-                    break
-                case 'important':
-                    if (isChildNewsItem) {
-                        await importantNewsItem(group_id, newsItem.id)
-                    } else {
-                        await assessStore.importantNewsItemAggregate(group_id, newsItem.id)
-                    }
-                    break
-                case 'read':
-                    if (isChildNewsItem) {
-                        await readNewsItem(group_id, newsItem.id)
-                    } else {
-                        await assessStore.readNewsItemAggregate(group_id, newsItem.id)
-                    }
-                    break
-                case 'create-report':
-                    if (reportItemModalRef.value) {
-                        reportItemModalRef.value.openDialog([newsItem])
-                    }
-                    return
-                case 'ungroup':
-                    if (isChildNewsItem) {
-                        await groupAction({
-                            group: group_id,
-                            action: 'UNGROUP',
-                            items: [{ type: 'ITEM', id: newsItem.id }]
-                        })
-                    } else {
-                        await groupAction({
-                            group: group_id,
-                            action: 'UNGROUP',
-                            items: [{ type: 'AGGREGATE', id: newsItem.id }]
-                        })
-                    }
-                    break
                 case 'comment':
                     if (!isChildNewsItem) {
                         await assessStore.saveNewsItemAggregate(
@@ -498,6 +470,10 @@
                         )
                     }
                     break
+                default:
+                    if (!(await applyItemAction(action, newsItem, group_id))) {
+                        return
+                    }
             }
 
             // Reload current view
@@ -516,30 +492,9 @@
                 }
             }
 
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'success', loc: 'assess.item_updated' }
-                })
-            )
+            notify({ type: 'success', loc: 'assess.item_updated' })
         } catch (error) {
-            if (isAggregateInUseError(error)) {
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            type: 'error',
-                            message: t('error.aggregate_in_use')
-                        }
-                    })
-                )
-                return
-            }
-
-            console.error('Error handling detail action:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'assess.error_updating' }
-                })
-            )
+            notifyActionError(error, 'Error handling detail action:', 'assess.error_updating')
         } finally {
             if (isToolbarAction && requestId === detailActionRequestId.value) {
                 detailActionPending.value = false
@@ -561,129 +516,25 @@
             selectedItem.value = null
             await refreshData()
 
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'success', loc: 'assess.item_deleted' }
-                })
-            )
+            notify({ type: 'success', loc: 'assess.item_deleted' })
         } catch (error) {
-            console.error('Error deleting item:', error)
-
-            const responseData = (error as AxiosError)?.response?.data
-            const responseError =
-                responseData && typeof responseData === 'object' && 'error' in responseData
-                    ? (responseData as { error?: string }).error
-                    : undefined
-            const isAggregateInUse =
-                responseData === 'aggregate_in_use' ||
-                responseError === 'aggregate_in_use' ||
-                (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
-
-            if (isAggregateInUse) {
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            type: 'error',
-                            message: t('error.aggregate_in_use')
-                        }
-                    })
-                )
-                return
-            }
-
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'assess.error_deleting' }
-                })
-            )
+            notifyActionError(error, 'Error deleting item:', 'assess.error_deleting')
         }
     }
 
     const updateItem = async (news_item: NewsItem, action: string) => {
         try {
             const group_id = current_group_id.value || getNormalizedGroupId()
-            const isChildNewsItem = news_item.entityType === 'news_item'
-
-            switch (action) {
-                case 'like':
-                    if (isChildNewsItem) {
-                        await voteNewsItem(group_id, news_item.id, 1)
-                    } else {
-                        await assessStore.voteNewsItemAggregate(group_id, news_item.id, 1)
-                    }
-                    break
-                case 'dislike':
-                    if (isChildNewsItem) {
-                        await voteNewsItem(group_id, news_item.id, -1)
-                    } else {
-                        await assessStore.voteNewsItemAggregate(group_id, news_item.id, -1)
-                    }
-                    break
-                case 'important':
-                    if (isChildNewsItem) {
-                        await importantNewsItem(group_id, news_item.id)
-                    } else {
-                        await assessStore.importantNewsItemAggregate(group_id, news_item.id)
-                    }
-                    break
-                case 'read':
-                    if (isChildNewsItem) {
-                        await readNewsItem(group_id, news_item.id)
-                    } else {
-                        await assessStore.readNewsItemAggregate(group_id, news_item.id)
-                    }
-                    break
-                case 'ungroup':
-                    if (isChildNewsItem) {
-                        await groupAction({
-                            group: group_id,
-                            action: 'UNGROUP',
-                            items: [{ type: 'ITEM', id: news_item.id }]
-                        })
-                    } else {
-                        await groupAction({
-                            group: group_id,
-                            action: 'UNGROUP',
-                            items: [{ type: 'AGGREGATE', id: news_item.id }]
-                        })
-                    }
-                    break
-                case 'create-report':
-                    if (reportItemModalRef.value) {
-                        reportItemModalRef.value.openDialog([news_item])
-                    }
-                    return
-                case 'refresh':
-                    break
+            if (!(await applyItemAction(action, news_item, group_id))) {
+                return
             }
 
             // Reload current view
             await refreshData()
 
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'success', loc: 'assess.item_updated' }
-                })
-            )
+            notify({ type: 'success', loc: 'assess.item_updated' })
         } catch (error) {
-            if (isAggregateInUseError(error)) {
-                window.dispatchEvent(
-                    new CustomEvent('notification', {
-                        detail: {
-                            type: 'error',
-                            message: t('error.aggregate_in_use')
-                        }
-                    })
-                )
-                return
-            }
-
-            console.error('Error updating item:', error)
-            window.dispatchEvent(
-                new CustomEvent('notification', {
-                    detail: { type: 'error', loc: 'assess.error_updating' }
-                })
-            )
+            notifyActionError(error, 'Error updating item:', 'assess.error_updating')
         }
     }
 
@@ -717,18 +568,6 @@
 
             refreshData()
         }, SSE_REFRESH_COALESCE_MS)
-    }
-
-    const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
-        // Get the full item from news_items_data
-        const item = news_items_data.value.find((n) => n.id === itemId)
-        if (item) {
-            if (isSelected) {
-                assessStore.select({ type: 'AGGREGATE', id: itemId, item: item })
-            } else {
-                assessStore.deselect({ type: 'AGGREGATE', id: itemId })
-            }
-        }
     }
 
     const getScroller = (): HTMLElement | null => {
@@ -1040,6 +879,13 @@
        for as long as the animation runs. */
     .card-list {
         position: relative;
+    }
+
+    .infinite-scroll-trigger {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .new-items-banner {

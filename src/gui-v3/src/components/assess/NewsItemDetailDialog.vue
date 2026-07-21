@@ -151,7 +151,7 @@
                         v-if="hasLink"
                         class="text-caption"
                     >
-                        <strong>Link: </strong>
+                        <strong>{{ t('assess.link') }}: </strong>
                         <a
                             :href="newsItemLink"
                             target="_blank"
@@ -213,7 +213,7 @@
                             class="mb-4"
                             @blur="autoSaveAggregateInfo"
                         />
-                        <div class="text-caption text-grey">Auto-saves on blur</div>
+                        <div class="text-caption text-grey">{{ t('assess.auto_save_blur') }}</div>
                     </v-form>
                 </v-window-item>
 
@@ -227,7 +227,7 @@
                         editor-style="height: 250px"
                         @text-change="debounceAutoSave"
                     />
-                    <div class="text-caption text-grey mt-2">Auto-saves on changes</div>
+                    <div class="text-caption text-grey mt-2">{{ t('assess.auto_save_changes') }}</div>
                 </v-window-item>
             </v-window>
         </v-card>

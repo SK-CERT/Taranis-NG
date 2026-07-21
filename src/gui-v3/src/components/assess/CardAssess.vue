@@ -217,7 +217,6 @@
     const props = withDefaults(
         defineProps<{
             card: AssessCard
-            data_set?: string
             preselected?: boolean
             analyzeSelector?: boolean
             hideReviews?: boolean
@@ -225,7 +224,6 @@
             highlightWordlist?: boolean
         }>(),
         {
-            data_set: 'assess',
             preselected: false,
             analyzeSelector: false,
             hideReviews: false,

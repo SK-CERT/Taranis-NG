@@ -83,7 +83,7 @@
                     <div v-if="selectedPresenter && selectedPresenter.parameters && selectedPresenter.parameters.length > 0">
                         <v-divider class="my-4" />
                         <div class="d-flex align-center mb-3">
-                            <h3 class="text-subtitle-1">Parameters</h3>
+                            <h3 class="text-subtitle-1">{{ t('presenters.types.parameters') }}</h3>
                             <v-spacer />
                             <v-btn
                                 color="primary"

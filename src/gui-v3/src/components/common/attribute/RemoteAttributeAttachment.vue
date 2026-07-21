@@ -23,7 +23,7 @@
                         class="text-blue-400 hover:text-blue-300 text-xs ml-auto"
                         @click="downloadRemoteAttachment(value.value)"
                     >
-                        Download
+                        {{ t('common.download') }}
                     </button>
                 </div>
             </div>
@@ -32,8 +32,11 @@
 </template>
 
 <script setup lang="ts">
+    import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
+
+    const { t } = useI18n()
 
     type RemoteAttachmentValue = {
         filename?: string

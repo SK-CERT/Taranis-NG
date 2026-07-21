@@ -59,8 +59,6 @@
                                 :analyze_selector="true"
                                 :selection="selectedItems"
                                 class="item-selector"
-                                :self-i-d="'selector_assess_analyze'"
-                                :data_set="'assess_news_item'"
                                 @new-data-loaded="handleNewDataLoaded"
                                 @update-showing-count="handleUpdateShowingCount"
                                 @card-items-reindex="handleCardItemsReindex"

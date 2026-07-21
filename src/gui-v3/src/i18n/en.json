@@ -121,6 +121,10 @@
         "submit": "Login",
         "error": "Username or password is incorrect"
     },
+    "home": {
+        "redirecting": "Redirecting...",
+        "redirect_message": "You will be redirected to your default view based on your permissions."
+    },
     "user_menu": {
         "settings": "Settings",
         "logout": "Logout"
@@ -243,6 +247,7 @@
         "select_attachment": "Select attachment",
         "select_file": "Select file",
         "type": "Type",
+        "unknown_type": "Unknown attribute type",
         "validator": "Validator",
         "validator_parameter": "Validator Parameter",
         "default_value": "Default Value",
@@ -582,6 +587,7 @@
         "MSA_N_Label": "There is no impact to availability within the subsequent system."
     },
     "report_item": {
+        "id": "ID",
         "add_new": "Create new report item",
         "edit": "Edit report item",
         "read": "Report item preview",
@@ -601,6 +607,7 @@
         "save_first": "Please save the report item first to add news items",
         "created": "Report item was successfully created",
         "attributes": "Attributes",
+        "no_attributes": "No attributes available",
         "confirm_close": {
             "message": "You have unsaved changes. Are you sure you want to close this report item?"
         },
@@ -709,6 +716,7 @@
     },
     "assess": {
         "source": "Source",
+        "link": "Link",
         "comments": "Comments",
         "collected": "Collected",
         "published": "Published",
@@ -723,6 +731,8 @@
         "attributes": "Attributes",
         "title": "Title",
         "description": "Description",
+        "auto_save_blur": "Auto-saves on blur",
+        "auto_save_changes": "Auto-saves on changes",
         "download": "Download",
         "total_count": "News item count",
         "selected_count": "Selected news item count",
@@ -1015,7 +1025,9 @@
         "close": "Close without saving"
     },
     "common": {
+        "add": "Add",
         "add_btn": "Add New",
+        "add_new": "Add New",
         "add_items": "Add item(s)",
         "save": "Save",
         "edit": "Edit",
@@ -1024,6 +1036,7 @@
         "down": "Move Down",
         "remove": "Remove",
         "delete": "Delete",
+        "download": "Download",
         "yes": "Yes",
         "no": "No",
         "cancel": "Cancel",
@@ -1038,6 +1051,8 @@
         "error_creating": "Error creating",
         "error_updating": "Error updating",
         "error_deleting": "Error deleting",
+        "error": "An error occurred",
+        "no_permission": "You do not have permission to perform this action",
         "loading_more": "Loading more items...",
         "end_of_list": "End of list",
         "messagebox": {
@@ -1077,6 +1092,7 @@
             "error": "Could not save this OSINT source",
             "name": "Name",
             "description": "Description",
+            "parameters": "Parameters",
             "last_attempt": "Last attempt",
             "last_collected": "Last collected",
             "last_error_message": "Last error message",
@@ -1142,6 +1158,7 @@
             "error": "Could not create this product type.",
             "name": "Name",
             "description": "Description",
+            "parameters": "Parameters",
             "successful": "New product type was successfully added",
             "successful_edit": "Product type was successfully updated",
             "removed": "Product type was successfully deleted",

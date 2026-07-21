@@ -16,7 +16,7 @@
                     :icon="ICONS.FILE_STAR_OUTLINE"
                     start
                 />
-                Publisher Presets
+                {{ t('nav_menu.publisher_presets') }}
             </v-tab>
             <v-tab
                 value="nodes"
@@ -26,7 +26,7 @@
                     :icon="ICONS.SERVER_NETWORK"
                     start
                 />
-                Publishers Nodes
+                {{ t('nav_menu.publishers_nodes') }}
             </v-tab>
         </v-tabs>
 

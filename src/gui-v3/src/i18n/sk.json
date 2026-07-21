@@ -121,6 +121,10 @@
         "submit": "Prihlásiť",
         "error": "Nesprávne meno alebo heslo"
     },
+    "home": {
+        "redirecting": "Presmerovanie...",
+        "redirect_message": "Budete presmerovaní na predvolenú stránku podľa vašich oprávnení."
+    },
     "user_menu": {
         "settings": "Nastavenia profilu",
         "logout": "Odhlásiť sa"
@@ -243,6 +247,7 @@
         "select_attachment": "Vybrať prílohu",
         "select_file": "Vybrať súbor",
         "type": "Typ",
+        "unknown_type": "Neznámy typ atribútu",
         "validator": "Validátor",
         "validator_parameter": "Parameter validátora",
         "default_value": "Predvolená hodnota",
@@ -582,6 +587,7 @@
         "MSA_N_Label": "There is no impact to availability within the subsequent system."
     },
     "report_item": {
+        "id": "ID",
         "add_new": "Nová analýza",
         "edit": "Upraviť analýzu",
         "read": "Náhľad analýzy",
@@ -601,6 +607,7 @@
         "save_first": "Najprv uložte položku reportu, aby ste mohli pridať novinky",
         "created": "Analýza bola úspešne vytvorená",
         "attributes": "Atribúty",
+        "no_attributes": "Žiadne atribúty",
         "confirm_close": {
             "message": "Máte neuložené zmeny. Naozaj chcete zatvoriť túto analýzu?"
         },
@@ -709,6 +716,7 @@
     },
     "assess": {
         "source": "Zdroj",
+        "link": "Odkaz",
         "comments": "Komentáre",
         "collected": "Získané",
         "published": "Publikované",
@@ -723,6 +731,8 @@
         "attributes": "Atributy",
         "title": "Názov",
         "description": "Popis",
+        "auto_save_blur": "Ukladá sa automaticky pri opustení poľa",
+        "auto_save_changes": "Ukladá sa automaticky pri zmene",
         "download": "Stiahnuť",
         "total_count": "Počet noviniek: ",
         "selected_count": "Počet vybraných noviniek: ",
@@ -1015,7 +1025,9 @@
         "close": "Zavrieť bez uloženia"
     },
     "common": {
+        "add": "Pridať",
         "add_btn": "Pridať",
+        "add_new": "Pridať nový",
         "add_items": "Pridať položky",
         "save": "Uložiť",
         "edit": "Upraviť",
@@ -1024,6 +1036,7 @@
         "down": "Presunúť nižšie",
         "remove": "Odobrať",
         "delete": "Zmazať",
+        "download": "Stiahnuť",
         "yes": "Áno",
         "no": "Nie",
         "cancel": "Zrušiť",
@@ -1038,6 +1051,8 @@
         "error_creating": "Vytváranie zlyhalo",
         "error_updating": "Aktualizácia zlyhala",
         "error_deleting": "Mazanie zlyhalo",
+        "error": "Vyskytla sa chyba",
+        "no_permission": "Nemáte oprávnenie na vykonanie tejto akcie",
         "loading_more": "Načítavam ďalšie položky...",
         "end_of_list": "Koniec zoznamu",
         "messagebox": {
@@ -1077,6 +1092,7 @@
             "error": "Nepodarilo sa uložiť OSINT zdroj",
             "name": "Názov",
             "description": "Popis",
+            "parameters": "Parametre",
             "last_attempt": "Posledný pokus",
             "last_collected": "Posledný zber",
             "last_error_message": "Posledná chyba",
@@ -1142,6 +1158,7 @@
             "error": "Nepodarilo sa vytvoriť typ publikácie.",
             "name": "Názov",
             "description": "Popis",
+            "parameters": "Parametre",
             "successful": "Nový typ publikácie bol úspešne pridaný",
             "successful_edit": "Typ publikácie bol úspešne aktualizovaný",
             "removed": "Typ publikácie bol úspešne odstránený",

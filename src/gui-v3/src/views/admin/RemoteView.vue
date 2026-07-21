@@ -16,7 +16,7 @@
                     :icon="ICONS.REMOTE_DESKTOP"
                     start
                 />
-                Remote Access
+                {{ t('nav_menu.remote_access') }}
             </v-tab>
             <v-tab
                 value="nodes"
@@ -26,7 +26,7 @@
                     :icon="ICONS.SHARE_VARIANT"
                     start
                 />
-                Remote Nodes
+                {{ t('nav_menu.remote_nodes') }}
             </v-tab>
         </v-tabs>
 
