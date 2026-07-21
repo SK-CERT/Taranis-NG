@@ -82,7 +82,7 @@
 
                     <div v-if="selectedCollector && selectedCollector.parameters && selectedCollector.parameters.length > 0">
                         <v-divider class="my-4" />
-                        <h3 class="text-subtitle-1 mb-3">Parameters</h3>
+                        <h3 class="text-subtitle-1 mb-3">{{ t('collectors.sources.parameters') }}</h3>
 
                         <div
                             v-for="(param, index) in selectedCollector.parameters"

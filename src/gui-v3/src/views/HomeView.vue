@@ -30,9 +30,9 @@
                             size="64"
                             class="mb-4"
                         />
-                        <p class="text-headline-small">Redirecting...</p>
+                        <p class="text-headline-small">{{ t('home.redirecting') }}</p>
                         <p class="text-body-medium text-medium-emphasis">
-                            You will be redirected to your default view based on your permissions.
+                            {{ t('home.redirect_message') }}
                         </p>
                     </v-card-text>
                 </v-card>
@@ -42,7 +42,10 @@
 </template>
 
 <script setup lang="ts">
+    import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
+
+    const { t } = useI18n()
 
     // This view is temporary - the router automatically redirects
     // authenticated users to /dashboard or /config

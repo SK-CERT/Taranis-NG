@@ -31,9 +31,6 @@
         <template #content>
             <ContentDataAssess
                 ref="contentData"
-                card-item="CardAssess"
-                self-i-d="selector_assess"
-                data_set="assess"
                 :analyze_selector="analyze_selector"
                 :selection="assessStore.getSelection"
                 @new-data-loaded="newDataLoaded"

@@ -13,14 +13,17 @@
             v-else
             class="alert alert-warning"
         >
-            Unknown attribute type: {{ attributeGroup.attribute?.attribute_type }}
+            {{ t('attribute.unknown_type') }}: {{ attributeGroup.attribute?.attribute_type }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+    import { useI18n } from 'vue-i18n'
     import RemoteAttributeString from './RemoteAttributeString.vue'
     import RemoteAttributeAttachment from './RemoteAttributeAttachment.vue'
+
+    const { t } = useI18n()
 
     type RemoteAttributeGroup = {
         attribute?: {

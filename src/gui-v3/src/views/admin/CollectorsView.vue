@@ -16,7 +16,7 @@
                     :icon="ICONS.ANIMATION_OUTLINE"
                     start
                 />
-                OSINT Sources
+                {{ t('nav_menu.osint_sources') }}
             </v-tab>
             <v-tab
                 value="groups"
@@ -26,7 +26,7 @@
                     :icon="ICONS.FOLDER_MULTIPLE"
                     start
                 />
-                OSINT Source Groups
+                {{ t('nav_menu.osint_source_groups') }}
             </v-tab>
             <v-tab
                 value="nodes"
@@ -36,7 +36,7 @@
                     :icon="ICONS.SERVER_NETWORK"
                     start
                 />
-                Collectors Nodes
+                {{ t('nav_menu.collectors_nodes') }}
             </v-tab>
         </v-tabs>
 

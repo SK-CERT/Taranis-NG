@@ -30,11 +30,15 @@
                     @click="handleClick"
                 >
                     <v-card-text>
-                        <v-row align="center">
+                        <!-- Top-aligned so every field label sits at the same height: with
+                             align="center" a column whose value is empty (or shorter than its
+                             neighbours) gets centred on its own, dropping its label lower than
+                             the rest. The icon and the delete button stay centred individually. -->
+                        <v-row align="start">
                             <!-- Icon/Tag -->
                             <v-col
                                 cols="auto"
-                                class="pr-4"
+                                class="pr-4 align-self-center"
                             >
                                 <v-icon
                                     size="large"
@@ -49,17 +53,17 @@
                                 <div class="text-label-small text-grey">
                                     {{ typeLabel }}
                                 </div>
-                                <div class="text-body-large">
+                                <div class="text-body-large card-field-value">
                                     {{ typeValue }}
                                 </div>
                             </v-col>
 
                             <!-- Description/Subtitle -->
-                            <v-col v-if="card.subtitle || card.description || isOsintSource">
+                            <v-col v-if="card.subtitle || card.description || isOsintSource || isModulePreset">
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.description') }}
                                 </div>
-                                <div class="text-body-medium">
+                                <div class="text-body-medium card-field-value">
                                     {{ card.subtitle || card.description || '' }}
                                 </div>
                             </v-col>
@@ -69,7 +73,7 @@
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.url') }}
                                 </div>
-                                <div class="text-body-medium">
+                                <div class="text-body-medium card-field-value">
                                     {{ card.api_url }}
                                 </div>
                             </v-col>
@@ -79,7 +83,7 @@
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.last_seen') }}
                                 </div>
-                                <div class="text-body-medium">
+                                <div class="text-body-medium card-field-value">
                                     {{ card.last_seen || '' }}
                                 </div>
                             </v-col>
@@ -90,8 +94,8 @@
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.last_attempted') }}
                                 </div>
-                                <div class="text-body-medium">
-                                    {{ card.last_attempted || ' ' }}
+                                <div class="text-body-medium card-field-value">
+                                    {{ card.last_attempted || '' }}
                                 </div>
                             </v-col>
 
@@ -99,8 +103,8 @@
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.last_collected') }}
                                 </div>
-                                <div class="text-body-medium">
-                                    {{ card.last_collected || ' ' }}
+                                <div class="text-body-medium card-field-value">
+                                    {{ card.last_collected || '' }}
                                 </div>
                             </v-col>
 
@@ -109,8 +113,8 @@
                                 <div class="text-label-small text-grey">
                                     {{ t('card_item.last_error') }}
                                 </div>
-                                <div class="text-body-medium text-error">
-                                    {{ card.last_error_message || ' ' }}
+                                <div class="text-body-medium text-error card-field-value">
+                                    {{ card.last_error_message || '' }}
                                 </div>
                             </v-col>
 
@@ -118,6 +122,7 @@
                             <v-col
                                 v-if="canDelete"
                                 cols="auto"
+                                class="align-self-center"
                             >
                                 <ActionButton
                                     action="delete"
@@ -160,10 +165,19 @@
         api_url?: string
         last_seen?: string
         collector_id?: string
+        collector?: {
+            type?: string
+            name?: string
+        }
         last_attempted?: string
         last_collected?: string
         last_error_message?: string
         default?: boolean
+        presenter_id?: string
+        presenter_name?: string
+        publisher_id?: string
+        bot_id?: string
+        item_name?: string
         report_type_name?: string
         product_type_name?: string
         news_items?: Array<{
@@ -222,10 +236,29 @@
     // fallback when a value is empty.
     const isOsintSource = computed(() => props.card?.collector_id != null)
 
+    // Product type, publisher preset and bot preset cards each carry the id of the module they
+    // drive. Like OSINT sources they always render the description column: descriptions are
+    // optional on these records, and an empty one would otherwise drop the whole labelled column
+    // and leave the card looking unlike its siblings.
+    const isModulePreset = computed(() => props.card?.presenter_id != null || props.card?.publisher_id != null || props.card?.bot_id != null)
+
     const typeLabel = computed(() => {
         // Node-type items (collectors/presenters/publishers/bots nodes) carry an api_url.
         if (props.card?.api_url) {
             return t('card_item.node')
+        }
+        // OSINT source cards label the name column with the source's collector (e.g. "RSS Collector")
+        // rather than the generic "Title", so the collection method is visible without opening the card.
+        if (isOsintSource.value) {
+            return props.card.collector?.name || props.card.collector?.type || t('card_item.title')
+        }
+        // Same for the module behind a product type (presenter_name) and behind a publisher or
+        // bot preset (item_name) — the backend presentation schemas expose the module name only.
+        if (props.card?.presenter_name) {
+            return props.card.presenter_name
+        }
+        if (props.card?.item_name) {
+            return props.card.item_name
         }
         if (props.card?.report_type_name) {
             return props.card.report_type_name
@@ -265,6 +298,13 @@
 </script>
 
 <style scoped>
+    /* Reserve one line even when the value is empty, so a card with no description is the
+       same height as one with a description and the rows in the list stay even. */
+    .card-field-value {
+        min-height: 1.25em;
+        min-height: 1lh;
+    }
+
     .card-container {
         width: 100%;
         display: flex;

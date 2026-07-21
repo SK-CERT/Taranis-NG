@@ -4,6 +4,7 @@ import pluginVueI18n from '@intlify/eslint-plugin-vue-i18n'
 import eslintConfigPrettier from 'eslint-config-prettier'
 import tsParser from '@typescript-eslint/parser'
 import vueParser from 'vue-eslint-parser'
+import * as jsoncParser from 'jsonc-eslint-parser'
 
 const sharedGlobals = {
     // Browser globals
@@ -152,14 +153,54 @@ export default [
             }
         },
         rules: {
-            '@intlify/vue-i18n/no-unused-keys': [
-                'warn',
+            // Every key handed to t() must exist in the locale files.
+            '@intlify/vue-i18n/no-missing-keys': 'error',
+            // ignorePattern covers markup that only
+            // looks like copy: mdi icon names passed as slot content, punctuation-only nodes
+            // (":", "(", ")"), secret masks and the Jinja snippets in the product-type help.
+            '@intlify/vue-i18n/no-raw-text': [
+                'error',
                 {
-                    extensions: ['.js', '.ts', '.vue'],
-                    ignores: ['validations', 'cvss_calculator', 'cvss_calculator_tooltip']
+                    ignorePattern: '^(mdi-[a-z0-9-]+|\\{%.*%\\}|[\\s\\d\\-–—:;,.()\\[\\]{}<>/\\\\|+*&#@!?%•·…"\'`]*)$',
+                    ignoreText: ['Taranis NG']
                 }
             ],
-            '@intlify/vue-i18n/no-missing-keys': 'warn'
+            // vue-i18n v11: flag APIs removed/renamed since v8 so they can't creep back in.
+            '@intlify/vue-i18n/no-deprecated-i18n-component': 'error',
+            '@intlify/vue-i18n/no-deprecated-i18n-place-attr': 'error',
+            '@intlify/vue-i18n/no-deprecated-i18n-places-prop': 'error',
+            '@intlify/vue-i18n/no-deprecated-modulo-syntax': 'error',
+            '@intlify/vue-i18n/no-deprecated-tc': 'error',
+            '@intlify/vue-i18n/no-deprecated-v-t': 'error',
+            '@intlify/vue-i18n/no-i18n-t-path-prop': 'error'
+        }
+    },
+    {
+        // The locale files themselves. They need the JSON parser to be inspectable, and the
+        // block is scoped to src/i18n so `eslint .` doesn't start parsing package.json,
+        // tsconfig.json and friends.
+        files: ['src/i18n/*.json'],
+        plugins: {
+            '@intlify/vue-i18n': pluginVueI18n
+        },
+        languageOptions: {
+            parser: jsoncParser
+        },
+        settings: {
+            'vue-i18n': {
+                localeDir: './src/i18n/*.json'
+            }
+        },
+        rules: {
+            // A key added to en.json but not to cs.json/sk.json silently falls back to English
+            // in the UI. This is the check that keeps the three files in lockstep.
+            '@intlify/vue-i18n/no-missing-keys-in-other-locales': 'error',
+            '@intlify/vue-i18n/no-duplicate-keys-in-locale': 'error',
+            '@intlify/vue-i18n/valid-message-syntax': 'error',
+            '@intlify/vue-i18n/no-html-messages': 'error'
+            // no-unused-keys is deliberately NOT enabled: the app builds many keys at runtime
+            // (t('settings.' + key), notification `loc:` strings, total-count-title props), and
+            // the rule reports all ~700 of them as unused. Run it ad hoc if you want to prune.
         }
     },
     {
