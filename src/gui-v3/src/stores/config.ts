@@ -23,6 +23,7 @@ import {
     getAllRoles,
     getAllUsers,
     getAllExternalUsers,
+    getAllAuthProviders,
     getAllWordLists,
     getAllStateDefinitions,
     createNewStateDefinition,
@@ -76,6 +77,7 @@ export const useConfigStore = defineStore('config', () => {
     const organizations = ref<ListState>(emptyListState())
     const users = ref<ListState>(emptyListState())
     const externalUsers = ref<ListState>(emptyListState())
+    const authProviders = ref<ListState>(emptyListState())
     const wordLists = ref<ListState>(emptyListState())
     const remoteAccess = ref<ListState>(emptyListState())
     const remoteNodes = ref<ListState>(emptyListState())
@@ -181,6 +183,10 @@ export const useConfigStore = defineStore('config', () => {
         return await loadListState(getAllExternalUsers, data, externalUsers)
     }
 
+    async function loadAuthProviders(data: FilterPayload): Promise<ApiResponse<ListState>> {
+        return await loadListState(getAllAuthProviders, data, authProviders)
+    }
+
     async function loadWordLists(data: FilterPayload): Promise<ApiResponse<ListState>> {
         return await loadListState(getAllWordLists, data, wordLists)
     }
@@ -262,6 +268,7 @@ export const useConfigStore = defineStore('config', () => {
         organizations,
         users,
         externalUsers,
+        authProviders,
         wordLists,
         remoteAccess,
         remoteNodes,
@@ -293,6 +300,7 @@ export const useConfigStore = defineStore('config', () => {
         loadOrganizations,
         loadUsers,
         loadExternalUsers,
+        loadAuthProviders,
         loadWordLists,
         loadRemoteAccesses,
         loadRemoteNodes,

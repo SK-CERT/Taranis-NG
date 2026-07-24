@@ -330,14 +330,16 @@ router.beforeEach((to) => {
     const requiresAuth = to.matched.some((record) => Boolean((record.meta as RouteMetaAuth).requiresAuth))
     if (requiresAuth) {
         if (!AuthService.isAuthenticated()) {
-            if (!authStore.hasExternalLoginUrl) {
-                return {
-                    path: '/login',
-                    query: { redirect: to.path }
-                }
+            // Always show the chooser. Environment-configured external auth is
+            // represented there as one method alongside database-backed methods.
+            const loginError = to.query['login_error']
+            return {
+                path: '/login',
+                query:
+                    typeof loginError === 'string' && loginError
+                        ? { redirect: to.fullPath, login_error: loginError }
+                        : { redirect: to.fullPath }
             }
-            window.location.href = authStore.getLoginURL
-            return false
         }
 
         if (to.path === '/') {

@@ -14,6 +14,7 @@ import App from './App.vue'
 import router from './router'
 import ApiService from './services/api_service'
 import { messages, resolveLocale } from './i18n'
+import { consumeJwtCookie } from './services/jwt_cookie'
 
 // Wait for stylesheets to be applied before mounting.
 // This prevents "Layout was forced before page fully loaded" warnings.
@@ -143,6 +144,11 @@ const pinia = createPinia()
 const app = createApp(App)
 
 app.use(pinia)
+
+// Before the router runs: a redirect login lands here with the JWT in a cookie, and
+// the auth guard would otherwise treat that arrival as anonymous.
+consumeJwtCookie(pinia)
+
 app.use(router)
 app.use(vuetify)
 app.use(i18n)

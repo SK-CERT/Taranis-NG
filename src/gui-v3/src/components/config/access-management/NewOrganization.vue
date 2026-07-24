@@ -87,6 +87,16 @@
                         density="comfortable"
                         :disabled="saving"
                     />
+
+                    <v-switch
+                        v-model="localItem.require_mfa"
+                        :label="t('access_management.organizations.require_mfa')"
+                        :hint="t('access_management.organizations.require_mfa_hint')"
+                        persistent-hint
+                        color="primary"
+                        :disabled="saving"
+                        data-test="organization-require-mfa"
+                    />
                 </v-form>
 
                 <v-alert
@@ -137,6 +147,7 @@
         id: string | number | null
         name: string
         description: string
+        require_mfa: boolean
         street: string
         city: string
         zip: string
@@ -175,6 +186,7 @@
         id: null,
         name: '',
         description: '',
+        require_mfa: false,
         street: '',
         city: '',
         zip: '',
@@ -207,6 +219,7 @@
                 id: isEdit.value ? localItem.value.id : -1,
                 name: localItem.value.name,
                 description: localItem.value.description,
+                require_mfa: localItem.value.require_mfa,
                 address: {
                     street: localItem.value.street,
                     city: localItem.value.city,

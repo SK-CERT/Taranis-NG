@@ -21,10 +21,16 @@ vi.mock('@/stores/auth', () => ({
     useAuthStore: () => ({
         hasExternalLoginUrl: true,
         hasExternalLogoutUrl: false,
+        loginMethods: [],
+        loginMethodsLoaded: true,
+        loginMethodsError: false,
+        passkeyEnabled: false,
         getExternalCallbackURL: 'https://taranis.example.test/v2/login',
         getLoginURL: 'https://identity.example.test/login',
         getLogoutURL: '/logout',
-        login: mocks.login
+        login: mocks.login,
+        loadLoginMethods: vi.fn(),
+        finishLogin: vi.fn()
     })
 }))
 

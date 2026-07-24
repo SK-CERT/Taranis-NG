@@ -100,6 +100,8 @@ export const ICONS = Object.freeze({
     SERVER_NETWORK: 'mdi-server-network',
     SHARE_VARIANT: 'mdi-share-variant',
     SHIELD_SEARCH: 'mdi-shield-search',
+    SHIELD_LOCK: 'mdi-shield-lock',
+    KEYBOARD: 'mdi-keyboard',
     SITEMAP: 'mdi-sitemap',
     STATE_MACHINE: 'mdi-state-machine',
     TAG_ARROW_RIGHT: 'mdi-tag-arrow-right',

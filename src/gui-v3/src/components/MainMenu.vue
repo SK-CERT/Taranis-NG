@@ -80,7 +80,6 @@
             showNavToggle: true
         }
     )
-
     const { t } = useI18n()
     const { isAuth, checkPermission } = useAuth()
     const route = useRoute()
