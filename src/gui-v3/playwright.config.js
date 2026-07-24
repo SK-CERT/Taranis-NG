@@ -90,17 +90,33 @@ export default defineConfig({
     webServer: [
         {
             // boot/rebuild the E2E Docker stack. The `url` probe is essential: without it
-            // Playwright can't tell the stack is already up, so when the earlier bash process
-            // that ran test-setup.sh has exited it RE-RUNS test-setup.sh. test-setup.sh starts
+            // Playwright can't tell the stack is already up, so when the earlier process
+            // that ran test-setup has exited it RE-RUNS test-setup. test-setup starts
             // with `down -v`, which would wipe the postgres volume WHILE tests are running —
             // that mid-test teardown was the real cause of the recurring 'Could not connect to
-            // X node.' failures (the POST hit a half-rebuilt backend → 400/500). With `url`,                                                                                                                                // Playwright checks isalive: if 200, it reuses the running stack and never re-runs setup;
-            // only if isalive is unreachable does it run setup. reuseExistingServer:true then
-            // behaves as documented across repeated VS Code 'Run Tests' clicks.
-            command: 'bash ../../scripts/test-setup.sh',
+            // X node.' failures (the POST hit a half-rebuilt backend → 400/500). With `url`,
+            // Playwright checks isalive: if 200, it reuses the running stack and never re-runs
+            // setup; only if isalive is unreachable does it run setup. reuseExistingServer:true
+            // then behaves as documented across repeated VS Code 'Run Tests' clicks.
+            //
+            // scripts/test-setup.py is the cross-platform (Windows/macOS/Linux) setup; it
+            // does the same down -v → up --build → wait-for-readiness sequence the original
+            // bash test-setup.sh did, with no shell dependency. See it for the rationale
+            // behind the two-stage (host-port + core-DNS) readiness probe on
+            // collectors/presenters/publishers (the DNS-lag gap that caused the misleading
+            // 'Could not connect to X node.' 500s).
+            // Use `python` on win32 (no python3 alias there).
+            //
+            // timeout: 2 min locally is plenty (warm Docker cache, fast local disks). CI needs
+            // much longer: GitHub's ubuntu-latest runner has no Docker layer cache, so the
+            // Dockerfile.core build (Python uv/pip installs across 8 RUN steps) runs cold and
+            // routinely exceeds 2 min before isalive responds. Give CI 10 min to cover the
+            // worst-case cold build + service-readiness wait; reuseExistingServer:true means
+            // only the first job in a matrix pays it.
+            command: process.platform === 'win32' ? 'python ../../scripts/test-setup.py' : 'python3 ../../scripts/test-setup.py',
             url: `http://127.0.0.1:${process.env.E2E_CORE_PORT || '8090'}/api/v1/isalive`,
             reuseExistingServer: true,
-            timeout: 120 * 1000
+            timeout: process.env.CI ? 600_000 : 120_000
         },
         {
             // Vite dev server proxies /api and /sse to the E2E core. Use E2E_CORE_PORT

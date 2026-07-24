@@ -49,6 +49,8 @@
     import RolesTab from '@/components/config/access-management/RolesTab.vue'
     import ACLTab from '@/components/config/access-management/ACLTab.vue'
     import OrganizationsTab from '@/components/config/access-management/OrganizationsTab.vue'
+    import AuthProvidersTab from '@/components/config/access-management/AuthProvidersTab.vue'
+    import SecurityTab from '@/components/config/access-management/SecurityTab.vue'
 
     type AccessTab = {
         value: string
@@ -96,6 +98,22 @@
             description: 'access_management.organizations.tab_description',
             component: OrganizationsTab,
             permission: 'CONFIG_ORGANIZATION_ACCESS'
+        },
+        {
+            value: 'login-methods',
+            title: 'nav_menu.login_methods',
+            icon: 'mdi-login-variant',
+            description: 'auth_provider.tab_description',
+            component: AuthProvidersTab,
+            permission: 'CONFIG_AUTH_PROVIDER_ACCESS'
+        },
+        {
+            value: 'security',
+            title: 'nav_menu.security',
+            icon: 'mdi-shield-key',
+            description: 'access_management.security.tab_description',
+            component: SecurityTab,
+            permission: 'CONFIG_AUTH_PROVIDER_ACCESS'
         }
     ]
 

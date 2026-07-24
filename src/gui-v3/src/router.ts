@@ -235,9 +235,13 @@ router.beforeEach((to) => {
     if (requiresAuth) {
         if (!AuthService.isAuthenticated()) {
             if (!authStore.hasExternalLoginUrl) {
+                // A failed redirect login comes back to the app route it started from,
+                // carrying ?login_error=; hand that to the login page so it can report it.
+                const loginError = to.query['login_error']
                 return {
                     path: '/login',
-                    query: { redirect: to.path }
+                    query:
+                        typeof loginError === 'string' && loginError ? { redirect: to.path, login_error: loginError } : { redirect: to.path }
                 }
             }
             window.location.href = authStore.getLoginURL
