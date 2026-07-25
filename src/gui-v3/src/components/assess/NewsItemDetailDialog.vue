@@ -1,19 +1,22 @@
 <template>
     <!-- contained renders the dialog inside its positioned ancestor (e.g. the side-by-side
          right column) instead of as a centered, full-screen-overlay modal. -->
+    <!-- No `scrollable`: it makes Vuetify force `max-height: 100%` on the card (which
+         resolves against an auto-height overlay = no cap). We cap via .detail-card and
+         scroll inside each pane instead. -->
     <v-dialog
         v-model="isOpen"
         :contained="contained"
         :max-width="contained ? '100%' : '90vw'"
         max-height="90vh"
-        scrollable
         @update:model-value="handleClose"
     >
-        <v-card style="min-height: 70vh; display: flex; flex-direction: column">
+        <v-card class="detail-card">
             <!-- Toolbar -->
             <v-toolbar
                 color="primary"
                 dark
+                class="flex-fixed"
             >
                 <v-btn
                     icon
@@ -46,6 +49,7 @@
                 v-model="activeTab"
                 dark
                 density="compact"
+                class="flex-fixed"
             >
                 <!-- Single Item Tabs: Source, Attributes, Comments -->
                 <template v-if="!isAggregate">
@@ -71,102 +75,105 @@
                 </template>
             </v-tabs>
 
-            <!-- Tab Content -->
-            <v-window
-                v-model="activeTab"
-                class="bg-surface"
-                style="flex: 1; overflow-y: auto"
-            >
+            <!-- Tab Content: every pane of the current mode is stacked in one grid cell, so
+                 the area is as tall as the tallest tab and its height never changes when
+                 switching tabs. Only the active pane is visible (toggled with visibility, so
+                 hidden panes still reserve their space). -->
+            <div class="bg-surface tab-content">
                 <!-- Single Item: Source Tab -->
-                <v-window-item
+                <div
                     v-if="!isAggregate"
-                    value="source"
-                    style="padding: 24px"
+                    class="pane source-tab"
+                    :class="{ 'pane--active': activeTab === 'source' }"
                 >
-                    <v-row class="mb-6">
-                        <v-col
-                            cols="12"
-                            md="3"
-                            class="text-center"
-                        >
-                            <div class="text-overline font-weight-bold">
-                                {{ t('assess.collected') }}
-                            </div>
-                            <div class="text-caption">
-                                {{ firstNewsItemData?.collected || 'N/A' }}
-                            </div>
-                        </v-col>
-                        <v-col
-                            cols="12"
-                            md="3"
-                            class="text-center"
-                        >
-                            <div class="text-overline font-weight-bold">
-                                {{ t('assess.published') }}
-                            </div>
-                            <div class="text-caption">
-                                {{ firstNewsItemData?.published || 'N/A' }}
-                            </div>
-                        </v-col>
-                        <v-col
-                            cols="12"
-                            md="3"
-                            class="text-center"
-                        >
-                            <div class="text-overline font-weight-bold">
-                                {{ t('assess.source') }}
-                            </div>
-                            <div class="text-caption">
-                                {{ firstNewsItemData?.source || 'N/A' }}
-                            </div>
-                        </v-col>
-                        <v-col
-                            cols="12"
-                            md="3"
-                            class="text-center"
-                        >
-                            <div class="text-overline font-weight-bold">
-                                {{ t('assess.author') }}
-                            </div>
-                            <div class="text-caption">
-                                {{ firstNewsItemData?.author || 'N/A' }}
-                            </div>
-                        </v-col>
-                    </v-row>
+                    <!-- Fixed header: metadata + article title stay pinned -->
+                    <div class="source-header">
+                        <v-row class="mb-6">
+                            <v-col
+                                cols="12"
+                                md="3"
+                                class="text-center"
+                            >
+                                <div class="text-overline font-weight-bold">
+                                    {{ t('assess.collected') }}
+                                </div>
+                                <div class="text-caption">
+                                    {{ firstNewsItemData?.collected || 'N/A' }}
+                                </div>
+                            </v-col>
+                            <v-col
+                                cols="12"
+                                md="3"
+                                class="text-center"
+                            >
+                                <div class="text-overline font-weight-bold">
+                                    {{ t('assess.published') }}
+                                </div>
+                                <div class="text-caption">
+                                    {{ firstNewsItemData?.published || 'N/A' }}
+                                </div>
+                            </v-col>
+                            <v-col
+                                cols="12"
+                                md="3"
+                                class="text-center"
+                            >
+                                <div class="text-overline font-weight-bold">
+                                    {{ t('assess.source') }}
+                                </div>
+                                <div class="text-caption">
+                                    {{ firstNewsItemData?.source || 'N/A' }}
+                                </div>
+                            </v-col>
+                            <v-col
+                                cols="12"
+                                md="3"
+                                class="text-center"
+                            >
+                                <div class="text-overline font-weight-bold">
+                                    {{ t('assess.author') }}
+                                </div>
+                                <div class="text-caption">
+                                    {{ firstNewsItemData?.author || 'N/A' }}
+                                </div>
+                            </v-col>
+                        </v-row>
 
-                    <v-divider class="my-4" />
-
-                    <div class="text-h5 font-weight-light mb-4">
-                        {{ firstNewsItemData?.title || 'N/A' }}
+                        <v-divider />
                     </div>
 
-                    <div
-                        class="text-body-2 text-medium-emphasis mb-4"
-                        v-html="firstNewsItemData?.content"
-                    />
+                    <!-- Scrollable body: only the article content scrolls -->
+                    <div class="source-body">
+                        <div
+                            class="text-body-2 text-medium-emphasis"
+                            v-html="firstNewsItemData?.content"
+                        />
+                    </div>
 
-                    <v-divider class="my-4" />
-
+                    <!-- Fixed footer: link stays pinned -->
                     <div
                         v-if="hasLink"
-                        class="text-caption"
+                        class="source-footer"
                     >
-                        <strong>{{ t('assess.link') }}: </strong>
-                        <a
-                            :href="newsItemLink"
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            {{ newsItemLink }}
-                        </a>
+                        <v-divider class="mb-3" />
+                        <div class="text-caption">
+                            <strong>{{ t('assess.link') }}: </strong>
+                            <a
+                                :href="newsItemLink"
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                {{ newsItemLink }}
+                            </a>
+                        </div>
                     </div>
-                </v-window-item>
+                </div>
 
                 <!-- Single Item: Attributes Tab -->
-                <v-window-item
+                <div
                     v-if="!isAggregate"
-                    value="attributes"
-                    style="padding: 24px"
+                    class="pane tab-pane"
+                    :class="{ 'pane--active': activeTab === 'attributes' }"
                 >
                     <v-row>
                         <v-col
@@ -187,15 +194,15 @@
                             />
                         </v-col>
                     </v-row>
-                </v-window-item>
+                </div>
 
                 <!-- Aggregate: Info Tab (Editable Form) -->
-                <v-window-item
+                <div
                     v-if="isAggregate"
-                    value="info"
-                    style="padding: 24px"
+                    class="pane tab-pane"
+                    :class="{ 'pane--active': activeTab === 'info' }"
                 >
-                    <v-form class="min-width-600">
+                    <v-form>
                         <v-text-field
                             v-model="editTitle"
                             :label="t('assess.title')"
@@ -215,12 +222,12 @@
                         />
                         <div class="text-caption text-grey">{{ t('assess.auto_save_blur') }}</div>
                     </v-form>
-                </v-window-item>
+                </div>
 
                 <!-- Comments Tab -->
-                <v-window-item
-                    value="comments"
-                    style="padding: 24px"
+                <div
+                    class="pane tab-pane"
+                    :class="{ 'pane--active': activeTab === 'comments' }"
                 >
                     <Editor
                         v-model="commentText"
@@ -228,8 +235,8 @@
                         @text-change="debounceAutoSave"
                     />
                     <div class="text-caption text-grey mt-2">{{ t('assess.auto_save_changes') }}</div>
-                </v-window-item>
-            </v-window>
+                </div>
+            </div>
         </v-card>
     </v-dialog>
 </template>
@@ -339,9 +346,11 @@
         () => props.newsItem,
         (newItem: NewsItemModel) => {
             if (newItem) {
-                // Only reset tab when switching to a different item, not on data refresh
+                // Only reset tab when switching to a different item, not on data refresh.
+                // Aggregates have no "source" tab, so start them on "info".
                 if (lastNewsItemId !== newItem.id) {
-                    activeTab.value = 'source'
+                    const isAgg = (newItem.news_items?.length || 0) > 1
+                    activeTab.value = isAgg ? 'info' : 'source'
                     lastNewsItemId = newItem.id ?? null
                 }
                 editTitle.value = newItem.title || ''
@@ -465,6 +474,77 @@
 </script>
 
 <style scoped>
+    /* ---- Dialog shell ----
+       Column layout so the toolbar + tabs stay pinned. The card hugs its content up to
+       90vh; beyond that the active pane scrolls internally (min-height: 300px keeps a
+       stub item from collapsing). */
+    .detail-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 300px;
+        max-height: 90vh;
+    }
+
+    /* Toolbar and tabs hold their natural height and are never compressed. */
+    .flex-fixed {
+        flex: 0 0 auto;
+    }
+
+    /* Tab content area: a single-cell grid that every pane is stacked into, so its height
+       equals the tallest pane and is identical on every tab. flex: 0 1 auto lets it hug
+       that content but shrink (active pane then scrolls) when the card reaches 90vh. */
+    .tab-content {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
+        flex: 0 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* Every pane occupies the same grid cell; inactive panes stay in layout (so the cell
+       keeps the tallest-tab height) but are hidden and non-interactive. */
+    .pane {
+        grid-area: 1 / 1;
+        min-height: 0;
+    }
+
+    .pane:not(.pane--active) {
+        visibility: hidden;
+    }
+
+    /* Standard padded pane (attributes / aggregate info / comments): scrolls as a whole. */
+    .tab-pane {
+        padding: 24px;
+        overflow-y: auto;
+    }
+
+    /* ---- Source tab: pinned metadata header + footer link, scrolling body ----
+       Grid stretch gives this pane the full cell height, so .source-body can scroll. */
+    .source-tab {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .source-header {
+        flex: 0 0 auto;
+        padding: 24px 24px 0;
+    }
+
+    /* flex-basis: auto (not 0) so a long article counts toward the dialog height, letting
+       it grow to the 90vh cap; min-height: 0 lets it then shrink and scroll internally. */
+    .source-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 8px 24px;
+    }
+
+    .source-footer {
+        flex: 0 0 auto;
+        padding: 0 24px 24px;
+    }
+
+    /* ---- Misc ---- */
     .truncate {
         white-space: nowrap;
         overflow: hidden;
@@ -472,14 +552,7 @@
         max-width: 600px;
     }
 
-    .max-width-600 {
-        max-width: 600px;
-    }
-
-    .gap-2 {
-        gap: 8px;
-    }
-
+    /* PrimeVue / Quill comment editor. */
     :deep(.p-editor-container) {
         border-radius: 4px;
     }
