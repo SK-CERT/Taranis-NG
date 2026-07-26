@@ -1,207 +1,192 @@
 <template>
-    <v-container v-bind="UI.TOOLBAR.CONTAINER" :style="UI.STYLE.shadow">
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                <div :class="UI.CLASS.toolbar_filter_title">{{$t( title )}}</div>
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="filter.search"
-                              :placeholder="$t('toolbar_filter.search')"
-                              v-on:keyup="filterSearch" />
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                <slot name="addbutton"></slot>
-            </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col class="py-0">
-                <!-- DAY-S -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.DAYS">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP"
-                            v-for="day in days" :key="day.filter" @click="filterRange(day.filter)">
-                        <div class="px-2" :title="$t('analyze.tooltip.range.' + day.filter)">{{$t(day.title)}}</div>
-                    </v-chip>
-                </v-chip-group>
+    <BaseToolbarFilter
+        ref="baseFilter"
+        :title="title"
+        :total-count-title="totalCountTitle"
+        :total-count="totalCount"
+        :currently-showing-count="currentlyShowingCount"
+        :initial-filter="filter"
+        :show-day-ranges="true"
+        :show-sort="true"
+        :show-selected-count="multiSelectActive"
+        :selected-count-title="'toolbar_filter.selected_count'"
+        :selected-count="selectedCount"
+        :show-add-button="showAddButton"
+        :add-button-label="addButtonLabel"
+        sort-tooltip-prefix="analyze"
+        @update-filter="handleFilterUpdate"
+        @add-new="emit('add-new')"
+    >
+        <!-- Add Button Slot -->
+        <template #addbutton>
+            <slot name="addbutton" />
+        </template>
 
-                <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
+        <!-- Custom Filters: Completed -->
+        <template #custom-filters="{ filter }">
+            <div style="display: flex; gap: 4px; flex-wrap: wrap">
+                <v-chip
+                    size="small"
+                    :color="filter['completed'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['completed'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="completedFilterTooltip"
+                    @click="cycleFilter('completed')"
+                >
+                    <v-icon>{{ completedFilterIcon }}</v-icon>
+                </v-chip>
+            </div>
+        </template>
+    </BaseToolbarFilter>
 
-                <!-- FILTER -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_MULTI" v-model="activeFilters">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterCompleted" id="button_filter_completed" value="completed">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="completeFilterTooltip">{{ completeFilterIcon }}</v-icon>
-                    </v-chip>
-                </v-chip-group>
+    <!-- Selection Group Toolbar -->
+    <v-toolbar
+        v-if="showGroupToolbar"
+        flat
+        color="surface"
+        density="compact"
+    >
+        <ToolbarGroup
+            ref="toolbarGroup"
+            view="analyze"
+            :current-filter="filter"
+            @update-data="handleUpdateData"
+        />
 
-                <!-- SORT -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_DESC')" :title="$t('analyze.tooltip.sort.time.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
-                    </v-chip>
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_ASC')" :title="$t('analyze.tooltip.sort.time.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
-                    </v-chip>
-                </v-chip-group>
-            </v-col>
-        </v-row>
-        <v-divider v-if="showGroupToolbar"></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW" v-if="showGroupToolbar">
-            <v-col v-bind="UI.TOOLBAR.COL.SELECTOR">
-                <ToolbarGroupAnalyze ref="toolbarGroupAnalyze" />
-            </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col v-bind="UI.TOOLBAR.COL.INFO">
-                <span>{{ $t(total_count_title) }}<strong>{{ totalCount }}</strong></span>
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.RIGHT"></v-col>
-        </v-row>
-    </v-container>
+        <v-spacer />
+        <v-btn
+            icon
+            size="small"
+            :color="compactMode ? 'primary' : 'default'"
+            :title="t('analyze.tooltip.compact_mode')"
+            @click="toggleCompactMode"
+        >
+            <v-icon>mdi-format-list-bulleted</v-icon>
+        </v-btn>
+    </v-toolbar>
 </template>
 
-<script>
-    import AuthMixin from "../../services/auth/auth_mixin";
-    import ToolbarGroupAnalyze from "@/components/analyze/ToolbarGroupAnalyze";
+<script setup lang="ts">
+    import { ref, computed, watch, onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useAnalyzeStore } from '@/stores/analyze'
+    import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
+    import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
 
-    export default {
-        name: "ToolbarFilterAnalyze",
-        mixins: [AuthMixin],
-        components: {
-            ToolbarGroupAnalyze
-        },
-        props: {
-            title: String,
-            dialog: String,
-            total_count_title: String,
-            show_group_toolbar: Boolean,
-        },
-        data: () => ({
-            local_reports: true,
-            status: [],
-            days: [
-                { title: 'toolbar_filter.all', icon: 'mdi-information-outline', type: 'info', filter: 'ALL' },
-                { title: 'toolbar_filter.today', icon: 'mdi-calendar-today', type: 'info', filter: 'TODAY' },
-                { title: 'toolbar_filter.this_week', icon: 'mdi-calendar-range', type: 'info', filter: 'WEEK' },
-                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' },
-                { title: 'toolbar_filter.last_7_days', icon: 'mdi-calendar-range', type: 'info', filter: 'LAST_7_DAYS' },
-                { title: 'toolbar_filter.last_31_days', icon: 'mdi-calendar-month', type: 'info', filter: 'LAST_31_DAYS' }
-            ],
-            data_count: 0,
-            filter: {
-                search: "",
-                range: "ALL",
-                completed: "ALL",
-                sort: "DATE_DESC"
-            },
-            timeout: null
-        }),
-        computed: {
-            totalCount() {
-                return this.data_count
-            },
-
-            showGroupToolbar() {
-                return this.show_group_toolbar && this.local_reports
-            },
-
-            activeFilters: {
-                get() {
-                    const result = []
-                    if (this.filter.completed === true || this.filter.completed === false) result.push('completed')
-                    return result
-                },
-                set() {
-                    // Chip-group requires a setter, but we handle clicks manually
-                }
-            },
-
-            completeFilterIcon() {
-                if (this.filter.completed === false) return this.UI.ICON.INCOMPLETED
-                if (this.filter.completed === true) return this.UI.ICON.COMPLETED
-                return this.UI.ICON.NO_STATE
-            },
-
-            completeFilterTooltip() {
-                if (this.filter.completed === "ALL") {
-                    return this.$t('analyze.tooltip.filter_all')
-                } else if (this.filter.completed === true) {
-                    return this.$t('analyze.tooltip.filter_completed')
-                } else {
-                    return this.$t('analyze.tooltip.filter_incomplete')
-                }
-            },
-
-        },
-        methods: {
-            updateDataCount(count) {
-                this.data_count = count
-            },
-
-            filterCompleted() {
-                // Cycle through three states
-                if (this.filter.completed === "ALL") {
-                    this.filter.completed = true;
-                } else if (this.filter.completed === true) {
-                    this.filter.completed = false;
-                } else {
-                    this.filter.completed = "ALL";
-                }
-                this.$emit('update-report-items-filter', this.filter);
-                if (this.show_group_toolbar) {
-                    this.$refs.toolbarGroupAnalyze.disableMultiSelect()
-                }
-            },
-
-
-            filterSort(sort) {
-                this.filter.sort = sort;
-                this.$emit('update-report-items-filter', this.filter);
-                if (this.show_group_toolbar) {
-                    this.$refs.toolbarGroupAnalyze.disableMultiSelect()
-                }
-            },
-
-            filterRange(range) {
-                this.filter.range = range;
-                this.$emit('update-report-items-filter', this.filter);
-                if (this.show_group_toolbar) {
-                    this.$refs.toolbarGroupAnalyze.disableMultiSelect()
-                }
-            },
-
-            filterSearch: function () {
-                clearTimeout(this.timeout);
-
-                let self = this;
-                this.timeout = setTimeout(function () {
-                    self.$emit('update-report-items-filter', self.filter)
-                    if (this.show_group_toolbar) {
-                        this.$refs.toolbarGroupAnalyze.disableMultiSelect()
-                    }
-                }, 300);
-            },
-
-            remove(item) {
-                this.chips.splice(this.chips.indexOf(item), 1);
-                this.chips = [...this.chips]
-            },
-
-            cancel() {
-            },
-
-            add() {
-            }
-        },
-        mounted() {
-            this.local_reports = !window.location.pathname.includes('/group/');
-        },
-        watch: {
-            $route() {
-                this.local_reports = !window.location.pathname.includes('/group/');
-            }
-        }
+    type AnalyzeFilter = {
+        search: string
+        range: string
+        completed: 'ALL' | boolean
+        sort: string
+        compact_mode?: boolean
     }
+
+    const props = withDefaults(
+        defineProps<{
+            title?: string
+            totalCountTitle?: string
+            multiSelect?: boolean
+            showGroupToolbar?: boolean
+            showAddButton?: boolean
+            addButtonLabel?: string
+        }>(),
+        {
+            title: 'nav_menu.report_items',
+            totalCountTitle: 'analyze.total_count',
+            multiSelect: false,
+            showGroupToolbar: true,
+            showAddButton: false,
+            addButtonLabel: 'common.add_btn'
+        }
+    )
+
+    const emit = defineEmits(['update-filter', 'update-data', 'add-new'])
+
+    const { t } = useI18n()
+    const analyzeStore = useAnalyzeStore()
+    const baseFilter = ref<any>(null)
+    const toolbarGroup = ref<any>(null)
+
+    const totalCount = ref(0)
+    const currentlyShowingCount = ref(0)
+    const selectedCount = ref(0)
+    const filter = ref<AnalyzeFilter>({
+        search: '',
+        range: 'ALL',
+        completed: 'ALL',
+        sort: 'DATE_DESC'
+    })
+
+    const compactMode = ref(false)
+
+    const multiSelectActive = computed(() => analyzeStore.getMultiSelectReport)
+
+    const completedFilterIcon = computed(() => {
+        if (filter.value.completed === 'ALL') return 'mdi-check-circle-outline'
+        if (filter.value.completed === false) return 'mdi-close-circle'
+        return 'mdi-check-circle'
+    })
+
+    const completedFilterTooltip = computed(() => {
+        if (filter.value.completed === 'ALL') return t('analyze.tooltip.filter_all')
+        if (filter.value.completed === true) return t('analyze.tooltip.filter_completed')
+        return t('analyze.tooltip.filter_incomplete')
+    })
+
+    const cycleFilter = (filterType: 'completed'): void => {
+        if (filter.value[filterType] === 'ALL') {
+            filter.value[filterType] = true
+        } else if (filter.value[filterType] === true) {
+            filter.value[filterType] = false
+        } else {
+            filter.value[filterType] = 'ALL'
+        }
+        emitFilter()
+    }
+
+    const handleFilterUpdate = (updatedFilter: Partial<AnalyzeFilter>): void => {
+        filter.value = { ...filter.value, ...updatedFilter }
+        emitFilter()
+    }
+
+    const toggleCompactMode = (): void => {
+        compactMode.value = !compactMode.value
+        emitFilter()
+    }
+
+    const emitFilter = (): void => {
+        emit('update-filter', {
+            ...filter.value,
+            compact_mode: compactMode.value
+        })
+    }
+
+    const handleUpdateData = (): void => {
+        emit('update-data')
+    }
+
+    watch(
+        () => analyzeStore.getSelectionReport,
+        (newSelection: unknown[]) => {
+            selectedCount.value = newSelection.length
+        },
+        { deep: true }
+    )
+
+    defineExpose({
+        updateDataCount: (count: number) => {
+            totalCount.value = count
+        },
+        updateCurrentlyShowingCount: (count: number) => {
+            currentlyShowingCount.value = count
+        },
+        updateShowingCount: (count: number) => {
+            currentlyShowingCount.value = count
+        },
+        toolbarGroup
+    })
+
+    onMounted(() => {
+        // Emit default filter on mount
+        emitFilter()
+    })
 </script>

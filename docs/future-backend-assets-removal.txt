@@ -1,6 +1,6 @@
 Taranis-NG backend cleanup map for removing My Assets feature (future work)
 Date: 2026-06-03
-Scope: backend-only follow-up after gui-v3 feature removal
+Scope: backend-only follow-up after GUI My Assets feature removal
 
 Overview
 - GUI v3 no longer exposes My Assets, Asset Groups, or Notification Templates.
@@ -103,7 +103,7 @@ Overview
 
 - Report item workflows that may trigger asset manager hooks.
 - Publisher/email flows that may rely on notification templates.
-- Any API clients outside gui-v3 that still call /api/v1/my-assets/*.
+- Any API clients outside the GUI that still call /api/v1/my-assets/*.
 - Permissions UI/admin flows that list My Assets permissions.
 
 7) Recommended execution order for backend removal (future)

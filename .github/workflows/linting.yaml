@@ -31,7 +31,7 @@ jobs:
       - name: Install dev tools (ruff, djlint) from lockstepped dependency group
         run: uv sync --group dev --no-install-project
       - name: Run djlint lint
-        run: uv run --group dev djlint src/presenters/templates src/gui-v3/index.html --lint --ignore=H021
+        run: uv run --group dev djlint src/presenters/templates src/gui/index.html --lint --ignore=H021
       - name: Run ruff lint check (changed files only)
         if: github.event_name == 'pull_request'
         # The legacy codebase is not yet clean under select = ["ALL"], so lint

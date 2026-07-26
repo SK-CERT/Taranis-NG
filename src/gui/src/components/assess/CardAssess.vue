@@ -1,379 +1,396 @@
 <template>
-    <v-container v-bind="UI.CARD.CONTAINER" :data-type="this.cardType" :data-open="opened" :data-set="data_set">
-        <v-row>
-            <v-col v-if="multiSelectActive" :style="UI.STYLE.card_selector_zone">
-                <v-row justify="center" align="center">
-                    <v-checkbox v-if="!preselected" v-model="selected" @change="selectionChanged" />
+    <div class="aggregate-card-wrapper">
+        <BaseCard
+            :multi-select-active="multiSelectActive"
+            :show-selection-checkbox="true"
+            :preselected="preselected"
+            :card-color="selectedColor"
+            :class="{ 'read-item': card.read }"
+            :card-id="card.id"
+            @card-click="showDetail"
+            @selection-change="selectionChanged"
+        >
+            <template #content>
+                <div class="text-label-medium text-grey mb-2">
+                    <v-row align="center">
+                        <v-col cols="auto">
+                            <span v-if="firstNewsItem">
+                                {{ firstNewsItem?.news_item_data?.osint_source_name || firstNewsItem?.news_item_data?.source || 'Unknown' }}
+                                <span v-if="firstNewsItem?.news_item_data?.osint_source_type">
+                                    ({{ firstNewsItem.news_item_data.osint_source_type.split(' ')[0] }})
+                                </span>
+                            </span>
+                        </v-col>
+                        <v-spacer />
+                        <v-col cols="auto">
+                            <span v-if="firstNewsItem">
+                                {{ t('card_item.published') }}:
+                                {{ firstNewsItem?.news_item_data?.published || 'N/A' }}
+                            </span>
+                        </v-col>
+                        <v-spacer />
+                        <v-col cols="auto">
+                            {{ t('card_item.collected') }}:
+                            {{ card.created }}
+                        </v-col>
+                    </v-row>
+                </div>
+
+                <span class="text-title-large mb-2">
+                    {{ card.title }}
+                </span>
+
+                <p
+                    v-if="!hideReviews"
+                    class="text-body-medium text-grey mb-3"
+                >
+                    {{ card.description }}
+                </p>
+
+                <v-row align="center">
+                    <v-col class="d-flex align-center flex-wrap">
+                        <span
+                            v-if="!isAggregate && !hideSourceLinks && firstNewsItem?.news_item_data?.link"
+                            class="text-label-small text-primary pr-2"
+                            style="display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+                        >
+                            {{ firstNewsItem?.news_item_data?.link }}
+                        </span>
+
+                        <v-btn
+                            v-if="isAggregate"
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            class="mr-2"
+                            :data-action="Action.AGGREGATE_OPEN"
+                            @click.stop="toggleOpen"
+                        >
+                            <v-icon start>
+                                {{ opened ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                            </v-icon>
+                            {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
+                        </v-btn>
+
+                        <v-chip
+                            v-else-if="newsItemsCount > 1"
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            class="mr-2"
+                        >
+                            <v-icon start> mdi-file-multiple </v-icon>
+                            {{ t('card_item.aggregated_items') }}: {{ newsItemsCount }}
+                        </v-chip>
+
+                        <v-chip
+                            v-if="inProgressReportsCount > 0"
+                            size="small"
+                            color="orange"
+                            variant="outlined"
+                            class="mr-2"
+                            :disabled="analyzeSelector"
+                            :style="analyzeSelector ? '' : 'cursor: pointer'"
+                            @click.stop="!analyzeSelector && showInReports('in_progress')"
+                        >
+                            <v-icon start> mdi-file-document </v-icon>
+                            {{ t('card_item.in_analyze') }}
+                            <span v-if="inProgressReportsCount > 1">&nbsp;({{ inProgressReportsCount }})</span>
+                        </v-chip>
+
+                        <v-chip
+                            v-if="completedReportsCount > 0"
+                            size="small"
+                            color="green"
+                            variant="outlined"
+                            class="mr-2"
+                            :disabled="analyzeSelector"
+                            :style="analyzeSelector ? '' : 'cursor: pointer'"
+                            @click.stop="!analyzeSelector && showInReports('completed')"
+                        >
+                            <v-icon start>{{ ICONS.CHECK_CIRCLE }}</v-icon>
+                            {{ t('card_item.analyzed') }}
+                            <span v-if="completedReportsCount > 1">&nbsp;({{ completedReportsCount }})</span>
+                        </v-chip>
+
+                        <v-icon
+                            v-if="hasComments"
+                            color="orange"
+                            size="small"
+                        >
+                            mdi-comment
+                        </v-icon>
+                    </v-col>
+
+                    <v-col
+                        v-if="!multiSelectActive && !analyzeSelector"
+                        cols="auto"
+                        class="d-flex align-center"
+                        style="gap: 4px"
+                    >
+                        <AssessItemActions
+                            :item="card"
+                            size="small"
+                            variant="text"
+                            icon-size="default"
+                            :show-counts="true"
+                            :show-open-link="!isAggregate"
+                            show-create-report
+                            :show-ungroup="isAggregate"
+                            @action="handleCardAction"
+                        />
+                    </v-col>
                 </v-row>
-            </v-col>
-            <v-col :class="UI.CLASS.card_offset">
-                <v-hover v-slot="{ hover }">
-                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="cardItemToolbar"
-                            @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus"
-                            :color="selectedColor">
-                        <!--CONTENT-->
-                        <v-layout v-bind="UI.CARD.LAYOUT" :class="['status', cardStatus, { 'read': isRead }]">
-                            <v-row v-bind="UI.CARD.ROW.CONTENT">
-                                <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div v-if="singleAggregate">
-                                        {{ $t('card_item.source') }}:
-                                        <strong>
-                                            {{ card.news_items[0].news_item_data.osint_source_name || card.news_items[0].news_item_data.source }}
-                                            ({{ (card.news_items[0].news_item_data.osint_source_type || '').split(' ')[0] }})
-                                        </strong>
-                                    </div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div v-if="singleAggregate" align="center">
-                                        {{ $t('card_item.published') }}:
-                                        <strong>{{ card.news_items[0].news_item_data.published }}</strong>
-                                    </div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div align="right">
-                                        {{ $t('card_item.collected') }}: <strong>{{ card.created }}</strong>
-                                    </div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.TITLE">
-                                    <div v-if="word_list_regex" v-html="wordCheck(card.title)"></div>
-                                    <div v-else>{{ card.title }}</div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.REVIEW" class="review-content">
-                                    <div v-if="!compact_mode">
-                                        <div v-if="word_list_regex" v-html="wordCheck(card.description)"></div>
-                                        <div v-else>{{ card.description }}</div>
-                                    </div>
-                                </v-col>
-                                <v-row v-bind="UI.CARD.FOOTER">
-                                    <v-col cols="8" class="footer-content">
-                                        <template v-if="!singleAggregate">
-                                            <v-btn depressed small color="primary" data-button="aggregate"
-                                                   @click.stop="openCard">
-                                                <v-icon v-if="opened" left>mdi-arrow-down-drop-circle</v-icon>
-                                                <v-icon v-if="!opened" left>mdi-arrow-right-drop-circle</v-icon>
-                                                <div class="subtitle-2">
-                                                    {{ $t('card_item.aggregated_items') }}: {{ card.news_items.length }}
-                                                </div>
-                                            </v-btn>
-                                        </template>
+            </template>
+        </BaseCard>
 
-                                        <span class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
-                                            {{ itemLink }}
-                                        </span>
-
-                                        <span v-if="card.in_reports_count > 0" class="pl-2">
-                                            <v-btn depressed x-small color="orange lighten-2"
-                                                   @click.stop="showInReports"
-                                                   :disabled="disable_reports_button"
-                                                   :title="$t('assess.tooltip.show_reports')">
-                                                {{ $t('card_item.in_analyze') }}
-                                                <span v-if="card.in_reports_count > 1">&nbsp;&nbsp;({{ card.in_reports_count }})</span>
-                                            </v-btn>
-                                        </span>
-
-                                        <v-icon v-if="card.comments != ''" class="pl-2"
-                                                color="orange lighten-2">mdi-comment</v-icon>
-                                    </v-col>
-                                    <v-col cols="4">
-                                        <!--TOOLBAR-->
-                                        <div>
-                                            <v-row v-if="!multiSelectActive && !analyze_selector"
-                                                   v-bind="UI.CARD.TOOLBAR.COMPACT"
-                                                   :style="UI.STYLE.card_toolbar_strip_bottom">
-                                                <v-col v-bind="UI.CARD.COL.TOOLS">
-                                                    <span class="ml-5 grey--text">
-                                                        <v-btn v-if="canModify" icon
-                                                               @click.stop="cardItemToolbar('like')" data-btn="like"
-                                                               :title="$t('assess.tooltip.like_item')">
-                                                            <v-icon :color="buttonStatus(card.me_like)">
-                                                                {{ card.likes ? 'mdi-thumb-up' : 'mdi-thumb-up-outline' }}
-                                                            </v-icon>
-                                                        </v-btn>
-                                                        {{ card.likes }}
-                                                    </span>
-                                                    <span class="mr-5 grey--text">
-                                                        <v-btn v-if="canModify" icon
-                                                               @click.stop="cardItemToolbar('unlike')"
-                                                               :title="$t('assess.tooltip.dislike_item')"
-                                                               data-btn="unlike">
-                                                            <v-icon :color="buttonStatus(card.me_dislike)">
-                                                                {{ card.dislikes ? 'mdi-thumb-down' : 'mdi-thumb-down-outline' }}
-                                                            </v-icon>
-                                                        </v-btn>
-                                                        {{ card.dislikes }}
-                                                    </span>
-
-                                                    <v-btn v-if="singleAggregate" icon
-                                                           @click.stop="cardItemToolbar('link')" data-btn="link"
-                                                           :title="$t('assess.tooltip.open_source')">
-                                                        <a class="alink" :href="card.news_items[0].news_item_data.link"
-                                                           target="_blank" rel="noreferer">
-                                                            <v-icon color="primary">mdi-open-in-app</v-icon>
-                                                        </a>
-                                                    </v-btn>
-                                                    <v-btn v-if="!singleAggregate && canModify" icon
-                                                           @click.stop="cardItemToolbar('ungroup')" data-btn="ungroup"
-                                                           :title="$t('assess.tooltip.ungroup_items')">
-                                                        <v-icon color="primary">mdi-ungroup</v-icon>
-                                                    </v-btn>
-                                                    <v-btn v-if="canCreateReport" icon
-                                                           @click.stop="cardItemToolbar('new')"
-                                                           :title="$t('assess.tooltip.analyze_item')" data-btn="new">
-                                                        <v-icon color="primary">mdi-file-outline</v-icon>
-                                                    </v-btn>
-                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
-                                                           data-btn="read" :title="$t('assess.tooltip.read_item')">
-                                                        <v-icon :color="buttonStatus(card.read)">
-                                                            {{ card.read ? 'mdi-eye' : 'mdi-eye-outline' }}
-                                                        </v-icon>
-                                                    </v-btn>
-                                                    <v-btn v-if="canModify" icon
-                                                           @click.stop="cardItemToolbar('important')"
-                                                           :title="$t('assess.tooltip.important_item')"
-                                                           data-btn="important">
-                                                        <v-icon :color="buttonStatus(card.important)">
-                                                            {{ card.important ? 'mdi-star' : 'mdi-star-outline' }}
-                                                        </v-icon>
-                                                    </v-btn>
-                                                    <v-btn v-if="canDelete" icon @click.stop="showMsgBox()"
-                                                           :title="$t('assess.tooltip.delete_item')" data-btn="delete">
-                                                        <v-icon color="error">{{ UI.ICON.DELETE }}</v-icon>
-                                                    </v-btn>
-                                                </v-col>
-                                            </v-row>
-                                            <v-row v-if="analyze_selector && analyze_can_modify"
-                                                   v-bind="UI.CARD.TOOLBAR.COMPACT" :style="UI.STYLE.card_toolbar">
-                                                <v-col v-bind="UI.CARD.COL.TOOLS">
-                                                    <v-btn icon @click.stop="cardItemToolbar('remove')"
-                                                           :title="$t('assess.tooltip.remove_item')">
-                                                        <v-icon color="primary">mdi-minus-circle-outline</v-icon>
-                                                    </v-btn>
-                                                </v-col>
-                                            </v-row>
-                                        </div>
-                                    </v-col>
-                                </v-row>
-                            </v-row>
-                        </v-layout>
-                    </v-card>
-                </v-hover>
-            </v-col>
-        </v-row>
-        <v-row>
-            <MessageBox v-model="msgbox_visible"
-                        @yes="handleMsgBox"
-                        @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')"
-                        :message="card.title">
-            </MessageBox>
-        </v-row>
-        <div v-if="opened" dark class="ml-16 mb-8 rounded">
-            <CardAssessItem v-for="news_item in card.news_items" :key="news_item.id" :news_item="news_item"
-                            :analyze_selector="analyze_selector" :compact_mode="compact_mode" :word_list_regex="word_list_regex"
-                            @show-item-detail="showItemDetail(news_item)" />
-        </div>
-    </v-container>
+        <Transition
+            name="aggregate-items"
+            @after-enter="emitCardItemsReindex"
+            @after-leave="emitCardItemsReindex"
+        >
+            <div
+                v-if="opened && isAggregate"
+                class="aggregate-items-list"
+            >
+                <CardAssessItem
+                    v-for="newsItem in childNewsItems"
+                    :key="newsItem.id"
+                    :news-item="newsItem"
+                    :analyze-selector="analyzeSelector"
+                    :hide-reviews="hideReviews"
+                    :hide-source-links="hideSourceLinks"
+                    @show-detail="showChildDetail"
+                    @update-item="updateChildItem"
+                    @delete-item="deleteChildItem"
+                />
+            </div>
+        </Transition>
+    </div>
 </template>
 
-<script>
-    import CardAssessItem from "@/components/assess/CardAssessItem";
-    import { groupAction, voteNewsItemAggregate } from "@/api/assess";
-    import { readNewsItemAggregate } from "@/api/assess";
-    import { importantNewsItemAggregate } from "@/api/assess";
-    import { deleteNewsItemAggregate } from "@/api/assess";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import MessageBox from "@/components/common/MessageBox.vue";
-    import CardMixin from "@/components/assess/card_mixin";
+<script setup lang="ts">
+    import { computed, ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useAssessStore } from '@/stores/assess'
+    import { useAuth } from '@/composables/useAuth'
+    import { deleteNewsItemAggregate } from '@/api/assess'
+    import { ICONS } from '@/config/ui-constants'
+    import BaseCard from '@/components/common/BaseCard.vue'
+    import AssessItemActions from '@/components/assess/AssessItemActions.vue'
+    import CardAssessItem from '@/components/assess/CardAssessItem.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
-    export default {
-        name: "CardAssess",
-        props: {
-            card: Object,
-            analyze_selector: Boolean,
-            analyze_can_modify: Boolean,
-            compact_mode: Boolean,
-            preselected: Boolean,
-            word_list_regex: String,
-            aggregate_opened: Boolean,
-            data_set: String,
-            disable_reports_button: Boolean
-        },
-        mixins: [AuthMixin, CardMixin],
-        components: { CardAssessItem, MessageBox },
-        data: () => ({
-            opened: false,
-        }),
-        computed: {
-            canModify() {
-                return this.checkPermission(Permissions.ASSESS_UPDATE)
-            },
+    type NewsItemData = {
+        osint_source_name?: string
+        source?: string
+        osint_source_type?: string
+        published?: string
+        link?: string
+        [key: string]: unknown
+    }
 
-            canDelete() {
-                return this.checkPermission(Permissions.ASSESS_DELETE)
-            },
+    type NewsItemEntry = {
+        id: number | string
+        title?: string
+        description?: string
+        comments?: string
+        created?: string
+        read?: boolean
+        important?: boolean
+        likes?: number
+        dislikes?: number
+        me_like?: boolean
+        me_dislike?: boolean
+        news_item_data?: NewsItemData
+        [key: string]: unknown
+    }
 
-            singleAggregate() {
-                return this.card.news_items.length === 1
-            },
+    type AssessCard = {
+        id: number | string
+        title?: string
+        description?: string
+        comments?: string
+        created?: string
+        read?: boolean
+        modify?: boolean
+        access?: boolean
+        in_reports_count?: number
+        completed_reports_count?: number
+        news_items?: NewsItemEntry[]
+        [key: string]: any
+    }
 
-            itemLink() {
-                if (this.card.news_items.length === 1) {
-                    return this.card.news_items[0].news_item_data.link
-                } else {
-                    return ""
-                }
-            },
+    const props = withDefaults(
+        defineProps<{
+            card: AssessCard
+            preselected?: boolean
+            analyzeSelector?: boolean
+            hideReviews?: boolean
+            hideSourceLinks?: boolean
+            highlightWordlist?: boolean
+        }>(),
+        {
+            preselected: false,
+            analyzeSelector: false,
+            hideReviews: false,
+            hideSourceLinks: false,
+            highlightWordlist: false
+        }
+    )
 
-            cardType() {
-                if (this.singleAggregate) {
-                    return "single";
-                } else {
-                    return "aggregate";
-                }
-            },
-        },
+    const emit = defineEmits<{
+        (e: 'show-detail', card: AssessCard): void
+        (e: 'update-item', card: AssessCard, action: ActionKey): void
+        (e: 'delete-item', card: AssessCard): void
+        (e: 'show-reports-for-item', card: AssessCard, mode: 'all' | 'completed' | 'in_progress'): void
+        (e: 'card-items-reindex', action: string): void
+    }>()
 
-        methods: {
-            showItemDetail(data) {
-                this.$emit('show-item-detail', data);
+    const { t } = useI18n()
+    const assessStore = useAssessStore()
+    const { checkPermission } = useAuth()
+    const opened = ref(false)
 
-                this.stateChange();
-            },
+    const firstNewsItem = computed(() => props.card.news_items?.[0])
+    const newsItemsCount = computed(() => props.card.news_items?.length ?? 0)
+    const inReportsCount = computed(() => props.card.in_reports_count ?? 0)
+    const completedReportsCount = computed(() => props.card.completed_reports_count ?? 0)
+    const inProgressReportsCount = computed(() => Math.max(0, inReportsCount.value - completedReportsCount.value))
+    const isAggregate = computed(() => newsItemsCount.value > 1)
+    const childNewsItems = computed(() => props.card.news_items ?? [])
 
-            openCard() {
-                this.opened = !this.opened;
-                // TODO (JP) this should maybe emit 'aggregate-open'? looks bad..
-                this.$emit('i', { 'id': this.card.id, 'opened': this.opened });
-                this.$emit('card-items-reindex');
-                this.$root.$emit('key-remap');
+    const multiSelectActive = computed(() => assessStore.getMultiSelect)
+    const selectedColor = computed(() => {
+        return assessStore.selectedItems.has(props.card.id) ? 'orange-lighten-4' : ''
+    })
 
-            },
+    const hasComments = computed(() => {
+        if (!props.card.comments) return false
+        // Strip HTML tags and check if there's actual content
+        const plainText = props.card.comments.replace(/<[^>]*>/g, '').trim()
+        return plainText.length > 0
+    })
 
-            selectionChanged() {
-                if (this.selected === true) {
-                    this.$store.dispatch("select", { 'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card })
-                } else {
-                    this.$store.dispatch("deselect", { 'type': 'AGGREGATE', 'id': this.card.id, 'item': this.card })
-                }
-            },
+    const selectionChanged = (isSelected: boolean): void => {
+        if (isSelected) {
+            assessStore.select({ type: 'news_item_aggregate', id: props.card.id, item: props.card })
+        } else {
+            assessStore.deselect({ type: 'news_item_aggregate', id: props.card.id })
+        }
+    }
 
-            itemClicked(data) {
-                if (this.card.news_items.length === 1) {
-                    this.$emit('show-single-aggregate-detail', {
-                        'data': data,
-                        'isSelector': this.analyze_selector,
-                        'id': this.$parent.selfID
-                    });
-                } else {
-                    this.$emit('show-aggregate-detail', {
-                        'data': data,
-                        'isSelector': this.analyze_selector,
-                        'id': this.$parent.selfID
-                    });
-                }
-                this.stateChange();
-            },
+    const showDetail = (): void => {
+        emit('show-detail', props.card)
+    }
 
-            showInReports() {
-                this.$emit('show-reports-for-item', this.card);
-            },
+    const showChildDetail = (item: AssessCard): void => {
+        emit('show-detail', item)
+    }
 
-            cardItemToolbar(action) {
+    const showInReports = (mode: 'all' | 'completed' | 'in_progress' = 'all'): void => {
+        emit('show-reports-for-item', props.card, mode)
+    }
 
-                switch (action) {
-                    case "like":
-                        voteNewsItemAggregate(this.getGroupId(), this.card.id, 1).then(() => {
-                        });
-                        break;
+    const toggleOpen = (): void => {
+        opened.value = !opened.value
+    }
 
-                    case "unlike":
-                        voteNewsItemAggregate(this.getGroupId(), this.card.id, -1).then(() => {
-                        });
-                        break;
+    const emitCardItemsReindex = (): void => {
+        emit('card-items-reindex', 'refresh')
+    }
 
-                    case "link":
-                        break;
+    const handleCardAction = (action: ActionKey): void => {
+        if (action === Action.DELETE) {
+            handleDelete()
+        } else {
+            updateCard(action)
+        }
+    }
 
-                    case "new":
-                        this.$root.$emit('new-report', [this.card]);
-                        break;
+    const updateCard = (action: ActionKey): void => {
+        emit('update-item', props.card, action)
+    }
 
-                    case "remove":
-                        this.$emit('remove-item-from-selector', this.card);
-                        break;
+    const updateChildItem = (item: AssessCard, action: ActionKey): void => {
+        emit('update-item', item, action)
+    }
 
-                    case "important":
-                        importantNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
-                        });
-                        break;
+    const deleteChildItem = (item: AssessCard): void => {
+        emit('delete-item', item)
+    }
 
-                    case "read":
-                        readNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
-                        });
-                        break;
+    const handleDelete = async (): Promise<void> => {
+        try {
+            await deleteNewsItemAggregate('', props.card.id)
+            emit('delete-item', props.card)
 
-                    case "delete":
-                        deleteNewsItemAggregate(this.getGroupId(), this.card.id).then(() => {
-                        }).catch((error) => {
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'error',
-                                    loc: 'error.' + error.response.data
-                                }
-                            )
-                        });
-                        break;
+            // Show success notification
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'common.deleted_successfully' }
+                })
+            )
+        } catch (error: unknown) {
+            console.error('Error deleting news item aggregate:', error)
 
-                    case "ungroup":
-                        this.opened = false;  // Close the expanded view before ungrouping
-                        groupAction({
-                            'group': this.getGroupId(),
-                            'action': 'UNGROUP',
-                            'items': [{ 'type': 'AGGREGATE', 'id': this.card.id }]
-                        }).then(() => {
-                        }).catch((error) => {
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'error',
-                                    loc: 'error.' + error.response.data
-                                }
-                            )
-                        });
-                        break;
+            const responseData = (error as { response?: { data?: unknown } } | undefined)?.response?.data
+            const isAggregateInUse =
+                responseData === 'aggregate_in_use' ||
+                (responseData as { error?: string } | undefined)?.error === 'aggregate_in_use' ||
+                (typeof responseData === 'string' && responseData.includes('aggregate_in_use'))
 
-                    default:
-                        this.toolbar = false;
-                        this.itemClicked(this.card);
-                        break;
-                }
-            },
-        },
-
-        created() {
-            this.opened = this.aggregate_opened;
+            // Check if it's an "in use" error
+            if (isAggregateInUse) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.aggregate_in_use')
+                        }
+                    })
+                )
+            } else {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: {
+                            type: 'error',
+                            message: t('error.server_error')
+                        }
+                    })
+                )
+            }
         }
     }
 </script>
 
 <style scoped>
-    .footer-content {
-        min-height: 48px;
+    .aggregate-card-wrapper {
+        width: 100%;
     }
 
-    .status.read {
-        opacity: 0.5;
+    .aggregate-items-list {
+        margin-top: -4px;
     }
 
-    .theme--light .status.read {
-        background-color: #f5f5f5;
+    .read-item {
+        opacity: 0.7;
     }
 
-    .theme--dark .status.read {
-        background-color: #2c2c2c;
+    .read-item:hover {
+        opacity: 1;
     }
 
-    .status.read .v-card {
-        filter: grayscale(30%);
+    .aggregate-items-enter-active,
+    .aggregate-items-leave-active {
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .aggregate-items-enter-from,
+    .aggregate-items-leave-to {
+        opacity: 0;
+        transform: translateY(-8px);
     }
 </style>

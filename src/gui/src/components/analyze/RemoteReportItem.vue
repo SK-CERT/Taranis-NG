@@ -1,103 +1,133 @@
 <template>
-    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="cancel" report-item>
-            <v-card>
+    <v-dialog
+        v-model="visible"
+        fullscreen
+        persistent
+        @keydown.esc="handleClose"
+    >
+        <v-card>
+            <v-toolbar
+                color="primary"
+                dark
+            >
+                <v-btn
+                    icon
+                    @click="handleClose"
+                >
+                    <v-icon>mdi-close-circle</v-icon>
+                </v-btn>
+                <v-toolbar-title>{{ reportItem.title }}</v-toolbar-title>
+                <v-spacer />
+            </v-toolbar>
 
-                <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000" data-dialog="report-item">
-                    <v-btn icon dark @click="cancel" data-btn="cancel">
-                        <v-icon>mdi-close-circle</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>{{report_item.title}}</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                </v-toolbar>
+            <v-card-text class="pa-6">
+                <div>
+                    <strong>{{ t('report_item.id') }}:</strong>
+                    <span>{{ reportItem.uuid }}</span>
+                </div>
 
-                <v-form @submit.prevent="add" id="form" ref="form">
-                    <v-card>
-                        <v-card-text>
-                            <span>ID: {{report_item.uuid}}</span>
-                        </v-card-text>
-                    </v-card>
+                <v-divider class="my-4" />
 
-                    <div style="padding:16px" class="div-wrapper">
-                        <v-card style="margin-bottom: 8px">
-
-                            <v-card-title class="v-card-title-dialog">
-                                {{$t('report_item.attributes')}}
-                            </v-card-title>
-
-                            <v-card-text style="padding-top:8px">
-                                <RemoteAttributeContainer v-for="attribute_item in report_item.attributes"
-                                                          :key="attribute_item.id"
-                                                          :attribute_item="attribute_item"></RemoteAttributeContainer>
-                            </v-card-text>
-                        </v-card>
-                    </div>
-
-                </v-form>
-
-            </v-card>
-        </v-dialog>
-    </v-row>
+                <h3 class="text-h6 mb-4">
+                    {{ t('report_item.attributes') }}
+                </h3>
+                <v-container v-if="reportItem.attributes && reportItem.attributes.length > 0">
+                    <RemoteAttributeContainer
+                        v-for="attribute in reportItem.attributes"
+                        :key="attribute.id"
+                        :attribute-group="attribute"
+                        :report-item-id="Number(reportItem.id || 0)"
+                    />
+                </v-container>
+                <v-alert
+                    v-else
+                    type="info"
+                >
+                    {{ t('report_item.no_attributes') }}
+                </v-alert>
+            </v-card-text>
+        </v-card>
+    </v-dialog>
 </template>
 
-<script>
-    import {getReportItem} from "@/api/analyze";
-    import RemoteAttributeContainer from "../common/attribute/RemoteAttributeContainer";
+<script setup lang="ts">
+    import { ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import RemoteAttributeContainer from '@/components/common/attribute/RemoteAttributeContainer.vue'
+    import { getReportItem } from '@/api/analyze'
 
-    export default {
-        name: "RemoteReportItem",
-        components: {RemoteAttributeContainer},
-        data: () => ({
-            visible: false,
-            report_item: {
-                uuid: null,
-                title: "",
-                title_prefix: "",
-                completed: false,
-                attributes: []
-            }
-        }),
-        methods: {
-            cancel() {
-                this.visible = false;
-            },
-            showDetail(report_item) {
-                getReportItem(report_item.id).then((response) => {
+    const { t } = useI18n()
 
-                    let data = response.data
+    type RemoteAttributeGroup = {
+        id: number | string
+        attribute?: {
+            attribute_type?: string
+            [key: string]: unknown
+        }
+        [key: string]: unknown
+    }
 
-                    this.visible = true;
+    type RemoteReportItemModel = {
+        id: number | string | null
+        title: string
+        uuid: string
+        attributes: RemoteAttributeGroup[]
+        [key: string]: unknown
+    }
 
-                    this.report_item.uuid = data.uuid;
-                    this.report_item.title = data.title;
-                    this.report_item.title_prefix = data.title_prefix;
-                    this.report_item.completed = data.completed;
+    type ApiResponse<T> = {
+        data?: T
+    }
 
-                    this.report_item.attributes = []
-                    for (let i = 0; i < data.attributes.length; i++) {
-                        let exists = false
-                        for (let k = 0; k < this.report_item.attributes.length; k++) {
-                            if (this.report_item.attributes[k].title === data.attributes[i].attribute_group_item_title) {
-                                exists = true
-                                this.report_item.attributes[k].values.push({
-                                    value: data.attributes[i].value,
-                                    index: this.report_item.attributes[k].values.length
-                                })
-                                break
-                            }
-                        }
+    const visible = ref<boolean>(false)
+    const reportItem = ref<RemoteReportItemModel>({
+        id: null,
+        title: '',
+        uuid: '',
+        attributes: []
+    })
 
-                        if (exists === false) {
-                            let attribute = {title: data.attributes[i].attribute_group_item_title, values: []}
-                            attribute.values.push({
-                                value: data.attributes[i].value,
-                                index: 0
-                            })
-                            this.report_item.attributes.push(attribute)
-                        }
-                    }
-                });
+    const normalizeReportItem = (payload: unknown, fallback: RemoteReportItemModel): RemoteReportItemModel => {
+        if (payload && typeof payload === 'object') {
+            const candidate = payload as Partial<RemoteReportItemModel>
+            if (candidate.id !== undefined && candidate.title !== undefined && candidate.uuid !== undefined) {
+                return {
+                    id: candidate.id ?? fallback.id,
+                    title: typeof candidate.title === 'string' ? candidate.title : fallback.title,
+                    uuid: typeof candidate.uuid === 'string' ? candidate.uuid : fallback.uuid,
+                    attributes: Array.isArray(candidate.attributes) ? candidate.attributes : fallback.attributes
+                }
             }
         }
+        return fallback
     }
+
+    const showDetail = async (item: RemoteReportItemModel): Promise<void> => {
+        try {
+            if (item.id == null) {
+                reportItem.value = item
+                visible.value = true
+                return
+            }
+
+            const response = (await getReportItem(item.id)) as ApiResponse<unknown> | unknown
+            const responseData =
+                response && typeof response === 'object' && 'data' in response ? (response as ApiResponse<unknown>).data : response
+
+            reportItem.value = normalizeReportItem(responseData, item)
+            visible.value = true
+        } catch {
+            // Fallback to passed item data
+            reportItem.value = item
+            visible.value = true
+        }
+    }
+
+    const handleClose = (): void => {
+        visible.value = false
+    }
+
+    defineExpose({
+        showDetail
+    })
 </script>

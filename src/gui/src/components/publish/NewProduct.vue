@@ -1,555 +1,784 @@
 <template>
-    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="add_button && canCreate" @click="addEmptyProduct">
-            <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{ $t("common.add_btn") }}</span>
-        </v-btn>
-
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible" @keydown.esc="cancel" new-product>
-            <MessageBox v-model="msgbox_close"
-                        :title="$t('confirm_close.title')"
-                        :message="$t('product.confirm_close.message')"
-                        :buttons="confirmCloseButtons"
-                        :icon="{ name: 'mdi-help-circle', color: 'warning' }"
-                        @continue="msgbox_close = false"
-                        @save="saveAndClose"
-                        @close="confirmClose" />
-
-            <v-card v-bind="UI.DIALOG.BASEMENT">
-                <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000">
-                    <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="cancel">
-                        <v-icon>{{ UI.ICON.CLOSE }}</v-icon>
+    <v-dialog
+        v-model="visible"
+        fullscreen
+        persistent
+        @keydown.esc="handleCancel"
+    >
+        <!-- Confirmation dialogs -->
+        <v-dialog
+            v-model="showCloseConfirmation"
+            max-width="500px"
+            persistent
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    {{ $t('confirm_close.title') }}
+                </v-card-title>
+                <v-card-text>{{ $t('product.confirm_close.message') }}</v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn
+                        color="primary"
+                        variant="elevated"
+                        class="confirm-btn"
+                        @click="showCloseConfirmation = false"
+                    >
+                        {{ $t('confirm_close.continue') }}
                     </v-btn>
-
-                    <v-toolbar-title>
-                        <span v-if="!edit">{{ $t("product.add_new") }}</span>
-                        <span v-else>{{ $t("product.edit") }}</span>
-                    </v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-select :key="`state-select-${product.state_id}`"
-                              :disabled="!canModify"
-                              style="padding-top: 25px; min-width: 100px; max-width: 200px"
-                              v-model="product.state_id"
-                              :items="available_states"
-                              :item-text="item => $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name"
-                              item-value="id"
-                              :label="$t('product.state')"
-                              append-icon="mdi-chevron-down"
-                              :menu-props="{ maxWidth: '300px' }"
-                              @change="updateRecord('state_id')">
-                        <template v-slot:item="{ item }">
-                            <v-list-item-avatar>
-                                <v-icon :color="item.color">{{ item.icon }}</v-icon>
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title>
-                                    {{ $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name }}
-                                </v-list-item-title>
-                            </v-list-item-content>
-                        </template>
-                    </v-select>
-                    <v-btn v-if="!edit && canModify && product.id == -1" text dark type="submit" form="form">
-                        <v-icon left>mdi-content-save</v-icon>
-                        <span>{{ $t("common.save") }}</span>
+                    <v-btn
+                        color="success"
+                        variant="elevated"
+                        class="confirm-btn"
+                        @click="saveAndClose"
+                    >
+                        {{ $t('confirm_close.save_and_close') }}
                     </v-btn>
-                </v-toolbar>
+                    <v-btn
+                        color="error"
+                        variant="elevated"
+                        class="confirm-btn"
+                        @click="confirmClose"
+                    >
+                        {{ $t('confirm_close.close') }}
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
 
-                <v-form @submit.prevent="createRecord" id="form" ref="form" class="px-4">
-                    <v-row no-gutters>
-                        <v-col cols="6" class="pr-3">
-                            <v-combobox v-on:change="productSelected"
-                                        :disabled="!canModify"
-                                        v-model="selected_type"
-                                        :items="product_types"
-                                        item-text="title"
-                                        :label="$t('product.report_type')"
-                                        name="report_type"
-                                        v-validate="'required'"
-                                        @blur="updateRecord('report_type')" />
-                        </v-col>
-                        <v-col cols="6" class="pr-3">
-                            <v-text-field :disabled="!canModify"
-                                          :label="$t('product.title')"
-                                          name="title"
-                                          type="text"
-                                          v-model="product.title"
-                                          v-validate="'required'"
-                                          data-vv-name="title"
-                                          :error-messages="errors.collect('title')"
-                                          :spellcheck="$store.state.settings.spellcheck"
-                                          @blur="updateRecord('title')" />
-                        </v-col>
-                        <v-col cols="12" class="pr-3">
-                            <v-textarea :disabled="!canModify"
-                                        :label="$t('product.description')"
-                                        name="description"
-                                        v-model="product.description"
-                                        :spellcheck="$store.state.settings.spellcheck"
-                                        @blur="updateRecord('description')" />
-                        </v-col>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-col cols="12" class="mb-2">
-                            <v-btn v-bind="UI.BUTTON.ADD_NEW_IN" v-if="canModify"
-                                   @click="$refs.report_item_selector.openSelector()">
-                                <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                                <span>{{ $t("report_item.select") }}</span>
-                            </v-btn>
-                        </v-col>
-                        <v-col cols="12">
-                            <ReportItemSelector ref="report_item_selector"
-                                                :values="report_items"
-                                                :modify="modify"
-                                                :edit="edit" />
-                        </v-col>
-                    </v-row>
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <v-checkbox v-for="preset in publisher_presets"
-                                        :key="preset.id"
-                                        :label="preset.name"
-                                        :disabled="!canModify"
-                                        v-model="preset.selected"/>
-                        </v-col>
-                    </v-row>
-                    <v-row no-gutters class="pt-4">
-                        <v-col cols="6">
-                            <v-btn depressed small @click="previewProduct($event)">
-                                <v-icon left>mdi-eye-outline</v-icon>
-                                <span>{{ $t("product.preview") }}</span>
-                            </v-btn>
-                        </v-col>
-                        <v-col cols="6">
-                            <v-btn v-if="canPublish" depressed small @click="publishConfirmation">
-                                <v-icon left>mdi-send-outline</v-icon>
-                                <span>{{ $t("product.publish") }}</span>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
+        <ConfirmationDialog
+            v-model="showPublishConfirmation"
+            title-key="product.publish_confirmation"
+            confirm-label-key="common.yes"
+            max-width="500px"
+            @confirm="handlePublish"
+        >
+            <div class="text-body-1 font-weight-bold mb-2">
+                {{ product.title }}
+            </div>
+            <div class="mb-1">
+                <span class="font-weight-medium">{{ $t('product.report_type') }}:</span>
+                {{ selectedType?.title || $t('product.no_type') }}
+            </div>
+            <div class="mb-1">
+                <span class="font-weight-medium">{{ $t('product.publisher_presets') }}:</span>
+                <span v-if="selectedPublisherPresetNames.length > 0">
+                    {{ selectedPublisherPresetNames.join(', ') }}
+                </span>
+                <span
+                    v-else
+                    class="text-grey"
+                >
+                    {{ $t('product.no_publisher_in_dialog') }}
+                </span>
+            </div>
+            <div class="text-body-2 text-grey mt-3">
+                {{ $t('product.publish_confirmation_message') }}
+            </div>
+        </ConfirmationDialog>
+
+        <v-dialog
+            v-model="showPublishUnsavedConfirmation"
+            max-width="500px"
+            persistent
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    {{ $t('product.publish_unsaved.title') }}
+                </v-card-title>
+                <v-card-text>{{ $t('product.publish_unsaved.message') }}</v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn @click="showPublishUnsavedConfirmation = false">
+                        {{ $t('product.publish_unsaved.close') }}
+                    </v-btn>
+                    <v-btn
+                        color="primary"
+                        @click="saveAndPublish"
+                    >
+                        {{ $t('product.publish_unsaved.save_and_publish') }}
+                    </v-btn>
+                    <v-btn
+                        color="error"
+                        @click="publishOnly"
+                    >
+                        {{ $t('product.publish_unsaved.publish_only') }}
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Main dialog -->
+        <v-card class="d-flex flex-column h-100">
+            <v-toolbar
+                color="primary"
+                dark
+            >
+                <v-btn
+                    icon
+                    @click="handleCancel"
+                >
+                    <v-icon>{{ ICONS.CLOSE_BOX }}</v-icon>
+                </v-btn>
+                <v-toolbar-title>
+                    {{ isEditMode ? $t('product.edit') : $t('product.add_new') }}
+                </v-toolbar-title>
+                <v-spacer />
+                <StateSelector
+                    v-if="availableStates.length > 0"
+                    :model-value="product.state_id ?? ''"
+                    :available-states="availableStates"
+                    :label="$t('product.state')"
+                    :disabled="!canModify"
+                    class="me-4"
+                    @update:model-value="handleStateChange"
+                />
+                <v-btn
+                    v-if="!isEditMode && canModify && product.id === -1"
+                    text
+                    @click="handleSave"
+                >
+                    <v-icon start>
+                        {{ ICONS.CONTENT_SAVE }}
+                    </v-icon>
+                    {{ $t('common.save') }}
+                </v-btn>
+            </v-toolbar>
+
+            <v-card-text class="pa-4 overflow-y-auto bg-background">
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="handleSave"
+                >
                     <v-row>
-                        <MessageBox v-model="msgbox_publish"
-                                    @yes="publishProduct"
-                                    @cancel="msgbox_publish = false"
-                                    :title="$t('product.publish_confirmation')"
-                                    :message="product.title"
-                                    :icon="{ name: 'mdi-help-circle', color: 'primary' }"/>
-                        <MessageBox v-model="msgbox_publish_unsaved"
-                                    :title="$t('product.publish_unsaved.title')"
-                                    :message="$t('product.publish_unsaved.message')"
-                                    :buttons="confirmPublishButtons"
-                                    :icon="{ name: 'mdi-alert-circle', color: 'warning' }"
-                                    @close="msgbox_publish_unsaved = false"
-                                    @save="saveAndPublish"
-                                    @publish="publishProduct" />
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-combobox
+                                v-model="selectedType"
+                                :items="productTypes"
+                                :item-title="(item) => item?.title || ''"
+                                :label="$t('product.report_type')"
+                                :rules="[requiredRule]"
+                                :disabled="!canModify"
+                                return-object
+                                @update:model-value="handleProductTypeChange"
+                            />
+                        </v-col>
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-text-field
+                                v-model="product.title"
+                                :label="$t('product.title')"
+                                :rules="[requiredRule]"
+                                :disabled="!canModify"
+                                @blur="handleUpdateRecord"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-textarea
+                                v-model="product.description"
+                                :label="$t('product.description')"
+                                :disabled="!canModify"
+                                rows="3"
+                                @blur="handleUpdateRecord"
+                            />
+                        </v-col>
                     </v-row>
 
-                    <v-row no-gutters class="pt-2">
+                    <!-- Report Items Section -->
+                    <v-row>
                         <v-col cols="12">
-                            <v-alert v-if="show_validation_error" dense type="error" text>
-                                {{ $t("error.validation") }}
-                            </v-alert>
-                            <v-alert v-if="show_error" dense type="error" text>
-                                {{ $t("report_item.error") }}
+                            <v-btn
+                                v-if="canModify"
+                                :prepend-icon="ICONS.PLUS"
+                                color="primary"
+                                variant="flat"
+                                class="mb-3"
+                                @click="openReportItemSelector"
+                            >
+                                {{ $t('report_item.select') }}
+                            </v-btn>
+
+                            <ReportItemSelector
+                                ref="reportItemSelector"
+                                :values="reportItems"
+                                :modify="canModify"
+                                :edit="isEditMode"
+                                :product-state-is-final="productStateIsFinal"
+                                @items-changed="handleReportItemsChanged"
+                            />
+                        </v-col>
+                    </v-row>
+
+                    <!-- Publisher Presets -->
+                    <v-row>
+                        <v-col cols="12">
+                            <div class="text-title-medium mb-2">
+                                {{ $t('product.publisher_presets') }}
+                            </div>
+                            <div v-if="publisherPresets.length > 0">
+                                <v-checkbox
+                                    v-for="preset in publisherPresets"
+                                    :key="preset.id"
+                                    v-model="preset.selected"
+                                    :label="preset.name"
+                                    :disabled="!canModify"
+                                    hide-details
+                                    density="compact"
+                                />
+                            </div>
+                            <div
+                                v-else
+                                class="text-center text-grey py-4"
+                            >
+                                {{ $t('common.no_data') }}
+                            </div>
+                        </v-col>
+                    </v-row>
+
+                    <!-- Action Buttons -->
+                    <v-row class="mt-4">
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-btn
+                                :prepend-icon="ICONS.READ_OUTLINE"
+                                color="primary"
+                                variant="flat"
+                                @click="handlePreview"
+                            >
+                                {{ $t('product.preview') }}
+                            </v-btn>
+                        </v-col>
+                        <v-col
+                            cols="12"
+                            md="6"
+                        >
+                            <v-btn
+                                v-if="canPublish"
+                                :prepend-icon="ICONS.SEND_OUTLINE"
+                                color="primary"
+                                variant="flat"
+                                @click="handlePublishConfirmation"
+                            >
+                                {{ $t('product.publish') }}
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+
+                    <!-- Error Messages -->
+                    <v-row v-if="showError">
+                        <v-col cols="12">
+                            <v-alert
+                                type="error"
+                                variant="tonal"
+                            >
+                                {{ $t('product.error') }}
                             </v-alert>
                         </v-col>
                     </v-row>
                 </v-form>
-            </v-card>
-        </v-dialog>
-    </v-row>
+            </v-card-text>
+        </v-card>
+    </v-dialog>
 </template>
 
-<script>
-    import AuthMixin from "../../services/auth/auth_mixin";
-    import {
-        createProduct, publishProduct as publishProductAPI,
-        updateProduct, previewProduct as previewProductAPI
-    } from "@/api/publish";
-    import { getEntityTypeStates } from "@/api/state";
-    import ReportItemSelector from "@/components/publish/ReportItemSelector";
-    import Permissions from "@/services/auth/permissions";
-    import MessageBox from "@/components/common/MessageBox.vue";
+<script setup lang="ts">
+    import { ref, computed, onMounted, onUnmounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useAuthStore } from '@/stores/auth'
+    import { ICONS } from '@/config/ui-constants'
+    import { createProduct, updateProduct, publishProduct, previewProduct } from '@/api/publish'
+    import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
+    import { getEntityTypeStates } from '@/api/state'
+    import { useAuth } from '@/composables/useAuth'
+    import StateSelector from '@/components/common/StateSelector.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
 
-    export default {
-        name: "NewProduct",
-        components: { ReportItemSelector, MessageBox },
-        props: { add_button: Boolean },
-        data: () => ({
-            visible: false,
-            show_validation_error: false,
-            edit: false,
-            show_error: false,
-            modify: false,
-            access: false,
-            msgbox_close: false,
-            msgbox_publish: false,
-            msgbox_publish_unsaved: false,
-            initialFormState: null,
-            confirmCloseButtons: [
-                { label: "confirm_close.continue", color: "", action: "continue" },
-                { label: "confirm_close.save_and_close", color: "primary", action: "save" },
-                { label: "confirm_close.close", color: "error", action: "close" },
-            ],
-            confirmPublishButtons: [
-                { label: "product.publish_unsaved.close", color: "", action: "close" },
-                { label: "product.publish_unsaved.save_and_publish", color: "primary", action: "save" },
-                { label: "product.publish_unsaved.publish_only", color: "error", action: "publish" },
-            ],
-            product_types: [],
-            publisher_presets: [],
-            selected_type: null,
-            report_items: [],
-            product: {
-                id: -1,
-                title: "",
-                description: "",
-                product_type_id: null,
-                state_id: null,
-                report_items: [],
-            },
-            available_states: [],
-        }),
-        mixins: [AuthMixin],
-        watch: {
-            // Remove double scrollbars on product when report items selector is open/closed
-            // This bug exist across mulitple places in Taranis (search for tag: DOUBLE_SCROLLBAR).
-            visible(val) {
-                if (val) {
-                    document.documentElement.style.overflow = "hidden";
-                } else {
-                    document.documentElement.style.overflow = "auto";
-                }
-            },
-        },
-        computed: {
-            canCreate() {
-                return this.checkPermission(Permissions.PUBLISH_CREATE);
-            },
+    type ProductModel = {
+        id: number
+        title: string
+        description: string
+        product_type_id: number | string | undefined
+        state_id: number | string | undefined
+        report_items: Array<{ id: number | string }>
+    }
 
-            canModify() {
-                return (
-                    this.edit === false ||
-                    (this.checkPermission(Permissions.PUBLISH_UPDATE) && this.modify === true)
-                );
-            },
+    type FormRef = {
+        reset?: () => void
+        validate?: () => Promise<{ valid: boolean }>
+    }
 
-            canPublish() {
-                return (
-                    this.publisher_presets.length > 0 &&
-                    (this.edit === false || (this.checkPermission(Permissions.PUBLISH_PRODUCT) && this.access === true))
-                );
-            },
-        },
-        methods: {
-            addEmptyProduct() {
-                this.visible = true;
-                this.edit = false;
-                this.show_error = false;
-                this.modify = false;
-                this.access = false;
-                this.selected_type = null;
-                this.report_items = [];
-                this.product.id = -1;
-                this.product.title = "";
-                this.product.description = "";
-                this.product.product_type_id = null;
-                this.product.report_items = [];
-                this.selectDefaultState();
-                this.resetValidation();
-            },
+    type ReportItem = {
+        id: number | string
+        [key: string]: unknown
+    }
 
-            publishConfirmation() {
-                // Check if at least one publisher is selected
-                if (!this.validatePublisherSelection()) {
-                    return;
-                }
-                // Check if there are unsaved changes (only for new products, not editing)
-                if (!this.edit && this.hasUnsavedChanges()) {
-                    this.msgbox_publish_unsaved = true;
-                } else {
-                    this.msgbox_publish = true;
-                }
-            },
+    type PublisherPreset = {
+        id: number | string
+        name: string
+        selected: boolean
+        [key: string]: unknown
+    }
 
-            prepareProduct() {
-                this.show_validation_error = false;
-                this.show_error = false;
+    type AvailableState = {
+        id: number | string
+        title?: string
+        is_default?: boolean
+        state_type?: string
+        [key: string]: unknown
+    }
 
-                this.product.product_type_id = this.selected_type.id;
+    type ProductType = {
+        id: number | string
+        title?: string
+        [key: string]: unknown
+    }
 
-                this.product.report_items = [];
-                for (let i = 0; i < this.report_items.length; i++) {
-                    this.product.report_items.push({ id: this.report_items[i].id });
-                }
-            },
+    type ProductEditPayload = {
+        id: number
+        title: string
+        description: string
+        product_type_id: number | string | undefined
+        state_id: number | string | undefined
+        report_items?: ReportItem[]
+        modify: boolean
+        access: boolean
+    }
 
-            getSelectedPublisherIds() {
-                return this.publisher_presets
-                    .filter((preset) => preset.selected)
-                    .map((preset) => preset.id);
-            },
+    const { t } = useI18n()
+    const { checkPermission } = useAuth()
+    const authStore = useAuthStore()
 
-            validatePublisherSelection() {
-                const selectedIds = this.getSelectedPublisherIds();
-                if (selectedIds.length === 0) {
-                    this.$root.$emit("notification", {
-                        type: "error",
-                        loc: "product.no_publisher_selected",
-                    });
-                    return false;
-                }
-                return true;
-            },
+    // Component state
+    const visible = ref<boolean>(false)
+    const isEditMode = ref<boolean>(false)
+    const showError = ref<boolean>(false)
+    const showCloseConfirmation = ref<boolean>(false)
+    const showPublishConfirmation = ref<boolean>(false)
+    const showPublishUnsavedConfirmation = ref<boolean>(false)
+    const initialFormState = ref<string | null>(null)
+    const formRef = ref<FormRef | null>(null)
+    const canModifyFlag = ref<boolean>(false)
+    const canAccessFlag = ref<boolean>(false)
 
-            saveAndPublish() {
-                this.msgbox_publish_unsaved = false;
+    // Form data
+    const product = ref<ProductModel>({
+        id: -1,
+        title: '',
+        description: '',
+        product_type_id: undefined,
+        state_id: undefined,
+        report_items: []
+    })
 
-                this.validateAndSave().then((ok) => {
-                    if (!ok) return;
+    const selectedType = ref<ProductType | null>(null)
+    const reportItems = ref<ReportItem[]>([])
+    const productTypes = ref<ProductType[]>([])
+    const publisherPresets = ref<PublisherPreset[]>([])
+    const availableStates = ref<AvailableState[]>([])
+    const reportItemSelector = ref<{ openSelector?: () => void } | null>(null)
 
-                    // Switch to edit mode to enable save/publish
-                    this.edit = true;
-                    this.modify = true;
-                    this.access = true;
+    // Validation rules
+    const requiredRule = (value: string | number | null | undefined): true | string => !!value || t('common.required')
 
-                    this.publishProduct()
-                });
-            },
+    // Computed properties
+    const canModify = computed(() => {
+        if (!isEditMode.value) return true
+        return checkPermission('PUBLISH_UPDATE') && canModifyFlag.value
+    })
 
-            productSelected() { },
+    const canPublish = computed(() => {
+        if (publisherPresets.value.length === 0) return false
+        if (!isEditMode.value) return true
+        return checkPermission('PUBLISH_PRODUCT') && canAccessFlag.value
+    })
 
-            cancel() {
-                // Check for unsaved changes only in create mode (not edit mode)
-                if (!this.edit && this.hasUnsavedChanges()) {
-                    this.msgbox_close = true;
-                    return;
-                }
+    // True when the product's current state is a FINAL state (e.g. published),
+    // so newly-added non-final reports will be auto-completed by the backend cascade.
+    const productStateIsFinal = computed(() => {
+        if (product.value.state_id === undefined || product.value.state_id === null) return false
+        return availableStates.value.some((s) => s.id === product.value.state_id && s.state_type === 'final')
+    })
 
-                this.closeDialog();
-            },
+    // The full names of the selected publisher presets, used in the publish dialog.
+    const selectedPublisherPresetNames = computed<string[]>(() =>
+        publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.name)
+    )
 
-            confirmClose() {
-                this.msgbox_close = false;
-                this.closeDialog();
-            },
+    // Methods
+    function resetForm() {
+        product.value = {
+            id: -1,
+            title: '',
+            description: '',
+            product_type_id: undefined,
+            state_id: undefined,
+            report_items: []
+        }
+        selectedType.value = null
+        isEditMode.value = false
+        showError.value = false
+        canModifyFlag.value = false
+        canAccessFlag.value = false
+        reportItems.value = []
+        formRef.value?.reset?.()
+        resetPublisherPresets()
+        selectDefaultState()
+        initialFormState.value = snapshotForm()
+    }
 
-            saveAndClose() {
-                this.msgbox_close = false;
-                this.createRecord();
-            },
+    function resetPublisherPresets() {
+        publisherPresets.value.forEach((preset) => {
+            preset.selected = false
+        })
+    }
 
-            closeDialog() {
-                this.resetValidation();
-                this.visible = false;
-            },
+    function snapshotForm() {
+        return JSON.stringify({
+            product: product.value,
+            selectedType: selectedType.value,
+            reportItems: reportItems.value,
+            publisherPresets: publisherPresets.value.map((p) => ({ id: p.id, selected: p.selected }))
+        })
+    }
 
-            previewProduct(event) {
-                this.$validator.validateAll().then(() => {
-                    if (this.$validator.errors.any()) {
-                        this.show_validation_error = true;
-                        return;
-                    }
+    function hasUnsavedChanges() {
+        if (initialFormState.value === null) return false
+        return snapshotForm() !== initialFormState.value
+    }
 
-                    this.prepareProduct();
+    function selectDefaultState() {
+        if (!availableStates.value || availableStates.value.length === 0) return
+        const defaultState = availableStates.value.find((state) => state.is_default)
+        if (defaultState) {
+            product.value.state_id = defaultState.id
+        }
+    }
 
-                    // Call the preview API - it always generates a fresh preview and returns a token
-                    const ctrl = Boolean(event && event.ctrlKey);
-                    previewProductAPI(this.product, ctrl, this.$store.getters.getJWT)
-                        .then((response) => {
-                            // Get the token from response
-                            const token = response.data.token;
+    function handleProductTypeChange(): void {
+        if (selectedType.value) {
+            product.value.product_type_id = selectedType.value.id
+            handleUpdateRecord()
+        }
+    }
 
-                            // Build the preview URL with the token
-                            const apiBase =
-                                typeof process.env.VUE_APP_TARANIS_NG_CORE_API == "undefined"
-                                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                                    : process.env.VUE_APP_TARANIS_NG_CORE_API;
-                            const previewUrl = `${apiBase}/publish/products/preview/${token}`;
-                            // Open the preview URL in a new tab
-                            window.open(previewUrl, "_blank");
+    function prepareProduct(): void {
+        showError.value = false
+        product.value.product_type_id = selectedType.value?.id
+        product.value.report_items = reportItems.value.map((item) => ({ id: item.id }))
+    }
 
-                            // Reset validation errors but preserve initial form state for unsaved changes detection
-                            this.$validator.reset();
-                            this.show_validation_error = false;
-                        })
-                        .catch((error) => {
-                            // eslint-disable-next-line no-console
-                            console.error("Preview failed:", error);
-                            this.show_error = true;
-                        });
-                });
-            },
+    function openReportItemSelector(): void {
+        reportItemSelector.value?.openSelector?.()
+    }
 
-            publishProduct() {
-                this.msgbox_publish = false;
-                this.msgbox_publish_unsaved = false;
+    async function handleReportItemsChanged(items: ReportItem[]): Promise<void> {
+        reportItems.value = Array.isArray(items) ? [...items] : []
 
-                this.$validator.validateAll().then(() => {
-                    if (this.$validator.errors.any()) {
-                        this.show_validation_error = true;
-                        return;
-                    }
+        if (isEditMode.value && product.value.id !== -1) {
+            await handleUpdateRecord()
+        }
+    }
 
-                    this.prepareProduct();
-                    const selectedPublisherIds = this.getSelectedPublisherIds();
+    function getSelectedPublisherIds(): Array<number | string> {
+        return publisherPresets.value.filter((preset) => preset.selected).map((preset) => preset.id)
+    }
 
-                    publishProductAPI(this.product, selectedPublisherIds)
-                        .then((response) => {
-                            if (response.data.overall_success) {
-                                this.$root.$emit("notification", { type: "success", loc: "product.publish_successful" });
-                            } else {
-                                this.$root.$emit("notification", { type: "error", loc: "product.publish_failed" });
-                            }
-                        })
-                        .catch(() => {
-                            this.show_error = true;
-                            this.$root.$emit("notification", { type: "error", loc: "product.publish_error" });
-                        });
-                });
-            },
+    function validatePublisherSelection(): boolean {
+        const selectedIds = getSelectedPublisherIds()
+        if (selectedIds.length === 0) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'product.no_publisher_selected' }
+                })
+            )
+            return false
+        }
+        return true
+    }
 
-            validateAndSave() {
-                return this.$validator.validateAll().then(() => {
-                    if (this.$validator.errors.any()) {
-                        this.show_validation_error = true;
-                        return false;
-                    }
+    async function handleSave(): Promise<boolean> {
+        const validate = formRef.value?.validate
+        if (!validate) {
+            return false
+        }
+        const { valid } = (await validate()) || { valid: false }
+        if (!valid) return false
 
-                    this.prepareProduct();
+        prepareProduct()
 
-                    let savePromise;
+        try {
+            if (product.value.id === -1) {
+                const response = await createProduct(product.value)
+                product.value.id = response.data
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: { type: 'success', loc: 'product.created_successfully' }
+                    })
+                )
+            } else {
+                await updateProduct(product.value)
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: { type: 'success', loc: 'product.updated_successfully' }
+                    })
+                )
+            }
+            window.dispatchEvent(new CustomEvent('product-updated'))
+            initialFormState.value = snapshotForm()
+            return true
+        } catch {
+            showError.value = true
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'product.error' }
+                })
+            )
+            return false
+        }
+    }
 
-                    if (this.product.id === -1) {
-                        savePromise = createProduct(this.product).then((response) => {
-                            this.product.id = response.data;
-                            this.$root.$emit("product-updated");
-                        });
-                    } else {
-                        savePromise = updateProduct(this.product).then(() => {
-                            // Notify that product was updated so the product list refreshes
-                            this.$root.$emit("product-updated");
-                        });
-                    }
+    function handleStateChange(newStateId: number | string | null): void {
+        // StateSelector is bound one-way via :model-value, so we must write the
+        // selected id back into the product before persisting.
+        product.value.state_id = newStateId ?? undefined
+        handleUpdateRecord()
+    }
 
-                    return savePromise
-                        .then(() => {
-                            this.resetValidation();
-                            return true;
-                        })
-                        .catch(() => {
-                            this.show_error = true;
-                            return false;
-                        });
-                });
-            },
+    async function handleUpdateRecord(): Promise<void> {
+        if (!isEditMode.value || product.value.id === -1) return
 
-            createRecord() {
-                this.validateAndSave().then((ok) => {
-                    if (!ok) return;
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
+        if (!valid) return
 
-                    this.visible = false;
-                });
-            },
+        prepareProduct()
 
-            updateRecord() {
-                if (!this.edit && this.product.id === -1) return;
-                this.validateAndSave().then((ok) => {
-                    if (!ok) return;
-                });
-            },
+        try {
+            await updateProduct(product.value)
+            window.dispatchEvent(new CustomEvent('product-updated'))
+            initialFormState.value = snapshotForm()
+        } catch {
+            showError.value = true
+        }
+    }
 
-            resetValidation() {
-                this.$validator.reset();
-                this.show_validation_error = false;
-                this.initialFormState = this.snapshotForm();
-            },
+    function handleCancel(): void {
+        if (!isEditMode.value && hasUnsavedChanges()) {
+            showCloseConfirmation.value = true
+            return
+        }
+        closeDialog()
+    }
 
-            async loadAvailableStates() {
-                try {
-                    const response = await getEntityTypeStates("product");
-                    this.available_states = response.data.states;
-                } catch (error) {
-                    // eslint-disable-next-line no-console
-                    console.error("Failed to load available states for PRODUCT:", error);
-                    this.available_states = [];
-                }
-            },
+    function confirmClose(): void {
+        showCloseConfirmation.value = false
+        closeDialog()
+    }
 
-            selectDefaultState() {
-                if (!this.available_states) return;
+    async function saveAndClose(): Promise<void> {
+        showCloseConfirmation.value = false
+        const saved = await handleSave()
+        if (saved) {
+            closeDialog()
+        }
+    }
 
-                const defaultState = this.available_states.find((state) => state.is_default);
-                if (defaultState) {
-                    this.product.state_id = defaultState.id;
-                }
-            },
+    function closeDialog(): void {
+        visible.value = false
+        resetForm()
+    }
 
-            snapshotForm() {
-                return JSON.stringify({
-                    product: this.product,
-                    selected_type: this.selected_type,
-                    report_items: this.report_items,
-                });
-            },
+    function handlePublishConfirmation(): void {
+        if (!validatePublisherSelection()) return
 
-            hasUnsavedChanges() {
-                if (this.initialFormState !== null) {
-                    return this.snapshotForm() !== this.initialFormState;
-                }
-                return false;
-            },
-        },
+        if (!isEditMode.value && hasUnsavedChanges()) {
+            showPublishUnsavedConfirmation.value = true
+        } else {
+            showPublishConfirmation.value = true
+        }
+    }
 
-        mounted() {
-            this.loadAvailableStates();
+    async function handlePublish(): Promise<void> {
+        showPublishConfirmation.value = false
 
-            this.$root.$on("new-product", (data) => {
-                this.visible = true;
-                this.selected_type = null;
-                this.report_items = data;
-                this.product.id = -1;
-            });
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
+        if (!valid) return
 
-            this.$store.dispatch("getAllUserProductTypes", { search: "" }).then(() => {
-                this.product_types = this.$store.getters.getProductTypes.items;
-            });
+        prepareProduct()
+        const selectedPublisherIds = getSelectedPublisherIds()
 
-            this.$store.dispatch("getAllUserPublishersPresets", { search: "" }).then(() => {
-                this.publisher_presets = this.$store.getters.getProductsPublisherPresets.items;
-                for (let i = 0; i < this.publisher_presets.length; i++) {
-                    this.publisher_presets[i].selected = false;
-                }
-            });
+        try {
+            const response = await publishProduct(product.value, selectedPublisherIds)
+            if (response.data.overall_success) {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: { type: 'success', loc: 'product.publish_successful' }
+                    })
+                )
+            } else {
+                window.dispatchEvent(
+                    new CustomEvent('notification', {
+                        detail: { type: 'error', loc: 'product.publish_failed' }
+                    })
+                )
+            }
+        } catch {
+            showError.value = true
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'product.publish_error' }
+                })
+            )
+        }
+    }
 
-            this.$root.$on("show-product-edit", (data) => {
-                this.initialFormState = null;
-                this.visible = true;
-                this.edit = true;
-                this.modify = data.modify;
-                this.access = data.access;
-                this.show_error = false;
+    async function saveAndPublish(): Promise<void> {
+        showPublishUnsavedConfirmation.value = false
+        const saved = await handleSave()
+        if (saved) {
+            isEditMode.value = true
+            canModifyFlag.value = true
+            canAccessFlag.value = true
+            showPublishConfirmation.value = true
+        }
+    }
 
-                this.selected_type = null;
-                this.report_items = data.report_items;
+    function publishOnly(): void {
+        showPublishUnsavedConfirmation.value = false
+        handlePublish()
+    }
 
-                this.product.id = data.id;
-                this.product.title = data.title;
-                this.product.description = data.description;
-                this.product.product_type_id = data.product_type_id;
-                this.product.state_id = data.state_id;
+    async function handlePreview(event?: MouseEvent): Promise<void> {
+        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
+        if (!valid) return
 
-                for (let i = 0; i < this.product_types.length; i++) {
-                    if (this.product_types[i].id === this.product.product_type_id) {
-                        this.selected_type = this.product_types[i];
-                        break;
-                    }
-                }
-            });
-        },
+        prepareProduct()
 
-        beforeDestroy() {
-            this.$root.$off("new-product");
-            this.$root.$off("show-product-edit");
-        },
-    };
+        try {
+            const ctrl = Boolean(event && event.ctrlKey)
+            const response = await previewProduct(product.value, ctrl, authStore.jwt)
+            const token = response.data.token
+
+            const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
+            const previewUrl = `${apiBase}/publish/products/preview/${token}`
+            // Open the preview URL in a new tab
+            window.open(previewUrl, '_blank')
+        } catch (error: unknown) {
+            console.error('Preview failed:', error)
+            showError.value = true
+        }
+    }
+
+    async function loadAvailableStates() {
+        try {
+            const response = await getEntityTypeStates('product')
+            availableStates.value = response.data.states || []
+            selectDefaultState()
+        } catch (error: unknown) {
+            console.error('Failed to load available states for PRODUCT:', error)
+            availableStates.value = []
+        }
+    }
+
+    async function loadProductTypes() {
+        try {
+            const response = await getAllUserProductTypes()
+            productTypes.value = response.data.items || []
+        } catch (error: unknown) {
+            console.error('Failed to load product types:', error)
+        }
+    }
+
+    async function loadPublisherPresets() {
+        try {
+            const response = await getAllUserPublishersPresets()
+            publisherPresets.value = (response.data.items || []).map((preset) => ({
+                ...preset,
+                selected: false
+            }))
+        } catch (error: unknown) {
+            console.error('Failed to load publisher presets:', error)
+        }
+    }
+
+    // Public methods for opening dialog
+    function openDialog(): void {
+        visible.value = true
+        resetForm()
+    }
+
+    function openEditDialog(data: ProductEditPayload): void {
+        visible.value = true
+        isEditMode.value = true
+        canModifyFlag.value = data.modify
+        canAccessFlag.value = data.access
+        showError.value = false
+
+        product.value = {
+            id: data.id,
+            title: data.title,
+            description: data.description,
+            product_type_id: data.product_type_id,
+            state_id: data.state_id,
+            report_items: data.report_items || []
+        }
+
+        reportItems.value = Array.isArray(data.report_items) ? [...data.report_items] : []
+        selectedType.value = productTypes.value.find((type) => type.id === data.product_type_id) || null
+        initialFormState.value = snapshotForm()
+    }
+
+    // Event listeners
+    const handleNewProduct = (event: Event): void => {
+        const data = (event as CustomEvent<unknown>).detail
+        openDialog()
+        if (data && Array.isArray(data)) {
+            reportItems.value = [...(data as ReportItem[])]
+        }
+    }
+
+    const handleShowProductEdit = (event: Event): void => {
+        const data = (event as CustomEvent<unknown>).detail
+        if (data && typeof data === 'object') {
+            openEditDialog(data as ProductEditPayload)
+        }
+    }
+
+    onMounted(() => {
+        loadAvailableStates()
+        loadProductTypes()
+        loadPublisherPresets()
+        window.addEventListener('new-product', handleNewProduct)
+        window.addEventListener('show-product-edit', handleShowProductEdit)
+    })
+
+    onUnmounted(() => {
+        window.removeEventListener('new-product', handleNewProduct)
+        window.removeEventListener('show-product-edit', handleShowProductEdit)
+    })
+
+    // Expose methods for parent components
+    defineExpose({
+        openDialog,
+        openEditDialog
+    })
 </script>
+
+<style scoped>
+    .v-toolbar :deep(.v-select) {
+        margin-top: 8px;
+    }
+
+    /* Keep the unsaved-changes dialog button labels white regardless of theme on-* colors. */
+    .confirm-btn,
+    .confirm-btn :deep(.v-btn__content) {
+        color: #fff !important;
+    }
+</style>

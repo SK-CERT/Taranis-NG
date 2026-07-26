@@ -1,51 +1,84 @@
 <template>
-    <v-container fluid>
-        <v-tabs v-model="activeTab" background-color="transparent" color="primary">
-            <v-tab>{{ $t('workflow.states_tab') }}</v-tab>
-            <v-tab>{{ $t('workflow.state_workflow_tab') }}</v-tab>
-            <v-tab>{{ $t('workflow.tags_tab') }}</v-tab>
-            <v-tab>{{ $t('workflow.tag_workflow_tab') }}</v-tab>
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <v-tabs
+            v-model="activeTab"
+            bg-color="transparent"
+            color="primary"
+        >
+            <v-tab
+                value="states"
+                :title="t('workflow.states.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.STATE_MACHINE"
+                    start
+                />
+                {{ t('workflow.states_tab') }}
+            </v-tab>
+            <v-tab
+                value="state-workflow"
+                :title="t('workflow.state_workflow.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.SITEMAP"
+                    start
+                />
+                {{ t('workflow.state_workflow_tab') }}
+            </v-tab>
+            <v-tab
+                value="tags"
+                :title="t('workflow.tags.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.TAG_MULTIPLE"
+                    start
+                />
+                {{ t('workflow.tags_tab') }}
+            </v-tab>
+            <v-tab
+                value="tag-workflow"
+                :title="t('workflow.tag_workflow.tab_description')"
+            >
+                <v-icon
+                    :icon="ICONS.TAG_ARROW_RIGHT"
+                    start
+                />
+                {{ t('workflow.tag_workflow_tab') }}
+            </v-tab>
         </v-tabs>
 
-        <v-tabs-items v-model="activeTab">
-            <!-- activeTab = 0 -> mounts/demounts tab -> fetch always new data on tab switch -->
-            <v-tab-item>
-                <StatesTab v-if="activeTab === 0" />
-            </v-tab-item>
+        <v-window v-model="activeTab">
+            <v-window-item value="states">
+                <StatesTab v-if="activeTab === 'states'" />
+            </v-window-item>
 
-            <v-tab-item>
-                <StateWorkflowTab v-if="activeTab === 1" />
-            </v-tab-item>
+            <v-window-item value="state-workflow">
+                <StateWorkflowTab v-if="activeTab === 'state-workflow'" />
+            </v-window-item>
 
-            <v-tab-item>
-                <TagsTab v-if="activeTab === 2" />
-            </v-tab-item>
+            <v-window-item value="tags">
+                <TagsTab v-if="activeTab === 'tags'" />
+            </v-window-item>
 
-            <v-tab-item>
-                <TagWorkflowTab v-if="activeTab === 3" />
-            </v-tab-item>
-        </v-tabs-items>
+            <v-window-item value="tag-workflow">
+                <TagWorkflowTab v-if="activeTab === 'tag-workflow'" />
+            </v-window-item>
+        </v-window>
     </v-container>
 </template>
 
-<script>
-import StatesTab from "@/components/config/workflow/StatesTab.vue";
-import StateWorkflowTab from "@/components/config/workflow/StateWorkflowTab.vue";
-import TagsTab from "@/components/config/workflow/TagsTab.vue";
-import TagWorkflowTab from "@/components/config/workflow/TagWorkflowTab.vue";
+<script setup lang="ts">
+    import { useI18n } from 'vue-i18n'
+    import { useTabQuery } from '@/composables/useTabQuery'
+    import { ICONS } from '@/config/ui-constants'
+    import StatesTab from '@/components/config/workflow/StatesTab.vue'
+    import StateWorkflowTab from '@/components/config/workflow/StateWorkflowTab.vue'
+    import TagsTab from '@/components/config/workflow/TagsTab.vue'
+    import TagWorkflowTab from '@/components/config/workflow/TagWorkflowTab.vue'
 
-export default {
-    name: "WorkflowView",
-    components: {
-        StatesTab,
-        StateWorkflowTab,
-        TagsTab,
-        TagWorkflowTab
-    },
-    data() {
-        return {
-            activeTab: 0
-        };
-    }
-}
+    const { t } = useI18n()
+    const activeTab = useTabQuery(['states', 'state-workflow', 'tags', 'tag-workflow'], 'states')
 </script>

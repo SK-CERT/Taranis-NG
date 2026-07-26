@@ -2,7 +2,7 @@
 """Start backend services for Taranis-NG E2E testing (cross-platform).
 
 This is the command the Playwright ``webServer`` boots (see
-``src/gui-v3/playwright.config.js`` and ``src/gui-v3/playwright.ui.config.js``).
+``src/gui/playwright.config.js`` and ``src/gui/playwright.ui.config.js``).
 It replaces the former ``scripts/test-setup.sh`` so the same setup works on
 Windows, macOS and Linux without bash (Git Bash, WSL) on Windows.
 

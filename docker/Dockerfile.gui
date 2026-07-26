@@ -1,20 +1,19 @@
 # build stage
 FROM node:lts-alpine AS build-stage
 
-RUN npm install -g @vue/cli-service
-
 WORKDIR /app
 COPY ./src/gui/package*.json ./
-COPY ./src/gui/git-info.js ./
+COPY ./src/gui/scripts ./scripts
+COPY ./src/gui/eslint.config.js .
+COPY ./src/gui/vite.config.js .
 COPY ./.git ./.git
+COPY ./VERSION.md .
 RUN apk add --no-cache git
-
 RUN npm install
+COPY ./src/gui/index.html .
 COPY ./src/gui/public /app/public
 COPY ./src/gui/src /app/src
-COPY ./src/gui/babel.config.js .
 
-ENV NODE_OPTIONS="--openssl-legacy-provider"
 RUN npm run build
 
 # production stage

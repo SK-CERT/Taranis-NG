@@ -6,8 +6,7 @@ is the canonical source; the derived locations are:
 - `pyproject.toml` (root), `src/shared/pyproject.toml` — `[project] version`
 - `src/{bots,collectors,core,presenters,publishers}/pyproject.toml` —
   `[project] version` **and** the `taranis-ng-shared==X` dependency pin
-- `src/gui/package.json` + `package-lock.json`, `src/gui-v3/package.json` +
-  `package-lock.json` — root-package `version` fields
+- `src/gui/package.json` + `package-lock.json` — root-package `version` fields
 
 ```bash
 # Cut a new release version: rewrites VERSION.md + all pins above, then
@@ -23,7 +22,7 @@ python3 scripts/bump_version.py --check
 
 The `--check` mode runs on every commit through the `check-version-lockstep`
 pre-commit hook, so a partial manual bump is blocked before it lands. The
-gui-v3 build metadata (`src/gui-v3/scripts/update-version.cjs`) reads
+GUI build metadata (`src/gui/scripts/update-version.cjs`) reads
 `VERSION.md` at build time (falling back to `package.json`), so it needs no
 separate pin.
 

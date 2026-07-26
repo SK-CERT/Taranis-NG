@@ -4,8 +4,6 @@
   tasks:
   roles:
   - name: taranis-ng-os-basic
-  - name: taranis-ng-build-gui
-  - name: taranis-ng-deploy-gui
   - name: taranis-ng-core
   - name: taranis-ng-hosts-file
     vars:

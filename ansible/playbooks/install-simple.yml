@@ -6,8 +6,6 @@
 
   roles:
   - name: taranis-ng-os-basic # basic OS setup
-  - name: taranis-ng-build-gui # build a gui
-  - name: taranis-ng-deploy-gui # deploy a gui (freely replace or amend)
   - name: taranis-ng-core # build and deploy API and all the rest
   - name: taranis-ng-hosts-file
     vars:

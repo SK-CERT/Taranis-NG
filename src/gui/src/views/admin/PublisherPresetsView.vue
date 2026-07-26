@@ -1,67 +1,101 @@
 <template>
-    <ViewLayout>
-        <template v-slot:panel>
-            <ToolbarFilter title='nav_menu.publisher_presets' total_count_title="publisher_preset.total_count"
-                           total_count_getter="getPublisherPresets">
-                <template v-slot:addbutton>
-                    <NewPublisherPreset/>
-                </template>
-            </ToolbarFilter>
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <!-- Toolbar -->
+        <ToolbarFilter
+            :total-count="configStore.publisherPresets.total_count"
+            total-count-title="publishers.presets.total_count"
+            @update-filter="handleFilterUpdate"
+        >
+            <template #addbutton>
+                <NewPublisherPreset
+                    :edit-item="editItem"
+                    @saved="handleSaved"
+                />
+            </template>
+        </ToolbarFilter>
 
-        </template>
-        <template v-slot:content>
-            <ContentData
-                    name = "PublisherPresets"
-                    cardItem="CardPreset"
-                    action="getAllPublisherPresets"
-                    getter="getPublisherPresets"
-                    deletePermission="CONFIG_PUBLISHER_PRESET_DELETE"
-            />
-        </template>
-    </ViewLayout>
+        <!-- Content -->
+        <ContentData
+            :items="configStore.publisherPresets.items"
+            card-item="CardCompact"
+            delete-permission="CONFIG_PUBLISHER_PRESET_DELETE"
+            :loading="loading"
+            @delete="handleDelete"
+            @edit="handleEdit"
+            @refresh="loadData"
+        />
+    </v-container>
 </template>
 
-<script>
-    import ViewLayout from "../../components/layouts/ViewLayout";
-    import NewPublisherPreset from "@/components/config/publisher_presets/NewPublisherPreset";
-    import ToolbarFilter from "../../components/common/ToolbarFilter";
-    import ContentData from "../../components/common/content/ContentData"
-    import {deletePublisherPreset} from "@/api/config";
+<script setup lang="ts">
+    import { ref, onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useConfigStore } from '@/stores/config'
+    import { deletePublisherPreset } from '@/api/config'
+    import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
+    import ContentData from '@/components/common/ContentData.vue'
+    import NewPublisherPreset from '@/components/config/publishers/NewPublisherPreset.vue'
 
-    export default {
-        name: "PublisherPresets",
-        components: {
-            ViewLayout,
-            ToolbarFilter,
-            ContentData,
-            NewPublisherPreset
-        },
-        data: () => ({
-        }),
-        mounted() {
-            this.$root.$on('delete-item', (item) => {
-                deletePublisherPreset(item).then(() => {
+    const { t } = useI18n()
+    const configStore = useConfigStore()
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'success',
-                            loc: 'publisher_preset.removed'
-                        }
-                    )
-                }).catch(() => {
+    type FilterState = {
+        search: string
+    }
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'error',
-                            loc: 'publisher_preset.removed_error'
-                        }
-                    )
-                })
-            });
-        },
-        beforeDestroy() {
-            this.$root.$off('delete-item')
+    type PublisherPresetItem = {
+        id?: string | number | null
+        name?: string
+        description?: string
+        use_for_notifications?: boolean
+        publisher_id?: string | number | null
+        parameter_values?: unknown[]
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<PublisherPresetItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
+        loading.value = true
+        try {
+            await configStore.loadPublisherPresets(filter.value)
+        } catch (error) {
+            console.error('Error loading publisher presets:', error)
+        } finally {
+            loading.value = false
         }
-    };
+    }
 
+    const handleFilterUpdate = (newFilter: FilterState): void => {
+        filter.value = newFilter
+        loadData()
+    }
+
+    const handleDelete = async (preset: PublisherPresetItem): Promise<void> => {
+        try {
+            await deletePublisherPreset(preset)
+            console.log('Publisher preset deleted successfully')
+            await loadData()
+        } catch (error) {
+            console.error('Error deleting publisher preset:', error)
+        }
+    }
+
+    const handleEdit = (item: PublisherPresetItem): void => {
+        editItem.value = item
+    }
+
+    const handleSaved = (): void => {
+        editItem.value = null
+        loadData()
+    }
+
+    onMounted(() => {
+        loadData()
+    })
 </script>

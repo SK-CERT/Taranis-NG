@@ -197,12 +197,12 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 
 ### `gui`
 
-| Environment variable          | Description | Example |
-|-------------------------------|-------------|----------|
-| `VUE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
-| `VUE_APP_TARANIS_NG_CORE_SSE` | URL of the Taranis NG SSE endpoint. | `http://127.0.0.1:8080/sse` |
-| `VUE_APP_TARANIS_NG_URL`      | URL of the Taranis NG frontend. | `http://127.0.0.1` |
-| `VUE_APP_TARANIS_NG_LOCALE`   | Application locale. | `en` |
+| Environment variable            | Description | Example |
+|---------------------------------|-------------|----------|
+| `VITE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
+| `VITE_APP_TARANIS_NG_CORE_SSE` | URL of the Taranis NG SSE endpoint. | `http://127.0.0.1:8080/sse` |
+| `VITE_APP_TARANIS_NG_URL`      | URL of the Taranis NG frontend. | `http://127.0.0.1` |
+| `VITE_APP_TARANIS_NG_LOCALE`   | Application locale. | `en` |
 | `NGINX_WORKERS`               | Number of NginX worker threads to spawn. | `4` |
 | `NGINX_CONNECTIONS`           | Maximum number of allowed connections per one worker thread. | `16` |
 

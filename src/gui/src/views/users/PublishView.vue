@@ -1,56 +1,67 @@
 <template>
     <ViewLayout>
-        <template v-slot:panel>
-            <ToolbarFilterPublish title='nav_menu.products' total_count_title="product.total_count">
-                <template v-slot:addbutton>
-                    <NewProduct add_button/>
-                </template>
-            </ToolbarFilterPublish>
+        <template #panel>
+            <ToolbarFilterPublish
+                ref="toolbarFilter"
+                title="nav_menu.products"
+                total-count-title="toolbar_filter.total_count"
+                :show-add-button="canCreateProduct"
+                @add-new="handleAddNew"
+            />
         </template>
-        <template v-slot:content>
-            <ContentDataPublish/>
+        <template #content>
+            <ContentDataPublish
+                ref="contentRef"
+                :selection="publishStore.getSelection"
+                @update-showing-count="updateShowingCount"
+            />
         </template>
     </ViewLayout>
+
+    <NewProduct ref="newProductRef" />
 </template>
 
-<script>
-    import ViewLayout from "../../components/layouts/ViewLayout";
-    import ToolbarFilterPublish from "../../components/publish/ToolbarFilterPublish";
-    import ContentDataPublish from "../../components/publish/ContentDataPublish";
-    import NewProduct from "@/components/publish/NewProduct";
-    import {deleteProduct} from "@/api/publish";
+<script setup lang="ts">
+    import { ref, computed, onMounted, nextTick } from 'vue'
+    import { onBeforeRouteLeave } from 'vue-router'
+    import { usePublishStore } from '@/stores/publish'
+    import { useAuth } from '@/composables/useAuth'
+    import ViewLayout from '@/components/layouts/ViewLayout.vue'
+    import ToolbarFilterPublish from '@/components/publish/ToolbarFilterPublish.vue'
+    import ContentDataPublish from '@/components/publish/ContentDataPublish.vue'
+    import NewProduct from '@/components/publish/NewProduct.vue'
 
-    export default {
-        name: "Publish",
-        components: {
-            ViewLayout,
-            ToolbarFilterPublish,
-            ContentDataPublish,
-            NewProduct
-        },
-        mounted() {
-            this.$root.$on('delete-product', (item) => {
-                deleteProduct(item).then(() => {
+    const publishStore = usePublishStore()
+    const { checkPermission } = useAuth()
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'success',
-                            loc: 'product.removed'
-                        }
-                    )
-                }).catch(() => {
+    const newProductRef = ref<any>(null)
+    const contentRef = ref<any>(null)
+    const toolbarFilter = ref<any>(null)
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'error',
-                            loc: 'product.removed_error'
-                        }
-                    )
-                })
-            });
-        },
-        beforeDestroy() {
-            this.$root.$off('delete-product')
+    const canCreateProduct = computed(() => checkPermission('PUBLISH_CREATE'))
+
+    const handleAddNew = (): void => {
+        if (newProductRef.value) {
+            newProductRef.value.openDialog()
         }
-    };
+    }
+
+    const updateShowingCount = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateShowingCount(count)
+        }
+    }
+
+    onMounted(async () => {
+        if (publishStore.pendingNewProduct) {
+            const items = publishStore.pendingNewProduct
+            publishStore.pendingNewProduct = null
+            await nextTick()
+            window.dispatchEvent(new CustomEvent('new-product', { detail: items }))
+        }
+    })
+
+    onBeforeRouteLeave(() => {
+        publishStore.multiSelect(false)
+    })
 </script>
