@@ -1,0 +1,56 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "NGINX",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://support.apis.f5.com/articles/rss/v4/feed?apikey=aIy8F8CUfdgqXPv6pHJ0RU64GQiYiyUK&page=1&results=10&source=kbarticles&source=techcomm&source=xctechdocs&product=NGINX%20Products&productVersionField=f5_nginx_products&documentType=Security%20Advisory&lastPublishedDateStart=2026-01-20&firstPublishedDateEnd=2026-01-20&requestid=d49a358e-f852-4a16-8b23-11e82b7b589b",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,158 @@
+{
+    "version": 1,
+    "data": [
+        {
+            "name": "Apache",
+            "description": "",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "https://httpd.apache.org/security/vulnerabilities_24.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "xpath://dt",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                },
+                {
+                    "value": "728",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "1000",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "xpath:.//h3",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "No",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "xpath:.//following::dd",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "365",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                }
+            ]
+        }
+    ]
+}
