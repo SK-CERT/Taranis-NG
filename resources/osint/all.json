@@ -2,6 +2,159 @@
     "version": 1,
     "data": [
         {
+            "name": "AMD Security Bulletins and Briefs",
+            "description": "",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "https://www.amd.com/en/resources/product-security.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "no",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody a",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:h1",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:h2 + p",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "6",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "360",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                }
+            ]
+        },
+        {
             "name": "AWS Latest Bulletins",
             "description": "Amazon Web Services Security Bulletins",
             "collector": {
@@ -321,6 +474,312 @@
                     "value": "False",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Android Security Bulletins",
+            "description": "",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "https://source.android.com/docs/security/bulletin/asb-overview",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "no",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:tbody tr td:first-child a",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "2",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "css:h1",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "css:.devsite-article-body",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "365",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Apache",
+            "description": "",
+            "collector": {
+                "type": "WEB_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "https://httpd.apache.org/security/vulnerabilities_24.html",
+                    "parameter": {
+                        "key": "WEB_URL"
+                    }
+                },
+                {
+                    "value": "firefox",
+                    "parameter": {
+                        "key": "WEBDRIVER"
+                    }
+                },
+                {
+                    "value": "xpath://dt",
+                    "parameter": {
+                        "key": "SINGLE_ARTICLE_LINK_SELECTOR"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_USERNAME"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTH_PASSWORD"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "CLIENT_CERT_DIR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "POPUP_CLOSE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "LOAD_MORE_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PAGINATION_LIMIT"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ARTICLE_DESCRIPTION_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "AUTHOR_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PUBLISHED_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ATTACHMENT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "ADDITIONAL_ID_SELECTOR"
+                    }
+                },
+                {
+                    "value": "728",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "NEXT_BUTTON_SELECTOR"
+                    }
+                },
+                {
+                    "value": "1000",
+                    "parameter": {
+                        "key": "WORD_LIMIT"
+                    }
+                },
+                {
+                    "value": "xpath:.//h3",
+                    "parameter": {
+                        "key": "TITLE_SELECTOR"
+                    }
+                },
+                {
+                    "value": "No",
+                    "parameter": {
+                        "key": "TOR"
+                    }
+                },
+                {
+                    "value": "xpath:.//following::dd",
+                    "parameter": {
+                        "key": "ARTICLE_FULL_TEXT_SELECTOR"
+                    }
+                },
+                {
+                    "value": "365",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
                     }
                 }
             ]
@@ -821,6 +1280,57 @@
             ]
         },
         {
+            "name": "Drupal",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://www.drupal.org/security/rss.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
             "name": "F5 Labs All",
             "description": "RSS for all F5 Labs content",
             "collector": {
@@ -1120,6 +1630,108 @@
                 },
                 {
                     "value": "False",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GitLab",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://about.gitlab.com/security-releases.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Google Chrome",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://chromereleases.googleblog.com/feeds/posts/default?alt=rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
                     "parameter": {
                         "key": "PREFER_SCRAPING"
                     }
@@ -1484,6 +2096,57 @@
             ]
         },
         {
+            "name": "Joomla",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://developer.joomla.org/security-centre.feed?type=rss",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Juniper Security Advisories",
             "description": "These are the 40 most recently published articles",
             "collector": {
@@ -1586,6 +2249,108 @@
             ]
         },
         {
+            "name": "MikroTik Security Advisories",
+            "description": "MikroTik Security Advisories",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "https://blog.mikrotik.com/rss/?cat=security",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NGINX",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://support.apis.f5.com/articles/rss/v4/feed?apikey=aIy8F8CUfdgqXPv6pHJ0RU64GQiYiyUK&page=1&results=10&source=kbarticles&source=techcomm&source=xctechdocs&product=NGINX%20Products&productVersionField=f5_nginx_products&documentType=Security%20Advisory&lastPublishedDateStart=2026-01-20&firstPublishedDateEnd=2026-01-20&requestid=d49a358e-f852-4a16-8b23-11e82b7b589b",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "10",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
+                    }
+                }
+            ]
+        },
+        {
             "name": "NVIDIA Product Security Notifications",
             "description": "NVIDIA Security Bulletins and Notices available at https://www.nvidia.com/en-us/security/",
             "collector": {
@@ -1650,6 +2415,57 @@
                     "value": "30",
                     "parameter": {
                         "key": "WARNING_INTERVAL"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Node.js",
+            "description": "",
+            "collector": {
+                "type": "RSS_COLLECTOR"
+            },
+            "parameter_values": [
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "WARNING_INTERVAL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "PROXY_SERVER"
+                    }
+                },
+                {
+                    "value": "180",
+                    "parameter": {
+                        "key": "REFRESH_INTERVAL"
+                    }
+                },
+                {
+                    "value": "https://nodejs.org/en/feed/vulnerability.xml",
+                    "parameter": {
+                        "key": "FEED_URL"
+                    }
+                },
+                {
+                    "value": "",
+                    "parameter": {
+                        "key": "USER_AGENT"
+                    }
+                },
+                {
+                    "value": "30",
+                    "parameter": {
+                        "key": "LINKS_LIMIT"
+                    }
+                },
+                {
+                    "value": "false",
+                    "parameter": {
+                        "key": "PREFER_SCRAPING"
                     }
                 }
             ]
