@@ -16,7 +16,15 @@ vi.mock('@/stores/settings', () => ({
     useSettingsStore: () => ({
         // Both the settings service (getSettingBoolean) and the component read the store.
         getSettings: mockSettings.value,
-        getSetting: (key) => mockSettings.value.find((entry) => entry.key === key)
+        getSetting: (key, defValue = '') => {
+            const setting = mockSettings.value.find((entry) => entry.key === key)
+            return setting ? setting.value : defValue
+        },
+        getSettingBoolean: (key, defValue = false) => {
+            const setting = mockSettings.value.find((entry) => entry.key === key)
+            const value = setting ? setting.value : defValue ? 'true' : 'false'
+            return value.toLowerCase().trim() === 'true'
+        }
     })
 }))
 

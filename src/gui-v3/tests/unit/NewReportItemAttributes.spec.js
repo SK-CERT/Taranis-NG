@@ -17,7 +17,8 @@ const mockAnalyzeStore = {
 }
 
 const mockSettingsStore = {
-    getSetting: vi.fn()
+    getSetting: vi.fn(),
+    getSettingBoolean: vi.fn()
 }
 
 vi.mock('vue-router', () => ({

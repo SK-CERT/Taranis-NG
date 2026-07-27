@@ -1,21 +1,9 @@
 import type { PermissionKey } from '@/types/permissions'
-
-export type ConfigLink = {
-    id: number
-    icon?: string
-    title?: string
-    route?: string
-    permission?: PermissionKey
-    // If set, the link is shown when the user has ANY of these permissions.
-    permissions?: PermissionKey[]
-    translate?: boolean
-    separator?: boolean
-    color?: string
-}
+import { type GroupNavItem } from '@/types/routing'
 
 // Shared list of configuration navigation links used by both the config
 // sidebar (ConfigNav) and the router redirect for `/config`.
-export const configLinks: ConfigLink[] = [
+export const configLinks: GroupNavItem[] = [
     {
         id: 1,
         icon: 'mdi-account-key',
@@ -96,8 +84,8 @@ export const configLinks: ConfigLink[] = [
 ]
 
 // Filter links based on permissions and remove leading/trailing/adjacent separators.
-export function filterConfigLinks(checkPermission: (permission: PermissionKey) => boolean): ConfigLink[] {
-    const filtered: ConfigLink[] = []
+export function filterConfigLinks(checkPermission: (permission: PermissionKey) => boolean): GroupNavItem[] {
+    const filtered: GroupNavItem[] = []
 
     for (let i = 0; i < configLinks.length; i++) {
         const link = configLinks[i]

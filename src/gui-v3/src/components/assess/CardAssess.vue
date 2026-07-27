@@ -6,6 +6,7 @@
             :preselected="preselected"
             :card-color="selectedColor"
             :class="{ 'read-item': card.read }"
+            :card-id="card.id"
             @card-click="showDetail"
             @selection-change="selectionChanged"
         >
@@ -62,6 +63,7 @@
                             color="primary"
                             variant="outlined"
                             class="mr-2"
+                            :data-action="Action.AGGREGATE_OPEN"
                             @click.stop="toggleOpen"
                         >
                             <v-icon start>
@@ -142,7 +144,11 @@
             </template>
         </BaseCard>
 
-        <Transition name="aggregate-items">
+        <Transition
+            name="aggregate-items"
+            @after-enter="emitCardItemsReindex"
+            @after-leave="emitCardItemsReindex"
+        >
             <div
                 v-if="opened && isAggregate"
                 class="aggregate-items-list"
@@ -173,6 +179,7 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import CardAssessItem from '@/components/assess/CardAssessItem.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
     type NewsItemData = {
         osint_source_name?: string
@@ -234,9 +241,10 @@
 
     const emit = defineEmits<{
         (e: 'show-detail', card: AssessCard): void
-        (e: 'update-item', card: AssessCard, action: string): void
+        (e: 'update-item', card: AssessCard, action: ActionKey): void
         (e: 'delete-item', card: AssessCard): void
         (e: 'show-reports-for-item', card: AssessCard, mode: 'all' | 'completed' | 'in_progress'): void
+        (e: 'card-items-reindex', action: string): void
     }>()
 
     const { t } = useI18n()
@@ -288,19 +296,23 @@
         opened.value = !opened.value
     }
 
-    const handleCardAction = (action: string): void => {
-        if (action === 'delete') {
+    const emitCardItemsReindex = (): void => {
+        emit('card-items-reindex', 'refresh')
+    }
+
+    const handleCardAction = (action: ActionKey): void => {
+        if (action === Action.DELETE) {
             handleDelete()
         } else {
             updateCard(action)
         }
     }
 
-    const updateCard = (action: string): void => {
+    const updateCard = (action: ActionKey): void => {
         emit('update-item', props.card, action)
     }
 
-    const updateChildItem = (item: AssessCard, action: string): void => {
+    const updateChildItem = (item: AssessCard, action: ActionKey): void => {
         emit('update-item', item, action)
     }
 

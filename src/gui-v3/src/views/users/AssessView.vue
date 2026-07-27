@@ -34,7 +34,7 @@
                 :analyze_selector="analyze_selector"
                 :selection="assessStore.getSelection"
                 @new-data-loaded="newDataLoaded"
-                @card-items-reindex="cardReindex"
+                @card-items-reindex="handleCardItemsReindex"
                 @update-showing-count="updateShowingCount"
             />
         </template>
@@ -45,8 +45,8 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted, computed } from 'vue'
-    import { useRoute, onBeforeRouteLeave } from 'vue-router'
+    import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+    import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
     import ViewLayout from '@/components/layouts/ViewLayout.vue'
@@ -55,6 +55,7 @@
     import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
+    import useKeyboard from '@/composables/useKeyboard'
 
     const props = withDefaults(
         defineProps<{
@@ -66,6 +67,7 @@
     )
 
     const route = useRoute()
+    const router = useRouter()
     const assessStore = useAssessStore()
     const { t } = useI18n()
 
@@ -73,8 +75,6 @@
     const contentData = ref<any>(null)
     const showAddNewsItemDialog = ref(false)
     const newReportItem = ref<any>(null)
-
-    // Computed property to check if manual sources exist
     const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
 
     const newDataLoaded = (count: number): void => {
@@ -90,14 +90,27 @@
         }
     }
 
-    const updateData = (): void => {
+    const updateData = (reloadAll: boolean = true): void => {
         if (contentData.value) {
-            contentData.value.updateData(false, true)
+            contentData.value.updateData(false, reloadAll)
         }
     }
 
-    const cardReindex = (): void => {
-        // Handle card reindexing (for keyboard navigation in future enhancement)
+    const keyboard = useKeyboard('assess', router)
+
+    /**
+     * Handle card items reindex event from ContentDataAssess
+     * This is emitted when cards are reindexed/updated
+     */
+    const handleCardItemsReindex = async (mode: string): Promise<void> => {
+        // Wait for Vue to update the DOM
+        await nextTick()
+        keyboard.reindexCardItems(mode)
+    }
+
+    // Handle keyboard events for card navigation
+    const handleKeyDown = (event: KeyboardEvent): void => {
+        keyboard.keyAction(event)
     }
 
     const updateShowingCount = (count: number): void => {
@@ -135,6 +148,18 @@
         }
 
         window.addEventListener('new-report', handleNewReport as EventListener)
+
+        // Keyboard initialization
+        window.addEventListener('keydown', handleKeyDown)
+        keyboard.onInit()
+        keyboard.setDetailDialogCloseCallback(() => {
+            if (contentData.value?.closeDetailDialog) {
+                contentData.value.closeDetailDialog()
+            }
+        })
+        keyboard.setReloadCallback(() => {
+            updateData(false)
+        })
     })
 
     onBeforeRouteLeave(() => {
@@ -142,6 +167,7 @@
     })
 
     onUnmounted(() => {
+        window.removeEventListener('keydown', handleKeyDown)
         window.removeEventListener('new-report', handleNewReport as EventListener)
     })
 </script>

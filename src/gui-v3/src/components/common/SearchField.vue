@@ -1,5 +1,7 @@
 <template>
     <v-text-field
+        v-bind="$attrs"
+        id="search"
         v-model="model"
         :label="resolvedLabel"
         :prepend-inner-icon="resolvedIcon"
@@ -9,7 +11,6 @@
         hide-details
         single-line
         clearable
-        v-bind="$attrs"
     />
 </template>
 

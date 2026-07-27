@@ -6,6 +6,7 @@
             :preselected="preselected"
             :card-class="'card-item'"
             :card-color="selectedColor"
+            :card-id="card.id"
             @card-click="cardItemClick"
             @selection-change="selectionChanged"
         >

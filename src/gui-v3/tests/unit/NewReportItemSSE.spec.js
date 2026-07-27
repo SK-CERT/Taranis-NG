@@ -12,7 +12,8 @@ const mockAnalyzeStore = {
 }
 
 const mockSettingsStore = {
-    getSetting: vi.fn()
+    getSetting: vi.fn(),
+    getSettingBoolean: vi.fn()
 }
 
 const mockRoute = {

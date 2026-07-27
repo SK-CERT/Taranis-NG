@@ -5,6 +5,7 @@
             v-for="group in groups"
             :key="group.id"
             :active="String(group.id) === String(activeId)"
+            :data-group-id="group.id"
             class="pa-2"
             @click="emit('select', group)"
         >
@@ -33,14 +34,7 @@
      * means — route navigation in AssessNav, group switching in the selector — and
      * controls highlighting via `activeId`.
      */
-    type GroupNavItem = {
-        id: string | number
-        icon?: string
-        color?: string | null
-        title: string
-        translate?: boolean | null
-        route?: string
-    }
+    import { type GroupNavItem } from '@/types/routing'
 
     defineProps<{
         groups: GroupNavItem[]

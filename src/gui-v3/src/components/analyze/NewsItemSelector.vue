@@ -213,6 +213,7 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import GroupNavList from '@/components/common/GroupNavList.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { type GroupNavItem } from '@/types/routing'
 
     type SelectorItem = {
         id: number | string
@@ -231,14 +232,6 @@
             [key: string]: unknown
         }>
         [key: string]: unknown
-    }
-
-    type SelectorGroup = {
-        id: string
-        title: string
-        icon: string
-        color?: string
-        translate?: boolean
     }
 
     type ReportItemUpdateDetail = {
@@ -287,8 +280,8 @@
     const detailItem = ref<SelectorItem | null>(null)
     const value = ref<SelectorItem[]>(props.values || [])
     const selectedItems = ref<SelectorItem[]>(props.values || [])
-    const groups = ref<SelectorGroup[]>([])
-    const selectedGroupId = ref<string | null>(null)
+    const groups = ref<GroupNavItem[]>([])
+    const selectedGroupId = ref<string | number | null>(null)
     const showRemoveConfirm = ref<boolean>(false)
     const itemToDelete = ref<SelectorItem | null>(null)
 
@@ -340,7 +333,7 @@
         }
     }
 
-    const onGroupSelect = (group: { id: string | number }): void => {
+    const onGroupSelect = (group: GroupNavItem): void => {
         changeGroup(String(group.id))
     }
 
@@ -349,7 +342,7 @@
         selectedGroupId.value = selectedGroupId.value || groups.value[0]?.id || 'all'
 
         // Ensure the store has a current group set so ContentDataAssess can build the API URL
-        assessStore.changeCurrentGroup(selectedGroupId.value)
+        assessStore.changeCurrentGroup(String(selectedGroupId.value))
 
         // Clear previous selections
         assessStore.multiSelect(false)
@@ -541,16 +534,7 @@
         // (includes the leading "All" category). Read/unread is handled by the toolbar filter.
         try {
             await configStore.loadOSINTSourceGroupsAssess({ search: '' })
-            groups.value = configStore.osintSourceGroupsForAssess.map((g) => {
-                const group: SelectorGroup = {
-                    id: String(g.id),
-                    title: g.title,
-                    icon: g.icon,
-                    translate: !!g.translate
-                }
-                if (g.color) group.color = g.color
-                return group
-            })
+            groups.value = configStore.osintSourceGroupsForAssess as GroupNavItem[]
         } catch (error) {
             console.error('Error loading OSINT source groups:', error)
         }

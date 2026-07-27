@@ -273,7 +273,7 @@
     import { useSettingsStore } from '@/stores/settings'
     import ViewLayout from '@/components/layouts/ViewLayout.vue'
     import WordCloud from '@/components/dashboard/WordCloud.vue'
-    import Settings from '@/services/settings'
+    import { Settings } from '@/types/settings'
     import { format } from 'date-fns'
     import gitMeta from '../../../git-info.json'
     import packageJson from '../../../package.json'
@@ -358,12 +358,12 @@
      */
     const getColorScheme = (): string[] => {
         try {
-            const useCategory = settingsStore.getSetting(Settings.TAG_COLOR)
+            const useCategory = settingsStore.getSettingBoolean(Settings.TAG_COLOR, false)
             if (useCategory) {
                 return ['#ff7200', '#d9534f', '#5cb85c', '#0275d8', '#5bc0de', '#5a5a5a', '#ff9100', '#df691a', '#e67e22', '#27ae60']
             }
         } catch (e) {
-            console.warn('[Dashboard] Could not load TAG_COLOR setting:', e)
+            console.warn('[Dashboard] Could not load tag cloud colors setting:', e)
         }
         return ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef']
     }

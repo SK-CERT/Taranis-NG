@@ -2,6 +2,7 @@
     <v-dialog
         v-model="isOpen"
         :max-width="maxWidth"
+        @keydown.stop
     >
         <v-card style="min-width: min(500px, calc(100vw - 48px))">
             <v-card-title

@@ -367,6 +367,8 @@
     import { ICONS } from '@/config/ui-constants'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { useSettingsStore } from '@/stores/settings'
+    import { Settings } from '@/types/settings'
+
     import {
         createNewReportItem,
         updateReportItem,
@@ -468,10 +470,7 @@
         return Array.from(Array(attribute_groups.value.length).keys())
     })
 
-    const spellcheck = computed(() => {
-        const setting = settingsStore.getSetting('SPELLCHECK')
-        return setting ? setting.value === 'true' : true
-    })
+    const spellcheck = computed(() => settingsStore.getSettingBoolean(Settings.SPELLCHECK, true))
 
     // Methods
     const initializeNewReportItem = (newsItemAggregates = []) => {

@@ -132,10 +132,11 @@
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
     import { useSettingsStore } from '@/stores/settings'
-    import type { SettingEntry } from '@/types/settings'
+    import { Settings, type SettingKey } from '@/types/settings'
     import SearchField from '@/components/common/SearchField.vue'
+    import { format } from 'date-fns'
 
-    type SettingType = 'B' | 'I' | 'N' | string
+    type SettingType = 'B' | 'I' | 'N' | 'S'
 
     type SettingOption = {
         id: string | number
@@ -143,8 +144,10 @@
         [key: string]: unknown
     }
 
-    type SettingsRecord = SettingEntry & {
+    type SettingsRecord = {
         id?: string | number
+        key: SettingKey
+        value: string
         type?: SettingType
         description?: string
         default_val?: string
@@ -178,6 +181,7 @@
     }
 
     const search = ref('')
+    let date_format: string
     const records = ref<SettingsRecord[]>([])
     const editDialog = ref(false)
     const editValue = ref('')
@@ -209,14 +213,7 @@
         if (!dateString) return ''
         try {
             const date = new Date(dateString)
-            // Simple format: YYYY-MM-DD HH:MM:SS
-            const year = date.getFullYear()
-            const month = String(date.getMonth() + 1).padStart(2, '0')
-            const day = String(date.getDate()).padStart(2, '0')
-            const hours = String(date.getHours()).padStart(2, '0')
-            const minutes = String(date.getMinutes()).padStart(2, '0')
-            const seconds = String(date.getSeconds()).padStart(2, '0')
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+            return format(date, date_format)
         } catch {
             return dateString
         }
@@ -227,7 +224,7 @@
             const options = JSON.parse(item.options || '[]') as SettingOption[]
 
             // For language settings, use language names
-            if (item.key === 'UI_LANGUAGE' || item.key === 'CONTENT_DEFAULT_LANGUAGE') {
+            if (item.key === Settings.UI_LANGUAGE || item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
                 return options.map((opt) => ({
                     ...opt,
                     txt: getLanguageName(String(opt.id), opt.txt)
@@ -267,8 +264,9 @@
             records.value = []
             return
         }
+        date_format = settingsStore.getDateTimeFormat
 
-        const filtered = allSettings.filter((item: SettingEntry) => {
+        const filtered = allSettings.filter((item: SettingsRecord) => {
             const settingsItem = item as SettingsRecord
             return settingsItem.is_global === props.globalSetting
         })
@@ -311,11 +309,11 @@
             initRecords()
 
             // Apply special settings immediately
-            if (item.key === 'DARK_THEME') {
+            if (item.key === Settings.DARK_THEME) {
                 applyTheme(validatedValue === 'true' ? 'dark' : 'light')
-            } else if (item.key === 'UI_LANGUAGE') {
+            } else if (item.key === Settings.UI_LANGUAGE) {
                 locale.value = validatedValue
-            } else if (item.key === 'SPELLCHECK') {
+            } else if (item.key === Settings.SPELLCHECK) {
                 settingsStore.spellcheck = validatedValue === 'true'
             }
 
