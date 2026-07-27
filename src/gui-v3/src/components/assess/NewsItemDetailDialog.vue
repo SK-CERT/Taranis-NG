@@ -249,6 +249,7 @@
     import Editor from 'primevue/editor'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import NewsItemAttribute from '@/components/assess/NewsItemAttribute.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
     type NewsAttributeItem = {
         id: number | string
@@ -289,7 +290,7 @@
     }
 
     type ActionPayload = {
-        action: string
+        action: ActionKey
         newsItem: NewsItemModel
         comment?: string
         title?: string
@@ -410,15 +411,15 @@
         isOpen.value = false
     }
 
-    const handleDialogAction = (action: string): void => {
-        if (action === 'delete') {
+    const handleDialogAction = (action: ActionKey): void => {
+        if (action === Action.DELETE) {
             handleDelete()
         } else {
             handleAction(action)
         }
     }
 
-    const handleAction = (action: string): void => {
+    const handleAction = (action: ActionKey): void => {
         emit('action', { action, newsItem: newsItem.value })
     }
 
@@ -441,7 +442,7 @@
 
     const saveComment = (): void => {
         emit('action', {
-            action: 'comment',
+            action: Action.COMMENT,
             newsItem: newsItem.value,
             comment: commentText.value
         })
@@ -460,7 +461,7 @@
 
     const saveAggregateInfo = (): void => {
         emit('action', {
-            action: 'update-aggregate',
+            action: Action.UPDATE_AGGREGATE,
             newsItem: newsItem.value,
             title: editTitle.value,
             description: editDescription.value

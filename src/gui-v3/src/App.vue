@@ -34,6 +34,7 @@
     import { useAuthStore } from '@/stores/auth'
     import { useUserStore } from '@/stores/user'
     import { useSettingsStore } from '@/stores/settings'
+    import { Settings } from '@/types/settings'
     import { useAuth } from '@/composables/useAuth'
     import { useSSE } from '@/composables/useSSE'
     import MainMenu from '@/components/MainMenu.vue'
@@ -100,16 +101,12 @@
                 await nextTick()
 
                 // Apply dark theme setting
-                const darkThemeSetting = settingsStore.getSetting('DARK_THEME')
-                if (darkThemeSetting) {
-                    applyTheme(darkThemeSetting.value === 'true' ? 'dark' : 'light')
-                }
+                const darkThemeSetting = settingsStore.getSettingBoolean(Settings.DARK_THEME, false)
+                applyTheme(darkThemeSetting ? 'dark' : 'light')
 
                 // Apply spellcheck setting
-                const spellcheckSetting = settingsStore.getSetting('SPELLCHECK')
-                if (spellcheckSetting) {
-                    settingsStore.spellcheck = spellcheckSetting.value === 'true'
-                }
+                const spellcheckSetting = settingsStore.getSettingBoolean(Settings.SPELLCHECK, true)
+                settingsStore.spellcheck = spellcheckSetting
 
                 // Apply language setting
                 if (settingsStore.getProfileLanguage) {

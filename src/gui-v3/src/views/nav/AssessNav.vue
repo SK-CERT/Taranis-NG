@@ -11,21 +11,13 @@
     import { useRouter, useRoute } from 'vue-router'
     import { useConfigStore } from '@/stores/config'
     import GroupNavList from '@/components/common/GroupNavList.vue'
-
-    type AssessGroup = {
-        id: string | number
-        icon: string
-        color: string | null
-        title: string
-        translate: boolean | null
-        route: string
-    }
+    import { type GroupNavItem } from '@/types/routing'
 
     const router = useRouter()
     const route = useRoute()
     const configStore = useConfigStore()
 
-    const groups = ref<AssessGroup[]>([])
+    const groups = ref<GroupNavItem[]>([])
 
     // Highlight the group matching the current /assess/group/:groupId route.
     const activeGroupId = computed<string | null>(() => (route.params['groupId'] as string) ?? null)
@@ -37,7 +29,7 @@
     onMounted(async () => {
         try {
             await configStore.loadOSINTSourceGroupsAssess({ search: '' })
-            groups.value = configStore.osintSourceGroupsForAssess as AssessGroup[]
+            groups.value = configStore.osintSourceGroupsForAssess as GroupNavItem[]
 
             // If not on a specific group route and groups exist, redirect to first
             if (!route.path.includes('/group/') && groups.value.length > 0) {

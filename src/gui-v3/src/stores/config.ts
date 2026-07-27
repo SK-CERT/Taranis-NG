@@ -31,6 +31,7 @@ import {
 } from '@/api/config'
 import { getAllUserProductTypes } from '@/api/user'
 import { getAllOSINTSourceGroupsAssess } from '@/api/assess'
+import { type GroupNavItem } from '@/types/routing'
 
 type FilterPayload = Record<string, unknown>
 
@@ -47,15 +48,6 @@ type OSINTGroupItem = {
     id: string | number
     name?: string
     default?: boolean
-}
-
-type AssessOSINTGroup = {
-    icon: string
-    color: string | null
-    title: string
-    translate: boolean | null
-    route: string
-    id: string | number
 }
 
 const emptyListState = <T = unknown>(): ListState<T> => ({ total_count: 0, items: [] })
@@ -97,16 +89,16 @@ export const useConfigStore = defineStore('config', () => {
     const stateEntityTypes = ref<ListState>(emptyListState())
 
     // Getters
-    const osintSourceGroupsForAssess = computed<AssessOSINTGroup[]>(() => {
+    const osintSourceGroupsForAssess = computed<GroupNavItem[]>(() => {
         // Build groups list for Assess including "All" category.
-        const groups: AssessOSINTGroup[] = []
+        const groups: GroupNavItem[] = []
         groups.push({
+            id: 'all',
             icon: 'mdi-folder-multiple',
             color: null,
             title: 'collectors.groups.all',
             translate: true,
-            route: '/assess/group/all',
-            id: 'all'
+            route: '/assess/group/all'
         })
 
         const items = osintSourceGroups.value && osintSourceGroups.value.items ? osintSourceGroups.value.items : []
@@ -123,12 +115,12 @@ export const useConfigStore = defineStore('config', () => {
                 translate = true
             }
             groups.push({
+                id: g.id,
                 icon: 'mdi-folder-multiple',
                 color: color,
                 title: title,
                 translate: translate,
-                route: '/assess/group/' + g.id,
-                id: g.id
+                route: '/assess/group/' + g.id
             })
         }
         return groups

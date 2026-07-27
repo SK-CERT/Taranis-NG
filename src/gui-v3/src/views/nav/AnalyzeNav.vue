@@ -30,14 +30,7 @@
     import { useRouter, useRoute } from 'vue-router'
     import { useTheme } from 'vuetify'
     import { useAnalyzeStore } from '@/stores/analyze'
-
-    type AnalyzeNavLink = {
-        icon: string
-        title: string
-        translate: boolean
-        route: string
-        color?: string
-    }
+    import { type GroupNavItem } from '@/types/routing'
 
     const router = useRouter()
     const route = useRoute()
@@ -45,7 +38,7 @@
     const analyzeStore = useAnalyzeStore()
 
     const groups = ref<Array<string | number>>([])
-    const links = ref<AnalyzeNavLink[]>([])
+    const links = ref<GroupNavItem[]>([])
 
     const isDark = computed(() => themeGlobal.name.value === 'dark')
     const textColor = computed(() => (isDark.value ? '#ffffff' : '#000000'))
@@ -60,6 +53,7 @@
 
             // Add local link
             links.value.push({
+                id: 'local',
                 icon: 'mdi-home-circle-outline',
                 title: 'nav_menu.local',
                 translate: true,
@@ -73,12 +67,13 @@
                 if (group === undefined || group === null) {
                     continue
                 }
-                const groupTitle = String(group)
+                const groupId = String(group).replaceAll(' ', '-')
                 links.value.push({
+                    id: groupId,
                     icon: 'mdi-arrow-down-bold-circle-outline',
-                    title: groupTitle,
+                    title: String(group),
                     translate: false,
-                    route: '/analyze/group-' + groupTitle.replaceAll(' ', '-')
+                    route: '/analyze/group-' + groupId
                 })
             }
 

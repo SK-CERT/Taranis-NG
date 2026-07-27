@@ -34,7 +34,7 @@ const emptyListState = <T = unknown>(): ListState<T> => ({ total_count: 0, items
 
 export const useAssessStore = defineStore('assess', () => {
     // State
-    const newsitems = ref<ListState>(emptyListState())
+    const newsitems = ref<ListState<SelectableItem>>(emptyListState<SelectableItem>())
     const multi_select = ref(false)
     const selection = ref<SelectableItem[]>([])
     const current_group_id = ref('')
@@ -48,6 +48,9 @@ export const useAssessStore = defineStore('assess', () => {
     const selectedItems = computed(() => {
         return new Set(selection.value.map((item) => item.id))
     })
+    function getNumberOfSelected(): number {
+        return selection.value.length
+    }
     const getCurrentGroup = computed(() => current_group_id.value)
     const getManualOSINTSourcesList = computed(() => (Array.isArray(manual_osint_sources.value) ? manual_osint_sources.value : []))
     const getFilter = computed(() => filter.value)
@@ -69,7 +72,16 @@ export const useAssessStore = defineStore('assess', () => {
     }
 
     function select(selected_item: SelectableItem): void {
+        // console.log('Selecting item:', selected_item)
         selection.value.push(selected_item)
+    }
+
+    function selectById(id: string): void {
+        const item = newsitems.value.items.find((i) => String(i.id) === id)
+        if (item) {
+            // console.log('Selecting item by id:', id, item, newsitems.value)
+            select({ type: 'AGGREGATE', id: item.id, item })
+        }
     }
 
     function deselect(selectedItem: SelectableItem): void {
@@ -80,6 +92,18 @@ export const useAssessStore = defineStore('assess', () => {
                 break
             }
         }
+    }
+
+    function deselectById(id: string): void {
+        const index = selection.value.findIndex((item) => String(item.id) === id)
+
+        if (index !== -1) {
+            selection.value.splice(index, 1)
+        }
+    }
+
+    function isSelectedById(id: string): boolean {
+        return selection.value.some((item) => String(item.id) === id)
     }
 
     function changeCurrentGroup(group_id: string): void {
@@ -133,6 +157,7 @@ export const useAssessStore = defineStore('assess', () => {
         newsitems,
         multi_select,
         selection,
+        getNumberOfSelected,
         current_group_id,
         manual_osint_sources,
         filter,
@@ -150,7 +175,10 @@ export const useAssessStore = defineStore('assess', () => {
         loadNewsItemsByGroup,
         multiSelect,
         select,
+        selectById,
         deselect,
+        deselectById,
+        isSelectedById,
         changeCurrentGroup,
         loadManualOSINTSources,
         setFilter,

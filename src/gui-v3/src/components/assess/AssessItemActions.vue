@@ -11,25 +11,11 @@
             target="_blank"
             rel="noreferrer"
             :title="t('assess.tooltip.open_source')"
+            :data-action="Action.OPEN"
             @click.stop
         >
             <v-icon :size="iconSize">
                 {{ ICONS.OPEN }}
-            </v-icon>
-        </v-btn>
-
-        <!-- Create Report (Single Item Only) -->
-        <v-btn
-            v-if="showCreateReport && canCreateReport"
-            icon
-            :disabled="disabled"
-            :size="size"
-            :variant="variant"
-            :title="t('assess.tooltip.analyze_item')"
-            @click.stop="$emit('action', 'create-report')"
-        >
-            <v-icon :size="iconSize">
-                {{ ICONS.ANALYZE }}
             </v-icon>
         </v-btn>
 
@@ -41,10 +27,27 @@
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.ungroup_item')"
-            @click.stop="$emit('action', 'ungroup')"
+            :data-action="Action.UNGROUP"
+            @click.stop="$emit('action', Action.UNGROUP)"
         >
             <v-icon :size="iconSize">
                 {{ ICONS.UNGROUP }}
+            </v-icon>
+        </v-btn>
+
+        <!-- Create Report (Single Item Only) -->
+        <v-btn
+            v-if="showCreateReport && canCreateReport"
+            icon
+            :disabled="disabled"
+            :size="size"
+            :variant="variant"
+            :title="t('assess.tooltip.analyze_item')"
+            :data-action="Action.CREATE_REPORT"
+            @click.stop="$emit('action', Action.CREATE_REPORT)"
+        >
+            <v-icon :size="iconSize">
+                {{ ICONS.ANALYZE }}
             </v-icon>
         </v-btn>
 
@@ -56,7 +59,8 @@
             :size="size"
             :variant="variant"
             :title="likeState === 'others' ? t('assess.tooltip.liked_by_others') : t('assess.tooltip.like_item')"
-            @click.stop="$emit('action', 'like')"
+            :data-action="Action.LIKE"
+            @click.stop="$emit('action', Action.LIKE)"
         >
             <v-icon
                 :size="iconSize"
@@ -81,7 +85,8 @@
             :size="size"
             :variant="variant"
             :title="dislikeState === 'others' ? t('assess.tooltip.disliked_by_others') : t('assess.tooltip.dislike_item')"
-            @click.stop="$emit('action', 'dislike')"
+            :data-action="Action.DISLIKE"
+            @click.stop="$emit('action', Action.DISLIKE)"
         >
             <v-icon
                 :size="iconSize"
@@ -106,7 +111,8 @@
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.important_item')"
-            @click.stop="$emit('action', 'important')"
+            :data-action="Action.IMPORTANT"
+            @click.stop="$emit('action', Action.IMPORTANT)"
         >
             <v-icon
                 :size="iconSize"
@@ -124,7 +130,8 @@
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.read_item')"
-            @click.stop="$emit('action', 'read')"
+            :data-action="Action.READ"
+            @click.stop="$emit('action', Action.READ)"
         >
             <v-icon
                 :size="iconSize"
@@ -142,6 +149,7 @@
             :size="size"
             :variant="variant"
             :title="t('assess.tooltip.delete_item')"
+            :data-action="Action.DELETE"
             @click.stop="showDeleteDialog = true"
         />
 
@@ -151,7 +159,7 @@
             v-model="showDeleteDialog"
             :message="itemTitle"
             max-width="600px"
-            @confirm="$emit('action', 'delete')"
+            @confirm="$emit('action', Action.DELETE)"
         />
     </div>
 </template>
@@ -164,6 +172,7 @@
     import { ICONS } from '@/config/ui-constants'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
     type AssessItem = {
         id?: number | string
@@ -212,7 +221,7 @@
     )
 
     const emit = defineEmits<{
-        (e: 'action', action: string): void
+        (e: 'action', action: ActionKey): void
     }>()
 
     const { t } = useI18n()

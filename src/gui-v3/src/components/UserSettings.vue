@@ -93,7 +93,8 @@
                                 >
                                     <v-btn
                                         block
-                                        variant="outlined"
+                                        color="outline"
+                                        variant="flat"
                                         @click="openKeyDialog(shortcut.alias)"
                                     >
                                         <v-icon start>
@@ -207,27 +208,7 @@
     const selectedWordLists = ref<Array<number | string>>([])
 
     // Hotkeys
-    const shortcuts = ref<HotkeyItem[]>([
-        { alias: 'close_item_1', icon: 'mdi-close', key: 'Escape' },
-        { alias: 'close_item_2', icon: 'mdi-close', key: '' },
-        { alias: 'close_item_3', icon: 'mdi-close', key: '' },
-        { alias: 'collection_up_1', icon: 'mdi-arrow-up', key: 'ArrowUp' },
-        { alias: 'collection_up_2', icon: 'mdi-arrow-up', key: 'k' },
-        { alias: 'collection_down_1', icon: 'mdi-arrow-down', key: 'ArrowDown' },
-        { alias: 'collection_down_2', icon: 'mdi-arrow-down', key: 'j' },
-        { alias: 'show_item_1', icon: 'mdi-eye', key: 'Enter' },
-        { alias: 'show_item_2', icon: 'mdi-eye', key: 'o' },
-        { alias: 'show_item_3', icon: 'mdi-eye', key: '' },
-        { alias: 'read_item', icon: 'mdi-email-open', key: 'r' },
-        { alias: 'important_item', icon: 'mdi-star', key: 'i' },
-        { alias: 'like_item', icon: 'mdi-thumb-up', key: 'l' },
-        { alias: 'unlike_item', icon: 'mdi-thumb-down', key: 'u' },
-        { alias: 'delete_item', icon: 'mdi-delete', key: 'Delete' },
-        { alias: 'selection', icon: 'mdi-checkbox-multiple-marked', key: 's' },
-        { alias: 'group', icon: 'mdi-group', key: 'g' },
-        { alias: 'ungroup', icon: 'mdi-ungroup', key: '' },
-        { alias: 'new_product', icon: 'mdi-plus', key: 'n' }
-    ])
+    const shortcuts = ref<HotkeyItem[]>([])
 
     const visible = computed<boolean>({
         get: () => props.modelValue,
@@ -248,17 +229,21 @@
 
             // Load hotkeys
             await settingsStore.loadUserHotkeys()
-            const userHotkeys = (settingsStore.getProfileHotkeys || []) as HotkeyItem[]
-            if (Array.isArray(userHotkeys) && userHotkeys.length > 0) {
-                // Convert to plain array to ensure it's not a Proxy
-                shortcuts.value = userHotkeys.map((h: HotkeyItem) => ({
-                    alias: h.alias,
-                    icon: h.icon,
-                    key: h.key
-                }))
-            }
+            getProfileHotkeys()
         } catch (error: unknown) {
             console.error('Error loading user settings:', error)
+        }
+    }
+
+    const getProfileHotkeys = async (): Promise<void> => {
+        const userHotkeys = (settingsStore.getProfileHotkeys || []) as HotkeyItem[]
+        if (Array.isArray(userHotkeys) && userHotkeys.length > 0) {
+            // Convert to plain array to ensure it's not a Proxy
+            shortcuts.value = userHotkeys.map((h: HotkeyItem) => ({
+                alias: h.alias,
+                icon: h.icon,
+                key: h.key
+            }))
         }
     }
 
@@ -297,28 +282,8 @@
     }
 
     const resetHotkeys = (): void => {
-        // Reset to default hotkeys
-        shortcuts.value = [
-            { alias: 'close_item_1', icon: 'mdi-close', key: 'Escape' },
-            { alias: 'close_item_2', icon: 'mdi-close', key: '' },
-            { alias: 'close_item_3', icon: 'mdi-close', key: '' },
-            { alias: 'collection_up_1', icon: 'mdi-arrow-up', key: 'ArrowUp' },
-            { alias: 'collection_up_2', icon: 'mdi-arrow-up', key: 'k' },
-            { alias: 'collection_down_1', icon: 'mdi-arrow-down', key: 'ArrowDown' },
-            { alias: 'collection_down_2', icon: 'mdi-arrow-down', key: 'j' },
-            { alias: 'show_item_1', icon: 'mdi-eye', key: 'Enter' },
-            { alias: 'show_item_2', icon: 'mdi-eye', key: 'o' },
-            { alias: 'show_item_3', icon: 'mdi-eye', key: '' },
-            { alias: 'read_item', icon: 'mdi-email-open', key: 'r' },
-            { alias: 'important_item', icon: 'mdi-star', key: 'i' },
-            { alias: 'like_item', icon: 'mdi-thumb-up', key: 'l' },
-            { alias: 'unlike_item', icon: 'mdi-thumb-down', key: 'u' },
-            { alias: 'delete_item', icon: 'mdi-delete', key: 'Delete' },
-            { alias: 'selection', icon: 'mdi-checkbox-multiple-marked', key: 's' },
-            { alias: 'group', icon: 'mdi-group', key: 'g' },
-            { alias: 'ungroup', icon: 'mdi-ungroup', key: '' },
-            { alias: 'new_product', icon: 'mdi-plus', key: 'n' }
-        ]
+        settingsStore.resetHotkeys()
+        getProfileHotkeys()
     }
 
     // Load settings when dialog opens

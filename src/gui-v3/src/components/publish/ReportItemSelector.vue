@@ -147,7 +147,7 @@
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { useSettingsStore } from '@/stores/settings'
-    import Settings, { getSettingBoolean } from '@/services/settings'
+    import { Settings } from '@/types/settings'
     import { getEntityTypeStates } from '@/api/state'
 
     type ReportItem = {
@@ -232,15 +232,12 @@
 
     // REPORT_SELECTOR_READ_ONLY decides whether a report item opened from the selector is
     // just viewable or editable. Read-only is the safer default if the setting is missing.
-    const readOnlySelector = computed(() => getSettingBoolean(Settings.REPORT_SELECTOR_READ_ONLY, true))
+    const readOnlySelector = computed(() => settingsStore.getSettingBoolean(Settings.REPORT_SELECTOR_READ_ONLY, true))
 
     // Whether the backend "Automatic cascade state changes" (CASCADE_STATES_ENABLED)
     // app setting is on. The completion-confirmation dialog only makes sense when
     // the backend would actually auto-complete newly-added non-final reports.
-    const cascadeStatesEnabled = computed(() => {
-        const setting = settingsStore.getSetting('CASCADE_STATES_ENABLED')
-        return setting?.value === 'true'
-    })
+    const cascadeStatesEnabled = computed(() => settingsStore.getSettingBoolean(Settings.CASCADE_STATES_ENABLED, true))
 
     const loadReportItemStates = async (): Promise<void> => {
         try {

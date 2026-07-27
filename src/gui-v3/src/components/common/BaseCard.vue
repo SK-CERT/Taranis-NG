@@ -25,6 +25,8 @@
                 :class="cardClass"
                 :elevation="isHovering ? 12 : 2"
                 :color="cardColor"
+                tabindex="0"
+                :data-id="cardId"
                 @click="handleCardClick"
             >
                 <v-card-text class="pa-2">
@@ -52,6 +54,10 @@
     import { ref, watch } from 'vue'
 
     const props = defineProps({
+        cardId: {
+            type: [String, Number],
+            default: undefined
+        },
         multiSelectActive: {
             type: Boolean,
             default: false

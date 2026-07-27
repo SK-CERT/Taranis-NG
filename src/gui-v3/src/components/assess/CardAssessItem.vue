@@ -73,6 +73,7 @@
     import { useI18n } from 'vue-i18n'
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
     type NewsItemData = {
         osint_source_name?: string
@@ -137,7 +138,7 @@
 
     const emit = defineEmits<{
         (e: 'show-detail', item: DetailNewsItem): void
-        (e: 'update-item', item: DetailNewsItem, action: string): void
+        (e: 'update-item', item: DetailNewsItem, action: ActionKey): void
         (e: 'delete-item', item: DetailNewsItem): void
     }>()
 
@@ -178,8 +179,8 @@
         emit('show-detail', displayItem.value)
     }
 
-    const handleAction = (action: string): void => {
-        if (action === 'delete') {
+    const handleAction = (action: ActionKey): void => {
+        if (action === Action.DELETE) {
             emit('delete-item', displayItem.value)
             return
         }

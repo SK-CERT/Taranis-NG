@@ -31,6 +31,7 @@ const mockSettingsStore = {
     loadUserWordLists: vi.fn(),
     loadUserHotkeys: vi.fn(),
     getSetting: vi.fn(),
+    getSettingBoolean: vi.fn(),
     getProfileLanguage: 'en'
 }
 
@@ -95,10 +96,10 @@ describe('App SSE boot flow', () => {
         mockSettingsStore.loadSettings.mockResolvedValue({})
         mockSettingsStore.loadUserWordLists.mockResolvedValue({})
         mockSettingsStore.loadUserHotkeys.mockResolvedValue({})
-        mockSettingsStore.getSetting.mockImplementation((key) => {
-            if (key === 'DARK_THEME') return { value: 'false' }
-            if (key === 'SPELLCHECK') return { value: 'true' }
-            return null
+        mockSettingsStore.getSetting.mockImplementation((key, defValue = '') => {
+            if (key === 'DARK_THEME') return 'false'
+            if (key === 'SPELLCHECK') return 'true'
+            return defValue
         })
         mockSettingsStore.getProfileLanguage = 'en'
 

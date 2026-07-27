@@ -28,31 +28,25 @@
         <!-- News Items Cards -->
         <div
             ref="listRef"
-            class="card-list"
+            class="card-list w-100"
         >
-            <TransitionGroup
-                name="card-list"
-                :move-class="moveClass"
-                tag="div"
-                class="w-100"
-            >
-                <component
-                    :is="currentCard"
-                    v-for="news_item in news_items_data"
-                    :key="news_item.id"
-                    :card="news_item"
-                    :analyze-selector="analyze_selector"
-                    :multi-select-active="multiSelectActive"
-                    :preselected="isPreselected(news_item.id)"
-                    :hide-reviews="filter.hide_reviews"
-                    :hide-source-links="filter.hide_source_links"
-                    :highlight-wordlist="filter.highlight_wordlist"
-                    @show-detail="showDetail"
-                    @show-reports-for-item="showReportsForItem"
-                    @update-item="updateItem"
-                    @delete-item="handleDelete"
-                />
-            </TransitionGroup>
+            <component
+                :is="currentCard"
+                v-for="news_item in news_items_data"
+                :key="news_item.id"
+                :card="news_item"
+                :analyze-selector="analyze_selector"
+                :multi-select-active="multiSelectActive"
+                :preselected="isPreselected(news_item.id)"
+                :hide-reviews="filter.hide_reviews"
+                :hide-source-links="filter.hide_source_links"
+                :highlight-wordlist="filter.highlight_wordlist"
+                @show-detail="showDetail"
+                @show-reports-for-item="showReportsForItem"
+                @update-item="updateItem"
+                @delete-item="handleDelete"
+                @card-items-reindex="handleCardItemsReindex"
+            />
         </div>
 
         <!-- Infinite Scroll Trigger -->
@@ -140,6 +134,7 @@
     import NewsItemDetailDialog from './NewsItemDetailDialog.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import ReportsListDialog from './ReportsListDialog.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
     type NewsItem = {
         id: string | number
@@ -159,7 +154,7 @@
     }
 
     type DetailActionPayload = {
-        action: string
+        action: ActionKey
         newsItem: NewsItem
         comment?: string
         title?: string
@@ -396,30 +391,29 @@
      * in whether the target is a child news item or an aggregate. Returns false when the action
      * was handled on the spot and there is nothing to reload.
      */
-    const applyItemAction = async (action: string, item: NewsItem, group_id: string): Promise<boolean> => {
+    const applyItemAction = async (action: ActionKey, item: NewsItem, group_id: string): Promise<boolean> => {
         const isChildNewsItem = item.entityType === 'news_item'
-
         switch (action) {
-            case 'like':
+            case Action.LIKE:
                 await (isChildNewsItem ? voteNewsItem(group_id, item.id, 1) : assessStore.voteNewsItemAggregate(group_id, item.id, 1))
                 break
-            case 'dislike':
+            case Action.DISLIKE:
                 await (isChildNewsItem ? voteNewsItem(group_id, item.id, -1) : assessStore.voteNewsItemAggregate(group_id, item.id, -1))
                 break
-            case 'important':
+            case Action.IMPORTANT:
                 await (isChildNewsItem ? importantNewsItem(group_id, item.id) : assessStore.importantNewsItemAggregate(group_id, item.id))
                 break
-            case 'read':
+            case Action.READ:
                 await (isChildNewsItem ? readNewsItem(group_id, item.id) : assessStore.readNewsItemAggregate(group_id, item.id))
                 break
-            case 'ungroup':
+            case Action.UNGROUP:
                 await groupAction({
                     group: group_id,
-                    action: 'UNGROUP',
+                    action: Action.UNGROUP,
                     items: [{ type: isChildNewsItem ? 'ITEM' : 'AGGREGATE', id: item.id }]
                 })
                 break
-            case 'create-report':
+            case Action.CREATE_REPORT:
                 reportItemModalRef.value?.openDialog([item])
                 return false
         }
@@ -432,8 +426,8 @@
         const { action, newsItem } = payload
         const group_id = current_group_id.value || getNormalizedGroupId()
         const isChildNewsItem = newsItem.entityType === 'news_item'
-        const isToolbarAction = ['like', 'dislike', 'important', 'read', 'ungroup'].includes(action)
-
+        const toolbarActions: readonly ActionKey[] = [Action.LIKE, Action.DISLIKE, Action.IMPORTANT, Action.READ, Action.UNGROUP]
+        const isToolbarAction = toolbarActions.includes(action)
         if (isToolbarAction && detailActionPending.value) {
             return
         }
@@ -448,7 +442,7 @@
         try {
             // The two editing actions are the dialog's own; everything else is shared with the cards.
             switch (action) {
-                case 'comment':
+                case Action.COMMENT:
                     if (!isChildNewsItem) {
                         await assessStore.saveNewsItemAggregate(
                             group_id,
@@ -459,7 +453,7 @@
                         )
                     }
                     break
-                case 'update-aggregate':
+                case Action.UPDATE_AGGREGATE:
                     if (!isChildNewsItem) {
                         await assessStore.saveNewsItemAggregate(
                             group_id,
@@ -485,7 +479,7 @@
             }
 
             // Update the selected item in the dialog to show fresh data with updated colors
-            if (selectedItem.value && action !== 'delete') {
+            if (selectedItem.value && action !== Action.DELETE) {
                 const updatedItem = findUpdatedSelectedItem(selectedItem.value)
                 if (updatedItem) {
                     selectedItem.value = updatedItem
@@ -522,7 +516,7 @@
         }
     }
 
-    const updateItem = async (news_item: NewsItem, action: string) => {
+    const updateItem = async (news_item: NewsItem, action: ActionKey) => {
         try {
             const group_id = current_group_id.value || getNormalizedGroupId()
             if (!(await applyItemAction(action, news_item, group_id))) {
@@ -776,9 +770,10 @@
             // Directly assign new data - Vue will detect removed items and animate them
             news_items_data.value = nextItems
 
+            // console.log("loadData", news_items_data.value.length, mode)
             emit('new-data-loaded', total_count.value)
             emit('update-showing-count', news_items_data.value.length)
-            emit('card-items-reindex')
+            emit('card-items-reindex', mode)
         } catch (error) {
             console.error('Error loading news items:', error)
         } finally {
@@ -832,7 +827,11 @@
         moveClass.value = ''
 
         emit('update-showing-count', news_items_data.value.length)
-        emit('card-items-reindex')
+        emit('card-items-reindex', 'append')
+    }
+
+    async function handleCardItemsReindex(mode: string): Promise<void> {
+        emit('card-items-reindex', mode)
     }
 
     /** The pill says "show me what is new", so it also takes the user there. */
@@ -868,7 +867,10 @@
 
     defineExpose({
         updateFilter,
-        updateData
+        updateData,
+        closeDetailDialog: () => {
+            detailDialog.value = false
+        }
     })
 </script>
 

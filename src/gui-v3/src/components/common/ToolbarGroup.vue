@@ -39,7 +39,8 @@
                     size="small"
                     :disabled="selectedCount < 2"
                     :title="t('assess.tooltip.group_items')"
-                    @click="handleAction('GROUP')"
+                    :data-multi-action="Action.GROUP"
+                    @click="handleAction(Action.GROUP)"
                 >
                     <v-icon>{{ ICONS.GROUP }}</v-icon>
                 </v-btn>
@@ -51,7 +52,8 @@
                     size="small"
                     :disabled="selectedCount === 0 || !canUngroupSelection"
                     :title="t('assess.tooltip.ungroup_items')"
-                    @click="handleAction('UNGROUP')"
+                    :data-multi-action="Action.UNGROUP"
+                    @click="handleAction(Action.UNGROUP)"
                 >
                     <v-icon>{{ ICONS.UNGROUP }}</v-icon>
                 </v-btn>
@@ -62,7 +64,8 @@
                     size="small"
                     :disabled="selectedCount === 0"
                     :title="t('assess.tooltip.read_items')"
-                    @click="handleAction('READ')"
+                    :data-multi-action="Action.READ"
+                    @click="handleAction(Action.READ)"
                 >
                     <v-icon>{{ ICONS.READ }}</v-icon>
                 </v-btn>
@@ -73,7 +76,8 @@
                     size="small"
                     :disabled="selectedCount === 0"
                     :title="t('assess.tooltip.important_items')"
-                    @click="handleAction('IMPORTANT')"
+                    :data-multi-action="Action.IMPORTANT"
+                    @click="handleAction(Action.IMPORTANT)"
                 >
                     <v-icon>{{ ICONS.IMPORTANT }}</v-icon>
                 </v-btn>
@@ -84,7 +88,8 @@
                     size="small"
                     :disabled="selectedCount === 0"
                     :title="t('assess.tooltip.like_items')"
-                    @click="handleAction('LIKE')"
+                    :data-multi-action="Action.LIKE"
+                    @click="handleAction(Action.LIKE)"
                 >
                     <v-icon>{{ ICONS.LIKE }}</v-icon>
                 </v-btn>
@@ -95,7 +100,8 @@
                     size="small"
                     :disabled="selectedCount === 0"
                     :title="t('assess.tooltip.dislike_items')"
-                    @click="handleAction('DISLIKE')"
+                    :data-multi-action="Action.DISLIKE"
+                    @click="handleAction(Action.DISLIKE)"
                 >
                     <v-icon>{{ ICONS.UNLIKE }}</v-icon>
                 </v-btn>
@@ -107,6 +113,7 @@
                     size="small"
                     :disabled="selectedCount === 0"
                     :title="t('assess.tooltip.analyze_items')"
+                    :data-multi-action="Action.CREATE_REPORT"
                     @click="handleAnalyze"
                 >
                     <v-icon>{{ ICONS.FILE_CHART_OUTLINE }}</v-icon>
@@ -120,7 +127,8 @@
                     color="error"
                     :disabled="selectedCount === 0"
                     :title="t('assess.tooltip.delete_items')"
-                    @click="handleAction('DELETE')"
+                    :data-multi-action="Action.DELETE"
+                    @click="handleAction(Action.DELETE)"
                 >
                     <v-icon>{{ ICONS.DELETE }}</v-icon>
                 </v-btn>
@@ -184,6 +192,7 @@
     import { groupAction, selectAllNewsItems } from '@/api/assess'
     import { getAllReportItemsUnpaginated, deleteReportItem } from '@/api/analyze'
     import { getAllProductsUnpaginated, deleteProduct } from '@/api/publish'
+    import { Action, type ActionKey } from '@/types/actions'
 
     type ViewMode = 'assess' | 'analyze' | 'publish'
     type GenericFilter = Record<string, unknown>
@@ -279,6 +288,7 @@
     })
 
     const normalizeSelectionType = (rawType: unknown): 'AGGREGATE' | 'ITEM' => {
+        // console.log('[ToolbarGroup] Normalizing selection type:', rawType)
         const typeValue = String(rawType || '').toUpperCase()
         if (typeValue.includes('AGGREGATE')) {
             return 'AGGREGATE'
@@ -374,7 +384,7 @@
             sort: filterSort
         }
 
-        console.log('[ToolbarGroup] Select all assess - group_id:', group_id, 'filter:', filter)
+        // console.log('[ToolbarGroup] Select all assess - group_id:', group_id, 'filter:', filter)
 
         // Show loading notification
         notify({
@@ -390,11 +400,10 @@
                 group_id,
                 filter
             })
-
-            console.log('[ToolbarGroup] Select all response:', response)
+            // console.log('[ToolbarGroup] Select all response:', response)
 
             if (response?.data?.items) {
-                console.log('[ToolbarGroup] Selecting', response.data.items.length, 'items')
+                // console.log('[ToolbarGroup] Selecting', response.data.items.length, 'items')
                 response.data.items.forEach((item: unknown) => {
                     const typedItem = item as ItemWithId
                     assessStore.select({
@@ -432,7 +441,7 @@
             sort: 'DATE_DESC'
         }
 
-        console.log('[ToolbarGroup] Select all analyze - group:', group, 'filter:', filter)
+        // console.log('[ToolbarGroup] Select all analyze - group:', group, 'filter:', filter)
 
         // Show loading notification
         notify({
@@ -449,11 +458,10 @@
                 filter
             })
 
-            console.log('[ToolbarGroup] Select all analyze response:', response)
-            console.log('[ToolbarGroup] Items in response:', response?.data?.items?.length)
+            // console.log('[ToolbarGroup] Select all analyze response:', response, 'Items in response:', response?.data?.items?.length)
 
             if (response?.data?.items) {
-                console.log('[ToolbarGroup] Selecting', response.data.items.length, 'analyze items')
+                // console.log('[ToolbarGroup] Selecting', response.data.items.length, 'analyze items')
                 response.data.items.forEach((item: unknown) => {
                     const typedItem = item as ItemWithId
                     analyzeStore.selectReport({
@@ -488,7 +496,7 @@
             sort: 'DATE_DESC'
         }
 
-        console.log('[ToolbarGroup] Select all publish - filter:', filter)
+        // console.log('[ToolbarGroup] Select all publish - filter:', filter)
 
         // Show loading notification
         notify({
@@ -501,12 +509,10 @@
 
         try {
             const response = await getAllProductsUnpaginated({ filter })
-
-            console.log('[ToolbarGroup] Select all publish response:', response)
-            console.log('[ToolbarGroup] Items in response:', response?.data?.items?.length)
+            // console.log('[ToolbarGroup] Select all publish response:', response, 'Items in response:', response?.data?.items?.length)
 
             if (response?.data?.items) {
-                console.log('[ToolbarGroup] Selecting', response.data.items.length, 'publish items')
+                // console.log('[ToolbarGroup] Selecting', response.data.items.length, 'publish items')
                 response.data.items.forEach((item: unknown) => {
                     const typedItem = item as ItemWithId
                     publishStore.select({
@@ -551,7 +557,7 @@
     // Assess-specific actions
     const handleAnalyze = (): void => {
         const selection = assessStore.getSelection as SelectionItem[]
-        const items = selection.filter((s) => s.type === 'news_item_aggregate').map((s) => s.item)
+        const items = selection.filter((s) => s.type === 'AGGREGATE' || s.type === 'news_item_aggregate').map((s) => s.item)
 
         if (items.length > 0) {
             assessStore.multiSelect(false)
@@ -560,7 +566,7 @@
         }
     }
 
-    const handleAction = async (type: string): Promise<void> => {
+    const handleAction = async (type: ActionKey): Promise<void> => {
         const selection = assessStore.getSelection as SelectionItem[]
 
         const getErrorKey = (error: unknown): string => {
@@ -588,12 +594,12 @@
 
         const items = selection.map((s) => ({ type: normalizeSelectionType(s.type), id: s.id }))
 
-        if (type === 'GROUP' && items.length < 2) {
+        if (type === Action.GROUP && items.length < 2) {
             notify({ type: 'warning', message: 'Select at least two items to group.' })
             return
         }
 
-        if (type === 'UNGROUP' && !canUngroupSelection.value) {
+        if (type === Action.UNGROUP && !canUngroupSelection.value) {
             notify({ type: 'warning', message: 'No grouped items selected.' })
             return
         }

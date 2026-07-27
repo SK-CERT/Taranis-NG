@@ -2,12 +2,11 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { getUserWordLists, getAvailableWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from '@/api/user'
 import { getAllSettings, updateSetting } from '@/api/config'
-import Settings from '@/services/settings'
-import type { SettingEntry } from '@/types/settings'
+import { Settings, HotkeyAction, type SettingEntry, type SettingKey, type HotkeyActionType } from '@/types/settings'
 
 type HotkeyEntry = {
     key: string
-    alias: string
+    alias: HotkeyActionType
     icon: string
 }
 
@@ -31,6 +30,7 @@ const asObjectWithItems = (value: unknown): { items?: unknown[] } | null => {
     return null
 }
 
+// This does not work completely because we also return additional database fields. It is not a pure SettingEntry type, but it works
 const toSettingEntries = (value: unknown): SettingEntry[] => {
     if (Array.isArray(value)) {
         return value as SettingEntry[]
@@ -79,21 +79,39 @@ export const useSettingsStore = defineStore('settings', () => {
         return lng
     })
 
+    const getDateTimeFormat = computed(() => {
+        const dateFmt = getSetting(Settings.DATE_FORMAT, 'yyyy-MM-dd')
+        const timeFmt = getSetting(Settings.TIME_FORMAT, 'HH:mm')
+        if (dateFmt != '' && timeFmt != '') {
+            return dateFmt + ' ' + timeFmt
+        }
+        return 'yyyy-MM-dd HH:mm'
+    })
+
     // Actions
-    function getSetting(key: string): SettingEntry | null {
+    function getSetting(key: SettingKey, defValue = ''): string {
         try {
             const settingsArray = Array.isArray(settings.value) ? settings.value : []
-            if (settingsArray.length === 0) return null
+            if (settingsArray.length === 0) return defValue || ''
             if (typeof settingsArray.find !== 'function') {
                 console.error('[Settings] settingsArray.find is not a function:', typeof settingsArray, settingsArray)
-                return null
+                return defValue || ''
             }
             const setting = settingsArray.find((s) => s && s.key === key)
-            return setting || null
+            if (!setting) {
+                console.error('[Settings] missing key:', key, 'Using default value:', defValue)
+                return defValue || ''
+            }
+            return setting.value !== undefined ? setting.value : defValue || ''
         } catch (error) {
             console.error('[Settings] Error in getSetting:', key, error)
-            return null
+            return defValue || ''
         }
+    }
+
+    function getSettingBoolean(key: SettingKey, defValue = false): boolean {
+        const val = getSetting(key, defValue ? 'true' : 'false')
+        return val != null && val.toLowerCase().trim() === 'true'
     }
 
     async function loadSettings(data: SearchFilter): Promise<ApiResponse<unknown>> {
@@ -228,43 +246,43 @@ export const useSettingsStore = defineStore('settings', () => {
         // we can't process .code, .keyCode property because they can be same up to 4 different .key values. Example: rR = KeyR,82  /? = Slash,191
         hotkeys.value = [
             // assess: new item navigation
-            { key: 'ArrowUp', alias: 'collection_up_1', icon: 'mdi-arrow-up' },
-            { key: 'k', alias: 'collection_up_2', icon: 'mdi-arrow-up' },
-            { key: 'ArrowDown', alias: 'collection_down_1', icon: 'mdi-arrow-down' },
-            { key: 'j', alias: 'collection_down_2', icon: 'mdi-arrow-down' },
-            { key: 'Enter', alias: 'show_item_1', icon: 'mdi-text-box-outline' },
-            { key: 'ArrowRight', alias: 'show_item_2', icon: 'mdi-text-box-outline' },
-            { key: 'l', alias: 'show_item_3', icon: 'mdi-text-box-outline' },
-            { key: 'Escape', alias: 'close_item_1', icon: 'mdi-close-box-outline' },
-            { key: 'ArrowLeft', alias: 'close_item_2', icon: 'mdi-close-box-outline' },
-            { key: 'h', alias: 'close_item_3', icon: 'mdi-close-box-outline' },
-            { key: 'Home', alias: 'home', icon: 'mdi-arrow-collapse-up' },
-            { key: 'End', alias: 'end', icon: 'mdi-arrow-collapse-down' },
+            { key: 'ArrowUp', alias: HotkeyAction.COLLECTION_UP_1, icon: 'mdi-arrow-up' },
+            { key: 'k', alias: HotkeyAction.COLLECTION_UP_2, icon: 'mdi-arrow-up' },
+            { key: 'ArrowDown', alias: HotkeyAction.COLLECTION_DOWN_1, icon: 'mdi-arrow-down' },
+            { key: 'j', alias: HotkeyAction.COLLECTION_DOWN_2, icon: 'mdi-arrow-down' },
+            { key: 'Enter', alias: HotkeyAction.SHOW_ITEM_1, icon: 'mdi-text-box-outline' },
+            { key: 'ArrowRight', alias: HotkeyAction.SHOW_ITEM_2, icon: 'mdi-text-box-outline' },
+            { key: 'l', alias: HotkeyAction.SHOW_ITEM_3, icon: 'mdi-text-box-outline' },
+            { key: 'Escape', alias: HotkeyAction.CLOSE_ITEM_1, icon: 'mdi-close-box-outline' },
+            { key: 'ArrowLeft', alias: HotkeyAction.CLOSE_ITEM_2, icon: 'mdi-close-box-outline' },
+            { key: 'h', alias: HotkeyAction.CLOSE_ITEM_3, icon: 'mdi-close-box-outline' },
+            { key: 'Home', alias: HotkeyAction.HOME, icon: 'mdi-arrow-collapse-up' },
+            { key: 'End', alias: HotkeyAction.END, icon: 'mdi-arrow-collapse-down' },
             // assess: OSINT source group navigation
-            { key: 'K', alias: 'source_group_up', icon: 'mdi-arrow-up-circle-outline' },
-            { key: 'J', alias: 'source_group_down', icon: 'mdi-arrow-down-circle-outline' },
+            { key: 'K', alias: HotkeyAction.SOURCE_GROUP_UP, icon: 'mdi-arrow-up-circle-outline' },
+            { key: 'J', alias: HotkeyAction.SOURCE_GROUP_DOWN, icon: 'mdi-arrow-down-circle-outline' },
             // assess: news item actions
-            { key: 'r', alias: 'read_item', icon: 'mdi-eye-outline' },
-            { key: 'i', alias: 'important_item', icon: 'mdi-star-outline' },
-            { key: 'u', alias: 'like_item', icon: 'mdi-thumb-up-outline' },
-            { key: 'U', alias: 'unlike_item', icon: 'mdi-thumb-down-outline' },
-            { key: 'Delete', alias: 'delete_item', icon: 'mdi-delete-outline' },
-            { key: 's', alias: 'selection', icon: 'mdi-checkbox-multiple-marked-outline' },
-            { key: 'g', alias: 'group', icon: 'mdi-group' },
-            { key: 'G', alias: 'ungroup', icon: 'mdi-ungroup' },
-            { key: 'n', alias: 'new_product', icon: 'mdi-file-outline' },
-            { key: 'a', alias: 'aggregate_open', icon: 'mdi-newspaper-variant' },
-            { key: 'o', alias: 'open_item_source', icon: 'mdi-open-in-app' },
-            { key: '/', alias: 'open_search', icon: 'mdi-card-search-outline' },
-            { key: 'R', alias: 'reload', icon: 'mdi-reload' },
+            { key: 'r', alias: HotkeyAction.READ_ITEM, icon: 'mdi-eye-outline' },
+            { key: 'i', alias: HotkeyAction.IMPORTANT_ITEM, icon: 'mdi-star-outline' },
+            { key: 'u', alias: HotkeyAction.LIKE_ITEM, icon: 'mdi-thumb-up-outline' },
+            { key: 'U', alias: HotkeyAction.UNLIKE_ITEM, icon: 'mdi-thumb-down-outline' },
+            { key: 'Delete', alias: HotkeyAction.DELETE_ITEM, icon: 'mdi-delete-outline' },
+            { key: 's', alias: HotkeyAction.SELECTION, icon: 'mdi-checkbox-multiple-marked-outline' },
+            { key: 'g', alias: HotkeyAction.GROUP, icon: 'mdi-group' },
+            { key: 'G', alias: HotkeyAction.UNGROUP, icon: 'mdi-ungroup' },
+            { key: 'n', alias: HotkeyAction.NEW_PRODUCT, icon: 'mdi-file-outline' },
+            { key: 'a', alias: HotkeyAction.AGGREGATE_OPEN, icon: 'mdi-newspaper-variant' },
+            { key: 'o', alias: HotkeyAction.OPEN_ITEM_SOURCE, icon: 'mdi-open-in-app' },
+            { key: '/', alias: HotkeyAction.OPEN_SEARCH, icon: 'mdi-card-search-outline' },
+            { key: 'R', alias: HotkeyAction.RELOAD, icon: 'mdi-reload' },
             // switch views
-            { key: 'v', alias: 'enter_view_mode', icon: 'mdi-view-headline' },
-            { key: 'd', alias: 'dashboard_view', icon: 'mdi-view-dashboard-variant-outline' },
-            { key: 'z', alias: 'analyze_view', icon: 'mdi-file-table' },
-            { key: 'p', alias: 'publish_view', icon: 'mdi mdi-send' },
-            { key: 'c', alias: 'configuration_view', icon: 'mdi-cog' },
+            { key: 'v', alias: HotkeyAction.ENTER_VIEW_MODE, icon: 'mdi-view-headline' },
+            { key: 'd', alias: HotkeyAction.DASHBOARD_VIEW, icon: 'mdi-view-dashboard-variant-outline' },
+            { key: 'z', alias: HotkeyAction.ANALYZE_VIEW, icon: 'mdi-file-table' },
+            { key: 'p', alias: HotkeyAction.PUBLISH_VIEW, icon: 'mdi mdi-send' },
+            { key: 'c', alias: HotkeyAction.CONFIGURATION_VIEW, icon: 'mdi-cog' },
             // assess: filter actions
-            { key: 'f', alias: 'enter_filter_mode', icon: 'mdi-filter-outline' }
+            { key: 'f', alias: HotkeyAction.ENTER_FILTER_MODE, icon: 'mdi-filter-outline' }
         ]
     }
 
@@ -282,9 +300,11 @@ export const useSettingsStore = defineStore('settings', () => {
         getProfileWordLists,
         getAvailableWordListsComputed,
         getProfileLanguage,
+        getDateTimeFormat,
 
         // Actions
         getSetting,
+        getSettingBoolean,
         loadSettings,
         saveSettings,
         loadUserWordLists,
