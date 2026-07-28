@@ -13,7 +13,7 @@ dependencies = [
     "flask-oidc==2.4.0",
     "Flask-RESTful==0.3.10",
     "Flask-SQLAlchemy==3.1.1",
-    "gevent==26.5.0",
+    "gevent==26.7.0",
     "gunicorn==26.0.0",
     "Jinja2==3.1.6",
     "ldap3==2.10.2rc4",
