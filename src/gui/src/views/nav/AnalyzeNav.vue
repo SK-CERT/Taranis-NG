@@ -1,48 +1,88 @@
 <template>
-     <Navigation
-        :links = "links"
-        :icon   = "'mdi-file-table'"
-    />
+    <v-list density="compact">
+        <!-- Group links -->
+        <v-list-subheader>{{ $t('analyze.source') }}</v-list-subheader>
+        <v-list-item
+            v-for="link in links"
+            :key="link.route"
+            :to="link.route"
+            class="pa-2"
+        >
+            <template #default>
+                <div class="d-flex flex-column align-center text-center">
+                    <v-icon
+                        :color="link.color || undefined"
+                        class="mb-2"
+                    >
+                        {{ link.icon }}
+                    </v-icon>
+                    <span class="text-body-small">
+                        {{ link.translate ? $t(link.title) : link.title }}
+                    </span>
+                </div>
+            </template>
+        </v-list-item>
+    </v-list>
 </template>
 
-<script>
-    import Navigation from "../../components/common/Navigation";
+<script setup lang="ts">
+    import { ref, onMounted, computed } from 'vue'
+    import { useRouter, useRoute } from 'vue-router'
+    import { useTheme } from 'vuetify'
+    import { useAnalyzeStore } from '@/stores/analyze'
+    import { type GroupNavItem } from '@/types/routing'
 
-    export default {
-        name: "AnalyzeNav",
-        components: {
-            Navigation
-        },
-        data: () => ({
-            groups: [],
-            links: []
-        }),
-        mounted() {
-            this.$store.dispatch('getAllReportItemGroups', {search:''})
-                .then(() => {
-                    this.groups = this.$store.getters.getReportItemGroups;
+    const router = useRouter()
+    const route = useRoute()
+    const { global: themeGlobal } = useTheme()
+    const analyzeStore = useAnalyzeStore()
 
-                    this.links.push({
-                        icon: 'mdi-home-circle-outline',
-                        title: 'nav_menu.local',
-                        translate: '1',
-                        route: '/analyze/local',
-                    })
+    const groups = ref<Array<string | number>>([])
+    const links = ref<GroupNavItem[]>([])
 
-                    for (let i = 0; i < this.groups.length; i++) {
-                        this.links.push({
-                            icon: 'mdi-arrow-down-bold-circle-outline',
-                            title: this.groups[i],
-                            route: '/analyze/group/' + this.groups[i].replaceAll(" ", "-"),
-                        })
-                    }
+    const isDark = computed(() => themeGlobal.name.value === 'dark')
+    const textColor = computed(() => (isDark.value ? '#ffffff' : '#000000'))
+    const iconColor = computed(() => (isDark.value ? '#ffffff' : 'rgba(0, 0, 0, 0.54)'))
+    const dividerColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)'))
 
-                    if (!window.location.pathname.includes("/group/")) {
+    onMounted(async () => {
+        try {
+            await analyzeStore.loadReportItemGroups({})
+            const reportGroups = analyzeStore.getReportItemGroups
+            groups.value = Array.isArray(reportGroups) ? (reportGroups as Array<string | number>) : []
 
-                        this.$router.push("/analyze/local").catch(()=>{});
-                    }
-                });
+            // Add local link
+            links.value.push({
+                id: 'local',
+                icon: 'mdi-home-circle-outline',
+                title: 'nav_menu.local',
+                translate: true,
+                route: '/analyze/local'
+            })
 
+            // Add group links (groups are just strings)
+            const groupArray = Array.isArray(groups.value) ? groups.value : []
+            for (let i = 0; i < groupArray.length; i++) {
+                const group = groupArray[i]
+                if (group === undefined || group === null) {
+                    continue
+                }
+                const groupId = String(group).replaceAll(' ', '-')
+                links.value.push({
+                    id: groupId,
+                    icon: 'mdi-arrow-down-bold-circle-outline',
+                    title: String(group),
+                    translate: false,
+                    route: '/analyze/group-' + groupId
+                })
+            }
+
+            // If not on a specific scope route, redirect to local
+            if (!route.params['scope']) {
+                router.push('/analyze/local')
+            }
+        } catch (error) {
+            console.error('Error loading report item groups:', error)
         }
-    }
+    })
 </script>

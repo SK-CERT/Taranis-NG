@@ -1,280 +1,333 @@
 <template>
-    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-btn v-bind="UI.BUTTON.ADD_NEW" v-if="canCreate" @click="addRemoteAccess">
-            <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-            <span>{{ $t('common.add_btn') }}</span>
-        </v-btn>
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="visible">
-            <v-card>
-                <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000">
-                    <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="cancel">
-                        <v-icon>{{ UI.ICON.CLOSE }}</v-icon>
-                    </v-btn>
+    <v-dialog
+        v-model="dialog"
+        max-width="600"
+        persistent
+        scrollable
+        @keydown.esc="requestClose"
+    >
+        <template #activator="{ props: activatorProps }">
+            <AddNewButton
+                :show="canCreate"
+                v-bind="activatorProps"
+            />
+        </template>
 
-                    <v-toolbar-title>
-                        <span v-if="!edit">{{ $t('remote_access.add_new') }}</span>
-                        <span v-else>{{ $t('remote_access.edit') }}</span>
-                    </v-toolbar-title>
+        <v-card>
+            <DialogToolbar
+                :title="isEdit ? t('remote.access.edit') : t('remote.access.add_new')"
+                :saving="saving"
+                @cancel="requestClose"
+                @save="saveAndClose"
+            />
 
-                    <v-spacer></v-spacer>
-                    <v-btn v-if="canUpdate" text dark type="submit" form="form">
-                        <v-icon left>mdi-content-save</v-icon>
-                        <span>{{ $t('common.save') }}</span>
-                    </v-btn>
-                </v-toolbar>
+            <v-card-text>
+                <v-form
+                    ref="formRef"
+                    @submit.prevent="saveAndClose"
+                >
+                    <v-text-field
+                        v-model="localItem.name"
+                        :label="t('remote.access.name')"
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        :rules="[(v) => !!v || t('error.required')]"
+                        :disabled="saving"
+                    />
 
-                <v-form @submit.prevent="add" id="form" ref="form" class="px-4">
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <v-text-field :disabled="!canUpdate" :label="$t('remote_access.name')" name="title"
-                                type="text" v-model="remote_access.name" v-validate="'required'" data-vv-name="name"
-                                :error-messages="errors.collect('name')"
-                                :spellcheck="$store.state.settings.spellcheck" />
-                        </v-col>
-                        <v-col cols="12">
-                            <v-textarea :disabled="!canUpdate" :label="$t('remote_access.description')"
-                                name="description" v-model="remote_access.description"
-                                :spellcheck="$store.state.settings.spellcheck" />
-                        </v-col>
-                        <v-col cols="12">
-                            <v-text-field :disabled="!canUpdate" :label="$t('settings.api_key')" name="api_key"
-                                :type="showApiKey ? 'text' : 'password'" v-model="remote_access.api_key"
-                                :spellcheck="false" :append-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
-                                @click:append="showApiKey = !showApiKey" />
-                        </v-col>
-                    </v-row>
+                    <v-textarea
+                        v-model="localItem.description"
+                        :label="t('remote.access.description')"
+                        variant="outlined"
+                        density="comfortable"
+                        rows="3"
+                        class="mb-3"
+                        :disabled="saving"
+                    />
 
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <v-checkbox :disabled="!canUpdate" :label="$t('remote_access.enabled')"
-                                v-model="remote_access.enabled" />
-                        </v-col>
-                    </v-row>
+                    <v-text-field
+                        v-model="localItem.api_key"
+                        :label="t('settings.api_key')"
+                        :type="showApiKey ? 'text' : 'password'"
+                        :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        :disabled="saving"
+                        @click:append-inner="showApiKey = !showApiKey"
+                    />
 
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <v-data-table :disabled="!canUpdate" v-model="selected_osint_sources"
-                                :headers="headers_sources" :items="osint_sources" item-key="id" :show-select="canUpdate"
-                                class="elevation-1">
-                                <template v-slot:top>
-                                    <v-toolbar flat>
-                                        <v-toolbar-title>{{ $t('remote_access.osint_sources') }}
-                                        </v-toolbar-title>
-                                    </v-toolbar>
-                                </template>
+                    <v-switch
+                        v-model="localItem.enabled"
+                        :label="t('remote.access.enabled')"
+                        color="primary"
+                        :disabled="saving"
+                    />
 
-                            </v-data-table>
-                        </v-col>
-                        <v-col cols="12" class="pt-2">
-                            <v-data-table :disabled="!canUpdate" v-model="selected_report_item_types"
-                                :headers="headers_types" :items="report_item_types" item-key="id"
-                                :show-select="canUpdate" class="elevation-1">
-                                <template v-slot:top>
-                                    <v-toolbar flat>
-                                        <v-toolbar-title>{{ $t('remote_access.report_item_types') }}
-                                        </v-toolbar-title>
-                                    </v-toolbar>
-                                </template>
+                    <v-autocomplete
+                        v-model="selectedOsintSources"
+                        :items="osintSources"
+                        item-title="name"
+                        item-value="id"
+                        :label="t('remote.access.osint_sources')"
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        multiple
+                        chips
+                        closable-chips
+                        clearable
+                        :loading="loadingSources"
+                        :disabled="saving"
+                    />
 
-                            </v-data-table>
-                        </v-col>
-                    </v-row>
-
-                    <v-row no-gutters class="pt-2">
-                        <v-col cols="12">
-
-                        </v-col>
-                    </v-row>
-                    <v-alert v-if="show_validation_error" dense type="error" text>
-                        {{ $t('error.validation') }}
-                    </v-alert>
-                    <v-alert v-if="show_error" dense type="error" text>
-                        {{ $t('remote_access.error') }}
-                    </v-alert>
-
+                    <v-autocomplete
+                        v-model="selectedReportItemTypes"
+                        :items="reportItemTypes"
+                        item-title="title"
+                        item-value="id"
+                        :label="t('remote.access.report_item_types')"
+                        variant="outlined"
+                        density="comfortable"
+                        class="mb-3"
+                        multiple
+                        chips
+                        closable-chips
+                        clearable
+                        :loading="loadingTypes"
+                        :disabled="saving"
+                    />
                 </v-form>
-            </v-card>
-        </v-dialog>
-    </v-row>
+
+                <v-alert
+                    v-if="showValidationError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showValidationError = false"
+                >
+                    {{ t('error.validation') }}
+                </v-alert>
+
+                <v-alert
+                    v-if="showError"
+                    type="error"
+                    variant="tonal"
+                    class="mt-4"
+                    closable
+                    @click:close="showError = false"
+                >
+                    {{ t('remote.access.error') }}
+                </v-alert>
+            </v-card-text>
+        </v-card>
+
+        <UnsavedChangesDialog
+            v-model="confirmVisible"
+            @continue="continueEditing"
+            @save="saveAndClose"
+            @discard="discardAndClose"
+        />
+    </v-dialog>
 </template>
 
-<script>
-import AuthMixin from "../../../services/auth/auth_mixin";
-import { createNewRemoteAccess } from "@/api/config";
-import { updateRemoteAccess } from "@/api/config";
-import Permissions from "@/services/auth/permissions";
+<script setup lang="ts">
+    import { ref, computed, watch, onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import { useAuth } from '@/composables/useAuth'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+    import { createNewRemoteAccess, updateRemoteAccess, getAllOSINTSources, getAllReportItemTypes } from '@/api/config'
 
-export default {
-    name: "NewRemoteAccess",
-    components: {},
-    props: { add_button: Boolean },
-    data: () => ({
+    type IdRef = { id: string | number; [key: string]: unknown }
 
-        headers_sources: [
-            {
-                text: 'Name',
-                align: 'start',
-                value: 'name',
-            },
-            { text: 'Description', value: 'description' },
-        ],
+    type OSINTSource = { id: string | number; name?: string; [key: string]: unknown }
+    type ReportItemType = { id: string | number; title?: string; [key: string]: unknown }
 
-        headers_types: [
-            {
-                text: 'Name',
-                align: 'start',
-                value: 'title',
-            },
-            { text: 'Description', value: 'description' },
-        ],
-
-        visible: false,
-        showApiKey: false,
-        show_validation_error: false,
-        edit: false,
-        show_error: false,
-        selected_osint_sources: [],
-        osint_sources: [],
-        report_item_types: [],
-        selected_report_item_types: [],
-        remote_access: {
-            id: -1,
-            name: "",
-            description: "",
-            api_key: "",
-            enabled: false,
-            osint_sources: [],
-            report_item_types: [],
-        }
-    }),
-    computed: {
-        canCreate() {
-            return this.checkPermission(Permissions.CONFIG_REMOTE_ACCESS_CREATE)
-        },
-        canUpdate() {
-            return this.checkPermission(Permissions.CONFIG_REMOTE_ACCESS_UPDATE) || !this.edit
-        },
-    },
-    methods: {
-        addRemoteAccess() {
-            this.visible = true;
-            this.edit = false;
-            this.show_error = false;
-            this.remote_access.id = -1
-            this.remote_access.name = ""
-            this.remote_access.description = ""
-            this.remote_access.api_key = ""
-            this.remote_access.enabled = false
-            this.remote_access.osint_sources = []
-            this.remote_access.report_item_types = []
-            this.selected_osint_sources = []
-            this.selected_report_item_types = []
-            this.$validator.reset();
-        },
-
-        cancel() {
-            this.$validator.reset();
-            this.visible = false
-        },
-
-        add() {
-            this.$validator.validateAll().then(() => {
-
-                if (!this.$validator.errors.any()) {
-
-                    this.show_validation_error = false;
-                    this.show_error = false;
-
-                    this.remote_access.osint_sources = [];
-                    for (let i = 0; i < this.selected_osint_sources.length; i++) {
-                        this.remote_access.osint_sources.push(
-                            {
-                                id: this.selected_osint_sources[i].id
-                            }
-                        )
-                    }
-
-                    this.remote_access.report_item_types = [];
-                    for (let i = 0; i < this.selected_report_item_types.length; i++) {
-                        this.remote_access.report_item_types.push(
-                            {
-                                id: this.selected_report_item_types[i].id
-                            }
-                        )
-                    }
-
-                    if (this.edit) {
-                        updateRemoteAccess(this.remote_access).then(() => {
-
-                            this.$validator.reset();
-                            this.visible = false;
-
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'success',
-                                    loc: 'remote_access.successful_edit'
-                                }
-                            )
-
-                        }).catch(() => {
-
-                            this.show_error = true;
-                        })
-                    } else {
-                        createNewRemoteAccess(this.remote_access).then(() => {
-
-                            this.$validator.reset();
-                            this.visible = false;
-
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'success',
-                                    loc: 'remote_access.successful'
-                                }
-                            )
-
-                        }).catch(() => {
-
-                            this.show_error = true;
-                        })
-                    }
-
-                } else {
-
-                    this.show_validation_error = true;
-                }
-            })
-        }
-    },
-    mixins: [AuthMixin],
-    mounted() {
-        this.$store.dispatch('getAllOSINTSources', { search: '' })
-            .then(() => {
-                this.osint_sources = this.$store.getters.getOSINTSources.items
-            });
-
-        this.$store.dispatch('getAllReportItemTypesConfig', { search: '' })
-            .then(() => {
-                this.report_item_types = this.$store.getters.getReportItemTypesConfig.items
-            });
-
-        this.$root.$on('show-edit', (data) => {
-            this.visible = true;
-            this.edit = true;
-            this.show_error = false;
-
-            this.selected_osint_sources = data.osint_sources;
-            this.selected_report_item_types = data.report_item_types;
-
-            this.remote_access.id = data.id;
-            this.remote_access.name = data.name;
-            this.remote_access.description = data.description;
-            this.remote_access.api_key = data.api_key;
-            this.remote_access.enabled = data.enabled;
-        });
-    },
-    beforeDestroy() {
-        this.$root.$off('show-edit')
+    type RemoteAccessItem = {
+        id: string | number | null
+        name: string
+        description: string
+        api_key: string
+        enabled: boolean
+        osint_sources: IdRef[]
+        report_item_types: IdRef[]
+        [key: string]: unknown
     }
-}
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            editItem?: Partial<RemoteAccessItem> | null
+        }>(),
+        {
+            editItem: null
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'saved'): void
+    }>()
+
+    const { t } = useI18n()
+    const { checkPermission } = useAuth()
+
+    const formRef = ref<any>(null)
+    const showValidationError = ref(false)
+    const showError = ref(false)
+    const saving = ref(false)
+    const dialog = ref(false)
+    const showApiKey = ref(false)
+    const loadingSources = ref(false)
+    const loadingTypes = ref(false)
+
+    const osintSources = ref<OSINTSource[]>([])
+    const reportItemTypes = ref<ReportItemType[]>([])
+    const selectedOsintSources = ref<(string | number)[]>([])
+    const selectedReportItemTypes = ref<(string | number)[]>([])
+
+    const defaultItem: RemoteAccessItem = {
+        id: null,
+        name: '',
+        description: '',
+        api_key: '',
+        enabled: true,
+        osint_sources: [],
+        report_item_types: []
+    }
+
+    const localItem = ref<RemoteAccessItem>({ ...defaultItem })
+    const isEdit = computed(() => !!localItem.value.id)
+
+    const canCreate = computed(() => checkPermission('CONFIG_REMOTE_ACCESS_CREATE'))
+
+    onMounted(async () => {
+        await Promise.all([loadOsintSources(), loadReportItemTypes()])
+    })
+
+    async function loadOsintSources(): Promise<void> {
+        loadingSources.value = true
+        try {
+            const response = (await getAllOSINTSources({ search: '' })) as {
+                items?: OSINTSource[]
+                data?: { items?: OSINTSource[] }
+            }
+            osintSources.value = response.items || response.data?.items || []
+        } catch (error) {
+            console.error('Error loading OSINT sources:', error)
+        } finally {
+            loadingSources.value = false
+        }
+    }
+
+    async function loadReportItemTypes(): Promise<void> {
+        loadingTypes.value = true
+        try {
+            const response = (await getAllReportItemTypes({ search: '' })) as {
+                items?: ReportItemType[]
+                data?: { items?: ReportItemType[] }
+            }
+            reportItemTypes.value = response.items || response.data?.items || []
+        } catch (error) {
+            console.error('Error loading report item types:', error)
+        } finally {
+            loadingTypes.value = false
+        }
+    }
+
+    // Persists the form. Returns true on success so the guard can decide whether to close.
+    async function persist(): Promise<boolean> {
+        showValidationError.value = false
+        showError.value = false
+
+        const { valid } = (await formRef.value.validate()) as FormValidationResult
+        if (!valid) {
+            showValidationError.value = true
+            return false
+        }
+
+        saving.value = true
+        try {
+            const payload: RemoteAccessItem = {
+                ...localItem.value,
+                osint_sources: selectedOsintSources.value.map((id) => ({ id })),
+                report_item_types: selectedReportItemTypes.value.map((id) => ({ id }))
+            }
+
+            if (isEdit.value) {
+                await updateRemoteAccess(payload)
+            } else {
+                // Backend requires an integer id even on create (ignored); null fails validation.
+                await createNewRemoteAccess({ ...payload, id: -1 })
+            }
+            emit('saved')
+            return true
+        } catch (error) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'common.error_saving' }
+                })
+            )
+            showError.value = true
+            return false
+        } finally {
+            saving.value = false
+        }
+    }
+
+    function closeDialog(): void {
+        showValidationError.value = false
+        showError.value = false
+        showApiKey.value = false
+        formRef.value?.reset()
+        localItem.value = { ...defaultItem }
+        selectedOsintSources.value = []
+        selectedReportItemTypes.value = []
+        dialog.value = false
+    }
+
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => ({ item: localItem.value, sources: selectedOsintSources.value, types: selectedReportItemTypes.value }),
+        save: persist,
+        close: closeDialog
+    })
+
+    watch(
+        () => props.editItem,
+        (newItem) => {
+            if (newItem && Object.keys(newItem).length > 0) {
+                localItem.value = { ...defaultItem, ...newItem }
+                selectedOsintSources.value = (newItem.osint_sources ?? []).map((s) => s.id)
+                selectedReportItemTypes.value = (newItem.report_item_types ?? []).map((tp) => tp.id)
+                // Opening for edit: the parent sets editItem, so reveal the dialog.
+                dialog.value = true
+            } else {
+                localItem.value = { ...defaultItem }
+                selectedOsintSources.value = []
+                selectedReportItemTypes.value = []
+            }
+        },
+        { immediate: true, deep: true }
+    )
+
+    watch(
+        () => dialog.value,
+        (newVal: boolean) => {
+            if (!newVal) {
+                showValidationError.value = false
+                showError.value = false
+                saving.value = false
+            } else {
+                // Snapshot the freshly-loaded form as the clean baseline for dirty-tracking.
+                capture()
+            }
+        }
+    )
 </script>

@@ -1,233 +1,353 @@
 <template>
-    <v-container>
-        <v-data-table :headers="headers" :items="records" :items-per-page="-1" item-key="id" sort-by="display_name"
-                      class="elevation-1" :search="search" :clickable="false" @click.stop disable-pagination hide-default-footer>
-            <template v-slot:top>
-                <v-row v-bind="UI.TOOLBAR.ROW">
-                    <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                        <v-tooltip top>
-                            <template v-slot:activator="{ on, attrs }">
-                                <v-icon color="blue" v-bind="attrs" v-on="on" class="ml-2">
-                                    {{ UI.ICON.HELP }}
-                                </v-icon>
-                            </template>
-                            <span>{{ $t('workflow.states.tab_description') }}</span>
-                        </v-tooltip>
+    <v-container fluid>
+        <v-card>
+            <!-- Toolbar -->
+            <v-card-text>
+                <v-row>
+                    <v-col cols="8">
+                        <SearchField
+                            v-model="search"
+                            :width="350"
+                        />
                     </v-col>
-                    <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                        <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="search" :label="$t('toolbar_filter.search')"
-                                      single-line hide-details></v-text-field>
-                    </v-col>
-                    <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                        <v-btn v-bind="UI.BUTTON.ADD_NEW" @click="addItem">
-                            <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                            <span>{{ $t('common.add_btn') }}</span>
-                        </v-btn>
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    >
+                        <AddNewButton
+                            :show="canCreate"
+                            @click="addItem"
+                        />
                     </v-col>
                 </v-row>
+            </v-card-text>
 
-                <StateEditDialog v-model="dialogEdit" :edited-item="editedItem" :edited-index="editedIndex"
-                                 :is-editable="isEditable" @save="saveRecord" @close="closeEdit" />
+            <!-- Data Table -->
+            <v-data-table
+                :headers="headers"
+                :items="filteredRecords"
+                :search="search"
+                item-key="id"
+                class="elevation-1"
+            >
+                <template #item.display_name="{ item }">
+                    {{ $te(`workflow.states.${item.display_name}`) ? $t(`workflow.states.${item.display_name}`) : item.display_name }}
+                </template>
 
-                <MessageBox v-model="dialogDelete"
-                            @yes="deleteRecord"
-                            @cancel="closeDelete"
-                            :title="$t('common.messagebox.delete')"
-                            :message="editedItem.display_name">
-                </MessageBox>
-            </template>
+                <template #item.color="{ item }">
+                    <v-chip
+                        :color="item.color"
+                        label
+                        :text-color="getContrastColor(item.color)"
+                    >
+                        {{ item.color }}
+                    </v-chip>
+                </template>
 
-            <template v-slot:item.display_name="{ item }">
-                {{ $te('workflow.states.' + item.display_name) ? $t('workflow.states.' + item.display_name) : item.display_name }}
-            </template>
+                <template #item.icon="{ item }">
+                    <v-icon :color="item.color">
+                        {{ item.icon }}
+                    </v-icon>
+                </template>
 
-            <template v-slot:item.color="{ item }">
-                <v-chip :color="item.color" label :text-color="getContrastColor(item.color)">
-                    {{ item.color }}
-                </v-chip>
-            </template>
-
-            <template v-slot:item.icon="{ item }">
-                <v-icon :color="item.color">{{ item.icon }}</v-icon>
-            </template>
-
-            <template v-slot:item.actions="{ item }">
-                <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? 'primary' : 'warning'">
-                            {{ item.editable ? 'mdi-pencil' : 'mdi-lock-outline' }}
-                        </v-icon>
+                <template #item.actions="{ item }">
+                    <template v-if="item.editable">
+                        <ActionButton
+                            action="edit"
+                            :title="t('common.edit')"
+                            class="mr-1"
+                            @click="editItem(item)"
+                        />
+                        <ActionButton
+                            action="delete"
+                            :title="t('common.delete')"
+                            @click="deleteItem(item)"
+                        />
                     </template>
-                    <span>{{ item.editable ? $t('common.edit') : $t('workflow.states.cannot_edit_system_state') }}</span>
-                </v-tooltip>
-                <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? 'error' : 'warning'">
-                            {{ item.editable ? UI.ICON.DELETE : 'mdi-lock-outline' }}
-                        </v-icon>
+                    <template v-else>
+                        <ActionButton
+                            action="lock"
+                            :title="t('workflow.states.cannot_edit_system_state')"
+                        />
                     </template>
-                    <span>
-                        {{ item.editable ? $t('common.delete') : $t('workflow.states.cannot_delete_system_state')}}
-                    </span>
-                </v-tooltip>
-            </template>
+                </template>
+            </v-data-table>
+        </v-card>
 
-        </v-data-table>
+        <!-- Delete Dialog -->
+        <ConfirmationDialog
+            v-model="dialogDelete"
+            :message="editedItem.display_name"
+            max-width="500"
+            @confirm="deleteRecord"
+        />
+
+        <!-- Edit Dialog - Simplified for now -->
+        <!-- `persistent`: blocks Vuetify's native close-on-Escape so Escape routes only
+             through @keydown.esc="requestClose" (the unsaved-changes guard). Without it,
+             Escape both opens the prompt AND closes this dialog — the prompt (rendered
+             inside this dialog) unmounts mid-click, so "Close without saving" detaches. -->
+        <v-dialog
+            v-model="dialogEdit"
+            max-width="700"
+            persistent
+            scrollable
+            @keydown.esc="requestClose"
+        >
+            <v-card>
+                <DialogToolbar
+                    :title="editedIndex === -1 ? t('workflow.states.add_new') : t('workflow.states.edit')"
+                    :show-save="isEditable"
+                    :saving="saving"
+                    @cancel="requestClose"
+                    @save="saveAndClose"
+                />
+                <v-card-text>
+                    <v-form ref="formRef">
+                        <v-text-field
+                            v-model="editedItem.display_name"
+                            :label="t('workflow.states.display_name')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            density="comfortable"
+                            class="mb-3"
+                            :rules="[(v) => !!v || t('error.required')]"
+                        />
+
+                        <v-textarea
+                            v-model="editedItem.description"
+                            :label="t('workflow.states.description')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            density="comfortable"
+                            rows="3"
+                            class="mb-3"
+                        />
+
+                        <v-text-field
+                            v-model="editedItem.color"
+                            :label="t('workflow.states.color')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            type="color"
+                            density="comfortable"
+                            class="mb-3"
+                        />
+
+                        <v-text-field
+                            v-model="editedItem.icon"
+                            :label="t('workflow.states.icon')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            density="comfortable"
+                            placeholder="mdi-circle"
+                        />
+                    </v-form>
+                </v-card-text>
+            </v-card>
+
+            <UnsavedChangesDialog
+                v-model="confirmVisible"
+                @continue="continueEditing"
+                @save="saveAndClose"
+                @discard="discardAndClose"
+            />
+        </v-dialog>
     </v-container>
 </template>
 
-<script>
-    import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from "@/api/config";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import StateEditDialog from "./StateEditDialog.vue";
-    import MessageBox from "@/components/common/MessageBox.vue";
+<script setup lang="ts">
+    import { ref, computed, onMounted, watch } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import SearchField from '@/components/common/SearchField.vue'
+    import { useConfigStore } from '@/stores/config'
+    import { useAuth } from '@/composables/useAuth'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+    import { createNewStateDefinition, updateStateDefinition, deleteStateDefinition } from '@/api/config'
 
-    export default {
-        name: "StatesTab",
-        components: {
-            MessageBox,
-            StateEditDialog,
-        },
-        data() {
-            return {
-                search: "",
-                headers: [
-                    { text: this.$t('workflow.states.display_name'), value: 'display_name' },
-                    { text: this.$t('workflow.states.description'), value: 'description' },
-                    { text: this.$t('workflow.states.color'), value: 'color' },
-                    { text: this.$t('workflow.states.icon'), value: 'icon' },
-                    { text: this.$t('settings.actions'), value: 'actions', sortable: false },
-                ],
-                records: [],
-                dialogEdit: false,
-                dialogDelete: false,
-                editedIndex: -1,
-                editedItem: {
-                    id: -1,
-                    display_name: "",
-                    description: "",
-                    color: "#2196F3",
-                    icon: "mdi-circle",
-                    editable: true,
-                },
-                defaultItem: {
-                    display_name: "",
-                    description: "",
-                    color: "#2196F3",
-                    icon: "mdi-circle",
-                    editable: true,
-                },
-            };
-        },
-        mixins: [AuthMixin],
-        computed: {
-            isEditable() {
-                // For new items (editedIndex === -1), always editable
-                // For existing items, check the editable flag
-                return this.editedIndex === -1 || this.editedItem.editable;
+    type StateDefinition = {
+        id: string | number
+        display_name: string
+        description: string
+        color: string
+        icon: string
+        editable: boolean
+        [key: string]: unknown
+    }
+
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const { t } = useI18n()
+    const configStore = useConfigStore()
+    const { checkPermission } = useAuth()
+
+    const search = ref('')
+    const dialogEdit = ref(false)
+    const dialogDelete = ref(false)
+    const editedIndex = ref(-1)
+    const formRef = ref<any>(null)
+    const saving = ref(false)
+
+    const defaultItem: StateDefinition = {
+        id: -1,
+        display_name: '',
+        description: '',
+        color: '#2196F3',
+        icon: 'mdi-circle',
+        editable: true
+    }
+
+    const editedItem = ref<StateDefinition>({ ...defaultItem })
+
+    const headers: HeaderEntry[] = [
+        { title: t('workflow.states.display_name'), key: 'display_name' },
+        { title: t('workflow.states.description'), key: 'description' },
+        { title: t('workflow.states.color'), key: 'color' },
+        { title: t('workflow.states.icon'), key: 'icon' },
+        { title: t('settings.actions'), key: 'actions', sortable: false }
+    ]
+
+    const canCreate = computed(() => checkPermission('CONFIG_WORKFLOW_CREATE'))
+
+    const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
+
+    const filteredRecords = computed<StateDefinition[]>(() =>
+        Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
+    )
+
+    function getContrastColor(hexColor?: string): 'white' | 'black' {
+        if (!hexColor || hexColor.length < 7) return 'white'
+        const r = parseInt(hexColor.slice(1, 3), 16)
+        const g = parseInt(hexColor.slice(3, 5), 16)
+        const b = parseInt(hexColor.slice(5, 7), 16)
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        return luminance > 0.5 ? 'black' : 'white'
+    }
+
+    function addItem(): void {
+        editedIndex.value = -1
+        editedItem.value = { ...defaultItem }
+        dialogEdit.value = true
+    }
+
+    function editItem(item: StateDefinition): void {
+        const records = filteredRecords.value
+        editedIndex.value = records.indexOf(item)
+        editedItem.value = { ...item }
+        dialogEdit.value = true
+    }
+
+    function deleteItem(item: StateDefinition): void {
+        if (!item.editable) return
+        const records = filteredRecords.value
+        editedIndex.value = records.indexOf(item)
+        editedItem.value = { ...item }
+        dialogDelete.value = true
+    }
+
+    // No close-time reset: addItem/editItem/deleteItem fully set editedItem/editedIndex
+    // before opening, so resetting here is unnecessary. A deferred reset (to avoid the
+    // close-animation flicker) would also race the next dialog open and clobber its state.
+    function closeEdit(): void {
+        dialogEdit.value = false
+    }
+
+    function closeDelete(): void {
+        dialogDelete.value = false
+    }
+
+    // Persists the form. Returns true on success so the unsaved-changes guard can
+    // decide whether to close the dialog (it closes only on a successful save).
+    async function persist(): Promise<boolean> {
+        const { valid } = (await formRef.value?.validate()) as FormValidationResult
+        if (!valid) {
+            return false
+        }
+
+        saving.value = true
+        try {
+            // Send only editable fields. On create, omit id entirely so the backend
+            // assigns a real auto-increment id; sending id (e.g. -1) inserts a row with
+            // that id, which the delete route (/<int>) can then never match -> 404.
+            const payload = {
+                display_name: editedItem.value.display_name,
+                description: editedItem.value.description,
+                color: editedItem.value.color,
+                icon: editedItem.value.icon,
+                editable: editedItem.value.editable
             }
-        },
-        methods: {
-            getContrastColor(hexColor) {
-                // Calculate luminance to determine if text should be light or dark
-                const r = parseInt(hexColor.slice(1, 3), 16);
-                const g = parseInt(hexColor.slice(3, 5), 16);
-                const b = parseInt(hexColor.slice(5, 7), 16);
-                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                return luminance > 0.5 ? 'black' : 'white';
-            },
-
-            fetchRecords() {
-                if (this.checkPermission(Permissions.CONFIG_WORKFLOW_ACCESS)) {
-                    this.$store.dispatch('getAllStateDefinitions', { search: '' }).then(() => {
-                        this.records = this.$store.getters.getStateDefinitions.items;
-                    });
-                }
-            },
-
-            addItem() {
-                this.editedIndex = -1
-                this.editedItem = Object.assign({}, this.defaultItem);
-                this.dialogEdit = true;
-            },
-
-            editItem(item) {
-                this.editedIndex = this.records.indexOf(item)
-                this.editedItem = Object.assign({}, item)
-                this.dialogEdit = true
-            },
-
-            deleteItem(item) {
-                if (!item.editable) {
-                    this.showMsg("error", "states.cannot_delete_system_state");
-                    return;
-                }
-                this.editedIndex = this.records.indexOf(item)
-                this.editedItem = Object.assign({}, item)
-                this.dialogDelete = true
-            },
-
-            closeEdit() {
-                this.dialogEdit = false
-                this.$nextTick(() => {
-                    this.editedItem = Object.assign({}, this.defaultItem)
-                    this.editedIndex = -1
+            if (editedIndex.value > -1) {
+                await updateStateDefinition({ ...payload, id: editedItem.value.id })
+            } else {
+                await createNewStateDefinition(payload)
+            }
+            await configStore.loadStateDefinitions({ search: '' })
+            return true
+        } catch (error) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'common.error_saving' }
                 })
-            },
-
-            closeDelete() {
-                this.dialogDelete = false
-                this.$nextTick(() => {
-                    this.editedItem = Object.assign({}, this.defaultItem)
-                    this.editedIndex = -1
-                })
-            },
-
-            saveRecord(submitData) {
-                if (this.editedIndex > -1) {
-                    updateStateDefinition(submitData).then((response) => {
-                        this.editedItem = Object.assign({}, response.data)
-                        Object.assign(this.records[this.editedIndex], this.editedItem);
-                        this.showMsg("success", "workflow.states.successful_edit");
-                        this.closeEdit();
-                    }).catch(() => {
-                        this.showMsg("error", "workflow.states.error");
-                    })
-                } else {
-                    createNewStateDefinition(submitData).then((response) => {
-                        this.editedItem = Object.assign({}, response.data)
-                        this.records.push(this.editedItem);
-                        this.showMsg("success", "workflow.states.successful");
-                        this.closeEdit();
-                    }).catch(() => {
-                        this.showMsg("error", "workflow.states.error");
-                    })
-                }
-            },
-
-            deleteRecord() {
-                if (!this.editedItem.editable) {
-                    this.showMsg("error", "workflow.states.cannot_delete_system_state");
-                    this.closeDelete();
-                    return;
-                }
-
-                deleteStateDefinition(this.editedItem).then(() => {
-                    this.records.splice(this.editedIndex, 1);
-                    this.showMsg("success", "workflow.states.remove");
-                    this.closeDelete();
-                }).catch(() => {
-                    this.showMsg("error", "workflow.states.removed_error");
-                })
-            },
-
-            showMsg(type, message) {
-                this.$root.$emit('notification', { type: type, loc: message })
-            },
-        },
-        mounted() {
-            this.fetchRecords();
+            )
+            return false
+        } finally {
+            saving.value = false
         }
     }
+
+    // Unsaved-changes guard. capture() snapshots the freshly-loaded form as the clean
+    // baseline on open; requestClose() shows the prompt only when real edits exist.
+    // Without capture() the baseline stays null and isDirty() always returns false, so
+    // the prompt never shows — even after the user edits fields then clicks cancel.
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => editedItem.value,
+        save: persist,
+        close: closeEdit
+    })
+
+    watch(
+        () => dialogEdit.value,
+        (newVal: boolean) => {
+            if (!newVal) {
+                saving.value = false
+            } else {
+                // Snapshot the form as the clean baseline for dirty-tracking.
+                capture()
+            }
+        }
+    )
+
+    async function deleteRecord(): Promise<void> {
+        if (!editedItem.value.editable) {
+            closeDelete()
+            return
+        }
+
+        try {
+            await deleteStateDefinition(editedItem.value)
+            await configStore.loadStateDefinitions({ search: '' })
+            closeDelete()
+        } catch (error) {
+            console.error('Error deleting state:', error)
+        }
+    }
+
+    onMounted(() => {
+        if (checkPermission('CONFIG_WORKFLOW_ACCESS')) {
+            configStore.loadStateDefinitions({ search: '' })
+        }
+    })
 </script>

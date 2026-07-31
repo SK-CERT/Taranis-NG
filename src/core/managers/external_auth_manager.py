@@ -22,7 +22,7 @@ from config import Config
 from keycloak import KeycloakAdmin
 
 
-def keycloak_user_management_enabled():
+def keycloak_user_management_enabled() -> bool:
     """Check if Keycloak user management is enabled.
 
     Returns:
@@ -33,7 +33,7 @@ def keycloak_user_management_enabled():
     return False
 
 
-def get_keycloak_client_secret_key():
+def get_keycloak_client_secret_key() -> str:
     """Get the Keycloak client_secret_key.
 
     This function retrieves the Keycloak client_secret_key from the Docker secrets file.
@@ -44,7 +44,7 @@ def get_keycloak_client_secret_key():
     return Config.read_secret("keycloak_client_secret_key")
 
 
-def get_keycloak_admin_password():
+def get_keycloak_admin_password() -> str:
     """Get the Keycloak admin password.
 
     This function retrieves the Keycloak admin password from the Docker secrets file.
@@ -55,7 +55,7 @@ def get_keycloak_admin_password():
     return Config.read_secret("keycloak_admin_password")
 
 
-def get_keycloak_admin():
+def get_keycloak_admin() -> KeycloakAdmin:
     """Return an instance of KeycloakAdmin.
 
     This function retrieves the necessary environment variables and uses them to create
@@ -74,7 +74,7 @@ def get_keycloak_admin():
     )
 
 
-def create_user(user_data):
+def create_user(user_data: dict) -> None:
     """Create a user in the external authentication system.
 
     Args:
@@ -82,14 +82,14 @@ def create_user(user_data):
             - username (str): The username of the user.
             - password (str): The password of the user.
     """
-    if keycloak_user_management_enabled():
+    if keycloak_user_management_enabled() and user_data.get("password"):
         keycloak_admin = get_keycloak_admin()
         keycloak_admin.create_user(
             {"username": user_data["username"], "credentials": [{"value": user_data["password"], "type": "password"}], "enabled": True},
         )
 
 
-def update_user(user_data, original_username):
+def update_user(user_data: dict, original_username: str) -> None:
     """Update user information in the external authentication system.
 
     This function updates the user information in the external authentication system, such as Keycloak.
@@ -98,19 +98,18 @@ def update_user(user_data, original_username):
         user_data (dict): A dictionary containing the updated user data.
         original_username (str): The original username of the user.
     """
-    if keycloak_user_management_enabled():
-        if user_data.get("password") or original_username != user_data["username"]:
-            keycloak_admin = get_keycloak_admin()
-            keycloak_user_id = keycloak_admin.get_user_id(original_username)
-            if keycloak_user_id is not None:
-                if original_username != user_data["username"]:
-                    keycloak_admin.update_user(user_id=keycloak_user_id, payload={"username": user_data["username"]})
+    if keycloak_user_management_enabled() and (user_data.get("password") or original_username != user_data["username"]):
+        keycloak_admin = get_keycloak_admin()
+        keycloak_user_id = keycloak_admin.get_user_id(original_username)
+        if keycloak_user_id is not None:
+            if original_username != user_data["username"]:
+                keycloak_admin.update_user(user_id=keycloak_user_id, payload={"username": user_data["username"]})
 
-                if user_data.get("password"):
-                    keycloak_admin.set_user_password(user_id=keycloak_user_id, password=user_data["password"], temporary=False)
+            if user_data.get("password"):
+                keycloak_admin.set_user_password(user_id=keycloak_user_id, password=user_data["password"], temporary=False)
 
 
-def delete_user(username):
+def delete_user(username: str) -> None:
     """Delete a user from the external authentication system.
 
     This function deletes a user from the external authentication system, such as Keycloak.

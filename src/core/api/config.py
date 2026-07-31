@@ -10,6 +10,9 @@ if TYPE_CHECKING:
 import io
 from http import HTTPStatus
 
+import requests
+from auth import saml_authenticator, saml_federation, saml_metadata
+from auth import url_guard as saml_url_guard
 from flask import request, send_file
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
@@ -30,6 +33,7 @@ from model import (
     acl_entry,
     ai_provider,
     attribute,
+    auth_provider,
     bot_preset,
     bots_node,
     collectors_node,
@@ -43,6 +47,7 @@ from model import (
     remote,
     report_item_type,
     role,
+    security_settings,
     setting,
     user,
     word_list,
@@ -50,11 +55,16 @@ from model import (
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
-
 from shared.schema.ai_provider import AiProviderSchema
+from shared.schema.auth_provider import AuthProviderSchema
 from shared.schema.data_provider import DataProviderSchema
 from shared.schema.role import PermissionSchema
+from shared.schema.security_settings import SecuritySettingsSchema
 from shared.schema.state import StateDefinitionSchema, StateEntityTypeSchema
+
+# Fetching an admin-supplied metadata URL is a server-side request: keep it tight.
+SAML_METADATA_TIMEOUT = 10
+SAML_METADATA_MAX_BYTES = 2 * 1024 * 1024
 
 
 class DictionariesReloadResource(Resource):
@@ -275,6 +285,213 @@ class AiProviderResource(Resource):
             return ai_provider.AiProvider.delete(ai_provider_id)
         except Exception as ex:
             msg = "Could not delete AI model"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class AuthProvidersResource(Resource):
+    """Authentication providers API endpoint."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_ACCESS")
+    def get(self) -> tuple[str, dict]:
+        """Get all authentication providers (secrets are never returned).
+
+        Returns:
+            (dict): The authentication providers
+        """
+        search = request.args.get("search")
+        return auth_provider.AuthProvider.get_all_json(search)
+
+    @auth_required("CONFIG_AUTH_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Create an authentication provider.
+
+        Returns:
+            (str, int): The result of the create
+        """
+        try:
+            user_object = auth_manager.get_user_from_jwt()
+            record = auth_provider.AuthProvider.add_new(request.json, user_object.name)
+            schema = AuthProviderSchema()
+            return schema.dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = f"Could not create authentication provider: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class AuthProviderResource(Resource):
+    """Authentication provider API endpoint."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_UPDATE")
+    def put(self, auth_provider_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Update an authentication provider (an empty secret keeps the stored one).
+
+        Args:
+            auth_provider_id (int): The authentication provider ID
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            user_object = auth_manager.get_user_from_jwt()
+            record = auth_provider.AuthProvider.update(auth_provider_id, request.json, user_object.name)
+            schema = AuthProviderSchema()
+            return schema.dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = f"Could not update authentication provider: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+    @auth_required("CONFIG_AUTH_PROVIDER_DELETE")
+    def delete(self, auth_provider_id: int) -> tuple[dict, HTTPStatus] | None:
+        """Delete an authentication provider (identity links are removed with it).
+
+        Args:
+            auth_provider_id (int): The authentication provider ID
+        Returns:
+            (str, int): The result of the delete
+        """
+        try:
+            return auth_provider.AuthProvider.delete(auth_provider_id)
+        except Exception as ex:
+            msg = "Could not delete authentication provider"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+def _read_idp_metadata_xml(data: dict) -> str:
+    """Return the IdP metadata XML from the request payload, fetching it when a URL is given.
+
+    Args:
+        data (dict): The request payload with either "xml" or "url".
+
+    Returns:
+        str: The metadata XML document.
+
+    Raises:
+        ValueError: If neither is provided, the URL is not http(s), points at a
+            non-public host, or the document is too large.
+    """
+    xml = data.get("xml")
+    url = (data.get("url") or "").strip()
+    if url:
+        # Rejects http(s)-only and, crucially, non-public hosts: this endpoint
+        # reflects the fetched document back, so an unguarded fetch is an SSRF.
+        saml_url_guard.assert_public_url(url)
+        response = requests.get(url, timeout=SAML_METADATA_TIMEOUT, stream=True)
+        response.raise_for_status()
+        xml = response.raw.read(SAML_METADATA_MAX_BYTES + 1, decode_content=True).decode("utf-8", errors="replace")
+        if len(xml.encode()) > SAML_METADATA_MAX_BYTES:
+            msg = "The metadata document is too large"
+            raise ValueError(msg)
+    if not xml:
+        msg = "Provide the metadata URL or the metadata XML"
+        raise ValueError(msg)
+    return xml
+
+
+class SamlMetadataImportResource(Resource):
+    """Read the SAML provider settings out of an identity provider's metadata."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Extract entityID, SSO URL and signing certificate(s) from IdP metadata.
+
+        Accepts the metadata document itself ("xml") or a URL to fetch it from
+        ("url"). Nothing is stored - the values are handed back for the admin to
+        review and save.
+
+        Returns:
+            (dict, int): The extracted provider settings, or an error.
+        """
+        try:
+            xml = _read_idp_metadata_xml(request.json or {})
+            settings = saml_metadata.parse_idp_metadata(xml)
+            # fail here rather than at the first login if the certificates are unusable
+            settings["certificate_count"] = len(saml_authenticator.load_idp_certificates(settings["idp_certificate"]))
+            return settings, HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = f"The metadata could not be read: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class SamlKeypairResource(Resource):
+    """Generate the service provider keypair an identity provider encrypts assertions to."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Generate an SP keypair.
+
+        Nothing is stored: the private key and certificate are handed back for the
+        admin to review and save with the provider. The certificate is the value a
+        federation's "encryption certificate" field wants.
+
+        Returns:
+            (dict, int): The generated private_key and certificate (PEM).
+        """
+        entity_id = (request.json or {}).get("sp_entity_id") or "taranis-ng"
+        return saml_authenticator.generate_sp_keypair(entity_id), HTTPStatus.OK
+
+
+class SamlFederationVerifyResource(Resource):
+    """Fetch and signature-verify a SAML federation's metadata for the admin preview."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_CREATE")
+    def post(self) -> tuple[dict, HTTPStatus]:
+        """Verify federation metadata and report the resolvable identity providers.
+
+        Accepts ``federation_metadata_url`` and ``federation_metadata_cert``.
+        Nothing is stored: the metadata is fetched, its signature verified against
+        the given trust anchor, and the number of usable identity providers (plus
+        the document's validUntil) handed back so the admin can confirm the URL and
+        anchor before saving.
+
+        Returns:
+            (dict, int): ``entity_count`` and ``valid_until``, or an error.
+        """
+        data = request.json or {}
+        try:
+            result = saml_federation.verify_metadata(
+                data.get("federation_metadata_url", ""),
+                data.get("federation_metadata_cert", ""),
+            )
+            return result, HTTPStatus.OK
+        except ValueError as ex:
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
+        except Exception as ex:
+            msg = f"The federation metadata could not be verified: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class SecuritySettingsResource(Resource):
+    """Site-wide security settings API endpoint (WebAuthn relying party)."""
+
+    @auth_required("CONFIG_AUTH_PROVIDER_ACCESS")
+    def get(self) -> tuple[dict, HTTPStatus]:
+        """Get the security settings.
+
+        Returns:
+            (dict): The security settings
+        """
+        return security_settings.SecuritySettings.get_json(), HTTPStatus.OK
+
+    @auth_required("CONFIG_AUTH_PROVIDER_UPDATE")
+    def put(self) -> tuple[dict, HTTPStatus]:
+        """Update the security settings.
+
+        Returns:
+            (str, int): The result of the update
+        """
+        try:
+            user_object = auth_manager.get_user_from_jwt()
+            record = security_settings.SecuritySettings.update(request.json, user_object.name)
+            return SecuritySettingsSchema().dump(record), HTTPStatus.OK
+        except Exception as ex:
+            msg = f"Could not update security settings: {ex}"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -725,7 +942,11 @@ class UsersResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
-        user.User.add_new(request.json)
+        try:
+            user.User.add_new(request.json)
+        except ValueError as ex:
+            # a rejected identity link or status change: the message names what to fix
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         return None
 
 
@@ -751,7 +972,11 @@ class UserResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
-        user.User.update(user_id, request.json)
+        try:
+            user.User.update(user_id, request.json)
+        except ValueError as ex:
+            # a rejected identity link or status change: the message names what to fix
+            return {"error": str(ex)}, HTTPStatus.BAD_REQUEST
         return None
 
     @auth_required("CONFIG_USER_DELETE")
@@ -772,6 +997,51 @@ class UserResource(Resource):
             external_auth_manager.delete_user(original_username)
         except Exception as ex:
             msg = "Could not delete user in external auth system"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class UserStatusResource(Resource):
+    """User account status API endpoint (approve / disable / re-enable)."""
+
+    @auth_required("CONFIG_USER_UPDATE")
+    def put(self, user_id: int) -> tuple[dict, HTTPStatus]:
+        """Set a user's account status.
+
+        Args:
+            user_id (int): The user ID
+        Returns:
+            (str, int): The result of the status change
+        """
+        try:
+            updated_user = user.User.set_status(user_id, (request.json or {}).get("status", ""))
+            log_manager.store_user_activity(get_user_from_jwt(), "USER_STATUS", f"User {updated_user.username} set to {updated_user.status}")
+            return {"status": updated_user.status}, HTTPStatus.OK
+        except Exception as ex:
+            msg = f"Could not change user status: {ex}"
+            log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
+            return {"error": msg}, HTTPStatus.BAD_REQUEST
+
+
+class UserMfaResetResource(Resource):
+    """Admin MFA reset API endpoint (recovery when a user loses their second factor)."""
+
+    @auth_required("CONFIG_USER_UPDATE")
+    def post(self, user_id: int) -> tuple[dict, HTTPStatus]:
+        """Reset a user's MFA enrollments (TOTP and/or passkeys).
+
+        Args:
+            user_id (int): The user ID
+        Returns:
+            (str, int): The result of the reset
+        """
+        try:
+            data = request.json or {}
+            user.User.reset_mfa(user_id, reset_totp=data.get("reset_totp", True), reset_passkeys=data.get("reset_passkeys", True))
+            log_manager.store_user_activity(get_user_from_jwt(), "USER_MFA_RESET", f"MFA reset for user id {user_id}")
+            return {}, HTTPStatus.OK
+        except Exception as ex:
+            msg = "Could not reset user MFA"
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
@@ -1901,6 +2171,15 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
 
     api.add_resource(UsersResource, "/api/v1/config/users")
     api.add_resource(UserResource, "/api/v1/config/users/<int:user_id>")
+    api.add_resource(UserStatusResource, "/api/v1/config/users/<int:user_id>/status")
+    api.add_resource(UserMfaResetResource, "/api/v1/config/users/<int:user_id>/reset-mfa")
+
+    api.add_resource(AuthProvidersResource, "/api/v1/config/auth-providers")
+    api.add_resource(AuthProviderResource, "/api/v1/config/auth-providers/<int:auth_provider_id>")
+    api.add_resource(SamlMetadataImportResource, "/api/v1/config/auth-providers/saml/import-metadata")
+    api.add_resource(SamlKeypairResource, "/api/v1/config/auth-providers/saml/generate-keypair")
+    api.add_resource(SamlFederationVerifyResource, "/api/v1/config/auth-providers/saml/verify-federation")
+    api.add_resource(SecuritySettingsResource, "/api/v1/config/security")
 
     api.add_resource(ExternalUsersResource, "/api/v1/config/external-users")
     api.add_resource(ExternalUserResource, "/api/v1/config/external-users/<int:user_id>")
@@ -1998,6 +2277,11 @@ def initialize(api: Api) -> None:  # noqa: PLR0915
     Permission.add("CONFIG_AI_CREATE", "Config AI create", "Create AI configuration")
     Permission.add("CONFIG_AI_UPDATE", "Config AI update", "Update AI configuration")
     Permission.add("CONFIG_AI_DELETE", "Config AI delete", "Delete AI configuration")
+
+    Permission.add("CONFIG_AUTH_PROVIDER_ACCESS", "Config auth providers access", "Access to authentication providers configuration")
+    Permission.add("CONFIG_AUTH_PROVIDER_CREATE", "Config auth provider create", "Create authentication provider configuration")
+    Permission.add("CONFIG_AUTH_PROVIDER_UPDATE", "Config auth provider update", "Update authentication provider configuration")
+    Permission.add("CONFIG_AUTH_PROVIDER_DELETE", "Config auth provider delete", "Delete authentication provider configuration")
 
     Permission.add("CONFIG_DATA_PROVIDER_ACCESS", "Config data provider access", "Access to data provider configuration")
     Permission.add("CONFIG_DATA_PROVIDER_CREATE", "Config data provider create", "Create data provider configuration")

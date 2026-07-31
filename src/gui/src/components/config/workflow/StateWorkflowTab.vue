@@ -1,307 +1,473 @@
 <template>
-    <v-container>
-        <v-card class="mt-6">
-            <v-data-table :headers="headers" :items="records" :items-per-page="-1" item-key="id" sort-by="entity_type"
-                          class="elevation-1" :search="search" disable-pagination hide-default-footer>
-                <template v-slot:top>
-                    <v-row v-bind="UI.TOOLBAR.ROW">
-                        <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                            <v-tooltip right>
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-icon color="blue" v-bind="attrs" v-on="on" class="ml-2">
-                                        {{ UI.ICON.HELP }}
-                                    </v-icon>
-                                </template>
-                                <span>{{ $t('workflow.state_workflow.tab_description') }}</span>
-                            </v-tooltip>
-                        </v-col>
-                        <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                            <v-select v-model="filterEntityType" :items="entityTypeFilter"
-                                      :label="$t('workflow.state_workflow.filter_by_entity_type')" clearable dense
-                                      hide-details class="mr-4">
-                                <template v-slot:item="{ item }">
-                                    {{ item.text }}
-                                </template>
-                                <template v-slot:selection="{ item }">
-                                    {{ item.text }}
-                                </template>
-                            </v-select>
-                        </v-col>
-                        <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                            <v-btn v-bind="UI.BUTTON.ADD_NEW" @click="addItem">
-                                <v-icon left>{{ UI.ICON.PLUS }}</v-icon>
-                                <span>{{ $t('common.add_btn') }}</span>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
+    <v-container fluid>
+        <v-card class="mt-4">
+            <!-- Toolbar -->
+            <v-card-text>
+                <v-row>
+                    <v-col cols="6">
+                        <v-select
+                            v-model="filterEntityType"
+                            :items="entityTypeFilter"
+                            :label="t('workflow.state_workflow.filter_by_entity_type')"
+                            variant="outlined"
+                            density="compact"
+                            clearable
+                            hide-details
+                        />
+                    </v-col>
+                    <v-col
+                        cols="6"
+                        class="text-right"
+                    >
+                        <AddNewButton
+                            :show="canCreate"
+                            @click="addItem"
+                        />
+                    </v-col>
+                </v-row>
+            </v-card-text>
 
-                    <StateEntityTypeEditDialog v-model="dialogEdit" :edited-item="editedItem"
-                                               :edited-index="editedIndex" :is-editable="isEditable" :available-states="availableStates"
-                                               @save="saveRecord" @close="closeEdit" />
-
-                    <MessageBox v-model="dialogDelete"
-                                @yes="deleteRecord"
-                                @cancel="closeDelete"
-                                :title="$t('common.messagebox.delete')">
-                    </MessageBox>
-                </template>
-
-                <template v-slot:item.entity_type="{ item }">
-                    <v-chip label :color="getEntityTypeColor(item.entity_type)">
-                        <v-icon left>{{ getEntityTypeIcon(item.entity_type) }}</v-icon>
-                        {{ $t('workflow.entity_types.' + item.entity_type) }}
+            <!-- Data Table -->
+            <v-data-table
+                :headers="headers"
+                :items="filteredRecords"
+                item-key="id"
+                class="elevation-1"
+            >
+                <template #item.entity_type="{ item }">
+                    <v-chip
+                        label
+                        :color="getEntityTypeColor(item.entity_type)"
+                    >
+                        <v-icon start>
+                            {{ getEntityTypeIcon(item.entity_type) }}
+                        </v-icon>
+                        {{ t(`workflow.entity_types.${item.entity_type}`) }}
                     </v-chip>
                 </template>
 
-                <template v-slot:item.state_name="{ item }">
-                    <v-icon left :color="item.state.color">{{ item.state.icon }}</v-icon>
-                    {{ $te('workflow.states.' + item.state.display_name) ? $t('workflow.states.' +
-                        item.state.display_name) : item.state.display_name }}
+                <template #item.state_name="{ item }">
+                    <v-icon
+                        v-if="item.state"
+                        start
+                        :color="item.state.color"
+                    >
+                        {{ item.state.icon }}
+                    </v-icon>
+                    {{
+                        item.state && $te(`workflow.states.${item.state.display_name}`)
+                            ? $t(`workflow.states.${item.state.display_name}`)
+                            : item.state?.display_name
+                    }}
                 </template>
 
-                <template v-slot:item.state_type="{ item }">
-                    <v-chip label :color="'grey'">
-                        <v-icon left>{{ getStateTypeIcon(item.state_type) }}</v-icon>
-                        {{ $t('workflow.state_types.' + item.state_type) }}
+                <template #item.state_type="{ item }">
+                    <v-chip
+                        label
+                        color="grey"
+                    >
+                        <v-icon start>
+                            {{ getStateTypeIcon(item.state_type) }}
+                        </v-icon>
+                        {{ t(`workflow.state_types.${item.state_type}`) }}
                     </v-chip>
                 </template>
 
-                <template v-slot:item.is_active="{ item }">
+                <template #item.is_active="{ item }">
                     <v-icon :color="item.is_active ? 'green' : 'error'">
                         {{ item.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}
                     </v-icon>
                 </template>
 
-                <template v-slot:item.actions="{ item }">
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-icon small class="mr-2" v-bind="attrs" v-on="on" @click="item.editable && editItem(item)" :color="item.editable ? 'primary' : 'warning'">
-                                {{ item.editable ? 'mdi-pencil' : 'mdi-lock-outline' }}
-                            </v-icon>
-                        </template>
-                        <span>{{ item.editable ? $t('common.edit') : $t('workflow.state_workflow.cannot_edit_system_association') }}</span>
-                    </v-tooltip>
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-icon small v-bind="attrs" v-on="on" @click="item.editable && deleteItem(item)" :color="item.editable ? 'error' : 'warning'">
-                                {{ item.editable ? UI.ICON.DELETE : 'mdi-lock-outline' }}
-                            </v-icon>
-                        </template>
-                        <span>
-                            {{ item.editable ? $t('common.delete') : $t('workflow.state_workflow.cannot_delete_system_association') }}
-                        </span>
-                    </v-tooltip>
+                <template #item.actions="{ item }">
+                    <template v-if="item.editable">
+                        <ActionButton
+                            action="edit"
+                            :title="t('common.edit')"
+                            class="mr-1"
+                            @click="editItem(item)"
+                        />
+                        <ActionButton
+                            action="delete"
+                            :title="t('common.delete')"
+                            @click="deleteItem(item)"
+                        />
+                    </template>
+                    <template v-else>
+                        <ActionButton
+                            action="lock"
+                            :title="t('workflow.state_workflow.cannot_edit_system_association')"
+                        />
+                    </template>
                 </template>
             </v-data-table>
         </v-card>
+
+        <!-- Delete Dialog -->
+        <ConfirmationDialog
+            v-model="dialogDelete"
+            :message="t('common.messagebox.delete_confirm_item')"
+            max-width="500"
+            @confirm="deleteRecord"
+        />
+
+        <!-- Edit Dialog - Simplified -->
+        <!-- `persistent`: blocks Vuetify's native close-on-Escape so Escape routes only
+             through @keydown.esc="requestClose" (the unsaved-changes guard). Without it,
+             Escape both opens the prompt AND closes this dialog — the prompt (rendered
+             inside this dialog) unmounts mid-click, so "Close without saving" detaches. -->
+        <v-dialog
+            v-model="dialogEdit"
+            max-width="700"
+            persistent
+            scrollable
+            @keydown.esc="requestClose"
+        >
+            <v-card>
+                <DialogToolbar
+                    :title="
+                        editedIndex === -1
+                            ? t('workflow.state_workflow.add_state_association')
+                            : t('workflow.state_workflow.edit_state_association')
+                    "
+                    :show-save="isEditable"
+                    :saving="saving"
+                    @cancel="requestClose"
+                    @save="saveAndClose"
+                />
+                <v-card-text>
+                    <v-form ref="formRef">
+                        <v-select
+                            v-model="editedItem.entity_type"
+                            :items="entityTypeFilter"
+                            :label="t('workflow.state_workflow.entity_type')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            density="comfortable"
+                            class="mb-3"
+                            :rules="[(v) => !!v || t('error.required')]"
+                        />
+
+                        <v-select
+                            v-model="editedItem.state_id"
+                            :items="availableStates"
+                            item-title="display_name"
+                            item-value="id"
+                            :label="t('workflow.state_workflow.state')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            density="comfortable"
+                            class="mb-3"
+                            :rules="[(v) => !!v || t('error.required')]"
+                        />
+
+                        <v-select
+                            v-model="editedItem.state_type"
+                            :items="stateTypeOptions"
+                            :label="t('workflow.state_workflow.state_type')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            density="comfortable"
+                            class="mb-3"
+                        />
+
+                        <v-text-field
+                            v-model.number="editedItem.sort_order"
+                            :label="t('workflow.state_workflow.sort_order')"
+                            :disabled="!isEditable"
+                            variant="outlined"
+                            type="number"
+                            density="comfortable"
+                            class="mb-3"
+                        />
+
+                        <v-switch
+                            v-model="editedItem.is_active"
+                            :label="t('workflow.state_workflow.is_active')"
+                            :disabled="!isEditable"
+                            color="primary"
+                        />
+                    </v-form>
+                </v-card-text>
+            </v-card>
+
+            <UnsavedChangesDialog
+                v-model="confirmVisible"
+                @continue="continueEditing"
+                @save="saveAndClose"
+                @discard="discardAndClose"
+            />
+        </v-dialog>
     </v-container>
 </template>
 
-<script>
-    import { createNewStateEntityType, updateStateEntityType, deleteStateEntityType } from "@/api/config";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import StateEntityTypeEditDialog from "./StateEntityTypeEditDialog.vue";
-    import MessageBox from "@/components/common/MessageBox.vue";
+<script setup lang="ts">
+    import { ref, computed, onMounted, watch } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
+    import ActionButton from '@/components/common/buttons/ActionButton.vue'
+    import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
+    import { useConfigStore } from '@/stores/config'
+    import { useAuth } from '@/composables/useAuth'
+    import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
+    import { createNewStateEntityType, updateStateEntityType, deleteStateEntityType } from '@/api/config'
 
-    export default {
-        name: "StateWorkflowTab",
-        components: {
-            MessageBox,
-            StateEntityTypeEditDialog,
-        },
-        data() {
-            return {
-                search: "",
-                filterEntityType: null,
-                headers: [
-                    { text: this.$t('workflow.state_workflow.entity_type'), value: 'entity_type' },
-                    { text: this.$t('workflow.state_workflow.state'), value: 'state_name' },
-                    { text: this.$t('workflow.state_workflow.state_type'), value: 'state_type' },
-                    { text: this.$t('workflow.state_workflow.is_active'), value: 'is_active' },
-                    { text: this.$t('workflow.state_workflow.sort_order'), value: 'sort_order' },
-                    { text: this.$t('settings.actions'), value: 'actions', sortable: false },
-                ],
-                records: [],
-                dialogEdit: false,
-                dialogDelete: false,
-                editedIndex: -1,
-                editedItem: {
-                    id: -1,
-                    entity_type: "",
-                    state_id: null,
-                    state_type: "normal",
-                    is_active: true,
-                    editable: true,
-                    sort_order: 0
-                },
-                defaultItem: {
-                    id: -1,
-                    entity_type: "",
-                    state_id: null,
-                    state_type: "normal",
-                    is_active: true,
-                    editable: true,
-                    sort_order: 0
-                },
-                entityTypeFilter: [
-                    { text: this.$t('workflow.entity_types.product'), value: 'product' },
-                    { text: this.$t('workflow.entity_types.report_item'), value: 'report_item' },
-                ]
-            };
-        },
-        mixins: [AuthMixin],
-        computed: {
-            isEditable() {
-                return this.editedIndex === -1 || this.editedItem.editable;
-            },
-            availableStates() {
-                return (this.$store.getters.getStateDefinitions && this.$store.getters.getStateDefinitions.items) || [];
+    type EntityType = 'product' | 'report_item' | string
+    type StateType = 'initial' | 'normal' | 'final' | string
+
+    type StateDefinition = {
+        id: string | number
+        display_name: string
+        color: string
+        icon: string
+        [key: string]: unknown
+    }
+
+    type StateEntityTypeRecord = {
+        id: string | number
+        entity_type: EntityType
+        state_id: string | number | null
+        state_type: StateType
+        is_active: boolean
+        editable: boolean
+        sort_order: number
+        state?: StateDefinition | null
+        [key: string]: unknown
+    }
+
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
+
+    type SelectOption = {
+        title: string
+        value: string
+    }
+
+    type FormValidationResult = {
+        valid: boolean
+    }
+
+    const { t } = useI18n()
+    const configStore = useConfigStore()
+    const { checkPermission } = useAuth()
+
+    const filterEntityType = ref<string | null>(null)
+    const dialogEdit = ref(false)
+    const dialogDelete = ref(false)
+    const editedIndex = ref(-1)
+    const formRef = ref<any>(null)
+    const saving = ref(false)
+
+    const defaultItem: StateEntityTypeRecord = {
+        id: -1,
+        entity_type: '',
+        state_id: null,
+        state_type: 'normal',
+        is_active: true,
+        editable: true,
+        sort_order: 0
+    }
+
+    const editedItem = ref<StateEntityTypeRecord>({ ...defaultItem })
+
+    const headers: HeaderEntry[] = [
+        { title: t('workflow.state_workflow.entity_type'), key: 'entity_type' },
+        { title: t('workflow.state_workflow.state'), key: 'state_name' },
+        { title: t('workflow.state_workflow.state_type'), key: 'state_type' },
+        { title: t('workflow.state_workflow.is_active'), key: 'is_active' },
+        { title: t('workflow.state_workflow.sort_order'), key: 'sort_order' },
+        { title: t('settings.actions'), key: 'actions', sortable: false }
+    ]
+
+    const entityTypeFilter: SelectOption[] = [
+        { title: t('workflow.entity_types.product'), value: 'product' },
+        { title: t('workflow.entity_types.report_item'), value: 'report_item' }
+    ]
+
+    const stateTypeOptions: SelectOption[] = [
+        { title: t('workflow.state_types.initial'), value: 'initial' },
+        { title: t('workflow.state_types.normal'), value: 'normal' },
+        { title: t('workflow.state_types.final'), value: 'final' }
+    ]
+
+    const canCreate = computed(() => checkPermission('CONFIG_WORKFLOW_CREATE'))
+
+    const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
+
+    const availableStates = computed<StateDefinition[]>(() =>
+        Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
+    )
+
+    const filteredRecords = computed<StateEntityTypeRecord[]>(() =>
+        Array.isArray(configStore.stateEntityTypes.items) ? (configStore.stateEntityTypes.items as StateEntityTypeRecord[]) : []
+    )
+
+    function getEntityTypeColor(entityType: EntityType): string {
+        const colors = {
+            report_item: '#2196F3',
+            product: '#4CAF50'
+        }
+        return colors[entityType as keyof typeof colors] || 'grey'
+    }
+
+    function getEntityTypeIcon(entityType: EntityType): string {
+        const icons = {
+            report_item: 'mdi-file-document',
+            product: 'mdi-package-variant'
+        }
+        return icons[entityType as keyof typeof icons] || 'mdi-help'
+    }
+
+    function getStateTypeIcon(stateType: StateType): string {
+        const icons = {
+            normal: 'mdi-circle',
+            initial: 'mdi-star',
+            final: 'mdi-flag-checkered'
+        }
+        return icons[stateType as keyof typeof icons] || 'mdi-help'
+    }
+
+    async function fetchRecords(): Promise<void> {
+        if (!checkPermission('CONFIG_WORKFLOW_ACCESS')) return
+
+        // Load state definitions first
+        await configStore.loadStateDefinitions({ search: '' })
+
+        // Then load state-entity type associations
+        const filter: Record<string, string> = {}
+        if (filterEntityType.value) {
+            filter['entity_type'] = filterEntityType.value
+        }
+        await configStore.loadStateEntityTypes(filter)
+    }
+
+    function addItem(): void {
+        editedIndex.value = -1
+        editedItem.value = { ...defaultItem }
+        dialogEdit.value = true
+    }
+
+    function editItem(item: StateEntityTypeRecord): void {
+        const records = filteredRecords.value
+        editedIndex.value = records.indexOf(item)
+        editedItem.value = { ...item }
+        dialogEdit.value = true
+    }
+
+    function deleteItem(item: StateEntityTypeRecord): void {
+        if (!item.editable) return
+        const records = filteredRecords.value
+        editedIndex.value = records.indexOf(item)
+        editedItem.value = { ...item }
+        dialogDelete.value = true
+    }
+
+    // No close-time reset: addItem/editItem/deleteItem fully set editedItem/editedIndex
+    // before opening, so resetting here is unnecessary. A deferred reset (to avoid the
+    // close-animation flicker) would also race the next dialog open and clobber its state.
+    function closeEdit(): void {
+        dialogEdit.value = false
+    }
+
+    function closeDelete(): void {
+        dialogDelete.value = false
+    }
+
+    // Persists the form. Returns true on success so the unsaved-changes guard can
+    // decide whether to close the dialog (it closes only on a successful save).
+    async function persist(): Promise<boolean> {
+        const { valid } = (await formRef.value?.validate()) as FormValidationResult
+        if (!valid) {
+            return false
+        }
+
+        saving.value = true
+        try {
+            // Send only the persisted fields. The record also carries a nested `state`
+            // object (and updated_by/at) which the backend schema feeds straight into the
+            // StateEntityType constructor, where the extra keys raise and the save 400s.
+            const payload = {
+                entity_type: editedItem.value.entity_type,
+                state_id: editedItem.value.state_id,
+                state_type: editedItem.value.state_type,
+                is_active: editedItem.value.is_active,
+                editable: editedItem.value.editable,
+                sort_order: editedItem.value.sort_order
             }
-        },
-        watch: {
-            filterEntityType() {
-                this.fetchRecords();
+            if (editedIndex.value > -1) {
+                await updateStateEntityType({ ...payload, id: editedItem.value.id })
+            } else {
+                await createNewStateEntityType(payload)
             }
-        },
-        methods: {
-            getContrastColor(hexColor) {
-                if (!hexColor) return 'black';
-                const r = parseInt(hexColor.slice(1, 3), 16);
-                const g = parseInt(hexColor.slice(3, 5), 16);
-                const b = parseInt(hexColor.slice(5, 7), 16);
-                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                return luminance > 0.5 ? 'black' : 'white';
-            },
-
-            getEntityTypeColor(entityType) {
-                const colors = {
-                    'report_item': '#2196F3',
-                    'product': '#4CAF50'
-                };
-                return colors[entityType] || 'grey';
-            },
-
-            getEntityTypeIcon(entityType) {
-                const icons = {
-                    'report_item': 'mdi-file-document',
-                    'product': 'mdi-package-variant'
-                };
-                return icons[entityType] || 'mdi-help';
-            },
-
-            getStateTypeIcon(stateType) {
-                const icons = {
-                    'normal': 'mdi-circle',
-                    'initial': 'mdi-star',
-                    'final': 'mdi-flag-checkered'
-                };
-                return icons[stateType] || 'mdi-help';
-            },
-
-            fetchRecords() {
-                if (this.checkPermission(Permissions.CONFIG_WORKFLOW_ACCESS)) {
-                    // First ensure we have state definitions loaded
-                    this.$store.dispatch('getAllStateDefinitions', { search: '' }).then(() => {
-                        // Then fetch state-entity type associations
-                        const filter = {};
-                        if (this.filterEntityType) {
-                            filter.entity_type = this.filterEntityType;
-                        }
-
-                        this.$store.dispatch('getAllStateEntityTypes', filter).then(() => {
-                            this.records = this.$store.getters.getStateEntityTypes.items;
-                        });
-                    });
-                }
-            },
-
-            addItem() {
-                this.editedIndex = -1;
-                this.editedItem = Object.assign({}, this.defaultItem);
-                this.dialogEdit = true;
-            },
-
-            editItem(item) {
-                this.editedIndex = this.records.indexOf(item);
-                this.editedItem = Object.assign({}, item);
-                this.dialogEdit = true;
-            },
-
-            deleteItem(item) {
-                if (!item.editable) {
-                    this.showMsg("error", "workflow.cannot_delete_system_association");
-                    return;
-                }
-                this.editedIndex = this.records.indexOf(item);
-                this.editedItem = Object.assign({}, item);
-                this.dialogDelete = true;
-            },
-
-            closeEdit() {
-                this.dialogEdit = false;
-                this.$nextTick(() => {
-                    this.editedItem = Object.assign({}, this.defaultItem);
-                    this.editedIndex = -1;
-                });
-            },
-
-            closeDelete() {
-                this.dialogDelete = false;
-                this.$nextTick(() => {
-                    this.editedItem = Object.assign({}, this.defaultItem);
-                    this.editedIndex = -1;
-                });
-            },
-
-            saveRecord(submitData) {
-                if (this.editedIndex > -1) {
-                    updateStateEntityType(submitData).then((response) => {
-                        this.editedItem = Object.assign({}, response.data);
-                        Object.assign(this.records[this.editedIndex], this.editedItem);
-                        this.showMsg("success", "workflow.state_workflow.successful_edit");
-                        this.closeEdit();
-                        this.fetchRecords(); // Refresh to get updated state info
-                    }).catch(() => {
-                        this.showMsg("error", "workflow.state_workflow.error");
-                    });
-                } else {
-                    createNewStateEntityType(submitData).then(() => {
-                        this.showMsg("success", "workflow.state_workflow.successful");
-                        this.closeEdit();
-                        this.fetchRecords(); // Refresh to get complete data
-                    }).catch((error) => {
-                        if (error.response && error.response.status === 409) {
-                            this.showMsg("error", "workflow.state_workflow.association_already_exists");
-                        } else {
-                            this.showMsg("error", "workflow.state_workflow.error");
-                        }
-                    });
-                }
-            },
-
-            deleteRecord() {
-                if (!this.editedItem.editable) {
-                    this.showMsg("error", "workflow.state_workflow.cannot_delete_system_association");
-                    this.closeDelete();
-                    return;
-                }
-
-                deleteStateEntityType(this.editedItem).then(() => {
-                    this.records.splice(this.editedIndex, 1);
-                    this.showMsg("success", "workflow.state_workflow.remove");
-                    this.closeDelete();
-                }).catch(() => {
-                    this.showMsg("error", "workflow.state_workflow.removed_error");
-                });
-            },
-
-            showMsg(type, message) {
-                this.$root.$emit('notification', { type: type, loc: message });
-            },
-        },
-        mounted() {
-            this.fetchRecords();
+            await fetchRecords()
+            return true
+        } catch (error) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'common.error_saving' }
+                })
+            )
+            return false
+        } finally {
+            saving.value = false
         }
     }
+
+    // Unsaved-changes guard. capture() snapshots the freshly-loaded form as the clean
+    // baseline on open; requestClose() shows the prompt only when real edits exist.
+    // Without capture() the baseline stays null and isDirty() always returns false, so
+    // the prompt never shows — even after the user edits fields then clicks cancel.
+    const { confirmVisible, capture, requestClose, continueEditing, saveAndClose, discardAndClose } = useUnsavedChanges({
+        getState: () => editedItem.value,
+        save: persist,
+        close: closeEdit
+    })
+
+    watch(
+        () => dialogEdit.value,
+        (newVal: boolean) => {
+            if (!newVal) {
+                saving.value = false
+            } else {
+                // Snapshot the form as the clean baseline for dirty-tracking.
+                capture()
+            }
+        }
+    )
+
+    async function deleteRecord(): Promise<void> {
+        if (!editedItem.value.editable) {
+            closeDelete()
+            return
+        }
+
+        try {
+            await deleteStateEntityType(editedItem.value)
+            await fetchRecords()
+            closeDelete()
+        } catch (error) {
+            // Surface the failure and close the dialog instead of leaving it silently stuck
+            // open (which otherwise looks like a hang to the user and to E2E).
+            console.error('Error deleting state entity type:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'common.error_deleting' }
+                })
+            )
+            closeDelete()
+        }
+    }
+
+    watch(filterEntityType, () => {
+        fetchRecords()
+    })
+
+    onMounted(() => {
+        fetchRecords()
+    })
 </script>

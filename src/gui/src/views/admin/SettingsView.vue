@@ -1,13 +1,7 @@
 <template>
-    <SettingsTable :glob_setting="true"></SettingsTable>
+    <SettingsTable :global-setting="true" />
 </template>
-<script>
-    import SettingsTable from "@/components/config/SettingsTable.vue";
 
-    export default {
-        name: "GlobalSettings",
-        components: {
-            SettingsTable
-        },
-    }
+<script setup lang="ts">
+    import SettingsTable from '@/components/config/SettingsTable.vue'
 </script>

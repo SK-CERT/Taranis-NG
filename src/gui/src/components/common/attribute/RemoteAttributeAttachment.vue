@@ -1,203 +1,90 @@
 <template>
-    <div class="dropzone-wrapper-div">
-        <vue-dropzone ref="myVueDropzone"
-                      id="dropzone"
-                      :options="dropzoneOptions"
-                      :include-styling="false"
-                      :useCustomSlot="true">
-        </vue-dropzone>
-
-        <v-dialog v-model="detailDialog" max-width="700px">
-            <v-card>
-                <v-card-title>
-                    <span class="headline">{{ $t('drop_zone.attachment_detail') }}</span>
-                </v-card-title>
-
-                <v-card-text>
-                    <v-row v-if="selected_attachment.last_updated !== null">
-                        <v-col style="flex-grow: 0;" cols="2">
-                            <span class="text--primary">{{ $t('drop_zone.last_updated') }}:</span>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.last_updated }}</div>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col style="flex-grow: 0">
-                            <v-icon class="text--primary">mdi-file-document</v-icon>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.file_name }}</div>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col style="flex-grow: 0;" cols="2">
-                            <span class="text--primary">{{ $t('drop_zone.file_description') }}:</span>
-                        </v-col>
-                        <v-col>
-                            <div>{{ selected_attachment.description }}</div>
-                        </v-col>
-                    </v-row>
-                </v-card-text>
-
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn v-if="report_item_id !== null" color="primary" dark @click="downloadFile">
-                        {{ $t('drop_zone.download') }}
-                        <v-icon right dark>mdi-cloud-download</v-icon>
-                    </v-btn>
-                    <v-btn color="primary" text @click="closeDetail">{{ $t('common.cancel') }}</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-    </div>
+    <AttributeItemLayout
+        :add-button="false"
+        :values="attributeGroup.attributes"
+    >
+        <template #content>
+            <div
+                v-for="value in attributeGroup.attributes"
+                :key="value.id"
+                class="remote-attachment-row"
+            >
+                <!-- TODO: Display remote file attachment info -->
+                <!-- Phase 3: Show filename, size, download link -->
+                <!-- May need to fetch file metadata from API feed -->
+                <div class="flex items-center gap-2 text-sm text-gray-300">
+                    <v-icon size="small">
+                        {{ ICONS.FILE_DOCUMENT }}
+                    </v-icon>
+                    <span>{{ value.value.filename || 'Remote Attachment' }}</span>
+                    <span class="text-xs text-gray-500">({{ formatFileSize(value.value.size) }})</span>
+                    <button
+                        type="button"
+                        class="text-blue-400 hover:text-blue-300 text-xs ml-auto"
+                        @click="downloadRemoteAttachment(value.value)"
+                    >
+                        {{ t('common.download') }}
+                    </button>
+                </div>
+            </div>
+        </template>
+    </AttributeItemLayout>
 </template>
 
-<script>
-    import vue2Dropzone from 'vue2-dropzone';
-    import 'vue2-dropzone/dist/vue2Dropzone.min.css';
-    import { downloadAttachment } from "@/api/analyze";
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
+<script setup lang="ts">
+    import { useI18n } from 'vue-i18n'
+    import { ICONS } from '@/config/ui-constants'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
 
-    // TODO: remove onclick (Content-Security-Policy), inspire in AttributeAttachment
-    const getTemplate = () => `
-         <div cs class="dz-preview dz-file-preview">
-         <div onclick="window.dispatchEvent(new CustomEvent('attachment-click', {detail: 'FILE_ID'}))">
-            <div class="v-icon mdi mdi-file-document-outline theme--light"></div>
-            <div class="dz-image">
-                <div data-dz-thumbnail-bg></div>
-            </div>
-            <div class="dz-details">
-                <div class="dz-filename"><span data-dz-name></span></div>
-            </div>
-            <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-            <div class="dz-error-message"><span data-dz-errormessage></span></div>
-            <div class="dz-success-mark"><i class="fa fa-check"></i></div>
-            <div class="dz-error-mark"><i class="fa fa-close"></i></div>
-            </div>
-        </div>
-    `;
+    const { t } = useI18n()
 
-    export default {
-        name: "RemoteAttributeAttachment",
-        components: {
-            vueDropzone: vue2Dropzone
-        },
-        mixins: [AttributesMixin],
-        data: () => ({
-            detailDialog: false,
-            description: "",
-            last_updated: "",
-            files: [],
-            download_link: "",
-            selected_attachment: {
-                id: "",
-                file_name: "",
-                size: -1,
-                mime_type: "",
-                user_name: "",
-                last_updated: "",
-                description: ""
-            },
-
-            dropzoneOptions: {
-                url: this.baseUrl + this.getLinkAdd,
-                thumbnailWidth: 64,
-                thumbnailHeight: 96,
-                previewTemplate: getTemplate(),
-                addRemoveLinks: false,
-                autoProcessQueue: false,
-                clickable: false
-            }
-        }),
-        methods: {
-            baseUrl() {
-                return (typeof process.env.VUE_APP_TARANIS_NG_CORE_API === "undefined"
-                    ? "$VUE_APP_TARANIS_NG_CORE_API"
-                    : process.env.VUE_APP_TARANIS_NG_CORE_API)
-            },
-
-            getLinkAdd() {
-                // TODO: non existing endpoint? probaly old code, should be same as in AttributeAttachment
-                return "/analyze/attribute/addattachment/";
-            },
-
-            getLinkDown(file_id) {
-                // TODO: non existing endpoint? probaly old code, should be same as in AttributeAttachment
-                return `/analyze/attribute/download/${file_id}`;
-            },
-
-            fileAdded(file) {
-                let previewHTML = file.previewTemplate.innerHTML;
-                previewHTML = previewHTML.replace('FILE_ID', file.id);
-                file.previewTemplate.innerHTML = previewHTML;
-                this.files.push(file);
-            },
-
-            closeDetail() {
-                this.detailDialog = false;
-            },
-
-            initDropzone() {
-                this.$refs.myVueDropzone.removeAllFiles();
-                this.files = [];
-                for (let i = 0; i < this.values.length; i++) {
-                    let file = {
-                        id: this.values[i].id,
-                        size: this.values[i].binary_size,
-                        name: this.values[i].value,
-                        type: this.values[i].binary_mime_type,
-                        description: this.values[i].binary_description,
-                        last_updated: this.values[i].last_updated + " " + this.values[i].user.name,
-                    };
-                    let url = this.getLinkDown(this.values[i].id);
-                    this.$refs.myVueDropzone.manuallyAddFile(file, url);
-                }
-            },
-
-            onAttachmentClick(e) {
-                this.$root.$emit("attachment-clicked", {
-                    attachment_id: e.detail,
-                })
-            },
-
-            downloadFile() {
-                downloadAttachment(this.download_link, this.selected_attachment.file_name);
-            }
-        },
-        mounted() {
-            this.$root.$on('attachment-clicked', (data) => {
-                for (let i = 0; i < this.files.length; i++) {
-                    if (this.files[i].id.toString() === data.attachment_id) {
-                        this.selected_attachment = {
-                            id: this.files[i].id,
-                            file_name: this.files[i].name,
-                            mime_type: this.files[i].type,
-                            file_size: this.files[i].size,
-                            description: this.files[i].description,
-                            last_updated: this.files[i].last_updated,
-                            file: this.files[i]
-                        };
-                        this.download_link = this.getLinkDown(this.selected_attachment.id);
-                        this.detailDialog = true;
-                        break;
-                    }
-                }
-            });
-
-            if (this.report_item_id !== null) {
-                this.$refs.myVueDropzone.setOption('url', this.baseUrl + this.getLinkAdd + this.report_item_id)
-            }
-
-            this.initDropzone()
-        },
-        created() {
-            window.addEventListener('attachment-click', this.onAttachmentClick, false);
-        },
-        beforeDestroy() {
-            window.removeEventListener("attachment-click", this.onAttachmentClick);
-            this.$root.$off('attachment-clicked')
-        }
+    type RemoteAttachmentValue = {
+        filename?: string
+        size?: number
+        [key: string]: unknown
     }
+
+    type RemoteAttributeValue = {
+        id: number | string
+        value: RemoteAttachmentValue
+        [key: string]: unknown
+    }
+
+    type RemoteAttributeGroup = {
+        attributes: RemoteAttributeValue[]
+        [key: string]: unknown
+    }
+
+    const props = defineProps<{
+        attributeGroup: RemoteAttributeGroup
+        reportItemId: number
+    }>()
+
+    const formatFileSize = (bytes: number | null | undefined): string => {
+        if (!bytes) return '0 B'
+        const k = 1024
+        const sizes = ['B', 'KB', 'MB', 'GB']
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    }
+
+    const downloadRemoteAttachment = (attachment: RemoteAttachmentValue): void => {
+        // TODO: Phase 3 - Implement remote file download
+        // May need to use a different API endpoint for remote files
+        // Handle proxying if needed
+        console.log('Download remote attachment TODO:', attachment)
+    }
+
+    // TODO: Phase 3 - Add remote-specific features:
+    // - Show source/origin of remote file
+    // - Display when file was sourced from API feed
+    // - Handle download from external sources
+    // - Show file verification/hash if available
 </script>
+
+<style scoped>
+    .remote-attachment-row {
+        width: 100%;
+        padding: 8px 0;
+    }
+</style>

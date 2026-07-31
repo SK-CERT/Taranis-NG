@@ -1,91 +1,99 @@
 <template>
-    <!--<v-card>
-        <v-card-title style="font-size: 16px; font-weight: bold; padding-top:0; padding-bottom:0">
-            {{attribute_item.attribute_group_item.title}}
-        </v-card-title>
-
-        <v-card-text>
-            <v-divider style="padding-bottom:8px"></v-divider>
-            <component v-bind:is="attributeType()" :attribute_group="attribute_item.attribute_group_item"
-                       :values="attribute_item.values"
-                       :read_only="read_only" :edit="edit" :modify="modify" :report_item_id="report_item_id"></component>
-        </v-card-text>
-    </v-card>-->
-    <component v-bind:is="attributeType()" :attribute_group="attribute_item.attribute_group_item"
-               :values="attribute_item.values"
-               :read_only="read_only" :edit="edit" :modify="modify" :report_item_id="report_item_id"></component>
-
+    <!-- Dynamic component dispatcher - renders the appropriate attribute type -->
+    <component
+        :is="attributeComponent"
+        v-if="attributeComponent"
+        :attribute-group="attributeItem.attribute_group_item"
+        :values="attributeItem.values || []"
+        :read-only="readOnly"
+        :edit="edit"
+        :modify="modify"
+        :report-item-id="reportItemId"
+    />
 </template>
 
-<script>
-    import AttributeString from "@/components/common/attribute/AttributeString";
-    import AttributeNumber from "@/components/common/attribute/AttributeNumber";
-    import AttributeRichText from "@/components/common/attribute/AttributeRichText";
-    import AttributeAttachment from "@/components/common/attribute/AttributeAttachment";
-    import AttributeTLP from "@/components/common/attribute/AttributeTLP";
-    import AttributeText from "@/components/common/attribute/AttributeText";
-    import AttributeDate from "@/components/common/attribute/AttributeDate";
-    import AttributeEnum from "@/components/common/attribute/AttributeEnum";
-    import AttributeRadio from "@/components/common/attribute/AttributeRadio";
-    import AttributeCPE from "@/components/common/attribute/AttributeCPE";
-    import AttributeCVE from "@/components/common/attribute/AttributeCVE";
-    import AttributeCWE from "@/components/common/attribute/AttributeCWE";
-    import AttributeBoolean from "@/components/common/attribute/AttributeBoolean";
-    import AttributeTime from "@/components/common/attribute/AttributeTime";
-    import AttributeDateTime from "@/components/common/attribute/AttributeDateTime";
-    import AttributeCVSS from "@/components/common/attribute/AttributeCVSS";
+<script setup lang="ts">
+    import { computed } from 'vue'
 
-    export default {
-        name: "AttributeContainer",
-        components: {
-            AttributeString,
-            AttributeNumber,
-            AttributeText,
-            AttributeRichText,
-            AttributeAttachment,
-            AttributeTLP,
-            AttributeDate,
-            AttributeEnum,
-            AttributeRadio,
-            AttributeCPE,
-            AttributeCVE,
-            AttributeCWE,
-            AttributeBoolean,
-            AttributeTime,
-            AttributeDateTime,
-            AttributeCVSS
-        },
-        props: {
-            attribute_item: Object,
-            read_only: Boolean,
-            edit: Boolean,
-            modify: Boolean,
-            report_item_id: Number
-        },
-        data: () => ({
-            attributes: {
-                STRING: "String",
-                NUMBER: "Number",
-                TEXT: "Text",
-                RICH_TEXT: "RichText",
-                ATTACHMENT: "Attachment",
-                TLP: "TLP",
-                DATE: "Date",
-                ENUM: "Enum",
-                RADIO: "Radio",
-                CPE: "CPE",
-                CVE: "CVE",
-                CWE: "CWE",
-                BOOLEAN: "Boolean",
-                TIME: "Time",
-                DATE_TIME: "DateTime",
-                CVSS: "CVSS"
+    // Lazy load attribute components to reduce bundle size
+    import AttributeString from './AttributeString.vue'
+    import AttributeNumber from './AttributeNumber.vue'
+    import AttributeBoolean from './AttributeBoolean.vue'
+    import AttributeEnum from './AttributeEnum.vue'
+    import AttributeRadio from './AttributeRadio.vue'
+    import AttributeText from './AttributeText.vue'
+    import AttributeDate from './AttributeDate.vue'
+
+    // Phase 2 components (ready to enable)
+    import AttributeTime from './AttributeTime.vue'
+    import AttributeDateTime from './AttributeDateTime.vue'
+    import AttributeRichText from './AttributeRichText.vue'
+    import AttributeTLP from './AttributeTLP.vue'
+    import AttributeAttachment from './AttributeAttachment.vue'
+
+    // Phase 3 components (now enabled)
+    import AttributeCPE from './AttributeCPE.vue'
+    import AttributeCVE from './AttributeCVE.vue'
+    import AttributeCWE from './AttributeCWE.vue'
+    import AttributeCVSS from './AttributeCVSS.vue'
+
+    type AttributeItem = {
+        attribute_group_item?: {
+            attribute?: {
+                type?: string
             }
-        }),
-        methods: {
-            attributeType: function(){
-                return "Attribute" + this.attributes[this.attribute_item.attribute_group_item.attribute.type];
-            }
+            [key: string]: unknown
         }
+        values?: unknown[]
+        [key: string]: unknown
     }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeItem: AttributeItem
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    // Map attribute types to components
+    const componentMap: Record<string, unknown> = {
+        // Phase 1 - Core types (DONE)
+        STRING: AttributeString,
+        NUMBER: AttributeNumber,
+        BOOLEAN: AttributeBoolean,
+        ENUM: AttributeEnum,
+        RADIO: AttributeRadio,
+        TEXT: AttributeText,
+        DATE: AttributeDate,
+
+        // Phase 2 - Common types (Ready to use)
+        TIME: AttributeTime,
+        DATE_TIME: AttributeDateTime,
+        RICH_TEXT: AttributeRichText,
+        TLP: AttributeTLP,
+        ATTACHMENT: AttributeAttachment,
+
+        // Phase 3 - Advanced types (Now enabled)
+        CPE: AttributeCPE,
+        CVE: AttributeCVE,
+        CWE: AttributeCWE,
+        CVSS: AttributeCVSS
+    }
+
+    const attributeComponent = computed(() => {
+        const attrType = props.attributeItem.attribute_group_item?.attribute?.type
+        if (!attrType) {
+            console.warn('Unknown attribute type:', attrType)
+            return null
+        }
+        return componentMap[attrType] || null
+    })
 </script>

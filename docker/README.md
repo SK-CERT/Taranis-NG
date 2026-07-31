@@ -179,6 +179,7 @@ docker build -t taranis-ng-publishers . -f ./docker/Dockerfile.publishers
 |-----------------------------|-------------|----------|
 | `postgres_password`         | PostgreSQL database password. | `supersecret` |
 | `jwt_secret_key`            | JWT token secret key. | `supersecret` |
+| `secrets_encryption_key`    | Key used to encrypt secrets stored in the database (auth provider client secrets, LDAP bind passwords, TOTP seeds). Falls back to `jwt_secret_key` when missing; a dedicated key is recommended. Changing the key requires re-entering provider secrets and re-enrolling TOTP. | `supersecretkeyminimal32byteslong` |
 
 
 Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/pooling.html) to maintain multiple active connections to the database server. Connection pooling is required when your deployment serves hundreds of customers from one instance. To enable connection pooling, set the `DB_POOL_SIZE`, `DB_POOL_RECYCLE`, and `DB_POOL_TIMEOUT` environment variables.
@@ -196,12 +197,12 @@ Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/p
 
 ### `gui`
 
-| Environment variable          | Description | Example |
-|-------------------------------|-------------|----------|
-| `VUE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
-| `VUE_APP_TARANIS_NG_CORE_SSE` | URL of the Taranis NG SSE endpoint. | `http://127.0.0.1:8080/sse` |
-| `VUE_APP_TARANIS_NG_URL`      | URL of the Taranis NG frontend. | `http://127.0.0.1` |
-| `VUE_APP_TARANIS_NG_LOCALE`   | Application locale. | `en` |
+| Environment variable            | Description | Example |
+|---------------------------------|-------------|----------|
+| `VITE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
+| `VITE_APP_TARANIS_NG_CORE_SSE` | URL of the Taranis NG SSE endpoint. | `http://127.0.0.1:8080/sse` |
+| `VITE_APP_TARANIS_NG_URL`      | URL of the Taranis NG frontend. | `http://127.0.0.1` |
+| `VITE_APP_TARANIS_NG_LOCALE`   | Application locale. | `en` |
 | `NGINX_WORKERS`               | Number of NginX worker threads to spawn. | `4` |
 | `NGINX_CONNECTIONS`           | Maximum number of allowed connections per one worker thread. | `16` |
 

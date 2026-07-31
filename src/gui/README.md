@@ -1,51 +1,111 @@
-# Taranis NG GUI
+# Taranis NG - Vue 3 GUI
 
-The GUI is written in [Vue.js](https://vuejs.org/) with [Vuetify](https://vuetifyjs.com/en/).
+This is the Taranis NG graphical user interface, built with Vue 3 and modern web technologies.
 
-Currently, the best way to build and deploy is via Docker. For more information, see [docker/README.md](../../docker/README.md) and the [toplevel README.md file](../../README.md).
+## Tech Stack
 
-If you wish to develop and build the GUI separately, read on.
+- **Vue 3** - Progressive JavaScript framework with Composition API
+- **Vite** - Next generation frontend tooling
+- **Vuetify 3** - Material Design component framework
+- **Pinia** - Intuitive state management for Vue
+- **Vue Router 4** - Official router for Vue.js
+- **Vue I18n 9** - Internationalization plugin
+- **Axios** - HTTP client
 
-### Project setup
+## 📚 Documentation
 
-Install the dependencies
+See [docs/README.md](./docs/README.md) for complete documentation index:
 
-```
+- **[Migration Guide](./docs/migration/README.md)** - Vue2→Vue3 component migration progress
+- **[IMPLEMENTATION_STATUS](./docs/IMPLEMENTATION_STATUS.md)** - Overall project status and phase tracking
+- **[Architecture](./docs/architecture/README.md)** - Design and component architecture
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 18+ and npm
+
+### Install Dependencies
+
+```bash
 npm install
 ```
 
-### Developing
+### Development Server
 
-You can run the GUI on the local machine, and edit it with your favorite IDE or text editor. The application will react to your changes in real time. Depending on whether you expose your API directly on `http://localhost:5000` (see `docker-compose.yml`), via Traefik on `https://localhost:4443`, or on a public IP and host name, you may need to change the following environment variables.
-
-```
-# set the environment variables needed by GUI
-export VUE_APP_TARANIS_NG_CORE_API="http://localhost:5000/api/v1"
-export VUE_APP_TARANIS_NG_CORE_SSE="http://localhost:5000/sse"
-export VUE_APP_TARANIS_NG_URL="http://localhost:8080"
-export VUE_APP_TARANIS_NG_LOCALE="en"
-
-# run the development server
-npm run serve
+```bash
+npm run dev
 ```
 
-### Building the static version
+The development server will start at `http://localhost:4444/` by default.
 
-When you are ready to generate the final static version of the GUI, run
+You can override the port if needed:
 
+```bash
+VITE_PORT=8082 npm run dev
 ```
+
+### Build for Production
+
+```bash
 npm run build
 ```
 
-The static html/js/css files will be stored under the `dist/` subdirectory.
+The production build will be output to the `dist/` directory.
 
-### Testing and linting
+### Lint
 
-```
-npm run test
+```bash
 npm run lint
 ```
 
-### Customize the configuration
+## Environment Variables
 
-See [Configuration Reference](https://cli.vuejs.org/config/).
+The following environment variables are used (configured at Docker runtime):
+
+- `VITE_APP_TARANIS_NG_URL` - Base URL of the application
+- `VITE_APP_TARANIS_NG_CORE_API` - Backend API endpoint
+- `VITE_APP_TARANIS_NG_CORE_SSE` - Server-Sent Events endpoint
+- `VITE_APP_TARANIS_NG_LOCALE` - Default locale (en, cs, sk)
+- `VITE_APP_VERSION` - Application version
+
+### Env Precedence in Dev (`npm run dev`)
+
+Vite loads env files from two places, in this order:
+
+1. `docker/.env*`
+2. `src/gui/.env*` (overrides same keys from `docker/.env*`)
+
+For backend proxying in `vite.config.js`, values are resolved with fallbacks:
+
+- Backend origin: `VITE_DEV_BACKEND_ORIGIN` -> `TARANIS_NG_HTTPS_URI` -> `http://127.0.0.1:8082`
+- API URL: `VITE_APP_TARANIS_NG_CORE_API` -> `${backendOrigin}/api/v1`
+- SSE URL: `VITE_APP_TARANIS_NG_CORE_SSE` -> `${backendOrigin}/sse`
+
+Notes:
+
+- `VITE_APP_*` is the canonical prefix for Vite/ Vue 3.
+- Dev server default port is `4444` (override with `VITE_PORT` or `PORT`).
+
+## Project Structure
+
+```
+src/
+├── api/          # API endpoint wrappers
+├── assets/       # Static assets and styles
+├── components/   # Reusable Vue components
+├── composables/  # Composition API composables
+├── i18n/         # Internationalization files
+├── services/     # Business logic services
+├── stores/       # Pinia stores
+├── views/        # Route view components
+├── App.vue       # Root component
+├── main.ts       # Application entry point
+└── router.ts     # Vue Router configuration
+```
+
+## Migration Status
+
+This is the sole Taranis NG GUI. The legacy Vue 2 GUI has been removed; this
+Vue 3 application is served at `/`.

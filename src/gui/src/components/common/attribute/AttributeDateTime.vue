@@ -1,119 +1,141 @@
 <template>
-
-    <!--<div class="datetime-value">
-        <v-row v-for="(value, index) in values" :key="value.index">
-            <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-            <v-datetime-picker
-                    v-if="!read_only && !values[index].remote"
-                    v-model="datetime"
-                    :label="$t('attribute.value')"
-                    date-format="yyyy.MM.dd"
-                    time-format="HH:mm"
-                    :disabled="!canModify"
+    <AttributeItemLayout
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
+    >
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
+                <!-- Read-only or remote -->
+                <span
+                    v-if="readOnly || value.remote"
+                    class="datetime-value"
+                >
+                    <span
+                        v-if="values.length > 1"
+                        class="datetime-number text--disabled"
+                        >{{ index + 1 }}.</span
+                    >
+                    {{ formatDateTime(value.value) }}
+                </span>
 
-                <template slot="actions" slot-scope="{  }">
-                    &lt;!&ndash;<v-btn color="lighten-1" @click.native="parent.clearHandler">{{$t('common.cancel')}}</v-btn>
-                    <v-btn color="success darken-1" @click="parent.okHandler">Done</v-btn>&ndash;&gt;
-                    <v-btn color="info lighten-1" @click="getDateTime(index)">{{$t('attribute.done')}}</v-btn>
-                </template>
-
-            </v-datetime-picker>
-        </v-row>
-    </div>-->
-    <AttributeItemLayout :add_button="addButtonVisible"
-                         @add-value="add()"
-                         :values="values">
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder">
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout v-if="!read_only && canModify && !values[index].remote"
-                                      :del_button="delButtonVisible"
-                                      @del-value="del(index)"
-                                      :occurrence="attribute_group.min_occurrence"
-                                      :values="values"
-                                      :val_index="index">
-                    <template v-slot:col_left>
-                        <!--<v-icon right>mdi-calendar-clock</v-icon>-->
-                    </template>
-                    <template v-slot:col_middle>
-                        <date-picker v-if="!read_only && !values[index].remote"
-                                     v-model="values[index].value"
-                                     type="datetime"
-                                     format="YYYY.MM.DD-HH:mm"
-                                     value-type="format"
-                                     :show-time-panel="showTimePanel"
-                                     @change="onEdit(index)"
-                                     @close="handleOpenChange"
-                                     :disabled="values[index].locked || !canModify">
-                            <template v-slot:footer>
-                                <button class="mx-btn mx-btn-text" @click="toggleTimePanel">
-                                    {{ showTimePanel ? 'select date' : 'select time' }}
-                                </button>
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    embed-delete
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_middle="{ delVisible, onDelete }">
+                        <v-text-field
+                            v-model="value.value"
+                            density="compact"
+                            variant="outlined"
+                            hide-details="auto"
+                            type="datetime-local"
+                            :label="$t('attribute.value')"
+                            :class="getLockedStyle(index)"
+                            :disabled="value.locked || !canModify"
+                            @focus="onFocus(index)"
+                            @blur="onBlur(index)"
+                            @keyup="onKeyUp(index)"
+                        >
+                            <template #append-inner>
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
                             </template>
-
-                            <template v-slot:icon-calendar>
-                                <v-icon class="pb-5">mdi-calendar-clock</v-icon>
-                            </template>
-                            <template v-slot:icon-clear>
-                                <v-icon small class="pb-5 pr-1">mdi-close</v-icon>
-                            </template>
-                            <template v-slot:input>
-                                <v-text-field v-if="!read_only && !values[index].remote"
-                                              :placeholder="$t('attribute.select_datetime')"
-                                              dense
-                                              v-model="values[index].value"
-                                              @focus="onFocus(index)"
-                                              @blur="onBlur(index)"
-                                              :class="getLockedStyle(index)"
-                                              :disabled="values[index].locked || !canModify"></v-text-field>
-                            </template>
-                        </date-picker>
+                        </v-text-field>
                     </template>
                 </AttributeValueLayout>
-            </v-row>
+            </div>
         </template>
-
     </AttributeItemLayout>
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { onMounted } from 'vue'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import { useAttributes } from './useAttributes'
 
-    import DatePicker from 'vue2-datepicker';
-    import 'vue2-datepicker/index.css';
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
 
-    export default {
-        name: "AttributeDateTime",
-        props: {
-            attribute_group: Object
-        },
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout,
-            DatePicker
-        },
-        data: () => ({
-            showTimePanel: false,
-            showTimeRangePanel: false
-        }),
-        mixins: [AttributesMixin],
-        methods: {
-            toggleTimePanel() {
-                this.showTimePanel = !this.showTimePanel;
-            },
-            toggleTimeRangePanel() {
-                this.showTimeRangePanel = !this.showTimeRangePanel;
-            },
-            handleOpenChange() {
-                this.showTimePanel = false;
-            },
-            handleRangeClose() {
-                this.showTimeRangePanel = false;
-            }
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+
+    const formatDateTime = (value: string | null | undefined): string => {
+        if (!value) return '–'
+        try {
+            const date = new Date(value)
+            if (isNaN(date.getTime())) return value
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            const hours = String(date.getHours()).padStart(2, '0')
+            const minutes = String(date.getMinutes()).padStart(2, '0')
+            const seconds = String(date.getSeconds()).padStart(2, '0')
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+        } catch {
+            return value
         }
     }
+
+    onMounted(addInitialValues)
 </script>
+
+<style scoped>
+    .datetime-number {
+        margin-right: 8px;
+        user-select: none;
+        min-width: 24px;
+        display: inline-block;
+    }
+
+    .datetime-value {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 8px 0;
+    }
+
+    .value-holder {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+</style>

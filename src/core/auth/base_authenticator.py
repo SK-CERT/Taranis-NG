@@ -7,12 +7,30 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import Flask
 
+from dataclasses import dataclass
 from http import HTTPStatus
 
 from flask_jwt_extended import create_access_token
 from managers import log_manager
 from model.token_blacklist import TokenBlacklist
 from model.user import User
+
+
+@dataclass
+class ExternalIdentity:
+    """Identity of a subject authenticated by an external provider.
+
+    Attributes:
+        username (str): Username reported by the provider.
+        external_id (str): Stable subject identifier (OIDC ``sub`` / LDAP DN).
+        name (str): Display name reported by the provider.
+        email (str): E-mail address reported by the provider.
+    """
+
+    username: str
+    external_id: str | None = None
+    name: str | None = None
+    email: str | None = None
 
 
 class BaseAuthenticator:
@@ -46,7 +64,7 @@ class BaseAuthenticator:
         Returns:
             str: A new JWT token generated for the user's username.
         """
-        return BaseAuthenticator.generate_jwt(user.username)
+        return BaseAuthenticator.generate_jwt(user)
 
     @staticmethod
     def logout(jwt_id: str) -> None:
@@ -75,20 +93,58 @@ class BaseAuthenticator:
         return {"error": "Authentication failed"}, HTTPStatus.UNAUTHORIZED
 
     @staticmethod
-    def generate_jwt(username: str) -> tuple[dict, HTTPStatus]:
-        """Generate a JSON Web Token (JWT) for a given username.
+    def generate_error_code(message: str, code: str, **extra: str) -> tuple[dict, HTTPStatus]:
+        """Generate a login rejection response carrying a machine-readable code.
 
         Args:
-            username (str): The username of the user for whom the JWT is to be generated.
+            message (str): Human-readable error message.
+            code (str): Machine-readable code for the GUI (e.g. PENDING_APPROVAL).
+            **extra: Additional payload entries (e.g. mfa_token).
+
+        Returns:
+            tuple: The error payload and HTTP status 403.
+        """
+        return {"error": message, "code": code, **extra}, HTTPStatus.FORBIDDEN
+
+    @staticmethod
+    def check_user_status(user: User) -> tuple[dict, HTTPStatus] | None:
+        """Refuse login of users that are not active.
+
+        Args:
+            user (User): The authenticated user.
+
+        Returns:
+            tuple | None: An error response for pending/disabled users, None when active.
+        """
+        if user.status == "pending":
+            log_manager.store_auth_warning_activity(f"Login of user pending approval blocked: {user.username}")
+            return BaseAuthenticator.generate_error_code("Your account is awaiting administrator approval", "PENDING_APPROVAL")
+        if user.status != "active":
+            log_manager.store_auth_warning_activity(f"Login of disabled user blocked: {user.username}")
+            return BaseAuthenticator.generate_error_code("Your account is disabled", "ACCOUNT_DISABLED")
+        return None
+
+    @staticmethod
+    def generate_jwt(user: User | str) -> tuple[dict, HTTPStatus]:
+        """Generate a JSON Web Token (JWT) for a given user.
+
+        Args:
+            user (User | str): The user (or their username, for the deprecated
+                env-based authenticators) for whom the JWT is to be generated.
 
         Returns:
             tuple: A tuple containing a dictionary with the access token and an HTTP status code.
-                   If the user does not exist, returns an error response.
+                   If the user does not exist or is not active, returns an error response.
         """
-        user = User.find(username)
-        if not user:
-            log_manager.store_auth_error_activity(f"User does not exist after authentication: {username}")
-            return BaseAuthenticator.generate_error()
+        if isinstance(user, str):
+            username = user
+            user = User.find(username)
+            if not user:
+                log_manager.store_auth_error_activity(f"User does not exist after authentication: {username}")
+                return BaseAuthenticator.generate_error()
+        status_error = BaseAuthenticator.check_user_status(user)
+        if status_error:
+            return status_error
         log_manager.store_user_activity(user, "LOGIN", "Successful")
         access_token = create_access_token(
             identity=user.username,

@@ -1,229 +1,205 @@
 <template>
     <AttributeItemLayout
-            :add_button="addButtonVisible"
-            @add-value="add()"
-            :values="values"
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
     >
-        <template v-slot:header>
-
-
-        </template>
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
-                        class="pb-4"
+                <!-- Read-only or remote -->
+                <div
+                    v-if="readOnly || value.remote"
+                    class="richtext-display pa-3 rounded"
                 >
-                    <template v-slot:col_middle>
+                    <div v-html="sanitizeHtml(value.value)" />
+                </div>
 
-                        <div class="py-2">
-                            <vue-editor
-                                    ref="myTextEditor"
-                                    v-model="values[index].value"
-                                    :editorOptions="editorOptionVue2"
-                                    @selection-change="onSelectionChange"
-                                    @focus="onFocus(index)"
-                                    @blur="onBlur(index)"
-                                    @keyup="onKeyUp(index)"
-                                    :disabled="values[index].locked || !canModify"
-                                    :class="getLockedStyle(index)"
-                            >
-                                <div class="toolbar" slot="toolbar">
-
-                                    <!--<button class="ql-bold">Bold</button>
-                                    <button class="ql-italic">Italic</button>
-
-                                    <select class="ql-size">
-                                        <option value="small"></option>
-                                        <option selected></option>
-                                        <option value="large"></option>
-                                        <option value="huge"></option>
-                                    </select>
-                                    <select class="ql-font">
-                                        <option selected="selected"></option>
-                                        <option value="serif"></option>
-                                        <option value="monospace"></option>
-                                    </select>
-
-                                    <button class="ql-script" value="sub"></button>
-                                    <button class="ql-script" value="super"></button>-->
-
-                                    <!--<v-btn small text @click="selectionWrap">
-                                        <v-icon>mdi-account</v-icon>
-                                    </v-btn>-->
-
-                                    <!-- Insert Template -->
-                                    <v-row justify="center" no-gutters>
-                                        <v-col style="width: 40%;">
-                                            <v-select
-                                                    v-model="select"
-                                                    :items="templates"
-                                                    item-text="name"
-                                                    item-value="template"
-                                                    return-object
-                                                    label="Insert Template"
-                                            ></v-select>
-                                        </v-col>
-                                        <v-col align-self="center" style="max-width: 10%;">
-                                            <v-btn text @click="insertTemplate">
-                                                <v-icon>mdi-view-grid-plus</v-icon>
-                                            </v-btn>
-                                        </v-col>
-                                    </v-row>
-                                </div>
-                            </vue-editor>
-                        </div>
-
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_middle>
+                        <Editor
+                            v-model="value.value"
+                            :read-only="false"
+                            theme="snow"
+                            placeholder="Enter rich text..."
+                            style="height: 250px"
+                            @blur="onBlur(index)"
+                        />
                     </template>
                 </AttributeValueLayout>
-            </v-row>
+            </div>
         </template>
-
     </AttributeItemLayout>
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { onMounted } from 'vue'
+    import Editor from 'primevue/editor'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import { useAttributes } from './useAttributes'
 
-    import { VueEditor, Quill } from 'vue2-editor';
+    type AttributeValueItem = {
+        index?: string | number
+        value: string
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
 
-    const toolbarOptions = [
-        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-        ['blockquote', 'code-block'],
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
 
-        [{ 'header': 1 }, { 'header': 2 }],               // custom button values
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'script':'sub'}, { 'script': 'super' }],      // superscript/subscript
-        [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
-        [{ 'direction': 'rtl' }],                         // text direction
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
 
-        [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+    const { canModify, addInitialValues, addButtonVisible, add, del, onBlur } = useAttributes(props)
 
-        [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-        [{ 'font': [] }],
-        [{ 'align': [] }],
+    // Basic HTML sanitization - removes potentially dangerous tags/attributes
+    const sanitizeHtml = (html: string | null | undefined): string => {
+        if (!html) return ''
+        try {
+            // Create a temporary element to parse HTML
+            const temp = document.createElement('div')
+            temp.innerHTML = html
 
-        ['clean'],                                         // remove formatting button
-        ['link', 'image', 'video'],
-        ['publish']
-    ];
+            // List of allowed HTML tags for rich text
+            const allowedTags = [
+                'p',
+                'br',
+                'b',
+                'i',
+                'u',
+                's',
+                'em',
+                'strong',
+                'span',
+                'div',
+                'ul',
+                'ol',
+                'li',
+                'a',
+                'h1',
+                'h2',
+                'h3',
+                'h4',
+                'h5',
+                'h6',
+                'blockquote',
+                'pre',
+                'code'
+            ]
+            const allowedAttrs = ['class', 'style', 'href', 'target', 'rel']
 
-    let Inline = Quill.import('blots/inline');
+            // Walk through all nodes and remove unsafe ones
+            const walk = (node: Node): void => {
+                const nodesToRemove: Node[] = []
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    const child = node.childNodes[i]
+                    if (!child) {
+                        continue
+                    }
+                    if (child.nodeType === 1) {
+                        // Element node
+                        const element = child as Element
+                        const tagName = element.tagName.toLowerCase()
 
-    class Publish extends Inline {
+                        if (!allowedTags.includes(tagName)) {
+                            // Keep content but remove the tag
+                            while (child.childNodes.length) {
+                                const firstChild = child.childNodes[0]
+                                if (!firstChild) {
+                                    break
+                                }
+                                node.insertBefore(firstChild as Node, child)
+                            }
+                            nodesToRemove.push(child)
+                        } else {
+                            // Remove unsafe attributes
+                            const attrs = element.attributes
+                            for (let j = attrs.length - 1; j >= 0; j--) {
+                                const attr = attrs[j]
+                                if (!attr) {
+                                    continue
+                                }
+                                if (!allowedAttrs.includes(attr.name)) {
+                                    element.removeAttribute(attr.name)
+                                }
+                            }
+                            // Sanitize href to prevent javascript: URLs
+                            const href = element.getAttribute('href')
+                            if (href && href.startsWith('javascript:')) {
+                                element.removeAttribute('href')
+                            }
+                            walk(element)
+                        }
+                    }
+                }
+                nodesToRemove.forEach((childNode) => childNode.parentNode?.removeChild(childNode))
+            }
 
-        static create(){
-            let node = super.create();
-            //node.setAttribute('class','spanblock');
-            return node;
+            walk(temp)
+            return temp.innerHTML
+        } catch {
+            // Fallback: return text with tags stripped
+            return html.replace(/<[^>]*>/g, '')
         }
     }
 
-    Publish.blotName = 'publish';
-    Publish.tagName = 'publish';
-    Quill.register(Publish);
-
-    export default {
-        name: "AttributeRichText",
-        props: {
-            attribute_group: Object,
-        },
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout,
-            VueEditor
-        },
-        data: () => ({
-                multi: null,
-                content: null,
-                selection: null,
-                selectionRange: null,
-                editorOptionVue2: {
-                    theme: 'snow',
-                    placeholder: "insert text here ...",
-                    modules: {
-                        toolbar: toolbarOptions
-                    }
-                },
-                select: null,
-                templates: [
-                    {name:'Placeholder Text', template: "Official website of the Department of Homeland Security All information products included in https://us-cert.gov/ics are provided \"as is\" for informational purposes only. The Department of Homeland Security (DHS) does not provide any warranties of any kind regarding any information contained within. DHS does not endorse any commercial product or service, referenced in this product or otherwise. "},
-                    {name:'Placeholder Text 2', template: "The impact and exploitability of the identified problem is dependent on the implementation and controls. Successful exploitation of this vulnerability in automation task programs or abuse of such powerful programming features may allow an attacker with network access and extensive knowledge of industrial robotics to exfiltrate data from, partially control the movements of, or disrupt the availability of arbitrary functions of the targeted device. "},
-                    {name:'Placeholder Text 3', template: "Template Data"}
-                ]
-        }),
-        mixins: [AttributesMixin],
-        computed: {
-            editor() {
-                return this.$refs.myTextEditor[0].quill;
-            }
-        },
-        mounted() {
-            this.content = this.values.value;
-        },
-        methods: {
-            onSelectionChange(range) {
-
-                try {
-                    this.selection = range;
-                    this.update();
-                } catch(err) {
-                    //pass
-                }
-            },
-            insertTemplate() {
-                if(this.select) {
-                    //let deltaTemplate = this.editor.clipboard.convert(this.select.template);
-
-                    //let deltaContent = this.editor.getContents();
-                    //window.console.debug("DC", deltaContent);
-                    //let preDelta = deltaContent.retain(this.editor.getSelection().index).insert(deltaTemplate)
-
-                    //let delta = this.editor.clipboard.convert(preDelta)
-                    //window.console.debug("DELTA", delta);
-                    try {
-                        this.editor.insertText(this.editor.selection.lastRange, this.select.template);
-                        this.update();
-                    } catch(err) {
-                        // pass
-                    }
-
-                    //let preContent = this.content;
-
-                    //this.editor.setContents(delta, 'silent');
-
-                    //let upd = this.editor.updateContents(delta);
-                    //window.console.debug(upd);
-
-                    /*this.editor.updateContents(
-                        new Delta().retain(19).insert(deltaTemplate)
-                    );*/
-
-                    /*this.editor.updateContents(
-                        delta.retain(this.editor.getSelection().index).insert(deltaTemplate)
-                    );*/
-
-                    //window.console.debug(deltaContent.retain(this.editor.getSelection().index).insert(deltaTemplate));
-                }
-            },
-            update() {
-                //this.values.value = this.content;
-                setTimeout(()=>{
-                    this.values.value = this.content;
-                    this.onEdit(0);
-                },200);
-            }
-        }
+    // Count words in rich text (strips HTML)
+    const getWordCount = (html: string | null | undefined): number => {
+        if (!html) return 0
+        const text = html.replace(/<[^>]*>/g, '').trim()
+        return text.split(/\s+/).filter((w) => w.length > 0).length
     }
+
+    onMounted(addInitialValues)
 </script>
+
+<style scoped>
+    /* Rich text editor styling */
+    :deep(.p-editor) {
+        border-radius: 4px;
+    }
+
+    :deep(.ql-editor) {
+        min-height: 250px;
+    }
+
+    .prose {
+        color: var(--p-text-color);
+    }
+
+    .line-clamp-4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

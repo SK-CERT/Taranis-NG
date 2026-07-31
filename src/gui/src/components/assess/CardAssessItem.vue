@@ -1,267 +1,210 @@
 <template>
-    <v-container v-bind="UI.CARD.CONTAINER" data-type="item">
-        <v-row>
-            <v-col v-if="multiSelectActive" :style="UI.STYLE.card_selector_zone">
-                <v-row justify="center" align="center">
-                    <v-checkbox v-if="!analyze_selector" v-model="selected" @change="selectionChanged"></v-checkbox>
+    <BaseCard
+        :multi-select-active="false"
+        :show-selection-checkbox="false"
+        card-class="aggregate-child-card"
+        @card-click="showDetail"
+    >
+        <template #content>
+            <div class="text-label-small text-grey mb-2">
+                <v-row align="center">
+                    <v-col cols="auto">
+                        {{ sourceLabel }}
+                    </v-col>
+                    <v-spacer />
+                    <v-col cols="auto">
+                        <strong>{{ t('card_item.published') }}:</strong>
+                        {{ publishedLabel }}
+                    </v-col>
+                    <v-spacer />
+                    <v-col cols="auto">
+                        <strong>{{ t('card_item.collected') }}:</strong>
+                        {{ collectedLabel }}
+                    </v-col>
                 </v-row>
-            </v-col>
-            <v-col :class="UI.CLASS.card_offset">
-                <v-hover v-slot="{ hover }">
-                    <v-card v-bind="UI.CARD.HOVER" :elevation="hover ? 12 : 2" @click.stop="itemClicked(news_item)"
-                            @mouseenter.native="toolbar = true" @mouseleave.native="toolbar = cardFocus"
-                            :color="selectedColor">
-                        <!--CONTENT-->
-                        <v-layout v-bind="UI.CARD.LAYOUT" :class="['status', cardStatus, { 'read': isRead }]">
-                            <v-row v-bind="UI.CARD.ROW.CONTENT">
-                                <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div>
-                                        {{ $t('card_item.source') }}:
-                                        <strong>
-                                            {{ news_item.news_item_data.osint_source_name || news_item.news_item_data.source }}
-                                            ({{ news_item.news_item_data.osint_source_type.split(' ')[0] }})
-                                        </strong>
-                                    </div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div align="center">
-                                        {{ $t('card_item.published') }}:
-                                        <strong>{{ news_item.news_item_data.published }}</strong>
-                                    </div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.INFO">
-                                    <div align="right">
-                                        {{ $t('card_item.collected') }}:
-                                        <strong>{{ news_item.news_item_data.collected }}</strong>
-                                    </div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.TITLE">
-                                    <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.title)">
-                                    </div>
-                                    <div v-else>{{ news_item.news_item_data.title }}</div>
-                                </v-col>
-                                <v-col v-bind="UI.CARD.COL.REVIEW" class="review-content">
-                                    <div v-if="!compact_mode">
-                                        <div v-if="word_list_regex" v-html="wordCheck(news_item.news_item_data.review)">
-                                        </div>
-                                        <div v-else>{{ news_item.news_item_data.review }}</div>
-                                    </div>
-                                </v-col>
-                                <v-row v-bind="UI.CARD.FOOTER">
-                                    <v-col cols="11" class="footer-content">
-                                        <span class="caption font-weight-bold px-0 mt-1 pb-0 pt-0 info--text source-link">
-                                            {{ news_item.news_item_data.link }}
-                                        </span>
-                                    </v-col>
+            </div>
 
-                                    <!--TOOLBAR-->
-                                    <v-col cols="1">
-                                        <v-row v-if="!multiSelectActive && !analyze_selector"
-                                                v-bind="UI.CARD.TOOLBAR.COMPACT"
-                                                :style="UI.STYLE.card_toolbar_strip_bottom">
-                                            <v-col v-bind="UI.CARD.COL.TOOLS">
-                                                <span class="ml-5 grey--text">
-                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('like')"
-                                                           data-btn="like" :title="$t('assess.tooltip.like_item')">
-                                                        <v-icon :color="buttonStatus(news_item.me_like)">
-                                                            {{ news_item.likes ? 'mdi-thumb-up' : 'mdi-thumb-up-outline' }}
-                                                        </v-icon>
-                                                    </v-btn>
-                                                    {{ news_item.likes }}
-                                                </span>
+            <h4 class="mb-2 child-title">
+                {{ itemTitle }}
+            </h4>
 
-                                                <span class="mr-5 grey--text">
-                                                    <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('unlike')"
-                                                           data-btn="unlike" :title="$t('assess.tooltip.dislike_item')">
-                                                        <v-icon :color="buttonStatus(news_item.me_dislike)">
-                                                            {{ news_item.dislikes ? 'mdi-thumb-down' : 'mdi-thumb-down-outline' }}
-                                                        </v-icon>
-                                                    </v-btn>
-                                                    {{ news_item.dislikes }}
-                                                </span>
+            <p
+                v-if="!hideReviews && itemReview"
+                class="text-grey mb-3"
+            >
+                {{ itemReview }}
+            </p>
 
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('ungroup')"
-                                                       data-btn="ungroup" :title="$t('assess.tooltip.ungroup_item')">
-                                                    <v-icon color="primary">mdi-ungroup</v-icon>
-                                                </v-btn>
+            <v-row align="center">
+                <v-col
+                    class="d-flex align-center flex-wrap"
+                    style="gap: 12px"
+                >
+                    <span
+                        v-if="!hideSourceLinks && itemLink"
+                        class="text-label-small text-primary source-link"
+                    >
+                        {{ itemLink }}
+                    </span>
+                </v-col>
 
-                                                <v-btn icon @click.stop="cardItemToolbar('link')"
-                                                       data-btn="link" :title="$t('assess.tooltip.open_source')">
-                                                    <a class="alink" :href="news_item.news_item_data.link"
-                                                       target="_blank" rel="noreferer">
-                                                        <v-icon color="primary">mdi-open-in-app</v-icon>
-                                                    </a>
-                                                </v-btn>
-
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('read')"
-                                                       data-btn="read" :title="$t('assess.tooltip.read_item')">
-                                                    <v-icon :color="buttonStatus(news_item.read)">
-                                                        {{ news_item.read ? 'mdi-eye' : 'mdi-eye-outline' }}
-                                                    </v-icon>
-                                                </v-btn>
-
-                                                <v-btn v-if="canModify" icon @click.stop="cardItemToolbar('important')"
-                                                       data-btn="important" :title="$t('assess.tooltip.important_item')">
-                                                    <v-icon :color="buttonStatus(news_item.important)">
-                                                        {{ news_item.important ? 'mdi-star' : 'mdi-star-outline' }}
-                                                    </v-icon>
-                                                </v-btn>
-
-                                                <v-btn v-if="canDelete" icon @click.stop="showMsgBox" data-btn="delete"
-                                                       :title="$t('assess.tooltip.delete_item')">
-                                                    <v-icon color="error">{{ UI.ICON.DELETE }}</v-icon>
-                                                </v-btn>
-
-                                            </v-col>
-                                        </v-row>
-                                    </v-col>
-                                </v-row>
-                            </v-row>
-                        </v-layout>
-                    </v-card>
-                </v-hover>
-            </v-col>
-        </v-row>
-        <v-row>
-            <MessageBox v-model="msgbox_visible" @yes="handleMsgBox" @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.delete')" :message="news_item.news_item_data.title">
-            </MessageBox>
-        </v-row>
-    </v-container>
+                <v-col
+                    v-if="!analyzeSelector"
+                    cols="auto"
+                    class="d-flex align-center"
+                    style="gap: 4px"
+                >
+                    <AssessItemActions
+                        :item="displayItem"
+                        size="small"
+                        variant="text"
+                        icon-size="default"
+                        :show-counts="true"
+                        @action="handleAction"
+                    />
+                </v-col>
+            </v-row>
+        </template>
+    </BaseCard>
 </template>
 
-<script>
-    import { groupAction, voteNewsItem } from "@/api/assess";
-    import { readNewsItem } from "@/api/assess";
-    import { importantNewsItem } from "@/api/assess";
-    import { deleteNewsItem } from "@/api/assess";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import MessageBox from "@/components/common/MessageBox.vue";
-    import CardMixin from "@/components/assess/card_mixin";
+<script setup lang="ts">
+    import { computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import BaseCard from '@/components/common/BaseCard.vue'
+    import AssessItemActions from '@/components/assess/AssessItemActions.vue'
+    import { Action, type ActionKey } from '@/types/actions'
 
-    export default {
-        name: "CardAssessItem",
-        components: { MessageBox },
-        props: {
-            news_item: Object,
-            analyze_selector: Boolean,
-            compact_mode: Boolean,
-            word_list_regex: String
-        },
-        mixins: [AuthMixin, CardMixin],
-        data: () => ({}),
-        computed: {
-            canModify() {
-                return this.checkPermission(Permissions.ASSESS_UPDATE) && this.news_item.modify === true
-            },
+    type NewsItemData = {
+        osint_source_name?: string
+        source?: string
+        osint_source_type?: string
+        published?: string
+        collected?: string
+        title?: string
+        review?: string
+        link?: string
+        [key: string]: unknown
+    }
 
-            canDelete() {
-                return this.checkPermission(Permissions.ASSESS_DELETE) && this.news_item.modify === true
-            },
-        },
-        methods: {
-            itemClicked(data) {
-                this.$emit('show-item-detail', data);
-                this.stateChange();
-            },
+    type AssessNewsItem = {
+        id: number | string
+        title?: string
+        description?: string
+        comments?: string
+        created?: string
+        read?: boolean
+        important?: boolean
+        likes?: number
+        dislikes?: number
+        me_like?: boolean
+        me_dislike?: boolean
+        modify?: boolean
+        news_item_data?: NewsItemData
+        [key: string]: unknown
+    }
 
-            selectionChanged() {
-                if (this.selected === true) {
-                    this.$store.dispatch("select", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
-                } else {
-                    this.$store.dispatch("deselect", { 'type': 'ITEM', 'id': this.news_item.id, 'item': this.news_item })
-                }
-            },
+    type DetailNewsItem = {
+        id: number | string
+        entityType: 'news_item'
+        title: string
+        description: string
+        comments: string
+        created: string
+        read: boolean
+        important: boolean
+        likes: number
+        dislikes: number
+        me_like: boolean
+        me_dislike: boolean
+        link: string
+        news_items: AssessNewsItem[]
+        [key: string]: unknown
+    }
 
-            cardItemToolbar(action) {
-                switch (action) {
-                    case "like":
-                        voteNewsItem(this.getGroupId(), this.news_item.id, 1).then(() => {
-                        });
-                        break;
-
-                    case "unlike":
-                        voteNewsItem(this.getGroupId(), this.news_item.id, -1).then(() => {
-                        });
-                        break;
-
-                    case "link":
-                        break;
-
-                    case "important":
-                        importantNewsItem(this.getGroupId(), this.news_item.id).then(() => {
-                        });
-                        break;
-
-                    case "read":
-                        readNewsItem(this.getGroupId(), this.news_item.id).then(() => {
-                        });
-                        break;
-
-                    case "delete":
-                        deleteNewsItem(this.getGroupId(), this.news_item.id).then(() => {
-                        }).catch((error) => {
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'error',
-                                    loc: 'error.' + error.response.data
-                                }
-                            )
-                        });
-                        break;
-
-                    case "ungroup":
-                        // Emit event to parent to close the expanded aggregate view
-                        this.$parent.opened = false;
-                        groupAction({
-                            'group': this.getGroupId(),
-                            'action': 'UNGROUP',
-                            'items': [{ 'type': 'ITEM', 'id': this.news_item.id }]
-                        }).then(() => {
-                        }).catch((error) => {
-                            this.$root.$emit('notification',
-                                {
-                                    type: 'error',
-                                    loc: 'error.' + error.response.data
-                                }
-                            )
-                        });
-                        break;
-
-                    default:
-                        this.toolbar = false;
-                        this.itemClicked(this.news_item);
-                        break;
-                }
-            },
+    const props = withDefaults(
+        defineProps<{
+            newsItem: AssessNewsItem
+            analyzeSelector?: boolean
+            hideReviews?: boolean
+            hideSourceLinks?: boolean
+        }>(),
+        {
+            analyzeSelector: false,
+            hideReviews: false,
+            hideSourceLinks: false
         }
+    )
+
+    const emit = defineEmits<{
+        (e: 'show-detail', item: DetailNewsItem): void
+        (e: 'update-item', item: DetailNewsItem, action: ActionKey): void
+        (e: 'delete-item', item: DetailNewsItem): void
+    }>()
+
+    const { t } = useI18n()
+
+    const itemData = computed(() => props.newsItem.news_item_data || {})
+
+    const sourceLabel = computed(() => {
+        const source = itemData.value.osint_source_name || itemData.value.source || 'Unknown'
+        const sourceType = itemData.value.osint_source_type?.split(' ')[0]
+        return sourceType ? `${source} (${sourceType})` : source
+    })
+
+    const publishedLabel = computed(() => itemData.value.published || 'N/A')
+    const collectedLabel = computed(() => itemData.value.collected || props.newsItem.created || 'N/A')
+    const itemTitle = computed(() => itemData.value.title || props.newsItem.title || '')
+    const itemReview = computed(() => itemData.value.review || props.newsItem.description || '')
+    const itemLink = computed(() => itemData.value.link || '')
+
+    const displayItem = computed<DetailNewsItem>(() => ({
+        ...props.newsItem,
+        entityType: 'news_item',
+        title: itemTitle.value,
+        description: itemReview.value,
+        comments: props.newsItem.comments || '',
+        created: collectedLabel.value,
+        read: Boolean(props.newsItem.read),
+        important: Boolean(props.newsItem.important),
+        likes: Number(props.newsItem.likes || 0),
+        dislikes: Number(props.newsItem.dislikes || 0),
+        me_like: Boolean(props.newsItem.me_like),
+        me_dislike: Boolean(props.newsItem.me_dislike),
+        link: itemLink.value,
+        news_items: [props.newsItem]
+    }))
+
+    const showDetail = (): void => {
+        emit('show-detail', displayItem.value)
+    }
+
+    const handleAction = (action: ActionKey): void => {
+        if (action === Action.DELETE) {
+            emit('delete-item', displayItem.value)
+            return
+        }
+
+        emit('update-item', displayItem.value, action)
     }
 </script>
+
 <style scoped>
-    .footer-content {
-        min-height: 48px;
+    :deep(.aggregate-child-card) {
+        margin-inline-start: 32px;
+        border-inline-start: 3px solid rgb(var(--v-theme-primary));
     }
 
-    .status.read {
-        opacity: 0.5;
+    .child-title {
+        font-size: 1.05rem;
+        line-height: 1.35;
     }
 
-    .theme--light .status.read {
-        background-color: #f5f5f5;
-    }
-
-    .theme--dark .status.read {
-        background-color: #2c2c2c;
-    }
-
-    .status.read .v-card {
-        filter: grayscale(30%);
-    }
-</style>
-<style>
-    .v-dialog--fullscreen {
-        position: fixed !important;
-        top: 0;
+    .source-link {
+        display: inline-block;
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 </style>

@@ -1,267 +1,368 @@
 <template>
-    <v-data-table :headers="headers"
-                  :items="records"
-                  :items-per-page="-1"
-                  item-key="id"
-                  sort-by="description"
-                  class="elevation-1"
-                  :search="search"
-                  :clickable="false"
-                  @click.stop
-                  disable-pagination
-                  hide-default-footer>
-        <template v-slot:top>
-            <v-row v-bind="UI.TOOLBAR.ROW">
-                <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                    <div v-if="glob_setting" :class="UI.CLASS.toolbar_filter_title">
-                        {{$t('nav_menu.settings')}}
-                    </div>
-                </v-col>
-                <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                    <v-text-field v-bind="UI.ELEMENT.SEARCH"
-                                  v-model="search"
-                                  :label="$t('toolbar_filter.search')"
-                                  single-line
-                                  hide-details></v-text-field>
-                </v-col>
-                <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                    <slot name="XXX"></slot>
-                </v-col>
-            </v-row>
-        </template>
+    <!-- Application Settings uses the same card + toolbar layout as the Access
+         Management tabs. Inside the User Settings dialog (globalSetting = false) the
+         wrapper stays flat/padding-free so it doesn't nest a card in a card. -->
+    <v-container
+        fluid
+        :class="{ 'pa-0': !globalSetting }"
+    >
+        <v-card :flat="!globalSetting">
+            <!-- Toolbar -->
+            <v-card-text>
+                <v-row>
+                    <v-col cols="8">
+                        <SearchField
+                            v-model="search"
+                            :width="350"
+                        />
+                    </v-col>
+                    <v-col
+                        cols="4"
+                        class="text-right"
+                    />
+                </v-row>
+            </v-card-text>
 
-        <template v-slot:item.value="{ item }">
-            <template v-if="item.type === 'B'">
-                <v-switch :input-value="item.value === 'true'"
-                          @change="val => {
-                              setting = { ...item, value: val ? 'true' : 'false' };
-                              save(item);
-                          }"
-                          inset></v-switch>
-            </template>
-            <template v-else-if="item.options">
-                <v-select v-model="item.value"
-                          @change="val => { setting = { ...item, value: val }; save(item); }"
-                          :value="item.value"
-                          :items="getDisplayOptions(item)"
-                          item-value="id"
-                          item-text="txt"></v-select>
-            </template>
-            <template v-else>
-                <v-edit-dialog v-model="item.value"
-                               large
-                               @save="save()"
-                               @cancel="cancel"
-                               @open="open(item)"
-                               @close="close">
-                    <v-chip :color="getColor(item.value, item.default_val)"
-                            :label="true"
-                            style="cursor: pointer"
-                            dark>
-                        {{ item.value }}
-                    </v-chip>
-                    <template v-slot:input>
-                        <div class="mt-4 text-h6">
-                            {{$t('settings.update_value')}}
-                        </div>
-                        <v-text-field v-model="setting.value"
-                                      :rules="[max150chars]"
-                                      label="Edit"
-                                      single-line
-                                      counter
-                                      autofocus></v-text-field>
+            <v-data-table
+                :headers="headers"
+                :items="records"
+                :search="search"
+                :items-per-page="-1"
+                item-key="id"
+                :sort-by="[{ key: 'description', order: 'asc' }]"
+                density="compact"
+                hide-default-footer
+                :class="{ 'elevation-1': globalSetting }"
+            >
+                <template #item.value="{ item }">
+                    <!-- Boolean setting (switch) -->
+                    <template v-if="item.type === 'B'">
+                        <v-switch
+                            :model-value="item.value === 'true'"
+                            color="primary"
+                            hide-details
+                            density="compact"
+                            @update:model-value="(val) => updateSetting(item, val ? 'true' : 'false')"
+                        />
                     </template>
-                </v-edit-dialog>
-            </template>
-        </template>
 
-        <!-- default value tooltip moved to next column due to readability -->
-        <template v-slot:item.description="{ item }">
-            <v-tooltip bottom>
-                <template v-slot:activator="{ on, attrs }">
-                    <span v-bind="attrs" v-on="on"
-                          style="cursor: pointer; white-space: normal; word-wrap: break-word; word-break: break-word;">
-                        {{ $te('settings_enum.' + item.key) ? $t('settings_enum.' + item.key) : item.description }}
+                    <!-- Select with options -->
+                    <template v-else-if="item.options">
+                        <v-select
+                            :model-value="item.value"
+                            :items="getDisplayOptions(item)"
+                            item-title="txt"
+                            item-value="id"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            @update:model-value="(val) => updateSetting(item, val)"
+                        />
+                    </template>
+
+                    <!-- Text input with edit dialog -->
+                    <template v-else>
+                        <v-chip
+                            :color="getColor(item.value, item.default_val)"
+                            label
+                            clickable
+                            @click="openEditDialog(item)"
+                        >
+                            {{ item.value }}
+                        </v-chip>
+                    </template>
+                </template>
+
+                <template #item.description="{ item }">
+                    <span
+                        style="cursor: help"
+                        :title="`${t('settings.default_value')}: ${item.default_val}`"
+                    >
+                        {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
                     </span>
                 </template>
-                <span>{{$t('settings.default_value')}}: {{ item.default_val }}</span>
-            </v-tooltip>
-        </template>
 
-        <template v-slot:item.updated_at="{ item }">
-            <span>{{ formatDate(item.updated_at) }}</span>
-        </template>
+                <template #item.updated_at="{ item }">
+                    <span>{{ formatDate(item.updated_at) }}</span>
+                </template>
+            </v-data-table>
+        </v-card>
+    </v-container>
 
-    </v-data-table>
+    <!-- Edit Dialog for text values -->
+    <v-dialog
+        v-model="editDialog"
+        max-width="500"
+    >
+        <v-card>
+            <v-card-title>{{ t('settings.update_value') }}</v-card-title>
+            <v-card-text>
+                <v-text-field
+                    v-model="editValue"
+                    :label="t('settings.value')"
+                    :rules="[maxCharsRule]"
+                    variant="outlined"
+                    counter="150"
+                    autofocus
+                    @keydown.enter="saveEdit"
+                />
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn
+                    variant="text"
+                    @click="editDialog = false"
+                >
+                    {{ t('common.cancel') }}
+                </v-btn>
+                <v-btn
+                    color="primary"
+                    variant="text"
+                    @click="saveEdit"
+                >
+                    {{ t('common.save') }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
-<script>
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import { format } from "date-fns";
-    import Settings, { getSetting, getSettingBoolean } from "@/services/settings";
-    import ISO6391 from "iso-639-1";
+<script setup lang="ts">
+    import { ref, computed, onMounted, watch } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useTheme } from 'vuetify'
+    import { useSettingsStore } from '@/stores/settings'
+    import { Settings, type SettingKey } from '@/types/settings'
+    import SearchField from '@/components/common/SearchField.vue'
+    import { format } from 'date-fns'
 
-    export default {
-        name: "SettingsTable",
-        props: {
-            glob_setting: { type: Boolean, required: true },
-        },
+    type SettingType = 'B' | 'I' | 'N' | 'S'
 
-        data() {
-            return {
-                search: '',
-                records: [],
-                dialog: false,
-                max150chars: v => v.length <= 150 || 'Input too long!',
-                setting: {
-                    id: -1,
-                    value: "",
-                    type: "",
-                    is_global: true,
-                },
-                date_format: "yyyy-MM-dd HH:mm:ss", // Default format
-            };
-        },
-        mixins: [AuthMixin],
+    type SettingOption = {
+        id: string | number
+        txt: string
+        [key: string]: unknown
+    }
 
-        computed: {
-            headers() {
-                const headers = [
-                    // { text: 'Key', value: 'key' },
-                    { text: this.$t('settings.description'), value: 'description', cellClass: 'wrap-text-cell' },
-                    { text: this.$t('settings.value'), value: 'value' },
-                    // { text: 'Type', value: 'type' },
-                ];
-                if (this.glob_setting) {
-                    headers.push({ text: this.$t('settings.updated_by'), value: 'updated_by' });
-                    headers.push({ text: this.$t('settings.updated_at'), value: 'updated_at', filterable: false });
-                }
-                return headers;
-            },
-        },
+    type SettingsRecord = {
+        id?: string | number
+        key: SettingKey
+        value: string
+        type?: SettingType
+        description?: string
+        default_val?: string
+        updated_by?: string
+        updated_at?: string
+        options?: string
+        is_global?: boolean
+        [key: string]: unknown
+    }
 
-        methods: {
-            getColor(value, default_val) {
-                return value === default_val ? "#a6a6a6" : "green";
-            },
+    type HeaderEntry = {
+        title: string
+        key: string
+        sortable?: boolean
+    }
 
-            formatDate(dateString) {
-                return dateString ? format(new Date(dateString), this.date_format) : "";
-            },
+    const props = defineProps<{
+        globalSetting: boolean
+    }>()
 
-            getDisplayOptions(item) {
+    const { t, te, locale } = useI18n()
+    const theme = useTheme()
+    const settingsStore = useSettingsStore()
+
+    const applyTheme = (themeName: string): void => {
+        if (typeof theme.change === 'function') {
+            theme.change(themeName)
+        } else {
+            theme.global.name.value = themeName
+        }
+    }
+
+    const search = ref('')
+    let date_format: string
+    const records = ref<SettingsRecord[]>([])
+    const editDialog = ref(false)
+    const editValue = ref('')
+    const editItem = ref<SettingsRecord | null>(null)
+
+    const maxCharsRule = (value: string | null | undefined): true | string => !value || value.length <= 150 || 'Input too long!'
+
+    const headers = computed<HeaderEntry[]>(() => {
+        const baseHeaders: HeaderEntry[] = [
+            { title: t('settings.description'), key: 'description' },
+            { title: t('settings.value'), key: 'value', sortable: false }
+        ]
+
+        if (props.globalSetting) {
+            baseHeaders.push(
+                { title: t('settings.updated_by'), key: 'updated_by' },
+                { title: t('settings.updated_at'), key: 'updated_at', sortable: true }
+            )
+        }
+
+        return baseHeaders
+    })
+
+    const getColor = (value: string, defaultValue?: string): string => {
+        return value === defaultValue ? 'grey' : 'success'
+    }
+
+    const formatDate = (dateString?: string): string => {
+        if (!dateString) return ''
+        try {
+            const date = new Date(dateString)
+            return format(date, date_format)
+        } catch {
+            return dateString
+        }
+    }
+
+    const getDisplayOptions = (item: SettingsRecord): SettingOption[] => {
+        try {
+            const options = JSON.parse(item.options || '[]') as SettingOption[]
+
+            // For language settings, use language names
+            if (item.key === Settings.UI_LANGUAGE || item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
+                return options.map((opt) => ({
+                    ...opt,
+                    txt: getLanguageName(String(opt.id), opt.txt)
+                }))
+            }
+
+            return options
+        } catch {
+            return []
+        }
+    }
+
+    const getLanguageName = (code: string, defaultName?: string): string => {
+        try {
+            // Try to use Intl.DisplayNames for multilingual support
+            if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
                 try {
-                    const options = JSON.parse(item.options);
-
-                    // For language settings, translate language names to current UI language
-                    if (item.key === 'UI_LANGUAGE' || item.key === 'CONTENT_DEFAULT_LANGUAGE') {
-                        return options.map(opt => ({
-                            ...opt,
-                            txt: this.getLanguageName(opt.id, opt.txt),
-                        }));
-                    }
-
-                    return options;
-                } catch (e) {
-                    return [];
+                    const displayNames = new Intl.DisplayNames([locale.value, 'en'], { type: 'language' })
+                    return displayNames.of(code) || defaultName || code
+                } catch {
+                    // Fallback
                 }
-            },
+            }
 
-            getLanguageName(code, defaultName) {
-                try {
-                    const currentLang = getSetting(Settings.UI_LANGUAGE, 'en');
+            // Simple fallback - return default name or code
+            return defaultName || code
+        } catch {
+            return defaultName || code
+        }
+    }
 
-                    // Try to use Intl.DisplayNames for multilingual support (modern browsers)
-                    if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
-                        try {
-                            const displayNames = new Intl.DisplayNames([currentLang, 'en'], { type: 'language' });
-                            return displayNames.of(code);
-                        } catch (e) {
-                            // Fallback if Intl.DisplayNames fails
-                        }
-                    }
+    const initRecords = (): void => {
+        const allSettings = settingsStore.getSettings || []
 
-                    // Fallback to iso-639-1 library for English name
-                    const langName = ISO6391.getName(code);
-                    return langName || defaultName || code;
-                } catch (e) {
-                    return defaultName || code;
-                }
-            },
+        if (!Array.isArray(allSettings)) {
+            console.warn('[SettingsTable] allSettings is not an array:', typeof allSettings)
+            records.value = []
+            return
+        }
+        date_format = settingsStore.getDateTimeFormat
 
-            initRecords() {
-                var dateFmt = getSetting(Settings.DATE_FORMAT, "yyyy-MM-dd");
-                var timeFmt = getSetting(Settings.TIME_FORMAT, "HH:mm:ss");
-                if (dateFmt != "" && timeFmt != "") {
-                    this.date_format = dateFmt + " " + timeFmt;
-                }
-                const allItems = this.$store.getters.getSettings;
-                this.records = allItems.filter(item => item.is_global === this.glob_setting);
-            },
+        const filtered = allSettings.filter((item: SettingsRecord) => {
+            const settingsItem = item as SettingsRecord
+            return settingsItem.is_global === props.globalSetting
+        })
 
-            save() {
-                // console.log('saving value:', this.setting.value)
-                var val = this.setting.value.trim();
-                if (this.setting.type == 'B') {
-                    val = val.toLowerCase();
-                    if (val != "true" && val != "false") {
-                        this.showMsg("warning", "settings.boolean_error");
-                        return;
-                    }
-                } else if (this.setting.type == 'I') {
-                    val = Number(val);
-                    if (isNaN(val) || !Number.isInteger(val)) {
-                        this.showMsg("warning", "settings.integer_error");
-                        return;
-                    }
-                } else if (this.setting.type === 'N') {
-                    val = Number(val);
-                    if (isNaN(val) || !isFinite(val)) {
-                        this.showMsg("warning", "settings.decimal_error");
-                        return;
-                    }
-                }
-                this.setting.value = String(val)
-                // console.log('saving corrected value:', this.setting.value, 'Object:', this.setting)
-                this.$store.dispatch('saveSettings', { data: this.setting, is_global: this.glob_setting }).then(() => {
-                    this.initRecords()
-                    // Some special settings require immediate application
-                    if (this.setting.key === Settings.DARK_THEME) {
-                        this.$vuetify.theme.dark = getSettingBoolean(Settings.DARK_THEME);
-                    } else if (this.setting.key === Settings.UI_LANGUAGE) {
-                        this.$i18n.locale = getSetting(Settings.UI_LANGUAGE);
-                    } else if (this.setting.key === Settings.SPELLCHECK) {
-                        this.$store.state.settings.spellcheck = getSettingBoolean(Settings.SPELLCHECK);
-                    }
-                    this.showMsg("success", "settings.successful_edit");
-                }).catch(() => {
-                    this.showMsg("error", "settings.error");
+        records.value = filtered as SettingsRecord[]
+    }
+
+    const validateValue = (item: SettingsRecord, value: string): string => {
+        let val = value.trim()
+
+        if (item.type === 'B') {
+            val = val.toLowerCase()
+            if (val !== 'true' && val !== 'false') {
+                throw new Error(t('settings.boolean_error'))
+            }
+        } else if (item.type === 'I') {
+            const numVal = Number(val)
+            if (isNaN(numVal) || !Number.isInteger(numVal)) {
+                throw new Error(t('settings.integer_error'))
+            }
+        } else if (item.type === 'N') {
+            const numVal = Number(val)
+            if (isNaN(numVal) || !isFinite(numVal)) {
+                throw new Error(t('settings.decimal_error'))
+            }
+        }
+
+        return String(val)
+    }
+
+    const updateSetting = async (item: SettingsRecord, value: string): Promise<void> => {
+        try {
+            const validatedValue = validateValue(item, value)
+            const settingData = {
+                ...item,
+                value: validatedValue
+            }
+
+            await settingsStore.saveSettings({ data: settingData, is_global: props.globalSetting })
+            initRecords()
+
+            // Apply special settings immediately
+            if (item.key === Settings.DARK_THEME) {
+                applyTheme(validatedValue === 'true' ? 'dark' : 'light')
+            } else if (item.key === Settings.UI_LANGUAGE) {
+                locale.value = validatedValue
+            } else if (item.key === Settings.SPELLCHECK) {
+                settingsStore.spellcheck = validatedValue === 'true'
+            }
+
+            // Show success notification
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'success', loc: 'settings.successful_edit' }
                 })
-            },
+            )
+        } catch (error) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', loc: 'settings.error' }
+                })
+            )
+        }
+    }
 
-            cancel() {
-                // console.log('cancel', this.setting.value)
-            },
+    const openEditDialog = (item: SettingsRecord): void => {
+        editItem.value = item
+        editValue.value = item.value
+        editDialog.value = true
+    }
 
-            open(item) {
-                this.setting = Object.assign({}, item);
-                // console.log('open', this.setting.value)
-            },
+    const saveEdit = (): void => {
+        if (editItem.value && editValue.value !== null) {
+            updateSetting(editItem.value, editValue.value)
+        }
+        editDialog.value = false
+    }
 
-            close() {
-                // console.log('close')
-            },
+    onMounted(async () => {
+        await settingsStore.loadSettings({ search: '' })
+        initRecords()
+    })
 
-            showMsg(type, message) {
-                this.$root.$emit('notification', { type: type, loc: message })
-            },
-
-        },
-
-        mounted() {
-            this.$store.dispatch('getAllSettings', { search: '' }).then(() => {
-                this.initRecords()
-            });
-        },
-    };
+    // Re-filter records whenever globalSetting prop changes
+    watch(
+        () => props.globalSetting,
+        () => {
+            initRecords()
+        }
+    )
 </script>
+
+<style scoped>
+    .wrap-text-cell {
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+</style>

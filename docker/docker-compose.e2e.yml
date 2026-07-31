@@ -6,7 +6,7 @@
 # a production stack: the defaults here deliberately avoid production's published
 # ports (traefik 8080/4443, ${PRESENTER_PORT}=5002, postgres/redis which are not
 # host-published). `traefik.enable: "false"` on core keeps the E2E core off the
-# production Traefik router; traefik itself is neither started by test-setup.sh
+# production Traefik router; traefik itself is neither started by test-setup.py
 # nor needed (Playwright hits core directly on E2E_CORE_PORT).
 #
 # IMPORTANT: presenters' port list is RESET here (the bare `!reset` tag clears the
