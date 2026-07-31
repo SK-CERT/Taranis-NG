@@ -32,6 +32,22 @@ type ApiResponse<T> = {
 
 const emptyListState = <T = unknown>(): ListState<T> => ({ total_count: 0, items: [] })
 
+/**
+ * The selection is filled from several places that spell the same entity kind differently:
+ * the cards send 'news_item_aggregate', the toolbar's "select all" and the keyboard shortcut
+ * send 'AGGREGATE'. Comparing the raw strings means unchecking a card cannot find the entry
+ * "select all" put there, so the item stays selected and is still acted on. Compare the kind.
+ */
+const normalizeSelectionType = (rawType: unknown): 'AGGREGATE' | 'ITEM' =>
+    String(rawType ?? '')
+        .toUpperCase()
+        .includes('AGGREGATE')
+        ? 'AGGREGATE'
+        : 'ITEM'
+
+const isSameSelectable = (a: SelectableItem, b: SelectableItem): boolean =>
+    String(a.id) === String(b.id) && normalizeSelectionType(a.type) === normalizeSelectionType(b.type)
+
 export const useAssessStore = defineStore('assess', () => {
     // State
     const newsitems = ref<ListState<SelectableItem>>(emptyListState<SelectableItem>())
@@ -68,11 +84,20 @@ export const useAssessStore = defineStore('assess', () => {
 
     function multiSelect(enable: boolean): void {
         multi_select.value = enable
+        clearSelection()
+    }
+
+    function clearSelection(): void {
         selection.value = []
     }
 
     function select(selected_item: SelectableItem): void {
         // console.log('Selecting item:', selected_item)
+        // Selecting twice (by hand and then through "select all") would leave two entries for
+        // the same item, and deselecting it would only drop one of them.
+        if (selection.value.some((item) => isSameSelectable(item, selected_item))) {
+            return
+        }
         selection.value.push(selected_item)
     }
 
@@ -85,12 +110,9 @@ export const useAssessStore = defineStore('assess', () => {
     }
 
     function deselect(selectedItem: SelectableItem): void {
-        for (let i = 0; i < selection.value.length; i++) {
-            const item = selection.value[i]
-            if (item && item.type === selectedItem.type && item.id === selectedItem.id) {
-                selection.value.splice(i, 1)
-                break
-            }
+        const index = selection.value.findIndex((item) => isSameSelectable(item, selectedItem))
+        if (index !== -1) {
+            selection.value.splice(index, 1)
         }
     }
 
@@ -174,6 +196,7 @@ export const useAssessStore = defineStore('assess', () => {
         // Actions
         loadNewsItemsByGroup,
         multiSelect,
+        clearSelection,
         select,
         selectById,
         deselect,

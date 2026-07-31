@@ -131,6 +131,62 @@ describe('Assess Store', () => {
 
             expect(store.selection).toHaveLength(1)
         })
+
+        // "Select all" stores 'AGGREGATE', the cards send 'news_item_aggregate'. Matching the raw
+        // strings left the item selected, so it was still grouped after the user unchecked it.
+        it('deselect should match an item selected under the other spelling of the aggregate type', () => {
+            const store = useAssessStore()
+            store.selection = [
+                { id: 'a1', type: 'AGGREGATE' },
+                { id: 'a2', type: 'AGGREGATE' }
+            ]
+
+            store.deselect({ id: 'a2', type: 'news_item_aggregate' })
+
+            expect(store.selection.map((s) => s.id)).toEqual(['a1'])
+        })
+
+        it('deselect should not remove an aggregate when a child news item is deselected', () => {
+            const store = useAssessStore()
+            store.selection = [{ id: 'a1', type: 'AGGREGATE' }]
+
+            store.deselect({ id: 'a1', type: 'ITEM' })
+
+            expect(store.selection).toHaveLength(1)
+        })
+
+        it('select should ignore an item that is already selected', () => {
+            const store = useAssessStore()
+
+            store.select({ id: 'a1', type: 'news_item_aggregate' })
+            store.select({ id: 'a1', type: 'AGGREGATE' })
+
+            expect(store.selection).toHaveLength(1)
+
+            // A single deselect has to leave nothing behind.
+            store.deselect({ id: 'a1', type: 'news_item_aggregate' })
+            expect(store.selection).toEqual([])
+        })
+
+        it('select should keep an aggregate and a child news item of the same id apart', () => {
+            const store = useAssessStore()
+
+            store.select({ id: 'a1', type: 'AGGREGATE' })
+            store.select({ id: 'a1', type: 'ITEM' })
+
+            expect(store.selection).toHaveLength(2)
+        })
+
+        it('clearSelection should empty the selection without leaving multi-select', () => {
+            const store = useAssessStore()
+            store.multi_select = true
+            store.selection = [{ id: 'a1', type: 'AGGREGATE' }]
+
+            store.clearSelection()
+
+            expect(store.selection).toEqual([])
+            expect(store.multi_select).toBe(true)
+        })
     })
 
     // ── Load News Items ───────────────────────────

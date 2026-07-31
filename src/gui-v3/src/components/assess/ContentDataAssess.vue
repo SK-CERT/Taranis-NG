@@ -46,6 +46,7 @@
                 @update-item="updateItem"
                 @delete-item="handleDelete"
                 @card-items-reindex="handleCardItemsReindex"
+                @selection-change="handleSelectionChange(news_item, $event)"
             />
         </div>
 
@@ -259,6 +260,19 @@
     const multiSelectActive = computed(() => assessStore.getMultiSelect)
 
     const isPreselected = (item_id: string | number): boolean => props.selection.some((item) => item.id === item_id)
+
+    /**
+     * Only the compact card reports its checkbox up here - CardAssess keeps the selection in step
+     * itself. Without this, ticking a card in compact mode changed nothing in the store: after
+     * "select all", unchecking one left it selected and the group action still took it along.
+     */
+    const handleSelectionChange = (news_item: NewsItem, isSelected: boolean): void => {
+        if (isSelected) {
+            assessStore.select({ type: 'news_item_aggregate', id: news_item.id, item: news_item })
+        } else {
+            assessStore.deselect({ type: 'news_item_aggregate', id: news_item.id })
+        }
+    }
 
     const getNormalizedGroupId = (): string => {
         const routeGroupId = route.params['groupId']

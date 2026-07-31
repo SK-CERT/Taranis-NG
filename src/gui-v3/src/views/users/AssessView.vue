@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
     import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-    import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+    import { useRoute, useRouter, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
     import ViewLayout from '@/components/layouts/ViewLayout.vue'
@@ -160,6 +160,16 @@
         keyboard.setReloadCallback(() => {
             updateData(false)
         })
+    })
+
+    // Every group tab is the same route record, so switching between them keeps this view mounted
+    // and a selection made in one group would survive into the next. A group action always targets
+    // the group in the URL, so acting on that selection would merge news items across groups -
+    // which is exactly what hiding the group actions on the "all sources" tab prevents.
+    onBeforeRouteUpdate((to, from) => {
+        if (to.params['groupId'] !== from.params['groupId']) {
+            assessStore.clearSelection()
+        }
     })
 
     onBeforeRouteLeave(() => {
