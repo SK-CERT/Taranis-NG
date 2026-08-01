@@ -1,163 +1,195 @@
 <template>
-    <v-container v-bind="UI.TOOLBAR.CONTAINER" :style="UI.STYLE.shadow">
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col v-bind="UI.TOOLBAR.COL.LEFT">
-                <div :class="UI.CLASS.toolbar_filter_title">{{$t( title )}}</div>
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.MIDDLE">
-                <v-text-field v-bind="UI.ELEMENT.SEARCH" v-model="filter.search"
-                              :placeholder="$t('toolbar_filter.search')"
-                              v-on:keyup="filterSearch" />
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.RIGHT">
-                <slot name="addbutton"></slot>
-            </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col class="py-0">
-                <!-- DAY-S -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.DAYS">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP"
-                            v-for="day in days" :key="day.filter" @click="filterRange(day.filter)">
-                        <div class="px-2" :title="$t('publish.tooltip.range.' + day.filter)">{{$t(day.title)}}</div>
-                    </v-chip>
-                </v-chip-group>
+    <BaseToolbarFilter
+        ref="baseFilter"
+        :title="title"
+        :total-count-title="totalCountTitle"
+        :total-count="totalCount"
+        :currently-showing-count="currentlyShowingCount"
+        :initial-filter="filter"
+        :show-day-ranges="true"
+        :show-sort="true"
+        :show-selected-count="multiSelectActive"
+        :selected-count-title="'toolbar_filter.selected_count'"
+        :selected-count="selectedCount"
+        :show-add-button="showAddButton"
+        :add-button-label="addButtonLabel"
+        sort-tooltip-prefix="publish"
+        :search-debounce-ms="800"
+        @update-filter="handleFilterUpdate"
+        @add-new="emit('add-new')"
+    >
+        <!-- Add Button Slot -->
+        <template #addbutton>
+            <slot name="addbutton" />
+        </template>
 
-                <v-icon v-bind="UI.TOOLBAR.ICON.CHIPS_SEPARATOR">{{ UI.ICON.SEPARATOR }}</v-icon>
+        <!-- Custom Filters: Published -->
+        <template #custom-filters="{ filter }">
+            <div style="display: flex; gap: 4px; flex-wrap: wrap">
+                <v-chip
+                    size="small"
+                    :color="filter['published'] === 'ALL' ? 'default' : 'primary'"
+                    :variant="filter['published'] === 'ALL' ? 'outlined' : 'flat'"
+                    :title="publishedFilterTooltip"
+                    @click="cycleFilter('published')"
+                >
+                    <v-icon>{{ publishedFilterIcon }}</v-icon>
+                </v-chip>
+            </div>
+        </template>
+    </BaseToolbarFilter>
 
-                <!-- FILTER -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.FILTER_MULTI" v-model="activeFilters">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterPublished" id="button_filter_published" value="published">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP" :title="publishedFilterTooltip">{{ publishedFilterIcon }}</v-icon>
-                    </v-chip>
-                </v-chip-group>
+    <!-- Selection Group Toolbar -->
+    <v-toolbar
+        flat
+        color="surface"
+        density="compact"
+    >
+        <ToolbarGroup
+            ref="toolbarGroup"
+            view="publish"
+            :current-filter="filter"
+            @update-data="handleUpdateData"
+        />
 
-                <!-- SORT -->
-                <v-chip-group v-bind="UI.TOOLBAR.GROUP.SORT">
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_DESC')" :title="$t('publish.tooltip.sort.date.descending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.DESC }}</v-icon>
-                    </v-chip>
-                    <v-chip v-bind="UI.TOOLBAR.CHIP.GROUP" @click="filterSort('DATE_ASC')" :title="$t('publish.tooltip.sort.date.ascending')">
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_A">{{ UI.ICON.CLOCK }}</v-icon>
-                        <v-icon v-bind="UI.TOOLBAR.ICON.CHIP_B">{{ UI.ICON.ASC }}</v-icon>
-                    </v-chip>
-                </v-chip-group>
-            </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row v-bind="UI.TOOLBAR.ROW">
-            <v-col v-bind="UI.TOOLBAR.COL.INFO">
-                <span>{{$t(total_count_title)}}<strong>{{totalCount}}</strong></span>
-            </v-col>
-            <v-col v-bind="UI.TOOLBAR.COL.RIGHT"></v-col>
-        </v-row>
-    </v-container>
+        <v-spacer />
+        <v-btn
+            icon
+            size="small"
+            :color="compactMode ? 'primary' : 'default'"
+            :title="t('publish.tooltip.compact_mode')"
+            @click="toggleCompactMode"
+        >
+            <v-icon>{{ ICONS.FORMAT_LIST_BULLETED }}</v-icon>
+        </v-btn>
+    </v-toolbar>
 </template>
 
-<script>
-    import AuthMixin from "../../services/auth/auth_mixin";
+<script setup lang="ts">
+    import { ref, computed, watch, onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { ICONS } from '@/config/ui-constants'
+    import { usePublishStore } from '@/stores/publish'
+    import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
+    import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
 
-    export default {
-        name: "ToolbarFilterPublish",
-        mixins: [AuthMixin],
-        props: {
-            title: String,
-            dialog: String,
-            total_count_title: String
-        },
-        data: () => ({
-            status: [],
-            days: [
-                { title: 'toolbar_filter.all', icon: 'mdi-information-outline', type: 'info', filter: 'ALL' },
-                { title: 'toolbar_filter.today', icon: 'mdi-calendar-today', type: 'info', filter: 'TODAY' },
-                { title: 'toolbar_filter.this_week', icon: 'mdi-calendar-range', type: 'info', filter: 'WEEK' },
-                { title: 'toolbar_filter.this_month', icon: 'mdi-calendar-month', type: 'info', filter: 'MONTH' },
-                { title: 'toolbar_filter.last_7_days', icon: 'mdi-calendar-range', type: 'info', filter: 'LAST_7_DAYS' },
-                { title: 'toolbar_filter.last_31_days', icon: 'mdi-calendar-month', type: 'info', filter: 'LAST_31_DAYS' }
-            ],
-            filter: {
-                search: "",
-                range: "ALL",
-                published: "ALL",
-                sort: "DATE_DESC"
-            },
-            timeout: null
-        }),
-        computed: {
-            totalCount() {
-                return this.$store.getters.getProducts.total_count
-            },
-
-            activeFilters: {
-                get() {
-                    const result = []
-                    if (this.filter.published === true || this.filter.published === false) result.push('published')
-                    return result
-                },
-                set() {
-                    // Chip-group requires a setter, but we handle clicks manually
-                }
-            },
-
-            publishedFilterIcon() {
-                if (this.filter.published === false) return this.UI.ICON.INCOMPLETED
-                if (this.filter.published === true) return this.UI.ICON.COMPLETED
-                return this.UI.ICON.NO_STATE
-            },
-
-            publishedFilterTooltip() {
-                if (this.filter.published === "ALL") {
-                    return this.$t('publish.tooltip.filter_all')
-                } else if (this.filter.published === true) {
-                    return this.$t('publish.tooltip.filter_published')
-                } else {
-                    return this.$t('publish.tooltip.filter_unpublished')
-                }
-            },
-        },
-        methods: {
-            filterPublished() {
-                // Cycle through three states
-                if (this.filter.published === "ALL") {
-                    this.filter.published = true;
-                } else if (this.filter.published === true) {
-                    this.filter.published = false;
-                } else {
-                    this.filter.published = "ALL";
-                }
-                this.$root.$emit('update-products-filter', this.filter);
-            },
-
-            filterSort(sort) {
-                this.filter.sort = sort;
-                this.$root.$emit('update-products-filter', this.filter);
-            },
-
-            filterRange(range) {
-                this.filter.range = range;
-                this.$root.$emit('update-products-filter', this.filter);
-            },
-
-            filterSearch: function () {
-                clearTimeout(this.timeout);
-
-                let self = this;
-                this.timeout = setTimeout(function () {
-                    self.$root.$emit('update-products-filter', self.filter);
-                }, 800);
-            },
-
-            remove(item) {
-                this.chips.splice(this.chips.indexOf(item), 1);
-                this.chips = [...this.chips]
-            },
-            cancel() {
-            },
-            add() {
-            }
-
-        }
+    type PublishFilter = {
+        search: string
+        range: string
+        published: 'ALL' | boolean
+        sort: string
+        compact_mode?: boolean
     }
+
+    const props = withDefaults(
+        defineProps<{
+            title?: string
+            totalCountTitle?: string
+            showAddButton?: boolean
+            addButtonLabel?: string
+        }>(),
+        {
+            title: '',
+            totalCountTitle: '',
+            showAddButton: false,
+            addButtonLabel: 'common.add_btn'
+        }
+    )
+
+    const emit = defineEmits(['add-new'])
+
+    const { t } = useI18n()
+    const publishStore = usePublishStore()
+    const baseFilter = ref<any>(null)
+    const toolbarGroup = ref<any>(null)
+
+    const currentlyShowingCount = ref(0)
+    const selectedCount = ref(0)
+    const filter = ref<PublishFilter>({
+        search: '',
+        range: 'ALL',
+        published: 'ALL',
+        sort: 'DATE_DESC'
+    })
+
+    const compactMode = ref(false)
+
+    const multiSelectActive = computed(() => publishStore.getMultiSelect)
+
+    const publishedFilterIcon = computed(() => {
+        if (filter.value.published === 'ALL') return 'mdi-check-circle-outline'
+        if (filter.value.published === false) return 'mdi-close-circle'
+        return 'mdi-check-circle'
+    })
+
+    const publishedFilterTooltip = computed(() => {
+        if (filter.value.published === 'ALL') return t('publish.tooltip.filter_all')
+        if (filter.value.published === true) return t('publish.tooltip.filter_published')
+        return t('publish.tooltip.filter_unpublished')
+    })
+
+    const cycleFilter = (filterType: 'published'): void => {
+        if (filter.value[filterType] === 'ALL') {
+            filter.value[filterType] = true
+        } else if (filter.value[filterType] === true) {
+            filter.value[filterType] = false
+        } else {
+            filter.value[filterType] = 'ALL'
+        }
+        emitFilter()
+    }
+
+    const totalCount = computed(() => {
+        return publishStore.getProducts.total_count
+    })
+
+    const handleFilterUpdate = (updatedFilter: Partial<PublishFilter>): void => {
+        filter.value = { ...filter.value, ...updatedFilter }
+        emitFilter()
+    }
+
+    const toggleCompactMode = (): void => {
+        compactMode.value = !compactMode.value
+        emitFilter()
+    }
+
+    const emitFilter = (): void => {
+        // Emit custom event for content to listen to
+        window.dispatchEvent(
+            new CustomEvent('update-products-filter', {
+                detail: {
+                    ...filter.value,
+                    compact_mode: compactMode.value
+                }
+            })
+        )
+    }
+
+    const handleUpdateData = (): void => {
+        // Emit custom event for content to refresh data
+        window.dispatchEvent(new CustomEvent('product-updated'))
+    }
+
+    watch(
+        () => publishStore.getSelection,
+        (newSelection: unknown[]) => {
+            selectedCount.value = newSelection.length
+        },
+        { deep: true }
+    )
+
+    defineExpose({
+        updateCurrentlyShowingCount: (count: number) => {
+            currentlyShowingCount.value = count
+        },
+        updateShowingCount: (count: number) => {
+            currentlyShowingCount.value = count
+        },
+        toolbarGroup
+    })
+
+    onMounted(() => {
+        // Emit default filter on mount
+        emitFilter()
+    })
 </script>

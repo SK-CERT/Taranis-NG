@@ -20,8 +20,8 @@ services:
 
     gui:
         environment:
-            VUE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
-            VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/logout"
+            VITE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
+            VITE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/logout"
 
 secrets:
     keycloak_client_secret_key:

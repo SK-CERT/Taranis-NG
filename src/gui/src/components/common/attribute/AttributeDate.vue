@@ -1,89 +1,123 @@
 <template>
     <AttributeItemLayout
-            :add_button="addButtonVisible"
-            @add-value="add()"
-            :values="values"
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
     >
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
+                <!-- Read-only or remote -->
+                <span
+                    v-if="readOnly || value.remote"
+                    class="date-value"
                 >
-                    <template v-slot:col_left>
-                        <!--<v-icon right>mdi-calendar</v-icon>-->
-                        <!--<v-icon right>mdi-account-lock</v-icon>-->
-                    </template>
-                    <template v-slot:col_middle>
-                        <date-picker
-                                v-if="!read_only && !values[index].remote"
-                                v-model="values[index].value"
-                                type="date"
-                                format="YYYY.MM.DD"
-                                value-type="format"
-                                @focus="onFocus(index)"
-                                @change="onEdit(index)"
-                                @clear="clear(index)"
-                                :class="getLockedStyle(index)"
-                                :disabled="values[index].locked || !canModify"
+                    {{ formatDate(value.value) }}
+                </span>
+
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    embed-delete
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_middle="{ delVisible, onDelete }">
+                        <v-text-field
+                            v-model="value.value"
+                            type="date"
+                            density="compact"
+                            variant="outlined"
+                            hide-details="auto"
+                            :label="$t('attribute.value')"
+                            :disabled="value.locked || !canModify"
+                            style="max-width: 240px"
+                            @focus="onFocus(index)"
+                            @blur="onBlur(index)"
+                            @update:model-value="onEdit(index)"
                         >
-                            <template v-slot:icon-calendar>
-                                <v-icon class="pb-5">mdi-calendar</v-icon>
+                            <template #append-inner>
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
                             </template>
-                            <template v-slot:icon-clear>
-                                <v-icon small class="pb-5 pr-1">mdi-close</v-icon>
-                            </template>
-                            <template v-slot:input>
-                                <v-text-field
-                                        v-if="!read_only && !values[index].remote"
-                                        :placeholder="$t('attribute.select_date')"
-                                        dense
-                                        v-model="values[index].value"
-                                        @focus="onFocus(index)"
-                                        @blur="onBlur(index)"
-                                        :class="getLockedStyle(index)"
-                                        :disabled="values[index].locked || !canModify"
-                                ></v-text-field>
-                            </template>
-                        </date-picker>
+                        </v-text-field>
                     </template>
                 </AttributeValueLayout>
-            </v-row>
+            </div>
         </template>
     </AttributeItemLayout>
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import { useAttributes } from './useAttributes'
 
-    import DatePicker from 'vue2-datepicker';
-    import 'vue2-datepicker/index.css';
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
+    }
 
-    export default {
-        name: "AttributeDate",
-        props: {
-            attribute_group: Object
-        },
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout,
-            DatePicker
-        },
-        methods: {
-            clear(index) {
-                this.values[index].value = '';
-                this.onEdit(index);
-            }
-        },
-        mixins: [AttributesMixin]
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    const { t } = useI18n()
+
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+
+    onMounted(addInitialValues)
+
+    const formatDate = (dateStr: string | null | undefined): string => {
+        if (!dateStr) return ''
+        try {
+            return new Date(dateStr).toLocaleDateString()
+        } catch {
+            return dateStr
+        }
     }
 </script>
+
+<style scoped>
+    .date-value {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .value-holder {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+</style>

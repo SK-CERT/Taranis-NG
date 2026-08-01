@@ -1,268 +1,406 @@
 <template>
     <ViewLayout>
-        <template v-slot:panel>
-
+        <template #panel>
+            <!-- Future: Add dashboard controls/filters here -->
         </template>
-        <template v-slot:content>
-            <v-row no-gutters>
+        <template #content>
+            <v-row>
+                <!-- Main Content - News Items & Tag Cloud -->
+                <v-col
+                    cols="12"
+                    lg="8"
+                >
+                    <v-card class="mt-2">
+                        <v-card-text>
+                            <div class="text-headline-medium mb-2">
+                                {{ t('nav_menu.newsitems') }}
+                            </div>
+                            <div class="text-subtitle-2 text-medium-emphasis">
+                                {{ t('dashboard.assess.tagcloud') }}
+                            </div>
+                            <v-divider class="my-2" />
 
-                <v-col cols="8" class="pa-2 mb-8">
-                    <template>
-                        <v-card class="mt-4 mx-auto" max-width="100%">
-                            <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('nav_menu.newsitems') }}</div>
-                                <div class="subheading grey--text">{{ $t('dashboard.assess.tagcloud') }}</div>
-                                <v-divider class="my-2"></v-divider>
+                            <!-- Word Cloud -->
+                            <WordCloud
+                                :data="tagCloud"
+                                :color-scheme="getColorScheme()"
+                                :min-font-size="14"
+                                :max-font-size="50"
+                                :empty-message="t('common.no_data')"
+                            />
 
-                                <v-sheet class="mx-auto" elevation="4" max-width="calc(100% - 32px)">
-                                    <wordcloud :data="tag_cloud" nameKey="word" valueKey="word_quantity"
-                                               :color="myColors" :showTooltip="false" :rotate="myRotate" :fontSize="fontSize"
-                                               :wordClick="wordClickHandler">
-                                    </wordcloud>
-                                </v-sheet>
-
-                                <v-divider class="my-2"></v-divider>
-                                <v-icon class="mr-2" color="primary">
-                                    mdi-email-multiple
-                                </v-icon>
-                                <span class="caption grey--text">
-                                    <strong>{{ getData.total_news_items }}</strong> {{ $t('dashboard.assess.total') }}
-                                </span>
-                            </v-card-text>
-                        </v-card>
-                    </template>
+                            <v-divider class="my-2" />
+                            <v-icon
+                                class="me-2"
+                                color="primary"
+                            >
+                                mdi-email-multiple
+                            </v-icon>
+                            <span class="text-caption text-medium-emphasis">
+                                <strong>{{ dashboardData.total_news_items || 0 }}</strong>
+                                {{ t('dashboard.assess.total') }}
+                            </span>
+                        </v-card-text>
+                    </v-card>
                 </v-col>
 
-                <v-col cols="4" class="pa-2 mb-8">
-                    <template>
-                        <v-card class="mt-4 mx-auto" max-width="100%">
-                            <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('dashboard.collect.title') }}</div>
-                                <div class="subheading grey--text">{{ $t('dashboard.collect.status') }}</div>
-                                <v-divider class="my-2"></v-divider>
+                <!-- Sidebar - Stats Cards -->
+                <v-col
+                    cols="12"
+                    lg="4"
+                >
+                    <!-- Collection Status -->
+                    <v-card class="mt-2">
+                        <v-card-text>
+                            <div class="text-headline-small mb-2">
+                                {{ t('dashboard.collect.title') }}
+                            </div>
+                            <div class="text-subtitle-2 text-medium-emphasis">
+                                {{ t('dashboard.collect.status') }}
+                            </div>
+                            <v-divider class="my-2" />
 
-                                <v-icon class="mr-2" color="green">
+                            <div class="d-flex align-center mb-2">
+                                <v-icon
+                                    class="me-2"
+                                    color="green"
+                                >
                                     mdi-lightbulb-off-outline
                                 </v-icon>
-                                <span class="caption grey--text">{{ $t('dashboard.collect.pending') }}</span>
-                                <v-divider inset class="mb-2 mt-2"></v-divider>
+                                <span class="text-caption text-medium-emphasis">
+                                    {{ t('dashboard.collect.pending') }}
+                                </span>
+                            </div>
+                            <v-divider
+                                inset
+                                class="mb-2 mt-2"
+                            />
 
-                                <v-icon class="mr-2" color="primary">
+                            <div class="d-flex align-center">
+                                <v-icon
+                                    class="me-2"
+                                    color="primary"
+                                >
                                     mdi-clock-check-outline
                                 </v-icon>
-                                <span class="caption grey--text">
-                                    {{ $t('dashboard.collect.last_attempt') }} <b>{{ getData.latest_collected }}</b>
+                                <span class="text-caption text-medium-emphasis">
+                                    {{ t('dashboard.collect.last_attempt') }}
+                                    <strong>{{ dashboardData.latest_collected || 'N/A' }}</strong>
                                 </span>
-                            </v-card-text>
-                        </v-card>
-                    </template>
+                            </div>
+                        </v-card-text>
+                    </v-card>
 
-                    <template>
-                        <v-card class="mt-4 mx-auto" max-width="100%">
-                            <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('nav_menu.report_items') }}</div>
-                                <div class="subheading grey--text">{{ $t('dashboard.analyze.status') }}</div>
-                                <v-divider class="my-2"></v-divider>
+                    <!-- Report Items Status -->
+                    <v-card class="mt-2">
+                        <v-card-text>
+                            <div class="text-headline-small mb-2">
+                                {{ t('nav_menu.report_items') }}
+                            </div>
+                            <div class="text-subtitle-2 text-medium-emphasis">
+                                {{ t('dashboard.analyze.status') }}
+                            </div>
+                            <v-divider class="my-2" />
 
-                                <!-- Dynamic state display from database -->
-                                <template v-for="(stateData, stateName) in getData.report_item_states">
-                                    <div :key="stateName" v-if="stateData.count > 0">
-                                        <div class="d-flex align-center mb-2">
-                                            <v-icon class="mr-2" :color="stateData.color" size="small">
-                                                {{ stateData.icon }}
-                                            </v-icon>
-                                            <span class="caption grey--text">
-                                                <b>{{ stateData.count }}</b>
-                                                {{ ($te('workflow.states.' + stateData.display_name)
-                                                    ? $t('workflow.states.' + stateData.display_name)
-                                                    : stateData.display_name
-                                                  ).toLowerCase()
-                                                }}
-                                                {{ $t('dashboard.analyze.report_items') }}
-                                            </span>
-                                        </div>
-                                        <v-divider inset class="mb-2"></v-divider>
+                            <!-- Dynamic state display -->
+                            <template
+                                v-for="(stateData, stateName) in dashboardData.report_item_states"
+                                :key="stateName"
+                            >
+                                <div v-if="stateData.count > 0">
+                                    <div class="d-flex align-center mb-2">
+                                        <v-icon
+                                            class="me-2"
+                                            :color="stateData.color"
+                                            size="small"
+                                        >
+                                            {{ stateData.icon }}
+                                        </v-icon>
+                                        <span class="text-caption text-medium-emphasis">
+                                            <strong>{{ stateData.count }}</strong>
+                                            {{ getStateDisplayName(stateData.display_name).toLowerCase() }}
+                                            {{ t('dashboard.analyze.report_items') }}
+                                        </span>
                                     </div>
-                                </template>
-
-                                <!-- Total summary -->
-                                <div class="d-flex align-center mt-2">
-                                    <v-icon class="mr-2" color="primary">
-                                        mdi-file-document
-                                    </v-icon>
-                                    <span class="caption grey--text">
-                                        <b>{{ getData.total_report_items || 0 }}</b> {{ $t('dashboard.analyze.total') }}
-                                    </span>
+                                    <v-divider
+                                        inset
+                                        class="mb-2"
+                                    />
                                 </div>
-                            </v-card-text>
-                        </v-card>
-                    </template>
+                            </template>
 
-                    <template>
-                        <v-card class="mt-4 mx-auto" max-width="100%">
-                            <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('nav_menu.products') }}</div>
-                                <div class="subheading grey--text">{{ $t('dashboard.publish.status') }}</div>
-                                <v-divider class="my-2"></v-divider>
+                            <!-- Total summary -->
+                            <div class="d-flex align-center mt-2">
+                                <v-icon
+                                    class="me-2"
+                                    color="primary"
+                                >
+                                    mdi-file-document
+                                </v-icon>
+                                <span class="text-caption text-medium-emphasis">
+                                    <strong>{{ dashboardData.total_report_items || 0 }}</strong>
+                                    {{ t('dashboard.analyze.total') }}
+                                </span>
+                            </div>
+                        </v-card-text>
+                    </v-card>
 
-                                <!-- Dynamic state display from database -->
-                                <template v-for="(stateData, stateName) in getData.product_states">
-                                    <div v-if="stateData.count > 0" :key="stateName">
-                                        <div class="d-flex align-center mb-2">
-                                            <v-icon class="mr-2" :color="stateData.color" size="small">
-                                                {{ stateData.icon }}
-                                            </v-icon>
-                                            <span class="caption grey--text">
-                                                <b>{{ stateData.count }}</b>
-                                                {{ ($te('workflow.states.' + stateData.display_name)
-                                                    ? $t('workflow.states.' + stateData.display_name)
-                                                    : stateData.display_name
-                                                  ).toLowerCase()
-                                                }}
-                                                {{ $t('dashboard.publish.products') }}
-                                            </span>
-                                        </div>
-                                        <v-divider inset class="mb-2"></v-divider>
+                    <!-- Products Status -->
+                    <v-card class="mt-2">
+                        <v-card-text>
+                            <div class="text-headline-small mb-2">
+                                {{ t('nav_menu.products') }}
+                            </div>
+                            <div class="text-subtitle-2 text-medium-emphasis">
+                                {{ t('dashboard.publish.status') }}
+                            </div>
+                            <v-divider class="my-2" />
+
+                            <!-- Dynamic state display -->
+                            <template
+                                v-for="(stateData, stateName) in dashboardData.product_states"
+                                :key="stateName"
+                            >
+                                <div v-if="stateData.count > 0">
+                                    <div class="d-flex align-center mb-2">
+                                        <v-icon
+                                            class="me-2"
+                                            :color="stateData.color"
+                                            size="small"
+                                        >
+                                            {{ stateData.icon }}
+                                        </v-icon>
+                                        <span class="text-caption text-medium-emphasis">
+                                            <strong>{{ stateData.count }}</strong>
+                                            {{ getStateDisplayName(stateData.display_name).toLowerCase() }}
+                                            {{ t('dashboard.publish.products') }}
+                                        </span>
                                     </div>
-                                </template>
-
-                                <!-- Total summary -->
-                                <div class="d-flex align-center mt-2">
-                                    <v-icon class="mr-2" color="primary">
-                                        mdi-package-variant
-                                    </v-icon>
-                                    <span class="caption grey--text">
-                                        <b>{{ getData.total_products || 0 }}</b> {{ $t('dashboard.publish.total') }}
-                                    </span>
+                                    <v-divider
+                                        inset
+                                        class="mb-2"
+                                    />
                                 </div>
-                            </v-card-text>
-                        </v-card>
-                    </template>
+                            </template>
 
-                    <template>
-                        <v-card class="mt-4 mx-auto" max-width="100%">
-                            <v-card-text class="pt-0">
-                                <div class="title mb-2">{{ $t('dashboard.about.title') }}</div>
+                            <!-- Total summary -->
+                            <div class="d-flex align-center mt-2">
+                                <v-icon
+                                    class="me-2"
+                                    color="primary"
+                                >
+                                    mdi-package-variant
+                                </v-icon>
+                                <span class="text-caption text-medium-emphasis">
+                                    <strong>{{ dashboardData.total_products || 0 }}</strong>
+                                    {{ t('dashboard.publish.total') }}
+                                </span>
+                            </div>
+                        </v-card-text>
+                    </v-card>
 
-                                <v-divider class="my-2"></v-divider>
-                                <v-icon class="mr-2" color="blue">
+                    <!-- About Section -->
+                    <v-card class="mt-2">
+                        <v-card-text>
+                            <div class="text-headline-small mb-2">
+                                {{ t('dashboard.about.title') }}
+                            </div>
+                            <v-divider class="my-2" />
+
+                            <!-- Version Info -->
+                            <div class="d-flex align-center mb-2">
+                                <v-icon
+                                    class="me-2"
+                                    color="blue"
+                                >
                                     mdi-information-outline
                                 </v-icon>
-                                <span class="caption grey--text">{{ $t('dashboard.about.version') }}
-                                    <b>{{ appVersion }}</b> {{ built }}
+                                <span class="text-caption text-medium-emphasis">
+                                    {{ t('dashboard.about.version') }}
+                                    <strong>{{ appVersion }}</strong>
+                                    {{ built }}
                                 </span>
+                            </div>
 
-                                <v-divider inset class="mt-2 mb-2"></v-divider>
-                                <v-icon class="mr-2" color="blue">
+                            <!-- Commit Info -->
+                            <v-divider
+                                inset
+                                class="my-2"
+                            />
+                            <div class="d-flex align-center mb-2">
+                                <v-icon
+                                    class="me-2"
+                                    color="blue"
+                                >
                                     mdi-source-branch
                                 </v-icon>
-                                <span class="caption grey--text">Commit
-                                    <b>{{ commit }}</b> {{ commited }} {{ branchDisplay }}
+                                <span class="text-caption text-medium-emphasis">
+                                    {{ t('dashboard.about.commit') }}
+                                    <strong>{{ commit }}</strong>
+                                    {{ commited }} {{ branchDisplay }}
                                 </span>
+                            </div>
 
-                                <v-divider inset class="mt-2 mb-2"></v-divider>
-                                <v-icon class="mr-2" color="blue">
+                            <!-- Database Records -->
+                            <v-divider
+                                inset
+                                class="my-2"
+                            />
+                            <div class="d-flex align-center">
+                                <v-icon
+                                    class="me-2"
+                                    color="blue"
+                                >
                                     mdi-database
                                 </v-icon>
-                                <span class="caption grey--text">
-                                    <b>{{ getData.total_database_items }}</b> {{ $t('dashboard.about.total') }}
+                                <span class="text-caption text-medium-emphasis">
+                                    <strong>{{ dashboardData.total_database_items || 0 }}</strong>
+                                    {{ t('dashboard.about.total') }}
                                 </span>
-                            </v-card-text>
-                        </v-card>
-                    </template>
+                            </div>
+                        </v-card-text>
+                    </v-card>
                 </v-col>
-
             </v-row>
         </template>
     </ViewLayout>
 </template>
 
-<script>
-    import wordcloud from 'vue-wordcloud'
-    import ViewLayout from "../../components/layouts/ViewLayout";
-    import Settings, { getSettingBoolean, isInitializedSetting } from "@/services/settings";
-    import { format } from 'date-fns';
-    import gitMeta from '../../../git-info.json';
-    import package_json from '../../../package.json';
+<script setup lang="ts">
+    import { ref, computed, onMounted, onUnmounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useDashboardStore } from '@/stores/dashboard'
+    import { useSettingsStore } from '@/stores/settings'
+    import ViewLayout from '@/components/layouts/ViewLayout.vue'
+    import WordCloud from '@/components/dashboard/WordCloud.vue'
+    import { Settings } from '@/types/settings'
+    import { format } from 'date-fns'
+    import gitMeta from '../../../git-info.json'
+    import packageJson from '../../../package.json'
 
-    export default {
-        name: "DashboardView",
-        components: {
-            wordcloud,
-            ViewLayout,
-        },
-        data: () => ({
-            myColors: [],
-            myRotate: { "from": 0, "to": 0, "numOfOrientation": 0 },
-            fontSize: [14, 50],
-            tag_cloud: [],
-            appVersion: package_json.version,
-            buildDate: gitMeta.buildDate,
-            commitHash: gitMeta.commit,
-            commitDate: gitMeta.commitDate,
-            branchName: gitMeta.branchName,
-        }),
-        computed: {
-            getData() {
-                return this.$store.getters.getDashboardData
-            },
+    const { t, te } = useI18n()
+    const dashboardStore = useDashboardStore()
+    const settingsStore = useSettingsStore()
 
-            built() {
-                return this.buildDate ? `(${this.formatToLocal(this.buildDate)})` : '';
-            },
+    type DashboardStateInfo = {
+        count: number
+        color: string
+        icon: string
+        display_name: string
+    }
 
-            commit() {
-                return this.commitHash ? this.commitHash : '';
-            },
+    type DashboardData = {
+        total_news_items: number
+        total_products: number
+        total_report_items: number
+        total_database_items: number
+        latest_collected: string
+        tag_cloud: Array<{ word: string; word_quantity: number }>
+        report_item_states: Record<string, DashboardStateInfo>
+        product_states: Record<string, DashboardStateInfo>
+    }
 
-            commited() {
-                return this.commitDate ? `(${this.formatToLocal(this.commitDate)})` : '';
-            },
+    const emptyDashboardData = (): DashboardData => ({
+        total_news_items: 0,
+        total_products: 0,
+        total_report_items: 0,
+        total_database_items: 0,
+        latest_collected: '',
+        tag_cloud: [],
+        report_item_states: {},
+        product_states: {}
+    })
 
-            branchDisplay() {
-                return this.branchName ? `[${this.branchName}]` : '';
-            },
-        },
-        methods: {
+    // Version and build info (from git-info.json generated by prebuild script)
+    const appVersion = ref(gitMeta.version || packageJson.version || 'unknown')
+    const buildDate = ref(gitMeta.buildDate || null)
+    const commitHash = ref(gitMeta.commit || null)
+    const commitDate = ref(gitMeta.commitDate || null)
+    const branchName = ref(gitMeta.branchName || null)
 
-            formatToLocal(dateString) {
-                return format(new Date(dateString), "yyyy-MM-dd HH:mm");
-            },
+    const dashboardData = computed<DashboardData>(() => {
+        return (dashboardStore.dashboard_data as DashboardData) || emptyDashboardData()
+    })
+    const tagCloud = computed(() => (Array.isArray(dashboardData.value.tag_cloud) ? dashboardData.value.tag_cloud : []))
 
-            wordClickHandler(name, value) {
-                // eslint-disable-next-line no-console
-                console.log('Word:', name, ', Quantity:', value);
-            },
+    const formatToLocal = (dateString: string): string => {
+        return format(new Date(dateString), 'yyyy-MM-dd HH:mm')
+    }
 
-            refreshTagCloud() {
-                this.$store.dispatch('getAllDashboardData')
-                    .then(() => {
-                        this.tag_cloud = this.$store.getters.getDashboardData.tag_cloud
-                    });
-            },
+    const built = computed(() => {
+        return buildDate.value ? `(${formatToLocal(buildDate.value)})` : ''
+    })
 
-            initSetting() {
-                if (getSettingBoolean(Settings.TAG_COLOR)) {
-                    this.myColors = 'Category10';
-                } else {
-                    this.myColors = ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef'];
-                }
-            },
-        },
-        mounted() {
-            if (isInitializedSetting()) {
-                this.initSetting();
-            } else {
-                this.$root.$on('settings-loaded', () => {
-                    this.initSetting();
-                });
+    const commit = computed(() => {
+        return commitHash.value ? commitHash.value : ''
+    })
+
+    const commited = computed(() => {
+        return commitDate.value ? `(${formatToLocal(commitDate.value)})` : ''
+    })
+
+    const branchDisplay = computed(() => {
+        return branchName.value ? `[${branchName.value}]` : ''
+    })
+
+    let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+    /**
+     * Get translated state display name
+     */
+    const getStateDisplayName = (displayName: string): string => {
+        const key = `workflow.states.${displayName}`
+        return te(key) ? t(key) : displayName
+    }
+
+    /**
+     * Get color scheme based on settings
+     */
+    const getColorScheme = (): string[] => {
+        try {
+            const useCategory = settingsStore.getSettingBoolean(Settings.TAG_COLOR, false)
+            if (useCategory) {
+                return ['#ff7200', '#d9534f', '#5cb85c', '#0275d8', '#5bc0de', '#5a5a5a', '#ff9100', '#df691a', '#e67e22', '#27ae60']
             }
+        } catch (e) {
+            console.warn('[Dashboard] Could not load tag cloud colors setting:', e)
+        }
+        return ['#1f77b4', '#629fc9', '#94bedb', '#c9e0ef']
+    }
 
-            this.refreshTagCloud()
-
-            setInterval(function () {
-                this.refreshTagCloud()
-            }.bind(this), 600000);
+    /**
+     * Refresh dashboard data
+     */
+    const refreshDashboard = async (): Promise<void> => {
+        try {
+            await dashboardStore.loadDashboardData()
+        } catch (error) {
+            console.error('[Dashboard] Error refreshing data:', error)
         }
     }
+
+    /**
+     * Component mount
+     */
+    onMounted(async () => {
+        // Initial data load
+        await refreshDashboard()
+
+        // console.log('[DashboardView] Dashboard data loaded:', {tagCloudLength: tagCloud.value?.length, tagCloud: tagCloud.value, dashboardData: dashboardData.value})
+
+        // Auto-refresh every 10 minutes (600000ms)
+        refreshInterval = setInterval(() => {
+            refreshDashboard()
+        }, 600000)
+    })
+
+    /**
+     * Component unmount
+     */
+    onUnmounted(() => {
+        if (refreshInterval) {
+            clearInterval(refreshInterval)
+            refreshInterval = null
+        }
+    })
 </script>

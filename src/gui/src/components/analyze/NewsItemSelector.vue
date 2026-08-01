@@ -1,291 +1,606 @@
 <template>
-    <v-container>
-        <v-row v-bind="UI.DIALOG.ROW.WINDOW" data-source="news_item_selector">
-            <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="dialog" news-item-selector>
-                <v-card flat>
-                    <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000" style="position: fixed; width: 100%;">
-                        <v-btn icon dark @click="close">
-                            <v-icon>mdi-close-circle</v-icon>
-                        </v-btn>
-                        <v-toolbar-title>{{$t('assess.select_news_item')}}</v-toolbar-title>
-                        <v-spacer></v-spacer>
-                        <v-btn text dark @click="add">
-                            <v-icon left>mdi-plus-box</v-icon>
-                            <span>{{$t('common.add')}}</span>
-                        </v-btn>
-                    </v-toolbar>
-                    <v-container class="pa-0 pt-12 cx-drawer-bg" style="max-width: 96px !important; position: fixed; left: 0; top: 0; height: 100%;">
-                        <v-list dense color="cx-drawer-bg">
-                            <v-list-item v-for="link in links" :key="link.id" @click="changeGroup($event, link.id)"
-                                         class="px-1" align="center"
-                                         :class="link.id == selected_group_id ? 'v-list-item--active' : ''">
-                                <v-list-item-content class="py-2">
-                                    <v-icon :color="link.color || 'cx-drawer-text'">{{ link.icon }}</v-icon>
-                                    <v-list-item-title class="cx-drawer-text--text caption" style="white-space: unset">
-                                        <span>{{ link.translate ? $t(link.title) : link.title }}</span>
-                                    </v-list-item-title>
-                                </v-list-item-content>
-                            </v-list-item>
-                        </v-list>
-                    </v-container>
+    <v-container
+        fluid
+        class="pa-0"
+        :class="{ 'nis-vertical-fill': verticalView }"
+    >
+        <!-- Dialog Container -->
+        <v-dialog
+            v-model="selectorOpen"
+            fullscreen
+            persistent
+        >
+            <v-card
+                flat
+                class="selector-layout"
+            >
+                <!-- Fixed Toolbar -->
+                <v-toolbar
+                    color="primary"
+                    dark
+                >
+                    <v-btn
+                        icon
+                        @click="handleClose"
+                    >
+                        <v-icon>mdi-close-circle</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>{{ t('assess.attached_news_items') }}</v-toolbar-title>
+                    <v-spacer />
+                    <v-btn @click="handleAdd">
+                        <v-icon start> mdi-plus-box </v-icon>
+                        {{ t('common.add_items') }}
+                    </v-btn>
+                </v-toolbar>
 
-                    <v-container fluid class="pa-0 pt-12 pl-8 ma-0 ml-16" style="width: calc(100% - 64px); position: sticky;">
-                        <div :style="UI.STYLE.sticky_filter_toolbar">
-                            <ToolbarFilterAssess :analyze_selector="true"
-                                                 total_count_title="assess.total_count"
-                                                 @update-news-items-filter="updateFilter"
-                                                 ref="toolbarFilter" />
+                <!-- Main Content Row -->
+                <div class="selector-body">
+                    <!-- Left Sidebar: Groups -->
+                    <GroupNavList
+                        :groups="groups"
+                        :active-id="selectedGroupId"
+                        @select="onGroupSelect"
+                    />
+
+                    <!-- Right Content Area: Toolbar + Items -->
+                    <div class="selector-main">
+                        <!-- Toolbar Filter -->
+                        <ToolbarFilterAssess
+                            ref="toolbarFilter"
+                            :analyze_selector="true"
+                            :total_count_title="'assess.total_count'"
+                            @update-filter="handleFilterUpdate"
+                        />
+
+                        <div class="selector-results bg-background">
+                            <!-- Content Data -->
+                            <ContentDataAssess
+                                ref="contentData"
+                                :analyze_selector="true"
+                                :selection="selectedItems"
+                                class="item-selector"
+                                @new-data-loaded="handleNewDataLoaded"
+                                @update-showing-count="handleUpdateShowingCount"
+                                @card-items-reindex="handleCardItemsReindex"
+                            />
                         </div>
+                    </div>
+                </div>
+            </v-card>
+        </v-dialog>
 
-                        <ContentDataAssess :analyze_selector="true" :selection="values"
-                                           class="item-selector"
-                                           card-item="CardAssess"
-                                           selfID="selector_assess_analyze"
-                                           data_set="assess_news_item"
-                                           ref="contentData"
-                                           @new-data-loaded="newDataLoaded" />
-                    </v-container>
-
-                </v-card>
-            </v-dialog>
-
+        <!-- Items Display (outside dialog). In side-by-side view this area scrolls on its
+             own, independently of the contained reader which is anchored to the root.
+             Kept mounted while the selector is open (it is covered by the fullscreen
+             dialog anyway): unmounting it on open collapses this block and reflows the
+             report form below it, making the report attributes flash up through the
+             dialog's open transition. -->
+        <div :class="{ 'nis-scroll-area': verticalView }">
             <v-row>
-                <v-col cols="12" :class="UI.CLASS.card_offset" v-for="value in values" :key="value.id">
-                    <component :analyze_selector="true" compact_mode class="item-selector" v-bind:is="cardLayout()"
-                               :analyze_can_modify="canModify"
-                               :card="value"
-                               :showToolbar="true"
-                               :disable_reports_button="true"
-                               data_set="assess_report_item"
-                               @remove-item-from-selector="showMsgBox(value)"
-                               @show-single-aggregate-detail="showSingleAggregateDetail(value)"
-                               @show-aggregate-detail="showAggregateDetail(value)"
-                               @show-item-detail="showItemDetail" />
+                <v-col
+                    v-for="item in value"
+                    :key="item.id"
+                    cols="12"
+                >
+                    <BaseCard
+                        :multi-select-active="false"
+                        :show-selection-checkbox="false"
+                        :preselected="false"
+                        card-class="card-item"
+                    >
+                        <!-- Content Slot -->
+                        <template #content>
+                            <div
+                                class="d-flex align-center"
+                                style="gap: 12px"
+                            >
+                                <!-- News Item Content (click to read) -->
+                                <div
+                                    class="flex-grow-1"
+                                    style="cursor: pointer"
+                                    :title="t('assess.read_news_item')"
+                                    @click="openDetail(item)"
+                                >
+                                    <!-- Source and Date Info -->
+                                    <div class="text-caption text-grey mb-2">
+                                        <v-row align="center">
+                                            <v-col cols="auto">
+                                                <span v-if="getNewsItemCount(item) > 0">
+                                                    {{
+                                                        getFirstNewsItem(item)?.news_item_data?.osint_source_name ||
+                                                        getFirstNewsItem(item)?.news_item_data?.source ||
+                                                        'Unknown'
+                                                    }}
+                                                </span>
+                                            </v-col>
+                                            <v-spacer />
+                                            <v-col cols="auto">
+                                                <span v-if="getNewsItemCount(item) > 0">
+                                                    {{ t('card_item.published') }}:
+                                                    {{ getFirstNewsItem(item)?.news_item_data?.published || 'N/A' }}
+                                                </span>
+                                            </v-col>
+                                        </v-row>
+                                    </div>
+                                    <div class="text-h6 font-weight-medium mb-2">
+                                        {{ item.title }}
+                                    </div>
+                                    <div class="text-body-2 mb-3">
+                                        {{ item.description }}
+                                    </div>
+
+                                    <!-- Aggregate: expand to reveal the child news items (like Assess) -->
+                                    <v-btn
+                                        v-if="getNewsItemCount(item) > 1"
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                        @click.stop="toggleExpand(item.id)"
+                                    >
+                                        <v-icon start>
+                                            {{ isExpanded(item.id) ? ICONS.ARROW_DOWN_DROP_CIRCLE : ICONS.ARROW_RIGHT_DROP_CIRCLE }}
+                                        </v-icon>
+                                        {{ t('card_item.aggregated_items') }}: {{ getNewsItemCount(item) }}
+                                    </v-btn>
+                                </div>
+
+                                <!-- Remove Button on the Right, Centered -->
+                                <v-btn
+                                    size="small"
+                                    variant="text"
+                                    :title="t('common.remove')"
+                                    style="flex-shrink: 0"
+                                    @click.stop="handleRemoveItem(item)"
+                                >
+                                    <v-icon :color="'error'">
+                                        {{ ICONS.REMOVE }}
+                                    </v-icon>
+                                </v-btn>
+                            </div>
+                        </template>
+                    </BaseCard>
+
+                    <!-- Child news items of the aggregate; click one to read it. -->
+                    <div
+                        v-if="isExpanded(item.id) && getNewsItemCount(item) > 1"
+                        class="mt-1"
+                    >
+                        <CardAssessItem
+                            v-for="child in item.news_items"
+                            :key="child.id"
+                            :news-item="child"
+                            :analyze-selector="true"
+                            @show-detail="openDetail"
+                        />
+                    </div>
                 </v-col>
             </v-row>
+        </div>
 
-            <NewsItemSingleDetail ref="newsItemSingleDetail" :attach="attach" :verticalView="verticalView" />
-            <NewsItemDetail ref="newsItemDetail" :attach="attach" :verticalView="verticalView" />
-            <NewsItemAggregateDetail ref="newsItemAggregateDetail" :attach="attach" :verticalView="verticalView" />
-        </v-row>
-        <v-row>
-            <MessageBox v-model="msgbox_visible"
-                        @yes="removeFromSelector(to_delete)"
-                        @cancel="msgbox_visible = false"
-                        :title="$t('common.messagebox.remove')"
-                        :message="to_delete.title"
-                        :icon="{ name: 'mdi-help-circle', color: 'primary' }">
-            </MessageBox>
-        </v-row>
+        <!-- Confirmation Dialog: Remove Item -->
+        <ConfirmationDialog
+            v-model="showRemoveConfirm"
+            title-key="common.messagebox.remove"
+            confirm-label-key="common.remove"
+            :message="itemToDelete?.title ?? ''"
+            @confirm="confirmRemoveItem"
+        />
+
+        <!-- News item reader. Contained to the right column in side-by-side mode;
+             a normal centered modal otherwise. Read-only (actions hidden). -->
+        <NewsItemDetailDialog
+            v-model="detailDialog"
+            :news-item="detailItem"
+            :contained="verticalView"
+            multi-select-active
+        />
     </v-container>
 </template>
 
-<script>
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Permissions from "@/services/auth/permissions";
-    import ViewLayout from "@/components/layouts/ViewLayout";
-    import ContentDataAssess from "../../components/assess/ContentDataAssess";
-    import ToolbarFilterAssess from "@/components/assess/ToolbarFilterAssess";
-    import CardAssess from "@/components/assess/CardAssess";
-    import NewsItemSingleDetail from "@/components/assess/NewsItemSingleDetail";
-    import NewsItemDetail from "@/components/assess/NewsItemDetail";
-    import NewsItemAggregateDetail from "@/components/assess/NewsItemAggregateDetail";
-    import { getReportItemData, updateReportItem } from "@/api/analyze";
-    import MessageBox from "@/components/common/MessageBox.vue";
+<script setup lang="ts">
+    import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useAssessStore } from '@/stores/assess'
+    import { useConfigStore } from '@/stores/config'
+    import { useAuth } from '@/composables/useAuth'
+    import { PERMISSIONS } from '@/services/auth/permissions'
+    import { updateReportItem, getReportItemData } from '@/api/analyze'
+    import { ICONS } from '@/config/ui-constants'
+    import ToolbarFilterAssess from '@/components/assess/ToolbarFilterAssess.vue'
+    import NewsItemDetailDialog from '@/components/assess/NewsItemDetailDialog.vue'
+    import CardAssessItem from '@/components/assess/CardAssessItem.vue'
+    import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
+    import BaseCard from '@/components/common/BaseCard.vue'
+    import GroupNavList from '@/components/common/GroupNavList.vue'
+    import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { type GroupNavItem } from '@/types/routing'
 
-    export default {
-        name: "NewsItemSelector",
-        components: {
-            MessageBox,
-            ViewLayout,
-            ContentDataAssess,
-            ToolbarFilterAssess,
-            CardAssess,
-            NewsItemSingleDetail,
-            NewsItemDetail,
-            NewsItemAggregateDetail,
-        },
-        props: {
-            values: Array,
-            report_item_id: Number,
-            edit: Boolean,
-            modify: Boolean,
-            attach: undefined,
-            verticalView: Boolean,
-        },
-        data: () => ({
-            dialog: false,
-            value: "",
-            groups: [],
-            links: [],
-            selected_group_id: null,
-            msgbox_visible: false,
-            to_delete: Object,
-        }),
-        mixins: [AuthMixin],
-        computed: {
-            canModify() {
-                return this.edit === false || (this.checkPermission(Permissions.ANALYZE_UPDATE) && this.modify === true)
+    type SelectorItem = {
+        id: number | string
+        title?: string
+        description?: string
+        in_reports_count?: number
+        news_items?: Array<{
+            id: number | string
+            news_item_data?: {
+                osint_source_name?: string
+                source?: string
+                published?: string
+                link?: string
+                [key: string]: unknown
             }
+            [key: string]: unknown
+        }>
+        [key: string]: unknown
+    }
+
+    type ReportItemUpdateDetail = {
+        report_item_id?: number
+        user_id?: number | string
+        add?: boolean
+        delete?: boolean
+        aggregate_id?: number | string
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            values?: SelectorItem[]
+            reportItemId?: number
+            edit?: boolean
+            modify?: boolean
+            attach?: string | object | boolean
+            verticalView?: boolean
+        }>(),
+        {
+            values: () => [],
+            edit: false,
+            modify: true,
+            verticalView: false
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: SelectorItem[]): void
+        (e: 'items-changed', value: SelectorItem[]): void
+    }>()
+
+    const { t } = useI18n()
+    const assessStore = useAssessStore()
+    const configStore = useConfigStore()
+    const { checkPermission, getUserId } = useAuth()
+
+    // Refs
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
+
+    // Reactive state
+    const selectorOpen = ref<boolean>(false)
+    const detailDialog = ref<boolean>(false)
+    const detailItem = ref<SelectorItem | null>(null)
+    const value = ref<SelectorItem[]>(props.values || [])
+    const selectedItems = ref<SelectorItem[]>(props.values || [])
+    const groups = ref<GroupNavItem[]>([])
+    const selectedGroupId = ref<string | number | null>(null)
+    const showRemoveConfirm = ref<boolean>(false)
+    const itemToDelete = ref<SelectorItem | null>(null)
+
+    watch(
+        () => props.values,
+        (newValues: SelectorItem[]) => {
+            const normalized = Array.isArray(newValues) ? [...newValues] : []
+            value.value = normalized
+            selectedItems.value = normalized
         },
-        methods: {
-            cardLayout: function () {
-                return "CardAssess";
-            },
+        { deep: true, immediate: true }
+    )
 
-            changeGroup(e, group_id) {
-                this.selected_group_id = group_id
-                this.$store.dispatch("changeCurrentGroup", group_id);
-                this.$refs.contentData.updateData(false, false);
-            },
+    // Computed
+    const canModify = computed(() => {
+        return props.edit === false || (checkPermission(PERMISSIONS.ANALYZE_UPDATE) && props.modify === true)
+    })
 
-            openSelector() {
-                this.selected_group_id = this.$store.getters.getCurrentGroup
-                if (!this.selected_group_id) {
-                    this.selected_group_id = this.groups[0].id
-                    this.$store.dispatch("changeCurrentGroup", this.selected_group_id);
-                }
-                this.$root.$emit('multi-select-off'); // deselect previous selections
-                this.$store.dispatch("multiSelectNews", true);
-                this.dialog = true;
-            },
+    const getFirstNewsItem = (item: SelectorItem): NonNullable<SelectorItem['news_items']>[number] | null => {
+        return item.news_items?.[0] ?? null
+    }
 
-            add() {
-                let selection = this.$store.getters.getSelection
-                let added_values = []
-                let data = {}
-                data.add = true
-                data.report_item_id = this.report_item_id
-                data.aggregate_ids = []
-                for (let i = 0; i < selection.length; i++) {
-                    if (selection[i].type === 'AGGREGATE') {
-                        let found = false
-                        for (let j = 0; j < this.values.length; j++) {
-                            if (this.values[j].id === selection[i].item.id) {
-                                found = true
-                                break
-                            }
-                        }
+    const getNewsItemCount = (item: SelectorItem): number => {
+        return item.news_items?.length ?? 0
+    }
 
-                        if (found === false) {
-                            added_values.push(selection[i].item)
-                            data.aggregate_ids.push(selection[i].item.id)
-                        }
-                    }
-                }
+    // Open the news item for reading. In side-by-side mode the dialog is contained to the
+    // right-hand column so the user can read it next to the report form. The list scrolls
+    // inside `.nis-scroll-area`, while the contained dialog is anchored to the non-scrolling
+    // `.nis-vertical-fill` root, so it stays centred in view without moving the list.
+    const openDetail = (item: SelectorItem): void => {
+        detailItem.value = item
+        detailDialog.value = true
+    }
 
-                if (this.edit === true) {
-                    updateReportItem(this.report_item_id, data).then(() => {
-                        for (let i = 0; i < added_values.length; i++) {
-                            added_values[i].in_reports_count += 1;
-                            this.values.push(added_values[i])
-                        }
-                    })
-                } else {
-                    for (let i = 0; i < added_values.length; i++) {
-                        added_values[i].in_reports_count += 1;
-                        this.values.push(added_values[i])
-                    }
-                }
+    // Track which aggregate cards are expanded to reveal their child news items.
+    const expandedItems = ref<Record<string, boolean>>({})
+    const isExpanded = (id: string | number): boolean => !!expandedItems.value[String(id)]
+    const toggleExpand = (id: string | number): void => {
+        expandedItems.value[String(id)] = !expandedItems.value[String(id)]
+    }
 
-                this.close()
-            },
-
-            close() {
-                this.$store.dispatch("multiSelectNews", false)
-                this.dialog = false;
-            },
-
-            newDataLoaded(count) {
-                this.$refs.toolbarFilter.updateDataCount(count)
-            },
-
-            updateFilter(filter) {
-                this.$refs.contentData.updateFilter(filter)
-            },
-
-            removeFromSelector(aggregate) {
-                this.msgbox_visible = false;
-                let data = {}
-                data.delete = true
-                data.aggregate_id = aggregate.id
-
-                if (this.edit === true) {
-                    updateReportItem(this.report_item_id, data).then(() => {
-                        const i = this.values.indexOf(aggregate)
-                        this.values.splice(i, 1)
-                    })
-                } else {
-                    const i = this.values.indexOf(aggregate)
-                    this.values.splice(i, 1)
-                }
-            },
-
-            showSingleAggregateDetail(news_item) {
-                this.$refs.newsItemSingleDetail.open(news_item)
-            },
-
-            showAggregateDetail(news_item) {
-                this.$refs.newsItemAggregateDetail.open(news_item)
-            },
-
-            showItemDetail(news_item) {
-                this.$refs.newsItemDetail.open(news_item);
-            },
-
-            report_item_updated(data_info) {
-                if (this.edit === true && this.report_item_id === data_info.report_item_id) {
-                    if (data_info.user_id !== this.$store.getters.getUserId) {
-                        if (data_info.add !== undefined) {
-                            getReportItemData(this.report_item_id, data_info).then((response) => {
-                                let data = response.data
-                                for (let i = 0; i < data.news_item_aggregates.length; i++) {
-                                    this.values.push(data.news_item_aggregates[i])
-                                }
-                            })
-                        } else if (data_info.delete !== undefined) {
-                            for (let i = 0; i < this.values.length; i++) {
-                                if (this.values[i].id === data_info.aggregate_id) {
-                                    this.values.splice(i, 1)
-                                    break
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-
-            showMsgBox(aggregate) {
-                this.msgbox_visible = true;
-                this.to_delete = aggregate;
-            },
-
-        },
-
-        updated() {
-            if (this.dialog === true) {
-                this.$refs.contentData.updateData(false, false);
-            }
-        },
-
-        mounted() {
-            this.$store.dispatch('getAllOSINTSourceGroupsAssess', { search: '' })
-                .then(() => {
-                    this.groups = this.$store.getters.getOSINTSourceGroupsAssess;
-                    this.links = [...this.groups]
-                });
-
-            this.$root.$on('report-item-updated', this.report_item_updated);
-        },
-
-        beforeDestroy() {
-            this.$root.$off('report-item-updated', this.report_item_updated);
+    // Methods
+    const changeGroup = async (groupId: string): Promise<void> => {
+        selectedGroupId.value = groupId
+        assessStore.changeCurrentGroup(groupId)
+        if (contentData.value) {
+            contentData.value.updateData?.(false, false)
         }
     }
+
+    const onGroupSelect = (group: GroupNavItem): void => {
+        changeGroup(String(group.id))
+    }
+
+    const openSelector = async (): Promise<void> => {
+        // Initialize selected group
+        selectedGroupId.value = selectedGroupId.value || groups.value[0]?.id || 'all'
+
+        // Ensure the store has a current group set so ContentDataAssess can build the API URL
+        assessStore.changeCurrentGroup(String(selectedGroupId.value))
+
+        // Clear previous selections
+        assessStore.multiSelect(false)
+        window.dispatchEvent(new CustomEvent('multi-select-off'))
+
+        // Enable multi-select for this session
+        assessStore.multiSelect(true)
+
+        selectorOpen.value = true
+
+        await nextTick()
+
+        for (const item of value.value) {
+            if (item?.id) {
+                assessStore.select({ type: 'news_item_aggregate', id: item.id, item })
+            }
+        }
+
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateSelectedCount?.(value.value.length)
+        }
+    }
+
+    const handleAdd = async (): Promise<void> => {
+        try {
+            const selection = (assessStore.getSelection || []) as Array<{ type?: string; item?: SelectorItem }>
+            const addedValues: SelectorItem[] = []
+            const aggregateIds: Array<number | string> = []
+
+            // Find selected aggregate items that aren't already in values
+            for (const selItem of selection) {
+                const isAggregateType = selItem?.type === 'AGGREGATE' || selItem?.type === 'news_item_aggregate'
+
+                const item = selItem?.item
+                if (isAggregateType && item?.id) {
+                    const found = value.value.some((v) => v.id === item.id)
+                    if (!found) {
+                        addedValues.push(item)
+                        aggregateIds.push(item.id)
+                    }
+                }
+            }
+
+            // If editing with a valid report item ID, make API call
+            if (props.edit === true && props.reportItemId && props.reportItemId > 0) {
+                const data = {
+                    add: true,
+                    report_item_id: props.reportItemId,
+                    aggregate_ids: aggregateIds
+                }
+
+                await updateReportItem(props.reportItemId, data)
+
+                // Update counts and add to values
+                for (const item of addedValues) {
+                    item.in_reports_count = (item.in_reports_count || 0) + 1
+                    value.value.push(item)
+                }
+            } else {
+                // Just update locally (for pre-save or read-only)
+                for (const item of addedValues) {
+                    item.in_reports_count = (item.in_reports_count || 0) + 1
+                    value.value.push(item)
+                }
+            }
+
+            // Deselect and close
+            assessStore.multiSelect(false)
+            selectorOpen.value = false
+
+            // Emit event for parent
+            emit('items-changed', value.value)
+        } catch (error: unknown) {
+            console.error('Error adding items to report:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', message: t('error.server_error') }
+                })
+            )
+        }
+    }
+
+    const handleClose = (): void => {
+        assessStore.multiSelect(false)
+        selectorOpen.value = false
+    }
+
+    const handleNewDataLoaded = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateDataCount?.(count)
+        }
+    }
+
+    const handleUpdateShowingCount = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateCurrentlyShowingCount?.(count)
+        }
+    }
+
+    const handleCardItemsReindex = (): void => {
+        // Handle reindexing if needed
+    }
+
+    const handleFilterUpdate = (filter: Record<string, unknown>): void => {
+        if (contentData.value) {
+            contentData.value.updateFilter?.(filter)
+        }
+    }
+
+    const handleRemoveItem = (item: SelectorItem): void => {
+        // Check permissions before allowing removal
+        if (!canModify.value) {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'warning', message: t('common.no_permission') }
+                })
+            )
+            return
+        }
+        itemToDelete.value = item
+        showRemoveConfirm.value = true
+    }
+
+    const handleUpdateItem = (_item: SelectorItem): void => {
+        // Handle item updates if needed
+    }
+
+    const confirmRemoveItem = async (): Promise<void> => {
+        if (!itemToDelete.value) return
+
+        try {
+            const data = {
+                delete: true,
+                aggregate_id: itemToDelete.value.id
+            }
+
+            if (props.edit === true && props.reportItemId && props.reportItemId > 0) {
+                await updateReportItem(props.reportItemId, data)
+            }
+
+            // Remove from array
+            const index = value.value.indexOf(itemToDelete.value)
+            if (index > -1) {
+                value.value.splice(index, 1)
+            }
+
+            showRemoveConfirm.value = false
+            itemToDelete.value = null
+
+            // Emit event for parent
+            emit('items-changed', value.value)
+        } catch (error: unknown) {
+            console.error('Error removing item from report:', error)
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', message: t('error.server_error') }
+                })
+            )
+        }
+    }
+
+    const handleReportItemUpdated = async (dataInfo: ReportItemUpdateDetail): Promise<void> => {
+        if (props.edit === true && props.reportItemId && props.reportItemId > 0 && props.reportItemId === dataInfo.report_item_id) {
+            const currentUserId = getUserId()
+            if (dataInfo.user_id !== currentUserId) {
+                if (dataInfo.add !== undefined) {
+                    const response = await getReportItemData(props.reportItemId, dataInfo)
+                    const data = (response as { data?: { news_item_aggregates?: SelectorItem[] } }).data
+                    if (data?.news_item_aggregates) {
+                        value.value.push(...data.news_item_aggregates)
+                        emit('items-changed', value.value)
+                    }
+                } else if (dataInfo.delete !== undefined) {
+                    value.value = value.value.filter((item) => item.id !== dataInfo.aggregate_id)
+                    emit('items-changed', value.value)
+                }
+            }
+        }
+    }
+
+    const handleReportItemUpdatedEvent = (event: Event): void => {
+        const customEvent = event as CustomEvent<ReportItemUpdateDetail>
+        handleReportItemUpdated(customEvent.detail)
+    }
+
+    // Lifecycle
+    onMounted(async () => {
+        // Load the same OSINT source groups the Assess view shows in its sidebar
+        // (includes the leading "All" category). Read/unread is handled by the toolbar filter.
+        try {
+            await configStore.loadOSINTSourceGroupsAssess({ search: '' })
+            groups.value = configStore.osintSourceGroupsForAssess as GroupNavItem[]
+        } catch (error) {
+            console.error('Error loading OSINT source groups:', error)
+        }
+
+        const firstGroup = groups.value[0]
+        selectedGroupId.value = firstGroup ? firstGroup.id : ''
+
+        // Listen for report item updates
+        window.addEventListener('report-item-updated', handleReportItemUpdatedEvent)
+    })
+
+    onUnmounted(() => {
+        window.removeEventListener('report-item-updated', handleReportItemUpdatedEvent)
+    })
+
+    // Expose methods for external use
+    defineExpose({
+        openSelector
+    })
 </script>
 
-<style>
-    .row {
-        margin: 0;
+<style scoped>
+    .item-selector {
+        cursor: pointer;
+    }
+
+    /* Side-by-side view: the root fills the column and does NOT scroll, so the contained
+       news-item reader (anchored to it) stays pinned to the visible area. The list scrolls
+       inside .nis-scroll-area instead, so opening the reader never moves the list. */
+    .nis-vertical-fill {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nis-vertical-fill .nis-scroll-area {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .selector-layout {
+        height: 100vh;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+    }
+
+    .selector-body {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 100px minmax(0, 1fr);
+        overflow: hidden;
+    }
+
+    .selector-main {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+    }
+
+    .selector-results {
+        min-height: 0;
+        overflow-y: auto;
     }
 </style>

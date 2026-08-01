@@ -10,9 +10,11 @@ __all__ = [
     "config",
     "dashboard",
     "isalive",
+    "public_web",
     "publish",
     "remote",
     "sse",
     "state",
+    "traefik",
     "user",
 ]

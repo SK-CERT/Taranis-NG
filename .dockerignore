@@ -26,7 +26,7 @@
 
 # Documentation, ops, data — not needed for backend image builds
 *.md
-# ...but keep VERSION.md (copied into gui / gui-v3 images at build time)
+# ...but keep VERSION.md (copied into the gui image at build time)
 !VERSION.md
 ansible/
 docs/

@@ -1,211 +1,333 @@
 <template>
-    <div>
-        <v-row justify="center">
-            <v-dialog v-model="visible" max-width="800" class="user-settings-dialog" @keydown.esc="close">
-                <v-card>
-                    <v-toolbar dark dense color="primary">
-                        <v-btn icon dark @click="close()">
-                            <v-icon>mdi-close-circle</v-icon>
-                        </v-btn>
-                        <v-toolbar-title class="title-limit">{{$t('settings.user_settings')}}</v-toolbar-title>
-                        <v-spacer></v-spacer>
-                        <v-btn text @click="save()">
-                            <v-icon left>mdi-content-save</v-icon>
-                            <span>{{$t('common.save')}}</span>
-                        </v-btn>
-                    </v-toolbar>
+    <v-dialog
+        v-model="visible"
+        max-width="900"
+        max-height="90vh"
+        scrollable
+        @keydown.esc="close"
+    >
+        <v-card>
+            <v-toolbar
+                color="primary"
+                dark
+                density="compact"
+            >
+                <v-toolbar-title>{{ t('settings.user_settings') }}</v-toolbar-title>
+                <v-spacer />
+                <v-btn
+                    variant="text"
+                    @click="close"
+                >
+                    {{ t('common.cancel') }}
+                </v-btn>
+                <v-btn
+                    variant="text"
+                    @click="save"
+                >
+                    <v-icon start>mdi-content-save</v-icon>
+                    {{ t('common.save') }}
+                </v-btn>
+            </v-toolbar>
 
-                    <v-tabs dark centered grow height="32">
-                        <!-- TABS -->
-                        <v-tab href="#tab-1">
-                            <span>{{$t('settings.tab_general')}}</span>
-                        </v-tab>
-                        <v-tab href="#tab-2">
-                            <span>{{$t('settings.tab_wordlists')}}</span>
-                        </v-tab>
-                        <v-tab href="#tab-3">
-                            <span>{{$t('settings.tab_hotkeys')}}</span>
-                        </v-tab>
+            <v-tabs
+                v-model="activeTab"
+                grow
+                color="primary"
+            >
+                <!-- General Tab -->
+                <v-tab value="general">
+                    <v-icon
+                        :icon="ICONS.COG"
+                        start
+                    />
+                    {{ t('settings.tab_general') }}
+                </v-tab>
 
-                        <!-- #tab-1 -->
-                        <v-tab-item value="tab-1" class="pa-0">
-                            <v-container fluid>
-                                <template>
-                                    <SettingsTable :glob_setting="false"></SettingsTable>
+                <!-- Security Tab -->
+                <v-tab value="security">
+                    <v-icon
+                        :icon="ICONS.SHIELD_LOCK"
+                        start
+                    />
+                    {{ t('settings.tab_security') }}
+                </v-tab>
+
+                <!-- Word Lists Tab -->
+                <v-tab value="wordlists">
+                    <v-icon
+                        :icon="ICONS.TEXT_BOX_OUTLINE"
+                        start
+                    />
+                    {{ t('settings.tab_wordlists') }}
+                </v-tab>
+
+                <!-- Hotkeys Tab -->
+                <v-tab value="hotkeys">
+                    <v-icon
+                        :icon="ICONS.KEYBOARD"
+                        start
+                    />
+                    {{ t('settings.tab_hotkeys') }}
+                </v-tab>
+            </v-tabs>
+
+            <v-card-text style="height: 70vh; overflow-y: auto">
+                <v-window v-model="activeTab">
+                    <!-- General Settings -->
+                    <v-window-item value="general">
+                        <SettingsTable :global-setting="false" />
+                    </v-window-item>
+
+                    <!-- Security (TOTP, passkeys) -->
+                    <v-window-item value="security">
+                        <SecuritySettings :load-trigger="securityLoadTrigger" />
+                    </v-window-item>
+
+                    <!-- Word Lists -->
+                    <v-window-item value="wordlists">
+                        <v-container fluid>
+                            <v-data-table
+                                v-model="selectedWordLists"
+                                :headers="wordListHeaders"
+                                :items="wordLists"
+                                item-value="id"
+                                show-select
+                                density="compact"
+                            >
+                                <template #top>
+                                    <v-toolbar
+                                        flat
+                                        density="compact"
+                                    >
+                                        <v-toolbar-title>{{ t('assess.tooltip.highlight_wordlist') }}</v-toolbar-title>
+                                    </v-toolbar>
                                 </template>
-                            </v-container>
-                        </v-tab-item>
+                            </v-data-table>
+                        </v-container>
+                    </v-window-item>
 
-                        <!-- #tab-2 -->
-                        <v-tab-item value="tab-2" class="pa-0">
-                            <v-container fluid>
-                                <v-data-table v-model="selected_word_lists"
-                                              :headers="headers"
-                                              :items="word_lists"
-                                              item-key="id"
-                                              show-select
-                                              class="elevation-1">
-
-                                    <template v-slot:top>
-                                        <v-toolbar flat>
-                                            <v-toolbar-title>{{$t('assess.tooltip.highlight_wordlist')}}</v-toolbar-title>
-                                        </v-toolbar>
-                                    </template>
-
-                                </v-data-table>
-                            </v-container>
-                        </v-tab-item>
-
-                        <!-- #tab-3 -->
-                        <v-tab-item value="tab-3" class="pa-0">
-                            <v-container fluid class="">
-                                <v-row no-gutters class="ma-0">
-                                    <v-tooltip top v-for="shortcut in shortcuts" :key="shortcut.alias">
-                                        <template v-slot:activator="{on}">
-                                            <v-btn :id=shortcut.alias v-on="on"
-                                                   class="ma-1" style="width: calc(100% / 3 - 8px);"
-                                                   @click.stop="pressKeyDialog(shortcut.alias)"
-                                                   @blur="pressKeyVisible = false">
-                                                <v-icon left>{{shortcut.icon}}</v-icon>
-                                                <span v-if="shortcut.key != 'undefined'" style="text-transform: none;" class="caption">{{shortcut.key}}</span>
-                                                <v-icon v-else color="error">mdi-alert</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>
-                                            {{ $t('settings.' + shortcut.alias) }}
+                    <!-- Hotkeys -->
+                    <v-window-item value="hotkeys">
+                        <v-container fluid>
+                            <v-row>
+                                <v-col
+                                    v-for="shortcut in shortcuts"
+                                    :key="shortcut.alias"
+                                    cols="12"
+                                    sm="6"
+                                    md="4"
+                                >
+                                    <v-btn
+                                        block
+                                        color="outline"
+                                        variant="flat"
+                                        @click="openKeyDialog(shortcut.alias)"
+                                    >
+                                        <v-icon start>
+                                            {{ shortcut.icon }}
+                                        </v-icon>
+                                        <span
+                                            v-if="shortcut.key"
+                                            class="text-caption"
+                                        >
+                                            {{ shortcut.key }}
                                         </span>
-                                    </v-tooltip>
-                                </v-row>
-                                <v-row no-gutters class="ma-0">
-                                    <v-spacer></v-spacer>
-                                    <v-btn text @click="resetHotkeys()">
-                                        <v-icon left>mdi-reload</v-icon>
-                                        <span>{{$t('settings.reset_keys')}}</span>
+                                        <v-icon
+                                            v-else
+                                            color="error"
+                                            >mdi-alert</v-icon
+                                        >
                                     </v-btn>
-                                </v-row>
-                            </v-container>
-                        </v-tab-item>
+                                    <div class="text-caption text-center mt-1">
+                                        {{ t('settings.' + shortcut.alias) }}
+                                    </div>
+                                </v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col class="text-right">
+                                    <v-btn
+                                        variant="text"
+                                        @click="resetHotkeys"
+                                    >
+                                        <v-icon start>mdi-reload</v-icon>
+                                        {{ t('settings.reset_keys') }}
+                                    </v-btn>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-window-item>
+                </v-window>
+            </v-card-text>
+        </v-card>
 
-                    </v-tabs>
-                </v-card>
-            </v-dialog>
-
-            <!-- Press Key Dialog -->
-            <template>
-                <div class="text-center">
-                    <v-dialog v-model="pressKeyVisible"
-                              width="300"
-                              persistent
-                              v-on:keydown="pressKey">
-                        <v-card color="primary" dark>
-                            <v-card-text class="white--text">
-                                {{$t('settings.press_key')}}<span class="font-weight-bold">{{$te('settings.' + hotkeyAlias) ? $t('settings.' + hotkeyAlias) : hotkeyAlias}}</span>
-                                <v-progress-linear indeterminate
-                                                   color="white"
-                                                   class="mb-0"></v-progress-linear>
-                            </v-card-text>
-                        </v-card>
-                    </v-dialog>
-                </div>
-            </template>
-        </v-row>
-    </div>
+        <!-- Press Key Dialog -->
+        <v-dialog
+            v-model="keyDialogVisible"
+            max-width="300"
+            persistent
+            @keydown="handleKeyPress"
+        >
+            <v-card
+                color="primary"
+                dark
+            >
+                <v-card-text class="white--text">
+                    {{ t('settings.press_key') }}
+                    <strong>{{ t('settings.' + currentHotkeyAlias) }}</strong>
+                    <v-progress-linear
+                        indeterminate
+                        color="white"
+                        class="mb-0"
+                    />
+                </v-card-text>
+            </v-card>
+        </v-dialog>
+    </v-dialog>
 </template>
 
-<script>
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import SettingsTable from "@/components/config/SettingsTable.vue";
+<script setup lang="ts">
+    import { ref, computed, watch } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useSettingsStore } from '@/stores/settings'
+    import { ICONS } from '@/config/ui-constants'
+    import SettingsTable from './config/SettingsTable.vue'
+    import SecuritySettings from './SecuritySettings.vue'
 
-    export default {
-        name: "UserSettings",
-        components: {
-            SettingsTable
-        },
-        mixins: [AuthMixin],
-        data: () => ({
-            visible: false,
-            pressKeyVisible: false,
-            shortcuts: [],
-            hotkeyAlias: '',
-            headers: [
-                {
-                    text: 'Name',
-                    align: 'start',
-                    value: 'name',
-                },
-                { text: 'Description', value: 'description' },
-            ],
-            word_lists: [],
-            selected_word_lists: [],
-        }),
-        methods: {
-            close() {
-                this.visible = false;
-            },
+    type HotkeyItem = {
+        alias: string
+        icon: string
+        key: string
+    }
 
-            save() {
-                Promise.all([
-                    this.$store.dispatch('saveUserWordLists', this.selected_word_lists),
-                    this.$store.dispatch('saveUserHotkeys', this.shortcuts)
-                ]).then(() => {
-                    this.visible = false;
-                }).catch(error => {
-                    // eslint-disable-next-line no-console
-                    console.error('Save user profile error:', error);
-                });
-            },
+    type WordListItem = {
+        id: number | string
+        name?: string
+        description?: string
+        selected?: boolean
+        [key: string]: unknown
+    }
 
-            pressKeyDialog(event) {
-                window.addEventListener("keydown", this.pressKey, false);
+    type KeyboardEventLike = {
+        preventDefault: () => void
+        key: string
+    }
 
-                this.pressKeyVisible = true;
-                this.hotkeyAlias = event;
-            },
+    const props = defineProps<{
+        modelValue: boolean
+    }>()
 
-            pressKey(event) {
-                // Beware! pressed keys are active also on background window when you try setting a new hotkey
-                // wait for a "real" key, don't cancel dialog on modifier key, otherwise you can't choose uppercase letters and other keys
-                if (event.key == "Alt" || event.key == "Shift" || event.key == "Control") {
-                    return;
-                }
+    const emit = defineEmits<{
+        (e: 'update:modelValue', value: boolean): void
+    }>()
 
-                let key = event;
-                let hotkeyIndex = this.shortcuts.map(function (e) { return e.alias; }).indexOf(this.hotkeyAlias);
+    const { t } = useI18n()
+    const settingsStore = useSettingsStore()
 
-                window.removeEventListener("keydown", this.pressKey);
+    const activeTab = ref<'general' | 'security' | 'wordlists' | 'hotkeys'>('general')
+    const keyDialogVisible = ref<boolean>(false)
+    const currentHotkeyAlias = ref<string>('')
+    // Bumped whenever the Security tab becomes visible so SecuritySettings
+    // reloads its TOTP/passkey state (mirrors the old dialog-open behavior).
+    const securityLoadTrigger = ref<number>(0)
 
-                this.pressKeyVisible = false;
+    // Word lists
+    const wordListHeaders = [
+        { title: 'Name', key: 'name', sortable: true },
+        { title: 'Description', key: 'description', sortable: false }
+    ]
+    const wordLists = ref<WordListItem[]>([])
+    const selectedWordLists = ref<Array<number | string>>([])
 
-                // check duplicity and clear
-                this.shortcuts.forEach(
-                    (doubleKey, i) => {
-                        if (doubleKey.key == key.key && i != hotkeyIndex) {
-                            this.shortcuts[i].key = 'undefined';
-                        }
-                    }
-                );
+    // Hotkeys
+    const shortcuts = ref<HotkeyItem[]>([])
 
-                // assigned new key
-                this.shortcuts[hotkeyIndex].key = key.key;
-            },
+    const visible = computed<boolean>({
+        get: () => props.modelValue,
+        set: (value: boolean) => emit('update:modelValue', value)
+    })
 
-            resetHotkeys() {
-                this.$store.dispatch('resetHotkeys');
-                this.shortcuts = JSON.parse(JSON.stringify(this.$store.getters.getProfileHotkeys)) // Deep copy
-            },
+    const close = (): void => {
+        visible.value = false
+    }
 
-        },
-        mounted() {
-            this.$root.$on('show-user-settings', () => {
-                this.visible = true;
-                this.selected_word_lists = this.$store.getters.getProfileWordLists
-                this.shortcuts = JSON.parse(JSON.stringify(this.$store.getters.getProfileHotkeys)) // Deep copy, don't change the original object until save
-            });
+    const loadSettings = async (): Promise<void> => {
+        try {
+            // Load word lists
+            await settingsStore.loadUserWordLists()
+            const profileWordLists = (settingsStore.getProfileWordLists || []) as WordListItem[]
+            wordLists.value = Array.isArray(profileWordLists) ? profileWordLists : []
+            selectedWordLists.value = wordLists.value.filter((wl: WordListItem) => wl.selected).map((wl: WordListItem) => wl.id)
 
-            this.$store.dispatch('getAvailableWordLists', { search: '' })
-                .then(() => {
-                    this.word_lists = this.$store.getters.getAvailableWordLists
-                });
+            // Load hotkeys
+            await settingsStore.loadUserHotkeys()
+            getProfileHotkeys()
+        } catch (error: unknown) {
+            console.error('Error loading user settings:', error)
         }
     }
+
+    const getProfileHotkeys = async (): Promise<void> => {
+        const userHotkeys = (settingsStore.getProfileHotkeys || []) as HotkeyItem[]
+        if (Array.isArray(userHotkeys) && userHotkeys.length > 0) {
+            // Convert to plain array to ensure it's not a Proxy
+            shortcuts.value = userHotkeys.map((h: HotkeyItem) => ({
+                alias: h.alias,
+                icon: h.icon,
+                key: h.key
+            }))
+        }
+    }
+
+    const save = async (): Promise<void> => {
+        try {
+            // Save word lists and hotkeys (general settings are auto-saved by SettingsTable)
+            await Promise.all([settingsStore.saveUserWordLists(selectedWordLists.value), settingsStore.saveUserHotkeys(shortcuts.value)])
+
+            close()
+        } catch (error: unknown) {
+            console.error('Error saving user settings:', error)
+        }
+    }
+
+    const openKeyDialog = (alias: string): void => {
+        currentHotkeyAlias.value = alias
+        keyDialogVisible.value = true
+    }
+
+    const handleKeyPress = (event: KeyboardEventLike): void => {
+        event.preventDefault()
+        const key = event.key
+
+        // Ensure shortcuts is an array
+        if (!Array.isArray(shortcuts.value)) {
+            console.error('shortcuts.value is not an array:', shortcuts.value)
+            keyDialogVisible.value = false
+            return
+        }
+
+        const shortcut = shortcuts.value.find((s: HotkeyItem) => s && s.alias === currentHotkeyAlias.value)
+        if (shortcut) {
+            shortcut.key = key
+        }
+        keyDialogVisible.value = false
+    }
+
+    const resetHotkeys = (): void => {
+        settingsStore.resetHotkeys()
+        getProfileHotkeys()
+    }
+
+    // Load settings when dialog opens
+    watch(visible, (newValue: boolean) => {
+        if (newValue) {
+            loadSettings()
+        }
+    })
+
+    // Reload Security tab data whenever it becomes active
+    watch(activeTab, (tab) => {
+        if (tab === 'security') {
+            securityLoadTrigger.value++
+        }
+    })
 </script>

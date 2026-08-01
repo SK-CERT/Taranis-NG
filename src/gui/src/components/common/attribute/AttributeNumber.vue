@@ -1,53 +1,139 @@
 <template>
     <AttributeItemLayout
-            :add_button="addButtonVisible"
-            @add-value="add()"
-            :values="values"
+        :add-button="addButtonVisible"
+        :values="values"
+        @add-value="add"
     >
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
+                <!-- Read-only or remote -->
+                <span
+                    v-if="readOnly || value.remote"
+                    class="numbered-value"
                 >
-                    <template v-slot:col_middle>
-                        <v-text-field v-if="!read_only && !values[index].remote"
-                                      v-model="values[index].value" dense
-                                      :label="$t('attribute.value')"
-                                      @focus="onFocus(index)" @blur="onBlur(index)" @keyup="onKeyUp(index)"
-                                      :class="getLockedStyle(index)"
-                                      :disabled="values[index].locked || !canModify"
-                                      :rules="[v => v == '' || /^-?\d+$/.test(v)  || 'Not a number']"
-                        ></v-text-field>
+                    <span
+                        v-if="values.length > 1"
+                        class="number-index text--disabled"
+                        >{{ index + 1 }}.</span
+                    >
+                    <span class="number-content">{{ value.value }}</span>
+                </span>
+
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    embed-delete
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_left>
+                        <span
+                            v-if="values.length > 1"
+                            class="number-index text--disabled"
+                            >{{ index + 1 }}.</span
+                        >
+                    </template>
+                    <template #col_middle="{ delVisible, onDelete }">
+                        <v-text-field
+                            v-model.number="value.value"
+                            type="number"
+                            density="compact"
+                            variant="outlined"
+                            hide-details="auto"
+                            :label="$t('attribute.value')"
+                            :class="getLockedStyle(index)"
+                            :disabled="value.locked || !canModify"
+                            @focus="onFocus(index)"
+                            @blur="onBlur(index)"
+                            @keyup="onKeyUp(index)"
+                        >
+                            <template #append-inner>
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
+                            </template>
+                        </v-text-field>
                     </template>
                 </AttributeValueLayout>
-            </v-row>
+            </div>
         </template>
     </AttributeItemLayout>
-
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import { useAttributes } from './useAttributes'
 
-    export default {
-        name: "AttributeNumber",
-        props: {
-            attribute_group: Object
-        },
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout
-        },
-        mixins: [AttributesMixin]
+    type AttributeValueItem = {
+        index?: string | number
+        value: number | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
     }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    const { t } = useI18n()
+
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+
+    onMounted(addInitialValues)
 </script>
+
+<style scoped>
+    .number-index {
+        margin-right: 8px;
+        user-select: none;
+        min-width: 24px;
+        display: inline-block;
+    }
+
+    .numbered-value {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 8px 0;
+    }
+
+    .number-content {
+        flex: 1;
+        font-family: monospace;
+    }
+
+    .value-holder {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+</style>

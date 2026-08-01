@@ -16,12 +16,12 @@
 9. Run taranis-ng-collectors: `python3 run.py` and it should collect first set of RSS news items from preconfigured test osint source
 
 # **Taranis NG frontend setup**
-1. Install Node.js from https://nodejs.org/en/
-1. Set environment variables for taranis-ng-gui:
-    VUE_APP_TARANIS_NG_URL=http://127.0.0.1:8080;VUE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:5000/api;VUE_APP_TARANIS_NG_LOCALE=en;VUE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:5000/sse
+1. Install Node.js (18+) from https://nodejs.org/
+2. Set environment variables for the GUI (`src/gui`):
+    VITE_APP_TARANIS_NG_URL=http://127.0.0.1:8080;VITE_APP_TARANIS_NG_CORE_API=http://127.0.0.1:5000/api;VITE_APP_TARANIS_NG_LOCALE=en;VITE_APP_TARANIS_NG_CORE_SSE=http://127.0.0.1:5000/sse
 3. Install all required packages: `npm install`
-4. Run application inside taranis-ng-gui: `npm run serve`
-5. In Browser go to: http://127.0.0.1:8080/
+4. Run the Vite dev server: `npm run dev`
+5. In Browser go to: http://127.0.0.1:4444/
 6. Test accounts are user with password user and admin with password admin
 
 # **Keycloak setup**
@@ -46,7 +46,7 @@ Keycloak is not needed to run test version of Taranis NG at the moment. You can 
 10. Create 2 users **user** and **admin** in USERS -> ADD USER. These are test users in Taranis NG at the moment.
 11. In **taranis-ng-core** add environment variable TARANIS_NG_AUTHENTICATOR=openid (just for sign in) or TARANIS_NG_AUTHENTICATOR=keycloak (for identy management)
 12. In **taranis-ng-core** add environment variable OPENID_LOGOUT_URL and set it according to your Keycloak installation
-13. In **taranis-ng-gui** add these environment variables VUE_APP_TARANIS_NG_LOGIN_URL, VUE_APP_TARANIS_NG_LOGOUT_URL to activate external login:
+13. In **taranis-ng-gui** add these environment variables VITE_APP_TARANIS_NG_LOGIN_URL, VITE_APP_TARANIS_NG_LOGOUT_URL to activate external login:
 
 ## Keycloak client example of docker-compose.yml:
 
@@ -85,8 +85,8 @@ and update password inside file:
 
 **taranis-ng-gui** section:
 ```
-VUE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
-VUE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/logout"
+VITE_APP_TARANIS_NG_LOGIN_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/auth?response_type=code&client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI"
+VITE_APP_TARANIS_NG_LOGOUT_URL: "${TARANIS_NG_KEYCLOAK_URL}/realms/taranis-ng/protocol/openid-connect/logout"
 ```
 
 You can use and modify the existing `docker-compose-keycloak.yml` example in the repository and

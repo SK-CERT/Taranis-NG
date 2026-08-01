@@ -9,7 +9,6 @@ from it and kept in lockstep:
 - ``src/{bots,collectors,core,presenters,publishers}/pyproject.toml``
   ``[project] version`` and the ``taranis-ng-shared==X`` dependency pin
 - ``src/gui/package.json`` + ``package-lock.json``
-- ``src/gui-v3/package.json`` + ``package-lock.json``
 
 See ``scripts/README.md`` for the full flow and update workflow.
 """
@@ -37,7 +36,7 @@ SERVICE_DIRS = ["src/bots", "src/collectors", "src/core", "src/presenters", "src
 PYPROJECT_FILES = ["pyproject.toml", "src/shared/pyproject.toml", *(f"{d}/pyproject.toml" for d in SERVICE_DIRS)]
 
 # npm projects: package.json plus the root-package version fields in package-lock.json.
-NPM_DIRS = ["src/gui", "src/gui-v3"]
+NPM_DIRS = ["src/gui"]
 
 # uv projects whose uv.lock records project/shared versions and must be relocked after a bump.
 UV_LOCK_DIRS = [".", *SERVICE_DIRS]

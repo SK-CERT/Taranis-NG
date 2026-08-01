@@ -1,135 +1,400 @@
 <template>
-    <v-row v-bind="UI.DIALOG.ROW.WINDOW">
-        <v-dialog v-bind="UI.DIALOG.FULLSCREEN" v-model="dialog">
-            <v-card v-bind="UI.DIALOG.BASEMENT">
-                <v-toolbar v-bind="UI.DIALOG.TOOLBAR" :style="UI.STYLE.z10000">
-                    <v-btn v-bind="UI.BUTTON.CLOSE_ICON" @click="close">
-                        <v-icon>{{ UI.ICON.CLOSE }}</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>{{$t('report_item.select')}}</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-btn text dark @click="add">
-                        <v-icon left>mdi-plus-box</v-icon>
-                        <span>{{$t('common.add')}}</span>
-                    </v-btn>
-                </v-toolbar>
-                <v-container fluid class="pa-0 ma-0">
-                    <div :style="UI.STYLE.sticky_filter_toolbar">
-                        <ToolbarFilterAnalyze :show_group_toolbar="false"
-                                              total_count_title="analyze.total_count"
-                                              @update-report-items-filter="updateFilter"
-                                              ref="toolbarFilter" />
-                    </div>
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <!-- Dialog Container -->
+        <v-dialog
+            v-model="selectorOpen"
+            fullscreen
+            persistent
+        >
+            <v-card
+                flat
+                class="d-flex flex-column"
+                style="height: 100vh"
+            >
+                <!-- Fixed header (toolbar + filter stay put while the list below scrolls) -->
+                <div class="flex-grow-0 flex-shrink-0">
+                    <v-toolbar
+                        color="primary"
+                        dark
+                    >
+                        <v-btn
+                            icon
+                            @click="handleClose"
+                        >
+                            <v-icon>{{ ICONS.CLOSE }}</v-icon>
+                        </v-btn>
+                        <v-toolbar-title>{{ t('report_item.select') }}</v-toolbar-title>
+                        <v-spacer />
+                        <v-btn @click="handleAdd">
+                            <v-icon start>
+                                {{ ICONS.PLUS_BOX }}
+                            </v-icon>
+                            {{ t('common.add_items') }}
+                        </v-btn>
+                    </v-toolbar>
 
-                    <ContentDataAnalyze :show_remove_action="false" :remote_reports="false" :selection="values"
-                                        class="item-selector" card-item="CardAnalyze"
-                                        ref="contentData"
-                                        @show-report-item-detail="showReportItemDetail"
-                                        @new-data-loaded="newDataLoaded" />
-                </v-container>
+                    <ToolbarFilterAnalyze
+                        ref="toolbarFilter"
+                        :show-group-toolbar="false"
+                        @update-filter="updateFilter"
+                    />
+                </div>
+
+                <!-- Main Content (scrollable area) -->
+                <div class="flex-grow-1 overflow-y-auto">
+                    <ContentDataAnalyze
+                        ref="contentData"
+                        :show-remove-action="false"
+                        :disable-actions="true"
+                        :selection="value"
+                        card-item="CardAnalyze"
+                        class="bg-background"
+                        @show-report-item-detail="showReportItemDetail"
+                        @new-data-loaded="handleNewDataLoaded"
+                        @update-showing-count="handleUpdateShowingCount"
+                    />
+                </div>
             </v-card>
         </v-dialog>
 
-        <v-spacer style="height:8px"></v-spacer>
+        <!-- New Report Item Dialog -->
+        <NewReportItem
+            ref="reportItemDialog"
+            :show-button="false"
+            :read-only="readOnlySelector"
+        />
 
-        <NewReportItem ref="reportItemDialog" :read_only="readOnlySelector" />
+        <!-- Confirm adding non-final reports to a final/published product -->
+        <v-dialog
+            v-model="showCompletionConfirm"
+            max-width="500px"
+            persistent
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    {{ t('product.add_incomplete_reports.title') }}
+                </v-card-title>
+                <v-card-text>
+                    <p class="mb-2">{{ confirmMessage }}</p>
+                    <v-list
+                        v-if="incompleteReportTitles.length > 0"
+                        density="compact"
+                        class="mb-2"
+                        style="max-height: 200px; overflow-y: auto"
+                    >
+                        <v-list-item
+                            v-for="(title, index) in incompleteReportTitles"
+                            :key="index"
+                            class="px-0"
+                        >
+                            <template #prepend>
+                                <v-icon
+                                    color="orange"
+                                    size="small"
+                                >
+                                    {{ ICONS.FILE_DOCUMENT }}
+                                </v-icon>
+                            </template>
+                            <v-list-item-title class="text-body-2">
+                                {{ title }}
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn @click="cancelAddReports">
+                        {{ t('common.cancel') }}
+                    </v-btn>
+                    <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="confirmAddReports"
+                    >
+                        {{ confirmButton }}
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
 
-        <component class="item-selector" v-bind:is="cardLayout()" v-for="value in values" :card="value"
-                   :show_remove_action="true" :key="value.id"
-                   @show-report-item-detail="showReportItemDetail"
-                   @remove-report-item-from-selector="removeReportItemFromSelector" />
-    </v-row>
+        <!-- Selected Items Display -->
+        <div
+            v-if="!selectorOpen"
+            class="pt-2"
+        >
+            <CardAnalyze
+                v-for="item in displayItems"
+                :key="item.id"
+                :card="item"
+                :show-remove-action="true"
+                @show-detail="showReportItemDetail"
+                @remove-report-item-from-selector="removeReportItem"
+            />
+        </div>
+    </v-container>
 </template>
 
-<script>
-    import ContentDataAnalyze from "@/components/analyze/ContentDataAnalyze";
-    import ToolbarFilter from "@/components/common/ToolbarFilter";
-    import CardAnalyze from "../analyze/CardAnalyze";
-    import ToolbarFilterAnalyze from "@/components/analyze/ToolbarFilterAnalyze";
-    import NewReportItem from "@/components/analyze/NewReportItem";
-    import Permissions from "@/services/auth/permissions";
-    import AuthMixin from "@/services/auth/auth_mixin";
-    import Settings, { getSettingBoolean } from "@/services/settings";
+<script setup lang="ts">
+    import { ref, computed, watch, onMounted, nextTick } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { ICONS } from '@/config/ui-constants'
+    import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
+    import ToolbarFilterAnalyze from '@/components/analyze/ToolbarFilterAnalyze.vue'
+    import CardAnalyze from '@/components/analyze/CardAnalyze.vue'
+    import NewReportItem from '@/components/analyze/NewReportItem.vue'
+    import { useAnalyzeStore } from '@/stores/analyze'
+    import { useSettingsStore } from '@/stores/settings'
+    import { Settings } from '@/types/settings'
+    import { getEntityTypeStates } from '@/api/state'
 
-    export default {
-        name: "ReportItemSelector",
-        components: {
-            ToolbarFilterAnalyze,
-            ContentDataAnalyze,
-            ToolbarFilter,
-            CardAnalyze,
-            NewReportItem
+    type ReportItem = {
+        id: number | string
+        title?: string
+        tag?: string
+        report_item_type_id?: number | string
+        report_type_name?: string
+        state?: {
+            name?: string
+            display_name?: string
+            color?: string
+            icon?: string
+            description?: string
+        } | null
+        [key: string]: any
+    }
+
+    const { t } = useI18n()
+    const analyzeStore = useAnalyzeStore()
+    const settingsStore = useSettingsStore()
+
+    const props = withDefaults(
+        defineProps<{
+            values?: ReportItem[]
+            modify?: boolean
+            edit?: boolean
+            productStateIsFinal?: boolean
+        }>(),
+        {
+            values: () => [],
+            modify: false,
+            edit: false,
+            productStateIsFinal: false
+        }
+    )
+
+    const emit = defineEmits<{
+        (e: 'items-changed', payload: ReportItem[]): void
+    }>()
+
+    const selectorOpen = ref<boolean>(false)
+    const value = ref<ReportItem[]>(props.values || [])
+    const toolbarFilter = ref<any>(null)
+    const contentData = ref<any>(null)
+    const reportItemDialog = ref<any>(null)
+    // Display names of report-item states marked as FINAL (state_type === 'final').
+    // Loaded once from /state/entity-types/report_item/states so we can detect
+    // non-final reports when adding them to an already-published product.
+    const finalReportStateNames = ref<Set<string>>(new Set())
+    // Pending selection awaiting confirmation when adding non-final reports to a final product.
+    const pendingSelection = ref<ReportItem[] | null>(null)
+    const showCompletionConfirm = ref<boolean>(false)
+
+    watch(
+        () => props.values,
+        (newValues: ReportItem[]) => {
+            value.value = Array.isArray(newValues) ? [...newValues] : []
         },
-        mixins: [AuthMixin],
-        props: {
-            values: Array,
-            modify: Boolean,
-            edit: Boolean
-        },
-        data: () => ({
-            dialog: false,
-            value: "",
-            readOnlySelector: true,
-        }),
-        computed: {
-            canModify() {
-                return this.edit === false || (this.checkPermission(Permissions.PUBLISH_UPDATE) && this.modify === true)
-            },
-        },
-        methods: {
-            newDataLoaded(count) {
-                this.$refs.toolbarFilter.updateDataCount(count)
-            },
+        { deep: true, immediate: true }
+    )
 
-            updateFilter(filter) {
-                this.$refs.contentData.updateFilter(filter)
-            },
+    // The selected report items only carry report_item_type_id; resolve the type
+    // name from the loaded report item types so the cards show the type like the
+    // Analyze list does.
+    const displayItems = computed<ReportItem[]>(() => {
+        const types = Array.isArray(analyzeStore.getReportItemTypes.items)
+            ? (analyzeStore.getReportItemTypes.items as Array<{ id: number | string; title?: string }>)
+            : []
+        return value.value.map((item) => {
+            if (item.report_type_name) return item
+            const reportType = types.find((x) => x.id == item.report_item_type_id)
+            return { ...item, report_type_name: reportType?.title || 'Report Item' }
+        })
+    })
 
-            showReportItemDetail(report_item) {
-                this.$refs.reportItemDialog.showDetail(report_item)
-            },
+    const isReportFinal = (item: ReportItem): boolean => {
+        const displayName = item.state?.display_name
+        if (!displayName) return false
+        return finalReportStateNames.value.has(displayName)
+    }
 
-            removeReportItemFromSelector(report_item) {
-                const i = this.values.indexOf(report_item)
-                this.values.splice(i, 1)
-            },
+    // REPORT_SELECTOR_READ_ONLY decides whether a report item opened from the selector is
+    // just viewable or editable. Read-only is the safer default if the setting is missing.
+    const readOnlySelector = computed(() => settingsStore.getSettingBoolean(Settings.REPORT_SELECTOR_READ_ONLY, true))
 
-            cardLayout: function () {
-                return "CardAnalyze";
-            },
+    // Whether the backend "Automatic cascade state changes" (CASCADE_STATES_ENABLED)
+    // app setting is on. The completion-confirmation dialog only makes sense when
+    // the backend would actually auto-complete newly-added non-final reports.
+    const cascadeStatesEnabled = computed(() => settingsStore.getSettingBoolean(Settings.CASCADE_STATES_ENABLED, true))
 
-            openSelector() {
-                this.$root.$emit('multi-select-off'); // deselect previous selections
-                this.$store.dispatch("multiSelectReport", true)
-                this.dialog = true;
-            },
-
-            add() {
-                let selection = this.$store.getters.getSelectionReport
-                for (let i = 0; i < selection.length; i++) {
-                    let found = false
-                    for (let j = 0; j < this.values.length; j++) {
-                        if (this.values[j].id === selection[i].item.id) {
-                            found = true
-                            break
-                        }
-                    }
-
-                    if (found === false)
-                        selection[i].item.tag = 'mdi-file-table-outline'
-                    this.values.push(selection[i].item)
-                }
-
-                this.close()
-            },
-
-            close() {
-                this.$store.dispatch("multiSelectReport", false)
-                this.dialog = false;
-            }
-        },
-        mounted() {
-            this.readOnlySelector = getSettingBoolean(Settings.REPORT_SELECTOR_READ_ONLY);
+    const loadReportItemStates = async (): Promise<void> => {
+        try {
+            const response = await getEntityTypeStates('report_item')
+            const states = Array.isArray(response?.data?.states) ? response.data.states : []
+            finalReportStateNames.value = new Set(
+                states
+                    .filter((s: { state_type?: string; display_name?: string }) => s.state_type === 'final')
+                    .map((s: { display_name?: string }) => s.display_name)
+                    .filter((name?: string): name is string => Boolean(name))
+            )
+        } catch (error: unknown) {
+            console.error('Failed to load report item states:', error)
         }
     }
+
+    onMounted(async () => {
+        if (!analyzeStore.getReportItemTypes.items?.length) {
+            await analyzeStore.loadReportItemTypes({})
+        }
+        if (finalReportStateNames.value.size === 0) {
+            await loadReportItemStates()
+        }
+    })
+
+    const openSelector = async (): Promise<void> => {
+        // Disable multi-select from previous selections
+        window.dispatchEvent(new CustomEvent('multi-select-off'))
+        analyzeStore.multiSelectReport(true)
+        selectorOpen.value = true
+
+        // Seed existing items into selection state so checkboxes/counters are correct on open.
+        await nextTick()
+        for (const item of value.value) {
+            if (item?.id) {
+                analyzeStore.selectReport({ id: item.id, item })
+            }
+        }
+    }
+
+    const collectNewItems = (): ReportItem[] => {
+        const rawSelection = analyzeStore.getSelectionReport
+        const selection: Array<{ item: ReportItem }> = Array.isArray(rawSelection)
+            ? rawSelection
+                  .map((entry): { item: ReportItem } | null => {
+                      if (!entry || typeof entry !== 'object') return null
+                      const candidate = (entry as { item?: unknown }).item
+                      if (!candidate || typeof candidate !== 'object') return null
+                      const id = (candidate as { id?: unknown }).id
+                      if (typeof id !== 'string' && typeof id !== 'number') return null
+                      return { item: candidate as ReportItem }
+                  })
+                  .filter((entry): entry is { item: ReportItem } => entry !== null)
+            : []
+        const newItems: ReportItem[] = []
+        selection.forEach((selectedItem: { item: ReportItem }) => {
+            const found = value.value.some((item) => item.id === selectedItem.item.id)
+            if (!found) {
+                selectedItem.item.tag = ICONS.FILE_TABLE_OUTLINE
+                newItems.push(selectedItem.item)
+            }
+        })
+        return newItems
+    }
+
+    const handleAdd = (): void => {
+        const newItems = collectNewItems()
+
+        // Confirm whenever any non-completed report is being added, but only when
+        // the backend "Automatic cascade state changes" setting is enabled —
+        // otherwise adding incomplete reports has no cascade side effect.
+        if (cascadeStatesEnabled.value && newItems.some((item) => !isReportFinal(item))) {
+            pendingSelection.value = newItems
+            showCompletionConfirm.value = true
+            return
+        }
+
+        applySelection(newItems)
+    }
+
+    const confirmMessage = computed(() => {
+        if (props.productStateIsFinal) {
+            return t('product.add_incomplete_reports.message_published')
+        }
+        return t('product.add_incomplete_reports.message')
+    })
+
+    // Display titles of the non-final reports pending confirmation.
+    const incompleteReportTitles = computed<string[]>(() => {
+        if (!pendingSelection.value) return []
+        return pendingSelection.value
+            .filter((item) => !isReportFinal(item))
+            .map((item) => item.title || item.report_type_name || t('product.add_incomplete_reports.untitled'))
+    })
+
+    const confirmButton = computed(() => {
+        if (props.productStateIsFinal) {
+            return t('product.add_incomplete_reports.confirm_published')
+        }
+        return t('product.add_incomplete_reports.confirm')
+    })
+
+    const applySelection = (newItems: ReportItem[]): void => {
+        value.value.push(...newItems)
+        handleClose()
+        emit('items-changed', value.value)
+    }
+
+    const confirmAddReports = (): void => {
+        showCompletionConfirm.value = false
+        if (pendingSelection.value) {
+            applySelection(pendingSelection.value)
+            pendingSelection.value = null
+        }
+    }
+
+    const cancelAddReports = (): void => {
+        showCompletionConfirm.value = false
+        pendingSelection.value = null
+    }
+
+    const handleClose = (): void => {
+        analyzeStore.multiSelectReport(false)
+        selectorOpen.value = false
+    }
+
+    const showReportItemDetail = (reportItem: ReportItem): void => {
+        reportItemDialog.value.showDetail(reportItem)
+    }
+
+    const removeReportItem = (reportItem: ReportItem): void => {
+        const index = value.value.findIndex((item) => item.id === reportItem.id)
+        if (index > -1) {
+            value.value.splice(index, 1)
+            emit('items-changed', value.value)
+        }
+    }
+
+    const updateFilter = (filter: Record<string, unknown>): void => {
+        if (contentData.value) {
+            contentData.value.updateFilter(filter)
+        }
+    }
+
+    const handleNewDataLoaded = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateDataCount(count)
+        }
+    }
+
+    const handleUpdateShowingCount = (count: number): void => {
+        if (toolbarFilter.value) {
+            toolbarFilter.value.updateCurrentlyShowingCount(count)
+        }
+    }
+
+    defineExpose({
+        openSelector
+    })
 </script>

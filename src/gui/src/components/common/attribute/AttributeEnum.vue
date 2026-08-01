@@ -1,61 +1,117 @@
 <template>
     <AttributeItemLayout
-        :add_button="addButtonVisible"
-        @add-value="add()"
+        :add-button="addButtonVisible"
         :values="values"
+        @add-value="add"
     >
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
+                <!-- Read-only or remote -->
+                <span
+                    v-if="readOnly || value.remote"
+                    class="enum-value"
                 >
+                    <v-chip size="small">{{ value.value }}</v-chip>
+                </span>
 
-                    <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                    <template v-slot:col_middle>
-                        <v-combobox v-if="!read_only && !values[index].remote"
-                                    v-model="values[index].value" dense
-                                    :items="stringEnums"
-                                    :label="$t('attribute.value')"
-                                    @focus="onFocus(index)" @blur="onBlur(index)"
-                                    :class="getLockedStyle(index)"
-                                    :disabled="values[index].locked || !canModify"
-                        />
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    embed-delete
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_middle="{ delVisible, onDelete }">
+                        <v-select
+                            v-model="value.value"
+                            :items="attributeGroup.attribute?.enum_values || []"
+                            density="compact"
+                            variant="outlined"
+                            hide-details="auto"
+                            :label="$t('attribute.value')"
+                            :disabled="value.locked || !canModify"
+                            @focus="onFocus(index)"
+                            @blur="onBlur(index)"
+                            @update:model-value="onEdit(index)"
+                        >
+                            <template #append-inner>
+                                <AttributeFieldDeleteButton
+                                    :visible="delVisible"
+                                    @delete="onDelete"
+                                />
+                            </template>
+                        </v-select>
                     </template>
                 </AttributeValueLayout>
-            </v-row>
+            </div>
         </template>
     </AttributeItemLayout>
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import { useAttributes } from './useAttributes'
 
-    export default {
-        name: "AttributeEnum",
-        props: {
-            attribute_group: Object
-        },
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout
-        },
-        data: () => ({
-            stringEnums: []
-        }),
-        mixins: [AttributesMixin],
-        mounted() {
-            for (let i = 0; i < this.attribute_group.attribute.attribute_enums.length; i++) {
-                this.stringEnums.push(this.attribute_group.attribute.attribute_enums[i].value)
-            }
-        }
+    type AttributeValueItem = {
+        index?: string | number
+        value: string | number | null
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
     }
+
+    type AttributeGroup = {
+        min_occurrence?: number
+        attribute?: {
+            enum_values?: Array<string | number>
+        }
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    const { t } = useI18n()
+
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+
+    onMounted(addInitialValues)
 </script>
+
+<style scoped>
+    .enum-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+    }
+
+    .value-holder {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+</style>

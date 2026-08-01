@@ -1,82 +1,112 @@
 <template>
-
-    <!--<div>
-        <v-row v-for="(value, index) in values" :key="value.index"
-               class="valueHolder"
-               @mouseenter="delButton=true"
-               @mouseleave="delButton=false"
-        >
-            <v-col>
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <v-checkbox
-                        :disabled="!canModify"
-                        v-if="!read_only && !values[index].remote"
-                        v-model="values[index].value"
-                        :label="$t('attribute.status')"
-                        @change="onEdit(index)"
-                />
-            </v-col>
-            <v-col>
-                <v-btn v-if="delButton && attribute_group.min_occurrence != attribute_group.max_occurrence" text small @click="del(index)">
-                    <v-icon>mdi-close-circle</v-icon>
-                </v-btn>
-            </v-col>
-        </v-row>
-        <v-row>
-            <v-btn v-if="values.length < attribute_group.max_occurrence && !read_only && canModify" depressed small block class="mt-2"
-                   @click="add">
-                <v-icon>mdi-plus</v-icon>
-            </v-btn>
-        </v-row>
-    </div>-->
     <AttributeItemLayout
-        :add_button="addButtonVisible"
-        @add-value="add()"
+        :add-button="addButtonVisible"
         :values="values"
+        @add-value="add"
     >
-        <template v-slot:content>
-            <v-row v-for="(value, index) in values" :key="value.index"
-                   class="valueHolder"
+        <template #content>
+            <div
+                v-for="(value, index) in values"
+                :key="`${value.index}-${index}`"
+                class="value-holder"
             >
-
-                <span v-if="read_only || values[index].remote">{{values[index].value}}</span>
-                <AttributeValueLayout
-                        v-if="!read_only && canModify && !values[index].remote"
-                        :del_button="delButtonVisible"
-                        @del-value="del(index)"
-                        :occurrence="attribute_group.min_occurrence"
-                        :values="values"
-                        :val_index="index"
+                <!-- Read-only or remote -->
+                <span
+                    v-if="readOnly || value.remote"
+                    class="boolean-value"
                 >
-                    <template v-slot:col_middle>
-                        <v-checkbox
-                                :disabled="!canModify"
-                                v-if="!read_only && !values[index].remote"
-                                v-model="values[index].value"
-                                :label="$t('attribute.status')"
-                                @change="onEdit(index)"
+                    <v-icon
+                        :color="value.value ? 'success' : 'error'"
+                        size="small"
+                    >
+                        {{ value.value ? ICONS.CHECK_CIRCLE : ICONS.CLOSE }}
+                    </v-icon>
+                    {{ value.value ? $t('common.yes') : $t('common.no') }}
+                </span>
+
+                <!-- Editable -->
+                <AttributeValueLayout
+                    v-if="!readOnly && canModify && !value.remote"
+                    :del-button="true"
+                    :occurrence="attributeGroup.min_occurrence"
+                    :values="values"
+                    :val-index="index"
+                    @del-value="del(index)"
+                >
+                    <template #col_middle>
+                        <v-switch
+                            v-model="value.value"
+                            :label="value.value ? $t('common.yes') : $t('common.no')"
+                            density="compact"
+                            :disabled="value.locked || !canModify"
+                            @focus="onFocus(index)"
+                            @blur="onBlur(index)"
+                            @update:model-value="onEdit(index)"
                         />
                     </template>
                 </AttributeValueLayout>
-
-            </v-row>
+            </div>
         </template>
-
     </AttributeItemLayout>
 </template>
 
-<script>
-    import AttributesMixin from "@/components/common/attribute/attributes_mixin";
-    import AttributeItemLayout from "../../layouts/AttributeItemLayout";
-    import AttributeValueLayout from "../../layouts/AttributeValueLayout";
+<script setup lang="ts">
+    import { onMounted } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { ICONS } from '@/config/ui-constants'
+    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import AttributeValueLayout from './AttributeValueLayout.vue'
+    import { useAttributes } from './useAttributes'
 
-    export default {
-        name: "AttributeBoolean",
-        components: {
-            AttributeItemLayout,
-            AttributeValueLayout
-        },
-        mixins: [AttributesMixin]
+    type AttributeValueItem = {
+        index?: string | number
+        value: boolean
+        remote?: boolean
+        locked?: boolean
+        [key: string]: unknown
     }
 
+    type AttributeGroup = {
+        min_occurrence?: number
+        attribute?: {
+            enum_values?: Array<string | number>
+        }
+        [key: string]: unknown
+    }
+
+    const props = withDefaults(
+        defineProps<{
+            attributeGroup: AttributeGroup
+            values: AttributeValueItem[]
+            readOnly?: boolean
+            edit?: boolean
+            modify?: boolean
+            reportItemId: number | null
+        }>(),
+        {
+            readOnly: false,
+            edit: false,
+            modify: false
+        }
+    )
+
+    const { t } = useI18n()
+
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onEdit } = useAttributes(props)
+
+    onMounted(addInitialValues)
 </script>
+
+<style scoped>
+    .boolean-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+    }
+
+    .value-holder {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+</style>

@@ -1,157 +1,308 @@
 <template>
+    <v-container
+        id="selector_analyze"
+        fluid
+        class="pa-2"
+    >
+        <TransitionGroup
+            name="card-list"
+            tag="div"
+            class="w-100"
+        >
+            <component
+                :is="currentCard"
+                v-for="collection in collections"
+                :key="collection.id"
+                :card="collection"
+                :disable-actions="disableActions"
+                :multi-select-active="multiSelectActive"
+                :show-remove-action="showRemoveAction"
+                :preselected="preselected(collection.id)"
+                @delete-item="handleDelete"
+                @selection-change="handleSelectionChange(collection.id, $event)"
+                @show-detail="emit('show-report-item-detail', $event)"
+                @edit="emit('show-report-item-detail', $event)"
+            />
+        </TransitionGroup>
+        <div
+            v-intersect="infiniteScrolling"
+            class="mt-4"
+            style="min-height: 100px; display: flex; align-items: center; justify-content: center"
+        >
+            <div
+                v-if="!dataLoaded && collections.length > 0"
+                class="text-center text-grey"
+            >
+                <v-progress-circular
+                    indeterminate
+                    size="small"
+                />
+                <p class="text-caption mt-2">
+                    {{ t('common.loading_more') }}
+                </p>
+            </div>
+            <div
+                v-else-if="collections.length > 0"
+                class="text-caption text-grey"
+            >
+                {{ t('common.end_of_list') }}
+            </div>
+        </div>
 
-    <v-container id="selector_analyze">
-        <component v-bind:is="cardLayout()" v-for="collection in collections" :card="collection" :key="collection.id"
-                   :show_remove_action="show_remove_action" :preselected="preselected(collection.id)"
-                   @show-report-item-detail="showReportItemDetail"
-                   @show-remote-report-item-detail="showRemoteReportItemDetail"
-                   @remove-report-item-from-selector="removeReportItemFromSelector"></component>
-        <v-card v-intersect.quiet="infiniteScrolling"></v-card>
+        <!-- Empty State -->
+        <v-row
+            v-if="dataLoaded && collections.length === 0"
+            justify="center"
+            class="my-8"
+        >
+            <v-col
+                cols="12"
+                md="6"
+                class="text-center"
+            >
+                <v-icon
+                    size="64"
+                    color="grey"
+                >
+                    {{ ICONS.FILE_TABLE_OUTLINE }}
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">
+                    {{ t('analyze.no_items') }}
+                </p>
+            </v-col>
+        </v-row>
     </v-container>
-
 </template>
 
-<script>
-    import CardAnalyze from "./CardAnalyze";
+<script setup lang="ts">
+    import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useRoute } from 'vue-router'
+    import { ICONS } from '@/config/ui-constants'
+    import { useAnalyzeStore } from '@/stores/analyze'
+    import CardAnalyze from './CardAnalyze.vue'
+    import CardCompact from '@/components/common/CardCompact.vue'
 
-    export default {
-        name: "ContentDataAnalyze",
+    type ReportItem = {
+        id: string | number
+        report_item_type_id?: string | number
+        report_type_name?: string
+        [key: string]: unknown
+    }
 
-        components: {
-            CardAnalyze,
-        },
+    type FilterState = {
+        search: string
+        range: string
+        completed: boolean | string
+        sort: string
+        compact_mode?: boolean
+    }
 
-        props: {
-            show_remove_action: Boolean,
-            remote_reports: Boolean,
-            selection: Array,
-            cardItem: String
-        },
+    const props = withDefaults(
+        defineProps<{
+            showRemoveAction?: boolean
+            disableActions?: boolean
+            remoteReports?: boolean
+            selection?: Array<{ id: string | number }>
+            cardItem?: string
+        }>(),
+        {
+            showRemoveAction: false,
+            disableActions: false,
+            remoteReports: false,
+            selection: () => [],
+            cardItem: ''
+        }
+    )
 
-        data: () => ({
-            collections: [],
-            data_loaded: false,
-            filter: {
-                search: "",
-                range: "ALL",
-                completed: "ALL",
-                sort: "DATE_DESC"
-            }
-        }),
+    const emit = defineEmits(['new-data-loaded', 'show-report-item-detail', 'update-showing-count'])
 
-        methods: {
-            showReportItemDetail(report_item) {
-                this.$emit('show-report-item-detail', report_item)
-            },
+    const { t } = useI18n()
+    const route = useRoute()
+    const analyzeStore = useAnalyzeStore()
 
-            showRemoteReportItemDetail(report_item) {
-                this.$emit('show-remote-report-item-detail', report_item)
-            },
+    const collections = ref<ReportItem[]>([])
+    const dataLoaded = ref(true)
+    const filter = ref<FilterState>({
+        search: '',
+        range: 'ALL',
+        completed: 'ALL',
+        sort: 'DATE_DESC'
+    })
 
-            removeReportItemFromSelector(report_item) {
-                this.$emit('remove-report-item-from-selector', report_item)
-            },
+    const currentCard = computed(() => {
+        if (props.cardItem === 'CardCompact') {
+            return CardCompact
+        }
+        if (props.cardItem === 'CardAnalyze') {
+            return CardAnalyze
+        }
+        return filter.value.compact_mode ? CardCompact : CardAnalyze
+    })
 
-            preselected(item_id) {
-                if (this.selection != null) {
+    const multiSelectActive = computed(() => analyzeStore.getMultiSelectReport)
 
-                    for (let i = 0; i < this.selection.length; i++) {
-                        if (this.selection[i].id === item_id) {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
+    const preselected = (itemId: string | number): boolean => props.selection.some((item) => item.id === itemId)
 
-            cardLayout: function () {
+    const getNormalizedScope = (): string => {
+        const scope = route.params['scope']
+        if (typeof scope === 'string') {
+            return scope
+        }
+        if (Array.isArray(scope)) {
+            return scope[0] || 'local'
+        }
+        return 'local'
+    }
 
-                return this.cardItem;
-            },
-
-            infiniteScrolling(entries, observer, isIntersecting) {
-
-                if (this.data_loaded && isIntersecting) {
-                    this.updateData(true, false)
-                }
-            },
-
-            updateData(append, reload_all) {
-                this.data_loaded = false;
-
-                if (append === false) {
-                    this.collections = []
-                }
-
-                let offset = this.collections.length;
-                let limit = 20;
-                if (reload_all) {
-                    offset = 0;
-                    if (this.collections.length > limit) {
-                        limit = this.collections.length;
-                    }
-                    this.collections = []
-                }
-
-                let group = ''
-                if (this.remote_reports) {
-                    group = this.$store.getters.getCurrentReportItemGroup
-
-                } else if (window.location.pathname.includes("/group/")) {
-
-                    let i = window.location.pathname.indexOf("/group/");
-                    let len = window.location.pathname.length;
-                    group = window.location.pathname.substring(i + 7, len).replaceAll("-", " ");
-                }
-
-                this.$store.dispatch("getAllReportItems", { group: group, filter: this.filter, offset: offset, limit: limit })
-                    .then(() => {
-                        const report_types = Object.values(this.$store.getters.getReportItemTypes.items);
-                        this.collections = this.collections.concat(this.$store.getters.getReportItems.items);
-                        for (let i = 0; i < this.collections.length; i++) {
-                            let report_type = report_types.filter(x => x.id == this.collections[i].report_item_type_id);
-                            if (report_type.length) {
-                                this.collections[i].report_type_name = report_type[0].title;
-                            } else {
-                                this.collections[i].report_type_name = this.$t('card_item.title');
-                            }
-                        }
-                        this.$emit('new-data-loaded', this.collections.length);
-                        setTimeout(() => {
-                            this.$root.$emit('sync-analyze-selection');  // add selection to newly loaded items, eg. user select all items and scroll down
-                        }, 200);
-                        setTimeout(() => {
-                            this.data_loaded = true
-                        }, 1000);
-                    });
-            },
-
-            report_item_updated() {
-                this.updateData(false, true)
-            },
-
-            updateFilter(filter) {
-                this.filter = filter;
-                this.updateData(false, false);
-            },
-        },
-
-        computed: {
-            multiSelectActive() {
-                return this.$store.getters.getMultiSelectReport;
-            }
-        },
-
-        mounted() {
-            this.updateData(false, false);
-
-            this.$root.$on('report-item-updated', this.report_item_updated);
-            this.$root.$on('report-items-updated', this.report_item_updated);
-        },
-
-        beforeDestroy() {
-            this.$root.$off('report-item-updated', this.report_item_updated);
-            this.$root.$off('report-items-updated', this.report_item_updated);
+    const infiniteScrolling = (isIntersecting: boolean): void => {
+        const totalCount = analyzeStore.getReportItems.total_count || 0
+        // Don't attempt to load more when there are no items to load
+        if (totalCount === 0) {
+            return
+        }
+        if (dataLoaded.value && isIntersecting && collections.value.length < totalCount) {
+            updateData(true, false)
         }
     }
+
+    const updateData = async (append = false, reloadAll = false): Promise<void> => {
+        dataLoaded.value = false
+
+        const totalCount = analyzeStore.getReportItems.total_count || 0
+        if (append && totalCount > 0 && collections.value.length >= totalCount) {
+            dataLoaded.value = true
+            return
+        }
+
+        let offset = collections.value.length
+        let limit = 20
+        if (reloadAll) {
+            offset = 0
+            if (collections.value.length > limit) {
+                limit = collections.value.length
+            }
+        } else if (append === false) {
+            offset = 0
+        }
+
+        let group = ''
+        if (props.remoteReports) {
+            group = typeof analyzeStore.getCurrentReportItemGroup === 'string' ? analyzeStore.getCurrentReportItemGroup : ''
+        } else {
+            // Extract scope from route params
+            const scope = getNormalizedScope()
+            if (scope !== 'local') {
+                // If scope starts with 'group-', extract the group name
+                if (scope.startsWith('group-')) {
+                    group = scope.substring(6).replaceAll('-', ' ')
+                } else {
+                    group = scope.replaceAll('-', ' ')
+                }
+            }
+        }
+
+        try {
+            // Load the report items list and the report-item-type catalog in
+            // parallel, since the type enrichment below only needs both results.
+            await Promise.all([
+                analyzeStore.loadReportItems({
+                    group: group,
+                    filter: filter.value,
+                    offset: offset,
+                    limit: limit
+                }),
+                analyzeStore.loadReportItemTypes({})
+            ])
+
+            const reportTypes = Array.isArray(analyzeStore.getReportItemTypes.items)
+                ? (analyzeStore.getReportItemTypes.items as ReportItem[])
+                : []
+            const newItems = Array.isArray(analyzeStore.getReportItems.items) ? (analyzeStore.getReportItems.items as ReportItem[]) : []
+
+            if (Array.isArray(newItems) && Array.isArray(reportTypes)) {
+                for (let i = 0; i < newItems.length; i++) {
+                    const item = newItems[i]
+                    if (!item) {
+                        continue
+                    }
+                    const reportType = reportTypes.find((x) => x.id == item.report_item_type_id)
+                    if (reportType) {
+                        item.report_type_name = String(reportType['title'] || 'Report Item')
+                    } else {
+                        item.report_type_name = 'Report Item'
+                    }
+                }
+            }
+
+            // Directly assign or concat - Vue will detect removed items and animate them
+            if (append) {
+                collections.value = collections.value.concat(newItems)
+            } else {
+                collections.value = newItems
+            }
+
+            const totalCount = analyzeStore.getReportItems.total_count || 0
+            emit('new-data-loaded', totalCount)
+            emit('update-showing-count', collections.value.length)
+        } catch (error) {
+            console.error('Error loading report items:', error)
+        } finally {
+            dataLoaded.value = true
+        }
+    }
+
+    const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
+        // Get the full item from collections
+        const item = collections.value.find((c) => c.id === itemId)
+        if (item) {
+            if (isSelected) {
+                analyzeStore.selectReport({ id: itemId, item: item })
+            } else {
+                analyzeStore.deselectReport({ id: itemId })
+            }
+        }
+    }
+
+    const updateFilter = (newFilter: FilterState): void => {
+        filter.value = newFilter
+        updateData(false, false)
+    }
+
+    watch(
+        () => route.params['scope'],
+        () => {
+            updateData(false, false)
+        }
+    )
+
+    const handleReportItemUpdate = (): void => {
+        updateData(false, true)
+    }
+
+    const handleReportItemsUpdate = (): void => {
+        updateData(false, true)
+    }
+
+    onMounted(() => {
+        updateData(false, false)
+        window.addEventListener('report-item-updated', handleReportItemUpdate as EventListener)
+        window.addEventListener('report-items-updated', handleReportItemsUpdate as EventListener)
+    })
+
+    onUnmounted(() => {
+        window.removeEventListener('report-item-updated', handleReportItemUpdate as EventListener)
+        window.removeEventListener('report-items-updated', handleReportItemsUpdate as EventListener)
+    })
+
+    const handleDelete = async (): Promise<void> => {
+        // Reload current view after successful deletion
+        // The animation will trigger when the deleted item is missing from the new data
+        await updateData(false, true)
+    }
+
+    defineExpose({
+        updateData,
+        updateFilter
+    })
 </script>

@@ -1,37 +1,52 @@
 <template>
-    <v-card>
-        <v-card-title style="font-size: 16px; font-weight: bold; padding-top:0; padding-bottom:0">
-            {{ attribute_item.title }}
-        </v-card-title>
-
-        <v-card-text>
-            <v-divider style="padding-bottom:8px"></v-divider>
-            <component v-bind:is="attributeType()" :values="attribute_item.values"></component>
-        </v-card-text>
-    </v-card>
+    <div>
+        <!-- TODO: Implement remote attribute container -->
+        <!-- Phase 3: Abstract dispatcher for remote read-only attributes -->
+        <!-- Handle: RemoteAttributeString, RemoteAttributeAttachment variants -->
+        <component
+            :is="getRemoteComponentName(attributeGroup.attribute?.attribute_type)"
+            v-if="getRemoteComponentName(attributeGroup.attribute?.attribute_type)"
+            :attribute-group="attributeGroup"
+            :report-item-id="reportItemId"
+        />
+        <div
+            v-else
+            class="alert alert-warning"
+        >
+            {{ t('attribute.unknown_type') }}: {{ attributeGroup.attribute?.attribute_type }}
+        </div>
+    </div>
 </template>
 
-<script>
-import RemoteAttributeString from "@/components/common/attribute/RemoteAttributeString";
-import RemoteAttributeAttachment from "@/components/common/attribute/RemoteAttributeAttachment";
+<script setup lang="ts">
+    import { useI18n } from 'vue-i18n'
+    import RemoteAttributeString from './RemoteAttributeString.vue'
+    import RemoteAttributeAttachment from './RemoteAttributeAttachment.vue'
 
-export default {
-    name: "RemoteAttributeContainer",
-    components: {
-        RemoteAttributeString,
-        RemoteAttributeAttachment
-    },
-    props: {
-        attribute_item: Object,
-    },
-    methods: {
-        attributeType: function () {
-            if (this.attribute_item.attribute_group_item.attribute.type === 'ATTACHMENT') {
-                return "RemoteAttributeAttachment"
-            } else {
-                return "RemoteAttributeString"
-            }
+    const { t } = useI18n()
+
+    type RemoteAttributeGroup = {
+        attribute?: {
+            attribute_type?: string
+            [key: string]: unknown
         }
+        [key: string]: unknown
     }
-}
+
+    const props = defineProps<{
+        attributeGroup: RemoteAttributeGroup
+        reportItemId: number
+    }>()
+
+    const getRemoteComponentName = (type: string | undefined): unknown => {
+        // TODO: Map attribute types to remote components
+        // Phase 3: Add mappings as remote variants are created
+        const componentMap: Record<string, unknown> = {
+            text: RemoteAttributeString,
+            string: RemoteAttributeString,
+            attachment: RemoteAttributeAttachment
+            // TODO: Add more as needed
+        }
+        return (type && componentMap[type]) || null
+    }
 </script>

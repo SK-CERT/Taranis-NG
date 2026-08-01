@@ -6,11 +6,16 @@ repos:
         args: [--fix]
       - id: ruff-format
 
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.57
+    hooks:
+      - id: ty
+
   - repo: https://github.com/djlint/djLint
     rev: v1.43.1
     hooks:
       - id: djlint
-        files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui-v3/index\\.html)$"
+        files: "^(src/presenters/templates/.*\\.(html|jinja|j2)|src/gui/index\\.html)$"
         args: ["--ignore=H021"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -44,7 +49,7 @@ repos:
         always_run: true
       - id: gui3-precommit
         name: gui3-precommit
-        entry: node src/gui-v3/scripts/precommit.cjs
+        entry: node src/gui/scripts/precommit.cjs
         language: system
         pass_filenames: false
         always_run: true

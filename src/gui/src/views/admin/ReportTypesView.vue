@@ -1,64 +1,101 @@
 <template>
-    <ViewLayout>
-        <template v-slot:panel>
-            <ToolbarFilter title="nav_menu.report_types" total_count_title="report_type.total_count"
-                           total_count_getter="getReportItemTypesConfig">
-                <template v-slot:addbutton>
-                    <NewReportType/>
-                </template>
-            </ToolbarFilter>
-        </template>
-        <template v-slot:content>
-            <ContentData
-                    name="ReportTypes"
-                    cardItem="CardCompact"
-                    action="getAllReportItemTypesConfig"
-                    getter="getReportItemTypesConfig"
-                    deletePermission="CONFIG_REPORT_TYPE_DELETE"
-            />
-        </template>
-    </ViewLayout>
+    <v-container
+        fluid
+        class="pa-0"
+    >
+        <!-- Toolbar -->
+        <ToolbarFilter
+            :total-count="configStore.reportItemTypesConfig.total_count"
+            total-count-title="reports.types.total_count"
+            @update-filter="handleFilterUpdate"
+        >
+            <template #addbutton>
+                <NewReportType
+                    :edit-item="editItem"
+                    @saved="handleSaved"
+                />
+            </template>
+        </ToolbarFilter>
+
+        <!-- Content -->
+        <ContentData
+            :items="configStore.reportItemTypesConfig.items"
+            card-item="CardCompact"
+            delete-permission="CONFIG_REPORT_TYPE_DELETE"
+            :loading="loading"
+            @delete="handleDelete"
+            @edit="handleEdit"
+            @refresh="loadData"
+        />
+    </v-container>
 </template>
 
-<script>
-    import ViewLayout from "../../components/layouts/ViewLayout";
-    import ToolbarFilter from "../../components/common/ToolbarFilter";
-    import ContentData from "../../components/common/content/ContentData";
-    import NewReportType from "../../components/config/report_types/NewReportType";
-    import {deleteReportItemType} from "@/api/config";
+<script setup lang="ts">
+    import { ref, onMounted, nextTick } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { useConfigStore } from '@/stores/config'
+    import { deleteReportItemType } from '@/api/config'
+    import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
+    import ContentData from '@/components/common/ContentData.vue'
+    import NewReportType from '@/components/config/reports/NewReportType.vue'
 
-    export default {
-        name: "ReportTypes",
-        components: {
-            ViewLayout,
-            ToolbarFilter,
-            ContentData,
-            NewReportType
-        },
-        data: () => ({}),
-        mounted() {
-            this.$root.$on('delete-item', (item) => {
-                deleteReportItemType(item).then(() => {
+    const { t } = useI18n()
+    const configStore = useConfigStore()
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'success',
-                            loc: 'report_type.removed'
-                        }
-                    )
-                }).catch(() => {
+    type FilterState = {
+        search: string
+    }
 
-                    this.$root.$emit('notification',
-                        {
-                            type: 'error',
-                            loc: 'report_type.removed_error'
-                        }
-                    )
-                })
-            });
-        },
-        beforeDestroy() {
-            this.$root.$off('delete-item')
+    type ReportTypeItem = {
+        id?: string | number | null
+        title?: string
+        description?: string
+        [key: string]: unknown
+    }
+
+    const loading = ref(false)
+    const filter = ref<FilterState>({ search: '' })
+    const editItem = ref<ReportTypeItem | null>(null)
+
+    const loadData = async (): Promise<void> => {
+        loading.value = true
+        try {
+            await configStore.loadReportItemTypesConfig(filter.value)
+        } catch (error) {
+            console.error('Error loading report types:', error)
+        } finally {
+            loading.value = false
         }
-    };
+    }
+
+    const handleFilterUpdate = (newFilter: FilterState): void => {
+        filter.value = newFilter
+        loadData()
+    }
+
+    const handleDelete = async (reportType: ReportTypeItem): Promise<void> => {
+        try {
+            await deleteReportItemType(reportType)
+            console.log('Report type deleted successfully')
+            await loadData()
+        } catch (error) {
+            console.error('Error deleting report type:', error)
+        }
+    }
+
+    const handleEdit = async (reportType: ReportTypeItem): Promise<void> => {
+        // Reset first so re-selecting the same row reopens the dialog.
+        editItem.value = null
+        await nextTick()
+        editItem.value = reportType
+    }
+
+    const handleSaved = (): void => {
+        editItem.value = null
+        loadData()
+    }
+
+    onMounted(() => {
+        loadData()
+    })
 </script>
