@@ -68,7 +68,14 @@
     )
 
     // SSE connection
-    const { connect, disconnect, reconnect, subscribe } = useSSE()
+    const { connect, disconnect, reconnect, subscribe, onResync } = useSSE()
+
+    // Events published while this tab had no stream are not replayed, so anything showing
+    // live data has to re-read it once the stream is back. Registered once for the app.
+    onResync(() => {
+        console.log('[SSE] Stream restored - requesting resync')
+        window.dispatchEvent(new CustomEvent('sse-resync'))
+    })
 
     const applyTheme = (themeName: string): void => {
         if (typeof theme.change === 'function') {
@@ -79,11 +86,14 @@
     }
 
     const initializeSSE = async (): Promise<void> => {
+        // Register the handlers first: they are kept by the composable and re-attached on
+        // every (re)connect, so they survive a failed first attempt too.
+        setupSSEListeners()
+
         try {
             await connect()
-            setupSSEListeners()
         } catch {
-            console.info('[App] SSE not available - real-time updates disabled')
+            console.info('[App] SSE not available - retrying in the background')
         }
     }
 

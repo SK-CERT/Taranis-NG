@@ -13,6 +13,7 @@
         "format:check": "prettier --check \"src/**/*.{js,ts,vue,css,scss,json}\" \"src/**/*.d.ts\" \"tests/**/*.{js,ts}\"",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
+        "pretypecheck": "node scripts/update-version.cjs",
         "typecheck": "vue-tsc --noEmit -p tsconfig.json",
         "test": "vitest",
         "test:unit": "vitest run",

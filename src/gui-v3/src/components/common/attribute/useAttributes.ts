@@ -19,6 +19,19 @@ type AttributeValue = {
     locked?: boolean
     last_updated?: unknown
     user?: AttributeUser
+    // Version of the stored value this copy is based on; sent back on save so the server can
+    // refuse the write when somebody else changed the value in the meantime.
+    version?: number
+}
+
+/** What the server reports when it refuses a write because the value moved on. */
+type ConflictPayload = {
+    attribute_id: number
+    current_version: number
+    current_value: unknown
+    current_value_description?: string | null
+    last_updated?: string | null
+    user?: string | null
 }
 
 type AttributeGroup = {
@@ -68,6 +81,7 @@ type ReportItemDataResponse = {
         attribute_user?: string
         attribute_value?: unknown
         attribute_value_description?: string
+        attribute_version?: number
         value_description?: string
         binary_mime_type?: unknown
         binary_size?: unknown
@@ -80,6 +94,7 @@ type DataUpdatePayload = {
     attribute_id?: number | string
     attribute_value?: unknown
     value_description?: string
+    base_version?: number
 }
 
 /**
@@ -98,6 +113,31 @@ export function isLabelOnly(attributeGroup?: AttributeGroup | null): boolean {
 export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) {
     const userStore = useUserStore()
     const keyTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+    // What a field held when it was last focused or saved, keyed by attribute id, plus the
+    // field that currently has focus. Together they answer "did the user actually change
+    // this?" — without that, merely clicking into a field and out again re-sends whatever
+    // this tab has in memory, which silently overwrites a newer edit from somebody else
+    // whenever the tab missed an update.
+    const savedFingerprints = ref(new Map<string, string>())
+    const focusedFieldId = ref<string | null>(null)
+
+    const fingerprint = (value: AttributeValue): string => JSON.stringify([value.value ?? null, value.value_description ?? null])
+
+    const isDirty = (value: AttributeValue): boolean => {
+        const known = savedFingerprints.value.get(String(value.id))
+        // Nothing recorded (e.g. blur without a preceding focus): fall back to saving.
+        return known === undefined || known !== fingerprint(value)
+    }
+
+    /**
+     * True while the user has this field focused with changes that are not saved yet.
+     * Applying an incoming remote value to such a field would throw away what they are
+     * in the middle of typing.
+     */
+    const hasUnsavedFocus = (value: AttributeValue): boolean => {
+        return focusedFieldId.value === String(value.id) && isDirty(value)
+    }
 
     const currentUserId = () => userStore.userId
 
@@ -140,7 +180,8 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                     index: props.values.length,
                     value: '',
                     last_updated: itemData.attribute_last_updated,
-                    user: { name: String(itemData.attribute_user ?? '') }
+                    user: { name: String(itemData.attribute_user ?? '') },
+                    version: Number(itemData.attribute_version ?? 1)
                 })
             } catch (error) {
                 console.error('Failed to add attribute value:', error)
@@ -229,6 +270,10 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             return
         }
 
+        const key = String(fieldValue.id)
+        focusedFieldId.value = key
+        savedFingerprints.value.set(key, fingerprint(fieldValue))
+
         if (props.edit === true) {
             try {
                 await lockReportItem(props.reportItemId, { field_id: fieldValue.id })
@@ -244,14 +289,26 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
             return
         }
 
+        const key = String(fieldValue.id)
+        const changed = isDirty(fieldValue)
+        if (focusedFieldId.value === key) {
+            focusedFieldId.value = null
+        }
+
         if (props.edit === true) {
-            await onEdit(fieldIndex)
+            // Persist only a real change, so leaving an untouched field alone never
+            // pushes this tab's copy over what somebody else saved in the meantime.
+            if (changed) {
+                await onEdit(fieldIndex)
+            }
             try {
                 await unlockReportItem(props.reportItemId, { field_id: fieldValue.id })
             } catch (error) {
                 console.error('Failed to unlock field:', error)
             }
         }
+
+        savedFingerprints.value.delete(key)
     }
 
     const onKeyUp = (fieldIndex: number) => {
@@ -270,6 +327,66 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 })
             }, 1000)
         }
+    }
+
+    /** Convert a value as stored by the backend into the form this attribute type edits. */
+    const toLocalValue = (raw: unknown): unknown => {
+        if (props.attributeGroup?.attribute?.type === 'CPE' && typeof raw === 'string') {
+            return raw.replace(/%/g, '*')
+        }
+        if (props.attributeGroup?.attribute?.type === 'BOOLEAN') {
+            return raw === 'true'
+        }
+        return raw
+    }
+
+    const extractConflict = (error: unknown): ConflictPayload | null => {
+        const response = (error as { response?: { status?: number; data?: { conflict?: ConflictPayload } } })?.response
+        if (response?.status !== 409) {
+            return null
+        }
+        return response.data?.conflict ?? null
+    }
+
+    const applyConflictValue = (value: AttributeValue, conflict: ConflictPayload): void => {
+        value.value = toLocalValue(conflict.current_value)
+        value.value_description = String(conflict.current_value_description ?? '')
+        value.version = conflict.current_version
+        value.last_updated = conflict.last_updated
+        value.user = { name: String(conflict.user ?? '') }
+        savedFingerprints.value.set(String(value.id), fingerprint(value))
+    }
+
+    /**
+     * Hand a refused write over to the dialog that owns this form, which asks the user whose
+     * version wins. Nothing was stored, so until they decide, the field keeps their text.
+     */
+    const announceConflict = (fieldIndex: number, conflict: ConflictPayload): void => {
+        const value = props.values[fieldIndex]
+        if (!value) {
+            return
+        }
+
+        window.dispatchEvent(
+            new CustomEvent('report-item-conflict', {
+                detail: {
+                    reportItemId: props.reportItemId,
+                    attributeId: conflict.attribute_id,
+                    mine: value.value,
+                    theirs: toLocalValue(conflict.current_value),
+                    user: conflict.user,
+                    lastUpdated: conflict.last_updated,
+                    keepMine: async () => {
+                        // Rebase onto the stored version, then send the local value again.
+                        value.version = conflict.current_version
+                        await onEdit(fieldIndex)
+                    },
+                    takeTheirs: () => {
+                        applyConflictValue(value, conflict)
+                    }
+                }
+            })
+        )
     }
 
     const onEdit = async (fieldIndex: number) => {
@@ -301,6 +418,10 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                 if (valueDescr !== undefined) {
                     dataUpdate.value_description = valueDescr
                 }
+                if (value.version !== undefined) {
+                    // Let the server refuse the write if this is no longer the current value.
+                    dataUpdate.base_version = value.version
+                }
 
                 const updateResponse = await updateReportItem(props.reportItemId, dataUpdate)
                 const response = await getReportItemData(props.reportItemId, (updateResponse as { data: unknown }).data)
@@ -308,7 +429,17 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
 
                 value.last_updated = itemData.attribute_last_updated
                 value.user = { name: String(itemData.attribute_user ?? '') }
+                if (itemData.attribute_version !== undefined) {
+                    value.version = Number(itemData.attribute_version)
+                }
+                // This value is now what the server holds, so a later blur won't re-send it.
+                savedFingerprints.value.set(String(value.id), fingerprint(value))
             } catch (error) {
+                const conflict = extractConflict(error)
+                if (conflict) {
+                    announceConflict(fieldIndex, conflict)
+                    return
+                }
                 console.error('Failed to save attribute value:', error)
             }
         }
@@ -433,17 +564,21 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                         if (!item || item.id !== Number(itemData.attribute_id)) {
                             continue
                         }
-                        let value = itemData.attribute_value
-                        if (props.attributeGroup?.attribute?.type === 'CPE' && typeof value === 'string') {
-                            value = value.replace(/%/g, '*')
-                        } else if (props.attributeGroup?.attribute?.type === 'BOOLEAN') {
-                            value = value === 'true'
+                        if (hasUnsavedFocus(item)) {
+                            // The user is typing in this very field - keep their text instead of
+                            // overwriting it mid-edit; saving it is handled on blur.
+                            break
                         }
-
-                        item.value = value
+                        item.value = toLocalValue(itemData.attribute_value)
                         item.value_description = String(itemData.attribute_value_description ?? '')
                         item.last_updated = itemData.attribute_last_updated
                         item.user = { name: String(itemData.attribute_user ?? '') }
+                        if (itemData.attribute_version !== undefined) {
+                            item.version = Number(itemData.attribute_version)
+                        }
+                        if (savedFingerprints.value.has(String(item.id))) {
+                            savedFingerprints.value.set(String(item.id), fingerprint(item))
+                        }
                         break
                     }
                 } else if (dataInfo.add !== undefined) {
@@ -460,7 +595,8 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                             binary_size: itemData.binary_size,
                             binary_description: itemData.binary_description,
                             last_updated: itemData.attribute_last_updated,
-                            user: { name: String(itemData.attribute_user ?? '') }
+                            user: { name: String(itemData.attribute_user ?? '') },
+                            version: Number(itemData.attribute_version ?? 1)
                         })
                     }
                 } else if (dataInfo.delete !== undefined) {

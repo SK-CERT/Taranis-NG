@@ -56,6 +56,48 @@
                 </v-card>
             </v-dialog>
 
+            <v-dialog
+                v-model="showConflict"
+                max-width="720px"
+                persistent
+            >
+                <v-card>
+                    <v-card-title class="text-h5">
+                        {{ t('report_item.conflict.title') }}
+                    </v-card-title>
+                    <v-card-text>
+                        <p class="mb-4">{{ conflictMessage }}</p>
+                        <div class="mb-3">
+                            <div class="text-caption text-medium-emphasis">{{ t('report_item.conflict.theirs') }}</div>
+                            <div class="conflict-value">{{ conflictText(conflict?.theirs) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-caption text-medium-emphasis">{{ t('report_item.conflict.mine') }}</div>
+                            <div class="conflict-value">{{ conflictText(conflict?.mine) }}</div>
+                        </div>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer />
+                        <v-btn
+                            color="primary"
+                            variant="elevated"
+                            class="confirm-btn"
+                            @click="resolveConflict('theirs')"
+                        >
+                            {{ t('report_item.conflict.take_theirs') }}
+                        </v-btn>
+                        <v-btn
+                            color="error"
+                            variant="elevated"
+                            class="confirm-btn"
+                            @click="resolveConflict('mine')"
+                        >
+                            {{ t('report_item.conflict.keep_mine') }}
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
             <v-overlay
                 v-model="overlay"
                 contained
@@ -392,6 +434,24 @@
         validate?: () => Promise<{ valid: boolean }>
     }
 
+    /** Report-level fields that are saved on their own, outside the attribute machinery. */
+    type ReportField = 'title' | 'title_prefix' | 'state_id'
+
+    /**
+     * A save the backend refused because the value had changed since it was loaded. Raised by
+     * useAttributes, which supplies the two ways out - nothing is stored until one is picked.
+     */
+    type ConflictDetail = {
+        reportItemId: number | null
+        attributeId: number
+        mine: unknown
+        theirs: unknown
+        user?: string | null
+        lastUpdated?: string | null
+        keepMine: () => Promise<void>
+        takeTheirs: () => void
+    }
+
     const props = defineProps({
         showButton: {
             type: Boolean,
@@ -426,6 +486,7 @@
     const show_validation_error = ref<boolean>(false)
     const show_error = ref<boolean>(false)
     const key_timeout = ref<any>(null)
+    const resync_timer = ref<ReturnType<typeof setTimeout> | null>(null)
     const initialFormState = ref<string | null>(null)
 
     // Data
@@ -444,6 +505,17 @@
         title_prefix: false,
         title: false
     })
+
+    // Last value known to be stored server-side for the report-level fields, so a save
+    // that would not change anything can be skipped (see saveReportItem).
+    const field_baseline = reactive<Record<ReportField, unknown>>({
+        title: '',
+        title_prefix: '',
+        state_id: null
+    })
+    const focused_field = ref<ReportField | null>(null)
+    const showConflict = ref<boolean>(false)
+    const conflict = ref<ConflictDetail | null>(null)
 
     const report_item = reactive<any>({
         id: null,
@@ -491,6 +563,10 @@
         report_item.title_prefix = ''
         report_item.report_item_type_id = null
         selectDefaultState()
+        focused_field.value = null
+        field_baseline.title = report_item.title
+        field_baseline.title_prefix = report_item.title_prefix
+        field_baseline.state_id = report_item.state_id
         resetValidation()
         resetAutoGenerate()
         initialFormState.value = snapshotForm()
@@ -616,8 +692,20 @@
         }
     }
 
-    const saveReportItem = (field_id: 'title' | 'title_prefix' | 'state_id') => {
+    const saveReportItem = (field_id: ReportField) => {
         if (!edit.value) return
+
+        // These fields save on blur (state on change), so without comparing against what
+        // was loaded, simply clicking into the title and out again re-sends this tab's
+        // copy - overwriting a newer title from another user if this tab missed it.
+        if (focused_field.value === field_id) {
+            focused_field.value = null
+        }
+
+        if (field_baseline[field_id] === report_item[field_id]) {
+            unlockReportItem(report_item.id, { field_id }).catch(() => {})
+            return
+        }
 
         const data: {
             update: boolean
@@ -632,6 +720,8 @@
         } else if (field_id === 'state_id') {
             data.state_id = report_item.state_id
         }
+
+        field_baseline[field_id] = report_item[field_id]
 
         updateReportItem(report_item.id, data)
             .then(() => {
@@ -652,10 +742,33 @@
         return field_locks[field_id] === true ? 'locked-style' : ''
     }
 
+    /**
+     * Whether a lock reported by the backend belongs to somebody else. Our own locks are
+     * skipped - reopening a report item we are still editing must not disable its fields.
+     */
+    const lockedByOthers = (lock?: { user_id?: number } | null): boolean => {
+        return !!lock && lock.user_id !== getUserId()
+    }
+
     const onFocus = (field_id) => {
+        focused_field.value = field_id
+        field_baseline[field_id] = report_item[field_id]
         if (edit.value === true) {
             lockReportItem(report_item.id, { field_id }).catch(() => {})
         }
+    }
+
+    /**
+     * Apply a value another user just saved, unless the local user is typing into that
+     * very field with unsaved changes - in that case their text stays and their own save
+     * decides what happens.
+     */
+    const applyRemoteField = (field_id: ReportField, value: unknown) => {
+        if (focused_field.value === field_id && field_baseline[field_id] !== report_item[field_id]) {
+            return
+        }
+        report_item[field_id] = value
+        field_baseline[field_id] = value
     }
 
     const onKeyUp = (field_id) => {
@@ -695,6 +808,11 @@
             report_item.report_item_type_id = data.report_item_type_id
             report_item.state_id = data.state_id
 
+            focused_field.value = null
+            field_baseline.title = data.title
+            field_baseline.title_prefix = data.title_prefix
+            field_baseline.state_id = data.state_id
+
             if (!report_types.value || !report_types.value.length) {
                 await loadReportTypes()
             }
@@ -719,12 +837,8 @@
             const locksResponse = await getReportItemLocks(report_item.id)
             const locks_data = locksResponse.data
 
-            if (locks_data.title !== undefined && locks_data.title !== null) {
-                field_locks.title = true
-            }
-            if (locks_data.title_prefix !== undefined && locks_data.title_prefix !== null) {
-                field_locks.title_prefix = true
-            }
+            field_locks.title = lockedByOthers(locks_data.title)
+            field_locks.title_prefix = lockedByOthers(locks_data.title_prefix)
 
             if (selected_type.value) {
                 for (let i = 0; i < selected_type.value.attribute_groups.length; i++) {
@@ -757,9 +871,7 @@
                                     value = value === 'true'
                                 }
 
-                                const locked =
-                                    locks_data["'" + data.attributes[k].id + "'"] !== undefined &&
-                                    locks_data["'" + data.attributes[k].id + "'"] !== null
+                                const locked = lockedByOthers(locks_data[data.attributes[k].id])
 
                                 values.push({
                                     id: data.attributes[k].id,
@@ -771,6 +883,9 @@
                                     binary_description: data.attributes[k].binary_description,
                                     last_updated: data.attributes[k].last_updated,
                                     user: data.attributes[k].user,
+                                    // Rows predating the version column report null; treat them as
+                                    // version 1 so concurrent-edit detection works for them too.
+                                    version: data.attributes[k].version ?? 1,
                                     locked: locked,
                                     remote: false
                                 })
@@ -1066,26 +1181,14 @@
                 try {
                     const response = await getReportItemData(report_item.id, data_info)
                     const data = response.data
+                    // Attribute values are applied by useAttributes, which knows the per-type
+                    // value conversions and leaves a field alone while the user types in it.
                     if (data.title !== undefined) {
-                        report_item.title = data.title
+                        applyRemoteField('title', data.title)
                     } else if (data.title_prefix !== undefined) {
-                        report_item.title_prefix = data.title_prefix
+                        applyRemoteField('title_prefix', data.title_prefix)
                     } else if (data.state_id !== undefined) {
-                        report_item.state_id = data.state_id
-                    }
-                    if (data.update !== undefined) {
-                        for (let i = 0; i < attribute_groups.value.length; i++) {
-                            for (let j = 0; j < attribute_groups.value[i].attribute_group_items.length; j++) {
-                                for (let k = 0; k < attribute_groups.value[i].attribute_group_items[j].values.length; k++) {
-                                    if (attribute_groups.value[i].attribute_group_items[j].values[k].id === data.attribute_id) {
-                                        attribute_groups.value[i].attribute_group_items[j].values[k].value = data.attribute_value
-                                        attribute_groups.value[i].attribute_group_items[j].values[k].value_description =
-                                            data.attribute_value_description
-                                        return
-                                    }
-                                }
-                            }
-                        }
+                        applyRemoteField('state_id', data.state_id)
                     }
                 } catch (error) {
                     console.error('Error updating report item from SSE:', error)
@@ -1104,6 +1207,71 @@
 
     const reportItemUpdatedEvent = (event) => {
         reportItemUpdated(event.detail)
+    }
+
+    const conflictText = (value: unknown): string => {
+        if (value === null || value === undefined || value === '') {
+            return t('report_item.conflict.empty')
+        }
+        if (typeof value === 'boolean') {
+            return value ? t('common.yes') : t('common.no')
+        }
+        return String(value)
+    }
+
+    const conflictMessage = computed<string>(() => {
+        const user = conflict.value?.user || t('report_item.conflict.unknown_user')
+        const time = conflict.value?.lastUpdated
+        if (!time) {
+            return t('report_item.conflict.message_unknown_time')
+        }
+        return t('report_item.conflict.message', { user, time })
+    })
+
+    const reportItemConflictEvent = (event: Event) => {
+        const detail = (event as CustomEvent<ConflictDetail>).detail
+        if (!detail || detail.reportItemId !== report_item.id) return
+        conflict.value = detail
+        showConflict.value = true
+    }
+
+    const resolveConflict = async (choice: 'mine' | 'theirs') => {
+        const pending = conflict.value
+        showConflict.value = false
+        conflict.value = null
+        if (!pending) return
+
+        if (choice === 'mine') {
+            await pending.keepMine()
+        } else {
+            pending.takeTheirs()
+        }
+    }
+
+    /**
+     * Re-read the open report item after the live stream was down: updates published in the
+     * meantime are not replayed, so without this the dialog would keep showing stale values
+     * and save them back over newer ones. Deferred while a field is focused, because
+     * reloading rebuilds the form and would drop whatever is being typed.
+     */
+    const requestResync = () => {
+        if (resync_timer.value) {
+            clearTimeout(resync_timer.value)
+            resync_timer.value = null
+        }
+
+        if (!visible.value || !edit.value || !report_item.id) return
+
+        const active = document.activeElement as HTMLElement | null
+        const isEditingField = !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+        // Reloading would also invalidate the value a pending conflict is about, so wait for
+        // the user to finish typing or to resolve the conflict first.
+        if (isEditingField || showConflict.value) {
+            resync_timer.value = setTimeout(requestResync, 3000)
+            return
+        }
+
+        showDetail({ id: report_item.id, modify: modify.value })
     }
 
     // Watchers
@@ -1131,12 +1299,20 @@
         window.addEventListener('report-item-locked', reportItemLockedEvent)
         window.addEventListener('report-item-unlocked', reportItemUnlockedEvent)
         window.addEventListener('report-item-updated', reportItemUpdatedEvent)
+        window.addEventListener('report-item-conflict', reportItemConflictEvent)
+        window.addEventListener('sse-resync', requestResync)
     })
 
     onUnmounted(() => {
+        if (resync_timer.value) {
+            clearTimeout(resync_timer.value)
+            resync_timer.value = null
+        }
         window.removeEventListener('report-item-locked', reportItemLockedEvent)
         window.removeEventListener('report-item-unlocked', reportItemUnlockedEvent)
         window.removeEventListener('report-item-updated', reportItemUpdatedEvent)
+        window.removeEventListener('report-item-conflict', reportItemConflictEvent)
+        window.removeEventListener('sse-resync', requestResync)
     })
 
     // Expose for parent components
@@ -1188,6 +1364,19 @@
     }
 
     /* Keep the unsaved-changes dialog button labels white regardless of theme on-* colors. */
+    /* Both sides of a conflict are shown verbatim, including line breaks, and long values
+       scroll inside their own box instead of stretching the dialog. */
+    .conflict-value {
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 12rem;
+        overflow-y: auto;
+        padding: 0.5rem;
+        border: 1px solid rgb(var(--v-theme-outline));
+        border-radius: 4px;
+        background-color: rgb(var(--v-theme-surface-variant));
+    }
+
     .confirm-btn,
     .confirm-btn :deep(.v-btn__content) {
         color: #fff !important;

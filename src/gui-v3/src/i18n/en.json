@@ -623,6 +623,17 @@
             "move_up": "Move up",
             "move_down": "Move down",
             "open_link": "Open link in a new tab"
+        },
+        "conflict": {
+            "title": "Value changed meanwhile",
+            "message": "{user} changed this value at {time}, after your copy was loaded. Your change was not saved yet - choose which version to keep.",
+            "message_unknown_time": "Somebody changed this value after your copy was loaded. Your change was not saved yet - choose which version to keep.",
+            "theirs": "Stored value",
+            "mine": "Your value",
+            "empty": "(empty)",
+            "take_theirs": "Discard mine, keep stored",
+            "keep_mine": "Overwrite with mine",
+            "unknown_user": "Another user"
         }
     },
     "product": {

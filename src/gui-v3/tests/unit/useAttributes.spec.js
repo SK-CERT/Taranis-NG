@@ -469,6 +469,143 @@ describe('useAttributes', () => {
             expect(analyzeApi.unlockReportItem).toHaveBeenCalledWith('report-1', { field_id: 5 })
             scope.stop()
         })
+
+        it('onBlur should not save when the value was not changed', async () => {
+            vi.mocked(analyzeApi.lockReportItem).mockResolvedValue({})
+            vi.mocked(analyzeApi.unlockReportItem).mockResolvedValue({})
+
+            const values = [{ id: 5, value: 'val', version: 3 }]
+            const { result, scope } = setupComposable(makeProps({ edit: true, values }))
+
+            await result.onFocus(0)
+            await result.onBlur(0)
+
+            // Clicking in and out must not push this tab's copy over a newer stored value.
+            expect(analyzeApi.updateReportItem).not.toHaveBeenCalled()
+            expect(analyzeApi.unlockReportItem).toHaveBeenCalledWith('report-1', { field_id: 5 })
+            scope.stop()
+        })
+
+        it('onBlur should save when the value was changed', async () => {
+            vi.mocked(analyzeApi.lockReportItem).mockResolvedValue({})
+            vi.mocked(analyzeApi.unlockReportItem).mockResolvedValue({})
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue({
+                data: { attribute_last_updated: 'now', attribute_user: 'admin', attribute_version: 4 }
+            })
+
+            const values = [{ id: 5, value: 'val', version: 3 }]
+            const props = makeProps({ edit: true, values })
+            const { result, scope } = setupComposable(props)
+
+            await result.onFocus(0)
+            props.values[0].value = 'edited'
+            await result.onBlur(0)
+
+            expect(analyzeApi.updateReportItem).toHaveBeenCalledWith(
+                'report-1',
+                expect.objectContaining({ attribute_id: 5, attribute_value: 'edited', base_version: 3 })
+            )
+            expect(props.values[0].version).toBe(4)
+            scope.stop()
+        })
+    })
+
+    // ── concurrent edits ──────────────────────────
+    describe('concurrent edits', () => {
+        const conflictError = (overrides = {}) => ({
+            response: {
+                status: 409,
+                data: {
+                    conflict: {
+                        attribute_id: 5,
+                        current_version: 7,
+                        current_value: 'their text',
+                        current_value_description: '',
+                        last_updated: '01.08.2026 - 10:00',
+                        user: 'analyst',
+                        ...overrides
+                    }
+                }
+            }
+        })
+
+        it('should raise a conflict event instead of overwriting when the server refuses', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockRejectedValue(conflictError())
+
+            const values = [{ id: 5, value: 'my text', version: 3 }]
+            const props = makeProps({ edit: true, values })
+            const { result, scope } = setupComposable(props)
+
+            const events = []
+            const listener = (event) => events.push(event.detail)
+            window.addEventListener('report-item-conflict', listener)
+
+            await result.onEdit(0)
+
+            expect(events).toHaveLength(1)
+            expect(events[0]).toMatchObject({ attributeId: 5, mine: 'my text', theirs: 'their text', user: 'analyst' })
+            // Nothing was stored, so the local text stays until the user decides.
+            expect(props.values[0].value).toBe('my text')
+
+            window.removeEventListener('report-item-conflict', listener)
+            scope.stop()
+        })
+
+        it('takeTheirs should adopt the stored value, keepMine should resend on the current version', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockRejectedValueOnce(conflictError())
+
+            const values = [{ id: 5, value: 'my text', version: 3 }]
+            const props = makeProps({ edit: true, values })
+            const { result, scope } = setupComposable(props)
+
+            const events = []
+            const listener = (event) => events.push(event.detail)
+            window.addEventListener('report-item-conflict', listener)
+
+            await result.onEdit(0)
+            events[0].takeTheirs()
+
+            expect(props.values[0].value).toBe('their text')
+            expect(props.values[0].version).toBe(7)
+
+            // Now the other way round: keep the local text and overwrite the stored one.
+            props.values[0].value = 'my text'
+            props.values[0].version = 3
+            vi.mocked(analyzeApi.updateReportItem).mockRejectedValueOnce(conflictError())
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue({
+                data: { attribute_last_updated: 'now', attribute_user: 'admin', attribute_version: 8 }
+            })
+
+            await result.onEdit(0)
+            await events[1].keepMine()
+
+            expect(analyzeApi.updateReportItem).toHaveBeenLastCalledWith(
+                'report-1',
+                expect.objectContaining({ attribute_id: 5, attribute_value: 'my text', base_version: 7 })
+            )
+            expect(props.values[0].value).toBe('my text')
+
+            window.removeEventListener('report-item-conflict', listener)
+            scope.stop()
+        })
+
+        it('should omit base_version for values whose version is unknown', async () => {
+            vi.mocked(analyzeApi.updateReportItem).mockResolvedValue({ data: 'ref' })
+            vi.mocked(analyzeApi.getReportItemData).mockResolvedValue({
+                data: { attribute_last_updated: 'now', attribute_user: 'admin' }
+            })
+
+            const values = [{ id: 5, value: 'val' }]
+            const { result, scope } = setupComposable(makeProps({ edit: true, values }))
+
+            await result.onEdit(0)
+
+            const payload = vi.mocked(analyzeApi.updateReportItem).mock.calls[0][1]
+            expect(payload).not.toHaveProperty('base_version')
+            scope.stop()
+        })
     })
 
     // ── onEdit ────────────────────────────────────

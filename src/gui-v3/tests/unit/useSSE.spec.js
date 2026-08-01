@@ -151,4 +151,150 @@ describe('useSSE', () => {
         expect(result.sseConnection.value?.options).toEqual(MockEventSource.instances[1].options)
         scope.stop()
     })
+
+    describe('recovery after a dropped stream', () => {
+        // Mirrors RECONNECT_IDLE_DELAY in the composable: the slow rate it falls back to
+        // once retries have failed repeatedly.
+        const RECONNECT_IDLE_DELAY = 300000
+
+        beforeEach(() => {
+            vi.useFakeTimers()
+        })
+
+        afterEach(() => {
+            vi.useRealTimers()
+        })
+
+        it('should retry automatically after a connection error', async () => {
+            const { result, scope } = setupComposable()
+
+            const connectPromise = result.connect()
+            await flushMicrotasks()
+            MockEventSource.instances[0].onopen()
+            await connectPromise
+
+            MockEventSource.instances[0].onerror(new Event('error'))
+            expect(result.sseConnection.value).toBeNull()
+
+            await vi.advanceTimersByTimeAsync(1000)
+            await flushMicrotasks()
+
+            expect(MockEventSource.instances).toHaveLength(2)
+            scope.stop()
+        })
+
+        it('should notify resync handlers once the stream is back, since events are not replayed', async () => {
+            const { result, scope } = setupComposable()
+            const onResync = vi.fn()
+            result.onResync(onResync)
+
+            const connectPromise = result.connect()
+            await flushMicrotasks()
+            MockEventSource.instances[0].onopen()
+            await connectPromise
+
+            // A first connect has nothing to catch up on.
+            expect(onResync).not.toHaveBeenCalled()
+
+            MockEventSource.instances[0].onerror(new Event('error'))
+            await vi.advanceTimersByTimeAsync(1000)
+            await flushMicrotasks()
+            MockEventSource.instances[1].onopen()
+            await flushMicrotasks()
+
+            expect(onResync).toHaveBeenCalledTimes(1)
+            scope.stop()
+        })
+
+        it('should re-register subscriptions on the new connection', async () => {
+            const { result, scope } = setupComposable()
+            const handler = vi.fn()
+            result.subscribe('report-item-updated', handler)
+
+            const connectPromise = result.connect()
+            await flushMicrotasks()
+            MockEventSource.instances[0].onopen()
+            await connectPromise
+
+            MockEventSource.instances[0].onerror(new Event('error'))
+            await vi.advanceTimersByTimeAsync(1000)
+            await flushMicrotasks()
+            MockEventSource.instances[1].onopen()
+            await flushMicrotasks()
+
+            MockEventSource.instances[1].emit('report-item-updated', JSON.stringify({ report_item_id: 1 }))
+            expect(handler).toHaveBeenCalledWith({ report_item_id: 1 })
+            scope.stop()
+        })
+
+        it('should not retry when the stream session is refused as unauthenticated', async () => {
+            for (const status of [401, 403]) {
+                MockEventSource.instances = []
+                initSSE.mockRejectedValueOnce({ response: { status } })
+                const { result, scope } = setupComposable()
+
+                await expect(result.connect()).rejects.toBeDefined()
+
+                // Retrying cannot produce a token, so nothing further may be attempted.
+                await vi.advanceTimersByTimeAsync(120000)
+                expect(initSSE).toHaveBeenCalledTimes(1)
+                expect(MockEventSource.instances).toHaveLength(0)
+
+                scope.stop()
+                initSSE.mockClear()
+                initSSE.mockResolvedValue({})
+            }
+        })
+
+        it('should keep retrying a transient stream session failure', async () => {
+            initSSE.mockRejectedValueOnce(new Error('network down'))
+            const { result, scope } = setupComposable()
+
+            await expect(result.connect()).rejects.toBeDefined()
+
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(initSSE).toHaveBeenCalledTimes(2)
+            scope.stop()
+        })
+
+        it('should back off to a slow retry once failures pile up', async () => {
+            initSSE.mockRejectedValue(new Error('network down'))
+            const { result, scope } = setupComposable()
+
+            await expect(result.connect()).rejects.toBeDefined()
+
+            // Walk through the exponential phase (1s, 2s, 4s ... capped at 30s).
+            await vi.advanceTimersByTimeAsync(10 * 30000)
+            const afterBurst = initSSE.mock.calls.length
+
+            // Once slowed down, half an idle delay must not trigger anything further.
+            await vi.advanceTimersByTimeAsync(RECONNECT_IDLE_DELAY / 2)
+            expect(initSSE).toHaveBeenCalledTimes(afterBurst)
+
+            await vi.advanceTimersByTimeAsync(RECONNECT_IDLE_DELAY)
+            expect(initSSE.mock.calls.length).toBeGreaterThan(afterBurst)
+
+            scope.stop()
+            initSSE.mockReset()
+            initSSE.mockResolvedValue({})
+        })
+
+        it('should stop retrying after an explicit disconnect', async () => {
+            const { result, scope } = setupComposable()
+
+            const connectPromise = result.connect()
+            await flushMicrotasks()
+            MockEventSource.instances[0].onopen()
+            await connectPromise
+
+            MockEventSource.instances[0].onerror(new Event('error'))
+            result.disconnect()
+
+            await vi.advanceTimersByTimeAsync(60000)
+            await flushMicrotasks()
+
+            expect(MockEventSource.instances).toHaveLength(1)
+            scope.stop()
+        })
+    })
 })

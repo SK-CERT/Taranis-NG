@@ -117,6 +117,11 @@ class ReportItemResource(Resource):
             data (dict): updated report item details
         """
         modified, data = ReportItem.update_report_item(report_item_id, request.json, auth_manager.get_user_from_jwt())
+        if data.get("conflict") is not None:
+            # The value changed since the client read it; nothing was written. The client
+            # decides whether to keep its version or take the stored one.
+            return data, HTTPStatus.CONFLICT
+
         if modified is True:
             updated_report_item = ReportItem.find(report_item_id)
             asset_manager.report_item_changed(updated_report_item)
@@ -198,9 +203,7 @@ class ReportItemLocks(Resource):
         Returns:
             (str): report item locks
         """
-        if report_item_id in sse_manager.report_item_locks:
-            return jsonify(sse_manager.report_item_locks[report_item_id])
-        return "{}"
+        return jsonify(sse_manager.get_report_item_locks(report_item_id))
 
 
 class ReportItemLock(Resource):

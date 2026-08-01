@@ -796,6 +796,64 @@ class ReportItem(db.Model):
             # Rollback on error to maintain data consistency
             db.session.rollback()
 
+    @staticmethod
+    def _find_attribute(report_item: ReportItem, attribute_id: int | str) -> ReportItemAttribute | None:
+        """Find an attribute of a report item by its ID.
+
+        Args:
+            report_item (ReportItem): The report item to search in.
+            attribute_id (int | str): The ID of the attribute, as int or str.
+
+        Returns:
+            ReportItemAttribute | None: The matching attribute, or None if there is none.
+        """
+        for attribute in report_item.attributes:
+            # convert ID to string, we compare types: int & int or int & str
+            if str(attribute.id) == str(attribute_id):
+                return attribute
+
+        return None
+
+    @classmethod
+    def _detect_update_conflict(cls, report_item: ReportItem, data: dict) -> dict | None:
+        """Detect that an attribute value was changed by somebody else since the client read it.
+
+        A client that wants to be protected against overwriting a concurrent change sends
+        `base_version`: the attribute version its edit is based on. If that no longer matches
+        the stored version, the value changed in the meantime and the write must be refused
+        instead of silently discarding the other change.
+
+        Requests without `base_version` (older clients) keep the previous last-write-wins
+        behaviour, so this stays backwards compatible.
+
+        Args:
+            report_item (ReportItem): The report item being updated.
+            data (dict): The update payload.
+
+        Returns:
+            dict | None: Details of the conflicting value, or None if the write may proceed.
+        """
+        base_version = data.get("base_version")
+        if base_version is None or "attribute_id" not in data:
+            return None
+
+        attribute = cls._find_attribute(report_item, data["attribute_id"])
+        if attribute is None:
+            return None
+
+        current_version = attribute.version or 1
+        if int(base_version) == current_version:
+            return None
+
+        return {
+            "attribute_id": attribute.id,
+            "current_version": current_version,
+            "current_value": attribute.value,
+            "current_value_description": attribute.value_description,
+            "last_updated": attribute.last_updated.strftime("%d.%m.%Y - %H:%M") if attribute.last_updated else None,
+            "user": attribute.user.name if attribute.user else None,
+        }
+
     @classmethod
     def update_report_item(cls, id: int, data: dict, user: User) -> tuple[bool, dict]:  # noqa: A002
         """Update a report item with the given data.
@@ -807,6 +865,8 @@ class ReportItem(db.Model):
 
         Returns:
             tuple: A tuple containing a boolean indicating whether the report item was modified and the updated data.
+                When the update was refused because the value changed meanwhile, the data contains a "conflict" entry
+                and nothing was written.
         """
         modified = False
         new_attribute = None
@@ -815,6 +875,11 @@ class ReportItem(db.Model):
         report_item = db.session.get(cls, id)
         if report_item is not None:
             if "update" in data:
+                conflict = cls._detect_update_conflict(report_item, data)
+                if conflict is not None:
+                    data["conflict"] = conflict
+                    return False, data
+
                 if "title" in data and report_item.title != data["title"]:
                     modified = True
                     report_item.title = data["title"]
@@ -830,20 +895,24 @@ class ReportItem(db.Model):
                     report_item.state_id = data["state_id"]
                     data["state_id"] = ""
                 if "attribute_id" in data:
-                    for attribute in report_item.attributes:
-                        # convert ID to string, we compare types: int & int or int & str
-                        if str(attribute.id) == str(data["attribute_id"]):
-                            if attribute.value != data["attribute_value"]:
-                                modified = True
-                                attribute.value = data["attribute_value"]
-                                attribute.user = user
-                                attribute.last_updated = datetime.now(TZ)
-                            if data.get("value_description", False) and attribute.value_description != data["value_description"]:
-                                modified = True
-                                attribute.value_description = data["value_description"]
-                                attribute.user = user
-                                attribute.last_updated = datetime.now(TZ)
-                            break
+                    attribute = cls._find_attribute(report_item, data["attribute_id"])
+                    if attribute is not None:
+                        attribute_modified = False
+                        if "attribute_value" in data and attribute.value != data["attribute_value"]:
+                            attribute_modified = True
+                            attribute.value = data["attribute_value"]
+                        if data.get("value_description", False) and attribute.value_description != data["value_description"]:
+                            attribute_modified = True
+                            attribute.value_description = data["value_description"]
+
+                        if attribute_modified:
+                            modified = True
+                            attribute.user = user
+                            attribute.last_updated = datetime.now(TZ)
+                            # Bump the version so a client editing the previous one is told about
+                            # this change instead of overwriting it (see _detect_update_conflict).
+                            attribute.version = (attribute.version or 1) + 1
+                            data["attribute_version"] = attribute.version
 
             if "add" in data:
                 if "attribute_id" in data:
@@ -950,6 +1019,7 @@ class ReportItem(db.Model):
                             data["attribute_value_description"] = attribute.value_description
                             data["attribute_last_updated"] = attribute.last_updated.strftime("%d.%m.%Y - %H:%M")
                             data["attribute_user"] = attribute.user.name
+                            data["attribute_version"] = attribute.version or 1
                             break
 
             if "add" in data:
