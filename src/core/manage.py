@@ -34,9 +34,9 @@ from model import (  # noqa: F401  Don't remove 'osint_source' and bot_preset re
 )
 from remote.bots_api import BotsApi
 from remote.collectors_api import CollectorsApi
-
 from shared.config_bot import ConfigBot
 from shared.config_collector import ConfigCollector
+from werkzeug.security import generate_password_hash
 
 
 def create_app() -> Flask:
@@ -142,11 +142,12 @@ def account(
         if not opt_username:
             logger.error("Username not specified!")
             abort()
-        if not opt_password or not opt_roles:
+        if not opt_password and not opt_roles:
             logger.error("Please specify a new password or role id!")
             abort()
 
-        if not user.User.find(opt_username):
+        existing_user = user.User.find(opt_username)
+        if not existing_user:
             logger.error("User does not exist!")
             abort()
 
@@ -166,6 +167,15 @@ def account(
                     abort()
 
                 roles.append(r)
+
+            existing_user.roles = roles
+
+        if opt_password:
+            existing_user.password = generate_password_hash(opt_password)
+
+        db_manager.db.session.commit()
+
+        logger.info(f"The user '{opt_username}' has been updated.")
 
     if opt_delete:
         if not opt_username:
@@ -681,7 +691,7 @@ def api_keys_management(opt_list: bool, opt_create: bool, opt_delete: bool, opt_
             "name": opt_name,
             "key": "".join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=40)),  # noqa: S311
             "user_id": u.id,
-            "expires_at": opt_expires if opt_expires else None,
+            "expires_at": opt_expires or None,
         }
 
         k = apikey.ApiKey.add_new(data)

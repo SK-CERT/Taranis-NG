@@ -48,8 +48,8 @@ classifiers = [
 # Lockstep is enforced by scripts/check_tool_versions.py (run as a pre-commit hook).
 [dependency-groups]
 dev = [
-    "djlint==1.42.1",
-    "ruff==0.15.22",
+    "djlint==1.43.1",
+    "ruff==0.16.0",
 ]
 
 [tool.uv]
@@ -63,7 +63,7 @@ required-version = "0.11.19"
 members = ["src/shared"]
 
 [tool.ruff]
-required-version = "0.15.22"
+required-version = "0.16.0"
 line-length = 142
 target-version = "py313"
 fix = true
@@ -81,6 +81,7 @@ ignore = [
     "FIX002",  # Line contains TODO, consider resolving the issue
     "FBT001",  # Boolean-typed positional argument in function definition (enable True/False parameters)
     "FBT002",  # Boolean default positional argument in function definition
+    "CPY001",  # Missing copyright notice at top of file (this project does not use per-file headers)
 ]
 
 [tool.ruff.lint.per-file-ignores]

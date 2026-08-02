@@ -7,6 +7,7 @@ const mockConnect = vi.fn()
 const mockDisconnect = vi.fn()
 const mockReconnect = vi.fn()
 const mockSubscribe = vi.fn()
+const mockOnResync = vi.fn()
 const mockIsAuthenticated = vi.fn()
 const mockNeedTokenRefresh = vi.fn()
 
@@ -44,7 +45,8 @@ vi.mock('@/composables/useSSE', () => ({
         connect: mockConnect,
         disconnect: mockDisconnect,
         reconnect: mockReconnect,
-        subscribe: mockSubscribe
+        subscribe: mockSubscribe,
+        onResync: mockOnResync
     })
 }))
 

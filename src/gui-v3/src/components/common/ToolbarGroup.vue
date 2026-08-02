@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import { ICONS } from '@/config/ui-constants'
     import { useRoute, useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
@@ -262,6 +262,14 @@
         if (props.view === 'assess') return assessStore.getSelection.length
         if (props.view === 'analyze') return analyzeStore.getSelectionReport.length
         return publishStore.getSelection.length
+    })
+
+    // The selection is also emptied from outside this toolbar - switching group tabs, leaving the
+    // view. Left alone, the button would keep offering "unselect all" over an empty selection.
+    watch(selectedCount, (count) => {
+        if (count === 0) {
+            allSelected.value = false
+        }
     })
 
     // Permission checks
@@ -404,6 +412,10 @@
 
             if (response?.data?.items) {
                 // console.log('[ToolbarGroup] Selecting', response.data.items.length, 'items')
+                // "Select all" means exactly the items this request returned, so it replaces the
+                // selection instead of adding to it - anything selected before (in this group or
+                // a previous one) must not be carried into the following group action.
+                assessStore.clearSelection()
                 response.data.items.forEach((item: unknown) => {
                     const typedItem = item as ItemWithId
                     assessStore.select({
@@ -462,6 +474,7 @@
 
             if (response?.data?.items) {
                 // console.log('[ToolbarGroup] Selecting', response.data.items.length, 'analyze items')
+                analyzeStore.selection_report = []
                 response.data.items.forEach((item: unknown) => {
                     const typedItem = item as ItemWithId
                     analyzeStore.selectReport({
@@ -513,6 +526,7 @@
 
             if (response?.data?.items) {
                 // console.log('[ToolbarGroup] Selecting', response.data.items.length, 'publish items')
+                publishStore.selection = []
                 response.data.items.forEach((item: unknown) => {
                     const typedItem = item as ItemWithId
                     publishStore.select({

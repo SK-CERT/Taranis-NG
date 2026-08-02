@@ -623,6 +623,17 @@
             "move_up": "Posunout nahoru",
             "move_down": "Posunout dolů",
             "open_link": "Otevřít odkaz v novém okně"
+        },
+        "conflict": {
+            "title": "Hodnota se mezitím změnila",
+            "message": "{user} změnil(a) tuto hodnotu v {time}, tedy až po načtení vaší kopie. Vaše změna zatím nebyla uložena - vyberte, která verze má zůstat.",
+            "message_unknown_time": "Někdo změnil tuto hodnotu po načtení vaší kopie. Vaše změna zatím nebyla uložena - vyberte, která verze má zůstat.",
+            "theirs": "Uložená hodnota",
+            "mine": "Vaše hodnota",
+            "empty": "(prázdné)",
+            "take_theirs": "Zahodit moji, ponechat uloženou",
+            "keep_mine": "Přepsat mojí verzí",
+            "unknown_user": "Jiný uživatel"
         }
     },
     "product": {
