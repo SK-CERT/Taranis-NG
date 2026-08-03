@@ -306,6 +306,23 @@
                                                                 <span class="text-truncate">{{
                                                                     attribute_item.attribute_group_item.title
                                                                 }}</span>
+                                                                <v-tooltip
+                                                                    v-if="attribute_item.attribute_group_item.description"
+                                                                    :text="attribute_item.attribute_group_item.description"
+                                                                    location="top"
+                                                                >
+                                                                    <template #activator="{ props: tooltipProps }">
+                                                                        <v-icon
+                                                                            v-bind="tooltipProps"
+                                                                            class="attribute-description-help ml-1"
+                                                                            color="primary"
+                                                                            size="x-small"
+                                                                            @click.stop
+                                                                        >
+                                                                            {{ ICONS.INFORMATION_OUTLINE }}
+                                                                        </v-icon>
+                                                                    </template>
+                                                                </v-tooltip>
                                                                 <span
                                                                     v-if="getAttributeMeta(attribute_item)"
                                                                     class="attribute-meta text-medium-emphasis text-no-wrap ml-auto mr-2"

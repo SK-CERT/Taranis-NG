@@ -88,6 +88,7 @@ const VOverlayStub = {
 
 const EDITABLE_TITLE = 'Editable attribute'
 const LABEL_ONLY_TITLE = 'Label only attribute'
+const EDITABLE_DESCRIPTION = 'Guidance for the editable attribute.'
 
 // A report type with one ordinary attribute and one label-only attribute (max_occurrence 0).
 function makeReportType() {
@@ -102,6 +103,7 @@ function makeReportType() {
                     {
                         id: 11,
                         title: EDITABLE_TITLE,
+                        description: EDITABLE_DESCRIPTION,
                         min_occurrence: 1,
                         max_occurrence: 1,
                         attribute: { type: 'STRING' }
@@ -109,6 +111,7 @@ function makeReportType() {
                     {
                         id: 12,
                         title: LABEL_ONLY_TITLE,
+                        description: '',
                         min_occurrence: 0,
                         max_occurrence: 0,
                         attribute: { type: 'RADIO' }
@@ -196,5 +199,17 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
     it('renders exactly one attribute editor for the two configured attributes', async () => {
         const wrapper = await mountOpenedEditor()
         expect(wrapper.findAll('.attribute-container-stub')).toHaveLength(1)
+    })
+
+    it('shows an information tooltip only for an attribute with a description', async () => {
+        const wrapper = await mountOpenedEditor()
+
+        const describedPanel = panelFor(wrapper, EDITABLE_TITLE)
+        const undescribedPanel = panelFor(wrapper, LABEL_ONLY_TITLE)
+        const tooltip = describedPanel.findComponent({ name: 'VTooltip' })
+
+        expect(tooltip.exists()).toBe(true)
+        expect(tooltip.props('text')).toBe(EDITABLE_DESCRIPTION)
+        expect(undescribedPanel.findComponent({ name: 'VTooltip' }).exists()).toBe(false)
     })
 })

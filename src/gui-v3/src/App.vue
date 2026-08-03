@@ -339,6 +339,18 @@
         color: rgb(var(--v-theme-on-info)) !important;
     }
 
+    /* Keep application tooltips readable and consistent in both themes. */
+    .v-tooltip > .v-overlay__content {
+        max-width: 320px;
+        padding: 5px 12px;
+        border-radius: 4px;
+        background: rgb(var(--v-theme-on-surface)) !important;
+        color: rgb(var(--v-theme-surface)) !important;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        overflow-wrap: anywhere;
+    }
+
     /* Selected left-nav item: tint the icon and label with the primary colour. */
     .v-navigation-drawer .v-list-item--active,
     .v-navigation-drawer .v-list-item--active .v-icon {
