@@ -41,7 +41,7 @@ export function createNewAsset(asset) {
 }
 
 export function solveVulnerability(data) {
-    return ApiService.post('/my-assets/asset-groups/' + data.group_id + '/assets/' + data.asset_id + '/vulnerabilities/' + data.report_item_id, data)
+    return ApiService.put('/my-assets/asset-groups/' + data.group_id + '/assets/' + data.asset_id + '/vulnerabilities/' + data.report_item_id, {solved: data.solved})
 }
 
 export function updateAsset(asset) {
