@@ -142,7 +142,7 @@ class SseInitResource(Resource):
             jwt_id = jwt_data.get("jti")
             jwt_token = request.headers.get("Authorization", "").replace("Bearer ", "")
             if jwt_token:
-                redis_client.setex(f"jwt:{jwt_id}", SseInitResource.SSE_TOKEN_TTL, jwt_token)
+                redis_client.set(f"jwt:{jwt_id}", jwt_token, ex=SseInitResource.SSE_TOKEN_TTL)
                 resp = make_response("", HTTPStatus.OK)
                 resp.set_cookie(
                     "jwt_id",
