@@ -317,10 +317,6 @@ services:
 #         max-file: "10"
 
   traefik:
-    depends_on:
-      - "gui"
-#      - "gui-v3"
-      - "core"
     restart: unless-stopped
     image: "traefik:3.6.9"
     environment:
