@@ -344,8 +344,16 @@
             },
 
             previewProduct(event) {
+                // Open the tab while the click still has browser user activation.
+                // Opening it after the preview request resolves is commonly blocked
+                // as an unsolicited popup.
+                const previewWindow = window.open("about:blank", "_blank");
+
                 this.$validator.validateAll().then(() => {
                     if (this.$validator.errors.any()) {
+                        if (previewWindow) {
+                            previewWindow.close();
+                        }
                         this.show_validation_error = true;
                         return;
                     }
@@ -365,14 +373,23 @@
                                     ? "$VUE_APP_TARANIS_NG_CORE_API"
                                     : process.env.VUE_APP_TARANIS_NG_CORE_API;
                             const previewUrl = `${apiBase}/publish/products/preview/${token}`;
-                            // Open the preview URL in a new tab
-                            window.open(previewUrl, "_blank");
+                            if (previewWindow) {
+                                previewWindow.location.href = previewUrl;
+                            } else {
+                                // If the browser still prevented creating a tab,
+                                // show the preview in the current tab rather than
+                                // silently discarding a successfully generated PDF.
+                                window.location.assign(previewUrl);
+                            }
 
                             // Reset validation errors but preserve initial form state for unsaved changes detection
                             this.$validator.reset();
                             this.show_validation_error = false;
                         })
                         .catch((error) => {
+                            if (previewWindow) {
+                                previewWindow.close();
+                            }
                             // eslint-disable-next-line no-console
                             console.error("Preview failed:", error);
                             this.show_error = true;
