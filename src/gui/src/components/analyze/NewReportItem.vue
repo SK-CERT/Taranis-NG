@@ -139,6 +139,15 @@
                                                                 <span>
                                                                     {{ attribute_item.attribute_group_item.title }}
                                                                 </span>
+                                                                <v-tooltip v-if="attribute_item.attribute_group_item.description" right>
+                                                                    <template v-slot:activator="{ on, attrs }">
+                                                                        <v-icon small color="primary" class="ml-1"
+                                                                                v-bind="attrs" v-on="on" @click.stop>
+                                                                            {{ UI.ICON.HELP }}
+                                                                        </v-icon>
+                                                                    </template>
+                                                                    <span>{{ attribute_item.attribute_group_item.description }}</span>
+                                                                </v-tooltip>
                                                             </v-row>
                                                         </v-expansion-panel-header>
                                                         <v-expansion-panel-content class="pt-0">
