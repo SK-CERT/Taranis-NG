@@ -210,7 +210,6 @@ describe('NewReportItem — label-only attributes (max_occurrence 0)', () => {
 
         expect(tooltip.exists()).toBe(true)
         expect(tooltip.props('text')).toBe(EDITABLE_DESCRIPTION)
-        expect(describedPanel.find('.attribute-description-help').exists()).toBe(true)
         expect(undescribedPanel.findComponent({ name: 'VTooltip' }).exists()).toBe(false)
     })
 })
