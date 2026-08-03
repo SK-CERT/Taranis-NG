@@ -1,0 +1,20 @@
+{# FIRST Traffic Light Protocol 2.0 value handling. Layout belongs to each presenter. #}
+{% macro tlp_normalize(value) -%}
+  {{- value|default('CLEAR')|string|upper|replace('TLP:', '')|replace('WHITE', 'CLEAR') -}}
+{%- endmacro %}
+
+{% macro tlp_rank(value) -%}
+  {%- set normalized = tlp_normalize(value) -%}
+  {{- {'CLEAR': 0, 'GREEN': 1, 'AMBER': 2, 'AMBER+STRICT': 3, 'RED': 4}.get(normalized, 0) -}}
+{%- endmacro %}
+
+{% macro tlp_label(value) -%}
+  TLP:{{- tlp_normalize(value) -}}
+{%- endmacro %}
+
+{% macro tlp_foreground(value) -%}
+  {%- set normalized = tlp_normalize(value) -%}
+  {{- {'RED':'#FF2B2B', 'AMBER':'#FFC000', 'AMBER+STRICT':'#FFC000', 'GREEN':'#33FF00', 'CLEAR':'#FFFFFF'}.get(normalized, '#FFFFFF') -}}
+{%- endmacro %}
+
+{% macro tlp_background() -%}#000000{%- endmacro %}
