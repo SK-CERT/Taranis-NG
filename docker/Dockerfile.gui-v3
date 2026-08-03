@@ -1,20 +1,39 @@
+# syntax=docker/dockerfile:1
+
+# metadata stage
+FROM node:lts-alpine AS metadata-stage
+
+RUN apk add --no-cache git
+
+WORKDIR /app
+COPY ./src/gui-v3/package.json ./package.json
+COPY ./src/gui-v3/scripts/update-version.cjs ./scripts/update-version.cjs
+COPY ./VERSION.md ./VERSION.md
+
+# The bind mount keeps .git out of image layers while still allowing the
+# application metadata to be generated from the repository checkout.
+RUN --mount=type=bind,source=.git,target=/app/.git \
+    node scripts/update-version.cjs
+
 # build stage
 FROM node:lts-alpine AS build-stage
 
 WORKDIR /app
-COPY ./src/gui-v3/package*.json ./
+COPY ./src/gui-v3/package.json ./src/gui-v3/package-lock.json ./
+RUN npm ci
+
 COPY ./src/gui-v3/scripts ./scripts
 COPY ./src/gui-v3/eslint.config.js .
 COPY ./src/gui-v3/vite.config.js .
-COPY ./.git ./.git
 COPY ./VERSION.md .
-RUN apk add --no-cache git
-RUN npm install
 COPY ./src/gui-v3/index.html .
 COPY ./src/gui-v3/public /app/public
 COPY ./src/gui-v3/src /app/src
+COPY --from=metadata-stage /app/git-info.json ./git-info.json
 
-RUN npm run build
+# git-info.json was generated in metadata-stage, so skip the prebuild hook
+# that would otherwise try to generate it again inside this stage.
+RUN npm --ignore-scripts run build
 
 # production stage
 FROM nginx:stable-alpine AS production-stage

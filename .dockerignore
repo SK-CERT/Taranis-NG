@@ -1,5 +1,6 @@
-# Reduce Docker build context to only what the Dockerfiles COPY.
-# Keeps `docker build` fast and avoids leaking .git/secrets into the daemon.
+# Reduce Docker build context to only what the Dockerfiles consume.
+# `.git/` intentionally remains available as a read-only BuildKit bind mount
+# for GUI metadata generation; it is not copied into any image layer.
 
 # Version control & metadata
 .gitignore
