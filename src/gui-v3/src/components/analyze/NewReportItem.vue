@@ -314,7 +314,7 @@
                                                                     <template #activator="{ props: tooltipProps }">
                                                                         <v-icon
                                                                             v-bind="tooltipProps"
-                                                                            class="attribute-description-help ml-1"
+                                                                            class="ml-1"
                                                                             color="primary"
                                                                             size="x-small"
                                                                             @click.stop
