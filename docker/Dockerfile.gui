@@ -1,21 +1,34 @@
+# syntax=docker/dockerfile:1
+
+# metadata stage
+FROM node:lts-alpine AS metadata-stage
+
+RUN apk add --no-cache git
+
+WORKDIR /app
+COPY ./src/gui/git-info.js ./
+
+# The bind mount keeps .git out of image layers while still allowing the
+# application metadata to be generated from the repository checkout.
+RUN --mount=type=bind,source=.git,target=/app/.git \
+    node git-info.js
+
 # build stage
 FROM node:lts-alpine AS build-stage
 
-RUN npm install -g @vue/cli-service
-
 WORKDIR /app
-COPY ./src/gui/package*.json ./
-COPY ./src/gui/git-info.js ./
-COPY ./.git ./.git
-RUN apk add --no-cache git
+COPY ./src/gui/package.json ./src/gui/package-lock.json ./
+RUN npm ci
 
-RUN npm install
+COPY ./src/gui/babel.config.js ./
 COPY ./src/gui/public /app/public
 COPY ./src/gui/src /app/src
-COPY ./src/gui/babel.config.js .
+COPY --from=metadata-stage /app/git-info.json ./git-info.json
 
 ENV NODE_OPTIONS="--openssl-legacy-provider"
-RUN npm run build
+# git-info.json was generated in metadata-stage, so skip the prebuild hook
+# that would otherwise try to generate it again inside this stage.
+RUN npm --ignore-scripts run build
 
 # production stage
 FROM nginx:stable-alpine AS production-stage
