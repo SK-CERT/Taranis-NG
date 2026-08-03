@@ -67,6 +67,21 @@ class BasePresenter:
             return dict(value)
         return value.__dict__
 
+    @staticmethod
+    def to_template_data(value: any) -> any:
+        """Convert presenter objects to plain template data without a JSON round trip."""
+        if isinstance(value, datetime.date):
+            return {"year": value.year, "month": value.month, "day": value.day}
+        if isinstance(value, types.MappingProxyType):
+            value = dict(value)
+        if isinstance(value, dict):
+            return {key: BasePresenter.to_template_data(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple, set)):
+            return [BasePresenter.to_template_data(item) for item in value]
+        if hasattr(value, "__dict__"):
+            return BasePresenter.to_template_data(vars(value))
+        return value
+
     class AttributesObject:
         """Helper class: object holding all attributes of a report item."""
 
@@ -395,9 +410,7 @@ class BasePresenter:
 
         """
         data = BasePresenter.InputDataObject(presenter_input)
-        data_json = data.to_json()
-        logger.debug(f"=== TEMPLATING FROM THE FOLLOWING INPUT ===\n{data_json}")
-        return json.loads(data_json)
+        return BasePresenter.to_template_data(data)
 
     @staticmethod
     def load_filters(env: jinja2.Environment) -> None:
