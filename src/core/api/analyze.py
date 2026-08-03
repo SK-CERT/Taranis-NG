@@ -381,7 +381,12 @@ class ReportItemLlmGenerate(Resource):
             context_text = "\n\n".join(doc.page_content for doc in documents_for_llm)
 
             if ai_provider.api_type == "openai":
-                llm = ChatOpenAI(model_name=ai_provider.model, api_key=ai_provider.api_key, base_url=ai_provider.api_url)
+                llm = ChatOpenAI(
+                    model_name=ai_provider.model,
+                    api_key=ai_provider.api_key,
+                    base_url=ai_provider.api_url,
+                    reasoning_effort="none",
+                )
             else:
                 msg = f"LLM generate: unsupported local model type '{ai_provider.api_type}'"
                 logger.warning(msg)
