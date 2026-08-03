@@ -70,7 +70,7 @@ ENV GUNICORN_CMD_ARGS="--timeout 120"
 
 VOLUME ["/data"]
 
-HEALTHCHECK --interval=5s --timeout=3s --retries=5 CMD curl --fail http://localhost/api/v1/isalive || exit 1
+HEALTHCHECK --interval=5s --timeout=3s --start-period=300s --retries=5 CMD curl --fail http://localhost/api/v1/isalive || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/start.sh"]
