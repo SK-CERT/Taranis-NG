@@ -4,22 +4,21 @@
         class="pa-0"
     >
         <div
-            v-if="processedData && processedData.length > 0"
-            class="word-cloud-container d-flex flex-wrap gap-2 align-center justify-center pa-4"
+            v-if="cloudWords.length > 0"
+            class="word-cloud-container"
+            role="list"
+            aria-label="Word cloud"
         >
-            <v-chip
-                v-for="tag in processedData"
+            <span
+                v-for="tag in cloudWords"
                 :key="tag.word"
-                :style="getChipStyle(tag)"
-                :color="getRandomColor()"
-                variant="tonal"
-                size="large"
-                class="word-chip"
-                @click="handleWordClick(tag)"
+                class="word-cloud-item"
+                role="listitem"
+                :style="getWordStyle(tag)"
+                :title="`${tag.word}: ${tag.word_quantity}`"
             >
-                <span :style="{ fontSize: getTagFontSize(tag) + 'px' }">{{ tag.word }}</span>
-                <!-- <span class="ml-1 text-caption">{{ tag.word_quantity }}</span> -->
-            </v-chip>
+                {{ tag.word }}
+            </span>
         </div>
         <div
             v-else
@@ -43,6 +42,13 @@
         word_quantity: number
     }
 
+    type WordCloudStyle = {
+        color: string
+        fontSize: string
+        fontWeight: number
+        opacity: number
+    }
+
     const props = withDefaults(
         defineProps<{
             data?: WordCloudItem[]
@@ -61,121 +67,115 @@
     )
 
     /**
-     * Process and validate data
+     * Keep valid words only and sort the cloud by relevance. The API normally
+     * returns this order already, but doing it here makes the component stable
+     * for every caller.
      */
-    const processedData = computed(() => {
-        if (!props.data) {
-            console.warn('[WordCloud] No data provided')
-            return []
-        }
-
+    const cloudWords = computed(() => {
         if (!Array.isArray(props.data)) {
-            console.warn('[WordCloud] Data is not an array:', props.data)
             return []
         }
 
-        if (props.data.length === 0) {
-            // console.log('[WordCloud] Empty data array')
-            return []
-        }
-
-        // Validate data items have required fields
-        const validated = props.data.filter((item) => {
-            if (!item.word || item.word_quantity === undefined) {
-                console.warn('[WordCloud] Invalid item structure:', item)
-                return false
-            }
-            return true
-        })
-
-        // console.log('[WordCloud] Processed data:', validated.length, 'items')
-        return validated
+        return props.data
+            .filter((item) => item && typeof item.word === 'string' && item.word.trim() && Number.isFinite(item.word_quantity))
+            .map((item) => ({ ...item, word: item.word.trim() }))
+            .sort((a, b) => b.word_quantity - a.word_quantity || a.word.localeCompare(b.word))
     })
 
-    /**
-     * Sort tags by word quantity in descending order
-     */
-    const sortedTags = computed(() => {
-        if (!processedData.value || processedData.value.length === 0) {
-            return []
-        }
-        return [...processedData.value].sort((a, b) => (b.word_quantity || 0) - (a.word_quantity || 0))
-    })
-
-    /**
-     * Get min and max quantities for scaling
-     */
     const quantityRange = computed(() => {
-        if (sortedTags.value.length === 0) {
+        if (cloudWords.value.length === 0) {
             return { min: 0, max: 1 }
         }
-        const quantities = sortedTags.value.map((t) => t.word_quantity || 0)
-        const min = Math.min(...quantities)
-        const max = Math.max(...quantities)
-        return { min, max }
+
+        const quantities = cloudWords.value.map(({ word_quantity }) => Math.max(0, word_quantity))
+        return {
+            min: Math.min(...quantities),
+            max: Math.max(...quantities)
+        }
     })
 
     /**
-     * Calculate font size for a tag based on its quantity
+     * A square-root scale keeps one very frequent word from visually drowning
+     * out the rest of the cloud while preserving the relative prominence.
      */
-    const getTagFontSize = (tag: WordCloudItem): number => {
+    const getScale = (tag: WordCloudItem): number => {
         const { min, max } = quantityRange.value
         if (max === min) {
-            return (props.minFontSize + props.maxFontSize) / 2
+            return 0.5
         }
-        const ratio = (tag.word_quantity - min) / (max - min)
-        return props.minFontSize + ratio * (props.maxFontSize - props.minFontSize)
+
+        const ratio = (Math.max(0, tag.word_quantity) - min) / (max - min)
+        return Math.sqrt(Math.max(0, ratio))
     }
 
-    /**
-     * Get random color from scheme
-     */
-    const getRandomColor = (): string => {
-        return props.colorScheme[Math.floor(Math.random() * props.colorScheme.length)] || 'var(--v-theme-primary)'
-    }
-
-    /**
-     * Get chip style (opacity based on frequency)
-     */
-    const getChipStyle = (tag: WordCloudItem): { opacity: number } => {
-        const { min, max } = quantityRange.value
-        if (max === min) {
-            return { opacity: 0.8 }
+    const getColor = (word: string): string => {
+        const colors = props.colorScheme.filter(Boolean)
+        if (colors.length === 0) {
+            return 'rgb(var(--v-theme-primary))'
         }
-        const ratio = (tag.word_quantity - min) / (max - min)
-        const opacity = 0.5 + ratio * 0.5 // Range from 0.5 to 1.0
-        return { opacity }
+
+        // Stable colors prevent the cloud from changing on every reactive update.
+        const hash = Array.from(word).reduce((value, character) => (value * 31 + character.codePointAt(0)!) >>> 0, 0)
+        return colors[hash % colors.length]!
     }
 
-    /**
-     * Handle word click
-     */
-    const handleWordClick = (tag: WordCloudItem): void => {
-        console.log('[WordCloud] Word clicked:', tag.word, 'Quantity:', tag.word_quantity)
+    const getWordStyle = (tag: WordCloudItem): WordCloudStyle => {
+        const scale = getScale(tag)
+        const fontSize = props.minFontSize + scale * (props.maxFontSize - props.minFontSize)
+
+        return {
+            color: getColor(tag.word),
+            fontSize: `clamp(${props.minFontSize}px, ${fontSize.toFixed(2)}px, ${props.maxFontSize}px)`,
+            fontWeight: Math.round(450 + scale * 250),
+            opacity: 0.7 + scale * 0.3
+        }
     }
 </script>
 
 <style scoped>
     .word-cloud-container {
-        background: rgba(0, 0, 0, 0.01);
-        border-radius: 4px;
-        min-height: 300px;
-        max-height: 500px;
-        overflow-y: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: center;
+        align-items: baseline;
+        justify-content: center;
+        min-height: clamp(20rem, 44vh, 34rem);
+        padding: clamp(1.5rem, 4vw, 4rem);
+        gap: clamp(0.55rem, 1.2vw, 1.15rem) clamp(0.9rem, 1.8vw, 1.75rem);
+        overflow: visible;
+        border-radius: 8px;
+        background:
+            radial-gradient(circle at 50% 45%, rgba(var(--v-theme-primary), 0.08), transparent 62%),
+            rgba(var(--v-theme-surface-variant), 0.16);
     }
 
-    .word-chip {
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin: 4px;
+    .word-cloud-item {
+        display: inline-block;
+        max-width: 100%;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+        text-align: center;
+        text-wrap: balance;
+        transition:
+            opacity 160ms ease,
+            transform 160ms ease;
     }
 
-    .word-chip:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    .word-cloud-item:hover {
+        opacity: 1 !important;
+        transform: translateY(-2px) scale(1.04);
     }
 
-    .gap-2 {
-        gap: 8px;
+    @media (max-width: 600px) {
+        .word-cloud-container {
+            min-height: 16rem;
+            padding: 1.25rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .word-cloud-item {
+            transition: none;
+        }
     }
 </style>
