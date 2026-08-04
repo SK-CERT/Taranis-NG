@@ -80,6 +80,14 @@ export const configLinks: GroupNavItem[] = [
         route: '/config/data-providers',
         permission: 'CONFIG_DATA_PROVIDER_ACCESS',
         translate: true
+    },
+    {
+        id: 13,
+        icon: 'mdi-file-cabinet',
+        title: 'nav_menu.external',
+        route: '/config/external',
+        permission: 'MY_ASSETS_CONFIG',
+        translate: true
     }
 ]
 

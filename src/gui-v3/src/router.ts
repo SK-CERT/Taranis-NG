@@ -58,6 +58,24 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.PUBLISH_ACCESS] }
     },
     {
+        path: '/myassets',
+        name: 'myassets_home',
+        components: {
+            default: () => import('./views/users/MyAssetsView.vue'),
+            nav: () => import('./views/nav/MyAssetsNav.vue')
+        },
+        meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_ACCESS] }
+    },
+    {
+        path: '/myassets/group/:groupId',
+        name: 'myassets',
+        components: {
+            default: () => import('./views/users/MyAssetsView.vue'),
+            nav: () => import('./views/nav/MyAssetsNav.vue')
+        },
+        meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_ACCESS] }
+    },
+    {
         path: '/dashboard',
         name: 'dashboard',
         components: {
@@ -199,6 +217,18 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_DATA_PROVIDER_ACCESS] }
     },
     {
+        path: '/config/external',
+        name: 'external',
+        components: {
+            default: () => import('./views/admin/ExternalView.vue'),
+            nav: () => import('./views/nav/ConfigNav.vue')
+        },
+        meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
+    },
+    { path: '/config/external/users', redirect: { path: '/config/external', query: { tab: 'users' } } },
+    { path: '/config/external/groups', redirect: { path: '/config/external', query: { tab: 'groups' } } },
+    { path: '/config/external/templates', redirect: { path: '/config/external', query: { tab: 'templates' } } },
+    {
         path: '/login',
         name: 'login',
         component: () => import('./views/Login.vue')
@@ -251,6 +281,9 @@ router.beforeEach((to) => {
             }
             if (AuthService.hasPermission(Permissions.CONFIG_ACCESS)) {
                 return { path: '/config' }
+            }
+            if (AuthService.hasPermission(Permissions.MY_ASSETS_ACCESS)) {
+                return { path: '/myassets' }
             }
             return true
         }

@@ -1,24 +1,24 @@
 # Vue3 GUI Implementation Status
 
-**Last Updated:** April 28, 2026
+**Last Updated:** August 4, 2026
 
 This file is the canonical current-status snapshot for the Vue3 GUI under `src/gui-v3/`. It is intentionally a current-state document, not a phase-by-phase migration diary.
 
 ## Current Status
 
-The Vue3 GUI is implemented and runs in parallel with the legacy Vue2 GUI:
+The Vue3 GUI is implemented alongside the legacy Vue2 GUI:
 
 - **Vue2** remains present in `src/gui/`
 - **Vue3** is implemented in `src/gui-v3/`
 - **Router base path:** `/v2/`
-- **Deployment model:** parallel Vue2 + Vue3 during migration/cutover period
+- **Deployment status:** the Vue3 Compose service is currently disabled; source presence does not imply deployed parity
 
 The Vue3 application has the expected core architecture in place:
 
 - Vue 3 + Composition API
-- Vue Router 4
+- Vue Router 5
 - Pinia
-- Vuetify 3
+- Vuetify 4
 - Vue I18n
 - Axios-based API service layer
 - SSE integration via composables
@@ -99,8 +99,11 @@ Implemented components currently present:
 - `CardAsset.vue`
 - `ContentDataAssets.vue`
 - `ToolbarFilterAssets.vue`
-- `NewAsset.vue`
-- `AssetDetailDialog.vue`
+- `AssetDialog.vue` (asset/CPE editing and vulnerability detail/resolution)
+
+The workflow is backed by `src/api/assets.ts`, `src/stores/assets.ts`, and
+`src/types/assets.ts`. Routes require `MY_ASSETS_ACCESS`; mutation controls
+require `MY_ASSETS_CREATE`.
 
 ### Attribute System
 
@@ -140,6 +143,11 @@ The admin/config surface is broadly implemented. Current `src/views/admin/` incl
 - Word lists
 - Workflow
 
+The external configuration page groups external users, asset groups, and
+notification templates under `/config/external` and requires
+`MY_ASSETS_CONFIG`. Notification recipients are edited with
+`RecipientTable.vue`.
+
 ## Confirmed Remaining Gaps
 
 The following components are confirmed absent from the current `src/gui-v3/src` tree as of April 28, 2026:
@@ -149,11 +157,11 @@ The following components are confirmed absent from the current `src/gui-v3/src` 
 - `EnterView.vue`
 - `EnterNav.vue`
 
-### Assets / Vulnerability Gaps
+### Assets / Vulnerability Acceptance Gaps
 
-- `CPETable.vue`
-- `CardVulnerability.vue`
-- `VulnerabilityDetail.vue`
+- Browser/backend acceptance of the restored asset/CPE/vulnerability workflow
+- Negative-permission E2E coverage for all three My Assets permissions
+- Notification delivery verification against a configured publisher
 
 ### Config / Specialized Card or Table Gaps
 
@@ -163,7 +171,6 @@ The following components are confirmed absent from the current `src/gui-v3/src` 
 - `CardUser.vue`
 - `WordTable.vue`
 - `AttributeTable.vue`
-- `RecipientTable.vue`
 
 ### Legacy / Specialized Helper Gaps
 
@@ -179,7 +186,7 @@ Some of these may be intentionally superseded by generic Vue3 patterns rather th
 
 - Vue3 app shell is present and wired
 - Main user views are present
-- Assess, Analyze, Publish, and Assets flows all have working Vue3 component surfaces
+- Assess, Analyze, Publish, and Assets flows all have Vue3 component surfaces
 - Attribute system is present
 - Admin/config views are present
 - Architecture documentation exists and has been refreshed
@@ -189,6 +196,7 @@ Some of these may be intentionally superseded by generic Vue3 patterns rather th
 - Full parity with every legacy Vue2 component is not finished
 - Vue2 is still present and has not been cut over or removed
 - Some specialized views/components remain absent
+- My Assets still requires runtime and role-based acceptance before parity sign-off
 
 ## Canonical Documentation
 
@@ -202,9 +210,10 @@ For architecture details, use:
 
 ## Validation Basis
 
-This status document was refreshed by direct inspection of the current repo on April 28, 2026:
+This status document was refreshed by direct inspection and source verification on August 4, 2026:
 
 - current docs tree
 - current Vue3 views tree
 - current component directories for Assess, Analyze, Publish, Assets, and the attribute system
 - confirmed missing component names checked directly against the `src/gui-v3/src` tree
+- My Assets API/store tests, typecheck, formatting, and production build

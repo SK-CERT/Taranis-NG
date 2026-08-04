@@ -1,6 +1,6 @@
 <template>
     <v-list density="compact">
-        <v-list-subheader>{{ $t('assess.groups') }}</v-list-subheader>
+        <v-list-subheader>{{ $t(titleKey) }}</v-list-subheader>
         <v-list-item
             v-for="group in groups"
             :key="group.id"
@@ -36,10 +36,14 @@
      */
     import { type GroupNavItem } from '@/types/routing'
 
-    defineProps<{
-        groups: GroupNavItem[]
-        activeId?: string | number | null
-    }>()
+    withDefaults(
+        defineProps<{
+            groups: GroupNavItem[]
+            activeId?: string | number | null
+            titleKey?: string
+        }>(),
+        { activeId: null, titleKey: 'assess.groups' }
+    )
 
     const emit = defineEmits<{
         (e: 'select', group: GroupNavItem): void
