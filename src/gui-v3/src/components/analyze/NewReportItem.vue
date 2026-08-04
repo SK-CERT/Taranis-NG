@@ -139,7 +139,7 @@
                         v-model="verticalView"
                         hide-details
                         density="compact"
-                        label="Side-by-side view"
+                        :label="t('report_item.side_by_side')"
                         class="mt-5"
                     />
 

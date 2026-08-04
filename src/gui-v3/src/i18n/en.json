@@ -608,6 +608,7 @@
         "created": "Report item was successfully created",
         "attributes": "Attributes",
         "no_attributes": "No attributes available",
+        "side_by_side": "Side-by-side view",
         "confirm_close": {
             "message": "You have unsaved changes. Are you sure you want to close this report item?"
         },
