@@ -280,6 +280,7 @@ export const useSettingsStore = defineStore('settings', () => {
             { key: 'd', alias: HotkeyAction.DASHBOARD_VIEW, icon: 'mdi-view-dashboard-variant-outline' },
             { key: 'z', alias: HotkeyAction.ANALYZE_VIEW, icon: 'mdi-file-table' },
             { key: 'p', alias: HotkeyAction.PUBLISH_VIEW, icon: 'mdi mdi-send' },
+            { key: 'm', alias: HotkeyAction.MY_ASSETS_VIEW, icon: 'mdi-file-cabinet' },
             { key: 'c', alias: HotkeyAction.CONFIGURATION_VIEW, icon: 'mdi-cog' },
             // assess: filter actions
             { key: 'f', alias: HotkeyAction.ENTER_FILTER_MODE, icon: 'mdi-filter-outline' }

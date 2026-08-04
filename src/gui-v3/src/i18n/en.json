@@ -135,7 +135,8 @@
         "analyze": "Analyze",
         "publish": "Publish",
         "config": "Configuration",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "my_assets": "My Assets"
     },
     "dashboard": {
         "assess": {
@@ -203,7 +204,9 @@
         "workflow": "Workflow",
         "ai_providers": "AI models",
         "data_providers": "Data providers",
-        "reports": "Reports"
+        "reports": "Reports",
+        "asset_groups": "Asset Groups",
+        "notification_templates": "Notification Templates"
     },
     "notification": {
         "close": "Close"
@@ -927,7 +930,8 @@
         "updated_by": "Updated by",
         "updated_at": "Updated at",
         "actions": "Actions",
-        "api_key": "API key"
+        "api_key": "API key",
+        "my_assets_view": "My Assets"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Automatic cascade state changes",
@@ -1074,7 +1078,9 @@
             "remove": "Are you sure you want to remove following item?"
         },
         "required": "This field is required",
-        "coming_soon": "Coming soon..."
+        "coming_soon": "Coming soon...",
+        "details": "Details",
+        "actions": "Actions"
     },
     "collectors": {
         "groups": {
@@ -1414,6 +1420,115 @@
         }
     },
     "external_user": {
-        "tab_description": "Here you can manage external users."
+        "tab_description": "Here you can manage external users.",
+        "add_new": "Add external user",
+        "edit": "Edit external user",
+        "username": "Username",
+        "name": "Name",
+        "password": "Password",
+        "password_check": "Repeat password",
+        "permissions": "Permissions",
+        "permission_name": "Permission",
+        "permission_description": "Description",
+        "password_mismatch": "Passwords do not match",
+        "error": "Could not save the external user",
+        "load_error": "Could not load external users or permissions",
+        "successful": "External user was successfully added",
+        "successful_edit": "External user was successfully updated",
+        "total_count": "External user count",
+        "removed": "External user was deleted",
+        "removed_error": "Could not delete the external user"
+    },
+    "assets": {
+        "tooltip": {
+            "filter_vulnerable": "Show/hide vulnerable assets",
+            "sort": {
+                "vulnerability": {
+                    "descending": "Sort assets by vulnerability in descending order"
+                },
+                "alphabetical": {
+                    "ascending": "Sort assets alphabetically in ascending order"
+                }
+            }
+        }
+    },
+    "asset_group": {
+        "add_new": "Add new asset group",
+        "edit": "Edit asset group",
+        "error": "Could not save this asset group",
+        "load_error": "Could not load asset groups or their associations",
+        "name": "Name",
+        "description": "Description",
+        "notification_templates": "Notification Templates",
+        "allowed_users": "Allowed users (If none is selected, all users are allowed)",
+        "successful": "New asset group was successfully added",
+        "successful_edit": "Asset group was successfully updated",
+        "removed": "Asset group was successfully deleted",
+        "removed_error": "Asset group is in use and could not be deleted",
+        "total_count": "Asset group count"
+    },
+    "notification_template": {
+        "add_new": "Add new notification template",
+        "add_recipient": "Add Recipient",
+        "edit_recipient": "Edit Recipient",
+        "edit": "Edit notification template",
+        "error": "Could not save this notification template",
+        "load_error": "Could not load notification templates",
+        "name": "Name",
+        "description": "Description",
+        "message_title": "Message Title",
+        "message_body": "Message Body",
+        "new_recipient": "New Recipient",
+        "recipient_name": "Recipient Name",
+        "email": "Email",
+        "recipients": "Recipients",
+        "successful": "New notification template was successfully added",
+        "successful_edit": "Notification template was successfully updated",
+        "removed": "Notification template was successfully deleted",
+        "removed_error": "Notification template is in use and could not be deleted",
+        "total_count": "Notification template count"
+    },
+    "asset": {
+        "add": "Add Asset",
+        "add_new": "Add new asset",
+        "add_group_info": "Please add an asset group",
+        "no_groups_message": "Please create an asset group before adding assets",
+        "no_data": "No assets found",
+        "edit": "Edit asset",
+        "error": "Could not save this asset",
+        "name": "Name",
+        "serial": "Serial Number",
+        "description": "Description",
+        "cpe": "CPE Code",
+        "new_cpe": "Add CPE Code",
+        "cpes": "CPE Codes",
+        "value": "Value",
+        "vulnerable": "Vulnerable",
+        "total": "Total",
+        "total_count": "Asset count",
+        "successful": "New asset was successfully added",
+        "successful_edit": "Asset was successfully updated",
+        "removed": "Asset was successfully deleted",
+        "removed_error": "Asset is in use and could not be deleted",
+        "vulnerabilities": "Vulnerabilities",
+        "vulnerabilities_count": "Vulnerabilities: ",
+        "no_vulnerabilities": "No vulnerabilities",
+        "sort": {
+            "alphabetical": "Alphabetical",
+            "vulnerability": "By Vulnerability"
+        },
+        "import_csv": "Import CSV",
+        "import_from_csv": "Import CPE from CSV",
+        "file_has_header": "File has header",
+        "load_csv_file": "Load CSV file",
+        "import": "Import",
+        "close": "Close",
+        "cpe_hint": "Enter a CPE value or select a suggestion. Use * as a wildcard.",
+        "solved": "Solved",
+        "vulnerability_updated": "Vulnerability status updated",
+        "vulnerability_update_error": "Could not update vulnerability status",
+        "load_error": "Could not load assets",
+        "groups": "Asset groups",
+        "detail": "Asset detail"
     }
 }

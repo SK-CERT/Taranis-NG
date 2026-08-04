@@ -45,6 +45,7 @@ export const HotkeyAction = {
     DASHBOARD_VIEW: 'dashboard_view',
     ANALYZE_VIEW: 'analyze_view',
     PUBLISH_VIEW: 'publish_view',
+    MY_ASSETS_VIEW: 'my_assets_view',
     CONFIGURATION_VIEW: 'configuration_view',
     ENTER_FILTER_MODE: 'enter_filter_mode'
 } as const

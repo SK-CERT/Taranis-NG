@@ -48,7 +48,7 @@
     const { t } = useI18n()
 
     // This view is temporary - the router automatically redirects
-    // authenticated users to /dashboard or /config
+    // authenticated users to /dashboard, /config, or /myassets
     // based on their permissions
 </script>
 

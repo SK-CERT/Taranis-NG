@@ -135,7 +135,8 @@
         "analyze": "Analyzovať",
         "publish": "Publikovať",
         "config": "Nastavenie",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "my_assets": "Aktíva"
     },
     "dashboard": {
         "assess": {
@@ -203,7 +204,9 @@
         "workflow": "Workflow",
         "ai_providers": "AI modely",
         "data_providers": "Zdroje dát",
-        "reports": "Reporty"
+        "reports": "Reporty",
+        "asset_groups": "Skupiny aktív",
+        "notification_templates": "Šablóny oznámení"
     },
     "notification": {
         "close": "Zavrieť"
@@ -927,7 +930,8 @@
         "updated_by": "Upravil",
         "updated_at": "Upravené",
         "actions": "Možnosti",
-        "api_key": "API klúč"
+        "api_key": "API klúč",
+        "my_assets_view": "Aktíva"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Automatické kaskádové zmeny stavov",
@@ -1074,7 +1078,9 @@
             "remove": "Ste si istý, že chcete odstrániť túto položku?"
         },
         "required": "Toto pole je povinné",
-        "coming_soon": "Už čoskoro..."
+        "coming_soon": "Už čoskoro...",
+        "details": "Podrobnosti",
+        "actions": "Akcie"
     },
     "collectors": {
         "groups": {
@@ -1414,6 +1420,106 @@
         }
     },
     "external_user": {
-        "tab_description": "Tu môžete spravovať externých používateľov."
+        "tab_description": "Tu môžete spravovať externých používateľov.",
+        "add_new": "Pridať externého používateľa",
+        "edit": "Upraviť externého používateľa",
+        "username": "Používateľské meno",
+        "name": "Meno",
+        "password": "Heslo",
+        "password_check": "Zopakovať heslo",
+        "permissions": "Oprávnenia",
+        "permission_name": "Oprávnenie",
+        "permission_description": "Popis",
+        "password_mismatch": "Heslá sa nezhodujú",
+        "error": "Externého používateľa sa nepodarilo uložiť",
+        "load_error": "Externých používateľov alebo oprávnenia sa nepodarilo načítať",
+        "successful": "Externý používateľ bol úspešne pridaný",
+        "successful_edit": "Externý používateľ bol úspešne aktualizovaný",
+        "total_count": "Počet externých používateľov",
+        "removed": "Externý používateľ bol odstránený",
+        "removed_error": "Externého používateľa sa nepodarilo odstrániť"
+    },
+    "assets": {
+        "tooltip": {
+            "filter_vulnerable": "Zobraziť/skryť zraniteľné aktíva",
+            "sort": {
+                "vulnerability": {
+                    "descending": "Zoradiť podľa zraniteľnosti zostupne"
+                },
+                "alphabetical": {
+                    "ascending": "Zoradiť abecedne vzostupne"
+                }
+            }
+        }
+    },
+    "asset_group": {
+        "add_new": "Pridať novú skupinu aktív",
+        "edit": "Upraviť skupinu aktív",
+        "error": "Nepodarilo sa uložiť skupinu aktív",
+        "load_error": "Skupiny aktív alebo ich väzby sa nepodarilo načítať",
+        "name": "Názov",
+        "description": "Popis",
+        "notification_templates": "Šablóny notifikácií",
+        "allowed_users": "Povolení používatelia (ak nie je vybraný žiadny, povolení sú všetci)",
+        "successful": "Nová skupina aktív bola úspešne pridaná",
+        "successful_edit": "Skupina aktív bola úspešne aktualizovaná",
+        "removed": "Skupina aktív bola úspešne odstránená",
+        "removed_error": "Skupina aktív sa používa a nie je možné ju odstrániť",
+        "total_count": "Počet skupín aktív: "
+    },
+    "notification_template": {
+        "add_new": "Pridať novú šablónu notifikácie",
+        "add_recipient": "Pridať príjemcu",
+        "edit_recipient": "Upraviť príjemcu",
+        "edit": "Upraviť šablónu notifikácie",
+        "error": "Nepodarilo sa uložiť šablónu notifikácie",
+        "load_error": "Šablóny notifikácií sa nepodarilo načítať",
+        "name": "Názov",
+        "description": "Popis",
+        "message_title": "Názov správy",
+        "message_body": "Text správy",
+        "new_recipient": "Nový príjemca",
+        "recipient_name": "Meno príjemcu",
+        "email": "Email",
+        "recipients": "Príjemcovia",
+        "successful": "Nová šablóna notifikácie bola úspešne pridaná",
+        "successful_edit": "Šablóna notifikácie bola úspešne aktualizovaná",
+        "removed": "Šablóna notifikácie bola úspešne odstránená",
+        "removed_error": "Šablóna notifikácie sa používa a nie je možné ju odstrániť",
+        "total_count": "Počet šablón notifikácií: "
+    },
+    "asset": {
+        "add_new": "Pridať nové aktívum",
+        "add_group_info": "Prosím, pridajte skupinu aktív",
+        "edit": "Upraviť aktívum",
+        "error": "Nepodarilo sa uložiť aktívum",
+        "name": "Názov",
+        "serial": "Sériové číslo",
+        "description": "Popis",
+        "cpe": "CPE kód",
+        "new_cpe": "Pridať CPE kód",
+        "cpes": "CPE kódy",
+        "value": "Hodnota",
+        "successful": "Nové aktívum bolo úspešne pridané",
+        "successful_edit": "Aktívum bolo úspešne aktualizované",
+        "removed": "Aktívum bolo úspešne odstránené",
+        "removed_error": "Aktívum sa používa a nie je možné ho odstrániť",
+        "total_count": "Počet aktív: ",
+        "vulnerabilities": "Zraniteľnosti",
+        "vulnerabilities_count": "Zraniteľnosti: ",
+        "no_vulnerabilities": "Žiadne zraniteľnosti",
+        "import_csv": "Import CSV",
+        "import_from_csv": "Import CPE z CSV",
+        "file_has_header": "Súbor obsahuje hlavičku",
+        "load_csv_file": "Načítať CSV súbor",
+        "import": "Import",
+        "close": "Zavrieť",
+        "cpe_hint": "Zadajte hodnotu CPE alebo vyberte návrh. Ako zástupný znak použite *.",
+        "solved": "Vyriešené",
+        "vulnerability_updated": "Stav zraniteľnosti bol aktualizovaný",
+        "vulnerability_update_error": "Stav zraniteľnosti sa nepodarilo aktualizovať",
+        "load_error": "Aktíva sa nepodarilo načítať",
+        "groups": "Skupiny aktív",
+        "detail": "Detail aktíva"
     }
 }

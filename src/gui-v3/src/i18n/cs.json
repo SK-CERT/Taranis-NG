@@ -135,7 +135,8 @@
         "analyze": "Analyzovat",
         "publish": "Zveřejnit",
         "config": "Nastavení",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "my_assets": "Aktiva"
     },
     "dashboard": {
         "assess": {
@@ -203,7 +204,9 @@
         "workflow": "Workflow",
         "ai_providers": "AI modely",
         "data_providers": "Zdroje dat",
-        "reports": "Reporty"
+        "reports": "Reporty",
+        "asset_groups": "Skupiny aktiv",
+        "notification_templates": "Šablony oznámení"
     },
     "notification": {
         "close": "Zavřít"
@@ -927,7 +930,8 @@
         "updated_by": "Upravil",
         "updated_at": "Upraveno",
         "actions": "Možnosti",
-        "api_key": "API klíč"
+        "api_key": "API klíč",
+        "my_assets_view": "Aktiva"
     },
     "settings_enum": {
         "CASCADE_STATES_ENABLED": "Automatické kaskádové změny stavů",
@@ -1074,7 +1078,9 @@
             "remove": "Jste si jisti, že chcete odstranit tuto položku?"
         },
         "required": "Toto pole je povinné",
-        "coming_soon": "Již brzy..."
+        "coming_soon": "Již brzy...",
+        "details": "Podrobnosti",
+        "actions": "Akce"
     },
     "collectors": {
         "groups": {
@@ -1414,6 +1420,115 @@
         }
     },
     "external_user": {
-        "tab_description": "Zde můžete spravovat externí uživatele."
+        "tab_description": "Zde můžete spravovat externí uživatele.",
+        "add_new": "Přidat externího uživatele",
+        "edit": "Upravit externího uživatele",
+        "username": "Uživatelské jméno",
+        "name": "Jméno",
+        "password": "Heslo",
+        "password_check": "Zopakovat heslo",
+        "permissions": "Oprávnění",
+        "permission_name": "Oprávnění",
+        "permission_description": "Popis",
+        "password_mismatch": "Hesla se neshodují",
+        "error": "Externího uživatele se nepodařilo uložit",
+        "load_error": "Externí uživatele nebo oprávnění se nepodařilo načíst",
+        "successful": "Externí uživatel byl úspěšně přidán",
+        "successful_edit": "Externí uživatel byl úspěšně upraven",
+        "total_count": "Počet externích uživatelů",
+        "removed": "Externí uživatel byl odstraněn",
+        "removed_error": "Externího uživatele se nepodařilo odstranit"
+    },
+    "assets": {
+        "tooltip": {
+            "filter_vulnerable": "Zobrazit/Skrýt zranitelné aktiva",
+            "sort": {
+                "vulnerability": {
+                    "descending": "Seřadit aktiva podle zranitelnosti sestupně"
+                },
+                "alphabetical": {
+                    "ascending": "Seřadit aktiva abecedně vzestupně"
+                }
+            }
+        }
+    },
+    "asset_group": {
+        "add_new": "Přidat novou skupinu aktiv",
+        "edit": "Upravit skupinu aktiv",
+        "error": "Nepodařilo se vytvořit skupinu aktiv",
+        "load_error": "Skupiny aktiv nebo jejich vazby se nepodařilo načíst",
+        "name": "Název",
+        "description": "Popis",
+        "notification_templates": "Šablony upozornění",
+        "allowed_users": "Povolení uživatelé (Pokud není žádný vybrán, získávají povolení všichni)",
+        "successful": "Nová skupina aktiv byla přidána",
+        "successful_edit": "Skupina aktiv byla upravena",
+        "removed": "Skupina aktiv byla smazána",
+        "removed_error": "Skupina aktiv je používána a nelze ji smazat",
+        "total_count": "Počet skupin aktiv: "
+    },
+    "notification_template": {
+        "add_new": "Přidat novou šablonu upozornění",
+        "add_recipient": "Přidat příjemce",
+        "edit_recipient": "Upravit příjemce",
+        "edit": "Upravit šablonu upozornění",
+        "error": "Nepodařilo se uložit šablonu upozornění",
+        "load_error": "Šablony upozornění se nepodařilo načíst",
+        "name": "Název",
+        "description": "Popis",
+        "message_title": "Nadpis zprávy",
+        "message_body": "Tělo zprávy",
+        "new_recipient": "Nový příjemce",
+        "recipient_name": "Jméno příjemce",
+        "email": "E-mailová adresa",
+        "recipients": "Příjemci",
+        "successful": "Nová šablona upozornění byla přidána",
+        "successful_edit": "Šablona upozornění byla upravena",
+        "removed": "Šablona upozornění byla smazána",
+        "removed_error": "Šablona upozornění se používá a nelze ji smazat",
+        "total_count": "Počet šablon upozornění: "
+    },
+    "asset": {
+        "add": "Přidat aktivum",
+        "add_new": "Přidat nové aktivum",
+        "add_group_info": "Přidejte prosím skupinu aktiv",
+        "no_groups_message": "Před přidáním aktiv vytvořte prosím skupinu aktiv",
+        "no_data": "Nebyla nalezena žádná aktiva",
+        "edit": "Upravit aktivum",
+        "error": "Nepodařilo se uložit toto aktivum",
+        "name": "Název",
+        "serial": "Sériové číslo",
+        "description": "Popis",
+        "cpe": "CPE kód",
+        "new_cpe": "Přidat CPE kód",
+        "cpes": "CPE kódy",
+        "value": "Hodnota",
+        "vulnerable": "Zranitelné",
+        "total": "Celkem",
+        "total_count": "Počet aktiv: ",
+        "successful": "Nové aktivum bylo přidáno",
+        "successful_edit": "Aktivum bylo upraveno",
+        "removed": "Aktivum bylo smazáno",
+        "removed_error": "Aktivum se používá a nelze jej smazat",
+        "vulnerabilities": "Zranitelnosti",
+        "vulnerabilities_count": "Počet zranitelností: ",
+        "no_vulnerabilities": "Bez zranitelností",
+        "sort": {
+            "alphabetical": "Abecedně",
+            "vulnerability": "Podle zranitelnosti"
+        },
+        "import_csv": "Importovat CSV",
+        "import_from_csv": "Importovat CPE z CSV",
+        "file_has_header": "Soubor má hlavičku",
+        "load_csv_file": "Načíst CSV soubor",
+        "import": "Importovat",
+        "close": "Zavřít",
+        "cpe_hint": "Zadejte hodnotu CPE nebo vyberte návrh. Jako zástupný znak použijte *.",
+        "solved": "Vyřešeno",
+        "vulnerability_updated": "Stav zranitelnosti byl aktualizován",
+        "vulnerability_update_error": "Stav zranitelnosti se nepodařilo aktualizovat",
+        "load_error": "Aktiva se nepodařilo načíst",
+        "groups": "Skupiny aktiv",
+        "detail": "Detail aktiva"
     }
 }
