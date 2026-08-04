@@ -217,9 +217,46 @@ services:
     secrets:
       - api_key
 
+  bootstrap:
+    depends_on:
+      core:
+        condition: service_healthy
+      bots:
+        condition: service_started
+      collectors:
+        condition: service_started
+      presenters:
+        condition: service_started
+      publishers:
+        condition: service_started
+    restart: "no"
+    image: "skcert/taranis-ng-core:${TARANIS_NG_TAG}"
+    command: ["python", "bootstrap_docker.py"]
+    environment:
+      DB_URL: "postgres"
+      DB_DATABASE: "taranis-ng"
+      DB_USER: "taranis-ng"
+      DB_POOL_SIZE: 20
+      DB_POOL_RECYCLE: 300
+      DB_POOL_TIMEOUT: 30
+      TZ: "${TZ}"
+      TARANIS_LOG_LEVEL: "${TARANIS_LOG_LEVEL}"
+      MODULES_LOG_LEVEL: "${MODULES_LOG_LEVEL}"
+      DEBUG_SQL: "false"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    secrets:
+      - postgres_password
+      - jwt_secret_key
+      - api_key
+
   gui:
     depends_on:
-      - "core"
+      bootstrap:
+        condition: service_completed_successfully
     restart: unless-stopped
     image: "skcert/taranis-ng-gui:${TARANIS_NG_TAG}"
     build:
@@ -268,7 +305,8 @@ services:
 
 #   gui-v3:
 #     depends_on:
-#       - "core"
+#       bootstrap:
+#         condition: service_completed_successfully
 #     restart: unless-stopped
 #     image: "skcert/taranis-ng-gui-v3:${TARANIS_NG_TAG}"
 #     build:

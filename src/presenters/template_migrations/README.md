@@ -1,5 +1,10 @@
 # Default vulnerability template migration
 
+**Audience:** presenter operators and developers.
+
+**Status:** supported migration for the official vulnerability template only;
+it is not the installer for the complete distribution preset/template bundle.
+
 This package promotes the redesigned Taranis NG vulnerability PDF on existing
 presenter installations without treating `/app/templates` as disposable.
 Fresh images already ship the redesigned template as `pdf_template.html` and

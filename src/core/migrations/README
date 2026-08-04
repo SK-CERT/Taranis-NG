@@ -1,1 +1,15 @@
-Generic single-database configuration.
+# Core database migrations
+
+**Audience:** Core developers.
+
+**Status:** internal Alembic migration environment, not an installation or
+upgrade procedure.
+
+The current Docker Core startup invokes the migration runner. A migration being
+marked applied proves only that its migration function returned; it does not
+necessarily prove that presenter-dependent presets or other operational data
+were installed successfully.
+
+Do not run historical migration data functions manually against a newer schema
+or use this directory as a repair interface. Back up the database and follow
+release-specific, tested upgrade instructions when those are available.

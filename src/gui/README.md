@@ -1,8 +1,15 @@
 # Taranis NG GUI
 
+**Audience:** developers of the legacy Vue 2 frontend.
+
+**Release status:** this is the GUI enabled by the current default Docker
+Compose stack. It is distinct from the Vue 3 application under `src/gui-v3`.
+
 The GUI is written in [Vue.js](https://vuejs.org/) with [Vuetify](https://vuetifyjs.com/en/).
 
-Currently, the best way to build and deploy is via Docker. For more information, see [docker/README.md](../../docker/README.md) and the [toplevel README.md file](../../README.md).
+Use the [Docker deployment guide](../../docker/README.md) for a complete
+deployment. The remainder of this file covers development of this component
+only.
 
 If you wish to develop and build the GUI separately, read on.
 

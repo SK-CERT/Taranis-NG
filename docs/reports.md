@@ -1,4 +1,11 @@
-﻿### Contents
+﻿# Official report examples
+
+**Audience:** analysts and administrators of an initialized instance.
+
+**Status:** workflow examples for instances where the named official report
+and product types are installed.
+
+### Contents
 
 - [OSINT Report](#_toc1)
 
@@ -45,7 +52,8 @@ To use all the report possibilities, you should add all types of report items to
 
 Then create new **Product** with type **OSINT Weekly Report** and add your previous created Report items.
 
-This report is inbuilt in Taranis (version after 2023/09)
+This is an official distribution report definition. Its availability depends
+on successful installation of the matching official preset/template bundle.
 
 If you need to edit the report design, use this HTML template: **/app/templates/template\_osint.html**
 
@@ -78,7 +86,8 @@ To use all the reporting possibilities, you should add all types of these report
 - **Vulnerability** **report** – Vulnerability part of the report
 - **News by Sector** – Sector news part of the report
 
-This report is inbuilt in Taranis (version after 2023/09)
+This is an official distribution report definition. Its availability depends
+on successful installation of the matching official preset/template bundle.
 
 If you need to edit the report design, use this HTML template: **/app/templates/weekly.html**
 
@@ -99,7 +108,8 @@ If you need to edit the report design, use this HTML template: **/app/templates/
 
 Create some new **Report items** with type **Offensive content**. Then create new **Product** with type **Offensive Content** and add your previous created Report items.
 
-This report is inbuilt in Taranis (version after 2023/09)
+This is an official distribution report definition. Its availability depends
+on successful installation of the matching official preset/template bundle.
 
 If you need to edit the report design, use this HTML template: **/app/templates/template\_content.html**
 
@@ -120,6 +130,7 @@ If you need to edit the report design, use this HTML template: **/app/templates/
 
 Create some new **Report items** with type **Disinformation from public source**. Then create new **Product** with type **Disinformation** and add your previous created Report items.
 
-This report is inbuilt in Taranis (version after 2023/09)
+This is an official distribution report definition. Its availability depends
+on successful installation of the matching official preset/template bundle.
 
 If you need to edit the report design, use this HTML template: **/app/templates/template\_disinfo.html**

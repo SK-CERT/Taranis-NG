@@ -1,126 +1,235 @@
-<!-- use whole link on github files becasue this .md is also on https://hub.docker.com -->
-
-# Quick reference
-
-- Source code: [github.com/SK-CERT/Taranis-NG](https://github.com/SK-CERT/Taranis-NG)
-- Docker images: [hub.docker.com/u/skcert](https://hub.docker.com/u/skcert)
-- Maintained by: [SK-CERT](https://www.sk-cert.sk)
-- Project web page: [taranis.ng](https://taranis.ng)
-- Where to file issues (no vulnerability reports please): [GitHub issues page](https://github.com/SK-CERT/Taranis-NG/issues)
-- Where to send security issues and vulnerability reports: [incident@nbu.gov.sk](mailto:incident@nbu.gov.sk)
-
-## What is Taranis NG?
-
-Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and
-organisations. It allows osint gathering, analysis and reporting; team-to-team
-collaboration; and contains a user portal for simple self asset management.
-
-Taranis crawls various **data sources** such as web sites or tweets to gather
-unstructured **news items**. These are processed by analysts to create
-structured **report items**, which are used to create **products** such as PDF
-files, which are finally **published**.
-
-Taranis supports **team-to-team collaboration**, and includes a light weight
-**self service asset management** which automatically links to the advisories
-that mention vulnerabilities in the software.
+<!-- use full external links because this file is also published on Docker Hub -->
 
 # Deploying Taranis NG with Docker
 
-Taranis NG supports deployment in Docker containers. [The docker/ folder on
-GitHub repository](https://github.com/SK-CERT/Taranis-NG/tree/main/docker)
-contains a sample
-[docker-compose.yml](https://raw.githubusercontent.com/SK-CERT/Taranis-NG/main/docker/docker-compose.yml)
-file which runs the whole application in one stack.
+This is the canonical Docker installation guide for Taranis NG.
 
-The same folder also contains additional support files for the creation of the
-Docker containers. These include start and pre-start scripts, the application
-entrypoint, and the [gunicorn](https://gunicorn.org/) configuration file.
+## Install and complete the first workflow
 
-## Prerequisites
+Follow this section from top to bottom. Installation is complete only after the
+final product preview succeeds.
 
-- [Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/)
-- [Docker Desktop](https://docs.docker.com/desktop/) for Windows and macOS users
-- (Optional) [Vim](https://www.vim.org/) or other text editor - for configuration and development
-- (Optional) [Notepad++](https://notepad-plus-plus.org/) text editor for Windows users
+### Requirements
 
-Please note it is important to use the latest version of Docker, otherwise the build and deploy can fail.
+- Docker Engine with the Docker Compose v2 plugin (`docker compose`), or
+  Docker Desktop on Windows and macOS
+- at least 2 GB RAM, 2 CPU cores, and 5 GB free disk space
+- at least 20 GB free disk space when building the images locally
 
-## Quickly build and run Taranis NG using `docker compose`
-
-_First_, you need to clone the source code repository:
+### 1. Clone and prepare the configuration
 
 ```bash
 git clone https://github.com/SK-CERT/Taranis-NG.git
 cd Taranis-NG
+
+cp docker/.env.example docker/.env
+cp docker/secrets/postgres_password.txt.example docker/secrets/postgres_password.txt
+cp docker/secrets/jwt_secret_key.txt.example docker/secrets/jwt_secret_key.txt
+cp docker/secrets/api_key.txt.example docker/secrets/api_key.txt
 ```
 
-_Then_, remove `.example` extension from file `docker/.env.example` and files in `docker/secrets`. Use your favorite text editor and change default passwords. Taranis NG uses [Docker secrets](https://docs.docker.com/compose/use-secrets/) to store sensitive data. (Saving passwords in variables defined in `docker/.env` is not advised and you will need to modify Docker compose YAML files to make it work correctly.
+Replace every example secret with an independently generated value. These
+files configure PostgreSQL, JWT signing, and the shared key used between Core
+and the satellite services. They do not set the passwords of Taranis NG user
+accounts.
 
-```bash
-vim docker/.env
-```
+Edit `docker/.env` if you want to change the hostname, ports, timezone, or image
+tag. Keep local changes in this gitignored file or in
+`docker/docker-compose.override.yml`; do not edit the tracked Compose file.
 
-*_Optionally:_ you may modify other settings in the `docker/.env` and `docker/docker-compose.yml` files to your liking.  More information on container configuration can be found [here](#configuration).*
+### 2. Start Taranis NG
 
-_Finally_, either deploy the ready-made images from Docker hub with:
-
-```bash
-cd Taranis-NG/docker
-docker compose pull
-docker compose up --no-build
-```
-
-or, alternatively, build and run the containers with:
-
-```bash
-cd Taranis-NG/docker
-TARANIS_NG_TAG=build docker compose build --pull
-TARANIS_NG_TAG=build docker compose up
-```
-
-**Important:** If you have `docker-compose.override.yml` configured (for ACME), the override file is automatically loaded when running from the docker/ directory. Do NOT use explicit `-f docker-compose.yml` flags as this disables automatic override loading.
-
-(`--pull` updates the base images)
-
-**Voila, Taranis NG is up and running. Visit your instance by navigating to
-[https://localhost:4443/](https://localhost:4443/) using your web browser**.
-
-**The default credentials are `user` / `user` and `admin` / `admin`.**
-
-For initial configuration instructions, please continue to the main
-[README](https://github.com/SK-CERT/Taranis-NG#connecting-to-collectors-presenters-and-publishers).
-
-## Enabling ACME/Let's Encrypt for automatic HTTPS certificates
-
-Taranis NG supports automatic HTTPS certificate provisioning via Let's Encrypt using ACME protocol. This requires your instance to be publicly accessible on the internet.
-
-**Step 1:** Copy the Docker Compose override file to enable the ACME storage volume:
-
-```bash
-cp docker/docker-compose.override.yml.example docker/docker-compose.override.yml
-```
-
-**Step 2:** Edit `docker/traefik/traefik.yml` and uncomment the ACME configuration section according to your certificate provider.
-
-**Step 3:** Restart Traefik:
+Enter the Compose directory:
 
 ```bash
 cd docker
-docker compose restart traefik
 ```
 
-**Important notes:**
-- ACME configuration must be in `traefik.yml` (static config), not in the `dynamic/` directory
-- `docker-compose.override.yml` is gitignored, so it won't be tracked
-- **Always run commands from the `docker/` directory** or the override file won't be loaded automatically
-- If you use `-f docker/docker-compose.yml` explicitly, you must also specify `-f docker/docker-compose.override.yml`
-- Changes to `traefik.yml` will show as modified in git - avoid committing your personal ACME settings
-- For testing, use Let's Encrypt staging server: `caServer: https://acme-staging-v02.api.letsencrypt.org/directory`
-- Ensure your `TARANIS_NG_HOSTNAME` is publicly accessible and ports 80/443 are open
+Use published images when the configured release tag is available:
 
-**Advanced ACME options:**
+```bash
+docker compose pull
+docker compose up -d --no-build
+```
 
-For custom Certificate Authorities like ZeroSSL or HARICA that require External Account Binding (EAB):
+If that tag is not available, build the checked-out source instead:
+
+```bash
+TARANIS_NG_TAG=build docker compose up -d --build
+```
+
+Always run Compose from the `docker/` directory. This automatically loads
+`docker-compose.override.yml`. If you use explicit `-f` arguments, include
+both the main and override files.
+
+### 3. Open the application and secure the accounts
+
+Open [https://localhost:4443/](https://localhost:4443/) unless you changed the
+hostname or port.
+
+The current password-authenticator database starts with `admin` / `admin` and
+`user` / `user`. Sign in locally, change **both** passwords immediately, then
+verify that the old passwords no longer work. Use `user` for normal work and
+reserve `admin` for configuration.
+
+Changing the Docker secret files does not change these database-stored account
+passwords.
+
+### 4. Confirm the included services
+
+The Compose stack automatically registers its collector, bot, presenter, and
+publisher and discovers their capabilities. Open their node pages and confirm
+that all four appear. Existing nodes and their operator-selected names and
+descriptions are preserved during upgrades.
+
+### 5. Check the supplied workflows
+
+Open these administration pages:
+
+- **Configuration → Attributes**
+- **Configuration → Report Types**
+- **Configuration → Product Types**
+
+The installation automatically supplies 26 attributes/data types, ten report
+types in total, and these four distribution product types:
+
+- `Weekly Bulletin`
+- `OSINT Weekly Report`
+- `Disinformation`
+- `Offensive Content`
+
+For the first workflow below, confirm that `News by Sector` and
+`Weekly Bulletin` are available and that the product type is bound to the HTML
+presenter and `/app/templates/weekly.html`.
+
+### 6. Import a small source set
+
+The repository contains an optional source catalog. For the first evaluation,
+import one or both bounded definitions below rather than the aggregate catalog:
+
+- `resources/osint/distros/ubuntu_rss.json` — Ubuntu Security Notices
+- `resources/osint/software/microsoft_rss.json` — MSRC Security Update Guide
+
+Both definitions limit a collection pass to ten links.
+
+In **Configuration → OSINT Sources**, select **Import**, choose the included
+collector node, upload one JSON file, and confirm the imported source. Repeat
+for the second file if desired.
+
+Do not import `all.json` for the first evaluation. Deleting a source can leave
+previously collected news without its original source relation, so do not use
+source deletion as a demo-reset mechanism.
+
+Wait for a collection pass, then open **Assess** and confirm that collected news
+appears. If it does not, inspect the collector node's capabilities and the
+source's last collection status before proceeding.
+
+### 7. Create and preview the first product
+
+Use the normal `user` account for this workflow:
+
+1. In **Assess**, select a collected news item and create a report item of type
+   `News by Sector`.
+2. Supply its sector, date, headline, and article fields, then save it.
+3. Open **Publish**, create a product of type `Weekly Bulletin`, and add the
+   report item.
+4. Select **Preview**.
+
+The preview should open as HTML without presenter warnings. Previewing verifies
+the complete chain from collected news through report data and product type to
+the bundled presenter template. It does not send the product to an external
+publisher.
+
+### 8. Confirm completion
+
+The evaluation installation is complete when all of these are true:
+
+- the published images were pulled, or every application image was built;
+- both application-account passwords were changed and the old passwords fail;
+- collector, bot, presenter, and publisher capabilities are visible;
+- the official report and product types required above exist;
+- at least one bounded source collected news;
+- a `News by Sector` report item was saved; and
+- a `Weekly Bulletin` product preview rendered successfully.
+
+Large enrichment dictionaries and a real external publisher destination are
+optional and are not required for this completion check. The separate
+configuration how-to is reference material for later customization, not a
+continuation of installation.
+
+## Optional data and external publication
+
+The first-workflow completion check does not require large enrichment downloads
+or a real publication destination:
+
+- Configure and populate a stop-word list for the language of collected
+  content before evaluating tag-cloud quality.
+- Import CVE, CWE, and CPE dictionaries when the related analysis fields are
+  needed; they can be large and are maintained separately from the application
+  schema.
+- A publisher capability and a publisher preset are not the same as a working
+  destination. Supply real endpoints and credentials deliberately, and test
+  external side effects only when the destination is intended to receive data.
+
+## Local TLS and custom ports
+
+### Trusted production or managed LAN
+
+Use a certificate trusted by every client. Keep HTTPS redirection and HSTS
+enabled. Custom certificates placed in `docker/tls` must cover
+`TARANIS_NG_HOSTNAME`.
+
+### Local evaluation with an untrusted certificate
+
+The current GUI sends a one-year HSTS header. If a browser rejects an untrusted
+local certificate, add this local-only override to
+`docker/docker-compose.override.yml`, adapting the ports as needed:
+
+```yaml
+services:
+  traefik:
+    ports: !override
+      - "127.0.0.1:8080:80"
+      - "127.0.0.1:4443:443"
+      - "127.0.0.1:4443:443/udp"
+      - "127.0.0.1:8081:9090"
+  gui:
+    labels:
+      traefik.http.middlewares.local-disable-hsts.headers.customresponseheaders.Strict-Transport-Security: "max-age=0"
+      traefik.http.routers.taranis-gui-443.middlewares: "local-disable-hsts"
+```
+
+Keep `TARANIS_NG_HOSTNAME`, `TARANIS_NG_HTTPS_PORT`, and
+`TARANIS_NG_HTTPS_URI` in `.env` consistent with the chosen URL. Check the
+effective bindings with `docker compose config`, then recreate the affected
+services:
+
+```bash
+docker compose up -d traefik gui
+```
+
+The `!override` tag prevents the original public bindings from being merged
+with the local-only bindings. Do not expose this evaluation mode publicly. A
+browser that already cached the old HSTS policy may also require removal of its
+stored domain-security entry.
+
+## ACME/Let's Encrypt
+
+ACME requires the instance to be publicly reachable. From the `docker/`
+directory:
+
+1. Copy `docker-compose.override.yml.example` to
+   `docker-compose.override.yml`. If an override already exists, merge the ACME
+   volume changes instead of replacing it.
+2. Edit `traefik/traefik.yml` and enable the ACME configuration for the chosen
+   certificate provider.
+3. Restart Traefik with `docker compose restart traefik`.
+
+Keep ACME configuration in `traefik.yml`, not in `dynamic/`. For testing, use
+the provider's staging endpoint. Ensure the configured hostname resolves
+publicly and the required HTTP/HTTPS ports are reachable.
+
+For certificate authorities that require External Account Binding:
 
 ```yaml
 certificatesResolvers:
@@ -129,7 +238,7 @@ certificatesResolvers:
       email: your-email@example.com
       storage: /letsencrypt/acme.json
       caServer: https://your-ca-server.com/acme/directory
-      keyType: EC384  # or RSA4096
+      keyType: EC384
       eab:
         kid: your-eab-key-id
         hmacEncoded: your-eab-hmac-key
@@ -137,91 +246,70 @@ certificatesResolvers:
         entryPoint: web
 ```
 
-## Advanced build methods
+## Configuration reference
 
-### Individually build the containers
+### Core
 
-To build the Docker images individually, you need to clone the source code repository.
+| Environment variable | Description | Example |
+| --- | --- | --- |
+| `REDIS_URL` | Redis database URL used for SSE events | `redis://redis` |
+| `DB_URL` | PostgreSQL host | `postgres` |
+| `DB_DATABASE` | PostgreSQL database | `taranis-ng` |
+| `DB_USER` | PostgreSQL user | `taranis-ng` |
+| `DB_POOL_SIZE` | Maximum active pooled connections | `100` |
+| `DB_POOL_RECYCLE` | Maximum pooled-connection age | `300` |
+| `DB_POOL_TIMEOUT` | Pool connection timeout | `30` |
+| `OPENID_LOGOUT_URL` | OpenID/Keycloak logout URL | provider-specific URL |
+| `GUNICORN_WORKERS` | Gunicorn worker count | `AUTO` |
 
-```bash
-git clone https://github.com/SK-CERT/Taranis-NG.git
-```
+| Secret file | Description |
+| --- | --- |
+| `postgres_password.txt` | PostgreSQL password; initializes a fresh database but does not rotate an existing one |
+| `jwt_secret_key.txt` | JWT signing key; changing it invalidates existing tokens |
+| `api_key.txt` | Shared authentication key for Core and satellite services |
 
-Afterwards go to the cloned repository and launch the `docker build` command for the specific container image, like so:
+### Satellites
 
-```bash
-cd Taranis-NG
-docker build -t taranis-ng-bots . -f ./docker/Dockerfile.bots
-docker build -t taranis-ng-collectors . -f ./docker/Dockerfile.collectors
-docker build -t taranis-ng-core . -f ./docker/Dockerfile.core
-docker build -t taranis-ng-gui . -f ./docker/Dockerfile.gui
-docker build -t taranis-ng-presenters . -f ./docker/Dockerfile.presenters
-docker build -t taranis-ng-publishers . -f ./docker/Dockerfile.publishers
-```
+Collectors, bots, presenters, and publishers use `TARANIS_NG_CORE_URL` for the
+Core endpoint and `api_key.txt` for shared authentication.
 
-# Container variables configuration
+### GUI
 
-### `core`
+| Environment variable | Description |
+| --- | --- |
+| `VUE_APP_TARANIS_NG_CORE_API` | Core API URL |
+| `VUE_APP_TARANIS_NG_CORE_SSE` | Core SSE URL |
+| `VUE_APP_TARANIS_NG_URL` | Public frontend URL |
+| `VUE_APP_TARANIS_NG_LOCALE` | Default locale |
+| `NGINX_WORKERS` | Nginx worker count |
+| `NGINX_CONNECTIONS` | Connections per worker |
 
-| Environment variable        | Description | Example |
-|-----------------------------|-------------|----------|
-| `REDIS_URL`                 | Redis database URL. Used for SSE events. | `redis://redis` |
-| `DB_URL`                    | PostgreSQL database URL. | `127.0.0.1` |
-| `DB_DATABASE`               | PostgreSQL database name. | `taranis-ng` |
-| `DB_USER`                   | PostgreSQL database user. | `taranis-ng` |
-| `DB_POOL_SIZE`              | SQLAlchemy QueuePool number of active connections to the database. | `100` |
-| `DB_POOL_RECYCLE`           | SQLAlchemy QueuePool maximum connection age. | `300` |
-| `DB_POOL_TIMEOUT`           | SQLAlchemy QueuePool connection timeout. | `5` |
-| `OPENID_LOGOUT_URL`         | Keycloak logout URL. | `https://example.com/realms/master/protocol/openid-connect/logout` |
-| `GUNICORN_WORKERS`          | Number of Gunicorn worker threads. | `AUTO`, `8` |
+### Redis and PostgreSQL
 
-| Secrets file                | Description | Example |
-|-----------------------------|-------------|----------|
-| `postgres_password`         | PostgreSQL database password. | `supersecret` |
-| `jwt_secret_key`            | JWT token secret key. | `supersecret` |
+Redis and PostgreSQL use their standard container configuration. If Redis
+warns that host memory overcommit is disabled, follow the operating system's
+Redis deployment guidance before using the instance under load.
 
+## Upgrades
 
-Taranis NG can use [connection pooling](https://docs.sqlalchemy.org/en/14/core/pooling.html) to maintain multiple active connections to the database server. Connection pooling is required when your deployment serves hundreds of customers from one instance. To enable connection pooling, set the `DB_POOL_SIZE`, `DB_POOL_RECYCLE`, and `DB_POOL_TIMEOUT` environment variables.
+Do not use the fresh-install copy commands to upgrade an existing deployment.
+Preserve `.env`, all secret files, PostgreSQL data, `core_data`, presenter user
+templates, and collector storage. The current snapshot does not yet provide a
+fully validated upgrade-and-rollback procedure, so test restoration and review
+release-specific migration notes before upgrading a production instance.
 
-### `bots`, `collectors`, `presenters`, `publishers`
+## MCP companion
 
-| Environment variable        | Description | Example |
-|-----------------------------|-------------|----------|
-| `TARANIS_NG_CORE_URL`       | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
+MCP is not bundled in this Compose stack. It is planned as a separate
+repository with its own installation and release lifecycle. Use only an MCP
+release that explicitly declares compatibility with the installed Taranis NG
+version.
 
-| Secrets file                | Description | Example |
-|-----------------------------|-------------|----------|
-| `api_key`            | Shared API key. | `supersecret` |
+## Project links
 
-
-### `gui`
-
-| Environment variable          | Description | Example |
-|-------------------------------|-------------|----------|
-| `VUE_APP_TARANIS_NG_CORE_API` | URL of the Taranis NG core API. | `http://127.0.0.1:8080/api/v1` |
-| `VUE_APP_TARANIS_NG_CORE_SSE` | URL of the Taranis NG SSE endpoint. | `http://127.0.0.1:8080/sse` |
-| `VUE_APP_TARANIS_NG_URL`      | URL of the Taranis NG frontend. | `http://127.0.0.1` |
-| `VUE_APP_TARANIS_NG_LOCALE`   | Application locale. | `en` |
-| `NGINX_WORKERS`               | Number of NginX worker threads to spawn. | `4` |
-| `NGINX_CONNECTIONS`           | Maximum number of allowed connections per one worker thread. | `16` |
-
-### `redis`
-Any configuration options are available at [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis).
-
-If you see in logs this message:
-```
-redis-1       | 1:C 07 Jan 2025 08:35:21.560 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
-```
-Run following in your host OS:
-```bash
-sysctl -w vm.overcommit_memory=1
-```
-
-### `database`
-Any configuration options are available at [https://hub.docker.com/_/postgres](https://hub.docker.com/_/postgres).
-
-## Learn more...
-
-Main documentation can be found in the [README](https://github.com/SK-CERT/Taranis-NG/blob/main/README.md), which includes basic information and initial setup instructions.
-
-For instructions on configuring other components, refer to the [How to guide](https://github.com/SK-CERT/Taranis-NG/blob/main/docs/howto.md).
+- [Source code](https://github.com/SK-CERT/Taranis-NG)
+- [Docker images](https://hub.docker.com/u/skcert)
+- [Configuration how-to](https://github.com/SK-CERT/Taranis-NG/blob/main/docs/howto.md)
+- [OSINT source catalog](https://github.com/SK-CERT/Taranis-NG/tree/main/resources/osint)
+- [Issue tracker](https://github.com/SK-CERT/Taranis-NG/issues)
+- Security reports: [incident@nbu.gov.sk](mailto:incident@nbu.gov.sk)

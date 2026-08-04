@@ -1,9 +1,16 @@
-﻿### Table of Contents
+﻿# Advanced configuration how-to
+
+**Audience:** administrators of an already initialized Taranis NG instance.
+
+**Status:** optional customization reference, not part of installation. The
+canonical Docker guide includes the complete path through the first collected
+item and product preview.
+
+### Table of contents
 
 - [Altering the roles](#_toc1)
-- [Adding sources to collect](#_toc2)
 - [Splitting the sources into groups, and revisiting the permissions](#_toc3)
-- [Using the default stop lists for better tag cloud](#_toc4)
+- [Customizing stop lists](#_toc4)
 - [Management script - configure accounts, roles, nodes and dictionaries via commandline](#_toc5)
 - [Using AI in Taranis NG](#_toc6)
 
@@ -14,16 +21,6 @@ ideas about how the responsibilities should be split, visit Configuration ->
 Roles. Edit the roles to your liking, for example by adding the executive
 permissions to the Admin role. If you change the roles to yourself, don't
 forget to log out and log back in.
-
-# <a id="_toc2"></a>Adding sources to collect
-
-Visit Configuration -> OSINT Sources. Click `Add new`. Select the collectors
-node that you just created and then you should be able to see all the
-collectors it has registered. Pick one (for instance the RSS collector), and
-you will be able to enter all the necessary details. Finally, click `Save`.
-
-In a few minutes, you should see freshly collected data in the Assess menu,
-which is normally available to the account user / user.
 
 # <a id="_toc3"></a>Splitting the sources into groups, and revisiting the permissions
 
@@ -36,11 +33,15 @@ a new ACL by clicking `Add new`. You can pick any particular item type
 (Collector, OSINT Source, OSINT Source Group, Product Type, Report Item Type, Word List) and then grant *see*, *access*, or *modify*
 access types to everyone, selected users, or selected roles.
 
-# <a id="_toc4"></a>Using the default stop lists for better tag cloud
+# <a id="_toc4"></a>Customizing stop lists
+
+A fresh database may not contain an active default stop-word list. Confirm that
+the expected list exists, has the correct language and URL, and contains words
+before relying on the tag cloud.
 
 1. Visit Configuration -> Word Lists.
-2. Open the default word lists (starting with `Default ...`).
-3. Choose a word list URL or use the default URL present in the standard installation.
+2. Open the intended word list, or create one if no suitable default exists.
+3. Configure a reviewed word-list URL for the language of the collected content.
 4. Under Words, click `Download from URL`.
 5. Check whether the CSV file has a header or not, then click `Download from URL`. Choose which column has the value and description.
 6. Optionally, you can check `Delete existing words` option to remove any previous words in the list.
@@ -51,11 +52,17 @@ access types to everyone, selected users, or selected roles.
 
 Taranis NG core container comes with a simple management script that may be used to set up and configure the instance without manual interaction with the database.
 
-To run the management script, launch a shell inside of the docker container for the core component with this command:
+Run the management script through the Core Compose service from the `docker/`
+directory:
 
 ```bash
-docker exec -it [CONTAINER] python manage.py [COMMAND] [PARAMETERS]
+docker compose exec core python manage.py [COMMAND] [PARAMETERS]
 ```
+
+The account command accepts passwords on the command line, where a shell or
+process monitor may record them. Prefer the account administration UI for
+password changes. Docker secret files do not rotate application-account
+passwords stored in PostgreSQL.
 
 Currently, you may manage the following:
 
@@ -113,7 +120,7 @@ manage.py [collector, bot] \
     --name "Docker [collector, bot]" \
     --description "A simple [collector, bot] hosted in a Docker container" \
     --api-url "http://[collectors, bots]" \
-    --api-key "supersecret"
+    --api-key "REPLACE_WITH_CURRENT_SATELLITE_KEY"
 ```
 
 Command output:
@@ -146,7 +153,7 @@ manage.py account \
     --create \
     --name "John Doe" \
     --username "test_user" \
-    --password "supersecret" \
+    --password "REPLACE_WITH_STRONG_UNIQUE_PASSWORD" \
     --roles 3
 ```
 
