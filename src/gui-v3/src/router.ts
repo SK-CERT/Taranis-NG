@@ -129,7 +129,14 @@ const routes: RouteRecordRaw[] = [
             default: () => import('./views/admin/CollectorsView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [
+                Permissions.CONFIG_OSINT_SOURCE_ACCESS,
+                Permissions.CONFIG_OSINT_SOURCE_GROUP_ACCESS,
+                Permissions.CONFIG_COLLECTORS_NODE_ACCESS
+            ]
+        }
     },
     {
         path: '/config/presenters',
@@ -138,7 +145,10 @@ const routes: RouteRecordRaw[] = [
             default: () => import('./views/admin/PresentersView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [Permissions.CONFIG_PRODUCT_TYPE_ACCESS, Permissions.CONFIG_PRESENTERS_NODE_ACCESS]
+        }
     },
     {
         path: '/config/publishers',
@@ -147,7 +157,10 @@ const routes: RouteRecordRaw[] = [
             default: () => import('./views/admin/PublishersView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [Permissions.CONFIG_PUBLISHER_PRESET_ACCESS, Permissions.CONFIG_PUBLISHERS_NODE_ACCESS]
+        }
     },
     {
         path: '/config/remote',
@@ -156,7 +169,10 @@ const routes: RouteRecordRaw[] = [
             default: () => import('./views/admin/RemoteView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [Permissions.CONFIG_REMOTE_ACCESS_ACCESS, Permissions.CONFIG_REMOTE_NODE_ACCESS]
+        }
     },
     {
         path: '/config/bots',
@@ -165,7 +181,10 @@ const routes: RouteRecordRaw[] = [
             default: () => import('./views/admin/BotsView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [Permissions.CONFIG_BOT_PRESET_ACCESS, Permissions.CONFIG_BOTS_NODE_ACCESS]
+        }
     },
 
     {
@@ -214,7 +233,10 @@ const routes: RouteRecordRaw[] = [
             default: () => import('./views/admin/DataProviderView.vue'),
             nav: () => import('./views/nav/ConfigNav.vue')
         },
-        meta: { requiresAuth: true, requiresPerm: [Permissions.CONFIG_DATA_PROVIDER_ACCESS] }
+        meta: {
+            requiresAuth: true,
+            requiresPerm: [Permissions.CONFIG_DATA_PROVIDER_ACCESS, Permissions.CONFIG_AI_ACCESS]
+        }
     },
     {
         path: '/config/external',

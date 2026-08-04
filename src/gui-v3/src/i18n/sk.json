@@ -1045,6 +1045,7 @@
         "add_btn": "Pridať",
         "add_new": "Pridať nový",
         "add_items": "Pridať položky",
+        "attributes": "Atribúty",
         "save": "Uložiť",
         "edit": "Upraviť",
         "done": "Hotovo",
@@ -1489,8 +1490,11 @@
         "total_count": "Počet šablón notifikácií: "
     },
     "asset": {
+        "add": "Pridať aktívum",
         "add_new": "Pridať nové aktívum",
         "add_group_info": "Prosím, pridajte skupinu aktív",
+        "no_groups_message": "Pred pridaním aktív najprv vytvorte skupinu aktív",
+        "no_data": "Nenašli sa žiadne aktíva",
         "edit": "Upraviť aktívum",
         "error": "Nepodarilo sa uložiť aktívum",
         "name": "Názov",
@@ -1501,6 +1505,8 @@
         "edit_cpe": "Upraviť CPE kód",
         "cpes": "CPE kódy",
         "value": "Hodnota",
+        "vulnerable": "Zraniteľné",
+        "total": "Celkom",
         "successful": "Nové aktívum bolo úspešne pridané",
         "successful_edit": "Aktívum bolo úspešne aktualizované",
         "removed": "Aktívum bolo úspešne odstránené",
@@ -1509,6 +1515,10 @@
         "vulnerabilities": "Zraniteľnosti",
         "vulnerabilities_count": "Zraniteľnosti: ",
         "no_vulnerabilities": "Žiadne zraniteľnosti",
+        "sort": {
+            "alphabetical": "Abecedne",
+            "vulnerability": "Podľa zraniteľnosti"
+        },
         "import_csv": "Import CSV",
         "import_from_csv": "Import CPE z CSV",
         "file_has_header": "Súbor obsahuje hlavičku",

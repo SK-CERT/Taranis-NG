@@ -13,6 +13,7 @@
                      animation originates from it (matches the Configuration dialogs). -->
                 <template #addbutton>
                     <AddNewsItemDialog
+                        v-if="canCreateNewsItem"
                         v-model="showAddNewsItemDialog"
                         :manual-sources="assessStore.getManualOSINTSourcesList"
                         @news-item-added="handleNewsItemAdded"
@@ -56,6 +57,8 @@
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import useKeyboard from '@/composables/useKeyboard'
+    import { useAuth } from '@/composables/useAuth'
+    import Permissions from '@/services/permissions'
 
     const props = withDefaults(
         defineProps<{
@@ -70,11 +73,13 @@
     const router = useRouter()
     const assessStore = useAssessStore()
     const { t } = useI18n()
+    const { checkPermission } = useAuth()
 
     const toolbarFilter = ref<any>(null)
     const contentData = ref<any>(null)
     const showAddNewsItemDialog = ref(false)
     const newReportItem = ref<any>(null)
+    const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
     const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
 
     const newDataLoaded = (count: number): void => {
@@ -138,10 +143,12 @@
     }
 
     onMounted(() => {
-        // Load manual OSINT sources to show "Add New" button (non-blocking)
-        assessStore.loadManualOSINTSources().catch((error) => {
-            console.error('Error loading manual OSINT sources:', error)
-        })
+        if (canCreateNewsItem.value) {
+            // Load manual OSINT sources to show "Add New" button (non-blocking)
+            assessStore.loadManualOSINTSources().catch((error) => {
+                console.error('Error loading manual OSINT sources:', error)
+            })
+        }
 
         if (route.path.includes('/group/')) {
             handleRouteChange()

@@ -9,48 +9,29 @@
             color="primary"
         >
             <v-tab
-                value="sources"
-                :title="t('collectors.sources.tab_description')"
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+                :title="t(tab.description)"
             >
                 <v-icon
-                    :icon="ICONS.ANIMATION_OUTLINE"
+                    :icon="tab.icon"
                     start
                 />
-                {{ t('nav_menu.osint_sources') }}
-            </v-tab>
-            <v-tab
-                value="groups"
-                :title="t('collectors.groups.tab_description')"
-            >
-                <v-icon
-                    :icon="ICONS.FOLDER_MULTIPLE"
-                    start
-                />
-                {{ t('nav_menu.osint_source_groups') }}
-            </v-tab>
-            <v-tab
-                value="nodes"
-                :title="t('collectors.nodes.tab_description')"
-            >
-                <v-icon
-                    :icon="ICONS.SERVER_NETWORK"
-                    start
-                />
-                {{ t('nav_menu.collectors_nodes') }}
+                {{ t(tab.title) }}
             </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-            <v-window-item value="sources">
-                <OSINTSourcesView v-if="activeTab === 'sources'" />
-            </v-window-item>
-
-            <v-window-item value="groups">
-                <OSINTSourceGroupsView v-if="activeTab === 'groups'" />
-            </v-window-item>
-
-            <v-window-item value="nodes">
-                <CollectorsNodesView v-if="activeTab === 'nodes'" />
+            <v-window-item
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+            >
+                <component
+                    :is="tab.component"
+                    v-if="activeTab === tab.value"
+                />
             </v-window-item>
         </v-window>
     </v-container>
@@ -58,12 +39,39 @@
 
 <script setup lang="ts">
     import { useI18n } from 'vue-i18n'
-    import { useTabQuery } from '@/composables/useTabQuery'
+    import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import CollectorsNodesView from './CollectorsNodesView.vue'
     import OSINTSourcesView from './OSINTSourcesView.vue'
     import OSINTSourceGroupsView from './OSINTSourceGroupsView.vue'
 
     const { t } = useI18n()
-    const activeTab = useTabQuery(['sources', 'groups', 'nodes'], 'sources')
+    const tabs = [
+        {
+            value: 'sources',
+            title: 'nav_menu.osint_sources',
+            description: 'collectors.sources.tab_description',
+            icon: ICONS.ANIMATION_OUTLINE,
+            component: OSINTSourcesView,
+            permission: 'CONFIG_OSINT_SOURCE_ACCESS'
+        },
+        {
+            value: 'groups',
+            title: 'nav_menu.osint_source_groups',
+            description: 'collectors.groups.tab_description',
+            icon: ICONS.FOLDER_MULTIPLE,
+            component: OSINTSourceGroupsView,
+            permission: 'CONFIG_OSINT_SOURCE_GROUP_ACCESS'
+        },
+        {
+            value: 'nodes',
+            title: 'nav_menu.collectors_nodes',
+            description: 'collectors.nodes.tab_description',
+            icon: ICONS.SERVER_NETWORK,
+            component: CollectorsNodesView,
+            permission: 'CONFIG_COLLECTORS_NODE_ACCESS'
+        }
+    ] as const
+
+    const { availableTabs, activeTab } = usePermissionTabs(tabs)
 </script>

@@ -17,6 +17,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-download-network',
         title: 'nav_menu.collectors',
         route: '/config/collectors',
+        permissions: ['CONFIG_OSINT_SOURCE_ACCESS', 'CONFIG_OSINT_SOURCE_GROUP_ACCESS', 'CONFIG_COLLECTORS_NODE_ACCESS'],
         translate: true
     },
     {
@@ -24,6 +25,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-presentation',
         title: 'nav_menu.presenters',
         route: '/config/presenters',
+        permissions: ['CONFIG_PRODUCT_TYPE_ACCESS', 'CONFIG_PRESENTERS_NODE_ACCESS'],
         translate: true
     },
     {
@@ -31,6 +33,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-upload-network',
         title: 'nav_menu.publishers',
         route: '/config/publishers',
+        permissions: ['CONFIG_PUBLISHER_PRESET_ACCESS', 'CONFIG_PUBLISHERS_NODE_ACCESS'],
         translate: true
     },
     {
@@ -41,12 +44,20 @@ export const configLinks: GroupNavItem[] = [
         permissions: ['CONFIG_REPORT_TYPE_ACCESS', 'CONFIG_ATTRIBUTE_ACCESS'],
         translate: true
     },
-    { id: 7, icon: 'mdi-robot', title: 'nav_menu.bots', route: '/config/bots', translate: true },
+    {
+        id: 7,
+        icon: 'mdi-robot',
+        title: 'nav_menu.bots',
+        route: '/config/bots',
+        permissions: ['CONFIG_BOT_PRESET_ACCESS', 'CONFIG_BOTS_NODE_ACCESS'],
+        translate: true
+    },
     {
         id: 8,
         icon: 'mdi-remote',
         title: 'nav_menu.remote',
         route: '/config/remote',
+        permissions: ['CONFIG_REMOTE_ACCESS_ACCESS', 'CONFIG_REMOTE_NODE_ACCESS'],
         translate: true
     },
     {
@@ -78,7 +89,7 @@ export const configLinks: GroupNavItem[] = [
         icon: 'mdi-cloud-arrow-down',
         title: 'nav_menu.data_providers',
         route: '/config/data-providers',
-        permission: 'CONFIG_DATA_PROVIDER_ACCESS',
+        permissions: ['CONFIG_DATA_PROVIDER_ACCESS', 'CONFIG_AI_ACCESS'],
         translate: true
     },
     {

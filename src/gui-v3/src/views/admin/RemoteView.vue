@@ -9,34 +9,29 @@
             color="primary"
         >
             <v-tab
-                value="access"
-                :title="t('remote.access.tab_description')"
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+                :title="t(tab.description)"
             >
                 <v-icon
-                    :icon="ICONS.REMOTE_DESKTOP"
+                    :icon="tab.icon"
                     start
                 />
-                {{ t('nav_menu.remote_access') }}
-            </v-tab>
-            <v-tab
-                value="nodes"
-                :title="t('remote.nodes.tab_description')"
-            >
-                <v-icon
-                    :icon="ICONS.SHARE_VARIANT"
-                    start
-                />
-                {{ t('nav_menu.remote_nodes') }}
+                {{ t(tab.title) }}
             </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-            <v-window-item value="access">
-                <RemoteAccessesView v-if="activeTab === 'access'" />
-            </v-window-item>
-
-            <v-window-item value="nodes">
-                <RemoteNodesView v-if="activeTab === 'nodes'" />
+            <v-window-item
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+            >
+                <component
+                    :is="tab.component"
+                    v-if="activeTab === tab.value"
+                />
             </v-window-item>
         </v-window>
     </v-container>
@@ -44,11 +39,30 @@
 
 <script setup lang="ts">
     import { useI18n } from 'vue-i18n'
-    import { useTabQuery } from '@/composables/useTabQuery'
+    import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import RemoteAccessesView from './RemoteAccessesView.vue'
     import RemoteNodesView from './RemoteNodesView.vue'
 
     const { t } = useI18n()
-    const activeTab = useTabQuery(['access', 'nodes'], 'access')
+    const tabs = [
+        {
+            value: 'access',
+            title: 'nav_menu.remote_access',
+            description: 'remote.access.tab_description',
+            icon: ICONS.REMOTE_DESKTOP,
+            component: RemoteAccessesView,
+            permission: 'CONFIG_REMOTE_ACCESS_ACCESS'
+        },
+        {
+            value: 'nodes',
+            title: 'nav_menu.remote_nodes',
+            description: 'remote.nodes.tab_description',
+            icon: ICONS.SHARE_VARIANT,
+            component: RemoteNodesView,
+            permission: 'CONFIG_REMOTE_NODE_ACCESS'
+        }
+    ] as const
+
+    const { availableTabs, activeTab } = usePermissionTabs(tabs)
 </script>

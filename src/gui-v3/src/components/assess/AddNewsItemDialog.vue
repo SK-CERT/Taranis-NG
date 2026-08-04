@@ -1,5 +1,6 @@
 <template>
     <v-dialog
+        v-if="canCreateNewsItem"
         v-model="isOpen"
         max-width="800px"
         scrollable
@@ -139,6 +140,8 @@
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { addNewsItem } from '@/api/assess'
     import { useUserStore } from '@/stores/user'
+    import { useAuth } from '@/composables/useAuth'
+    import Permissions from '@/services/permissions'
 
     type ManualSource = {
         id: string | number
@@ -185,6 +188,8 @@
 
     const { t, locale } = useI18n()
     const userStore = useUserStore()
+    const { checkPermission } = useAuth()
+    const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
 
     const isOpen = computed<boolean>({
         get: () => props.modelValue,
@@ -286,6 +291,13 @@
         showError.value = false
         showValidationError.value = false
         showSuccess.value = false
+
+        // The parent hides this dialog for unauthorized users, but permission may
+        // change while it is open or this component may be mounted elsewhere.
+        if (!checkPermission(Permissions.ASSESS_CREATE)) {
+            closeDialog()
+            return
+        }
 
         if (!formRef.value?.validate) {
             return

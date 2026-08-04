@@ -16,6 +16,8 @@
 # All bindings are loopback-only.
 services:
   core:
+    environment:
+      GUNICORN_WORKERS: "1"
     labels:
       traefik.enable: "false"
     ports: !override
