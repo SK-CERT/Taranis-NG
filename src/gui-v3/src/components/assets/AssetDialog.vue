@@ -61,20 +61,9 @@
                                 rows="3"
                                 class="mb-2"
                             />
-                            <v-combobox
-                                v-model="cpeValues"
-                                v-model:search="cpeSearch"
-                                :items="cpeSuggestions"
-                                :label="t('asset.cpes')"
+                            <CpeEditor
+                                v-model="cpeEntries"
                                 :disabled="saving || !canModify"
-                                multiple
-                                chips
-                                closable-chips
-                                clearable
-                                variant="outlined"
-                                :hint="t('asset.cpe_hint')"
-                                persistent-hint
-                                @update:search="scheduleCpeSearch"
                             />
                         </v-form>
                     </v-window-item>
@@ -117,20 +106,7 @@
                                     </div>
                                 </v-expansion-panel-title>
                                 <v-expansion-panel-text>
-                                    <p
-                                        v-if="vulnerability.report_item.subtitle"
-                                        class="mb-3"
-                                    >
-                                        {{ vulnerability.report_item.subtitle }}
-                                    </p>
-                                    <v-list density="compact">
-                                        <v-list-item
-                                            v-for="(attribute, index) in vulnerability.report_item.attributes || []"
-                                            :key="attribute.id ?? index"
-                                            :title="attribute.attribute_group_item_title || t('common.attributes')"
-                                            :subtitle="attribute.value_description || attribute.value || ''"
-                                        />
-                                    </v-list>
+                                    <VulnerabilityDetail :report-item="vulnerability.report_item" />
                                 </v-expansion-panel-text>
                             </v-expansion-panel>
                         </v-expansion-panels>
@@ -157,8 +133,10 @@
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
-    import { createNewAsset, getCPEAttributeEnums, solveVulnerability, updateAsset } from '@/api/assets'
-    import type { Asset, AssetVulnerability, ListResponse } from '@/types/assets'
+    import { createNewAsset, solveVulnerability, updateAsset } from '@/api/assets'
+    import CpeEditor, { type CpeEntry } from './CpeEditor.vue'
+    import VulnerabilityDetail from './VulnerabilityDetail.vue'
+    import type { Asset, AssetVulnerability } from '@/types/assets'
 
     const props = defineProps<{ modelValue: boolean; asset?: Asset | null; groupId: string }>()
     const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
@@ -174,11 +152,8 @@
     const error = ref(false)
     const formRef = ref<{ validate?: () => Promise<{ valid: boolean }> } | null>(null)
     const form = ref({ name: '', serial: '', description: '' })
-    const cpeValues = ref<string[]>([])
-    const cpeSearch = ref('')
-    const cpeSuggestions = ref<string[]>([])
+    const cpeEntries = ref<CpeEntry[]>([])
     const vulnerabilities = ref<AssetVulnerability[]>([])
-    let searchTimer: ReturnType<typeof setTimeout> | undefined
 
     const unsolvedCount = computed(() => vulnerabilities.value.filter((item) => !item.solved).length)
     const required = (value: string): true | string => Boolean(value?.trim()) || t('error.required')
@@ -191,29 +166,13 @@
         ([visible, asset]) => {
             if (!visible) return
             form.value = { name: asset?.name || '', serial: asset?.serial || '', description: asset?.description || '' }
-            cpeValues.value = (asset?.asset_cpes || []).map((item) => item.value.replaceAll('%', '*'))
+            cpeEntries.value = (asset?.asset_cpes || []).map((item) => ({ value: item.value.replaceAll('%', '*') }))
             vulnerabilities.value = (asset?.vulnerabilities || []).map((item) => ({ ...item }))
             tab.value = 'details'
             error.value = false
         },
         { immediate: true, deep: true }
     )
-
-    const scheduleCpeSearch = (): void => {
-        clearTimeout(searchTimer)
-        searchTimer = setTimeout(loadCpeSuggestions, 300)
-    }
-
-    const loadCpeSuggestions = async (): Promise<void> => {
-        try {
-            const response = (await getCPEAttributeEnums({ search: cpeSearch.value, limit: 30 })) as {
-                data?: ListResponse<{ value?: string }> | { items?: Array<{ value?: string }> }
-            }
-            cpeSuggestions.value = (response.data?.items || []).map((item) => item.value || '').filter(Boolean)
-        } catch {
-            cpeSuggestions.value = []
-        }
-    }
 
     const save = async (): Promise<void> => {
         if (!canModify.value) return
@@ -225,7 +184,7 @@
             id: props.asset?.id || 0,
             asset_group_id: props.groupId,
             ...form.value,
-            asset_cpes: cpeValues.value.map((value) => ({ value: value.replaceAll('*', '%') }))
+            asset_cpes: cpeEntries.value.map((entry) => ({ value: entry.value.replaceAll('*', '%') }))
         }
         try {
             if (editing.value) await updateAsset(payload)
