@@ -1,18 +1,16 @@
-# Vue3 GUI Documentation Index
+# Vue 3 GUI Documentation Index
 
-**Audience:** Vue 3 frontend developers. These are implementation and migration
-notes, not deployment instructions. See the repository
-[Docker deployment guide](../../../docker/README.md) for the current released
-stack.
+**Audience:** Vue 3 frontend developers. These are implementation and
+architecture references, not deployment instructions. See the repository
+[Docker deployment guide](../../../docker/README.md) for the supported stack.
 
-**Last Updated:** April 28, 2026
+This directory contains implementation, status, and architecture documentation
+for the Taranis NG Vue 3 GUI.
 
-This directory contains all implementation and architecture documentation for the Taranis-NG Vue3 GUI project.
-
-## 📂 Directory Structure
+## Directory structure
 
 ```
-/docs/
+src/gui-v3/docs/
 ├── README.md (this file)
 ├── IMPLEMENTATION_STATUS.md (main status reference)
 ├── migration/
@@ -24,14 +22,15 @@ This directory contains all implementation and architecture documentation for th
     └── UNIFIED_TOOLBAR_FILTERS.md
 ```
 
----
-
-## 🎯 Quick Navigation
+## Quick navigation
 
 ### For Project Status
-- **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** — Primary reference for current implementation status, feature coverage, and remaining gaps.
+
+- **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** — Feature,
+  verification, and deployment status.
 
 ### For Architecture
+
 - **[architecture/STATE_MANAGEMENT.md](./architecture/STATE_MANAGEMENT.md)** — Pinia stores, API service layer, and UI constants.
 - **[architecture/ROUTING_AND_AUTH.md](./architecture/ROUTING_AND_AUTH.md)** — Vue Router setup, navigation guards, permissions, and SSE.
 - **[architecture/ATTRIBUTE_SYSTEM.md](./architecture/ATTRIBUTE_SYSTEM.md)** — Dynamic attribute dispatcher pattern and all attribute types.

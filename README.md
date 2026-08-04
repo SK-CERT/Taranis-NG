@@ -1,8 +1,9 @@
 # Taranis NG
 
 Taranis NG is an OSINT gathering and analysis tool for CSIRT teams and
-organisations. It allows osint gathering, analysis and reporting; team-to-team
-collaboration; and contains a user portal for simple self asset management.
+organisations. It supports OSINT gathering, analysis and reporting;
+team-to-team collaboration; and includes a user portal for simple self-service
+asset management.
 
 ![](docs/images/screenshot.png)
 
@@ -11,22 +12,28 @@ unstructured **news items**. These are processed by analysts to create
 structured **report items**, which are used to create **products** such as PDF
 files, which are finally **published**.
 
-Taranis supports **team-to-team collaboration**, and includes a light weight
-**self service asset management** which automatically links to the advisories
+Taranis supports **team-to-team collaboration**, and includes a lightweight
+**self-service asset management** portal which automatically links to advisories
 that mention vulnerabilities in the software.
 
+## Languages
 
-This is just a taste of its features:
+The Vue 3 GUI includes translations for Brazilian Portuguese, Czech, Dutch,
+English, French, German, Hindi, Italian, Japanese, Korean, Polish, Russian,
+Simplified Chinese, Slovak, Spanish, Thai, Turkish, Ukrainian, and Vietnamese.
+English is used as the fallback language.
 
-- crawl the raw data using various collectors, perhaps located in different environments.
-- process even those javascript-generated web pages with advanced data extraction techniques
-- create different analyses with completely customizable report item types
-- generate many different products with help of product templates
-- easily publish to different channels
-- time is money: collaborate with other teams by sharing interesting data. Each partnership can be configured and customized.
-- split the work responsibilities any way you like, or have multiple teams process partially overlapping data using advanced role and permission system
-- use wordlists for filtering and highlighting
-- publish the self-service asset management portal to your constituency and allow them to set various notification profiles for those times when a vulnerability hits their product.
+Key capabilities include:
+
+- collecting data from multiple source types and environments;
+- extracting content from JavaScript-rendered web pages;
+- creating analyses with configurable report-item types;
+- generating products from reusable templates;
+- publishing through multiple channels;
+- sharing selected data between teams with configurable collaboration rules;
+- separating responsibilities through roles and permissions;
+- filtering and highlighting with word lists; and
+- offering self-service asset and vulnerability notification management.
 
 ### Hardware requirements
 
@@ -47,38 +54,36 @@ For instructions on configuring other components, refer to the [How to guide](do
 
 You can view the architecture block diagram [here](docs/images/block-diagram.png).
 
-Have a look at the [Taranis NG - original requirements.pdf](docs/Taranis-NG-original-requirements.pdf)
-for detailed description of the features of the first release, its internal
-architecture, and general design goals of the project.
-The current version contains newer features and changes that are not documented
-in this historical PDF. Do not use it as installation or operations guidance.
+The [requirements and design reference](docs/Taranis-NG-original-requirements.pdf)
+describes the product's design goals. Use the Docker guide and current source
+documentation for installation and operations.
 
 #### Node type capabilities
 
-| Type      | Name                 | Description                           |
-| :-------- | :------------------- | :------------------------------------ |
-| Collector | web                  | crawl web sites                       |
-|           | email                | read e-mails                          |
-|           | manual entry         | enter news item manually              |
-|           | rss                  | read RSS, Atom feeds                  |
-|           | scheduled tasks      | populate feed automatically           |
-|           | slack                | read [Slack](https://slack.com/) messages |
-|           | twitter              | receive tweets                        |
-| Presenter | html                 | create HTML from template             |
-|           | json                 | create a json file                    |
-|           | message              | create a email message  from template |
-|           | misp                 | create [MISP](https://misp-project.org/) event JSON |
-|           | pdf                  | create a PDF file from template       |
-|           | text                 | create plain text from template       |
-| Publisher | email                | send e-mail                           |
-|           | mastodon             | create Mastodon tweet                 |
-|           | misp                 | create MISP event                     |
-|           | ftp, sftp            | upload to FTP, SFTP                   |
-|           | twitter              | create tweet                          |
-|           | wordpress            | publish to [WordPress](https://wordpress.org/) |
-| Bot       | analyst              | extract attributes from text by regular expressions |
-|           | grouping             | group similar items in the news feed  |
-|           | wordlist updater     | update word lists used for matching   |
+| Type      | Name             | Description                                         |
+| :-------- | :--------------- | :-------------------------------------------------- |
+| Collector | web              | crawl web sites                                     |
+|           | email            | read e-mails                                        |
+|           | manual entry     | enter news item manually                            |
+|           | rss              | read RSS, Atom feeds                                |
+|           | scheduled tasks  | populate feed automatically                         |
+|           | slack            | read [Slack](https://slack.com/) messages           |
+|           | twitter          | receive tweets                                      |
+| Presenter | html             | create HTML from template                           |
+|           | json             | create a json file                                  |
+|           | message          | create a email message from template                |
+|           | misp             | create [MISP](https://misp-project.org/) event JSON |
+|           | pdf              | create a PDF file from template                     |
+|           | text             | create plain text from template                     |
+| Publisher | email            | send e-mail                                         |
+|           | mastodon         | create Mastodon tweet                               |
+|           | misp             | create MISP event                                   |
+|           | ftp, sftp        | upload to FTP, SFTP                                 |
+|           | twitter          | create tweet                                        |
+|           | wordpress        | publish to [WordPress](https://wordpress.org/)      |
+| Bot       | analyst          | extract attributes from text by regular expressions |
+|           | grouping         | group similar items in the news feed                |
+|           | wordlist updater | update word lists used for matching                 |
 
 ## About
 

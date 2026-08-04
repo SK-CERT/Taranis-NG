@@ -1,210 +1,127 @@
-# Testing Guide - Taranis-NG Vue 3 GUI
+# Vue 3 GUI testing
 
-**Last Updated:** April 28, 2026
+The Vue 3 test suite combines Vitest component/unit tests with Playwright
+browser workflows.
 
-## Overview
-
-The Vue3 GUI test suite lives under `src/gui-v3/tests/` and currently covers:
-
-- **E2E tests** with Playwright for end-to-end workflows and routing
-- **Unit tests** with Vitest for stores, composables, services, utilities, and selected components
-- **Component tests** with Vitest + Vue Test Utils
-
-## Tooling
-
-### Unit / Component Tests
-
-- **Runner:** Vitest
-- **Vue support:** `@vue/test-utils`
-- **Environment:** `happy-dom`
-- **Config:** `vitest.config.js`
-
-### E2E Tests
-
-- **Runner:** Playwright
-- **Configs:** `playwright.config.js`, `playwright.ui.config.js`
-- **Browsers:** Chromium, Firefox, WebKit
-- **Default base URL:** `http://localhost:4444`
-
-## Quick Start
-
-### Install dependencies
+Run commands from `src/gui-v3` after installing the locked dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
-### Install Playwright browsers
+## Unit and component tests
+
+Vitest uses `happy-dom`, Vue Test Utils, the `@` source alias, and Vuetify
+component support. End-to-end files are excluded from the Vitest run.
+
+```bash
+# Watch mode
+npm test
+
+# One complete run
+npm run test:unit
+
+# Interactive Vitest UI
+npm run test:ui
+
+# V8 coverage in text, JSON, and HTML formats
+npm run test:coverage
+
+# One file
+npx vitest run tests/unit/useAuth.spec.js
+```
+
+Unit coverage includes stores, API wrappers, authentication and permissions,
+route/tab isolation, Assess behavior, My Assets, OSINT bulk operations,
+notifications, SSE, attributes, CVSS, dialogs, and shared components.
+
+## End-to-end tests
+
+Install the Playwright browsers once:
 
 ```bash
 npx playwright install
 ```
 
-## Test Commands
+The default Playwright configuration:
 
-All commands below are defined in `package.json`.
+- starts a dedicated `taranis-e2e` Docker backend;
+- starts the Vue 3 Vite server on `http://localhost:4444`;
+- seeds required nodes, sources, product types, and presets;
+- runs one worker because the specs share and mutate one backend;
+- exercises Chromium, Firefox, and WebKit; and
+- records traces on the first retry plus screenshots and video on failure.
+
+The E2E setup removes only the dedicated `taranis-e2e` containers and volumes.
+It does not use the normal Taranis NG Compose project or its PostgreSQL volume.
+
+### Execution model
+
+`playwright.config.js` defines a setup project that runs
+`tests/e2e/00-config-seed.spec.js`. The Chromium, Firefox, and WebKit projects
+depend on that setup project, so the shared backend data is prepared before the
+browser workflows begin. The browser projects do not run the seed specification
+again.
+
+The configuration starts the backend through `scripts/test-setup.sh` and the
+frontend through `npm run dev:remote`. Playwright can reuse an already running
+frontend outside CI. Keep the suite at one worker unless its shared backend
+state and cleanup model are changed.
 
 ```bash
-# Vitest watch mode
-npm test
-
-# Run all unit/component tests once
-npm run test:unit
-
-# Open Vitest UI
-npm run test:ui
-
-# Run unit/component tests with coverage
-npm run test:coverage
-
-# Run Playwright E2E suite
+# Complete browser suite
 npm run test:e2e
 
-# Run Playwright UI mode
+# Chromium-only interactive UI
 npm run test:e2e:ui
 
-# Run Playwright UI mode bound to localhost only
+# Interactive UI bound to 127.0.0.1:9323
 npm run test:e2e:ui:remote
 
-# Run headed E2E tests
+# Headed or debug execution
 npm run test:e2e:headed
-
-# Run E2E tests in debug mode
 npm run test:e2e:debug
 
-# Open the Playwright HTML report
+# Open the generated HTML report
 npm run test:e2e:report
-```
 
-## Current Test Structure
-
-```text
-tests/
-├── e2e/
-│   ├── navigation.spec.js
-│   ├── organizations.spec.js
-│   └── roles.spec.js
-├── fixtures/
-│   └── data.json
-├── helpers/
-│   ├── mock-api.js
-│   ├── mount-helpers.js
-│   ├── store-helpers.js
-│   └── test-helpers.js
-├── unit/
-│   ├── ActionButton.spec.js
-│   ├── analyze.api.spec.js
-│   ├── api-service.spec.js
-│   ├── App.spec.js
-│   ├── assess.store.spec.js
-│   ├── AttributeComponents.spec.js
-│   ├── AttributeContainer.spec.js
-│   ├── auth.store.spec.js
-│   ├── BaseToolbarFilter.spec.js
-│   ├── CalculatorCVSS.spec.js
-│   ├── config.store.spec.js
-│   ├── ContentDataSSE.spec.js
-│   ├── cvss-utils.spec.js
-│   ├── DeleteConfirmationDialog.spec.js
-│   ├── NewReportItemSSE.spec.js
-│   ├── NotificationSnackbar.spec.js
-│   ├── useAttributes.spec.js
-│   ├── useAuth.spec.js
-│   └── useSSE.spec.js
-└── README.md
-```
-
-## What Is Currently Covered
-
-### E2E Coverage
-
-Current Playwright specs cover:
-
-- **Navigation and routing**
-- **Organizations CRUD flow**
-- **Roles CRUD flow**
-
-### Unit / Component Coverage
-
-Current Vitest coverage includes:
-
-- **Stores:** auth, assess, config
-- **Composables:** useAuth, useAttributes, useSSE
-- **API/service layer:** analyze API, api_service
-- **App-level behavior:** `App.vue`, SSE-related behavior
-- **Shared UI components:** `ActionButton`, `BaseToolbarFilter`, `NotificationSnackbar`, `DeleteConfirmationDialog`
-- **Attribute system:** `AttributeContainer`, `AttributeComponents`
-- **Utilities:** CVSS helpers
-
-## Configuration Notes
-
-### Vitest
-
-`vitest.config.js` currently uses:
-
-- `happy-dom`
-- alias `@ -> ./src`
-- exclusion of `tests/e2e/**`
-- V8 coverage reporters: `text`, `json`, `html`
-
-### Playwright
-
-`playwright.config.js` currently:
-
-- runs tests from `./tests/e2e`
-- uses Chromium, Firefox, and WebKit
-- writes HTML and JSON reports
-- captures screenshots on failure
-- captures video on failure
-- enables traces on first retry
-- starts two web servers before tests:
-  - `bash ../../scripts/test-setup.sh`
-  - `npm run dev:remote`
-
-`playwright.ui.config.js` is the lighter UI-mode variant and runs Chromium only.
-
-## Helper Utilities
-
-`tests/helpers/test-helpers.js` currently provides helpers such as:
-
-- `login(page, username, password)`
-- `logout(page)`
-- `navigateToConfig(page, section)`
-- `waitForNotification(page, expectedText, timeout)`
-- `waitForNotificationDismiss(page, timeout)`
-- `openDialog(page, buttonText)`
-- `closeDialog(page)`
-- `fillField(page, fieldName, value)`
-- `saveDialog(page)`
-- `deleteItem(page, itemIdentifier)`
-- `waitForPageLoad(page)`
-- `hasPermission(page, selector)`
-- `generateTestName(baseName)`
-- `takeScreenshot(page, name)`
-
-## Running a Single Test File
-
-### Vitest
-
-```bash
-npx vitest tests/unit/useAuth.spec.js
-```
-
-### Playwright
-
-```bash
+# One specification
 npx playwright test tests/e2e/roles.spec.js
 ```
 
-## Test Output
+Set `BASE_URL` to test an already reachable frontend instead of the default
+URL. The automated configuration still manages its declared web servers unless
+the corresponding config is changed.
 
-Generated output directories/files:
+Current browser workflows cover authentication, navigation, 404 handling,
+Assess, access management, roles, organizations, collectors, presenters,
+workflow states, selected Publish behavior, and My Assets permission and CRUD
+paths.
 
-- `coverage/` — Vitest coverage output
-- `test-results/` — Playwright screenshots, videos, traces, and JSON output
-- Playwright HTML report — opened with `npm run test:e2e:report`
+### Test support modules
 
-## Notes
+The reusable support code is grouped by responsibility:
 
-- This document describes the current test suite layout and commands, not target coverage goals.
-- If you add a new test file or helper, update this README in the same change.
+- `tests/helpers/test-helpers.js` provides common browser actions, including
+  login, navigation, dialogs, notifications, deletion, and screenshots.
+- `tests/helpers/api-seed.js` creates and removes the API records required by
+  browser workflows.
+- `tests/helpers/api-cleanup.js` creates the cleanup API context and purges
+  state from the dedicated test backend.
+- `tests/helpers/mock-api.js` provides configurable API responses and errors for
+  unit tests.
+- `tests/helpers/mount-helpers.js` mounts components with the standard plugins
+  and test i18n instance.
+- `tests/helpers/store-helpers.js` creates and resets Pinia state for unit tests.
+
+Use these modules instead of duplicating setup or UI interaction logic in new
+specifications. The configuration files and helper sources remain the source of
+truth for their exact options and exported functions.
+
+## Generated output
+
+- `coverage/` — Vitest coverage
+- `test-results/` — Playwright JSON results and failure artifacts
+- `playwright-report/` — Playwright HTML report
+
+These paths are ignored by Git.

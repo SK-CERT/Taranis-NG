@@ -1,7 +1,7 @@
 # A directory for certificates and private keys
 
 **Audience:** Docker deployment operators. This file describes certificate
-placement only; see the [Docker deployment guide](../README.md#tls-modes) for
+placement only; see the [Docker deployment guide](../README.md#local-tls-and-custom-ports) for
 hostname, port, trust, HSTS, and evaluation-mode requirements.
 
 If you wish to use Taranis NG with custom certificates, place them here in PEM format.

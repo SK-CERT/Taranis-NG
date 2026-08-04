@@ -9,10 +9,9 @@ complete Taranis NG deployment. Core cannot provide an end-to-end installation
 on its own: the application also depends on PostgreSQL, Redis, the GUI, and the
 configured satellite services.
 
-Do not enable old `test.py` imports or sample-data hooks. The previously
-documented test module is not present, and the legacy sample-data path is not a
-supported way to initialize report forms, product types, templates, sources, or
-collector configuration.
+Do not use test-module imports or sample-data hooks to initialize report forms,
+product types, templates, sources, or collector configuration. Use migrations,
+bootstrap data, and the supported application APIs.
 
 ## Local Core development
 
@@ -29,7 +28,7 @@ Core requires at least:
 - database migrations before serving requests.
 
 Use the Core service definition in `docker/docker-compose.yml` as the current
-configuration reference. Never use the historical example values `12345`,
+configuration reference. Never use example values such as `12345`,
 `admin/admin`, or `user/user` outside an isolated disposable environment.
 
 For account, role, node, API-key, and dictionary management, see the
@@ -44,7 +43,6 @@ time. Verify environment-variable names against the current source and Compose
 files before testing. Changing Docker secret files does not rotate passwords
 already stored for application users in PostgreSQL.
 
-The normal deployment currently serves the legacy GUI. The Vue 3 development
-application has separate instructions in
-[`src/gui-v3/README.md`](../gui-v3/README.md); do not infer its release status
-from Core development setup.
+The tracked deployment serves the Vue 2 GUI. The optional Vue 3 application has
+separate instructions in [`src/gui-v3/README.md`](../gui-v3/README.md); Core
+development setup does not enable it.

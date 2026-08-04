@@ -1,6 +1,6 @@
 # Taranis NG GUI
 
-**Audience:** developers of the legacy Vue 2 frontend.
+**Audience:** developers of the Vue 2 frontend.
 
 **Release status:** this is the GUI enabled by the current default Docker
 Compose stack. It is distinct from the Vue 3 application under `src/gui-v3`.
@@ -11,48 +11,46 @@ Use the [Docker deployment guide](../../docker/README.md) for a complete
 deployment. The remainder of this file covers development of this component
 only.
 
-If you wish to develop and build the GUI separately, read on.
-
-### Project setup
+## Project setup
 
 Install the dependencies
 
-```
-npm install
+```bash
+npm ci
 ```
 
-### Developing
+## Development server
 
-You can run the GUI on the local machine, and edit it with your favorite IDE or text editor. The application will react to your changes in real time. Depending on whether you expose your API directly on `http://localhost:5000` (see `docker-compose.yml`), via Traefik on `https://localhost:4443`, or on a public IP and host name, you may need to change the following environment variables.
+Set the public frontend, API, SSE, and locale values for the backend instance
+used during development. The default Docker example is available through
+Traefik at `https://localhost:4443`.
 
-```
-# set the environment variables needed by GUI
-export VUE_APP_TARANIS_NG_CORE_API="http://localhost:5000/api/v1"
-export VUE_APP_TARANIS_NG_CORE_SSE="http://localhost:5000/sse"
-export VUE_APP_TARANIS_NG_URL="http://localhost:8080"
+```bash
+export VUE_APP_TARANIS_NG_CORE_API="https://localhost:4443/api/v1"
+export VUE_APP_TARANIS_NG_CORE_SSE="https://localhost:4443/sse"
+export VUE_APP_TARANIS_NG_URL="https://localhost:4443"
 export VUE_APP_TARANIS_NG_LOCALE="en"
 
-# run the development server
 npm run serve
 ```
 
-### Building the static version
+## Production build
 
 When you are ready to generate the final static version of the GUI, run
 
-```
+```bash
 npm run build
 ```
 
 The static html/js/css files will be stored under the `dist/` subdirectory.
 
-### Testing and linting
+## Testing and linting
 
-```
+```bash
 npm run test
 npm run lint
 ```
 
-### Customize the configuration
+## Configuration reference
 
 See [Configuration Reference](https://cli.vuejs.org/config/).
