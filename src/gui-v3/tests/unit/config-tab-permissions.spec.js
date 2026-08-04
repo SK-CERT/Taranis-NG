@@ -1,3 +1,4 @@
+/* eslint-disable vue/one-component-per-file -- test harness uses minimal inline components */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick, reactive } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
