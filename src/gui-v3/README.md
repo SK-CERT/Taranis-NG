@@ -1,43 +1,45 @@
 # Taranis NG - Vue 3 GUI
 
-This is the Vue 3 version of the Taranis NG graphical user interface, built with modern web technologies.
+This directory contains the Vue 3 Taranis NG graphical user interface.
 
 **Audience:** Vue 3 frontend developers.
 
-**Release status:** in this repository snapshot the Vue 3 Compose service is
-commented out and the default Docker stack serves the legacy GUI. The commands
-below are development commands, not the supported complete-application
-installation path. Use the [Docker deployment guide](../../docker/README.md)
-for the released stack.
+**Deployment status:** the tracked Docker stack serves the Vue 2 GUI at `/`.
+The Vue 3 application uses `/v2/`, but its tracked Compose service is disabled.
+The commands below are for frontend development and evaluation. Use the
+[Docker deployment guide](../../docker/README.md) for the supported complete
+application stack.
 
 ## Tech Stack
 
-- **Vue 3** - Progressive JavaScript framework with Composition API
-- **Vite** - Next generation frontend tooling
-- **Vuetify 3** - Material Design component framework
-- **Pinia** - Intuitive state management for Vue
-- **Vue Router 4** - Official router for Vue.js
-- **Vue I18n 9** - Internationalization plugin
+- **Vue** - Composition API application framework
+- **Vite** - Development and production build tooling
+- **Vuetify** - Material Design component framework
+- **Pinia** - Application state management
+- **Vue Router** - Client-side routing under `/v2/`
+- **Vue I18n** - Internationalization and locale fallback
 - **Axios** - HTTP client
+
+Exact dependency versions are defined in `package.json` and
+`package-lock.json`.
 
 ## 📚 Documentation
 
 See [docs/README.md](./docs/README.md) for complete documentation index:
 
-- **[Migration Guide](./docs/migration/README.md)** - Vue2→Vue3 component migration progress
-- **[IMPLEMENTATION_STATUS](./docs/IMPLEMENTATION_STATUS.md)** - Overall project status and phase tracking
+- **[Status reference](./docs/IMPLEMENTATION_STATUS.md)** - Current feature and deployment status
 - **[Architecture](./docs/README.md#for-architecture)** - Design and component architecture index
 
 ## Development Setup
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 22 and npm
 
 ### Install Dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
 ### Development Server
@@ -46,7 +48,8 @@ npm install
 npm run dev
 ```
 
-The development server will start at `http://localhost:4444/v2/` by default.
+The development server starts at `http://localhost:4444/v2/` by default. Use a
+different port when Docker or another service already owns port 4444.
 
 You can override the port if needed:
 
@@ -62,21 +65,45 @@ npm run build
 
 The production build will be output to the `dist/` directory.
 
-### Lint
+### Verification
 
 ```bash
-npm run lint
+npm run format:check
+npm run lint:check
+npm run typecheck
+npm run test:unit
+npm run build
 ```
 
 ## Environment Variables
 
 The following environment variables are used (configured at Docker runtime):
 
-- `VUE_APP_TARANIS_NG_URL` - Base URL of the application
-- `VUE_APP_TARANIS_NG_CORE_API` - Backend API endpoint
-- `VUE_APP_TARANIS_NG_CORE_SSE` - Server-Sent Events endpoint
-- `VUE_APP_TARANIS_NG_LOCALE` - Default locale (en, cs, sk)
-- `VUE_APP_VERSION` - Application version
+- `VITE_APP_TARANIS_NG_URL` - Public application URL
+- `VITE_APP_TARANIS_NG_CORE_API` - Backend API endpoint
+- `VITE_APP_TARANIS_NG_CORE_SSE` - Server-Sent Events endpoint
+- `VITE_APP_TARANIS_NG_LOCALE` - Default locale code
+- `VITE_APP_VERSION` - Application version
+- `VITE_DEV_BACKEND_ORIGIN` - Development proxy target origin
+
+## Languages
+
+The Vue 3 interface is translated into the following languages:
+
+- Asian languages: Hindi (`hi`), Japanese (`ja`), Korean
+  (`ko`), Simplified Chinese (`zh-CN`), Thai (`th`), and Vietnamese (`vi`)
+- Central and Eastern European languages: Czech (`cs`), Polish (`pl`), Russian
+  (`ru`), Slovak (`sk`), and Ukrainian (`uk`)
+- Western European languages: Dutch (`nl`), English (`en`), French (`fr`),
+  German (`de`), Italian (`it`), Brazilian Portuguese (`pt-BR`), and Spanish
+  (`es`)
+- Turkish (`tr`)
+
+English is the fallback locale.
+
+Locale catalogs are discovered automatically from `src/i18n/*.json` at build
+time, so adding a catalog does not require a source-code registry or database
+option entry.
 
 ### Env Precedence in Dev (`npm run dev`)
 
@@ -85,16 +112,15 @@ Vite loads env files from two places, in this order:
 1. `docker/.env*`
 2. `src/gui-v3/.env*` (overrides same keys from `docker/.env*`)
 
-For backend proxying in `vite.config.js`, values are resolved with fallbacks:
+For backend proxying in `vite.config.js`, values are resolved as follows:
 
 - Backend origin: `VITE_DEV_BACKEND_ORIGIN` -> `TARANIS_NG_HTTPS_URI` -> `http://127.0.0.1:8082`
-- API URL: `VITE_APP_TARANIS_NG_CORE_API` -> `VUE_APP_TARANIS_NG_CORE_API` -> `${backendOrigin}/api/v1`
-- SSE URL: `VITE_APP_TARANIS_NG_CORE_SSE` -> `VUE_APP_TARANIS_NG_CORE_SSE` -> `${backendOrigin}/sse`
+- API URL: `VITE_APP_TARANIS_NG_CORE_API` -> `${backendOrigin}/api/v1`
+- SSE URL: `VITE_APP_TARANIS_NG_CORE_SSE` -> `${backendOrigin}/sse`
 
 Notes:
 
-- `VITE_APP_*` is preferred for Vue 3.
-- `VUE_APP_*` is kept as compatibility fallback for existing Docker/runtime configuration.
+- Vue 3 uses `VITE_APP_*`; `VUE_APP_*` belongs to the Vue 2 GUI.
 - Dev server default port is `4444` (override with `VITE_PORT` or `PORT`).
 
 ## Project Structure
@@ -114,8 +140,9 @@ src/
 └── router.ts     # Vue Router configuration
 ```
 
-## Migration status
+## Runtime paths
 
-This is a **work in progress** migration from Vue 2 to Vue 3. The legacy Vue 2 UI is still accessible at `/` while this Vue 3 version is available at `/v2/`.
-
-See the migration plan documentation for details on the gradual component-by-component migration strategy.
+- Vue 2 uses `/` in the tracked Docker deployment.
+- Vue 3 uses `/v2/` when its container or development server is running.
+- Vue Router and the production Nginx configuration both preserve `/v2/` for
+  direct navigation and SPA fallback.

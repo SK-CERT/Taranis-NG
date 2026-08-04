@@ -58,9 +58,16 @@ If that tag is not available, build the checked-out source instead:
 TARANIS_NG_TAG=build docker compose up -d --build
 ```
 
-Always run Compose from the `docker/` directory. This automatically loads
-`docker-compose.override.yml`. If you use explicit `-f` arguments, include
-both the main and override files.
+Always run Compose from the `docker/` directory. Compose automatically loads
+`docker-compose.override.yml` when that local file exists. If you use explicit
+`-f` arguments, include every required main and override file.
+
+### Web interfaces
+
+The tracked Compose stack serves the Vue 2 interface at `/`. The Vue 3 source
+is built for the `/v2/` base path, but its service is not enabled in the
+tracked Compose definition. Use the Vue 3 development instructions for
+frontend evaluation; do not expect `/v2/` to work in an unmodified deployment.
 
 ### 3. Open the application and secure the accounts
 
@@ -250,39 +257,46 @@ certificatesResolvers:
 
 ### Core
 
-| Environment variable | Description | Example |
-| --- | --- | --- |
-| `REDIS_URL` | Redis database URL used for SSE events | `redis://redis` |
-| `DB_URL` | PostgreSQL host | `postgres` |
-| `DB_DATABASE` | PostgreSQL database | `taranis-ng` |
-| `DB_USER` | PostgreSQL user | `taranis-ng` |
-| `DB_POOL_SIZE` | Maximum active pooled connections | `100` |
-| `DB_POOL_RECYCLE` | Maximum pooled-connection age | `300` |
-| `DB_POOL_TIMEOUT` | Pool connection timeout | `30` |
-| `OPENID_LOGOUT_URL` | OpenID/Keycloak logout URL | provider-specific URL |
-| `GUNICORN_WORKERS` | Gunicorn worker count | `AUTO` |
+| Environment variable | Description                            | Example               |
+| -------------------- | -------------------------------------- | --------------------- |
+| `REDIS_URL`          | Redis database URL used for SSE events | `redis://redis`       |
+| `DB_URL`             | PostgreSQL host                        | `postgres`            |
+| `DB_DATABASE`        | PostgreSQL database                    | `taranis-ng`          |
+| `DB_USER`            | PostgreSQL user                        | `taranis-ng`          |
+| `DB_POOL_SIZE`       | Maximum active pooled connections      | `100`                 |
+| `DB_POOL_RECYCLE`    | Maximum pooled-connection age          | `300`                 |
+| `DB_POOL_TIMEOUT`    | Pool connection timeout                | `30`                  |
+| `OPENID_LOGOUT_URL`  | OpenID/Keycloak logout URL             | provider-specific URL |
+| `GUNICORN_WORKERS`   | Gunicorn worker count                  | `AUTO`                |
 
-| Secret file | Description |
-| --- | --- |
+| Secret file             | Description                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------- |
 | `postgres_password.txt` | PostgreSQL password; initializes a fresh database but does not rotate an existing one |
-| `jwt_secret_key.txt` | JWT signing key; changing it invalidates existing tokens |
-| `api_key.txt` | Shared authentication key for Core and satellite services |
+| `jwt_secret_key.txt`    | JWT signing key; changing it invalidates existing tokens                              |
+| `api_key.txt`           | Shared authentication key for Core and satellite services                             |
 
 ### Satellites
 
 Collectors, bots, presenters, and publishers use `TARANIS_NG_CORE_URL` for the
 Core endpoint and `api_key.txt` for shared authentication.
 
-### GUI
+### Vue 2 GUI
 
-| Environment variable | Description |
-| --- | --- |
-| `VUE_APP_TARANIS_NG_CORE_API` | Core API URL |
-| `VUE_APP_TARANIS_NG_CORE_SSE` | Core SSE URL |
-| `VUE_APP_TARANIS_NG_URL` | Public frontend URL |
-| `VUE_APP_TARANIS_NG_LOCALE` | Default locale |
-| `NGINX_WORKERS` | Nginx worker count |
-| `NGINX_CONNECTIONS` | Connections per worker |
+| Environment variable          | Description            |
+| ----------------------------- | ---------------------- |
+| `VUE_APP_TARANIS_NG_CORE_API` | Core API URL           |
+| `VUE_APP_TARANIS_NG_CORE_SSE` | Core SSE URL           |
+| `VUE_APP_TARANIS_NG_URL`      | Public frontend URL    |
+| `VUE_APP_TARANIS_NG_LOCALE`   | Default locale         |
+| `NGINX_WORKERS`               | Nginx worker count     |
+| `NGINX_CONNECTIONS`           | Connections per worker |
+
+### Vue 3 GUI
+
+The optional Vue 3 container uses `VITE_APP_TARANIS_NG_URL`,
+`VITE_APP_TARANIS_NG_CORE_API`, `VITE_APP_TARANIS_NG_CORE_SSE`,
+`VITE_APP_TARANIS_NG_LOCALE`, and `VITE_APP_VERSION`. Its public base path is
+`/v2/`.
 
 ### Redis and PostgreSQL
 
@@ -294,14 +308,13 @@ Redis deployment guidance before using the instance under load.
 
 Do not use the fresh-install copy commands to upgrade an existing deployment.
 Preserve `.env`, all secret files, PostgreSQL data, `core_data`, presenter user
-templates, and collector storage. The current snapshot does not yet provide a
-fully validated upgrade-and-rollback procedure, so test restoration and review
+templates, and collector storage. The repository does not provide a fully
+validated upgrade-and-rollback procedure, so test restoration and review
 release-specific migration notes before upgrading a production instance.
 
 ## MCP companion
 
-MCP is not bundled in this Compose stack. It is planned as a separate
-repository with its own installation and release lifecycle. Use only an MCP
+MCP is not bundled in this Compose stack. Install it separately and use only a
 release that explicitly declares compatibility with the installed Taranis NG
 version.
 
