@@ -9,34 +9,29 @@
             color="primary"
         >
             <v-tab
-                value="presets"
-                :title="t('bots.presets.tab_description')"
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+                :title="t(tab.description)"
             >
                 <v-icon
-                    :icon="ICONS.ROBOT"
+                    :icon="tab.icon"
                     start
                 />
-                {{ t('nav_menu.bot_presets') }}
-            </v-tab>
-            <v-tab
-                value="nodes"
-                :title="t('bots.nodes.tab_description')"
-            >
-                <v-icon
-                    :icon="ICONS.SERVER_NETWORK"
-                    start
-                />
-                {{ t('nav_menu.bots_nodes') }}
+                {{ t(tab.title) }}
             </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-            <v-window-item value="presets">
-                <BotPresetsView v-if="activeTab === 'presets'" />
-            </v-window-item>
-
-            <v-window-item value="nodes">
-                <BotsNodesView v-if="activeTab === 'nodes'" />
+            <v-window-item
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+            >
+                <component
+                    :is="tab.component"
+                    v-if="activeTab === tab.value"
+                />
             </v-window-item>
         </v-window>
     </v-container>
@@ -44,11 +39,30 @@
 
 <script setup lang="ts">
     import { useI18n } from 'vue-i18n'
-    import { useTabQuery } from '@/composables/useTabQuery'
+    import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import BotPresetsView from './BotPresetsView.vue'
     import BotsNodesView from './BotsNodesView.vue'
 
     const { t } = useI18n()
-    const activeTab = useTabQuery(['presets', 'nodes'], 'presets')
+    const tabs = [
+        {
+            value: 'presets',
+            title: 'nav_menu.bot_presets',
+            description: 'bots.presets.tab_description',
+            icon: ICONS.ROBOT,
+            component: BotPresetsView,
+            permission: 'CONFIG_BOT_PRESET_ACCESS'
+        },
+        {
+            value: 'nodes',
+            title: 'nav_menu.bots_nodes',
+            description: 'bots.nodes.tab_description',
+            icon: ICONS.SERVER_NETWORK,
+            component: BotsNodesView,
+            permission: 'CONFIG_BOTS_NODE_ACCESS'
+        }
+    ] as const
+
+    const { availableTabs, activeTab } = usePermissionTabs(tabs)
 </script>

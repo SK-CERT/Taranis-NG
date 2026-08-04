@@ -38,11 +38,9 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue'
     import type { Component } from 'vue'
-    import { useRoute, useRouter } from 'vue-router'
     import { useI18n } from 'vue-i18n'
-    import { useAuth } from '@/composables/useAuth'
+    import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import type { PermissionKey } from '@/types/permissions'
     import UsersTab from '@/components/config/access-management/UsersTab.vue'
@@ -60,9 +58,6 @@
     }
 
     const { t } = useI18n()
-    const { checkPermission } = useAuth()
-    const route = useRoute()
-    const router = useRouter()
 
     const tabs: AccessTab[] = [
         {
@@ -99,29 +94,5 @@
         }
     ]
 
-    // Only show tabs the user is allowed to access.
-    const availableTabs = computed(() => tabs.filter((tab) => checkPermission(tab.permission)))
-
-    const isValidTab = (value: unknown): value is string =>
-        typeof value === 'string' && availableTabs.value.some((tab) => tab.value === value)
-
-    const defaultTab = (): string => availableTabs.value[0]?.value ?? 'users'
-
-    // Initialise from the ?tab= query param when valid, otherwise the first accessible tab.
-    const activeTab = ref(isValidTab(route.query['tab']) ? (route.query['tab'] as string) : defaultTab())
-
-    // Keep the URL query in sync with the active tab so tabs are deep-linkable.
-    watch(activeTab, (value) => {
-        if (route.query['tab'] !== value) {
-            router.replace({ query: { ...route.query, tab: value } })
-        }
-    })
-
-    // React to external query changes (deep links, back/forward navigation).
-    watch(
-        () => route.query['tab'],
-        (value) => {
-            activeTab.value = isValidTab(value) ? value : defaultTab()
-        }
-    )
+    const { availableTabs, activeTab } = usePermissionTabs(tabs)
 </script>

@@ -58,7 +58,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { ICONS } from '@/config/ui-constants'
     import UserMenu from './UserMenu.vue'
-    import { PERMISSIONS } from '@/services/auth/permissions'
+    import Permissions from '@/services/permissions'
     import type { PermissionKey } from '@/types/permissions'
     import { useTheme } from 'vuetify'
     import lightLogo from '@/assets/taranis-logo-nav.svg'
@@ -134,7 +134,7 @@
 
     const visibleButtons = computed(() => {
         return buttons.filter((button) => {
-            return checkPermission(PERMISSIONS[button.permission]) && button.show
+            return checkPermission(Permissions[button.permission]) && button.show
         })
     })
 

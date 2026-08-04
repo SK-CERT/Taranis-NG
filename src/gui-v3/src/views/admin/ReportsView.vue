@@ -9,33 +9,29 @@
             color="primary"
         >
             <v-tab
-                value="types"
-                :title="t('reports.types.tab_description')"
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+                :title="t(tab.description)"
             >
                 <v-icon
-                    :icon="ICONS.FILE_TABLE"
+                    :icon="tab.icon"
                     start
                 />
-                {{ t('nav_menu.report_types') }}
-            </v-tab>
-            <v-tab
-                value="attributes"
-                :title="t('reports.attributes.tab_description')"
-            >
-                <v-icon
-                    :icon="ICONS.APPLICATION_VARIABLE_OUTLINE"
-                    start
-                />
-                {{ t('nav_menu.attributes') }}
+                {{ t(tab.title) }}
             </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-            <v-window-item value="types">
-                <ReportTypesView v-if="activeTab === 'types'" />
-            </v-window-item>
-            <v-window-item value="attributes">
-                <AttributesTab v-if="activeTab === 'attributes'" />
+            <v-window-item
+                v-for="tab in availableTabs"
+                :key="tab.value"
+                :value="tab.value"
+            >
+                <component
+                    :is="tab.component"
+                    v-if="activeTab === tab.value"
+                />
             </v-window-item>
         </v-window>
     </v-container>
@@ -43,11 +39,30 @@
 
 <script setup lang="ts">
     import { useI18n } from 'vue-i18n'
-    import { useTabQuery } from '@/composables/useTabQuery'
+    import { usePermissionTabs } from '@/composables/usePermissionTabs'
     import { ICONS } from '@/config/ui-constants'
     import ReportTypesView from './ReportTypesView.vue'
     import AttributesTab from '@/components/config/reports/AttributesTab.vue'
 
     const { t } = useI18n()
-    const activeTab = useTabQuery(['types', 'attributes'], 'types')
+    const tabs = [
+        {
+            value: 'types',
+            title: 'nav_menu.report_types',
+            description: 'reports.types.tab_description',
+            icon: ICONS.FILE_TABLE,
+            component: ReportTypesView,
+            permission: 'CONFIG_REPORT_TYPE_ACCESS'
+        },
+        {
+            value: 'attributes',
+            title: 'nav_menu.attributes',
+            description: 'reports.attributes.tab_description',
+            icon: ICONS.APPLICATION_VARIABLE_OUTLINE,
+            component: AttributesTab,
+            permission: 'CONFIG_ATTRIBUTE_ACCESS'
+        }
+    ] as const
+
+    const { availableTabs, activeTab } = usePermissionTabs(tabs)
 </script>
