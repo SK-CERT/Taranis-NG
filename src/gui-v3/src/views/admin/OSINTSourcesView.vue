@@ -10,34 +10,50 @@
             @update-filter="handleFilterUpdate"
         >
             <template #addbutton>
-                <NewOSINTSource
-                    :edit-item="editItem"
-                    @saved="handleSaved"
-                />
+                <div class="d-flex align-center justify-end ga-2 flex-wrap">
+                    <OSINTSourceBulkActions
+                        :can-import="canImport"
+                        :can-export="canExport"
+                        :nodes="collectorNodes"
+                        :loading-nodes="loadingNodes"
+                        :selected-ids="selectedIds"
+                        :source-count="sourceItems.length"
+                        @load-nodes="loadCollectorNodes"
+                        @import-complete="handleImportComplete"
+                        @select-all="selectAll"
+                        @clear-selection="clearSelection"
+                    />
+                    <NewOSINTSource
+                        :edit-item="editItem"
+                        @saved="handleSaved"
+                    />
+                </div>
             </template>
         </ToolbarFilter>
 
         <!-- Content -->
-        <ContentData
-            :items="configStore.osintSources.items"
-            card-item="CardCompact"
-            delete-permission="CONFIG_OSINT_SOURCE_DELETE"
+        <OSINTSourceBulkList
+            :items="sourceItems"
             :loading="loading"
+            :selection-enabled="canExport"
+            :selected-ids="selectedIds"
             @delete="handleDelete"
             @edit="handleEdit"
-            @refresh="loadData"
+            @selection-change="handleSelectionChange"
         />
     </v-container>
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
+    import { computed, ref, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteOSINTSource } from '@/api/config'
+    import { useAuth } from '@/composables/useAuth'
     import ToolbarFilter from '@/components/common/ToolbarFilter.vue'
-    import ContentData from '@/components/common/ContentData.vue'
     import NewOSINTSource from '@/components/config/collectors/NewOSINTSource.vue'
+    import OSINTSourceBulkActions from '@/components/config/collectors/OSINTSourceBulkActions.vue'
+    import OSINTSourceBulkList from '@/components/config/collectors/OSINTSourceBulkList.vue'
 
     const { t } = useI18n()
     const configStore = useConfigStore()
@@ -47,7 +63,7 @@
     }
 
     type OSINTSourceItem = {
-        id?: string | number | null
+        id: string | number
         name?: string
         description?: string
         feed_url?: string
@@ -58,8 +74,16 @@
     }
 
     const loading = ref(false)
+    const loadingNodes = ref(false)
     const filter = ref<FilterState>({ search: '' })
     const editItem = ref<OSINTSourceItem | null>(null)
+    const selectedIds = ref<Array<string | number>>([])
+    const { checkPermission } = useAuth()
+
+    const canImport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
+    const canExport = computed(() => checkPermission('CONFIG_OSINT_SOURCE_ACCESS'))
+    const sourceItems = computed(() => configStore.osintSources.items as OSINTSourceItem[])
+    const collectorNodes = computed(() => configStore.collectorsNodes.items as Array<{ id: string | number; name?: string }>)
 
     const loadData = async (): Promise<void> => {
         loading.value = true
@@ -94,6 +118,40 @@
     const handleSaved = (): void => {
         editItem.value = null
         loadData()
+    }
+
+    const loadCollectorNodes = async (): Promise<void> => {
+        if (!canImport.value || loadingNodes.value || collectorNodes.value.length > 0) return
+        loadingNodes.value = true
+        try {
+            await configStore.loadCollectorsNodes({ search: '' })
+        } catch {
+            window.dispatchEvent(new CustomEvent('notification', { detail: { type: 'error', loc: 'collectors.sources.import_error' } }))
+        } finally {
+            loadingNodes.value = false
+        }
+    }
+
+    const handleSelectionChange = (id: string | number, selected: boolean): void => {
+        if (!canExport.value) return
+        const selection = new Set(selectedIds.value)
+        if (selected) selection.add(id)
+        else selection.delete(id)
+        selectedIds.value = [...selection]
+    }
+
+    const selectAll = (): void => {
+        if (!canExport.value) return
+        selectedIds.value = sourceItems.value.map((source) => source.id)
+    }
+
+    const clearSelection = (): void => {
+        selectedIds.value = []
+    }
+
+    const handleImportComplete = async (): Promise<void> => {
+        clearSelection()
+        await loadData()
     }
 
     onMounted(() => {

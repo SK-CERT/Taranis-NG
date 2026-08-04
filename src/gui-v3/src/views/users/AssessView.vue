@@ -16,6 +16,7 @@
                         v-if="canCreateNewsItem"
                         v-model="showAddNewsItemDialog"
                         :manual-sources="assessStore.getManualOSINTSourcesList"
+                        :initial-source-id="requestedManualSourceId"
                         @news-item-added="handleNewsItemAdded"
                     >
                         <template #activator="{ props: activatorProps }">
@@ -78,6 +79,7 @@
     const toolbarFilter = ref<any>(null)
     const contentData = ref<any>(null)
     const showAddNewsItemDialog = ref(false)
+    const requestedManualSourceId = ref<string | null>(null)
     const newReportItem = ref<any>(null)
     const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
     const hasManualSources = computed(() => assessStore.getManualOSINTSourcesList && assessStore.getManualOSINTSourcesList.length > 0)
@@ -142,12 +144,36 @@
         }
     }
 
-    onMounted(() => {
+    onMounted(async () => {
+        const manualSourceQuery = route.query['manualSource']
+        const sourceId = Array.isArray(manualSourceQuery) ? manualSourceQuery[0] : manualSourceQuery
+        requestedManualSourceId.value = sourceId ?? null
+
+        if (manualSourceQuery !== undefined) {
+            const query = { ...route.query }
+            delete query['manualSource']
+            await router.replace({ name: 'assess', params: { groupId: route.params['groupId'] }, query })
+        }
+
         if (canCreateNewsItem.value) {
             // Load manual OSINT sources to show "Add New" button (non-blocking)
-            assessStore.loadManualOSINTSources().catch((error) => {
+            try {
+                await assessStore.loadManualOSINTSources()
+                if (
+                    requestedManualSourceId.value &&
+                    assessStore.getManualOSINTSourcesList.some(
+                        (source) =>
+                            typeof source === 'object' &&
+                            source !== null &&
+                            'id' in source &&
+                            String(source.id) === requestedManualSourceId.value
+                    )
+                ) {
+                    showAddNewsItemDialog.value = true
+                }
+            } catch (error) {
                 console.error('Error loading manual OSINT sources:', error)
-            })
+            }
         }
 
         if (route.path.includes('/group/')) {

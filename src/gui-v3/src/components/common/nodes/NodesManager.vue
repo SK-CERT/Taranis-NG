@@ -66,12 +66,17 @@
 
     const list = computed<NodeListState>(() => storeAny[config.value.listKey] as NodeListState)
 
+    const notify = (type: 'success' | 'error', loc: string): void => {
+        window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc } }))
+    }
+
     const loadData = async (): Promise<void> => {
         loading.value = true
         try {
             await storeAny[config.value.loadAction](filter.value)
         } catch (error) {
             console.error(`Error loading ${props.type} nodes:`, error)
+            notify('error', 'common.error')
         } finally {
             loading.value = false
         }
@@ -85,9 +90,11 @@
     const handleDelete = async (node: NodeItem): Promise<void> => {
         try {
             await config.value.deleteFn(node)
+            notify('success', 'common.deleted_successfully')
             await loadData()
         } catch (error) {
             console.error(`Error deleting ${props.type} node:`, error)
+            notify('error', 'common.error_deleting')
         }
     }
 

@@ -36,6 +36,14 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPerm: [Permissions.ASSESS_ACCESS] }
     },
     {
+        path: '/enter/source/:sourceId',
+        redirect: (to) => ({
+            name: 'assess',
+            params: { groupId: 'all' },
+            query: { ...to.query, manualSource: String(to.params['sourceId']) }
+        })
+    },
+    {
         path: '/analyze',
         redirect: '/analyze/local'
     },
@@ -246,6 +254,29 @@ const routes: RouteRecordRaw[] = [
             nav: () => import('./views/nav/ConfigNav.vue')
         },
         meta: { requiresAuth: true, requiresPerm: [Permissions.MY_ASSETS_CONFIG] }
+    },
+    { path: '/config/users', redirect: { path: '/config/access-management', query: { tab: 'users' } } },
+    { path: '/config/roles', redirect: { path: '/config/access-management', query: { tab: 'roles' } } },
+    { path: '/config/acls', redirect: { path: '/config/access-management', query: { tab: 'acls' } } },
+    {
+        path: '/config/organizations',
+        redirect: { path: '/config/access-management', query: { tab: 'organizations' } }
+    },
+    { path: '/config/collectors/sources', redirect: { path: '/config/collectors', query: { tab: 'sources' } } },
+    { path: '/config/collectors/groups', redirect: { path: '/config/collectors', query: { tab: 'groups' } } },
+    { path: '/config/collectors/nodes', redirect: { path: '/config/collectors', query: { tab: 'nodes' } } },
+    { path: '/config/presenters/nodes', redirect: { path: '/config/presenters', query: { tab: 'nodes' } } },
+    { path: '/config/product/types', redirect: { path: '/config/presenters', query: { tab: 'types' } } },
+    { path: '/config/publishers/nodes', redirect: { path: '/config/publishers', query: { tab: 'nodes' } } },
+    { path: '/config/publishers/presets', redirect: { path: '/config/publishers', query: { tab: 'presets' } } },
+    { path: '/config/bots/nodes', redirect: { path: '/config/bots', query: { tab: 'nodes' } } },
+    { path: '/config/bots/presets', redirect: { path: '/config/bots', query: { tab: 'presets' } } },
+    { path: '/config/remote/access', redirect: { path: '/config/remote', query: { tab: 'access' } } },
+    { path: '/config/remote/nodes', redirect: { path: '/config/remote', query: { tab: 'nodes' } } },
+    { path: '/config/reportitems/types', redirect: { path: '/config/reports', query: { tab: 'types' } } },
+    {
+        path: '/config/reportitems/attributes',
+        redirect: { path: '/config/reports', query: { tab: 'attributes' } }
     },
     { path: '/config/external/users', redirect: { path: '/config/external', query: { tab: 'users' } } },
     { path: '/config/external/groups', redirect: { path: '/config/external', query: { tab: 'groups' } } },
