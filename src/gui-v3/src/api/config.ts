@@ -291,7 +291,9 @@ export function importOSINTSources(form_data) {
 }
 
 export function exportOSINTSources(data) {
-    return ApiService.download('/config/export-osint-sources', data, 'osint_sources_export.json')
+    // Keep the response observable by the caller so the UI can report failures
+    // instead of treating a failed download as a successful export.
+    return ApiService.post('/config/export-osint-sources', data, { responseType: 'blob' })
 }
 
 export function getAllOSINTSourceGroups(filter) {

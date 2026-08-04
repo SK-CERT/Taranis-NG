@@ -1132,7 +1132,19 @@
             },
             "dialog_import": "Importovať OSINT zdroje",
             "import": "Importovať",
-            "export": "Exportovať"
+            "export": "Exportovať",
+            "import_progress": "Prebieha import OSINT zdrojov...",
+            "import_success": "OSINT zdroje boli úspešne importované",
+            "import_error": "OSINT zdroje sa nepodarilo importovať",
+            "export_progress": "Prebieha export OSINT zdrojov...",
+            "export_success": "OSINT zdroje boli úspešne exportované",
+            "export_error": "OSINT zdroje sa nepodarilo exportovať",
+            "file": "Súbor na import",
+            "file_required": "Vyberte súbor na import",
+            "node_required": "Vyberte uzol kolektora",
+            "export_all_hint": "Exportovať všetky zdroje",
+            "export_selected_hint": "Exportovať vybrané zdroje",
+            "selected_count": "Vybrané: {count}"
         },
         "nodes": {
             "tab_description": "Tu môžete spravovať uzly zberačov.",

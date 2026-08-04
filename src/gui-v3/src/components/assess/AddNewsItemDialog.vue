@@ -174,10 +174,12 @@
         defineProps<{
             modelValue?: boolean
             manualSources?: unknown[]
+            initialSourceId?: string | number | null
         }>(),
         {
             modelValue: false,
-            manualSources: () => []
+            manualSources: () => [],
+            initialSourceId: null
         }
     )
 
@@ -237,17 +239,16 @@
 
     // Initialize selected source
     watch(
-        () => props.modelValue,
-        (newVal: boolean) => {
-            if (newVal && props.manualSources.length > 0) {
-                // Set to first source if only one, otherwise let user select
-                if (props.manualSources.length === 1) {
-                    selectedSourceId.value = (props.manualSources[0] as ManualSource).id
-                } else if (!selectedSourceId.value) {
-                    selectedSourceId.value = (props.manualSources[0] as ManualSource).id
-                }
+        [() => props.modelValue, () => props.manualSources, () => props.initialSourceId],
+        ([isDialogOpen]) => {
+            if (isDialogOpen && props.manualSources.length > 0) {
+                const requestedSource = (props.manualSources as ManualSource[]).find(
+                    (source) => props.initialSourceId !== null && String(source.id) === String(props.initialSourceId)
+                )
+                selectedSourceId.value = requestedSource?.id ?? (props.manualSources[0] as ManualSource).id
             }
-        }
+        },
+        { immediate: true }
     )
 
     const appendLeadingZeroes = (n: number): string | number => {

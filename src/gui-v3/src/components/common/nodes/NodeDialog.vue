@@ -194,6 +194,7 @@
             emit('saved')
             return true
         } catch (error) {
+            console.error(`Error saving ${props.type} node:`, error)
             window.dispatchEvent(
                 new CustomEvent('notification', {
                     detail: { type: 'error', loc: 'common.error_saving' }
