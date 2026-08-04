@@ -608,6 +608,7 @@
         "created": "Analýza bola úspešne vytvorená",
         "attributes": "Atribúty",
         "no_attributes": "Žiadne atribúty",
+        "side_by_side": "Zobraziť vedľa seba",
         "confirm_close": {
             "message": "Máte neuložené zmeny. Naozaj chcete zatvoriť túto analýzu?"
         },
