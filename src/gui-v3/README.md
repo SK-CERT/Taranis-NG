@@ -2,6 +2,14 @@
 
 This is the Vue 3 version of the Taranis NG graphical user interface, built with modern web technologies.
 
+**Audience:** Vue 3 frontend developers.
+
+**Release status:** in this repository snapshot the Vue 3 Compose service is
+commented out and the default Docker stack serves the legacy GUI. The commands
+below are development commands, not the supported complete-application
+installation path. Use the [Docker deployment guide](../../docker/README.md)
+for the released stack.
+
 ## Tech Stack
 
 - **Vue 3** - Progressive JavaScript framework with Composition API
@@ -18,7 +26,7 @@ See [docs/README.md](./docs/README.md) for complete documentation index:
 
 - **[Migration Guide](./docs/migration/README.md)** - Vue2→Vue3 component migration progress
 - **[IMPLEMENTATION_STATUS](./docs/IMPLEMENTATION_STATUS.md)** - Overall project status and phase tracking
-- **[Architecture](./docs/architecture/README.md)** - Design and component architecture
+- **[Architecture](./docs/README.md#for-architecture)** - Design and component architecture index
 
 ## Development Setup
 
@@ -106,7 +114,7 @@ src/
 └── router.ts     # Vue Router configuration
 ```
 
-## Migration Status
+## Migration status
 
 This is a **work in progress** migration from Vue 2 to Vue 3. The legacy Vue 2 UI is still accessible at `/` while this Vue 3 version is available at `/v2/`.
 

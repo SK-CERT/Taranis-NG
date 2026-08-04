@@ -1,6 +1,17 @@
 # Installation
 
-This repository provides an automated way of installing Taranis NG.
+> [!CAUTION]
+> **Status: historical and unsupported.** This directory is not the current
+> installation path. The playbooks refer to a separate legacy utilities
+> repository, target obsolete Ubuntu releases, and contain a known-failing
+> sample-data step that can corrupt collector configuration. Do not use this
+> procedure for a new or production installation. Use the current
+> [Docker deployment guide](../docker/README.md).
+
+The remainder of this file is retained only to explain the legacy playbooks.
+Commands below are not release-tested installation instructions.
+
+This directory previously documented an automated way of installing Taranis NG.
 
 ## 1 Introduction
 
@@ -18,9 +29,11 @@ Also, there is one more component that is external to Taranis NG software, but i
 All of these components may be installed on separate hosts, or together on one host.
 
 
-## 2 Brave, impatient, localhost TL;DR installation
+## 2 Historical localhost example (do not run for a current installation)
 
-Installation instructions for the impatient. Use at your own risk. Skip to the next section for a more detailed manual, and a proper way of doing things.
+This example is preserved for historical context. It is not a supported quick
+start and must not be used as a fallback when the Docker installation is
+incomplete.
 
 ```
 git clone https://gitlab.com/sk-cert/taranis-ng-utils.git
@@ -30,13 +43,12 @@ ansible-playbook \
    playbooks/install-localhost.yml
 ```
 
-Done, now visit [http://www.taranisng.local](http://www.taranisng.local), login with one of
+The legacy procedure expected
+[http://www.taranisng.local](http://www.taranisng.local) and fixed public test
+credentials. Those credentials are deliberately not repeated here and the
+resulting deployment must be treated as insecure.
 
-- admin/admin
-- user/user
-- customer/customer
-
-## 3 How to install
+## 3 Historical procedure
 
 ### 3.1 Install Ansible and GIT (skip if you already have it)
 
@@ -100,7 +112,10 @@ For other questions, please refer to [Ansible documentation](https://docs.ansibl
 
 ### 3.6 Set configurables
 
-Edit the variables in [ansible-sample-installation-playbook.yml](ansible-sample-installation-playbook.yml). Take care to change the hostname for API and GUI according to your environment, and also generate strong passwords for database and JWT tokens.
+The historical guide referred to `ansible-sample-installation-playbook.yml`,
+which is no longer present in this directory. This missing input is another
+reason the procedure is not runnable as documented. Do not reconstruct it for
+a current deployment; use the supported Docker path.
 
 If proxy is required, add a block like this:
 
@@ -146,9 +161,10 @@ ansible-playbook \
 
 #### Known bugs and caveats
 
-- one of the latest installation steps, sample data, currently fails. Quick fix is provided during the installation.
+- the sample-data step fails; do not apply its suggested source edit or treat it
+  as a supported quick fix;
 - reboot is required after installation.
-- sample data installs corrupted collector configuration; go to collector nodes and re-save to fix it.
+- sample data can install corrupted collector configuration;
 - beware: if you enable keycloak, some manual configuration is needed.
 
 # 4 Extras and future work

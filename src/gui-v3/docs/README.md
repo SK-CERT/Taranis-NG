@@ -1,5 +1,10 @@
 # Vue3 GUI Documentation Index
 
+**Audience:** Vue 3 frontend developers. These are implementation and migration
+notes, not deployment instructions. See the repository
+[Docker deployment guide](../../../docker/README.md) for the current released
+stack.
+
 **Last Updated:** April 28, 2026
 
 This directory contains all implementation and architecture documentation for the Taranis-NG Vue3 GUI project.

@@ -44,6 +44,10 @@ with app.app_context():
     elif command_name == "regenerate":
         with db_manager.db.engine.begin() as connection:
             regenerate_all(connection)
+    elif command_name == "repair-distribution-bundle":
+        from migrations.repair_distribution_bundle import repair_distribution_bundle
+
+        repair_distribution_bundle(db_manager.db.engine)
     else:
         if command_name != "":
             print("Unknown command:", command_name, flush=True)  # noqa: T201

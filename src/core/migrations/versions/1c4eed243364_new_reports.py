@@ -7,6 +7,8 @@ Create Date: 2023-08-30 08:53:19.704085
 """
 
 from datetime import datetime
+from enum import Enum as PythonEnum
+from enum import auto
 
 from alembic import op
 from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, orm, text
@@ -19,6 +21,37 @@ revision = "1c4eed243364"
 down_revision = "4f24c634cd22"
 branch_labels = None
 depends_on = None
+
+
+class AttributeType_1c4eed243364(PythonEnum):
+    """Attribute enum as it existed when this revision was created."""
+
+    STRING = auto()
+    NUMBER = auto()
+    BOOLEAN = auto()
+    RADIO = auto()
+    ENUM = auto()
+    TEXT = auto()
+    RICH_TEXT = auto()
+    DATE = auto()
+    TIME = auto()
+    DATE_TIME = auto()
+    LINK = auto()
+    ATTACHMENT = auto()
+    TLP = auto()
+    CPE = auto()
+    CVE = auto()
+    CVSS = auto()
+
+
+class AttributeValidator_1c4eed243364(PythonEnum):
+    """Attribute-validator enum as it existed for this revision."""
+
+    NONE = auto()
+    EMAIL = auto()
+    NUMBER = auto()
+    RANGE = auto()
+    REGEXP = auto()
 
 
 class ReportItemType_1c4eed243364(Base):
@@ -140,9 +173,9 @@ class Attribute_1c4eed243364(Base):
     id = Column(Integer, primary_key=True, server_default=text("nextval('attribute_id_seq'::regclass)"))
     name = Column(String, nullable=False)
     description = Column(String)
-    type = Column(String)
+    type = Column(Enum(AttributeType_1c4eed243364))
     default_value = Column(String)
-    validator = Column(String)
+    validator = Column(Enum(AttributeValidator_1c4eed243364))
     validator_parameter = Column(String)
 
     def __init__(self, name, description, type, default_value, validator, validator_parameter):
@@ -273,17 +306,63 @@ def upgrade():
     else:
         print("No report to upgrade...", flush=True)
 
+    install_distribution_bundle(session)
+
+
+def install_distribution_bundle(session, presenter_id=None, parameter_html_id=None):
+    """Install the distribution data owned by this historical revision."""
     # ======= Product Types =======
 
-    presenter = session.query(Presenter_1c4eed243364).filter_by(type="HTML_PRESENTER").first()
+    presenter = session.get(Presenter_1c4eed243364, presenter_id) if presenter_id else None
+    if presenter is None:
+        presenter = session.query(Presenter_1c4eed243364).filter_by(type="HTML_PRESENTER").first()
     if not presenter:
         print("HTML_PRESENTER id not found!", flush=True)
         return
 
-    parameter_html = session.query(Parameter_1c4eed243364).filter_by(key="HTML_TEMPLATE_PATH").first()
+    parameter_html = session.get(Parameter_1c4eed243364, parameter_html_id) if parameter_html_id else None
+    if parameter_html is None:
+        parameter_html = session.query(Parameter_1c4eed243364).filter_by(key="HTML_TEMPLATE_PATH").first()
     if not parameter_html:
         print("HTML_TEMPLATE_PATH id not found!", flush=True)
         return
+
+    official_product_titles = ("Weekly Bulletin", "OSINT Weekly Report", "Disinformation", "Offensive Content")
+    official_report_titles = (
+        "OSINT Report - Summary",
+        "OSINT Report - Ransomware",
+        "OSINT Report - Sectors",
+        "OSINT Report - Threats",
+        "OSINT Report - Cyber Event",
+        "Disinformation from public source",
+        "Offensive content",
+        "News by Sector",
+    )
+    official_attribute_names = (
+        "NIS Sector",
+        "Attachment",
+        "Disinfo type",
+        "Boolean",
+        "Threat level",
+        "Trend",
+        "Source Reliability",
+        "Information Credibility",
+    )
+    existing_official_configuration = (
+        session.query(ProductType_1c4eed243364).filter(ProductType_1c4eed243364.title.in_(official_product_titles)).first()
+        or session.query(ReportItemType_1c4eed243364).filter(ReportItemType_1c4eed243364.title.in_(official_report_titles)).first()
+        or session.query(Attribute_1c4eed243364).filter(Attribute_1c4eed243364.name.in_(official_attribute_names)).first()
+    )
+    if existing_official_configuration:
+        print("Existing distribution configuration found; preserving it unchanged.", flush=True)
+        return
+
+    atr_text_id = session.query(Attribute_1c4eed243364).filter_by(name="Text").first().id
+    atr_text_area_id = session.query(Attribute_1c4eed243364).filter_by(name="Text Area").first().id
+    atr_tlp_id = session.query(Attribute_1c4eed243364).filter_by(name="TLP").first().id
+    atr_date_id = session.query(Attribute_1c4eed243364).filter_by(name="Date").first().id
+    atr_num_id = session.query(Attribute_1c4eed243364).filter_by(name="Number").first().id
+    atr_sev_id = session.query(Attribute_1c4eed243364).filter_by(name="MISP Event Threat Level").first().id
 
     # ======= ProductType, ParameterValue, ProductTypeParameterValue =======
 

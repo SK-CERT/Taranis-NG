@@ -29,35 +29,17 @@ This is just a taste of its features:
 - publish the self-service asset management portal to your constituency and allow them to set various notification profiles for those times when a vulnerability hits their product.
 
 ### Hardware requirements
-make sure to have at least 2 GB of RAM, 2 CPU cores and 5 GB of disk storage available for running,
-20 GB of disk storage if you want to build the project from scratch.
+
+Allow at least 2 GB of RAM, 2 CPU cores, and 5 GB of disk space to run the
+containers. Allow at least 20 GB of disk space when building all application
+images from source.
 
 ## Getting started with Docker installation
 
-Currently, the best way to deploy is via Docker. For Docker installation see [Docker README](docker/README.md).
-
-When your Taranis NG instance is up and running, visit your instance by
-navigating to [https://localhost:4443](https://localhost:4443/) using your web
-browser. **The default credentials are `user` / `user` and `admin` / `admin`.**
-
-### Connecting to collectors, presenters, and publishers
-
-After installation, you have to connect the core application with collectors,
-presenters, and publishers. There is no limit to how many of these you have.
-The default docker installation deploys one instance of each for you automatically.
-
-- Adding a `collector node`: no action needed. This is done automatically on startup if no collector nodes are defined.
-
-- Adding a `bot node`: no action needed. This is done automatically on startup if no bot nodes are defined.
-
-- Adding a `presenter node`: Log in as an `admin`, then navigate to Configuration
--> Presenters nodes. Click `Add new`. Enter any name and description. For URL,
-enter `http://presenters/` and for key, enter `supersecret` (or whatever
-password you chose during the installation). Click `Save`.
-
-- Adding a `publisher node`: repeat the process at Configuration -> Publishers
-nodes. Fill in the fields. For URL, enter `http://publishers/`. Don't forget to
-set the password.
+Docker Compose is the current deployment path. Use the
+[Docker deployment guide](docker/README.md) as the single source for current
+installation commands, security warnings, initialization limitations, and
+verification steps.
 
 ## Learn more...
 
@@ -68,8 +50,8 @@ You can view the architecture block diagram [here](docs/images/block-diagram.png
 Have a look at the [Taranis NG - original requirements.pdf](docs/Taranis-NG-original-requirements.pdf)
 for detailed description of the features of the first release, its internal
 architecture, and general design goals of the project.
-Please note that the version available today already contain new features
-and changes, which are not documented in this PDF.
+The current version contains newer features and changes that are not documented
+in this historical PDF. Do not use it as installation or operations guidance.
 
 #### Node type capabilities
 
