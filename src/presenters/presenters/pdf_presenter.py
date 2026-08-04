@@ -45,9 +45,10 @@ class PDFPresenter(BasePresenter):
             template_path = presenter_input.param_key_values["PDF_TEMPLATE_PATH"]
             pdf_file_name = common.read_str_parameter("PDF_FILE_NAME", None, presenter_input)
 
-            data = BasePresenter.render_jinja(presenter_input, template_path, escape_html=True, is_pdf=True)
+            input_data = BasePresenter.generate_input_data(presenter_input)
+            data = BasePresenter.render_jinja(input_data, template_path, escape_html=True, is_pdf=True)
             if pdf_file_name:
-                pdf_file_name = BasePresenter.render_jinja(presenter_input, None, pdf_file_name)
+                pdf_file_name = BasePresenter.render_jinja(input_data, None, pdf_file_name)
             return {"mime_type": "application/pdf", "data": data, "att_file_name": pdf_file_name}
 
         except Exception as error:

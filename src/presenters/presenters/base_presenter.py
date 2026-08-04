@@ -15,6 +15,7 @@ import re
 import types
 from base64 import b64encode
 from pathlib import Path
+from pprint import pformat
 from typing import ClassVar
 
 import jinja2
@@ -410,7 +411,9 @@ class BasePresenter:
 
         """
         data = BasePresenter.InputDataObject(presenter_input)
-        return BasePresenter.to_template_data(data)
+        template_data = BasePresenter.to_template_data(data)
+        logger.debug(f"=== TEMPLATING FROM THE FOLLOWING INPUT ===\n{pformat(template_data, width=150, sort_dicts=False)}")
+        return template_data
 
     @staticmethod
     def load_filters(env: jinja2.Environment) -> None:
@@ -449,7 +452,7 @@ class BasePresenter:
     @classmethod
     def render_jinja(
         cls,
-        presenter_input: dict,
+        input_data: dict,
         template_path: str | None,
         template_string: str | None = None,
         escape_html: bool = False,
@@ -458,7 +461,7 @@ class BasePresenter:
         """Render a Jinja2 template and return base64-encoded bytes.
 
         Args:
-            presenter_input: Input data (dict-like) for templating.
+            input_data: data object for templating.
             template_path: Path to a template file or None.
             template_string: Template source string to use instead of a file.
             escape_html: Enable Jinja2 autoescaping for HTML output.
@@ -470,7 +473,6 @@ class BasePresenter:
         Raises:
             ValueError: If a template path is outside allowed templates root.
         """
-        input_data = cls.generate_input_data(presenter_input)
         if template_string:
             env = jinja2.Environment(autoescape=False)  # noqa: S701 # safe for plaintext
             cls.load_filters(env)

@@ -38,7 +38,8 @@ class HTMLPresenter(BasePresenter):
         """
         try:
             template_path = presenter_input.param_key_values["HTML_TEMPLATE_PATH"]
-            data = BasePresenter.render_jinja(presenter_input, template_path, escape_html=True)
+            input_data = BasePresenter.generate_input_data(presenter_input)
+            data = BasePresenter.render_jinja(input_data, template_path, escape_html=True)
             return {"mime_type": "text/html", "data": data}
 
         except Exception as error:
