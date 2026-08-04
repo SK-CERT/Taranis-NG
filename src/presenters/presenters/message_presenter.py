@@ -46,10 +46,11 @@ class MESSAGEPresenter(BasePresenter):
         presenter_output = {"mime_type": "text/plain", "message_title": None, "message_body": None, "data": None, "att_file_name": None}
 
         try:
-            presenter_output["message_title"] = BasePresenter.render_jinja(presenter_input, message_title_template_path)
-            presenter_output["message_body"] = BasePresenter.render_jinja(presenter_input, message_body_template_path)
+            input_data = BasePresenter.generate_input_data(presenter_input)
+            presenter_output["message_title"] = BasePresenter.render_jinja(input_data, message_title_template_path)
+            presenter_output["message_body"] = BasePresenter.render_jinja(input_data, message_body_template_path)
             if att_file_name:
-                presenter_output["att_file_name"] = BasePresenter.render_jinja(presenter_input, None, att_file_name)
+                presenter_output["att_file_name"] = BasePresenter.render_jinja(input_data, None, att_file_name)
             if att_template_path:
                 presenter_input.param_key_values.update({"PDF_TEMPLATE_PATH": att_template_path})
                 pdf_presenter = PDFPresenter()

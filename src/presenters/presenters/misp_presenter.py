@@ -40,7 +40,8 @@ class MISPPresenter(BasePresenter):
         """
         try:
             template_path = presenter_input.param_key_values["MISP_TEMPLATE_PATH"]
-            data = BasePresenter.render_jinja(presenter_input, template_path)
+            input_data = BasePresenter.generate_input_data(presenter_input)
+            data = BasePresenter.render_jinja(input_data, template_path)
             return {"mime_type": "application/json", "data": data}
 
         except Exception as error:

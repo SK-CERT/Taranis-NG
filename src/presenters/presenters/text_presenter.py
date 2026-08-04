@@ -40,7 +40,8 @@ class TEXTPresenter(BasePresenter):
         """
         try:
             template_path = presenter_input.param_key_values["TEXT_TEMPLATE_PATH"]
-            data = BasePresenter.render_jinja(presenter_input, template_path)
+            input_data = BasePresenter.generate_input_data(presenter_input)
+            data = BasePresenter.render_jinja(input_data, template_path)
             return {"mime_type": "text/plain", "data": data}
 
         except Exception as error:
