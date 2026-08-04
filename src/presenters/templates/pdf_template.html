@@ -1,53 +1,118 @@
 {% from '_shared/tlp.html' import tlp_normalize, tlp_rank, tlp_label, tlp_foreground, tlp_background %}
-{% set supported_types = ['Vulnerability Report', 'Taranis Default Vulnerability Report'] %}
+
+{# Input selection and validation #}
+{% set supported_types = ["Vulnerability Report", "Taranis Default Vulnerability Report"] %}
 {% set items = [] %}
-{% for report_item in data.report_items %}{% if report_item.type in supported_types %}{% set _ = items.append(report_item) %}{% endif %}{% endfor %}
+{% for report_item in data.report_items %}
+    {% if report_item.type in supported_types %}
+        {% set _ = items.append(report_item) %}
+    {% endif %}
+{% endfor %}
 {% set errors = [] %}
-{% set required = ['cvss', 'tlp', 'confidentiality', 'description', 'exposure_date', 'affected_systems', 'recommendations'] %}
-{% macro date_value(value) -%}{% if value is mapping %}{{ '%04d-%02d-%02d'|format(value.year|int, value.month|int, value.day|int) }}{% else %}{{ value|e }}{% endif %}{%- endmacro %}
-{% macro cvss_score(value) -%}{% if value is mapping %}{{ value.baseScore|default(value.score)|default(0) }}{% else %}{{ value|default(0) }}{% endif %}{%- endmacro %}
-{% if not items %}{% set _ = errors.append('No supported vulnerability report items were supplied.') %}{% endif %}
+{% set required = ["cvss", "tlp", "confidentiality", "description", "exposure_date", "affected_systems", "recommendations"] %}
+
+{% macro date_value(value) -%}
+    {%- if value is mapping -%}
+        {{- '%04d-%02d-%02d'|format(value.year|int, value.month|int, value.day|int) -}}
+    {%- else -%}
+        {{- value|e -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{% macro cvss_score(value) -%}
+    {%- if value is mapping -%}
+        {{- value.baseScore|default(value.score) |default(0) -}}
+    {%- else -%}
+        {{- value|default(0) -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{% if not items %}
+    {% set _ = errors.append('No supported vulnerability report items were supplied.') %}
+{% endif %}
 {% for item in data.report_items %}
-  {% if item.type not in supported_types %}{% set _ = errors.append('Unsupported report-item type: ' ~ item.type ~ ' (' ~ item.name ~ ').') %}{% endif %}
+    {% if item.type not in supported_types %}
+        {% set _ = errors.append('Unsupported report-item type: ' ~ item.type ~ ' (' ~ item.name ~ ').') %}
+    {% endif %}
 {% endfor %}
 {% for item in items %}
-  {% for key in required %}{% if key not in item.attrs or not item.attrs[key] %}{% set _ = errors.append(item.name ~ ': required field ' ~ key|replace('_', ' ')|title ~ ' is missing.') %}{% endif %}{% endfor %}
-  {% if item.attrs.tlp|default('') and tlp_normalize(item.attrs.tlp) not in ['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED'] %}{% set _ = errors.append(item.name ~ ': unsupported TLP value.') %}{% endif %}
-  {% if item.type == 'Taranis Default Vulnerability Report' and item.news_items|default([])|length == 0 %}{% set _ = errors.append(item.name ~ ': no linked news evidence.') %}{% endif %}
+    {% for key in required %}
+        {% if key not in item.attrs or not item.attrs[key] %}
+            {% set _ = errors.append(item.name ~ ': required field ' ~ key|replace('_', ' ')|title ~ ' is missing.') %}
+        {% endif %}
+    {% endfor %}
+    {% if item.attrs.tlp|default('') and tlp_normalize(item.attrs.tlp) not in ['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED'] %}
+        {% set _ = errors.append(item.name ~ ': unsupported TLP value.') %}
+    {% endif %}
+    {% if item.type == 'Taranis Default Vulnerability Report' and item.news_items|default([])|length == 0 %}
+        {% set _ = errors.append(item.name ~ ': no linked news evidence.') %}
+    {% endif %}
 {% endfor %}
+
+{# Document-wide aggregates #}
 {% set tlp_state = namespace(value='CLEAR', rank=0) %}
 {% set score_state = namespace(max=0, critical=0, high=0, medium=0, low=0, none=0) %}
 {% set evidence_state = namespace(count=0) %}
 {% set reference_state = namespace(count=0) %}
 {% set reference_groups = namespace(names=[], links_by_name={}) %}
 {% for item in items %}
-  {% set item_tlp = tlp_normalize(item.attrs.tlp) %}
-  {% set item_tlp_rank = tlp_rank(item.attrs.tlp)|int %}
-  {% if item_tlp_rank > tlp_state.rank %}{% set tlp_state.value = item_tlp %}{% set tlp_state.rank = item_tlp_rank %}{% endif %}
-  {% set score = cvss_score(item.attrs.cvss)|float %}
-  {% if score > score_state.max %}{% set score_state.max = score %}{% endif %}
-  {% if score >= 9 %}{% set score_state.critical = score_state.critical + 1 %}{% elif score >= 7 %}{% set score_state.high = score_state.high + 1 %}{% elif score >= 4 %}{% set score_state.medium = score_state.medium + 1 %}{% elif score > 0 %}{% set score_state.low = score_state.low + 1 %}{% else %}{% set score_state.none = score_state.none + 1 %}{% endif %}
-  {% set evidence_state.count = evidence_state.count + (item.news_items|default([])|length) %}
-  {% set reference_name = item.name|default('Untitled', true)|trim %}
-  {% if reference_name not in reference_groups.names %}{% set _ = reference_groups.names.append(reference_name) %}{% set _ = reference_groups.links_by_name.update({reference_name: []}) %}{% endif %}
-  {% set item_links = item.attrs.links|default([]) %}
-  {% if item_links is iterable and item_links is not string and item_links is not mapping %}
-    {% for link in item_links %}{% set reference_link = link|string|trim %}{% if reference_link and reference_link not in reference_groups.links_by_name[reference_name] %}{% set _ = reference_groups.links_by_name[reference_name].append(reference_link) %}{% set reference_state.count = reference_state.count + 1 %}{% endif %}{% endfor %}
-  {% elif item_links %}
-    {% set reference_link = item_links|string|trim %}{% if reference_link and reference_link not in reference_groups.links_by_name[reference_name] %}{% set _ = reference_groups.links_by_name[reference_name].append(reference_link) %}{% set reference_state.count = reference_state.count + 1 %}{% endif %}
-  {% endif %}
+    {% set item_tlp = tlp_normalize(item.attrs.tlp) %}
+    {% set item_tlp_rank = tlp_rank(item.attrs.tlp)|int %}
+    {% if item_tlp_rank > tlp_state.rank %}
+        {% set tlp_state.value = item_tlp %}
+        {% set tlp_state.rank = item_tlp_rank %}
+    {% endif %}
+    {% set score = cvss_score(item.attrs.cvss)|float %}
+    {% if score > score_state.max %}
+        {% set score_state.max = score %}
+    {% endif %}
+    {% if score >= 9 %}
+        {% set score_state.critical = score_state.critical + 1 %}
+    {% elif score >= 7 %}
+        {% set score_state.high = score_state.high + 1 %}
+    {% elif score >= 4 %}
+        {% set score_state.medium = score_state.medium + 1 %}
+    {% elif score > 0 %}
+        {% set score_state.low = score_state.low + 1 %}
+    {% else %}
+        {% set score_state.none = score_state.none + 1 %}
+    {% endif %}
+    {% set evidence_state.count = evidence_state.count + (item.news_items|default([])|length) %}
+    {% set reference_name = item.name|default('Untitled', true)|trim %}
+    {% if reference_name not in reference_groups.names %}
+        {% set _ = reference_groups.names.append(reference_name) %}
+        {% set _ = reference_groups.links_by_name.update({reference_name: []}) %}
+    {% endif %}
+    {% set item_links = item.attrs.links|default([]) %}
+    {% if item_links is iterable and item_links is not string and item_links is not mapping %}
+        {% for link in item_links %}
+            {% set reference_link = link|string|trim %}
+            {% if reference_link and reference_link not in reference_groups.links_by_name[reference_name] %}
+                {% set _ = reference_groups.links_by_name[reference_name].append(reference_link) %}
+                {% set reference_state.count = reference_state.count + 1 %}
+            {% endif %}
+        {% endfor %}
+    {% elif item_links %}
+        {% set reference_link = item_links|string|trim %}
+        {% if reference_link and reference_link not in reference_groups.links_by_name[reference_name] %}
+            {% set _ = reference_groups.links_by_name[reference_name].append(reference_link) %}
+            {% set reference_state.count = reference_state.count + 1 %}
+        {% endif %}
+    {% endif %}
 {% endfor %}
+
+{# Presentation-level document state #}
 {% set mode = 'Vulnerability Alert' if items|length == 1 else 'Vulnerability Bulletin' %}
 {% set max_severity = 'CRITICAL' if score_state.max >= 9 else 'HIGH' if score_state.max >= 7 else 'MEDIUM' if score_state.max >= 4 else 'LOW' if score_state.max > 0 else 'NONE' %}
 {% set tlp_color = tlp_foreground(tlp_state.value) %}
 {% set tlp_bg = tlp_background() %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="description" content="Taranis vulnerability report">
-  <title>{{ data.product.title|default(mode)|e }}</title>
-  <style>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="Taranis vulnerability report">
+        <title>{{ data.product.title|default(mode) |e }}</title>
+        <style>
     :root { --ink:#14212b; --navy:#123d73; --blue:#3f92dd; --paper:#fff; --wash:#eef3f5; --line:#cad6db; --muted:#60717b; --critical:#a51d32; --high:#d3562a; --medium:#c28a12; --low:#287b91; --none:#687983; }
     @page {
       size:A4; margin:30mm 16mm 21mm;
@@ -119,47 +184,260 @@
     .reference-group p { margin-bottom:1mm; }
     .note { background:#fff1bf; border-left:1.2mm solid var(--medium); padding:3.5mm; margin-top:5mm; }
     .validation { margin-top:12mm; } .validation h1 { color:var(--critical); } .validation ul { padding-left:6mm; }
-  </style>
-</head>
-<body>
-<div class="page-rule page-rule-top"></div><div class="page-rule page-rule-bottom"></div>
-<span class="mode-seed">{{ mode|e }}</span><span class="title-seed">{{ data.product.title|default(mode)|e }}</span>
-{% if errors %}
-  <section class="validation"><p class="eyebrow">Report validation</p><h1>Report generation blocked</h1><div class="rule"></div><p>The product does not meet the template requirements.</p><div class="note"><ul>{% for error in errors %}<li>{{ error|e }}</li>{% endfor %}</ul></div></section>
-{% else %}
-  <main>
-    <section class="cover">
-      <p class="eyebrow">{{ mode|e }}</p><h1>{{ data.product.title|e }}</h1><div class="rule"></div>
-      <p class="summary">{{ data.product.description|default('Taranis NG vulnerability report.')|e }}</p>
-      <div class="node-rule"></div>
-      <div class="metrics avoid"><div class="metric"><span>Highest severity</span><b>{{ max_severity }}</b></div><div class="metric"><span>Maximum CVSS</span><b>{{ '%.1f'|format(score_state.max) }}</b></div><div class="metric"><span>Findings</span><b>{{ items|length }}</b></div><div class="metric"><span>Sources</span><b>{{ evidence_state.count + reference_state.count }}</b></div><div class="metric"><span>Handling</span><b style="font-size:9pt">TLP:{{ tlp_state.value }}</b></div></div>
-      <div class="severity-summary avoid{% if score_state.none %} has-none{% endif %}"><div><span>Critical</span><b>{{ score_state.critical }}</b></div><div><span>High</span><b>{{ score_state.high }}</b></div><div><span>Medium</span><b>{{ score_state.medium }}</b></div><div><span>Low</span><b>{{ score_state.low }}</b></div>{% if score_state.none %}<div><span>None</span><b>{{ score_state.none }}</b></div>{% endif %}</div>
-      <div class="section-head"><h2>Findings</h2><small>{{ items|length }} total</small></div>
-      <table class="register"><thead><tr><th>Severity</th><th>CVE / CVSS</th><th>Affected systems</th><th>Recommended response</th></tr></thead><tbody>
-      {% for item in items %}{% set score = cvss_score(item.attrs.cvss)|float %}{% set severity = 'CRITICAL' if score >= 9 else 'HIGH' if score >= 7 else 'MEDIUM' if score >= 4 else 'LOW' if score > 0 else 'NONE' %}{% set cves = item.attrs.cve|default([]) %}<tr><td><span class="badge sev-{{ severity|lower }}">{{ severity }}</span></td><td>{% if cves is iterable and cves is not string and cves is not mapping %}{% for cve in cves %}<b>{{ cve|e }}</b>{% if not loop.last %}<br>{% endif %}{% endfor %}{% elif cves %}<b>{{ cves|e }}</b>{% endif %}<br>CVSS {{ '%.1f'|format(score) }}</td><td><b>{{ item.name|e }}</b><br>{{ item.attrs.affected_systems|e }}</td><td>{{ item.attrs.recommendations|e|truncate(260, true, '…') }}</td></tr>{% endfor %}
-      </tbody></table>
-    </section>
+        </style>
+    </head>
+    <body>
+        <div class="page-rule page-rule-top"></div>
+        <div class="page-rule page-rule-bottom"></div>
+        <span class="mode-seed">{{ mode|e }}</span>
+        <span class="title-seed">{{ data.product.title|default(mode) |e }}</span>
 
-    {% for item in items %}
-    <section class="page-break">
-      {% set score = cvss_score(item.attrs.cvss)|float %}{% set severity = 'CRITICAL' if score >= 9 else 'HIGH' if score >= 7 else 'MEDIUM' if score >= 4 else 'LOW' if score > 0 else 'NONE' %}{% set item_tlp = tlp_normalize(item.attrs.tlp) %}
-      <div class="item-head"><div class="item-number">{{ '%02d'|format(loop.index) }}</div><div><p class="eyebrow">{{ severity }} · CVSS {{ '%.1f'|format(score) }}</p><h2>{{ item.name|e }}</h2><div class="item-meta{% if not item.attrs.update_date|default('') %} no-update{% endif %}"><div><span>Published</span><b>{{ date_value(item.attrs.exposure_date) }}</b></div>{% if item.attrs.update_date|default('') %}<div><span>Updated</span><b>{{ date_value(item.attrs.update_date) }}</b></div>{% endif %}<div><span>Handling</span><b>{{ item.attrs.confidentiality|e }} · TLP:{{ item_tlp }}</b></div></div></div></div>
-      {% set cves = item.attrs.cve|default([]) %}{% set cwes = item.attrs.cwe|default({}) %}
-      <div class="grid-2"><article class="panel"><span class="label">CVSS and identifiers</span><div class="cvss">{{ '%.1f'|format(score) }} <small>{{ severity }}</small></div>{% if cves is iterable and cves is not string and cves is not mapping %}{% for cve in cves %}<span class="chip">{{ cve|e }}</span>{% endfor %}{% elif cves %}<span class="chip">{{ cves|e }}</span>{% endif %}{% if cwes is mapping %}{% for cwe, detail in cwes.items() %}<span class="chip">{{ cwe|e }}</span>{% endfor %}{% elif cwes is iterable and cwes is not string %}{% for cwe in cwes %}<span class="chip">{{ cwe|e }}</span>{% endfor %}{% elif cwes %}<span class="chip">{{ cwes|e }}</span>{% endif %}</article><article class="panel"><span class="label">Affected systems</span><p><b>{{ item.attrs.affected_systems|e }}</b></p></article></div>
-      <div class="description"><span class="label">Description</span><p>{{ item.attrs.description|e }}</p></div>
-      {% set impacts = item.attrs.impact|default([]) %}{% set iocs = item.attrs.ioc|default([]) %}
-      <div class="grid-2"><article class="panel"><span class="label">Impact</span>{% if impacts is iterable and impacts is not string and impacts is not mapping %}{% if impacts %}<ul>{% for impact in impacts %}<li>{{ impact|e }}</li>{% endfor %}</ul>{% else %}<p>Not specified.</p>{% endif %}{% elif impacts %}<p>{{ impacts|e }}</p>{% else %}<p>Not specified.</p>{% endif %}</article><article class="panel"><span class="label">Verification</span>{% if iocs is iterable and iocs is not string and iocs is not mapping %}{% if iocs %}<ul>{% for ioc in iocs %}<li>{{ ioc|e }}</li>{% endfor %}</ul>{% else %}<p>Check the deployed version, relevant configuration, and remediation state.</p>{% endif %}{% elif iocs %}<p>{{ iocs|e }}</p>{% else %}<p>Check the deployed version, relevant configuration, and remediation state.</p>{% endif %}</article></div>
-      <div class="response"><span class="label">Recommended response</span><br>{{ item.attrs.recommendations|e }}</div>
-      {% if item.news_items|default([]) %}{% set source = item.news_items[0] %}<div class="evidence"><strong>Source:</strong> {{ source.osint_source_name|default(source.source)|e }} · published {{ date_value(source.published) }} · collected {{ date_value(source.collected) }}<br><a href="{{ source.link|e }}">{{ source.link|e }}</a></div>{% endif %}
-    </section>
-    {% endfor %}
+        {% if errors %}
+            <section class="validation">
+                <p class="eyebrow">Report validation</p>
+                <h1>Report generation blocked</h1>
+                <div class="rule"></div>
+                <p>The product does not meet the template requirements.</p>
+                <div class="note">
+                    <ul>
+                        {% for error in errors %}<li>{{ error|e }}</li>{% endfor %}
+                    </ul>
+                </div>
+            </section>
+        {% else %}
+            <main>
+                {# Cover and findings register #}
+                <section class="cover">
+                    <p class="eyebrow">{{ mode|e }}</p>
+                    <h1>{{ data.product.title|e }}</h1>
+                    <div class="rule"></div>
+                    <p class="summary">{{ data.product.description|default("Taranis NG vulnerability report.") |e }}</p>
+                    <div class="node-rule"></div>
 
-    {% if evidence_state.count or reference_state.count %}<section class="page-break">
-      <div class="section-head"><h2>Sources</h2><small>{% if evidence_state.count %}Linked records: {{ evidence_state.count }}{% endif %}{% if evidence_state.count and reference_state.count %} · {% endif %}{% if reference_state.count %}References: {{ reference_state.count }}{% endif %}</small></div>
-      {% if evidence_state.count %}<div class="source-grid">{% set source_state = namespace(seen=[]) %}{% for item in items %}{% for source in item.news_items|default([]) %}{% set identity = source.id|default(source.link) %}{% if identity not in source_state.seen %}{% set _ = source_state.seen.append(identity) %}<article class="source"><h3>{{ source.title|e }}</h3><p><b>{{ source.osint_source_name|default(source.source)|e }}</b><br>Published {{ date_value(source.published) }} · collected {{ date_value(source.collected) }}</p><a href="{{ source.link|e }}">{{ source.link|e }}</a></article>{% endif %}{% endfor %}{% endfor %}</div>{% endif %}
-      {% if reference_state.count %}<div class="reference-list"><p class="eyebrow">References</p>{% for reference_name in reference_groups.names %}{% set reference_links = reference_groups.links_by_name[reference_name] %}{% if reference_links %}<section class="reference-group"><h3>{{ reference_name|e }}</h3>{% for link in reference_links %}<p><a href="{{ link|e }}">{{ link|e }}</a></p>{% endfor %}</section>{% endif %}{% endfor %}</div>{% endif %}
-    </section>{% endif %}
-  </main>
-{% endif %}
-</body>
+                    <div class="metrics avoid">
+                        <div class="metric"><span>Highest severity</span><b>{{ max_severity }}</b></div>
+                        <div class="metric"><span>Maximum CVSS</span><b>{{ '%.1f'|format(score_state.max) }}</b></div>
+                        <div class="metric"><span>Findings</span><b>{{ items|length }}</b></div>
+                        <div class="metric"><span>Sources</span><b>{{ evidence_state.count + reference_state.count }}</b></div>
+                        <div class="metric"><span>Handling</span><b style="font-size:9pt">TLP:{{ tlp_state.value }}</b></div>
+                    </div>
+
+                    <div class="severity-summary avoid{% if score_state.none %} has-none{% endif %}">
+                        <div><span>Critical</span><b>{{ score_state.critical }}</b></div>
+                        <div><span>High</span><b>{{ score_state.high }}</b></div>
+                        <div><span>Medium</span><b>{{ score_state.medium }}</b></div>
+                        <div><span>Low</span><b>{{ score_state.low }}</b></div>
+                        {% if score_state.none %}
+                            <div><span>None</span><b>{{ score_state.none }}</b></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="section-head">
+                        <h2>Findings</h2>
+                        <small>{{ items|length }} total</small>
+                    </div>
+                    <table class="register">
+                        <thead>
+                            <tr>
+                                <th>Severity</th>
+                                <th>CVE / CVSS</th>
+                                <th>Affected systems</th>
+                                <th>Recommended response</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                {% set score = cvss_score(item.attrs.cvss)|float %}
+                                {% set severity = 'CRITICAL' if score >= 9 else 'HIGH' if score >= 7 else 'MEDIUM' if score >= 4 else 'LOW' if score > 0 else 'NONE' %}
+                                {% set cves = item.attrs.cve|default([]) %}
+                                <tr>
+                                    <td>
+                                        <span class="badge sev-{{ severity|lower }}">{{ severity }}</span>
+                                    </td>
+                                    <td>
+                                        {% if cves is iterable and cves is not string and cves is not mapping %}
+                                            {% for cve in cves %}
+                                                <b>{{ cve|e }}</b>
+                                                {% if not loop.last %}<br>{% endif %}
+                                            {% endfor %}
+                                        {% elif cves %}
+                                            <b>{{ cves|e }}</b>
+                                        {% endif %}
+                                        <br>
+                                        CVSS {{ '%.1f'|format(score) }}
+                                    </td>
+                                    <td>
+                                        <b>{{ item.name|e }}</b>
+                                        <br>
+                                        {{ item.attrs.affected_systems|e }}
+                                    </td>
+                                    <td>{{ item.attrs.recommendations|e|truncate(260, true, '…') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </section>
+
+                {# One detail section per report item #}
+                {% for item in items %}
+                    {% set score = cvss_score(item.attrs.cvss)|float %}
+                    {% set severity = 'CRITICAL' if score >= 9 else 'HIGH' if score >= 7 else 'MEDIUM' if score >= 4 else 'LOW' if score > 0 else 'NONE' %}
+                    {% set item_tlp = tlp_normalize(item.attrs.tlp) %}
+                    {% set cves = item.attrs.cve|default([]) %}
+                    {% set cwes = item.attrs.cwe|default({}) %}
+                    {% set impacts = item.attrs.impact|default([]) %}
+                    {% set iocs = item.attrs.ioc|default([]) %}
+
+                    <section class="page-break">
+                        <div class="item-head">
+                            <div class="item-number">{{ '%02d'|format(loop.index) }}</div>
+                            <div>
+                                <p class="eyebrow">{{ severity }} · CVSS {{ '%.1f'|format(score) }}</p>
+                                <h2>{{ item.name|e }}</h2>
+                                <div class="item-meta{% if not item.attrs.update_date|default('') %} no-update{% endif %}">
+                                    <div>
+                                        <span>Published</span>
+                                        <b>{{ date_value(item.attrs.exposure_date) }}</b>
+                                    </div>
+                                    {% if item.attrs.update_date|default('') %}
+                                        <div>
+                                            <span>Updated</span>
+                                            <b>{{ date_value(item.attrs.update_date) }}</b>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <span>Handling</span>
+                                        <b>{{ item.attrs.confidentiality|e }} · TLP:{{ item_tlp }}</b>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <article class="panel">
+                                <span class="label">CVSS and identifiers</span>
+                                <div class="cvss">
+                                    {{ '%.1f'|format(score) }} <small>{{ severity }}</small>
+                                </div>
+                                {%- if cves is iterable and cves is not string and cves is not mapping -%}
+                                    {%- for cve in cves -%}<span class="chip">{{ cve|e }}</span>{%- endfor -%}
+                                {%- elif cves -%}
+                                    <span class="chip">{{ cves|e }}</span>
+                                {%- endif -%}
+                                {%- if cwes is mapping -%}
+                                    {%- for cwe, detail in cwes.items() -%}<span class="chip">{{ cwe|e }}</span>{%- endfor -%}
+                                {%- elif cwes is iterable and cwes is not string -%}
+                                    {%- for cwe in cwes -%}<span class="chip">{{ cwe|e }}</span>{%- endfor -%}
+                                {%- elif cwes -%}
+                                    <span class="chip">{{ cwes|e }}</span>
+                                {%- endif %}
+                            </article>
+                            <article class="panel">
+                                <span class="label">Affected systems</span>
+                                <p><b>{{ item.attrs.affected_systems|e }}</b></p>
+                            </article>
+                        </div>
+
+                        <div class="description"><span class="label">Description</span><p>{{ item.attrs.description|e }}</p></div>
+
+                        <div class="grid-2">
+                            <article class="panel">
+                                <span class="label">Impact</span>
+                                {% if impacts is iterable and impacts is not string and impacts is not mapping %}
+                                    {% if impacts %}
+                                        <ul>{% for impact in impacts %}<li>{{ impact|e }}</li>{% endfor %}</ul>
+                                    {% else %}
+                                        <p>Not specified.</p>
+                                    {% endif %}
+                                {% elif impacts %}
+                                    <p>{{ impacts|e }}</p>
+                                {% else %}
+                                    <p>Not specified.</p>
+                                {% endif %}
+                            </article>
+                            <article class="panel">
+                                <span class="label">Verification</span>
+                                {% if iocs is iterable and iocs is not string and iocs is not mapping %}
+                                    {% if iocs %}
+                                        <ul>{% for ioc in iocs %}<li>{{ ioc|e }}</li>{% endfor %}</ul>
+                                    {% else %}
+                                        <p>Check the deployed version, relevant configuration, and remediation state.</p>
+                                    {% endif %}
+                                {% elif iocs %}
+                                    <p>{{ iocs|e }}</p>
+                                {% else %}
+                                    <p>Check the deployed version, relevant configuration, and remediation state.</p>
+                                {% endif %}
+                            </article>
+                        </div>
+
+                        <div class="response"><span class="label">Recommended response</span><br>{{ item.attrs.recommendations|e }}</div>
+
+                        {% if item.news_items|default([]) %}
+                            {% set source = item.news_items[0] %}
+                            <div class="evidence">
+                                <strong>Source:</strong> {{ source.osint_source_name|default(source.source) |e }} · published {{ date_value(source.published) }} · collected {{ date_value(source.collected) }}
+                                <br>
+                                <a href="{{ source.link|e }}">{{ source.link|e }}</a>
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endfor %}
+
+                {# Consolidated linked records and references #}
+                {% if evidence_state.count or reference_state.count %}
+                    <section class="page-break">
+                        <div class="section-head">
+                            <h2>Sources</h2>
+                            <small>
+                                {%- if evidence_state.count -%}Linked records: {{ evidence_state.count }}{%- endif -%}
+                                {%- if evidence_state.count and reference_state.count %} · {% endif -%}
+                                {%- if reference_state.count -%}References: {{ reference_state.count }}{%- endif -%}
+                            </small>
+                        </div>
+
+                        {% if evidence_state.count %}
+                            <div class="source-grid">
+                                {% set source_state = namespace(seen=[]) %}
+                                {% for item in items %}
+                                    {% for source in item.news_items|default([]) %}
+                                        {% set identity = source.id|default(source.link) %}
+                                        {% if identity not in source_state.seen %}
+                                            {% set _ = source_state.seen.append(identity) %}
+                                            <article class="source">
+                                                <h3>{{ source.title|e }}</h3>
+                                                <p>
+                                                    <b>{{ source.osint_source_name|default(source.source) |e }}</b>
+                                                    <br>
+                                                    Published {{ date_value(source.published) }} · collected {{ date_value(source.collected) }}
+                                                </p>
+                                                <a href="{{ source.link|e }}">{{ source.link|e }}</a>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if reference_state.count %}
+                            <div class="reference-list">
+                                <p class="eyebrow">References</p>
+                                {% for reference_name in reference_groups.names %}
+                                    {% set reference_links = reference_groups.links_by_name[reference_name] %}
+                                    {% if reference_links %}
+                                        <section class="reference-group">
+                                            <h3>{{ reference_name|e }}</h3>
+                                            {% for link in reference_links %}
+                                                <p><a href="{{ link|e }}">{{ link|e }}</a></p>
+                                            {% endfor %}
+                                        </section>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endif %}
+            </main>
+        {% endif %}
+    </body>
 </html>
