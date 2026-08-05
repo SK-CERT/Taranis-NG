@@ -109,6 +109,8 @@
                                 :hint="t('word_lists.link_hint')"
                             />
 
+                            <WordListCsvImport v-model="item.entries" />
+
                             <EditableEntityTable
                                 v-model="item.entries"
                                 :title="t('word_lists.words')"
@@ -179,6 +181,7 @@
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
     import { useAuth } from '@/composables/useAuth'
     import { createNewWordList, updateWordList } from '@/api/config'
+    import WordListCsvImport from '@/components/config/word-lists/WordListCsvImport.vue'
 
     type WordEntry = {
         value: string
