@@ -43,6 +43,49 @@ describe('AttributeValueLayout', () => {
         expect(wrapper.emitted('del-value')).toBeTruthy()
     })
 
+    // ── Modification provenance ──────────────────────────────────────────────
+    it('exposes modification provenance through a keyboard-focusable control', () => {
+        const wrapper = mountLayout({
+            values: [
+                {
+                    id: 1,
+                    value: 'v1',
+                    last_updated: '05.08.2026 - 03:45',
+                    user: { name: 'Arthur Dent' }
+                }
+            ]
+        })
+        const activator = wrapper.find('.attribute-provenance__activator')
+
+        expect(activator.exists()).toBe(true)
+        expect(activator.element.tagName).toBe('BUTTON')
+        expect(activator.attributes('aria-label')).toBe('Last updated: 05.08.2026 - 03:45; Updated by: Arthur Dent')
+        expect(activator.attributes('tabindex')).not.toBe('-1')
+    })
+
+    it('renders no provenance control when both timestamp and modifier are absent', () => {
+        const wrapper = mountLayout({
+            values: [{ id: 1, value: 'v1', last_updated: null, user: null }]
+        })
+
+        expect(wrapper.find('.attribute-provenance__activator').exists()).toBe(false)
+        expect(wrapper.find('.attribute-provenance__details').exists()).toBe(false)
+    })
+
+    it('uses the selected value provenance rather than another occurrence', () => {
+        const wrapper = mountLayout({
+            valIndex: 1,
+            values: [
+                { id: 1, last_updated: 'old', user: { name: 'First analyst' } },
+                { id: 2, last_updated: 'new', user: { name: 'Second analyst' } }
+            ]
+        })
+
+        expect(wrapper.find('.attribute-provenance__activator').attributes('aria-label')).toBe(
+            'Last updated: new; Updated by: Second analyst'
+        )
+    })
+
     // ── Embed-delete: expose visibility/handler via the col_middle slot ───────
     it('exposes delVisible via the col_middle scoped slot and omits the col_right button', () => {
         const wrapper = mountWithPlugins(AttributeValueLayout, {

@@ -323,12 +323,6 @@
                                                                         </v-icon>
                                                                     </template>
                                                                 </v-tooltip>
-                                                                <span
-                                                                    v-if="getAttributeMeta(attribute_item)"
-                                                                    class="attribute-meta text-medium-emphasis text-no-wrap ml-auto mr-2"
-                                                                >
-                                                                    {{ getAttributeMeta(attribute_item) }}
-                                                                </span>
                                                             </div>
                                                         </v-expansion-panel-title>
                                                         <v-expansion-panel-text v-if="!isLabelOnlyAttribute(attribute_item)">
@@ -1072,37 +1066,6 @@
         return isLabelOnly(attributeItem?.attribute_group_item)
     }
 
-    const getAttributeMeta = (attributeItem) => {
-        const values = Array.isArray(attributeItem?.values) ? attributeItem.values : []
-        let latest: Record<string, unknown> | null = null
-
-        for (const value of values) {
-            const user = value?.user as { name?: string } | undefined
-            const userName = user?.name
-            if (!userName) continue
-
-            if (!latest) {
-                latest = value
-                continue
-            }
-
-            const currentTime = Date.parse(String(value?.['last_updated'] || ''))
-            const latestTime = Date.parse(String(latest?.['last_updated'] || ''))
-
-            if (!Number.isNaN(currentTime) && Number.isNaN(latestTime)) {
-                latest = value
-            } else if (!Number.isNaN(currentTime) && !Number.isNaN(latestTime) && currentTime > latestTime) {
-                latest = value
-            }
-        }
-
-        const latestUserName = (latest?.['user'] as { name?: string } | undefined)?.name
-        if (!latestUserName) return ''
-        if (!latest?.['last_updated']) return latestUserName
-
-        return `${latest['last_updated']} ${latestUserName}`
-    }
-
     // AI generation
     const autoGenerate = async (attribute_group_item_id) => {
         if (!autoGenerateIcon[attribute_group_item_id]) {
@@ -1394,12 +1357,6 @@
     .locked-style :deep(input) {
         color: grey !important;
         font-style: italic;
-    }
-
-    .attribute-meta {
-        font-size: 0.8rem;
-        font-weight: 400;
-        text-transform: none;
     }
 
     /* Let the panel list wrap so compact attributes can pair up two-per-row.
