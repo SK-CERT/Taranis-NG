@@ -47,7 +47,7 @@
                     </template>
 
                     <!-- Select with options -->
-                    <template v-else-if="item.options">
+                    <template v-else-if="item.key === Settings.UI_LANGUAGE || item.options">
                         <v-select
                             :model-value="item.value"
                             :items="getDisplayOptions(item)"
@@ -132,6 +132,7 @@
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
     import { useSettingsStore } from '@/stores/settings'
+    import { supportedLocales } from '@/i18n'
     import { Settings, type SettingKey } from '@/types/settings'
     import SearchField from '@/components/common/SearchField.vue'
     import { format } from 'date-fns'
@@ -220,11 +221,18 @@
     }
 
     const getDisplayOptions = (item: SettingsRecord): SettingOption[] => {
+        if (item.key === Settings.UI_LANGUAGE) {
+            return supportedLocales.map((code) => ({
+                id: code,
+                txt: getLanguageName(code)
+            }))
+        }
+
         try {
             const options = JSON.parse(item.options || '[]') as SettingOption[]
 
-            // For language settings, use language names
-            if (item.key === Settings.UI_LANGUAGE || item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
+            // Content languages remain configured by the backend.
+            if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
                 return options.map((opt) => ({
                     ...opt,
                     txt: getLanguageName(String(opt.id), opt.txt)

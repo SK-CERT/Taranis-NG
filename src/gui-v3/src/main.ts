@@ -13,11 +13,7 @@ import 'primeicons/primeicons.css'
 import App from './App.vue'
 import router from './router'
 import ApiService from './services/api_service'
-
-// Import i18n locale messages (JSON format for Weblate compatibility)
-import en from './i18n/en.json'
-import cs from './i18n/cs.json'
-import sk from './i18n/sk.json'
+import { messages, resolveLocale } from './i18n'
 
 // Wait for stylesheets to be applied before mounting.
 // This prevents "Layout was forced before page fully loaded" warnings.
@@ -71,10 +67,8 @@ const baseURL = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
 ApiService.init(baseURL)
 
 // Get default locale from environment or browser.
-let defaultLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE as string | undefined
-if (!defaultLocale) {
-    defaultLocale = navigator.language.split('-')[0] || 'en'
-}
+const configuredLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE as string | undefined
+const defaultLocale = resolveLocale(configuredLocale || navigator.language)
 
 // Create Vuetify instance.
 const vuetify = createVuetify({
@@ -139,11 +133,7 @@ const i18n = createI18n({
     legacy: false,
     locale: defaultLocale,
     fallbackLocale: 'en',
-    messages: {
-        en,
-        cs,
-        sk
-    }
+    messages
 })
 
 // Create Pinia store.

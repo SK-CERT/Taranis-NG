@@ -298,6 +298,14 @@ The optional Vue 3 container uses `VITE_APP_TARANIS_NG_URL`,
 `VITE_APP_TARANIS_NG_LOCALE`, and `VITE_APP_VERSION`. Its public base path is
 `/v2/`.
 
+Locale availability differs between the interfaces. Vue 2 supports Czech
+(`cs`), English (`en`), and Slovak (`sk`). Vue 3 supports Brazilian Portuguese
+(`pt-BR`), Czech (`cs`), Dutch (`nl`), English (`en`), French (`fr`), German
+(`de`), Hindi (`hi`), Italian (`it`), Japanese (`ja`), Korean (`ko`), Polish
+(`pl`), Russian (`ru`), Simplified Chinese (`zh-CN`), Slovak (`sk`), Spanish
+(`es`), Thai (`th`), Turkish (`tr`), Ukrainian (`uk`), and Vietnamese (`vi`).
+English is the fallback for both interfaces.
+
 ### Redis and PostgreSQL
 
 Redis and PostgreSQL use their standard container configuration. If Redis

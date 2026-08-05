@@ -7,7 +7,7 @@ import { router } from './router'
 import { store } from '@/store/store'
 import ApiService from "@/services/api_service";
 import VueI18n from 'vue-i18n'
-import messages from "@/i18n/messages";
+import messages, { resolveLocale } from "@/i18n/messages";
 import VeeValidate from 'vee-validate';
 import Themes from './assets/themes';
 import {Scroll} from 'vuetify/lib/directives';
@@ -52,7 +52,8 @@ const vuetify = new Vuetify({
 
 Vue.use(VueI18n);
 
-let lang = typeof(process.env.VUE_APP_TARANIS_NG_LOCALE) == "undefined" ? "en" : process.env.VUE_APP_TARANIS_NG_LOCALE
+const configuredLocale = typeof(process.env.VUE_APP_TARANIS_NG_LOCALE) == "undefined" ? null : process.env.VUE_APP_TARANIS_NG_LOCALE;
+const lang = resolveLocale(configuredLocale || navigator.language);
 
 const i18n = new VueI18n({
     locale: lang, // later we overwrite this to user language
