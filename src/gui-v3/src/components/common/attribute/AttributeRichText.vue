@@ -30,6 +30,7 @@
                     <template #col_middle>
                         <Editor
                             v-model="value.value"
+                            :pt="editorPassThrough"
                             :read-only="false"
                             theme="snow"
                             placeholder="Enter rich text..."
@@ -44,12 +45,13 @@
 </template>
 
 <script setup lang="ts">
-    import { onMounted } from 'vue'
+    import { computed, onMounted } from 'vue'
     import Editor from 'primevue/editor'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import { useAttributes } from './useAttributes'
     import { sanitizeRichTextHtml } from '@/utils/sanitizeRichTextHtml'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
 
     type AttributeValueItem = {
         index?: string | number
@@ -81,6 +83,8 @@
     )
 
     const { canModify, addInitialValues, addButtonVisible, add, del, onBlur } = useAttributes(props)
+    const spellcheck = useSpellcheck()
+    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     // Count words in rich text (strips HTML)
     const getWordCount = (html: string | null | undefined): number => {

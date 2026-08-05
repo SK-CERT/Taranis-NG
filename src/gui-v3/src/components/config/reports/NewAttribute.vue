@@ -30,6 +30,7 @@
                 >
                     <v-text-field
                         v-model="localItem.name"
+                        :spellcheck="spellcheck"
                         :label="t('reports.attributes.name')"
                         variant="outlined"
                         density="comfortable"
@@ -40,6 +41,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
+                        :spellcheck="spellcheck"
                         :label="t('reports.attributes.description')"
                         variant="outlined"
                         density="comfortable"
@@ -69,6 +71,7 @@
                         >
                             <v-text-field
                                 v-model="localItem.default_value"
+                                :spellcheck="false"
                                 :label="t('reports.attributes.default_value')"
                                 variant="outlined"
                                 density="comfortable"
@@ -94,6 +97,7 @@
                         >
                             <v-text-field
                                 v-model="localItem.validator_parameter"
+                                :spellcheck="false"
                                 :label="t('reports.attributes.validator_parameter')"
                                 variant="outlined"
                                 density="comfortable"
@@ -173,6 +177,7 @@
                         <template #form="{ item }">
                             <v-text-field
                                 v-model="item.value"
+                                :spellcheck="false"
                                 :label="t('reports.attributes.value')"
                                 variant="outlined"
                                 density="comfortable"
@@ -181,6 +186,7 @@
                             />
                             <v-text-field
                                 v-model="item.description"
+                                :spellcheck="spellcheck"
                                 :label="t('reports.attributes.description')"
                                 variant="outlined"
                                 density="comfortable"
@@ -226,6 +232,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { useAuth } from '@/composables/useAuth'
     import {
         createNewAttribute,
@@ -306,6 +313,7 @@
     }>()
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)

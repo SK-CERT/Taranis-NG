@@ -32,6 +32,7 @@
                         <v-col cols="12">
                             <v-text-field
                                 v-model="localItem.name"
+                                :spellcheck="spellcheck"
                                 :label="t('word_lists.name')"
                                 variant="outlined"
                                 density="comfortable"
@@ -42,6 +43,7 @@
                         <v-col cols="12">
                             <v-textarea
                                 v-model="localItem.description"
+                                :spellcheck="spellcheck"
                                 :label="t('word_lists.description')"
                                 variant="outlined"
                                 density="comfortable"
@@ -88,6 +90,7 @@
                         <template #form="{ item }">
                             <v-text-field
                                 v-model="item.name"
+                                :spellcheck="spellcheck"
                                 :label="t('word_lists.name')"
                                 variant="outlined"
                                 density="comfortable"
@@ -96,6 +99,7 @@
                             />
                             <v-textarea
                                 v-model="item.description"
+                                :spellcheck="spellcheck"
                                 :label="t('word_lists.description')"
                                 variant="outlined"
                                 density="comfortable"
@@ -104,6 +108,7 @@
                             />
                             <v-text-field
                                 v-model="item.link"
+                                :spellcheck="false"
                                 :label="t('word_lists.link')"
                                 variant="outlined"
                                 density="comfortable"
@@ -129,6 +134,7 @@
                                 <template #form="{ item: word }">
                                     <v-text-field
                                         v-model="word.value"
+                                        :spellcheck="false"
                                         :label="t('word_lists.value')"
                                         variant="outlined"
                                         density="comfortable"
@@ -137,6 +143,7 @@
                                     />
                                     <v-text-field
                                         v-model="word.description"
+                                        :spellcheck="spellcheck"
                                         :label="t('word_lists.description')"
                                         variant="outlined"
                                         density="comfortable"
@@ -179,6 +186,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
@@ -240,6 +248,7 @@
     }>()
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)

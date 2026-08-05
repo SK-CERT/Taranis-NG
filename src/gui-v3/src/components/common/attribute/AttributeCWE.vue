@@ -64,6 +64,7 @@
                         <div class="cwe-fields">
                             <v-text-field
                                 v-model="value.value"
+                                :spellcheck="false"
                                 density="compact"
                                 variant="outlined"
                                 hide-details="auto"
@@ -77,6 +78,7 @@
                             />
                             <v-text-field
                                 v-model="value.value_description"
+                                :spellcheck="spellcheck"
                                 density="compact"
                                 variant="outlined"
                                 hide-details="auto"
@@ -105,6 +107,7 @@
 
 <script setup lang="ts">
     import { onMounted } from 'vue'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { ICONS } from '@/config/ui-constants'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
@@ -148,6 +151,8 @@
             modify: false
         }
     )
+
+    const spellcheck = useSpellcheck()
 
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, enumSelected } =
         useAttributes(props)

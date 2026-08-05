@@ -30,6 +30,7 @@
                 >
                     <v-text-field
                         v-model="localItem.name"
+                        :spellcheck="spellcheck"
                         :label="t('remote.nodes.name')"
                         variant="outlined"
                         density="comfortable"
@@ -40,6 +41,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
+                        :spellcheck="spellcheck"
                         :label="t('remote.nodes.description')"
                         variant="outlined"
                         density="comfortable"
@@ -50,6 +52,7 @@
 
                     <v-text-field
                         v-model="localItem.remote_url"
+                        :spellcheck="false"
                         :label="t('remote.nodes.remote_url')"
                         variant="outlined"
                         density="comfortable"
@@ -60,6 +63,7 @@
 
                     <v-text-field
                         v-model="localItem.events_url"
+                        :spellcheck="false"
                         :label="t('remote.nodes.event_url')"
                         variant="outlined"
                         density="comfortable"
@@ -69,6 +73,7 @@
 
                     <v-text-field
                         v-model="localItem.api_key"
+                        :spellcheck="false"
                         :label="t('settings.api_key')"
                         :type="showApiKey ? 'text' : 'password'"
                         :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
@@ -202,6 +207,7 @@
 <script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
@@ -247,6 +253,7 @@
     }>()
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)

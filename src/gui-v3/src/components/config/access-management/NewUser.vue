@@ -32,6 +32,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.username"
+                                :spellcheck="false"
                                 :label="t('access_management.users.username')"
                                 variant="outlined"
                                 density="comfortable"
@@ -42,6 +43,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.name"
+                                :spellcheck="spellcheck"
                                 :label="t('access_management.users.name')"
                                 variant="outlined"
                                 density="comfortable"
@@ -54,6 +56,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="password"
+                                :spellcheck="false"
                                 :label="t('access_management.users.password')"
                                 :type="showPassword ? 'text' : 'password'"
                                 variant="outlined"
@@ -67,6 +70,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="passwordConfirm"
+                                :spellcheck="false"
                                 :label="t('access_management.users.password_check')"
                                 :type="showPassword ? 'text' : 'password'"
                                 variant="outlined"
@@ -146,6 +150,7 @@
 <script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
@@ -204,6 +209,7 @@
     const emit = defineEmits(['update:modelValue', 'saved'])
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const dialog = ref(false)

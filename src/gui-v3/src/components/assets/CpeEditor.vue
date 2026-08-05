@@ -74,6 +74,7 @@
                 <v-combobox
                     v-model="editedCpe.value"
                     v-model:search="cpeSearch"
+                    :spellcheck="false"
                     :items="cpeSuggestions"
                     :label="t('asset.value')"
                     variant="outlined"
@@ -86,6 +87,7 @@
                 />
                 <v-text-field
                     v-model="editedCpe.description"
+                    :spellcheck="spellcheck"
                     :label="t('asset.description')"
                     variant="outlined"
                     @keydown.enter.prevent="save"
@@ -174,6 +176,7 @@
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { getCPEAttributeEnums } from '@/api/assets'
     import type { ListResponse } from '@/types/assets'
 
@@ -185,6 +188,7 @@
     const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false })
     const model = defineModel<CpeEntry[]>({ default: () => [] })
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
 
     const headers = computed(() => {
         const values = [

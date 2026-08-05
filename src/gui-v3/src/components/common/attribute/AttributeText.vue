@@ -77,6 +77,7 @@
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-textarea
                             v-model="value.value"
+                            :spellcheck="spellcheck"
                             density="compact"
                             variant="outlined"
                             hide-details="auto"
@@ -106,6 +107,7 @@
 <script setup lang="ts">
     import { onMounted, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
@@ -142,6 +144,7 @@
     )
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
 
     const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, move, moveUp, moveDown } =
         useAttributes(props)

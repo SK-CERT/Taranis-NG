@@ -40,6 +40,7 @@
                         >
                             <v-text-field
                                 v-model="form.name"
+                                :spellcheck="spellcheck"
                                 :label="t('asset.name')"
                                 :rules="[required]"
                                 :disabled="saving || !canModify"
@@ -48,6 +49,7 @@
                             />
                             <v-text-field
                                 v-model="form.serial"
+                                :spellcheck="false"
                                 :label="t('asset.serial')"
                                 :disabled="saving || !canModify"
                                 variant="outlined"
@@ -55,6 +57,7 @@
                             />
                             <v-textarea
                                 v-model="form.description"
+                                :spellcheck="spellcheck"
                                 :label="t('asset.description')"
                                 :disabled="saving || !canModify"
                                 variant="outlined"
@@ -132,6 +135,7 @@
     import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { createNewAsset, solveVulnerability, updateAsset } from '@/api/assets'
     import CpeEditor, { type CpeEntry } from './CpeEditor.vue'
@@ -141,6 +145,7 @@
     const props = defineProps<{ modelValue: boolean; asset?: Asset | null; groupId: string }>()
     const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const open = computed({ get: () => props.modelValue, set: (value) => emit('update:modelValue', value) })

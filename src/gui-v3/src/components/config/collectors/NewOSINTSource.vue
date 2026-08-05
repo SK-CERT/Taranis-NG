@@ -63,6 +63,7 @@
                     <v-text-field
                         v-if="selectedCollector"
                         v-model="localItem.name"
+                        :spellcheck="spellcheck"
                         :label="t('collectors.sources.name')"
                         variant="outlined"
                         density="comfortable"
@@ -74,6 +75,7 @@
                     <v-textarea
                         v-if="selectedCollector"
                         v-model="localItem.description"
+                        :spellcheck="spellcheck"
                         :label="t('collectors.sources.description')"
                         variant="outlined"
                         density="comfortable"
@@ -93,6 +95,7 @@
                         >
                             <v-text-field
                                 v-model="parameterValues[index]"
+                                :spellcheck="false"
                                 :label="String(param.name || param.key || '')"
                                 :type="typeof param.key === 'string' && param.key.includes('PASSWORD') ? 'password' : 'text'"
                                 variant="outlined"
@@ -179,6 +182,7 @@
 <script setup lang="ts">
     import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
@@ -272,6 +276,7 @@
     }>()
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
     const configStore = useConfigStore()
 
