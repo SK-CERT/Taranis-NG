@@ -141,47 +141,43 @@
      * Handle form submission with validation
      */
     const handleFormSubmit = async (): Promise<void> => {
-        // Validate all fields
-        const usernameValid = validateUsername()
-        const passwordValid = validatePassword()
+        const externalLogin = authStore.hasExternalLoginUrl
+        if (!externalLogin) {
+            const usernameValid = validateUsername()
+            const passwordValid = validatePassword()
+            if (!usernameValid || !passwordValid || !username.value || !password.value) return
+        }
 
-        // If no errors, proceed with login
-        if (usernameValid && passwordValid && username.value && password.value) {
-            showLoginError.value = false
+        showLoginError.value = false
 
-            try {
-                if (authStore.hasExternalLoginUrl) {
-                    // External authentication (OAuth/Keycloak)
-                    const req = authStore.login({
-                        params: {
-                            code: route.query['code'],
-                            session_state: route.query['session_state']
-                        },
-                        method: 'get'
-                    })
-                    await req
-                } else {
-                    // Internal authentication
-                    const req = authStore.login({
-                        username: username.value,
-                        password: password.value
-                    })
-                    await req
-                }
+        try {
+            if (externalLogin) {
+                await authStore.login({
+                    params: {
+                        code: route.query['code'],
+                        session_state: route.query['session_state'],
+                        redirect_uri: authStore.getExternalCallbackURL
+                    },
+                    method: 'get'
+                })
+            } else {
+                await authStore.login({
+                    username: username.value,
+                    password: password.value
+                })
+            }
 
-                if (isAuthenticated()) {
-                    showLoginError.value = false
-                    const queryRedirect = route.query['redirect']
-                    const redirect =
-                        typeof queryRedirect === 'string' ? queryRedirect : Array.isArray(queryRedirect) ? (queryRedirect[0] ?? '/') : '/'
-                    router.push(redirect)
-                } else {
-                    validationFailed()
-                }
-            } catch (error) {
-                console.error('[Login] Authentication error:', error)
+            if (isAuthenticated()) {
+                const queryRedirect = route.query['redirect']
+                const redirect =
+                    typeof queryRedirect === 'string' ? queryRedirect : Array.isArray(queryRedirect) ? (queryRedirect[0] ?? '/') : '/'
+                router.push(redirect)
+            } else {
                 validationFailed()
             }
+        } catch (error) {
+            console.error('[Login] Authentication error:', error)
+            validationFailed()
         }
     }
 
