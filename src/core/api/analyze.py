@@ -321,16 +321,16 @@ class ReportItemRemoveAttachment(Resource):
         if not isinstance(description, str):
             return {"error": "Attachment description must be a string"}, HTTPStatus.BAD_REQUEST
 
-        try:
-            user = auth_manager.get_user_from_jwt()
-            data = ReportItem.update_attachment_description(report_item_id, attribute_id, user, description)
-            updated_report_item = ReportItem.find(report_item_id)
-            asset_manager.report_item_changed(updated_report_item)
-            sse_manager.report_item_updated(data)
-            sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
-            return data
-        except ValueError as error:
-            return {"error": str(error)}, HTTPStatus.NOT_FOUND
+        user = auth_manager.get_user_from_jwt()
+        data = ReportItem.update_attachment_description(report_item_id, attribute_id, user, description)
+        if data is None:
+            return {"error": "Attachment not found"}, HTTPStatus.NOT_FOUND
+
+        updated_report_item = ReportItem.find(report_item_id)
+        asset_manager.report_item_changed(updated_report_item)
+        sse_manager.report_item_updated(data)
+        sse_manager.remote_access_report_items_updated(updated_report_item.report_item_type_id)
+        return data
 
 
 class ReportItemDownloadAttachment(Resource):
