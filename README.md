@@ -16,12 +16,7 @@ Taranis supports **team-to-team collaboration**, and includes a lightweight
 **self-service asset management** portal which automatically links to advisories
 that mention vulnerabilities in the software.
 
-## Languages
-
-The Vue 3 GUI includes translations for Brazilian Portuguese, Czech, Dutch,
-English, French, German, Hindi, Italian, Japanese, Korean, Polish, Russian,
-Simplified Chinese, Slovak, Spanish, Thai, Turkish, Ukrainian, and Vietnamese.
-English is used as the fallback language.
+## Key capabilities
 
 Key capabilities include:
 
@@ -35,30 +30,7 @@ Key capabilities include:
 - filtering and highlighting with word lists; and
 - offering self-service asset and vulnerability notification management.
 
-### Hardware requirements
-
-Allow at least 2 GB of RAM, 2 CPU cores, and 5 GB of disk space to run the
-containers. Allow at least 20 GB of disk space when building all application
-images from source.
-
-## Getting started with Docker installation
-
-Docker Compose is the current deployment path. Use the
-[Docker deployment guide](docker/README.md) as the single source for current
-installation commands, security warnings, initialization limitations, and
-verification steps.
-
-## Learn more...
-
-For instructions on configuring other components, refer to the [How to guide](docs/howto.md).
-
-You can view the architecture block diagram [here](docs/images/block-diagram.png).
-
-The [requirements and design reference](docs/Taranis-NG-original-requirements.pdf)
-describes the product's design goals. Use the Docker guide and current source
-documentation for installation and operations.
-
-#### Node type capabilities
+### Node type capabilities
 
 | Type      | Name             | Description                                         |
 | :-------- | :--------------- | :-------------------------------------------------- |
@@ -84,6 +56,37 @@ documentation for installation and operations.
 | Bot       | analyst          | extract attributes from text by regular expressions |
 |           | grouping         | group similar items in the news feed                |
 |           | wordlist updater | update word lists used for matching                 |
+
+## Getting started with Docker installation
+
+Docker Compose is the current deployment path. Use the
+[Docker deployment guide](docker/README.md) as the single source for current
+installation commands, security warnings, initialization limitations, and
+verification steps.
+
+### Hardware requirements
+
+Allow at least 2 GB of RAM, 2 CPU cores, and 5 GB of disk space to run the
+containers. Allow at least 20 GB of disk space when building all application
+images from source.
+
+## Languages
+
+The Vue 3 GUI includes translations for Brazilian Portuguese, Czech, Dutch,
+English, French, German, Hindi, Italian, Japanese, Korean, Polish, Russian,
+Simplified Chinese, Slovak, Spanish, Thai, Turkish, Ukrainian, and Vietnamese.
+The legacy Vue 2 GUI includes Czech, English, and Slovak. English is the
+fallback language in both interfaces.
+
+## Documentation
+
+For instructions on configuring other components, refer to the [How to guide](docs/howto.md).
+
+You can view the architecture block diagram [here](docs/images/block-diagram.png).
+
+The [requirements and design reference](docs/Taranis-NG-original-requirements.pdf)
+describes the product's design goals. Use the Docker guide and current source
+documentation for installation and operations.
 
 ## About
 

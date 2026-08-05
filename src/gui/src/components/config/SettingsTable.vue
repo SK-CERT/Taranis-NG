@@ -39,7 +39,7 @@
                           }"
                           inset></v-switch>
             </template>
-            <template v-else-if="item.options">
+            <template v-else-if="item.key === 'UI_LANGUAGE' || item.options">
                 <v-select v-model="item.value"
                           @change="val => { setting = { ...item, value: val }; save(item); }"
                           :value="item.value"
@@ -99,6 +99,7 @@
     import AuthMixin from "@/services/auth/auth_mixin";
     import { format } from "date-fns";
     import Settings, { getSetting, getSettingBoolean } from "@/services/settings";
+    import { supportedLocales } from "@/i18n/messages";
     import ISO6391 from "iso-639-1";
 
     export default {
@@ -150,11 +151,18 @@
             },
 
             getDisplayOptions(item) {
+                if (item.key === Settings.UI_LANGUAGE) {
+                    return supportedLocales.map(code => ({
+                        id: code,
+                        txt: this.getLanguageName(code),
+                    }));
+                }
+
                 try {
                     const options = JSON.parse(item.options);
 
-                    // For language settings, translate language names to current UI language
-                    if (item.key === 'UI_LANGUAGE' || item.key === 'CONTENT_DEFAULT_LANGUAGE') {
+                    // Content languages remain configured by the backend.
+                    if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) {
                         return options.map(opt => ({
                             ...opt,
                             txt: this.getLanguageName(opt.id, opt.txt),

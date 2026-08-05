@@ -101,6 +101,9 @@ The Vue 3 interface is translated into the following languages:
 
 English is the fallback locale.
 
+The legacy Vue 2 interface currently supports Czech (`cs`), English (`en`),
+and Slovak (`sk`).
+
 Locale catalogs are discovered automatically from `src/i18n/*.json` at build
 time, so adding a catalog does not require a source-code registry or database
 option entry.

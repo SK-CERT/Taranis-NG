@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { getUserWordLists, getAvailableWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from '@/api/user'
 import { getAllSettings, updateSetting } from '@/api/config'
 import { Settings, HotkeyAction, type SettingEntry, type SettingKey, type HotkeyActionType } from '@/types/settings'
+import { resolveLocale } from '@/i18n'
 
 type HotkeyEntry = {
     key: string
@@ -65,18 +66,11 @@ export const useSettingsStore = defineStore('settings', () => {
         // Use internal getSetting to avoid circular dependency
         const settingsArray = Array.isArray(settings.value) ? settings.value : []
         const uiLangSetting = settingsArray.find((item) => item.key === Settings.UI_LANGUAGE)
-        let lng = uiLangSetting ? uiLangSetting.value : null
+        const storedLocale = uiLangSetting?.value
+        const configuredLocale = import.meta.env.VITE_APP_TARANIS_NG_LOCALE as string | undefined
+        const browserLocale = typeof navigator !== 'undefined' ? navigator.language : undefined
 
-        if (!lng) {
-            lng = navigator.language.split('-')[0] || null
-        }
-        if (!lng && typeof import.meta.env.VITE_APP_TARANIS_NG_LOCALE !== 'undefined') {
-            lng = import.meta.env.VITE_APP_TARANIS_NG_LOCALE || null
-        }
-        if (!lng) {
-            lng = 'en'
-        }
-        return lng
+        return resolveLocale(storedLocale || configuredLocale || browserLocale)
     })
 
     const getDateTimeFormat = computed(() => {

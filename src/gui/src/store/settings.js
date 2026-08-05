@@ -1,6 +1,7 @@
 import { getUserWordLists, getAvailableWordLists, updateUserWordLists, getHotkeys, updateHotkeys } from "@/api/user";
 import { getAllSettings, updateSetting } from "@/api/config";
 import Settings, { getSetting } from "@/services/settings";
+import { resolveLocale } from "@/i18n/messages";
 
 const state = {
     settings: [],
@@ -159,21 +160,11 @@ const getters = {
     },
 
     getProfileLanguage() {
-        let lng = getSetting(Settings.UI_LANGUAGE);
-        if (!lng) {
-            lng = navigator.language.split('-')[0];
-        }
-        if (!lng && typeof (process.env.VUE_APP_TARANIS_NG_LOCALE) !== "undefined") {
-            lng = process.env.VUE_APP_TARANIS_NG_LOCALE;
-        }
-        if (!lng) {
-            let bash_locale = "$VUE_APP_TARANIS_NG_LOCALE";
-            lng = bash_locale;
-        }
-        if (!lng) {
-            lng = "en";
-        }
-        return lng;
+        const storedLocale = getSetting(Settings.UI_LANGUAGE);
+        const configuredLocale = typeof(process.env.VUE_APP_TARANIS_NG_LOCALE) === "undefined"
+            ? null
+            : process.env.VUE_APP_TARANIS_NG_LOCALE;
+        return resolveLocale(storedLocale || configuredLocale || navigator.language);
     }
 };
 

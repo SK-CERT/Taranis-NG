@@ -34,6 +34,16 @@ export VUE_APP_TARANIS_NG_LOCALE="en"
 npm run serve
 ```
 
+## Languages
+
+The Vue 2 interface is available in Czech (`cs`), English (`en`), and Slovak
+(`sk`). English is the fallback locale. The Vue 3 interface has a larger set of
+translations documented in the [Vue 3 GUI README](../gui-v3/README.md#languages).
+
+Vue 2 locale catalogs are discovered automatically from
+`src/i18n/<locale>/messages.js` at build time, so they do not require database
+option entries.
+
 ## Production build
 
 When you are ready to generate the final static version of the GUI, run
