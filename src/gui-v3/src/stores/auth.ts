@@ -89,7 +89,14 @@ export const useAuthStore = defineStore('auth', () => {
 
     function clearJwtToken(): void {
         setStoredAccessToken('')
+        ApiService.setHeader()
         jwt.value = ''
+    }
+
+    function clearSession(): void {
+        clearJwtToken()
+        useUserStore().clearUser()
+        window.dispatchEvent(new Event('logged-out'))
     }
 
     async function login(userData: LoginPayload): Promise<ApiResponse<AuthTokenResponse>> {
@@ -110,19 +117,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function logout(): Promise<void> {
-        const userStore = useUserStore()
-
-        try {
-            await logoutApi()
-            clearJwtToken()
-            userStore.clearUser()
-            // Dispatch event to trigger SSE closing in App.vue
-            window.dispatchEvent(new Event('logged-out'))
-        } catch (error) {
-            clearJwtToken()
-            userStore.clearUser()
-            throw error
-        }
+        // Start the authenticated request before removing the local token, but
+        // invalidate the browser session immediately. A slow or failed server
+        // logout must never leave protected UI mounted with stale credentials.
+        const logoutRequest = logoutApi()
+        clearSession()
+        await logoutRequest
     }
 
     async function refreshToken(): Promise<ApiResponse<AuthTokenResponse>> {
@@ -135,7 +135,7 @@ export const useAuthStore = defineStore('auth', () => {
 
             return response
         } catch (error) {
-            clearJwtToken()
+            clearSession()
             throw error
         }
     }

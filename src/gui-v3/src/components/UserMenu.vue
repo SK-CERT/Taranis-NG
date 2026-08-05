@@ -75,16 +75,19 @@
     }
 
     const handleLogout = async (): Promise<void> => {
-        try {
-            await authStore.logout()
-            if (authStore.hasExternalLogoutUrl) {
-                window.location.href = authStore.getLogoutURL
-            } else {
-                router.push('/login')
-            }
-        } catch (error: unknown) {
+        const logoutRequest = authStore.logout().catch((error: unknown) => {
             console.error('Logout error:', error)
+        })
+
+        // Leave the protected route immediately; reporting a server-side
+        // logout failure must not keep cached application content visible.
+        if (authStore.hasExternalLogoutUrl) {
+            window.location.href = authStore.getLogoutURL
+        } else {
+            await router.replace('/login')
         }
+
+        await logoutRequest
     }
 </script>
 
