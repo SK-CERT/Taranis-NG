@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { effectScope } from 'vue'
+import { defineComponent } from 'vue'
+import { mount } from '@vue/test-utils'
 import { useAttributes, isLabelOnly } from '@/components/common/attribute/useAttributes'
 
 // Mock dependencies
@@ -45,14 +46,18 @@ function makeProps(overrides = {}) {
     }
 }
 
-// Helper: run composable in a Vue effect scope (provides onUnmounted support)
+// Mount a host component so lifecycle hooks run with an active component instance.
 function setupComposable(props) {
     let result
-    const scope = effectScope()
-    scope.run(() => {
-        result = useAttributes(props)
-    })
-    return { result, scope }
+    const wrapper = mount(
+        defineComponent({
+            setup() {
+                result = useAttributes(props)
+                return () => null
+            }
+        })
+    )
+    return { result, scope: { stop: () => wrapper.unmount() } }
 }
 
 describe('useAttributes', () => {
