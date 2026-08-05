@@ -103,6 +103,49 @@
                     </v-row>
 
                     <!-- Attribute constants (enums) -->
+                    <div
+                        v-if="canImportConstants || canReloadDictionary"
+                        class="constant-tools d-flex flex-wrap align-center ga-2 mt-2"
+                    >
+                        <v-btn
+                            v-if="canReloadDictionary"
+                            type="button"
+                            color="primary"
+                            variant="tonal"
+                            prepend-icon="mdi-refresh"
+                            :loading="dictionaryReloading"
+                            :disabled="constantOperationBusy"
+                            @click="reloadCurrentDictionary"
+                        >
+                            {{ dictionaryReloadLabel }}
+                        </v-btn>
+                        <AttributeConstantCsvImport
+                            v-model="csvDialog"
+                            :show="canImportConstants"
+                            :busy="constantImporting"
+                            :error="constantOperationError"
+                            @import="importConstants"
+                        />
+                    </div>
+
+                    <v-progress-linear
+                        v-if="constantOperationBusy"
+                        indeterminate
+                        color="primary"
+                        class="mt-2"
+                    />
+
+                    <v-alert
+                        v-if="constantOperationError && !csvDialog"
+                        type="error"
+                        variant="tonal"
+                        class="mt-2"
+                        closable
+                        @click:close="constantOperationError = ''"
+                    >
+                        {{ constantOperationError }}
+                    </v-alert>
+
                     <EditableEntityTable
                         :key="tableKey"
                         v-model:dialog="constantDialog"
@@ -190,13 +233,16 @@
         getAttributeEnums,
         addAttributeEnum,
         updateAttributeEnum,
-        deleteAttributeEnum
+        deleteAttributeEnum,
+        reloadDictionaries
     } from '@/api/config'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
+    import AttributeConstantCsvImport from '@/components/config/reports/AttributeConstantCsvImport.vue'
+    import { mergeAttributeConstants, type AttributeConstantImport } from '@/utils/attribute-constant-csv'
 
     type AttributeType =
         | 'STRING'
@@ -329,6 +375,15 @@
 
     const constantDialog = ref(false)
     const constantSaving = ref(false)
+    const csvDialog = ref(false)
+    const constantImporting = ref(false)
+    const dictionaryReloading = ref(false)
+    const constantOperationError = ref('')
+    const dictionaryTypes: AttributeType[] = ['CPE', 'CVE', 'CWE']
+    const canImportConstants = computed(() => (isEdit.value ? canUpdate.value && canCreate.value : canCreate.value))
+    const canReloadDictionary = computed(() => isEdit.value && canUpdate.value && dictionaryTypes.includes(localItem.value.type))
+    const constantOperationBusy = computed(() => constantImporting.value || dictionaryReloading.value)
+    const dictionaryReloadLabel = computed(() => t(`attribute.reload_${localItem.value.type.toLocaleLowerCase()}`))
 
     const constantHeaders = [
         { title: t('reports.attributes.value'), key: 'value', sortable: false },
@@ -340,6 +395,11 @@
 
     const notify = (type: 'success' | 'error', loc: string): void => {
         window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc } }))
+    }
+
+    const apiErrorMessage = (error: unknown): string => {
+        const responseError = (error as { response?: { data?: { error?: unknown } } } | undefined)?.response?.data?.error
+        return typeof responseError === 'string' && responseError ? responseError : t('common.error')
     }
 
     const loadConstants = async (): Promise<void> => {
@@ -382,6 +442,10 @@
             constantPage.value = 1
             loadConstants()
         }, 300)
+    })
+
+    watch(csvDialog, (open) => {
+        if (open && !constantImporting.value) constantOperationError.value = ''
     })
 
     // Persist a constant from the table's add/edit dialog. `isNew` is true when adding.
@@ -436,6 +500,56 @@
         }
     }
 
+    const importConstants = async ({
+        items,
+        replaceExisting
+    }: {
+        items: AttributeConstantImport[]
+        replaceExisting: boolean
+    }): Promise<void> => {
+        if (!canImportConstants.value || items.length === 0) return
+        constantImporting.value = true
+        constantOperationError.value = ''
+        try {
+            if (isEdit.value && localItem.value.id !== null) {
+                await addAttributeEnum(localItem.value.id, { items, delete_existing: replaceExisting })
+                constantPage.value = 1
+                await loadConstants()
+            } else {
+                constants.value = mergeAttributeConstants(constants.value, items, replaceExisting).map((constant, index) => ({
+                    id: -1,
+                    index,
+                    ...constant
+                }))
+                constantsTotal.value = constants.value.length
+            }
+            csvDialog.value = false
+            notify('success', 'common.updated_successfully')
+        } catch (error) {
+            console.error('Error importing attribute constants:', error)
+            constantOperationError.value = apiErrorMessage(error)
+        } finally {
+            constantImporting.value = false
+        }
+    }
+
+    const reloadCurrentDictionary = async (): Promise<void> => {
+        if (!canReloadDictionary.value) return
+        dictionaryReloading.value = true
+        constantOperationError.value = ''
+        try {
+            await reloadDictionaries(localItem.value.type.toLocaleLowerCase())
+            constantPage.value = 1
+            await loadConstants()
+            notify('success', 'common.updated_successfully')
+        } catch (error) {
+            console.error('Error reloading attribute dictionary:', error)
+            constantOperationError.value = apiErrorMessage(error)
+        } finally {
+            dictionaryReloading.value = false
+        }
+    }
+
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
         if (!canSave.value) return false
@@ -482,6 +596,10 @@
         constantsTotal.value = 0
         constantSearch.value = ''
         constantPage.value = 1
+        csvDialog.value = false
+        constantImporting.value = false
+        dictionaryReloading.value = false
+        constantOperationError.value = ''
     }
 
     function closeDialog(): void {
