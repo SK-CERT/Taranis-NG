@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
+import { useUserStore } from '@/stores/user'
 
 // Mock dependencies
 vi.mock('@/api/auth', () => ({
@@ -221,6 +222,24 @@ describe('Auth Store', () => {
 
             expect(store.getUserData).toBe(null)
         })
+
+        it('should invalidate the local session even when server logout fails', async () => {
+            localStorage.ACCESS_TOKEN = makeJwt()
+            vi.mocked(authApi.logout).mockRejectedValue(new Error('Server unavailable'))
+            const store = useAuthStore()
+            const userStore = useUserStore()
+            userStore.setUser({ id: 1, name: 'Admin', permissions: ['ASSESS_ACCESS'] })
+            const loggedOut = vi.fn()
+            window.addEventListener('logged-out', loggedOut)
+
+            const request = store.logout()
+
+            expect(store.jwt).toBe('')
+            expect(userStore.user.id).toBe('')
+            expect(loggedOut).toHaveBeenCalledTimes(1)
+            await expect(request).rejects.toThrow('Server unavailable')
+            window.removeEventListener('logged-out', loggedOut)
+        })
     })
 
     // ── Token Refresh ─────────────────────────────
@@ -246,10 +265,17 @@ describe('Auth Store', () => {
             vi.mocked(authApi.refresh).mockRejectedValue(new Error('Token expired'))
 
             const store = useAuthStore()
+            const userStore = useUserStore()
+            userStore.setUser({ id: 1, name: 'Admin', permissions: ['ASSESS_ACCESS'] })
+            const loggedOut = vi.fn()
+            window.addEventListener('logged-out', loggedOut)
             await expect(store.refreshToken()).rejects.toThrow('Token expired')
 
             expect(store.jwt).toBe('')
             expect(store.isAuthenticated).toBe(false)
+            expect(userStore.user.id).toBe('')
+            expect(loggedOut).toHaveBeenCalledTimes(1)
+            window.removeEventListener('logged-out', loggedOut)
         })
     })
 

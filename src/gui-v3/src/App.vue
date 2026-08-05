@@ -21,7 +21,8 @@
         </v-navigation-drawer>
 
         <v-main :class="{ 'configuration-view': isConfigurationRoute }">
-            <router-view />
+            <!-- Never retain a protected view after local credentials disappear. -->
+            <router-view v-if="isAuth || route.path === '/login'" />
         </v-main>
 
         <!-- Notification component -->
@@ -216,6 +217,12 @@
         navVisible.value = !navVisible.value
     }
 
+    const navigateToLogin = (): void => {
+        if (route.value.path !== '/login') {
+            void router.replace('/login')
+        }
+    }
+
     /**
      * Token refresh interval
      */
@@ -238,11 +245,16 @@
                         })
                         .catch((error) => {
                             console.error('[App] Token refresh failed:', error)
+                            navigateToLogin()
                         })
                 }
             } else if (authStore.jwt) {
                 console.log('[App] Token expired, logging out...')
-                authStore.logout()
+                const logoutRequest = authStore.logout()
+                navigateToLogin()
+                logoutRequest.catch((error) => {
+                    console.error('[App] Logout after token expiry failed:', error)
+                })
             }
         }, 5000)
     }

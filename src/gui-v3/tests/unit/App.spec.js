@@ -10,6 +10,7 @@ const mockSubscribe = vi.fn()
 const mockOnResync = vi.fn()
 const mockIsAuthenticated = vi.fn()
 const mockNeedTokenRefresh = vi.fn()
+const mockRouterReplace = vi.fn()
 
 const mockAuthStore = {
     jwt: '',
@@ -37,7 +38,7 @@ const mockSettingsStore = {
 }
 
 vi.mock('vue-router', () => ({
-    useRouter: () => ({ push: vi.fn() }),
+    useRouter: () => ({ replace: mockRouterReplace }),
     useRoute: () => ({ name: 'assess', path: '/assess' })
 }))
 
@@ -194,6 +195,47 @@ describe('App SSE boot flow', () => {
             expect(mockAuthStore.refreshToken).toHaveBeenCalledTimes(1)
             expect(mockReconnect).toHaveBeenCalledTimes(1)
         })
+    })
+
+    it('should leave protected content when token refresh fails', async () => {
+        mockNeedTokenRefresh.mockReturnValue(true)
+        mockAuthStore.refreshToken.mockRejectedValue(new Error('Token expired'))
+
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: true,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+
+        await flushPromises()
+        vi.advanceTimersByTime(5000)
+        await flushPromises()
+
+        expect(mockRouterReplace).toHaveBeenCalledWith('/login')
+        expect(mockReconnect).not.toHaveBeenCalled()
+    })
+
+    it('should leave protected content immediately when the stored token expires', async () => {
+        mockIsAuthenticated.mockReturnValue(false)
+        mockAuthStore.logout.mockResolvedValue(undefined)
+
+        wrapper = mountWithPlugins(App, {
+            global: {
+                stubs: {
+                    MainMenu: true,
+                    NotificationSnackbar: true
+                }
+            }
+        })
+
+        await flushPromises()
+        vi.advanceTimersByTime(5000)
+
+        expect(mockAuthStore.logout).toHaveBeenCalledTimes(1)
+        expect(mockRouterReplace).toHaveBeenCalledWith('/login')
     })
 
     it('should initialize authenticated session when logged-in event fires', async () => {
