@@ -15,7 +15,7 @@ from managers.sse_manager import sse_manager
 from model.attribute import AttributeEnum
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
-from model.report_item import ReportItem, ReportItemAttribute
+from model.report_item import ReportItem
 from model.report_item_type import AttributeGroupItem, ReportItemType
 
 
@@ -42,7 +42,7 @@ class ReportItemGroups(Resource):
         Returns:
             (dict): all report item groups
         """
-        return ReportItem.get_groups()
+        return ReportItem.get_groups(auth_manager.get_user_from_jwt())
 
 
 class ReportItems(Resource):
@@ -339,9 +339,9 @@ class ReportItemDownloadAttachment(Resource):
     @auth_required("ANALYZE_ACCESS", ACLCheck.REPORT_ITEM_ACCESS)
     def post(
         self,
-        report_item_id: int,  # noqa: ARG002, it's used in auth_required
+        report_item_id: int,
         attribute_id: int,
-    ) -> object | None:
+    ) -> object | tuple[dict, HTTPStatus] | None:
         """Download a report item attachment.
 
         Args:
@@ -350,7 +350,9 @@ class ReportItemDownloadAttachment(Resource):
         Returns:
             (file): report item attachment
         """
-        report_item_attribute = ReportItemAttribute.find(attribute_id)
+        report_item_attribute = ReportItem.find_attachment(report_item_id, attribute_id)
+        if report_item_attribute is None:
+            return {"error": "Attachment not found"}, HTTPStatus.NOT_FOUND
         response = send_file(
             io.BytesIO(report_item_attribute.binary_data),
             download_name=report_item_attribute.value,

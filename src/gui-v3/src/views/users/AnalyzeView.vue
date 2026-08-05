@@ -3,7 +3,7 @@
         <template #panel>
             <ToolbarFilterAnalyze
                 ref="toolbarFilter"
-                :multi-select="true"
+                :multi-select="!isRemoteScope"
                 title="nav_menu.report_items"
                 total-count-title="toolbar_filter.total_count"
                 :show-add-button="canCreateReportItem"
@@ -18,9 +18,11 @@
                 :show-remove-action="false"
                 :remote-reports="false"
                 :selection="analyzeStore.getSelectionReport"
+                :disable-actions="isRemoteScope"
                 @new-data-loaded="newDataLoaded"
                 @update-showing-count="updateShowingCount"
                 @show-report-item-detail="showReportItemDetail"
+                @show-remote-report-item-detail="showRemoteReportItemDetail"
             />
         </template>
     </ViewLayout>
@@ -30,10 +32,11 @@
         :show-button="false"
         @data-updated="updateData"
     />
+    <RemoteReportItem ref="remoteReportItemRef" />
 </template>
 
 <script setup lang="ts">
-    import { ref, computed } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import { useRoute, onBeforeRouteLeave } from 'vue-router'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { useAuth } from '@/composables/useAuth'
@@ -41,6 +44,7 @@
     import ToolbarFilterAnalyze from '@/components/analyze/ToolbarFilterAnalyze.vue'
     import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
+    import RemoteReportItem from '@/components/analyze/RemoteReportItem.vue'
 
     const route = useRoute()
     const analyzeStore = useAnalyzeStore()
@@ -48,9 +52,23 @@
     const toolbarFilter = ref<any>(null)
     const contentData = ref<any>(null)
     const newReportItemRef = ref<any>(null)
+    const remoteReportItemRef = ref<any>(null)
+
+    const isRemoteScope = computed(() => {
+        const scope = route.params['scope']
+        return typeof scope === 'string' && scope !== 'local'
+    })
+
+    watch(
+        isRemoteScope,
+        (remote) => {
+            if (remote) analyzeStore.multiSelectReport(false)
+        },
+        { immediate: true }
+    )
 
     const canCreateReportItem = computed(() => {
-        return checkPermission('ANALYZE_CREATE') && !route.path.includes('/group/')
+        return checkPermission('ANALYZE_CREATE') && !isRemoteScope.value
     })
 
     const handleAddNew = (): void => {
@@ -87,6 +105,10 @@
         if (newReportItemRef.value) {
             newReportItemRef.value.showDetail(reportItem)
         }
+    }
+
+    const showRemoteReportItemDetail = (reportItem: unknown): void => {
+        remoteReportItemRef.value?.showDetail(reportItem)
     }
 
     onBeforeRouteLeave(() => {

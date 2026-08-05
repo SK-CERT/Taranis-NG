@@ -1,90 +1,89 @@
 <template>
-    <AttributeItemLayout
-        :add-button="false"
-        :values="attributeGroup.attributes"
-    >
-        <template #content>
-            <div
-                v-for="value in attributeGroup.attributes"
-                :key="value.id"
-                class="remote-attachment-row"
-            >
-                <!-- TODO: Display remote file attachment info -->
-                <!-- Phase 3: Show filename, size, download link -->
-                <!-- May need to fetch file metadata from API feed -->
-                <div class="flex items-center gap-2 text-sm text-gray-300">
-                    <v-icon size="small">
-                        {{ ICONS.FILE_DOCUMENT }}
-                    </v-icon>
-                    <span>{{ value.value.filename || 'Remote Attachment' }}</span>
-                    <span class="text-xs text-gray-500">({{ formatFileSize(value.value.size) }})</span>
-                    <button
-                        type="button"
-                        class="text-blue-400 hover:text-blue-300 text-xs ml-auto"
-                        @click="downloadRemoteAttachment(value.value)"
-                    >
-                        {{ t('common.download') }}
-                    </button>
-                </div>
+    <div class="remote-attachments">
+        <div
+            v-for="value in attributeGroup.attributes"
+            :key="value.id"
+            class="remote-attachment"
+        >
+            <v-icon>{{ ICONS.FILE_DOCUMENT }}</v-icon>
+            <div class="remote-attachment__details">
+                <strong>{{ value.value }}</strong>
+                <span class="text-medium-emphasis">
+                    {{ formatFileSize(value.binary_size) }}
+                    <template v-if="value.binary_description"> · {{ value.binary_description }}</template>
+                </span>
             </div>
-        </template>
-    </AttributeItemLayout>
+            <v-btn
+                icon="mdi-download"
+                variant="text"
+                color="primary"
+                :title="t('common.download')"
+                @click="download(value)"
+            />
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
-    import AttributeItemLayout from './AttributeItemLayout.vue'
+    import { downloadReportItemAttachment } from '@/api/analyze'
 
     const { t } = useI18n()
 
     type RemoteAttachmentValue = {
-        filename?: string
-        size?: number
-        [key: string]: unknown
-    }
-
-    type RemoteAttributeValue = {
         id: number | string
-        value: RemoteAttachmentValue
-        [key: string]: unknown
-    }
-
-    type RemoteAttributeGroup = {
-        attributes: RemoteAttributeValue[]
-        [key: string]: unknown
+        value?: string
+        binary_size?: number | null
+        binary_description?: string | null
     }
 
     const props = defineProps<{
-        attributeGroup: RemoteAttributeGroup
+        attributeGroup: { attributes: RemoteAttachmentValue[] }
         reportItemId: number
     }>()
 
     const formatFileSize = (bytes: number | null | undefined): string => {
-        if (!bytes) return '0 B'
-        const k = 1024
-        const sizes = ['B', 'KB', 'MB', 'GB']
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+        if (!bytes || bytes < 1) return '0 B'
+        const units = ['B', 'KB', 'MB', 'GB']
+        const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+        return `${Number((bytes / 1024 ** index).toFixed(2))} ${units[index]}`
     }
 
-    const downloadRemoteAttachment = (attachment: RemoteAttachmentValue): void => {
-        // TODO: Phase 3 - Implement remote file download
-        // May need to use a different API endpoint for remote files
-        // Handle proxying if needed
-        console.log('Download remote attachment TODO:', attachment)
+    const download = async (attachment: RemoteAttachmentValue): Promise<void> => {
+        try {
+            await downloadReportItemAttachment(props.reportItemId, attachment.id, attachment.value || 'attachment')
+        } catch {
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', message: t('error.server_error') }
+                })
+            )
+        }
     }
-
-    // TODO: Phase 3 - Add remote-specific features:
-    // - Show source/origin of remote file
-    // - Display when file was sourced from API feed
-    // - Handle download from external sources
-    // - Show file verification/hash if available
 </script>
 
 <style scoped>
-    .remote-attachment-row {
-        width: 100%;
-        padding: 8px 0;
+    .remote-attachments {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .remote-attachment {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .remote-attachment + .remote-attachment {
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(var(--v-theme-outline), 0.2);
+    }
+
+    .remote-attachment__details {
+        display: grid;
+        min-width: 0;
+        overflow-wrap: anywhere;
     }
 </style>

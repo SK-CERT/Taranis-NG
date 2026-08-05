@@ -61,7 +61,11 @@
                                     {{ typeLabel }}
                                 </div>
                                 <div class="text-body-large card-field-value">
-                                    {{ typeValue }}
+                                    <HighlightedText
+                                        :text="typeValue"
+                                        :words="highlightWords"
+                                        :enabled="highlightWordlist && isReviewCard"
+                                    />
                                 </div>
                             </v-col>
 
@@ -71,7 +75,11 @@
                                     {{ t('card_item.description') }}
                                 </div>
                                 <div class="text-body-medium card-field-value">
-                                    {{ card.subtitle || card.description || '' }}
+                                    <HighlightedText
+                                        :text="card.subtitle || card.description || ''"
+                                        :words="highlightWords"
+                                        :enabled="highlightWordlist && isReviewCard"
+                                    />
                                 </div>
                             </v-col>
 
@@ -219,10 +227,13 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import { useSettingsStore } from '@/stores/settings'
     import type { PermissionKey } from '@/types/permissions'
     import { ICONS } from '@/config/ui-constants'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import HighlightedText from '@/components/common/HighlightedText.vue'
+    import { collectHighlightWords } from '@/utils/word-list-highlighting'
 
     type CardData = {
         id?: string | number
@@ -278,13 +289,15 @@
             preselected?: boolean
             lockDefault?: boolean
             listMode?: boolean
+            highlightWordlist?: boolean
         }>(),
         {
             deletePermission: '',
             multiSelectActive: false,
             preselected: false,
             lockDefault: false,
-            listMode: false
+            listMode: false,
+            highlightWordlist: false
         }
     )
 
@@ -292,6 +305,7 @@
 
     const { t, te } = useI18n()
     const { checkPermission } = useAuth()
+    const settingsStore = useSettingsStore()
 
     const deleteDialog = ref(false)
     const internalSelected = ref<boolean>(props.preselected)
@@ -328,6 +342,7 @@
     const isReviewCard = computed(
         () => props.card?.report_type_name != null || props.card?.product_type_name != null || Array.isArray(props.card?.news_items)
     )
+    const highlightWords = computed(() => collectHighlightWords(settingsStore.getProfileWordLists))
     const isDenseList = computed(() => isReviewCard.value || props.listMode)
     const hasWorkflowState = computed(() => props.card?.report_type_name != null || props.card?.product_type_name != null)
     const reviewItemCount = computed(() =>

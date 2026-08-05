@@ -1,5 +1,7 @@
 """This module contains schemas and classes for representing report items and their attributes."""
 
+import base64
+
 from marshmallow import EXCLUDE, Schema, fields, post_load
 
 from shared.schema.acl_entry import ACLEntryStatusSchema
@@ -179,6 +181,17 @@ class ReportItemAttributeRemoteSchema(Schema):
 
     attribute_group_item_title = fields.Str()
     value = fields.Str()
+    binary_mime_type = fields.Str(allow_none=True)
+    binary_size = fields.Int(allow_none=True)
+    binary_description = fields.Str(allow_none=True)
+    binary_value = fields.Method("get_binary_value")
+
+    def get_binary_value(self, attribute: object) -> str | None:
+        """Encode synchronized attachment bytes for backward-compatible JSON transport."""
+        binary_data = getattr(attribute, "binary_data", None)
+        if not binary_data:
+            return None
+        return base64.b64encode(binary_data).decode("ascii")
 
 
 class ReportItemRemoteSchema(Schema):

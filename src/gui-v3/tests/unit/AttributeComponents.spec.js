@@ -29,6 +29,7 @@ vi.mock('@/api/analyze', () => ({
     lockReportItem: vi.fn().mockResolvedValue({}),
     unlockReportItem: vi.fn().mockResolvedValue({}),
     updateReportItem: vi.fn().mockResolvedValue({}),
+    getAttributeEnums: vi.fn().mockResolvedValue({ data: { items: [], total_count: 0 } }),
     downloadAttachment: vi.fn().mockResolvedValue({}),
     removeAttachment: vi.fn().mockResolvedValue({}),
     updateAttachmentDescription: vi.fn().mockResolvedValue({ data: {} }),
@@ -73,12 +74,20 @@ const DialogStub = {
     emits: ['update:modelValue']
 }
 
+const EnumSelectorStub = {
+    name: 'EnumSelector',
+    props: ['attributeId', 'valueIndex', 'disabled'],
+    template: '<button class="enum-selector-stub" :disabled="disabled" />',
+    emits: ['enum-selected']
+}
+
 const globalStubs = {
     AttributeItemLayout: AttributeItemLayoutStub,
     AttributeValueLayout: AttributeValueLayoutStub,
     Editor: EditorStub,
     CalculatorCVSS: CalculatorCVSSStub,
-    VDialog: DialogStub
+    VDialog: DialogStub,
+    EnumSelector: EnumSelectorStub
 }
 
 // ── Shared prop factories ─────────────────────────────────────────────────────
@@ -509,6 +518,23 @@ describe('AttributeCVE', () => {
         const wrapper = mountAttr(AttributeCVE, baseProps({ value: 'CVE-2024-1234' }))
         expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)
     })
+
+    it('offers enum lookup in editable mode and applies the selected occurrence', async () => {
+        const props = baseProps({ value: 'CVE-2024-1234' }, { attribute: { id: 17, type: 'CVE' } })
+        const wrapper = mountAttr(AttributeCVE, props)
+        const selector = wrapper.findComponent(EnumSelectorStub)
+
+        expect(selector.props()).toMatchObject({ attributeId: 17, valueIndex: 0, disabled: false })
+        selector.vm.$emit('enum-selected', { index: 0, value: 'CVE-2026-12345', value_description: 'Example CVE' })
+        await flushPromises()
+
+        expect(props.values[0]).toMatchObject({ value: 'CVE-2026-12345', value_description: 'Example CVE' })
+    })
+
+    it('does not offer enum lookup for read-only values', () => {
+        const wrapper = mountAttr(AttributeCVE, readOnlyProps({ value: 'CVE-2024-1234' }))
+        expect(wrapper.findComponent(EnumSelectorStub).exists()).toBe(false)
+    })
 })
 
 // ── AttributeCWE ──────────────────────────────────────────────────────────────
@@ -530,6 +556,14 @@ describe('AttributeCWE', () => {
         const wrapper = mountAttr(AttributeCWE, baseProps({ value: 'CWE-79' }))
         expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)
     })
+
+    it('offers enum lookup and disables it while the occurrence is locked', () => {
+        const props = baseProps({ value: 'CWE-79', locked: true }, { attribute: { id: 18, type: 'CWE' } })
+        const wrapper = mountAttr(AttributeCWE, props)
+        const selector = wrapper.findComponent(EnumSelectorStub)
+
+        expect(selector.props()).toMatchObject({ attributeId: 18, valueIndex: 0, disabled: true })
+    })
 })
 
 // ── AttributeCPE ──────────────────────────────────────────────────────────────
@@ -550,6 +584,17 @@ describe('AttributeCPE', () => {
     it('shows editable text field in edit mode', () => {
         const wrapper = mountAttr(AttributeCPE, baseProps({ value: 'cpe:/a:vendor:product:1.0' }))
         expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)
+    })
+
+    it('offers the same enum lookup for CPE attributes', () => {
+        const props = baseProps({ value: 'cpe:/a:vendor:product:1.0' }, { attribute: { id: 19, type: 'CPE' } })
+        const wrapper = mountAttr(AttributeCPE, props)
+
+        expect(wrapper.findComponent(EnumSelectorStub).props()).toMatchObject({
+            attributeId: 19,
+            valueIndex: 0,
+            disabled: false
+        })
     })
 })
 

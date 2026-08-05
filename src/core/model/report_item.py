@@ -8,6 +8,7 @@ The module also defines several schemas for creating and validating report items
 
 from __future__ import annotations
 
+import base64
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -416,30 +417,27 @@ class ReportItem(db.Model):
         Returns:
             tuple: A tuple containing the list of report items and the total count.
         """
-        if group:
-            query = cls.query.filter(ReportItem.remote_user == group)
-        else:
-            query = (
-                db.session.query(
-                    ReportItem,
-                    func.count().filter(ACLEntry.id > 0).label("acls"),
-                    func.count().filter(ACLEntry.access.is_(True)).label("access"),
-                    func.count().filter(ACLEntry.modify.is_(True)).label("modify"),
-                )
-                .distinct()
-                .group_by(ReportItem.id)
+        query = (
+            db.session.query(
+                ReportItem,
+                func.count().filter(ACLEntry.id > 0).label("acls"),
+                func.count().filter(ACLEntry.access.is_(True)).label("access"),
+                func.count().filter(ACLEntry.modify.is_(True)).label("modify"),
             )
+            .distinct()
+            .group_by(ReportItem.id)
+        )
 
-            query = query.filter(ReportItem.remote_user.is_(None))
+        query = query.filter(ReportItem.remote_user == group) if group else query.filter(ReportItem.remote_user.is_(None))
 
-            query = query.outerjoin(
-                ACLEntry,
-                and_(
-                    cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
-                    ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
-                ),
-            )
-            query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
+        query = query.outerjoin(
+            ACLEntry,
+            and_(
+                cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
+                ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
+            ),
+        )
+        query = ACLEntry.apply_query(query, user, see=True, access=False, modify=False)
 
         search_string = filter.get("search", "")
         if search_string:
@@ -548,28 +546,17 @@ class ReportItem(db.Model):
         report_items = []
         initial_state = StateDefinition.get_initial_state(StateEntityTypeEnum.REPORT_ITEM.value)
 
-        if group:
-            for result in results:
-                report_item = result
-                report_item.see = True
-                report_item.access = True
-                report_item.modify = False
-                report_item.news_items_count = len(report_item.news_item_aggregates)
-                # Assign initial state if not present
-                if not report_item.state and initial_state:
-                    report_item.state = initial_state
-                report_items.append(report_item)
-        else:
-            for result in results:
-                report_item = result.ReportItem
-                report_item.see = True
-                report_item.access = result.access > 0 or result.acls == 0
-                report_item.modify = result.modify > 0 or result.acls == 0
-                report_item.news_items_count = len(report_item.news_item_aggregates)
-                # Assign initial state if not present
-                if not report_item.state and initial_state:
-                    report_item.state = initial_state
-                report_items.append(report_item)
+        for result in results:
+            report_item = result.ReportItem
+            report_item.see = True
+            report_item.access = result.access > 0 or result.acls == 0
+            # Synchronized report items are always read-only, even if their local
+            # report-item type ACL would otherwise permit modification.
+            report_item.modify = False if group else result.modify > 0 or result.acls == 0
+            report_item.news_items_count = len(report_item.news_item_aggregates)
+            if not report_item.state and initial_state:
+                report_item.state = initial_state
+            report_items.append(report_item)
 
         report_items_schema = ReportItemPresentationSchema(many=True)
         return {"total_count": count, "items": report_items_schema.dump(report_items)}
@@ -592,19 +579,23 @@ class ReportItem(db.Model):
         return report_item_schema.dump(report_item)
 
     @classmethod
-    def get_groups(cls) -> list:
+    def get_groups(cls, user: User) -> list:
         """Get the distinct groups associated with the report items.
 
         Returns:
             list: A list of distinct groups.
         """
-        result = (
-            db.session.query(ReportItem.remote_user)
-            .distinct()
-            .group_by(ReportItem.remote_user)
-            .filter(ReportItem.remote_user.is_not(None))
-            .all()
+        query = (
+            db.session.query(ReportItem.remote_user).distinct().group_by(ReportItem.remote_user).filter(ReportItem.remote_user.is_not(None))
         )
+        query = query.outerjoin(
+            ACLEntry,
+            and_(
+                cast(ReportItem.report_item_type_id, sqlalchemy.String) == ACLEntry.item_id,
+                ACLEntry.item_type == ItemType.REPORT_ITEM_TYPE,
+            ),
+        )
+        result = ACLEntry.apply_query(query, user, see=True, access=False, modify=False).all()
         groups = set()
         for row in result:
             groups.add(row[0])
@@ -734,6 +725,17 @@ class ReportItem(db.Model):
         initial_state = StateDefinition.get_initial_state(StateEntityTypeEnum.REPORT_ITEM.value)
         for item_data in report_item_data:
             new_report_item = schema.load(item_data)  # this create new record!
+            for attribute, serialized_attribute in zip(
+                new_report_item.attributes,
+                item_data.get("attributes", []),
+                strict=False,
+            ):
+                binary_value = serialized_attribute.get("binary_value")
+                if binary_value:
+                    try:
+                        attribute.binary_data = base64.b64decode(binary_value, validate=True)
+                    except (ValueError, TypeError):
+                        logger.warning("Ignoring invalid base64 data in synchronized report attachment")
             existing_report_item = cls.find_by_uuid(new_report_item.uuid)
             if existing_report_item is None:
                 # print("New report item:", vars(new_report_item), flush=True)
@@ -813,6 +815,15 @@ class ReportItem(db.Model):
                 return attribute
 
         return None
+
+    @classmethod
+    def find_attachment(cls, report_item_id: int, attribute_id: int | str) -> ReportItemAttribute | None:
+        """Find a binary attribute only within its owning report item."""
+        report_item = cls.find(report_item_id)
+        attribute = cls._find_attribute(report_item, attribute_id) if report_item is not None else None
+        if attribute is None or attribute.binary_mime_type is None:
+            return None
+        return attribute
 
     @classmethod
     def _detect_update_conflict(cls, report_item: ReportItem, data: dict) -> dict | None:

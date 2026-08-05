@@ -198,3 +198,11 @@ export function getReportItemsByAggregate(aggregate_id) {
 export function downloadAttachment(download_link, optional_file_name) {
     return ApiService.download(download_link, undefined, optional_file_name)
 }
+
+export function downloadReportItemAttachment(report_item_id, attribute_id, optional_file_name) {
+    return ApiService.download(
+        '/analyze/report-items/' + report_item_id + '/file-attributes/' + attribute_id + '/file',
+        undefined,
+        optional_file_name
+    )
+}

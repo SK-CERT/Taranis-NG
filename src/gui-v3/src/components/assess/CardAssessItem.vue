@@ -25,14 +25,22 @@
             </div>
 
             <h4 class="mb-2 child-title">
-                {{ itemTitle }}
+                <HighlightedText
+                    :text="itemTitle"
+                    :words="highlightWords"
+                    :enabled="highlightWordlist"
+                />
             </h4>
 
             <p
                 v-if="!hideReviews && itemReview"
                 class="text-grey mb-3"
             >
-                {{ itemReview }}
+                <HighlightedText
+                    :text="itemReview"
+                    :words="highlightWords"
+                    :enabled="highlightWordlist"
+                />
             </p>
 
             <v-row align="center">
@@ -73,6 +81,7 @@
     import { useI18n } from 'vue-i18n'
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
+    import HighlightedText from '@/components/common/HighlightedText.vue'
     import { Action, type ActionKey } from '@/types/actions'
 
     type NewsItemData = {
@@ -128,11 +137,15 @@
             analyzeSelector?: boolean
             hideReviews?: boolean
             hideSourceLinks?: boolean
+            highlightWordlist?: boolean
+            highlightWords?: string[]
         }>(),
         {
             analyzeSelector: false,
             hideReviews: false,
-            hideSourceLinks: false
+            hideSourceLinks: false,
+            highlightWordlist: false,
+            highlightWords: () => []
         }
     )
 

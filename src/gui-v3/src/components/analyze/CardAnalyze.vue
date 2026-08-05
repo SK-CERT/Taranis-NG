@@ -2,7 +2,7 @@
     <div>
         <BaseCard
             :multi-select-active="multiSelectActive"
-            :show-selection-checkbox="true"
+            :show-selection-checkbox="!isRemote"
             :preselected="preselected"
             card-class="review-list__row"
             :card-color="selectedColor"
@@ -185,17 +185,18 @@
 
     const showDeleteDialog = ref<boolean>(false)
     const showRemoveDialog = ref<boolean>(false)
+    const isRemote = computed(() => props.card.remote_user !== null && props.card.remote_user !== undefined)
 
     const canModify = computed(() => {
-        return checkPermission(PERMISSIONS.ANALYZE_UPDATE) && (props.card.modify === true || props.card.remote_user !== null)
+        return !isRemote.value && checkPermission(PERMISSIONS.ANALYZE_UPDATE) && props.card.modify === true
     })
 
     const canDelete = computed(() => {
-        return checkPermission(PERMISSIONS.ANALYZE_DELETE) && (props.card.modify === true || props.card.remote_user !== null)
+        return !isRemote.value && checkPermission(PERMISSIONS.ANALYZE_DELETE) && props.card.modify === true
     })
 
     const canCreateProduct = computed(() => {
-        return checkPermission(PERMISSIONS.PUBLISH_CREATE) && !route.path.includes('/group/')
+        return !isRemote.value && checkPermission(PERMISSIONS.PUBLISH_CREATE) && !route.path.includes('/group/')
     })
 
     const multiSelectActive = computed(() => {
@@ -222,7 +223,7 @@
     }
 
     const cardItemClick = (_event?: unknown): void => {
-        if (checkPermission(PERMISSIONS.ANALYZE_ACCESS) && (props.card.access === true || props.card.remote_user !== null)) {
+        if (checkPermission(PERMISSIONS.ANALYZE_ACCESS) && props.card.access === true) {
             // Emit event to open report item detail dialog
             emit('show-detail', props.card)
         }
