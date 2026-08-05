@@ -133,6 +133,7 @@
     import BaseCard from '@/components/common/BaseCard.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
+    import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
 
     type AnalyzeCard = {
         id: number | string
@@ -196,7 +197,7 @@
     })
 
     const canCreateProduct = computed(() => {
-        return !isRemote.value && checkPermission(PERMISSIONS.PUBLISH_CREATE) && !route.path.includes('/group/')
+        return !isRemote.value && checkPermission(PERMISSIONS.PUBLISH_CREATE) && !isRemoteAnalyzeRoute(route)
     })
 
     const multiSelectActive = computed(() => {

@@ -45,6 +45,7 @@
     import ContentDataAnalyze from '@/components/analyze/ContentDataAnalyze.vue'
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import RemoteReportItem from '@/components/analyze/RemoteReportItem.vue'
+    import { isRemoteAnalyzeRoute } from '@/utils/analyze-routing'
 
     const route = useRoute()
     const analyzeStore = useAnalyzeStore()
@@ -54,10 +55,7 @@
     const newReportItemRef = ref<any>(null)
     const remoteReportItemRef = ref<any>(null)
 
-    const isRemoteScope = computed(() => {
-        const scope = route.params['scope']
-        return typeof scope === 'string' && scope !== 'local'
-    })
+    const isRemoteScope = computed(() => isRemoteAnalyzeRoute(route))
 
     watch(
         isRemoteScope,

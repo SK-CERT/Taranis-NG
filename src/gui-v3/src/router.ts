@@ -6,6 +6,7 @@ import AuthService from '@/services/auth_service'
 import Permissions from '@/services/permissions'
 import { getFirstConfigRoute } from '@/config/config-nav-links'
 import type { PermissionKey } from '@/types/permissions'
+import { createLegacyAnalyzeRedirect } from '@/utils/analyze-routing'
 
 interface RouteMetaAuth {
     requiresAuth?: boolean
@@ -46,6 +47,10 @@ const routes: RouteRecordRaw[] = [
     {
         path: '/analyze',
         redirect: '/analyze/local'
+    },
+    {
+        path: '/analyze/group/:groupName',
+        redirect: createLegacyAnalyzeRedirect
     },
     {
         path: '/analyze/:scope',
