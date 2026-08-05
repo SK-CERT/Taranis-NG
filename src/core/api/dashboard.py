@@ -37,6 +37,7 @@ class Dashboard(Resource):
 
         total_database_items = total_news_items + total_products + total_report_items
         latest_collected = NewsItemData.latest_collected()
+        news_items_by_day = NewsItemData.count_collected_by_day(7)
         grouped_words = TagCloud.get_grouped_words(number_of_days)
 
         return {
@@ -47,6 +48,7 @@ class Dashboard(Resource):
             "product_states": product_states,
             "total_database_items": total_database_items,
             "latest_collected": latest_collected,
+            "news_items_by_day": news_items_by_day,
             "tag_cloud": grouped_words,
         }
 

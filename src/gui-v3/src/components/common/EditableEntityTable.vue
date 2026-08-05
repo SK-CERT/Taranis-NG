@@ -1,9 +1,9 @@
 <template>
     <v-card
         variant="outlined"
-        class="mt-2 mb-4"
+        class="editable-entity-table mt-2 mb-4"
     >
-        <v-card-title class="text-subtitle-1 bg-grey-lighten-4 d-flex align-center">
+        <v-card-title class="editable-entity-table__title text-subtitle-1 d-flex align-center">
             <span>{{ title }}</span>
             <v-spacer />
             <SearchField
@@ -24,7 +24,8 @@
         <component
             :is="server ? 'v-data-table-server' : 'v-data-table'"
             v-bind="tableProps"
-            density="comfortable"
+            density="compact"
+            class="editable-entity-table__table"
             @update:options="(o: TableOptions) => emit('update:options', o)"
         >
             <!-- Forward any cell/template slots the caller defined (e.g. #item.name). -->
@@ -304,3 +305,41 @@
         model.value = list
     }
 </script>
+
+<style scoped>
+    .editable-entity-table {
+        overflow: hidden;
+        border: 2px solid var(--review-panel-border);
+        border-radius: 4px;
+        box-shadow: none;
+    }
+
+    .editable-entity-table__title {
+        min-height: 48px;
+        padding: 0.4rem 0.65rem;
+        border-bottom: 1px solid var(--review-list-border);
+        background: var(--filter-controls-bg);
+    }
+
+    .editable-entity-table__table :deep(.v-data-table__th) {
+        height: 36px !important;
+        padding-inline: 10px !important;
+        background: var(--filter-controls-bg);
+    }
+
+    .editable-entity-table__table :deep(.v-data-table__td) {
+        height: 40px !important;
+        padding: 4px 10px !important;
+        background: var(--review-list-row);
+    }
+
+    .editable-entity-table__table :deep(tbody tr:hover .v-data-table__td) {
+        background: var(--review-list-row-hover);
+    }
+
+    .editable-entity-table__table :deep(.v-btn--icon) {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+    }
+</style>

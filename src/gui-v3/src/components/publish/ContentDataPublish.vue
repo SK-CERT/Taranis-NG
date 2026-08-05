@@ -2,12 +2,12 @@
     <v-container
         id="selector_publish"
         fluid
-        class="pa-2"
+        class="pa-0"
     >
         <TransitionGroup
             name="card-list"
             tag="div"
-            class="w-100"
+            class="publish-list w-100"
         >
             <component
                 :is="currentCard"
@@ -17,6 +17,8 @@
                 :multi-select-active="multiSelectActive"
                 :preselected="isPreselected(collection.id)"
                 @selection-change="handleSelectionChange(collection.id, $event)"
+                @show-detail="openProduct"
+                @edit="openProduct"
             />
         </TransitionGroup>
         <div
@@ -115,6 +117,7 @@
 
     const collections = ref<ProductItem[]>([])
     const dataLoaded = ref(true)
+    let updateSequence = 0
     const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
@@ -150,6 +153,7 @@
     }
 
     const updateData = async (append = false, reloadAll = false): Promise<void> => {
+        const requestId = ++updateSequence
         dataLoaded.value = false
 
         const totalCount = publishStore.getProducts.total_count || 0
@@ -181,6 +185,10 @@
                 getAllUserProductTypes()
             ])
 
+            if (requestId !== updateSequence) {
+                return
+            }
+
             const productTypes = Array.isArray(productTypesResponse?.data?.items) ? (productTypesResponse.data.items as ProductType[]) : []
 
             const newItems = Array.isArray(publishStore.getProducts.items) ? (publishStore.getProducts.items as ProductItem[]) : []
@@ -202,7 +210,8 @@
 
             // Directly assign or concat - Vue will detect removed items and animate them
             if (append) {
-                collections.value = collections.value.concat(newItems)
+                const existingIds = new Set(collections.value.map((item) => String(item.id)))
+                collections.value = collections.value.concat(newItems.filter((item) => !existingIds.has(String(item.id))))
             } else {
                 collections.value = newItems
             }
@@ -211,14 +220,26 @@
         } catch (error) {
             console.error('Error loading products:', error)
         } finally {
-            dataLoaded.value = true
+            if (requestId === updateSequence) {
+                dataLoaded.value = true
+            }
         }
     }
 
     const handleFilterUpdate = (event: Event): void => {
         const customEvent = event as CustomEvent<FilterState>
-        filter.value = customEvent.detail
-        updateData(false, false)
+        const oldFilter = filter.value
+        const newFilter = customEvent.detail
+        const dataFilterChanged =
+            oldFilter.search !== newFilter.search ||
+            oldFilter.range !== newFilter.range ||
+            oldFilter.published !== newFilter.published ||
+            oldFilter.sort !== newFilter.sort
+
+        filter.value = newFilter
+        if (dataFilterChanged) {
+            updateData(false, false)
+        }
     }
 
     const handleSelectionChange = (itemId: string | number, isSelected: boolean): void => {
@@ -231,6 +252,24 @@
                 publishStore.deselect({ id: itemId })
             }
         }
+    }
+
+    const openProduct = (product: ProductItem): void => {
+        const state = product['state'] as { id?: string | number | null } | null | undefined
+        window.dispatchEvent(
+            new CustomEvent('show-product-edit', {
+                detail: {
+                    id: product.id,
+                    title: product['title'],
+                    description: product['subtitle'] || '',
+                    product_type_id: product.product_type_id,
+                    state_id: state?.id || null,
+                    report_items: product['report_items'] || [],
+                    modify: product['modify'] === true,
+                    access: product['access'] === true
+                }
+            })
+        )
     }
 
     const handleProductUpdate = (): void => {
@@ -254,3 +293,17 @@
         updateData
     })
 </script>
+
+<style scoped>
+    #selector_publish {
+        width: min(100%, 1480px);
+        margin-inline: auto;
+        padding: 0 !important;
+    }
+
+    .publish-list {
+        display: grid;
+        width: 100%;
+        gap: 0;
+    }
+</style>

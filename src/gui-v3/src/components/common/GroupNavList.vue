@@ -1,22 +1,25 @@
 <template>
-    <v-list density="compact">
+    <v-list
+        density="compact"
+        class="group-navigation"
+    >
         <v-list-subheader>{{ $t(titleKey) }}</v-list-subheader>
         <v-list-item
             v-for="group in groups"
             :key="group.id"
             :active="String(group.id) === String(activeId)"
             :data-group-id="group.id"
-            class="pa-2"
+            class="group-navigation__item"
             @click="emit('select', group)"
         >
-            <div class="d-flex flex-column align-center text-center">
+            <div class="group-navigation__content">
                 <v-icon
                     :color="group.color || undefined"
-                    class="mb-2"
+                    size="22"
                 >
                     {{ group.icon }}
                 </v-icon>
-                <span class="text-body-small">
+                <span class="group-navigation__label">
                     {{ group.translate ? $t(group.title) : group.title }}
                 </span>
             </div>
@@ -49,3 +52,25 @@
         (e: 'select', group: GroupNavItem): void
     }>()
 </script>
+
+<style scoped>
+    .group-navigation__item {
+        padding: 0.35rem 0.45rem !important;
+    }
+
+    .group-navigation__content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .group-navigation__label {
+        overflow: hidden;
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>

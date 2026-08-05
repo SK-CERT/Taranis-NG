@@ -139,7 +139,10 @@
         "my_assets": "Moje zasoby"
     },
     "dashboard": {
+        "subtitle": "Obszar roboczy analizy operacyjnej",
+        "refresh": "Odśwież pulpit",
         "assess": {
+            "trending": "Najnowsze trendy wywiadowcze",
             "tagcloud": "Chmura tagów najnowszych zebranych wiadomości",
             "total": "elementów wiadomości łącznie"
         },
@@ -160,6 +163,7 @@
             "total": "produktów łącznie"
         },
         "about": {
+            "system": "System",
             "title": "Informacje",
             "version": "Wersja",
             "commit": "Wersja kodu",

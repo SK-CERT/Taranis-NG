@@ -237,6 +237,39 @@ class NewsItemData(db.Model):
         return cls.query.count()
 
     @classmethod
+    def count_collected_by_day(cls, number_of_days: int = 7) -> list[dict[str, int | str]]:
+        """Count collected news items for each of the most recent calendar days.
+
+        Empty days are included so dashboard clients can render a stable time series.
+
+        Args:
+            number_of_days: Number of calendar days to include, ending today.
+
+        Returns:
+            Daily ISO dates and their collected news item counts.
+        """
+        days = max(1, number_of_days)
+        today = datetime.now(TZ).date()
+        first_day = today - timedelta(days=days - 1)
+        collected_day = func.date(cls.collected)
+
+        rows = (
+            db.session.query(collected_day.label("collected_day"), func.count(cls.id).label("item_count"))
+            .filter(cls.collected.isnot(None), collected_day >= first_day)
+            .group_by(collected_day)
+            .all()
+        )
+        counts = {str(day): int(item_count) for day, item_count in rows}
+
+        return [
+            {
+                "date": (first_day + timedelta(days=offset)).isoformat(),
+                "count": counts.get((first_day + timedelta(days=offset)).isoformat(), 0),
+            }
+            for offset in range(days)
+        ]
+
+    @classmethod
     def latest_collected(cls) -> str:
         """Get latest collected news item.
 

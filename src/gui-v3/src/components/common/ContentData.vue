@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        class="pa-4"
+        class="config-card-list pa-0"
     >
         <component
             :is="cardComponent"
@@ -10,6 +10,7 @@
             :card="item"
             :delete-permission="deletePermission"
             :lock-default="lockDefault"
+            list-mode
             @delete="handleDelete"
             @edit="handleEdit"
         />
@@ -125,5 +126,12 @@
 </script>
 
 <style scoped>
-    /* Add any custom styles here */
+    .config-card-list {
+        overflow: hidden;
+        margin: 0 0.7rem 0.7rem;
+        width: auto;
+        border: 2px solid var(--review-panel-border);
+        border-radius: 4px;
+        background: var(--review-list-row);
+    }
 </style>

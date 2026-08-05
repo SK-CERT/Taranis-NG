@@ -139,7 +139,10 @@
         "my_assets": "Mes actifs"
     },
     "dashboard": {
+        "subtitle": "Espace de travail de veille opérationnelle",
+        "refresh": "Actualiser le tableau de bord",
         "assess": {
+            "trending": "Tendances du renseignement",
             "tagcloud": "Nuage de mots-clés des dernières actualités collectées",
             "total": "actualités au total"
         },
@@ -160,6 +163,7 @@
             "total": "produits au total"
         },
         "about": {
+            "system": "Système",
             "title": "À propos",
             "version": "Version",
             "commit": "Commit",

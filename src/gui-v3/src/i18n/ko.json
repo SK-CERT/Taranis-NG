@@ -139,7 +139,10 @@
         "my_assets": "내 자산"
     },
     "dashboard": {
+        "subtitle": "운영 인텔리전스 작업 공간",
+        "refresh": "대시보드 새로 고침",
         "assess": {
+            "trending": "주요 인텔리전스 동향",
             "tagcloud": "최근 수집된 뉴스 항목의 태그 클라우드",
             "total": "전체 뉴스 항목"
         },
@@ -160,6 +163,7 @@
             "total": "전체 제품"
         },
         "about": {
+            "system": "시스템",
             "title": "정보",
             "version": "버전",
             "commit": "커밋",

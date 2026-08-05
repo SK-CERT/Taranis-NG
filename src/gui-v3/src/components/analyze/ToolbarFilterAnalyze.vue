@@ -44,6 +44,7 @@
         flat
         color="surface"
         density="compact"
+        class="analyze-action-bar"
     >
         <ToolbarGroup
             ref="toolbarGroup"
@@ -52,11 +53,12 @@
             @update-data="handleUpdateData"
         />
 
-        <v-spacer />
+        <div class="analyze-action-bar__spacer" />
         <v-btn
             icon
             size="small"
             :color="compactMode ? 'primary' : 'default'"
+            :variant="compactMode ? 'tonal' : 'text'"
             :title="t('analyze.tooltip.compact_mode')"
             @click="toggleCompactMode"
         >
@@ -190,3 +192,18 @@
         emitFilter()
     })
 </script>
+
+<style scoped>
+    .analyze-action-bar {
+        border-top: 1px solid rgba(var(--v-theme-outline), 0.2);
+    }
+
+    .analyze-action-bar__spacer {
+        flex: 1 1 auto;
+    }
+
+    .analyze-action-bar :deep(.v-btn) {
+        border-radius: 3px;
+        box-shadow: none;
+    }
+</style>

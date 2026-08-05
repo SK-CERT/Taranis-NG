@@ -139,7 +139,10 @@
         "my_assets": "Varlıklarım"
     },
     "dashboard": {
+        "subtitle": "Operasyonel istihbarat çalışma alanı",
+        "refresh": "Gösterge panelini yenile",
         "assess": {
+            "trending": "Gündemdeki istihbarat",
             "tagcloud": "Son toplanan haber öğelerinin etiket bulutu",
             "total": "toplam haber öğesi"
         },
@@ -160,6 +163,7 @@
             "total": "toplam ürün"
         },
         "about": {
+            "system": "Sistem",
             "title": "Hakkında",
             "version": "Sürüm",
             "commit": "Kod sürümü",

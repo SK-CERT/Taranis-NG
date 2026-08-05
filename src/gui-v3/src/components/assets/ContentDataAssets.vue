@@ -1,8 +1,8 @@
 <template>
-    <v-container fluid>
+    <div class="asset-content">
         <div
             v-if="loading"
-            class="text-center pa-12"
+            class="asset-content__state"
         >
             <v-progress-circular
                 indeterminate
@@ -12,33 +12,31 @@
         </div>
         <v-alert
             v-else-if="loadError"
+            class="ma-3"
             type="error"
             variant="tonal"
             >{{ t('asset.load_error') }}</v-alert
         >
         <v-alert
             v-else-if="assets.length === 0"
+            class="ma-3"
             type="info"
             variant="tonal"
             >{{ t('asset.no_data') }}</v-alert
         >
-        <v-row v-else>
-            <v-col
+        <div
+            v-else
+            class="asset-list"
+        >
+            <CardAsset
                 v-for="asset in assets"
                 :key="asset.id"
-                cols="12"
-                sm="6"
-                md="4"
-                lg="3"
-            >
-                <CardAsset
-                    :asset="asset"
-                    @edit="emit('edit', $event)"
-                    @delete="remove"
-                />
-            </v-col>
-        </v-row>
-    </v-container>
+                :asset="asset"
+                @edit="emit('edit', $event)"
+                @delete="remove"
+            />
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -99,3 +97,21 @@
     onMounted(reload)
     defineExpose({ reload, updateFilter })
 </script>
+
+<style scoped>
+    .asset-content {
+        min-height: 100%;
+        background: var(--review-list-row);
+    }
+
+    .asset-content__state {
+        display: grid;
+        min-height: 12rem;
+        place-items: center;
+    }
+
+    .asset-list {
+        overflow: hidden;
+        background: var(--review-list-row);
+    }
+</style>

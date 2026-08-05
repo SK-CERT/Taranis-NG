@@ -139,7 +139,10 @@
         "my_assets": "Tài sản của tôi"
     },
     "dashboard": {
+        "subtitle": "Không gian làm việc tình báo tác nghiệp",
+        "refresh": "Làm mới bảng điều khiển",
         "assess": {
+            "trending": "Xu hướng tình báo",
             "tagcloud": "Đám mây thẻ cho các tin mới nhất đã thu thập",
             "total": "tổng số tin"
         },
@@ -160,6 +163,7 @@
             "total": "tổng số sản phẩm"
         },
         "about": {
+            "system": "Hệ thống",
             "title": "Giới thiệu",
             "version": "Phiên bản",
             "commit": "Commit",

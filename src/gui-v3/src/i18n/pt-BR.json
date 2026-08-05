@@ -139,7 +139,10 @@
         "my_assets": "Meus ativos"
     },
     "dashboard": {
+        "subtitle": "Espaço de trabalho de inteligência operacional",
+        "refresh": "Atualizar painel",
         "assess": {
+            "trending": "Inteligência em destaque",
             "tagcloud": "Nuvem de tags dos últimos itens de notícias coletados",
             "total": "itens de notícias no total"
         },
@@ -160,6 +163,7 @@
             "total": "produtos no total"
         },
         "about": {
+            "system": "Sistema",
             "title": "Sobre",
             "version": "Versão",
             "commit": "Commit",

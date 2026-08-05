@@ -4,7 +4,7 @@
             :multi-select-active="multiSelectActive"
             :show-selection-checkbox="true"
             :preselected="preselected"
-            :card-class="'card-item'"
+            card-class="review-list__row"
             :card-color="selectedColor"
             :card-id="card.id"
             @card-click="cardItemClick"
@@ -12,74 +12,67 @@
         >
             <!-- Content Slot -->
             <template #content>
-                <v-row class="align-center">
-                    <v-col cols="auto">
+                <article class="report-card">
+                    <div class="report-card__icon">
                         <v-icon
-                            style="font-size: 32px"
                             :icon="card.tag || ICONS.FILE_DOCUMENT"
-                            class="ms-2"
+                            size="22"
                         />
-                    </v-col>
-                    <v-col>
-                        <v-row>
-                            <!-- Type Name -->
-                            <v-col class="d-flex align-center text-label-medium text-grey">
-                                {{ card.report_type_name }}
-                            </v-col>
-                            <!-- Updated Info, pushed to the right -->
-                            <v-col
-                                cols="auto"
-                                class="d-flex align-center text-label-medium text-grey"
+                    </div>
+
+                    <div class="report-card__content">
+                        <div class="report-card__meta-row">
+                            <span class="report-card__type">{{ card.report_type_name }}</span>
+                            <span class="report-card__updated">
+                                <v-icon size="14">mdi-clock-outline</v-icon>
+                                {{ t('card_item.updated') }} {{ card.last_updated }}
+                                <span v-if="card.updated_by">· {{ card.updated_by }}</span>
+                            </span>
+                        </div>
+
+                        <h2 class="report-card__title">
+                            <span
+                                v-if="card.title_prefix"
+                                class="report-card__prefix"
+                                >{{ card.title_prefix }} —</span
                             >
-                                {{ t('card_item.updated') }}:
-                                {{ card.last_updated }}
-                                <span
-                                    v-if="card.updated_by"
-                                    class="ms-2"
-                                    >{{ card.updated_by }}</span
-                                >
-                            </v-col>
-                        </v-row>
-                        <!-- Title Row + State (below Updated) -->
-                        <v-row
-                            class="mt-2"
-                            align="center"
-                        >
-                            <v-col>
-                                <div class="text-title-medium">
-                                    <span v-if="card.title_prefix">{{ card.title_prefix }} -</span>
-                                    {{ card.title }}
-                                    <span
-                                        v-if="card.news_items_count"
-                                        class="text-grey ms-1"
-                                        >({{ card.news_items_count }})</span
-                                    >
-                                </div>
-                            </v-col>
-                            <v-col
+                            {{ card.title }}
+                        </h2>
+
+                        <div class="report-card__details">
+                            <v-chip
                                 v-if="card.state"
-                                cols="auto"
-                                class="d-flex justify-end align-center"
+                                :color="card.state.color"
+                                variant="tonal"
+                                size="small"
                                 :title="card.state.description"
+                                class="report-card__state"
                             >
-                                <v-icon :color="card.state.color">
-                                    {{ card.state.icon }}
-                                </v-icon>
-                                <span class="text-body-large ms-2">
-                                    {{
-                                        $te('workflow.states.' + card.state.display_name)
-                                            ? $t('workflow.states.' + card.state.display_name)
-                                            : card.state.display_name
-                                    }}
-                                </span>
-                            </v-col>
-                        </v-row>
-                    </v-col>
-                    <!-- Actions -->
-                    <v-col
+                                <v-icon
+                                    start
+                                    size="16"
+                                    >{{ card.state.icon }}</v-icon
+                                >
+                                {{
+                                    $te('workflow.states.' + card.state.display_name)
+                                        ? $t('workflow.states.' + card.state.display_name)
+                                        : card.state.display_name
+                                }}
+                            </v-chip>
+
+                            <span
+                                v-if="card.news_items_count"
+                                class="report-card__source-count"
+                            >
+                                <v-icon size="15">mdi-newspaper-variant-outline</v-icon>
+                                {{ card.news_items_count }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div
                         v-if="!disableActions"
-                        cols="auto"
-                        class="d-flex justify-end"
+                        class="report-card__actions"
                     >
                         <!-- Publish -->
                         <ActionButton
@@ -102,8 +95,8 @@
                             :title="t('analyze.tooltip.remove_item')"
                             @click.stop="showRemoveDialog = true"
                         />
-                    </v-col>
-                </v-row>
+                    </div>
+                </article>
             </template>
         </BaseCard>
 
@@ -271,8 +264,135 @@
 </script>
 
 <style scoped>
-    .card-item {
-        cursor: pointer;
-        transition: all 0.3s ease;
+    .report-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .report-card__icon {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 4px;
+        color: rgb(var(--v-theme-primary));
+        background: linear-gradient(145deg, rgba(var(--v-theme-primary), 0.16), rgba(var(--v-theme-primary), 0.06));
+        box-shadow: inset 0 0 0 1px rgba(var(--v-theme-primary), 0.12);
+    }
+
+    .report-card__content {
+        min-width: 0;
+    }
+
+    .report-card__meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .report-card__type {
+        overflow: hidden;
+        color: rgb(var(--v-theme-primary));
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-overflow: ellipsis;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .report-card__updated {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex: 0 1 auto;
+        color: rgba(var(--v-theme-on-surface), 0.55);
+        font-size: 0.72rem;
+        white-space: nowrap;
+    }
+
+    .report-card__title {
+        margin: 0.15rem 0 0.3rem;
+        color: rgb(var(--v-theme-on-surface));
+        font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+        font-weight: 650;
+        letter-spacing: -0.012em;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .report-card__prefix {
+        color: rgba(var(--v-theme-on-surface), 0.72);
+        font-weight: 500;
+    }
+
+    .report-card__details {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-height: 22px;
+    }
+
+    .report-card__state {
+        font-weight: 650;
+    }
+
+    .report-card__source-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: rgba(var(--v-theme-on-surface), 0.58);
+        font-size: 0.76rem;
+    }
+
+    .report-card__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.15rem;
+        padding-inline-start: 0.5rem;
+        border-inline-start: 1px solid rgba(var(--v-theme-outline), 0.24);
+    }
+
+    .report-card__actions :deep(.v-btn) {
+        border-radius: 3px;
+    }
+
+    @media (max-width: 760px) {
+        .report-card {
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: start;
+        }
+
+        .report-card__meta-row {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .report-card__updated {
+            white-space: normal;
+        }
+
+        .report-card__actions {
+            grid-column: 2;
+            justify-content: flex-end;
+            padding-block-start: 0.35rem;
+            padding-inline-start: 0;
+            border-inline-start: 0;
+            border-top: 1px solid rgba(var(--v-theme-outline), 0.2);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .report-card__icon {
+            width: 36px;
+            height: 36px;
+        }
     }
 </style>

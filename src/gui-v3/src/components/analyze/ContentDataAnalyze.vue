@@ -2,12 +2,12 @@
     <v-container
         id="selector_analyze"
         fluid
-        class="pa-2"
+        class="pa-0"
     >
         <TransitionGroup
             name="card-list"
             tag="div"
-            class="w-100"
+            class="analyze-list"
         >
             <component
                 :is="currentCard"
@@ -123,6 +123,7 @@
 
     const collections = ref<ReportItem[]>([])
     const dataLoaded = ref(true)
+    let updateSequence = 0
     const filter = ref<FilterState>({
         search: '',
         range: 'ALL',
@@ -167,6 +168,7 @@
     }
 
     const updateData = async (append = false, reloadAll = false): Promise<void> => {
+        const requestId = ++updateSequence
         dataLoaded.value = false
 
         const totalCount = analyzeStore.getReportItems.total_count || 0
@@ -215,6 +217,10 @@
                 analyzeStore.loadReportItemTypes({})
             ])
 
+            if (requestId !== updateSequence) {
+                return
+            }
+
             const reportTypes = Array.isArray(analyzeStore.getReportItemTypes.items)
                 ? (analyzeStore.getReportItemTypes.items as ReportItem[])
                 : []
@@ -237,7 +243,8 @@
 
             // Directly assign or concat - Vue will detect removed items and animate them
             if (append) {
-                collections.value = collections.value.concat(newItems)
+                const existingIds = new Set(collections.value.map((item) => String(item.id)))
+                collections.value = collections.value.concat(newItems.filter((item) => !existingIds.has(String(item.id))))
             } else {
                 collections.value = newItems
             }
@@ -248,7 +255,9 @@
         } catch (error) {
             console.error('Error loading report items:', error)
         } finally {
-            dataLoaded.value = true
+            if (requestId === updateSequence) {
+                dataLoaded.value = true
+            }
         }
     }
 
@@ -265,8 +274,17 @@
     }
 
     const updateFilter = (newFilter: FilterState): void => {
+        const oldFilter = filter.value
+        const dataFilterChanged =
+            oldFilter.search !== newFilter.search ||
+            oldFilter.range !== newFilter.range ||
+            oldFilter.completed !== newFilter.completed ||
+            oldFilter.sort !== newFilter.sort
+
         filter.value = newFilter
-        updateData(false, false)
+        if (dataFilterChanged) {
+            updateData(false, false)
+        }
     }
 
     watch(
@@ -306,3 +324,17 @@
         updateFilter
     })
 </script>
+
+<style scoped>
+    #selector_analyze {
+        width: min(100%, 1480px);
+        margin-inline: auto;
+        padding: 0 !important;
+    }
+
+    .analyze-list {
+        display: grid;
+        width: 100%;
+        gap: 0;
+    }
+</style>

@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        class="pa-4"
+        class="config-list-toolbar"
     >
         <!-- Search and Counts -->
         <v-row
@@ -44,8 +44,6 @@
                 <slot name="addbutton" />
             </v-col>
         </v-row>
-
-        <v-divider class="my-2" />
     </v-container>
 </template>
 
@@ -105,5 +103,18 @@
 </script>
 
 <style scoped>
-    /* Add any custom styles here */
+    .config-list-toolbar {
+        width: auto;
+        margin: 0.7rem 0.7rem 0;
+        padding: 0.45rem 0.6rem;
+        background: rgb(var(--v-theme-surface));
+    }
+
+    .config-list-toolbar :deep(.v-row) {
+        margin: 0;
+    }
+
+    .config-list-toolbar :deep(.v-col) {
+        padding: 0.25rem;
+    }
 </style>

@@ -139,7 +139,10 @@
         "my_assets": "Meine Assets"
     },
     "dashboard": {
+        "subtitle": "Arbeitsbereich für operative Informationen",
+        "refresh": "Dashboard aktualisieren",
         "assess": {
+            "trending": "Aktuelle Intelligence-Trends",
             "tagcloud": "Schlagwortwolke der zuletzt erfassten Nachrichtenbeiträge",
             "total": "Nachrichtenbeiträge insgesamt"
         },
@@ -160,6 +163,7 @@
             "total": "Produkte insgesamt"
         },
         "about": {
+            "system": "System",
             "title": "Über",
             "version": "Version",
             "commit": "Commit",

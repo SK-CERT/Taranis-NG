@@ -1,5 +1,5 @@
 <template>
-    <ViewLayout>
+    <ViewLayout integrated-toolbar>
         <template #panel>
             <ToolbarFilterPublish
                 ref="toolbarFilter"
