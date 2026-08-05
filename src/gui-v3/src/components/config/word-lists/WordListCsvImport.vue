@@ -69,6 +69,7 @@
                 <v-text-field
                     v-else
                     :model-value="normalizedSourceUrl"
+                    :spellcheck="false"
                     :label="t('word_lists.link')"
                     prepend-inner-icon="mdi-link"
                     variant="outlined"

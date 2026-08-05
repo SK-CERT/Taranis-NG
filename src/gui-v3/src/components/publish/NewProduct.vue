@@ -172,6 +172,7 @@
                         >
                             <v-text-field
                                 v-model="product.title"
+                                :spellcheck="spellcheck"
                                 :label="$t('product.title')"
                                 :rules="[requiredRule]"
                                 :disabled="!canModify"
@@ -181,6 +182,7 @@
                         <v-col cols="12">
                             <v-textarea
                                 v-model="product.description"
+                                :spellcheck="spellcheck"
                                 :label="$t('product.description')"
                                 :disabled="!canModify"
                                 rows="3"
@@ -297,6 +299,7 @@
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { navigateReservedTabOrCurrentWindow, openBlankTabWithoutOpener } from '@/utils/window'
     import StateSelector from '@/components/common/StateSelector.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
@@ -354,6 +357,7 @@
     }
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
     const authStore = useAuthStore()
 

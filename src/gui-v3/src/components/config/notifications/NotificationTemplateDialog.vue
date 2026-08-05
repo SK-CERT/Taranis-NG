@@ -19,24 +19,28 @@
                 >
                     <v-text-field
                         v-model="form.name"
+                        :spellcheck="spellcheck"
                         :label="t('notification_template.name')"
                         :rules="[required]"
                         variant="outlined"
                     />
                     <v-textarea
                         v-model="form.description"
+                        :spellcheck="spellcheck"
                         :label="t('notification_template.description')"
                         variant="outlined"
                         rows="2"
                     />
                     <v-text-field
                         v-model="form.message_title"
+                        :spellcheck="spellcheck"
                         :label="t('notification_template.message_title')"
                         variant="outlined"
                     />
                     <label class="text-subtitle-2 d-block mb-2">{{ t('notification_template.message_body') }}</label>
                     <Editor
                         v-model="form.message_body"
+                        :pt="editorPassThrough"
                         editor-style="min-height: 220px"
                         class="mb-4"
                     />
@@ -57,6 +61,7 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import Editor from 'primevue/editor'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import RecipientTable from './RecipientTable.vue'
@@ -65,6 +70,8 @@
     const props = defineProps<{ modelValue: boolean; template?: NotificationTemplate | null }>()
     const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
+    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
     const open = computed({ get: () => props.modelValue, set: (value) => emit('update:modelValue', value) })
     const editing = computed(() => Boolean(props.template?.id))
     const formRef = ref<{ validate?: () => Promise<{ valid: boolean }> } | null>(null)

@@ -19,12 +19,14 @@
                 >
                     <v-text-field
                         v-model="form.name"
+                        :spellcheck="spellcheck"
                         :label="t('asset_group.name')"
                         :rules="[required]"
                         variant="outlined"
                     />
                     <v-textarea
                         v-model="form.description"
+                        :spellcheck="spellcheck"
                         :label="t('asset_group.description')"
                         variant="outlined"
                         rows="3"
@@ -70,6 +72,7 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { createNewAssetGroup, getAllNotificationTemplates, updateAssetGroup } from '@/api/assets'
     import { getAllExternalUsers } from '@/api/config'
@@ -78,6 +81,7 @@
     const props = defineProps<{ modelValue: boolean; group?: AssetGroup | null }>()
     const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const open = computed({ get: () => props.modelValue, set: (value) => emit('update:modelValue', value) })
     const editing = computed(() => Boolean(props.group?.id))
     const formRef = ref<{ validate?: () => Promise<{ valid: boolean }> } | null>(null)

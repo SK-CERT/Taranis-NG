@@ -39,12 +39,14 @@
             <v-card-text>
                 <v-text-field
                     v-model="working.email"
+                    :spellcheck="false"
                     :label="t('notification_template.email')"
                     type="email"
                     variant="outlined"
                 />
                 <v-text-field
                     v-model="working.name"
+                    :spellcheck="spellcheck"
                     :label="t('notification_template.recipient_name')"
                     variant="outlined"
                 />
@@ -56,12 +58,14 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import type { NotificationRecipient } from '@/types/assets'
     const model = defineModel<NotificationRecipient[]>({ default: () => [] })
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const dialog = ref(false)
     const index = ref(-1)
     const working = ref<NotificationRecipient>({ email: '', name: '' })

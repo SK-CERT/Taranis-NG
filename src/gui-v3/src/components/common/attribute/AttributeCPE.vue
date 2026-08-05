@@ -51,6 +51,7 @@
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-text-field
                             v-model="value.value"
+                            :spellcheck="false"
                             density="compact"
                             variant="outlined"
                             hide-details="auto"

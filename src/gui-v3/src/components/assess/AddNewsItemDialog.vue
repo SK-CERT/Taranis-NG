@@ -45,6 +45,7 @@
                     <!-- Title Field -->
                     <v-text-field
                         v-model="newsItem.title"
+                        :spellcheck="spellcheck"
                         :label="t('enter.title')"
                         :rules="[rules.required]"
                         variant="outlined"
@@ -55,6 +56,7 @@
                     <!-- Review Field -->
                     <v-textarea
                         v-model="newsItem.review"
+                        :spellcheck="spellcheck"
                         :label="t('enter.review')"
                         variant="outlined"
                         density="comfortable"
@@ -65,6 +67,7 @@
                     <!-- Source Field -->
                     <v-text-field
                         v-model="newsItem.source"
+                        :spellcheck="spellcheck"
                         :label="t('enter.source')"
                         variant="outlined"
                         density="comfortable"
@@ -74,6 +77,7 @@
                     <!-- Link Field -->
                     <v-text-field
                         v-model="newsItem.link"
+                        :spellcheck="false"
                         :label="t('enter.link')"
                         variant="outlined"
                         density="comfortable"
@@ -88,6 +92,7 @@
                         </label>
                         <Editor
                             v-model="editorContent"
+                            :pt="editorPassThrough"
                             editor-style="min-height: 250px"
                         />
                     </div>
@@ -141,6 +146,7 @@
     import { addNewsItem } from '@/api/assess'
     import { useUserStore } from '@/stores/user'
     import { useAuth } from '@/composables/useAuth'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import Permissions from '@/services/permissions'
 
     type ManualSource = {
@@ -192,6 +198,8 @@
     const userStore = useUserStore()
     const { checkPermission } = useAuth()
     const canCreateNewsItem = computed(() => checkPermission(Permissions.ASSESS_CREATE))
+    const spellcheck = useSpellcheck()
+    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     const isOpen = computed<boolean>({
         get: () => props.modelValue,

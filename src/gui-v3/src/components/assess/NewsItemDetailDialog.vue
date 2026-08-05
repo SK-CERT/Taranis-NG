@@ -202,6 +202,7 @@
                     <v-form>
                         <v-text-field
                             v-model="editTitle"
+                            :spellcheck="spellcheck"
                             :label="t('assess.title')"
                             density="comfortable"
                             variant="outlined"
@@ -211,6 +212,7 @@
                         />
                         <v-textarea
                             v-model="editDescription"
+                            :spellcheck="spellcheck"
                             :label="t('assess.description')"
                             density="comfortable"
                             variant="outlined"
@@ -231,6 +233,7 @@
                 >
                     <Editor
                         v-model="commentText"
+                        :pt="editorPassThrough"
                         editor-style="height: 250px"
                         :readonly="!canModifyItem"
                         @text-change="debounceAutoSave"
@@ -246,6 +249,7 @@
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAuth } from '@/composables/useAuth'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { PERMISSIONS } from '@/services/auth/permissions'
     import Editor from 'primevue/editor'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
@@ -326,6 +330,8 @@
 
     const { t } = useI18n()
     const { checkPermission } = useAuth()
+    const spellcheck = useSpellcheck()
+    const editorPassThrough = computed(() => ({ content: { spellcheck: spellcheck.value } }))
 
     const isOpen = ref<boolean>(false)
     const activeTab = ref<'source' | 'attributes' | 'comments' | 'info'>('source')

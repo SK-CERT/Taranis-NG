@@ -110,6 +110,7 @@
                     >
                         <v-text-field
                             v-model="editedItem.display_name"
+                            :spellcheck="spellcheck"
                             :label="t('workflow.states.display_name')"
                             :disabled="!canSave"
                             variant="outlined"
@@ -120,6 +121,7 @@
 
                         <v-textarea
                             v-model="editedItem.description"
+                            :spellcheck="spellcheck"
                             :label="t('workflow.states.description')"
                             :disabled="!canSave"
                             variant="outlined"
@@ -130,6 +132,7 @@
 
                         <v-text-field
                             v-model="editedItem.color"
+                            :spellcheck="false"
                             :label="t('workflow.states.color')"
                             :disabled="!canSave"
                             variant="outlined"
@@ -140,6 +143,7 @@
 
                         <v-text-field
                             v-model="editedItem.icon"
+                            :spellcheck="false"
                             :label="t('workflow.states.icon')"
                             :disabled="!canSave"
                             variant="outlined"
@@ -163,6 +167,7 @@
 <script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
@@ -195,6 +200,7 @@
     }
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const configStore = useConfigStore()
     const { checkPermission } = useAuth()
 

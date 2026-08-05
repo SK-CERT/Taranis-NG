@@ -30,6 +30,7 @@
                 >
                     <v-text-field
                         v-model="localItem.name"
+                        :spellcheck="spellcheck"
                         :label="t('data_providers.data.name')"
                         variant="outlined"
                         density="comfortable"
@@ -51,6 +52,7 @@
 
                     <v-text-field
                         v-model="localItem.api_url"
+                        :spellcheck="false"
                         :label="t('data_providers.data.api_url')"
                         variant="outlined"
                         density="comfortable"
@@ -63,6 +65,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.api_key"
+                                :spellcheck="false"
                                 :label="t('settings.api_key')"
                                 variant="outlined"
                                 density="comfortable"
@@ -75,6 +78,7 @@
                         <v-col cols="6">
                             <v-text-field
                                 v-model="localItem.user_agent"
+                                :spellcheck="false"
                                 :label="t('data_providers.data.user_agent')"
                                 variant="outlined"
                                 density="comfortable"
@@ -85,6 +89,7 @@
 
                     <v-text-field
                         v-model="localItem.web_url"
+                        :spellcheck="false"
                         :label="t('data_providers.data.web_url')"
                         variant="outlined"
                         density="comfortable"
@@ -129,6 +134,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
@@ -163,6 +169,7 @@
     const emit = defineEmits(['update:modelValue', 'saved'])
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)

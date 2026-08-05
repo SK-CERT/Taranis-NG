@@ -24,6 +24,7 @@
             />
             <v-text-field
                 v-model="item.title"
+                :spellcheck="spellcheck"
                 :label="t('reports.types.name')"
                 variant="outlined"
                 density="comfortable"
@@ -31,6 +32,7 @@
             />
             <v-text-field
                 v-model="item.description"
+                :spellcheck="spellcheck"
                 :label="t('reports.types.description')"
                 variant="outlined"
                 density="comfortable"
@@ -40,6 +42,7 @@
                 <v-col cols="6">
                     <v-text-field
                         v-model.number="item.min_occurrence"
+                        :spellcheck="false"
                         :label="t('attribute.min_occurrence')"
                         type="number"
                         variant="outlined"
@@ -49,6 +52,7 @@
                 <v-col cols="6">
                     <v-text-field
                         v-model.number="item.max_occurrence"
+                        :spellcheck="false"
                         :label="t('attribute.max_occurrence')"
                         type="number"
                         variant="outlined"
@@ -70,6 +74,7 @@
             <v-textarea
                 v-if="item.ai_provider_id != null"
                 v-model="item.ai_prompt"
+                :spellcheck="spellcheck"
                 :label="t('attribute.ai_prompt')"
                 variant="outlined"
                 density="comfortable"
@@ -83,6 +88,7 @@
 <script setup lang="ts">
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import EditableEntityTable from '@/components/common/EditableEntityTable.vue'
 
     export type AttributeGroupItem = {
@@ -128,6 +134,7 @@
     const items = defineModel<AttributeGroupItem[]>({ required: true })
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
 
     const defaultItem = (): AttributeGroupItem => ({
         id: -1,

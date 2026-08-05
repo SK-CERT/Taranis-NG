@@ -23,6 +23,7 @@
                             md="6"
                             ><v-text-field
                                 v-model="form.username"
+                                :spellcheck="false"
                                 :label="t('external_user.username')"
                                 :rules="[required]"
                                 variant="outlined"
@@ -32,6 +33,7 @@
                             md="6"
                             ><v-text-field
                                 v-model="form.name"
+                                :spellcheck="spellcheck"
                                 :label="t('external_user.name')"
                                 variant="outlined"
                         /></v-col>
@@ -40,6 +42,7 @@
                             md="6"
                             ><v-text-field
                                 v-model="password"
+                                :spellcheck="false"
                                 :label="t('external_user.password')"
                                 type="password"
                                 :rules="editing && !password ? [] : [required]"
@@ -50,6 +53,7 @@
                             md="6"
                             ><v-text-field
                                 v-model="passwordAgain"
+                                :spellcheck="false"
                                 :label="t('external_user.password_check')"
                                 type="password"
                                 :rules="[passwordMatches]"
@@ -85,6 +89,7 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import { createNewExternalUser, getAllExternalPermissions, updateExternalUser } from '@/api/config'
 
@@ -93,6 +98,7 @@
     const props = defineProps<{ modelValue: boolean; user?: ExternalUser | null }>()
     const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const open = computed({ get: () => props.modelValue, set: (value) => emit('update:modelValue', value) })
     const editing = computed(() => Boolean(props.user?.id))
     const formRef = ref<{ validate?: () => Promise<{ valid: boolean }> } | null>(null)

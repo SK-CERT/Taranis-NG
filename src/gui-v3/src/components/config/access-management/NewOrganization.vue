@@ -30,6 +30,7 @@
                 >
                     <v-text-field
                         v-model="localItem.name"
+                        :spellcheck="spellcheck"
                         :label="t('access_management.organizations.name')"
                         variant="outlined"
                         density="comfortable"
@@ -40,6 +41,7 @@
 
                     <v-textarea
                         v-model="localItem.description"
+                        :spellcheck="spellcheck"
                         :label="t('access_management.organizations.description')"
                         variant="outlined"
                         density="comfortable"
@@ -49,6 +51,7 @@
 
                     <v-text-field
                         v-model="localItem.street"
+                        :spellcheck="spellcheck"
                         :label="t('access_management.organizations.street')"
                         variant="outlined"
                         density="comfortable"
@@ -58,6 +61,7 @@
 
                     <v-text-field
                         v-model="localItem.city"
+                        :spellcheck="spellcheck"
                         :label="t('access_management.organizations.city')"
                         variant="outlined"
                         density="comfortable"
@@ -67,6 +71,7 @@
 
                     <v-text-field
                         v-model="localItem.zip"
+                        :spellcheck="false"
                         :label="t('access_management.organizations.zip')"
                         variant="outlined"
                         density="comfortable"
@@ -76,6 +81,7 @@
 
                     <v-text-field
                         v-model="localItem.country"
+                        :spellcheck="spellcheck"
                         :label="t('access_management.organizations.country')"
                         variant="outlined"
                         density="comfortable"
@@ -119,6 +125,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { useAuth } from '@/composables/useAuth'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
@@ -155,6 +162,7 @@
     const emit = defineEmits(['update:modelValue', 'saved'])
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)

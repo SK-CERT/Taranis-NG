@@ -146,6 +146,7 @@
                 </div>
                 <v-textarea
                     v-model="descriptionDraft"
+                    :spellcheck="spellcheck"
                     :label="t('drop_zone.file_description')"
                     rows="3"
                     auto-grow
@@ -193,6 +194,7 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import { ICONS } from '@/config/ui-constants'
     import AuthService from '@/services/auth_service'
     import Permissions from '@/services/auth/permissions'
@@ -248,6 +250,7 @@
     )
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     // Besides the field-editing helpers, this composable keeps the values synchronized when
     // another analyst uploads, updates, or deletes an attachment over SSE.
     useAttributes(props)

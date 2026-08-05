@@ -30,6 +30,7 @@
                 >
                     <v-text-field
                         v-model="localItem.name"
+                        :spellcheck="spellcheck"
                         :label="t('data_providers.ai.name')"
                         variant="outlined"
                         density="comfortable"
@@ -51,6 +52,7 @@
 
                     <v-text-field
                         v-model="localItem.api_url"
+                        :spellcheck="false"
                         :label="t('data_providers.ai.api_url')"
                         variant="outlined"
                         density="comfortable"
@@ -61,6 +63,7 @@
 
                     <v-text-field
                         v-model="localItem.api_key"
+                        :spellcheck="false"
                         :label="t('settings.api_key')"
                         variant="outlined"
                         density="comfortable"
@@ -74,6 +77,7 @@
 
                     <v-text-field
                         v-model="localItem.model"
+                        :spellcheck="false"
                         :label="t('data_providers.ai.model')"
                         variant="outlined"
                         density="comfortable"
@@ -118,6 +122,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useSpellcheck } from '@/composables/useSpellcheck'
     import AddNewButton from '@/components/common/buttons/AddNewButton.vue'
     import DialogToolbar from '@/components/common/dialogs/DialogToolbar.vue'
     import UnsavedChangesDialog from '@/components/common/dialogs/UnsavedChangesDialog.vue'
@@ -151,6 +156,7 @@
     const emit = defineEmits(['update:modelValue', 'saved'])
 
     const { t } = useI18n()
+    const spellcheck = useSpellcheck()
     const { checkPermission } = useAuth()
 
     const formRef = ref<any>(null)
