@@ -102,7 +102,7 @@
     const layoutSize = ref({ width: 800, height: 420 })
     const layingOut = ref(false)
 
-    let resizeObserver: ResizeObserver | null = null
+    let resizeObserver: { observe: (target: Element) => void; disconnect: () => void } | null = null
     let resizeFrame = 0
     let layoutGeneration = 0
     let activeLayout: { start: () => unknown; stop: () => unknown } | null = null
@@ -221,7 +221,7 @@
     })
 
     onMounted(() => {
-        resizeObserver = new ResizeObserver(scheduleLayout)
+        resizeObserver = new window.ResizeObserver(scheduleLayout)
         if (containerRef.value) resizeObserver.observe(containerRef.value)
         scheduleLayout()
     })

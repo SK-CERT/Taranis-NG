@@ -1,10 +1,10 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
+import * as jsoncParser from 'jsonc-eslint-parser'
 import pluginVueI18n from '@intlify/eslint-plugin-vue-i18n'
 import eslintConfigPrettier from 'eslint-config-prettier'
 import tsParser from '@typescript-eslint/parser'
 import vueParser from 'vue-eslint-parser'
-import * as jsoncParser from 'jsonc-eslint-parser'
 
 const sharedGlobals = {
     // Browser globals
