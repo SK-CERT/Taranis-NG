@@ -59,6 +59,7 @@
                             @click="editItem(item)"
                         />
                         <ActionButton
+                            v-if="canDelete"
                             action="delete"
                             :title="t('common.delete')"
                             @click="deleteItem(item)"
@@ -97,17 +98,20 @@
             <v-card>
                 <DialogToolbar
                     :title="editedIndex === -1 ? t('workflow.states.add_new') : t('workflow.states.edit')"
-                    :show-save="isEditable"
+                    :show-save="canSave"
                     :saving="saving"
                     @cancel="requestClose"
                     @save="saveAndClose"
                 />
                 <v-card-text>
-                    <v-form ref="formRef">
+                    <v-form
+                        ref="formRef"
+                        :disabled="!canSave"
+                    >
                         <v-text-field
                             v-model="editedItem.display_name"
                             :label="t('workflow.states.display_name')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             density="comfortable"
                             class="mb-3"
@@ -117,7 +121,7 @@
                         <v-textarea
                             v-model="editedItem.description"
                             :label="t('workflow.states.description')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             density="comfortable"
                             rows="3"
@@ -127,7 +131,7 @@
                         <v-text-field
                             v-model="editedItem.color"
                             :label="t('workflow.states.color')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             type="color"
                             density="comfortable"
@@ -137,7 +141,7 @@
                         <v-text-field
                             v-model="editedItem.icon"
                             :label="t('workflow.states.icon')"
-                            :disabled="!isEditable"
+                            :disabled="!canSave"
                             variant="outlined"
                             density="comfortable"
                             placeholder="mdi-circle"
@@ -221,8 +225,11 @@
     ]
 
     const canCreate = computed(() => checkPermission('CONFIG_WORKFLOW_CREATE'))
+    const canUpdate = computed(() => checkPermission('CONFIG_WORKFLOW_UPDATE'))
+    const canDelete = computed(() => checkPermission('CONFIG_WORKFLOW_DELETE'))
 
     const isEditable = computed(() => editedIndex.value === -1 || editedItem.value.editable)
+    const canSave = computed(() => isEditable.value && (editedIndex.value === -1 ? canCreate.value : canUpdate.value))
 
     const filteredRecords = computed<StateDefinition[]>(() =>
         Array.isArray(configStore.stateDefinitions.items) ? (configStore.stateDefinitions.items as StateDefinition[]) : []
@@ -238,6 +245,7 @@
     }
 
     function addItem(): void {
+        if (!canCreate.value) return
         editedIndex.value = -1
         editedItem.value = { ...defaultItem }
         dialogEdit.value = true
@@ -251,7 +259,7 @@
     }
 
     function deleteItem(item: StateDefinition): void {
-        if (!item.editable) return
+        if (!canDelete.value || !item.editable) return
         const records = filteredRecords.value
         editedIndex.value = records.indexOf(item)
         editedItem.value = { ...item }
@@ -272,6 +280,7 @@
     // Persists the form. Returns true on success so the unsaved-changes guard can
     // decide whether to close the dialog (it closes only on a successful save).
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         const { valid } = (await formRef.value?.validate()) as FormValidationResult
         if (!valid) {
             return false
@@ -331,7 +340,7 @@
     )
 
     async function deleteRecord(): Promise<void> {
-        if (!editedItem.value.editable) {
+        if (!canDelete.value || !editedItem.value.editable) {
             closeDelete()
             return
         }
