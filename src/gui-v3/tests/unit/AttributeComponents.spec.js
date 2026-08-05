@@ -19,6 +19,8 @@ import AttributeCPE from '@/components/common/attribute/AttributeCPE.vue'
 import AttributeCVSS from '@/components/common/attribute/AttributeCVSS.vue'
 import AttributeRichText from '@/components/common/attribute/AttributeRichText.vue'
 import AttributeAttachment from '@/components/common/attribute/AttributeAttachment.vue'
+import AuthService from '@/services/auth_service'
+import { removeAttachment, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
 
 // ── API mocks (prevent network calls from useAttributes) ─────────────────────
 vi.mock('@/api/analyze', () => ({
@@ -27,7 +29,10 @@ vi.mock('@/api/analyze', () => ({
     lockReportItem: vi.fn().mockResolvedValue({}),
     unlockReportItem: vi.fn().mockResolvedValue({}),
     updateReportItem: vi.fn().mockResolvedValue({}),
-    downloadAttachment: vi.fn().mockResolvedValue({})
+    downloadAttachment: vi.fn().mockResolvedValue({}),
+    removeAttachment: vi.fn().mockResolvedValue({}),
+    updateAttachmentDescription: vi.fn().mockResolvedValue({ data: {} }),
+    uploadAttachment: vi.fn().mockResolvedValue({ data: { attribute_id: 99 } })
 }))
 
 // Stub layout sub-components so we don't need to wire up their Pinia deps
@@ -61,11 +66,19 @@ const CalculatorCVSSStub = {
     emits: ['update:modelValue']
 }
 
+const DialogStub = {
+    name: 'VDialog',
+    props: ['modelValue'],
+    template: '<div class="dialog-stub"><slot /></div>',
+    emits: ['update:modelValue']
+}
+
 const globalStubs = {
     AttributeItemLayout: AttributeItemLayoutStub,
     AttributeValueLayout: AttributeValueLayoutStub,
     Editor: EditorStub,
-    CalculatorCVSS: CalculatorCVSSStub
+    CalculatorCVSS: CalculatorCVSSStub,
+    VDialog: DialogStub
 }
 
 // ── Shared prop factories ─────────────────────────────────────────────────────
@@ -587,7 +600,11 @@ describe('AttributeRichText', () => {
 // ── AttributeAttachment ───────────────────────────────────────────────────────
 
 describe('AttributeAttachment', () => {
-    beforeEach(() => setActivePinia(createPinia()))
+    beforeEach(() => {
+        setActivePinia(createPinia())
+        vi.clearAllMocks()
+        vi.spyOn(AuthService, 'hasPermission').mockReturnValue(true)
+    })
 
     const attachmentValue = {
         id: 10,
@@ -606,13 +623,88 @@ describe('AttributeAttachment', () => {
 
     it('shows read-only attachment display', () => {
         const wrapper = mountAttr(AttributeAttachment, readOnlyProps(attachmentValue))
-        expect(wrapper.find('.attachment-display').exists()).toBe(true)
+        expect(wrapper.find('.attachment-row').exists()).toBe(true)
+        expect(wrapper.find('.attachment-dropzone').exists()).toBe(false)
     })
 
     it('shows editable layout in edit mode', () => {
-        const wrapper = mountAttr(AttributeAttachment, baseProps(attachmentValue))
-        // Attachment edit mode shows a value-layout stub with file info / download button
-        expect(wrapper.find('.value-layout-stub').exists()).toBe(true)
+        const wrapper = mountAttr(AttributeAttachment, { ...baseProps(attachmentValue), modify: true })
+        expect(wrapper.find('.attachment-row').exists()).toBe(true)
+        expect(wrapper.find('.attachment-dropzone').exists()).toBe(true)
+    })
+
+    it('queues a selected file with its description while creating a report', async () => {
+        const props = {
+            ...baseProps({}, { attribute: { type: 'ATTACHMENT' } }),
+            values: [],
+            edit: false,
+            modify: true,
+            reportItemId: null
+        }
+        const wrapper = mountAttr(AttributeAttachment, props)
+        const file = new File(['contents'], 'evidence.txt', { type: 'text/plain' })
+
+        wrapper.vm.acceptFiles([file])
+        await wrapper.vm.$nextTick()
+        wrapper.vm.descriptionDraft = 'Collected evidence'
+        await wrapper.vm.confirmDescription()
+
+        expect(props.values).toHaveLength(1)
+        expect(props.values[0]).toMatchObject({
+            value: 'evidence.txt',
+            binary_description: 'Collected evidence',
+            binary_mime_type: 'text/plain',
+            binary_size: 8,
+            file
+        })
+        expect(uploadAttachment).not.toHaveBeenCalled()
+    })
+
+    it('uploads a selected file immediately for an existing report', async () => {
+        const props = {
+            ...baseProps({}, { attribute: { type: 'ATTACHMENT' } }),
+            values: [],
+            modify: true
+        }
+        const wrapper = mountAttr(AttributeAttachment, props)
+        const file = new File(['contents'], 'evidence.txt', { type: 'text/plain' })
+
+        wrapper.vm.acceptFiles([file])
+        await wrapper.vm.$nextTick()
+        wrapper.vm.descriptionDraft = 'Collected evidence'
+        await wrapper.vm.confirmDescription()
+
+        expect(uploadAttachment).toHaveBeenCalledWith(42, 'ag-1', file, 'Collected evidence')
+        expect(props.values[0]).toMatchObject({ id: 99, value: 'evidence.txt', binary_description: 'Collected evidence' })
+        expect(props.values[0].file).toBeUndefined()
+    })
+
+    it('updates an existing attachment description', async () => {
+        updateAttachmentDescription.mockResolvedValueOnce({ data: { binary_description: 'Updated description' } })
+        const props = { ...baseProps({ ...attachmentValue, binary_description: 'Old description' }), modify: true }
+        const wrapper = mountAttr(AttributeAttachment, props)
+
+        wrapper.vm.openDescriptionEditor(props.values[0])
+        wrapper.vm.descriptionDraft = 'Updated description'
+        await wrapper.vm.confirmDescription()
+
+        expect(updateAttachmentDescription).toHaveBeenCalledWith({
+            report_item_id: 42,
+            attribute_id: 10,
+            description: 'Updated description'
+        })
+        expect(props.values[0].binary_description).toBe('Updated description')
+    })
+
+    it('deletes an existing attachment after confirmation', async () => {
+        const props = { ...baseProps(attachmentValue), modify: true }
+        const wrapper = mountAttr(AttributeAttachment, props)
+
+        wrapper.vm.selectedValue = props.values[0]
+        await wrapper.vm.deleteSelectedAttachment()
+
+        expect(removeAttachment).toHaveBeenCalledWith({ report_item_id: 42, attribute_id: 10 })
+        expect(props.values).toHaveLength(0)
     })
 })
 

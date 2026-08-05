@@ -37,7 +37,7 @@ type ConflictPayload = {
 type AttributeGroup = {
     id?: number
     min_occurrence?: number
-    max_occurrence?: number
+    max_occurrence?: number | null
     attribute?: {
         type?: string
         enum_values?: unknown[]
@@ -571,6 +571,15 @@ export function useAttributes<T extends UseAttributesProps>(props: Readonly<T>) 
                         }
                         item.value = toLocalValue(itemData.attribute_value)
                         item.value_description = String(itemData.attribute_value_description ?? '')
+                        if (itemData.binary_description !== undefined) {
+                            item.binary_description = itemData.binary_description
+                        }
+                        if (itemData.binary_mime_type !== undefined) {
+                            item.binary_mime_type = itemData.binary_mime_type
+                        }
+                        if (itemData.binary_size !== undefined) {
+                            item.binary_size = itemData.binary_size
+                        }
                         item.last_updated = itemData.attribute_last_updated
                         item.user = { name: String(itemData.attribute_user ?? '') }
                         if (itemData.attribute_version !== undefined) {

@@ -73,7 +73,7 @@
         last_updated?: unknown
         user?: {
             name?: string
-        }
+        } | null
         [key: string]: unknown
     }
 
