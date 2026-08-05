@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from shared.schema.bots_node import BotsNode
 
-from marshmallow import EXCLUDE, Schema, fields, post_load
+from marshmallow import EXCLUDE, Schema, fields, post_load, validate
 
 from shared.schema.bot import BotSchema
 from shared.schema.presentation import PresentationSchema
@@ -70,7 +70,7 @@ class BotsNodeSchema(Schema):
     name = fields.Str()
     description = fields.Str()
     api_url = fields.Str()
-    api_key = fields.Str()
+    api_key = fields.Str(required=True, validate=validate.Regexp(r".*\S"))
     bots = fields.List(fields.Nested(BotSchema))
     created = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
     last_seen = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
