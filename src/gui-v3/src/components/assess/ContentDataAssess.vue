@@ -136,6 +136,7 @@
     import NewReportItem from '@/components/analyze/NewReportItem.vue'
     import ReportsListDialog from './ReportsListDialog.vue'
     import { Action, type ActionKey } from '@/types/actions'
+    import { useSseResync } from '@/composables/useSseResync'
 
     type NewsItem = {
         id: string | number
@@ -814,6 +815,7 @@
 
     /** Silent reload after a card action or a server event: the window must not move. */
     const refreshData = (): Promise<void> => loadData('refresh')
+    useSseResync(refreshData)
 
     /** Kept for the toolbar and the analyze selector, which drive this component by ref. */
     const updateData = (append = false, reload_all = false): Promise<void> => loadData(append ? 'append' : reload_all ? 'reload' : 'reset')

@@ -47,6 +47,7 @@
     import { useAssetsStore } from '@/stores/assets'
     import CardAsset from './CardAsset.vue'
     import type { Asset, AssetFilter } from '@/types/assets'
+    import { useSseResync } from '@/composables/useSseResync'
 
     const emit = defineEmits<{ (e: 'edit', asset: Asset): void }>()
     const { t } = useI18n()
@@ -61,22 +62,28 @@
         window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc } }))
     }
 
-    const reload = async (): Promise<void> => {
+    const reloadData = async (silent = false): Promise<void> => {
         if (!groupId.value) {
             store.clearAssets()
             return
         }
-        loading.value = true
-        loadError.value = false
+        if (!silent) {
+            loading.value = true
+            loadError.value = false
+        }
         try {
             await store.loadAssets({ group_id: groupId.value, filter: filter.value })
         } catch {
-            loadError.value = true
-            notify('error', 'asset.load_error')
+            if (!silent) {
+                loadError.value = true
+                notify('error', 'asset.load_error')
+            }
         } finally {
-            loading.value = false
+            if (!silent) loading.value = false
         }
     }
+
+    const reload = (): Promise<void> => reloadData(false)
 
     const remove = async (asset: Asset): Promise<void> => {
         try {
@@ -95,6 +102,7 @@
 
     watch(groupId, reload)
     onMounted(reload)
+    useSseResync(() => reloadData(true))
     defineExpose({ reload, updateFilter })
 </script>
 
