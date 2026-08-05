@@ -1,14 +1,25 @@
 <template>
-    <v-btn
-        type="button"
-        color="primary"
-        variant="tonal"
-        prepend-icon="mdi-upload"
-        class="mb-3"
-        @click="openDialog"
-    >
-        {{ t('word_lists.import_from_csv') }}
-    </v-btn>
+    <div class="d-flex flex-wrap ga-2 mb-3">
+        <v-btn
+            type="button"
+            color="primary"
+            variant="tonal"
+            prepend-icon="mdi-upload"
+            @click="openLocalDialog"
+        >
+            {{ t('word_lists.import_from_csv') }}
+        </v-btn>
+        <v-btn
+            v-if="normalizedSourceUrl"
+            type="button"
+            color="primary"
+            variant="tonal"
+            prepend-icon="mdi-download"
+            @click="openUrlDialog"
+        >
+            {{ t('word_lists.download_from_link') }}
+        </v-btn>
+    </div>
 
     <v-dialog
         v-model="dialog"
@@ -21,7 +32,7 @@
                 color="primary"
                 density="compact"
             >
-                <v-toolbar-title>{{ t('word_lists.import_from_csv') }}</v-toolbar-title>
+                <v-toolbar-title>{{ dialogTitle }}</v-toolbar-title>
                 <v-spacer />
                 <v-btn
                     type="button"
@@ -45,6 +56,7 @@
 
             <v-card-text>
                 <v-file-input
+                    v-if="sourceMode === 'file'"
                     v-model="csvFile"
                     :label="t('word_lists.load_csv_file')"
                     accept=".csv,text/csv,text/plain"
@@ -52,6 +64,15 @@
                     variant="outlined"
                     clearable
                     @update:model-value="readCsvFile"
+                />
+
+                <v-text-field
+                    v-else
+                    :model-value="normalizedSourceUrl"
+                    :label="t('word_lists.link')"
+                    prepend-inner-icon="mdi-link"
+                    variant="outlined"
+                    readonly
                 />
 
                 <div class="d-flex flex-wrap align-center ga-6 mb-3">
@@ -74,7 +95,7 @@
                     variant="tonal"
                     class="mb-3"
                 >
-                    {{ t('word_lists.error') }}
+                    {{ importErrorMessage }}
                 </v-alert>
 
                 <v-data-table
@@ -95,7 +116,10 @@
     import { mergeWordListEntries, parseWordListCsv, type WordListEntry } from '@/utils/word-list-csv'
 
     const model = defineModel<WordListEntry[]>({ default: () => [] })
+    const props = withDefaults(defineProps<{ sourceUrl?: string }>(), { sourceUrl: '' })
     const { t } = useI18n()
+
+    type SourceMode = 'file' | 'url'
 
     const previewHeaders = computed(() => [
         { title: t('word_lists.value'), key: 'value', sortable: false },
@@ -103,6 +127,7 @@
     ])
 
     const dialog = ref(false)
+    const sourceMode = ref<SourceMode>('file')
     const csvFile = ref<File | File[] | null>(null)
     const csvText = ref('')
     const csvRows = ref<WordListEntry[]>([])
@@ -110,6 +135,9 @@
     const fileHasHeader = ref(true)
     const replaceExisting = ref(false)
     const readingFile = ref(false)
+    const normalizedSourceUrl = computed(() => props.sourceUrl.trim())
+    const dialogTitle = computed(() => (sourceMode.value === 'url' ? t('word_lists.download_from_link') : t('word_lists.import_from_csv')))
+    const importErrorMessage = computed(() => `${dialogTitle.value}: ${t('common.error')}`)
 
     const reset = (): void => {
         csvFile.value = null
@@ -121,9 +149,17 @@
         readingFile.value = false
     }
 
-    const openDialog = (): void => {
+    const openLocalDialog = (): void => {
         reset()
+        sourceMode.value = 'file'
         dialog.value = true
+    }
+
+    const openUrlDialog = async (): Promise<void> => {
+        reset()
+        sourceMode.value = 'url'
+        dialog.value = true
+        await downloadCsv()
     }
 
     const closeDialog = (): void => {
@@ -152,6 +188,36 @@
         try {
             csvText.value = await file.text()
             parseCsv()
+        } catch {
+            csvError.value = true
+        } finally {
+            readingFile.value = false
+        }
+    }
+
+    const downloadCsv = async (): Promise<void> => {
+        csvText.value = ''
+        csvRows.value = []
+        csvError.value = false
+        readingFile.value = true
+
+        try {
+            const url = new globalThis.URL(normalizedSourceUrl.value)
+            if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('Unsupported URL protocol')
+
+            // This intentionally remains a direct browser request, like Vue 2. Omitting
+            // credentials prevents Taranis cookies or authorization from reaching a
+            // category-controlled host; the remote server must explicitly allow CORS.
+            const response = await globalThis.fetch(url, {
+                credentials: 'omit',
+                referrerPolicy: 'no-referrer',
+                cache: 'no-store'
+            })
+            if (!response.ok) throw new Error(`Download failed with HTTP ${response.status}`)
+
+            csvText.value = await response.text()
+            parseCsv()
+            if (!csvRows.value.length) csvError.value = true
         } catch {
             csvError.value = true
         } finally {
