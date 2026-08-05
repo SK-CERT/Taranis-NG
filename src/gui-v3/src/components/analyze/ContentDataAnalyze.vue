@@ -318,8 +318,8 @@
 
 <style scoped>
     #selector_analyze {
-        width: min(100%, 1480px);
-        margin-inline: auto;
+        width: 100%;
+        max-width: none;
         padding: 0 !important;
     }
 
