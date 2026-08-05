@@ -33,7 +33,7 @@
     import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
-    import { useRoute } from 'vue-router'
+    import { useRouter } from 'vue-router'
     import { useAuthStore } from '@/stores/auth'
     import { useUserStore } from '@/stores/user'
     import { useSettingsStore } from '@/stores/settings'
@@ -45,7 +45,8 @@
 
     const { locale } = useI18n()
     const theme = useTheme()
-    const route = useRoute()
+    const router = useRouter()
+    const route = computed(() => router.currentRoute?.value ?? { name: undefined, path: '' })
     const authStore = useAuthStore()
     const userStore = useUserStore()
     const settingsStore = useSettingsStore()
@@ -53,8 +54,8 @@
 
     const navVisible = ref(true)
     const isAuth = computed(() => authStore.isAuthenticated)
-    const showNavigation = computed(() => isAuth.value && route.name !== 'publish' && route.name !== 'dashboard')
-    const isConfigurationRoute = computed(() => route.path === '/config' || route.path.startsWith('/config/'))
+    const showNavigation = computed(() => isAuth.value && route.value.name !== 'publish' && route.value.name !== 'dashboard')
+    const isConfigurationRoute = computed(() => route.value.path === '/config' || route.value.path.startsWith('/config/'))
 
     // Watch theme changes and apply dark-mode/light-mode classes to HTML element.
     // These override the prefers-color-scheme CSS fallback once the user's preference is known.

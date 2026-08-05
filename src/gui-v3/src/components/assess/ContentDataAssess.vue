@@ -192,7 +192,8 @@
     const { t } = useI18n()
     const route = useRoute()
     const assessStore = useAssessStore()
-    const searchQuery = Array.isArray(route.query['search']) ? route.query['search'][0] : route.query['search']
+    const routeQuery = route.query ?? {}
+    const searchQuery = Array.isArray(routeQuery['search']) ? routeQuery['search'][0] : routeQuery['search']
 
     const news_items_data = ref<NewsItem[]>([])
 
