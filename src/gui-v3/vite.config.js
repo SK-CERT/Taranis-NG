@@ -75,6 +75,12 @@ export default defineConfig(({ mode }) => {
                       'import.meta.env.VITE_APP_TARANIS_NG_LOCALE': JSON.stringify(
                           env.VITE_APP_TARANIS_NG_LOCALE || '$VITE_APP_TARANIS_NG_LOCALE'
                       ),
+                      'import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL': JSON.stringify(
+                          env.VITE_APP_TARANIS_NG_LOGIN_URL || '$VITE_APP_TARANIS_NG_LOGIN_URL'
+                      ),
+                      'import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL': JSON.stringify(
+                          env.VITE_APP_TARANIS_NG_LOGOUT_URL || '$VITE_APP_TARANIS_NG_LOGOUT_URL'
+                      ),
                       'import.meta.env.VITE_APP_VERSION': JSON.stringify(env.VITE_APP_VERSION || '3.0.0-beta')
                   }
     }

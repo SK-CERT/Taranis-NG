@@ -42,6 +42,7 @@ describe('Auth Store', () => {
     let authApi
 
     beforeEach(async () => {
+        vi.unstubAllEnvs()
         localStorage.clear()
         setActivePinia(createPinia())
         vi.clearAllMocks()
@@ -310,6 +311,43 @@ describe('Auth Store', () => {
         it('getLogoutURL should default to /logout', () => {
             const store = useAuthStore()
             expect(store.getLogoutURL).toBe('/logout')
+        })
+
+        it.each(['', '   ', '$VITE_APP_TARANIS_NG_LOGIN_URL', '${VITE_APP_TARANIS_NG_LOGIN_URL}', 'javascript:alert(1)'])(
+            'rejects an empty, unresolved, or unsafe login URL: %s',
+            (configured) => {
+                vi.stubEnv('VITE_APP_TARANIS_NG_LOGIN_URL', configured)
+                const store = useAuthStore()
+
+                expect(store.hasExternalLoginUrl).toBe(false)
+                expect(store.getLoginURL).toBe('/login')
+            }
+        )
+
+        it('substitutes the encoded Vue 3 callback into the external login URL', () => {
+            vi.stubEnv(
+                'VITE_APP_TARANIS_NG_LOGIN_URL',
+                'https://identity.example.test/auth?client_id=taranis-ng&redirect_uri=TARANIS_GUI_URI'
+            )
+            const store = useAuthStore()
+
+            expect(store.hasExternalLoginUrl).toBe(true)
+            expect(store.getExternalCallbackURL).toBe(`${window.location.origin}/v2/login`)
+            expect(store.getLoginURL).toBe(
+                `https://identity.example.test/auth?client_id=taranis-ng&redirect_uri=${encodeURIComponent(
+                    `${window.location.origin}/v2/login`
+                )}`
+            )
+        })
+
+        it('substitutes the encoded Vue 3 return path into the external logout URL', () => {
+            vi.stubEnv('VITE_APP_TARANIS_NG_LOGOUT_URL', 'https://identity.example.test/logout?post_logout_redirect_uri=TARANIS_GUI_URI')
+            const store = useAuthStore()
+
+            expect(store.hasExternalLogoutUrl).toBe(true)
+            expect(store.getLogoutURL).toBe(
+                `https://identity.example.test/logout?post_logout_redirect_uri=${encodeURIComponent(`${window.location.origin}/v2/login`)}`
+            )
         })
     })
 

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import ApiService from '@/services/api_service'
 import { login as loginApi, logout as logoutApi, refresh } from '@/api/auth'
 import { parseJwtClaims } from '@/services/jwt'
+import { getExternalAuthCallbackUrl, getExternalAuthUrl, resolveExternalAuthUrl } from '@/services/auth/runtime_urls'
 import { useUserStore } from './user'
 import type { AuthTokenResponse, JwtClaims, LoginPayload, UserClaims } from '@/types/auth'
 
@@ -45,36 +46,24 @@ export const useAuthStore = defineStore('auth', () => {
     })
 
     const hasExternalLoginUrl = computed(() => {
-        return import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL != null
+        return getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL) !== null
     })
 
     const getLoginURL = computed(() => {
-        const own_base_uri = document.URL.replace(/^([^:]*:\/*[^\/]*)\/.*/, '$1') //eslint-disable-line
-        let login_uri = '/login'
-
-        if (import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL != null) {
-            login_uri = import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL
-        }
-
-        login_uri = login_uri.replace('TARANIS_GUI_URI', encodeURIComponent(own_base_uri + '/login'))
-        return login_uri
+        const configured = getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGIN_URL)
+        return configured ? resolveExternalAuthUrl(configured) : '/login'
     })
 
     const hasExternalLogoutUrl = computed(() => {
-        return import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL != null
+        return getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL) !== null
     })
 
     const getLogoutURL = computed(() => {
-        const own_base_uri = document.URL.replace(/^([^:]*:\/*[^\/]*)\/.*/, '$1') //eslint-disable-line
-        let logout_uri = '/logout'
-
-        if (import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL != null) {
-            logout_uri = import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL
-        }
-
-        logout_uri = logout_uri.replace('TARANIS_GUI_URI', encodeURIComponent(own_base_uri + '/login'))
-        return logout_uri
+        const configured = getExternalAuthUrl(import.meta.env.VITE_APP_TARANIS_NG_LOGOUT_URL)
+        return configured ? resolveExternalAuthUrl(configured) : '/logout'
     })
+
+    const getExternalCallbackURL = computed(() => getExternalAuthCallbackUrl())
 
     const getJWT = computed(() => jwt.value)
 
@@ -171,6 +160,7 @@ export const useAuthStore = defineStore('auth', () => {
         getLoginURL,
         hasExternalLogoutUrl,
         getLogoutURL,
+        getExternalCallbackURL,
         getJWT,
         isAuthenticated,
 

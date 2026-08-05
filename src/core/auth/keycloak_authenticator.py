@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 from os import environ
+from urllib.parse import urlsplit, urlunsplit
 
 import jwt
 from auth.base_authenticator import BaseAuthenticator
@@ -26,6 +27,10 @@ class KeycloakAuthenticator(BaseAuthenticator):
         if "code" not in request.args or "session_state" not in request.args:
             return {"error": "Missing code or session_state parameters"}, HTTPStatus.BAD_REQUEST
 
+        redirect_uri = self._get_redirect_uri()
+        if redirect_uri is None:
+            return {"error": "Invalid external login redirect URI"}, HTTPStatus.BAD_REQUEST
+
         link = environ.get("TARANIS_NG_KEYCLOAK_INTERNAL_URL")
         old_keycloak = version.parse(environ.get("KEYCLOAK_VERSION")) < version.parse("17.0.0")
         # there's a change in API endpoints from version 17.0.0
@@ -39,8 +44,7 @@ class KeycloakAuthenticator(BaseAuthenticator):
             data={
                 "grant_type": "authorization_code",
                 "code": request.args["code"],  # code from url
-                "redirect_uri": "/".join(request.headers.get("Referer").split("/")[0:3]) + "/login",
-                # original redirect_uri (host needs to match)
+                "redirect_uri": redirect_uri,
             },
             auth=HTTPBasicAuth(environ.get("TARANIS_NG_KEYCLOAK_CLIENT_ID"), external_auth_manager.get_keycloak_client_secret_key()),
             # do not forget credentials
@@ -72,3 +76,15 @@ class KeycloakAuthenticator(BaseAuthenticator):
 
         # generate custom token
         return BaseAuthenticator.generate_jwt(data["preferred_username"])
+
+    @staticmethod
+    def _get_redirect_uri() -> str | None:
+        """Return the exact Vue 3 callback URI used for the authorization request."""
+        candidate = request.args.get("redirect_uri") or request.headers.get("Referer")
+        if not candidate:
+            return None
+
+        parsed = urlsplit(candidate)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.path not in {"/login", "/v2/login"}:
+            return None
+        return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))

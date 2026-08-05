@@ -83,6 +83,8 @@ The following environment variables are used (configured at Docker runtime):
 - `VITE_APP_TARANIS_NG_CORE_API` - Backend API endpoint
 - `VITE_APP_TARANIS_NG_CORE_SSE` - Server-Sent Events endpoint
 - `VITE_APP_TARANIS_NG_LOCALE` - Default locale code
+- `VITE_APP_TARANIS_NG_LOGIN_URL` - Optional OIDC login URL; use `TARANIS_GUI_URI` for the encoded `/v2/login` callback
+- `VITE_APP_TARANIS_NG_LOGOUT_URL` - Optional OIDC logout URL; use `TARANIS_GUI_URI` for the encoded `/v2/login` return URL
 - `VITE_APP_VERSION` - Application version
 - `VITE_DEV_BACKEND_ORIGIN` - Development proxy target origin
 
