@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createNewReportItem, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
+import { createNewReportItem, downloadReportItemAttachment, updateAttachmentDescription, uploadAttachment } from '@/api/analyze'
 import ApiService from '@/services/api_service'
 
 vi.mock('@/services/api_service', () => ({
     default: {
         post: vi.fn(),
         put: vi.fn(),
-        upload: vi.fn()
+        upload: vi.fn(),
+        download: vi.fn()
     }
 }))
 
@@ -61,5 +62,11 @@ describe('analyze api', () => {
         updateAttachmentDescription({ report_item_id: 42, attribute_id: 9, description: 'Updated' })
 
         expect(ApiService.put).toHaveBeenCalledWith('/analyze/report-items/42/file-attributes/9', { description: 'Updated' })
+    })
+
+    it('downloads an attachment through its report-scoped authorized resource', () => {
+        downloadReportItemAttachment(42, 9, 'evidence.txt')
+
+        expect(ApiService.download).toHaveBeenCalledWith('/analyze/report-items/42/file-attributes/9/file', undefined, 'evidence.txt')
     })
 })

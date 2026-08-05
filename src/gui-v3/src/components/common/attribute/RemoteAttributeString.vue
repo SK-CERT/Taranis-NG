@@ -1,49 +1,37 @@
 <template>
-    <AttributeItemLayout
-        :add-button="false"
-        :values="attributeGroup.attributes"
-    >
-        <template #content>
-            <div
-                v-for="value in attributeGroup.attributes"
-                :key="value.id"
-                class="remote-value"
-            >
-                <span class="text-sm text-gray-300">{{ value.value }}</span>
-            </div>
-        </template>
-    </AttributeItemLayout>
+    <div class="remote-values">
+        <div
+            v-for="value in attributeGroup.attributes"
+            :key="value.id"
+            class="remote-values__item"
+        >
+            {{ value.value }}
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-    import AttributeItemLayout from './AttributeItemLayout.vue'
-
     type RemoteAttributeValue = {
         id: number | string
         value?: string
-        [key: string]: unknown
     }
 
-    type RemoteAttributeGroup = {
-        attributes: RemoteAttributeValue[]
-        [key: string]: unknown
-    }
-
-    const props = defineProps<{
-        attributeGroup: RemoteAttributeGroup
+    defineProps<{
+        attributeGroup: { attributes: RemoteAttributeValue[] }
         reportItemId: number
     }>()
-
-    // TODO: Phase 3 - Add remote-specific features:
-    // - Display source/origin information
-    // - Show when data came from API feed
-    // - Prevent editing with clear UI indication
-    // - Link to original source if available
 </script>
 
 <style scoped>
-    .remote-value {
-        width: 100%;
-        padding: 8px 0;
+    .remote-values {
+        display: grid;
+        gap: 0.5rem;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .remote-values__item + .remote-values__item {
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(var(--v-theme-outline), 0.2);
     }
 </style>

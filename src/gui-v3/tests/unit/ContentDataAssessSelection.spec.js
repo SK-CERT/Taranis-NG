@@ -13,7 +13,8 @@ import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
 const mockRoute = {
     params: {
         groupId: 'group-a'
-    }
+    },
+    query: {}
 }
 
 const mockAssessStore = {

@@ -41,11 +41,19 @@
                     @del-value="del(index)"
                 >
                     <template #col_left>
-                        <span
-                            v-if="values.length > 1"
-                            class="cve-number text--disabled"
-                            >{{ index + 1 }}.</span
-                        >
+                        <div class="attribute-lookup-column">
+                            <span
+                                v-if="values.length > 1"
+                                class="cve-number text--disabled"
+                                >{{ index + 1 }}.</span
+                            >
+                            <EnumSelector
+                                :attribute-id="attributeGroup.attribute?.id"
+                                :value-index="index"
+                                :disabled="value.locked || !canModify"
+                                @enum-selected="enumSelected"
+                            />
+                        </div>
                     </template>
                     <template #col_middle="{ delVisible, onDelete }">
                         <v-text-field
@@ -80,6 +88,7 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import AttributeFieldDeleteButton from '@/components/common/buttons/AttributeFieldDeleteButton.vue'
+    import EnumSelector from '@/components/common/EnumSelector.vue'
     import { useAttributes } from './useAttributes'
 
     type AttributeValueItem = {
@@ -92,6 +101,13 @@
 
     type AttributeGroup = {
         min_occurrence?: number
+        attribute?: {
+            id?: string | number
+            type?: string
+            enum_values?: unknown[]
+            enum_items?: unknown[]
+            attribute_enums?: unknown[]
+        }
         [key: string]: unknown
     }
 
@@ -111,7 +127,8 @@
         }
     )
 
-    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp } = useAttributes(props)
+    const { canModify, addInitialValues, addButtonVisible, add, del, getLockedStyle, onFocus, onBlur, onKeyUp, enumSelected } =
+        useAttributes(props)
 
     onMounted(addInitialValues)
 </script>
@@ -134,5 +151,11 @@
     .value-holder {
         width: 100%;
         margin-bottom: 2px;
+    }
+
+    .attribute-lookup-column {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 </style>

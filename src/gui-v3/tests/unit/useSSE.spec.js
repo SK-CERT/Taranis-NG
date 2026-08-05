@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { effectScope } from 'vue'
+import { defineComponent } from 'vue'
+import { mount } from '@vue/test-utils'
 import { useSSE } from '@/composables/useSSE'
 
 const { initSSE } = vi.hoisted(() => ({
@@ -47,11 +48,15 @@ class MockEventSource {
 
 function setupComposable() {
     let result
-    const scope = effectScope()
-    scope.run(() => {
-        result = useSSE()
-    })
-    return { result, scope }
+    const wrapper = mount(
+        defineComponent({
+            setup() {
+                result = useSSE()
+                return () => null
+            }
+        })
+    )
+    return { result, scope: { stop: () => wrapper.unmount() } }
 }
 
 async function flushMicrotasks() {

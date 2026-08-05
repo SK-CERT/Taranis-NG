@@ -20,8 +20,8 @@
                 :preselected="preselected(collection.id)"
                 @delete-item="handleDelete"
                 @selection-change="handleSelectionChange(collection.id, $event)"
-                @show-detail="emit('show-report-item-detail', $event)"
-                @edit="emit('show-report-item-detail', $event)"
+                @show-detail="showDetail"
+                @edit="showDetail"
             />
         </TransitionGroup>
         <div
@@ -115,7 +115,7 @@
         }
     )
 
-    const emit = defineEmits(['new-data-loaded', 'show-report-item-detail', 'update-showing-count'])
+    const emit = defineEmits(['new-data-loaded', 'show-report-item-detail', 'show-remote-report-item-detail', 'update-showing-count'])
 
     const { t } = useI18n()
     const route = useRoute()
@@ -144,6 +144,14 @@
     const multiSelectActive = computed(() => analyzeStore.getMultiSelectReport)
 
     const preselected = (itemId: string | number): boolean => props.selection.some((item) => item.id === itemId)
+
+    const showDetail = (item: ReportItem): void => {
+        if (item['remote_user'] !== null && item['remote_user'] !== undefined) {
+            emit('show-remote-report-item-detail', item)
+            return
+        }
+        emit('show-report-item-detail', item)
+    }
 
     const getNormalizedScope = (): string => {
         const scope = route.params['scope']

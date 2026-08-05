@@ -5,43 +5,52 @@
         persistent
         @keydown.esc="handleClose"
     >
-        <v-card>
-            <v-toolbar
-                color="primary"
-                dark
-            >
+        <v-card class="remote-report">
+            <v-toolbar color="primary">
                 <v-btn
                     icon
+                    :title="t('notification.close')"
                     @click="handleClose"
                 >
                     <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
                 <v-toolbar-title>{{ reportItem.title }}</v-toolbar-title>
-                <v-spacer />
             </v-toolbar>
 
-            <v-card-text class="pa-6">
-                <div>
-                    <strong>{{ t('report_item.id') }}:</strong>
-                    <span>{{ reportItem.uuid }}</span>
-                </div>
+            <v-card-text class="remote-report__body">
+                <v-alert
+                    type="info"
+                    variant="tonal"
+                    class="mb-4"
+                >
+                    <div class="remote-report__identity">
+                        <span
+                            ><strong>{{ t('report_item.id') }}:</strong> {{ reportItem.uuid }}</span
+                        >
+                        <span v-if="reportItem.remote_user">
+                            <strong>{{ t('card_item.source') }}:</strong> {{ reportItem.remote_user }}
+                        </span>
+                    </div>
+                </v-alert>
 
-                <v-divider class="my-4" />
-
-                <h3 class="text-h6 mb-4">
+                <h2 class="text-h6 mb-3">
                     {{ t('report_item.attributes') }}
-                </h3>
-                <v-container v-if="reportItem.attributes && reportItem.attributes.length > 0">
+                </h2>
+                <div
+                    v-if="reportItem.attributes.length > 0"
+                    class="remote-report__attributes"
+                >
                     <RemoteAttributeContainer
                         v-for="attribute in reportItem.attributes"
                         :key="attribute.id"
                         :attribute-group="attribute"
-                        :report-item-id="Number(reportItem.id || 0)"
+                        :report-item-id="Number(reportItem.id)"
                     />
-                </v-container>
+                </div>
                 <v-alert
                     v-else
                     type="info"
+                    variant="tonal"
                 >
                     {{ t('report_item.no_attributes') }}
                 </v-alert>
@@ -58,76 +67,118 @@
 
     const { t } = useI18n()
 
-    type RemoteAttributeGroup = {
+    type RemoteAttributeValue = {
         id: number | string
-        attribute?: {
-            attribute_type?: string
-            [key: string]: unknown
-        }
+        value?: string
+        binary_mime_type?: string | null
+        binary_size?: number | null
+        binary_description?: string | null
+        attribute_group_item_title?: string | null
+        [key: string]: unknown
+    }
+
+    type RemoteAttributeGroup = {
+        id: string
+        title: string
+        attributeType: string
+        attributes: RemoteAttributeValue[]
+    }
+
+    type RemoteReportItemSummary = {
+        id: number | string
+        title?: string
+        uuid?: string
+        remote_user?: string | null
         [key: string]: unknown
     }
 
     type RemoteReportItemModel = {
-        id: number | string | null
+        id: number | string
         title: string
         uuid: string
+        remote_user: string
         attributes: RemoteAttributeGroup[]
-        [key: string]: unknown
     }
 
-    type ApiResponse<T> = {
-        data?: T
-    }
-
-    const visible = ref<boolean>(false)
-    const reportItem = ref<RemoteReportItemModel>({
-        id: null,
+    const emptyReportItem = (): RemoteReportItemModel => ({
+        id: 0,
         title: '',
         uuid: '',
+        remote_user: '',
         attributes: []
     })
 
-    const normalizeReportItem = (payload: unknown, fallback: RemoteReportItemModel): RemoteReportItemModel => {
-        if (payload && typeof payload === 'object') {
-            const candidate = payload as Partial<RemoteReportItemModel>
-            if (candidate.id !== undefined && candidate.title !== undefined && candidate.uuid !== undefined) {
-                return {
-                    id: candidate.id ?? fallback.id,
-                    title: typeof candidate.title === 'string' ? candidate.title : fallback.title,
-                    uuid: typeof candidate.uuid === 'string' ? candidate.uuid : fallback.uuid,
-                    attributes: Array.isArray(candidate.attributes) ? candidate.attributes : fallback.attributes
-                }
+    const visible = ref(false)
+    const reportItem = ref<RemoteReportItemModel>(emptyReportItem())
+
+    const groupAttributes = (attributes: unknown): RemoteAttributeGroup[] => {
+        if (!Array.isArray(attributes)) return []
+
+        const groups = new Map<string, RemoteAttributeGroup>()
+        for (const candidate of attributes) {
+            if (!candidate || typeof candidate !== 'object') continue
+            const value = candidate as RemoteAttributeValue
+            const title = value.attribute_group_item_title?.trim() || t('attribute.unknown_type')
+            const attributeType = value.binary_mime_type ? 'ATTACHMENT' : 'TEXT'
+            const key = `${title}\u0000${attributeType}`
+            let group = groups.get(key)
+            if (!group) {
+                group = { id: key, title, attributeType, attributes: [] }
+                groups.set(key, group)
             }
+            group.attributes.push(value)
         }
-        return fallback
+        return Array.from(groups.values())
     }
 
-    const showDetail = async (item: RemoteReportItemModel): Promise<void> => {
+    const showDetail = async (item: RemoteReportItemSummary): Promise<void> => {
+        if (item.id === null || item.id === undefined || item.remote_user === null || item.remote_user === undefined) return
+
         try {
-            if (item.id == null) {
-                reportItem.value = item
-                visible.value = true
-                return
+            const response = await getReportItem(item.id)
+            const data = response?.data
+            if (!data || data.remote_user === null || data.remote_user === undefined) return
+
+            reportItem.value = {
+                id: data.id,
+                title: typeof data.title === 'string' ? data.title : item.title || '',
+                uuid: typeof data.uuid === 'string' ? data.uuid : item.uuid || '',
+                remote_user: String(data.remote_user),
+                attributes: groupAttributes(data.attributes)
             }
-
-            const response = (await getReportItem(item.id)) as ApiResponse<unknown> | unknown
-            const responseData =
-                response && typeof response === 'object' && 'data' in response ? (response as ApiResponse<unknown>).data : response
-
-            reportItem.value = normalizeReportItem(responseData, item)
             visible.value = true
         } catch {
-            // Fallback to passed item data
-            reportItem.value = item
-            visible.value = true
+            window.dispatchEvent(
+                new CustomEvent('notification', {
+                    detail: { type: 'error', message: t('error.server_error') }
+                })
+            )
         }
     }
 
     const handleClose = (): void => {
         visible.value = false
+        reportItem.value = emptyReportItem()
     }
 
-    defineExpose({
-        showDetail
-    })
+    defineExpose({ showDetail })
 </script>
+
+<style scoped>
+    .remote-report__body {
+        width: min(100%, 1080px);
+        margin-inline: auto;
+        padding: 1.5rem;
+    }
+
+    .remote-report__identity {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+    }
+
+    .remote-report__attributes {
+        display: grid;
+        gap: 0.75rem;
+    }
+</style>

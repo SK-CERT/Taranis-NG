@@ -38,14 +38,22 @@
                 </div>
 
                 <span class="text-title-large mb-2">
-                    {{ card.title }}
+                    <HighlightedText
+                        :text="card.title"
+                        :words="highlightWords"
+                        :enabled="highlightWordlist"
+                    />
                 </span>
 
                 <p
                     v-if="!hideReviews"
                     class="text-body-medium text-grey mb-3"
                 >
-                    {{ card.description }}
+                    <HighlightedText
+                        :text="card.description"
+                        :words="highlightWords"
+                        :enabled="highlightWordlist"
+                    />
                 </p>
 
                 <v-row align="center">
@@ -161,6 +169,8 @@
                     :analyze-selector="analyzeSelector"
                     :hide-reviews="hideReviews"
                     :hide-source-links="hideSourceLinks"
+                    :highlight-wordlist="highlightWordlist"
+                    :highlight-words="highlightWords"
                     @show-detail="showChildDetail"
                     @update-item="updateChildItem"
                     @delete-item="deleteChildItem"
@@ -174,13 +184,16 @@
     import { computed, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useAssessStore } from '@/stores/assess'
+    import { useSettingsStore } from '@/stores/settings'
     import { useAuth } from '@/composables/useAuth'
     import { deleteNewsItemAggregate } from '@/api/assess'
     import { ICONS } from '@/config/ui-constants'
     import BaseCard from '@/components/common/BaseCard.vue'
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import CardAssessItem from '@/components/assess/CardAssessItem.vue'
+    import HighlightedText from '@/components/common/HighlightedText.vue'
     import { Action, type ActionKey } from '@/types/actions'
+    import { collectHighlightWords } from '@/utils/word-list-highlighting'
 
     type NewsItemData = {
         osint_source_name?: string
@@ -250,6 +263,7 @@
 
     const { t } = useI18n()
     const assessStore = useAssessStore()
+    const settingsStore = useSettingsStore()
     const { checkPermission } = useAuth()
     const opened = ref(false)
 
@@ -260,6 +274,7 @@
     const inProgressReportsCount = computed(() => Math.max(0, inReportsCount.value - completedReportsCount.value))
     const isAggregate = computed(() => newsItemsCount.value > 1)
     const childNewsItems = computed(() => props.card.news_items ?? [])
+    const highlightWords = computed(() => collectHighlightWords(settingsStore.getProfileWordLists))
 
     const multiSelectActive = computed(() => assessStore.getMultiSelect)
     const selectedColor = computed(() => {

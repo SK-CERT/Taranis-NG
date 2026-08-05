@@ -225,10 +225,10 @@
     const currentHotkeyAlias = ref<string>('')
 
     // Word lists
-    const wordListHeaders = [
-        { title: 'Name', key: 'name', sortable: true },
-        { title: 'Description', key: 'description', sortable: false }
-    ]
+    const wordListHeaders = computed(() => [
+        { title: t('word_lists.name'), key: 'name', sortable: true },
+        { title: t('word_lists.description'), key: 'description', sortable: false }
+    ])
     const wordLists = ref<WordListItem[]>([])
     const selectedWordLists = ref<Array<number | string>>([])
 
@@ -247,10 +247,11 @@
     const loadSettings = async (): Promise<void> => {
         try {
             // Load word lists
-            await settingsStore.loadUserWordLists()
+            await Promise.all([settingsStore.loadUserWordLists(), settingsStore.loadAvailableWordLists({ search: '' })])
             const profileWordLists = (settingsStore.getProfileWordLists || []) as WordListItem[]
-            wordLists.value = Array.isArray(profileWordLists) ? profileWordLists : []
-            selectedWordLists.value = wordLists.value.filter((wl: WordListItem) => wl.selected).map((wl: WordListItem) => wl.id)
+            const availableWordLists = (settingsStore.getAvailableWordListsComputed || []) as WordListItem[]
+            wordLists.value = Array.isArray(availableWordLists) ? availableWordLists : []
+            selectedWordLists.value = Array.isArray(profileWordLists) ? profileWordLists.map((wordList) => wordList.id) : []
 
             // Load hotkeys
             await settingsStore.loadUserHotkeys()
@@ -275,7 +276,8 @@
     const save = async (): Promise<void> => {
         try {
             // Save word lists and hotkeys (general settings are auto-saved by SettingsTable)
-            await Promise.all([settingsStore.saveUserWordLists(selectedWordLists.value), settingsStore.saveUserHotkeys(shortcuts.value)])
+            const selectedLists = selectedWordLists.value.map((id) => ({ id }))
+            await Promise.all([settingsStore.saveUserWordLists(selectedLists), settingsStore.saveUserHotkeys(shortcuts.value)])
 
             close()
         } catch (error: unknown) {

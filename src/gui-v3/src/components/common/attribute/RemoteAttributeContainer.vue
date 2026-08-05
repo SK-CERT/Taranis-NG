@@ -1,36 +1,37 @@
 <template>
-    <div>
-        <!-- TODO: Implement remote attribute container -->
-        <!-- Phase 3: Abstract dispatcher for remote read-only attributes -->
-        <!-- Handle: RemoteAttributeString, RemoteAttributeAttachment variants -->
-        <component
-            :is="getRemoteComponentName(attributeGroup.attribute?.attribute_type)"
-            v-if="getRemoteComponentName(attributeGroup.attribute?.attribute_type)"
-            :attribute-group="attributeGroup"
-            :report-item-id="reportItemId"
-        />
-        <div
-            v-else
-            class="alert alert-warning"
-        >
-            {{ t('attribute.unknown_type') }}: {{ attributeGroup.attribute?.attribute_type }}
-        </div>
-    </div>
+    <v-card
+        variant="outlined"
+        class="remote-attribute"
+    >
+        <v-card-title class="remote-attribute__title">
+            {{ attributeGroup.title }}
+        </v-card-title>
+        <v-divider />
+        <v-card-text class="remote-attribute__body">
+            <component
+                :is="attributeComponent"
+                :attribute-group="attributeGroup"
+                :report-item-id="reportItemId"
+            />
+        </v-card-text>
+    </v-card>
 </template>
 
 <script setup lang="ts">
-    import { useI18n } from 'vue-i18n'
+    import { computed } from 'vue'
     import RemoteAttributeString from './RemoteAttributeString.vue'
     import RemoteAttributeAttachment from './RemoteAttributeAttachment.vue'
 
-    const { t } = useI18n()
-
     type RemoteAttributeGroup = {
-        attribute?: {
-            attribute_type?: string
+        title: string
+        attributeType?: string
+        attributes: Array<{
+            id: number | string
+            value?: string
+            binary_size?: number | null
+            binary_description?: string | null
             [key: string]: unknown
-        }
-        [key: string]: unknown
+        }>
     }
 
     const props = defineProps<{
@@ -38,19 +39,19 @@
         reportItemId: number
     }>()
 
-    const getRemoteComponentName = (type: string | undefined): unknown => {
-        // TODO: Map attribute types to remote components
-        // Phase 3: Add mappings as remote variants are created
-        const componentMap: Record<string, unknown> = {
-            text: RemoteAttributeString,
-            string: RemoteAttributeString,
-            attachment: RemoteAttributeAttachment
-            // TODO: Add more as needed
-        }
-        return (type && componentMap[type]) || null
-    }
+    const attributeComponent = computed(() =>
+        props.attributeGroup.attributeType?.toUpperCase() === 'ATTACHMENT' ? RemoteAttributeAttachment : RemoteAttributeString
+    )
 </script>
 
 <style scoped>
-    /* TODO: Add remote container styling if needed */
+    .remote-attribute__title {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .remote-attribute__body {
+        padding: 0.75rem 1rem;
+    }
 </style>
