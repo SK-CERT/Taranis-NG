@@ -297,6 +297,7 @@
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
+    import { openInNewTabWithoutOpener } from '@/utils/window'
     import StateSelector from '@/components/common/StateSelector.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
@@ -668,8 +669,7 @@
 
             const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
             const previewUrl = `${apiBase}/publish/products/preview/${token}`
-            // Open the preview URL in a new tab
-            window.open(previewUrl, '_blank')
+            openInNewTabWithoutOpener(previewUrl)
         } catch (error: unknown) {
             console.error('Preview failed:', error)
             showError.value = true

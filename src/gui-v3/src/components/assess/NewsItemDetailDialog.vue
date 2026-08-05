@@ -146,7 +146,7 @@
                     <div class="source-body">
                         <div
                             class="text-body-2 text-medium-emphasis"
-                            v-html="firstNewsItemData?.content"
+                            v-html="sanitizedNewsItemContent"
                         />
                     </div>
 
@@ -250,6 +250,7 @@
     import AssessItemActions from '@/components/assess/AssessItemActions.vue'
     import NewsItemAttribute from '@/components/assess/NewsItemAttribute.vue'
     import { Action, type ActionKey } from '@/types/actions'
+    import { sanitizeNewsItemHtml } from '@/utils/sanitizeNewsItemHtml'
 
     type NewsAttributeItem = {
         id: number | string
@@ -377,6 +378,10 @@
 
     const firstNewsItemData = computed(() => {
         return newsItem.value.news_items?.[0]?.news_item_data || {}
+    })
+
+    const sanitizedNewsItemContent = computed(() => {
+        return sanitizeNewsItemHtml(firstNewsItemData.value.content)
     })
 
     const newsItemLink = computed(() => {

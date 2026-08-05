@@ -15,7 +15,7 @@
                     v-if="readOnly || value.remote"
                     class="richtext-display pa-3 rounded"
                 >
-                    <div v-html="sanitizeHtml(value.value)" />
+                    <div v-html="sanitizeRichTextHtml(value.value)" />
                 </div>
 
                 <!-- Editable -->
@@ -49,6 +49,7 @@
     import AttributeItemLayout from './AttributeItemLayout.vue'
     import AttributeValueLayout from './AttributeValueLayout.vue'
     import { useAttributes } from './useAttributes'
+    import { sanitizeRichTextHtml } from '@/utils/sanitizeRichTextHtml'
 
     type AttributeValueItem = {
         index?: string | number
@@ -80,97 +81,6 @@
     )
 
     const { canModify, addInitialValues, addButtonVisible, add, del, onBlur } = useAttributes(props)
-
-    // Basic HTML sanitization - removes potentially dangerous tags/attributes
-    const sanitizeHtml = (html: string | null | undefined): string => {
-        if (!html) return ''
-        try {
-            // Create a temporary element to parse HTML
-            const temp = document.createElement('div')
-            temp.innerHTML = html
-
-            // List of allowed HTML tags for rich text
-            const allowedTags = [
-                'p',
-                'br',
-                'b',
-                'i',
-                'u',
-                's',
-                'em',
-                'strong',
-                'span',
-                'div',
-                'ul',
-                'ol',
-                'li',
-                'a',
-                'h1',
-                'h2',
-                'h3',
-                'h4',
-                'h5',
-                'h6',
-                'blockquote',
-                'pre',
-                'code'
-            ]
-            const allowedAttrs = ['class', 'style', 'href', 'target', 'rel']
-
-            // Walk through all nodes and remove unsafe ones
-            const walk = (node: Node): void => {
-                const nodesToRemove: Node[] = []
-                for (let i = 0; i < node.childNodes.length; i++) {
-                    const child = node.childNodes[i]
-                    if (!child) {
-                        continue
-                    }
-                    if (child.nodeType === 1) {
-                        // Element node
-                        const element = child as Element
-                        const tagName = element.tagName.toLowerCase()
-
-                        if (!allowedTags.includes(tagName)) {
-                            // Keep content but remove the tag
-                            while (child.childNodes.length) {
-                                const firstChild = child.childNodes[0]
-                                if (!firstChild) {
-                                    break
-                                }
-                                node.insertBefore(firstChild as Node, child)
-                            }
-                            nodesToRemove.push(child)
-                        } else {
-                            // Remove unsafe attributes
-                            const attrs = element.attributes
-                            for (let j = attrs.length - 1; j >= 0; j--) {
-                                const attr = attrs[j]
-                                if (!attr) {
-                                    continue
-                                }
-                                if (!allowedAttrs.includes(attr.name)) {
-                                    element.removeAttribute(attr.name)
-                                }
-                            }
-                            // Sanitize href to prevent javascript: URLs
-                            const href = element.getAttribute('href')
-                            if (href && href.startsWith('javascript:')) {
-                                element.removeAttribute('href')
-                            }
-                            walk(element)
-                        }
-                    }
-                }
-                nodesToRemove.forEach((childNode) => childNode.parentNode?.removeChild(childNode))
-            }
-
-            walk(temp)
-            return temp.innerHTML
-        } catch {
-            // Fallback: return text with tags stripped
-            return html.replace(/<[^>]*>/g, '')
-        }
-    }
 
     // Count words in rich text (strips HTML)
     const getWordCount = (html: string | null | undefined): number => {
