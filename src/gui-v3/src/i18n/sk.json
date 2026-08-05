@@ -139,7 +139,10 @@
         "my_assets": "Aktíva"
     },
     "dashboard": {
+        "subtitle": "Pracovný priestor operatívneho spravodajstva",
+        "refresh": "Obnoviť dashboard",
         "assess": {
+            "trending": "Aktuálne trendy",
             "tagcloud": "Tagcloud pre najnovšie získané novinky",
             "total": "noviniek spolu"
         },
@@ -160,6 +163,7 @@
             "total": "publikácií spolu"
         },
         "about": {
+            "system": "Systém",
             "title": "O aplikácii",
             "version": "Verzia",
             "commit": "Commit",

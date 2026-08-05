@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        class="pa-2"
+        :class="isDenseList ? 'pa-0' : 'pa-2'"
     >
         <div
             class="card-container d-flex align-center"
@@ -25,23 +25,30 @@
             <v-hover v-slot="{ isHovering, props: hoverProps }">
                 <v-card
                     v-bind="hoverProps"
-                    :elevation="isHovering ? 12 : 2"
+                    :elevation="isDenseList ? 0 : isHovering ? 12 : 2"
                     class="card-compact flex-grow-1"
+                    :class="{
+                        'card-compact--review review-list__row': isReviewCard,
+                        'card-compact--list': listMode
+                    }"
                     @click="handleClick"
                 >
-                    <v-card-text>
+                    <v-card-text class="compact-card__body">
                         <!-- Top-aligned so every field label sits at the same height: with
                              align="center" a column whose value is empty (or shorter than its
                              neighbours) gets centred on its own, dropping its label lower than
                              the rest. The icon and the delete button stay centred individually. -->
-                        <v-row align="start">
+                        <v-row
+                            align="start"
+                            class="compact-card__row"
+                        >
                             <!-- Icon/Tag -->
                             <v-col
                                 cols="auto"
-                                class="pr-4 align-self-center"
+                                class="compact-card__icon align-self-center"
                             >
                                 <v-icon
-                                    size="large"
+                                    :size="isDenseList ? 'small' : 'large'"
                                     color="primary"
                                 >
                                     {{ card.tag || ICONS.FILE_DOCUMENT }}
@@ -49,7 +56,7 @@
                             </v-col>
 
                             <!-- Title -->
-                            <v-col>
+                            <v-col class="compact-card__primary">
                                 <div class="text-label-small text-grey">
                                     {{ typeLabel }}
                                 </div>
@@ -118,6 +125,68 @@
                                 </div>
                             </v-col>
 
+                            <v-col
+                                v-if="isReviewCard"
+                                cols="auto"
+                                class="compact-review-meta align-self-center"
+                            >
+                                <v-chip
+                                    v-if="hasWorkflowState && card.state"
+                                    :color="card.state.color || 'primary'"
+                                    variant="tonal"
+                                    size="x-small"
+                                    :title="card.state.description"
+                                >
+                                    <v-icon
+                                        v-if="card.state.icon"
+                                        start
+                                        size="13"
+                                    >
+                                        {{ card.state.icon }}
+                                    </v-icon>
+                                    {{ stateLabel }}
+                                </v-chip>
+
+                                <v-chip
+                                    v-if="!hasWorkflowState && inProgressReportsCount > 0"
+                                    color="orange"
+                                    variant="tonal"
+                                    size="x-small"
+                                >
+                                    <v-icon
+                                        start
+                                        size="13"
+                                        >mdi-progress-clock</v-icon
+                                    >
+                                    {{ t('card_item.in_analyze') }}
+                                    <span v-if="inProgressReportsCount > 1">&nbsp;{{ inProgressReportsCount }}</span>
+                                </v-chip>
+
+                                <v-chip
+                                    v-if="!hasWorkflowState && completedReportsCount > 0"
+                                    color="green"
+                                    variant="tonal"
+                                    size="x-small"
+                                >
+                                    <v-icon
+                                        start
+                                        size="13"
+                                        >mdi-check-circle</v-icon
+                                    >
+                                    {{ t('card_item.analyzed') }}
+                                    <span v-if="completedReportsCount > 1">&nbsp;{{ completedReportsCount }}</span>
+                                </v-chip>
+
+                                <span
+                                    v-if="reviewItemCount > 0"
+                                    class="compact-review-count"
+                                    :title="reviewCountTitle"
+                                >
+                                    <v-icon size="14">mdi-newspaper-variant-outline</v-icon>
+                                    {{ reviewItemCount }}
+                                </span>
+                            </v-col>
+
                             <!-- Actions -->
                             <v-col
                                 v-if="canDelete"
@@ -158,6 +227,7 @@
     type CardData = {
         id?: string | number
         title?: string
+        title_prefix?: string
         name?: string
         subtitle?: string
         description?: string
@@ -180,6 +250,17 @@
         item_name?: string
         report_type_name?: string
         product_type_name?: string
+        report_items_count?: number
+        news_items_count?: number
+        in_reports_count?: number
+        completed_reports_count?: number
+        state?: {
+            color?: string
+            icon?: string
+            name?: string
+            display_name?: string
+            description?: string
+        }
         news_items?: Array<{
             news_item_data?: {
                 osint_source_name?: string
@@ -196,18 +277,20 @@
             multiSelectActive?: boolean
             preselected?: boolean
             lockDefault?: boolean
+            listMode?: boolean
         }>(),
         {
             deletePermission: '',
             multiSelectActive: false,
             preselected: false,
-            lockDefault: false
+            lockDefault: false,
+            listMode: false
         }
     )
 
-    const emit = defineEmits(['click', 'delete', 'edit', 'selection-change'])
+    const emit = defineEmits(['click', 'delete', 'edit', 'show-detail', 'selection-change'])
 
-    const { t } = useI18n()
+    const { t, te } = useI18n()
     const { checkPermission } = useAuth()
 
     const deleteDialog = ref(false)
@@ -241,6 +324,27 @@
     // optional on these records, and an empty one would otherwise drop the whole labelled column
     // and leave the card looking unlike its siblings.
     const isModulePreset = computed(() => props.card?.presenter_id != null || props.card?.publisher_id != null || props.card?.bot_id != null)
+
+    const isReviewCard = computed(
+        () => props.card?.report_type_name != null || props.card?.product_type_name != null || Array.isArray(props.card?.news_items)
+    )
+    const isDenseList = computed(() => isReviewCard.value || props.listMode)
+    const hasWorkflowState = computed(() => props.card?.report_type_name != null || props.card?.product_type_name != null)
+    const reviewItemCount = computed(() =>
+        Number(props.card?.report_items_count ?? props.card?.news_items_count ?? props.card?.news_items?.length ?? 0)
+    )
+    const reviewCountTitle = computed(() =>
+        props.card?.product_type_name != null ? t('nav_menu.report_items') : t('card_item.aggregated_items')
+    )
+    const completedReportsCount = computed(() => Number(props.card?.completed_reports_count ?? 0))
+    const inProgressReportsCount = computed(() =>
+        Math.max(0, Number(props.card?.in_reports_count ?? 0) - completedReportsCount.value)
+    )
+    const stateLabel = computed(() => {
+        const label = props.card?.state?.display_name || props.card?.state?.name || ''
+        const key = `workflow.states.${label}`
+        return label && te(key) ? t(key) : label
+    })
 
     const typeLabel = computed(() => {
         // Node-type items (collectors/presenters/publishers/bots nodes) carry an api_url.
@@ -276,11 +380,12 @@
     })
 
     const typeValue = computed(() => {
-        return props.card?.title || props.card?.name || ''
+        const value = props.card?.title || props.card?.name || ''
+        return props.card?.title_prefix ? `${props.card.title_prefix} — ${value}` : value
     })
 
     const handleClick = (): void => {
-        emit('edit', props.card as CardData)
+        emit(isReviewCard.value ? 'show-detail' : 'edit', props.card as CardData)
     }
 
     const showDeleteDialog = (): void => {
@@ -328,5 +433,98 @@
 
     .card-compact:hover {
         transform: translateY(-2px);
+    }
+
+    .card-compact--review,
+    .card-compact--list {
+        border: 1px solid var(--review-list-border);
+        border-inline-width: 0;
+        border-radius: 0;
+        background: var(--review-list-row);
+        box-shadow: none;
+        transform: none !important;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+    }
+
+    .card-compact--review:hover,
+    .card-compact--list:hover {
+        background: var(--review-list-row-hover);
+    }
+
+    .card-compact--review .compact-card__body,
+    .card-compact--list .compact-card__body {
+        padding: 0.35rem 0.55rem !important;
+    }
+
+    .card-compact--review .compact-card__row,
+    .card-compact--list .compact-card__row {
+        margin: 0;
+        align-items: center !important;
+    }
+
+    .card-compact--review .compact-card__row > :deep(.v-col),
+    .card-compact--list .compact-card__row > :deep(.v-col) {
+        min-width: 0;
+        padding: 0.15rem 0.35rem;
+    }
+
+    .card-compact--review .compact-card__icon,
+    .card-compact--list .compact-card__icon {
+        padding-inline: 0.25rem 0.45rem !important;
+    }
+
+    .card-compact--review .card-field-value,
+    .card-compact--list .card-field-value {
+        overflow: hidden;
+        min-height: 1.2em;
+        font-size: 0.84rem;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .card-compact--review .compact-card__primary .card-field-value,
+    .card-compact--list .compact-card__primary .card-field-value {
+        color: rgb(var(--v-theme-on-surface));
+        font-weight: 650;
+    }
+
+    .card-compact--review :deep(.text-label-small),
+    .card-compact--list :deep(.text-label-small) {
+        font-size: 0.64rem;
+        line-height: 1.1;
+    }
+
+    .compact-review-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 12rem;
+        max-width: 12rem;
+        flex: 0 0 12rem;
+        gap: 0.3rem;
+        white-space: nowrap;
+    }
+
+    .compact-review-meta :deep(.v-chip) {
+        height: 22px;
+        border-radius: 3px;
+        font-size: 0.68rem;
+        font-weight: 650;
+    }
+
+    .compact-review-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        color: rgba(var(--v-theme-on-surface), 0.62);
+        font-size: 0.72rem;
+        font-weight: 650;
+    }
+
+    .card-compact--review + * {
+        margin-top: 0;
     }
 </style>

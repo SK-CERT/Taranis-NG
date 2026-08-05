@@ -1,22 +1,25 @@
 <template>
-    <v-list density="compact">
+    <v-list
+        density="compact"
+        class="section-navigation"
+    >
         <!-- Group links -->
         <v-list-subheader>{{ $t('analyze.source') }}</v-list-subheader>
         <v-list-item
             v-for="link in links"
             :key="link.route"
             :to="link.route"
-            class="pa-2"
+            class="section-navigation__item"
         >
             <template #default>
-                <div class="d-flex flex-column align-center text-center">
+                <div class="section-navigation__content">
                     <v-icon
                         :color="link.color || undefined"
-                        class="mb-2"
+                        size="22"
                     >
                         {{ link.icon }}
                     </v-icon>
-                    <span class="text-body-small">
+                    <span class="section-navigation__label">
                         {{ link.translate ? $t(link.title) : link.title }}
                     </span>
                 </div>
@@ -86,3 +89,25 @@
         }
     })
 </script>
+
+<style scoped>
+    .section-navigation__item {
+        padding: 0.35rem 0.45rem !important;
+    }
+
+    .section-navigation__content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .section-navigation__label {
+        overflow: hidden;
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>

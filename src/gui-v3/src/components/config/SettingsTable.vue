@@ -9,17 +9,16 @@
         <v-card :flat="!globalSetting">
             <!-- Toolbar -->
             <v-card-text>
-                <v-row>
-                    <v-col cols="8">
+                <v-row class="settings-search-row">
+                    <v-col
+                        cols="12"
+                        md="7"
+                    >
                         <SearchField
                             v-model="search"
                             :width="350"
                         />
                     </v-col>
-                    <v-col
-                        cols="4"
-                        class="text-right"
-                    />
                 </v-row>
             </v-card-text>
 
@@ -29,10 +28,11 @@
                 :search="search"
                 :items-per-page="-1"
                 item-key="id"
-                :sort-by="[{ key: 'description', order: 'asc' }]"
+                :sort-by="globalSetting ? [{ key: 'description', order: 'asc' }] : []"
                 density="compact"
                 hide-default-footer
-                :class="{ 'elevation-1': globalSetting }"
+                class="settings-table"
+                :class="{ 'elevation-1': globalSetting, 'settings-table--personal': !globalSetting }"
             >
                 <template #item.value="{ item }">
                     <!-- Boolean setting (switch) -->
@@ -56,6 +56,7 @@
                             variant="outlined"
                             density="compact"
                             hide-details
+                            :prepend-inner-icon="getSelectIcon(item)"
                             @update:model-value="(val) => updateSetting(item, val)"
                         />
                     </template>
@@ -74,12 +75,21 @@
                 </template>
 
                 <template #item.description="{ item }">
-                    <span
-                        style="cursor: help"
-                        :title="`${t('settings.default_value')}: ${item.default_val}`"
-                    >
-                        {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
-                    </span>
+                    <div :class="{ 'setting-label': !globalSetting }">
+                        <span
+                            v-if="!globalSetting"
+                            class="setting-label__icon"
+                        >
+                            <v-icon size="20">{{ getSettingIcon(item.key) }}</v-icon>
+                        </span>
+                        <span
+                            class="setting-label__text"
+                            style="cursor: help"
+                            :title="`${t('settings.default_value')}: ${item.default_val}`"
+                        >
+                            {{ te('settings_enum.' + item.key) ? t('settings_enum.' + item.key) : item.description }}
+                        </span>
+                    </div>
                 </template>
 
                 <template #item.updated_at="{ item }">
@@ -210,6 +220,27 @@
         return value === defaultValue ? 'grey' : 'success'
     }
 
+    const settingIcons: Record<SettingKey, string> = {
+        [Settings.DATE_FORMAT]: 'mdi-calendar-range',
+        [Settings.REPORT_SELECTOR_READ_ONLY]: 'mdi-eye-lock-outline',
+        [Settings.TIME_FORMAT]: 'mdi-clock-outline',
+        [Settings.CASCADE_STATES_ENABLED]: 'mdi-state-machine',
+        [Settings.CONTENT_DEFAULT_LANGUAGE]: 'mdi-file-document-edit-outline',
+        [Settings.DARK_THEME]: 'mdi-theme-light-dark',
+        [Settings.HOTKEYS]: 'mdi-keyboard-outline',
+        [Settings.SPELLCHECK]: 'mdi-spellcheck',
+        [Settings.TAG_COLOR]: 'mdi-palette-outline',
+        [Settings.UI_LANGUAGE]: 'mdi-web'
+    }
+
+    const getSettingIcon = (key: SettingKey): string => settingIcons[key] || 'mdi-tune-variant'
+
+    const getSelectIcon = (item: SettingsRecord): string | undefined => {
+        if (item.key === Settings.UI_LANGUAGE) return 'mdi-web'
+        if (item.key === Settings.CONTENT_DEFAULT_LANGUAGE) return 'mdi-translate'
+        return undefined
+    }
+
     const formatDate = (dateString?: string): string => {
         if (!dateString) return ''
         try {
@@ -224,7 +255,7 @@
         if (item.key === Settings.UI_LANGUAGE) {
             return supportedLocales.map((code) => ({
                 id: code,
-                txt: getLanguageName(code)
+                txt: `${getLanguageName(code, undefined, true)} (${code})`
             }))
         }
 
@@ -245,12 +276,12 @@
         }
     }
 
-    const getLanguageName = (code: string, defaultName?: string): string => {
+    const getLanguageName = (code: string, defaultName?: string, native = false): string => {
         try {
             // Try to use Intl.DisplayNames for multilingual support
             if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
                 try {
-                    const displayNames = new Intl.DisplayNames([locale.value, 'en'], { type: 'language' })
+                    const displayNames = new Intl.DisplayNames(native ? [code, 'en'] : [locale.value, 'en'], { type: 'language' })
                     return displayNames.of(code) || defaultName || code
                 } catch {
                     // Fallback
@@ -274,12 +305,31 @@
         }
         date_format = settingsStore.getDateTimeFormat
 
-        const filtered = allSettings.filter((item: SettingsRecord) => {
+        const settingsRecords = allSettings as SettingsRecord[]
+        const filtered = settingsRecords.filter((item) => {
             const settingsItem = item as SettingsRecord
+            if (!props.globalSetting && settingsItem.key === Settings.TAG_COLOR) return false
             return settingsItem.is_global === props.globalSetting
         })
 
-        records.value = filtered as SettingsRecord[]
+        if (props.globalSetting) {
+            records.value = filtered as SettingsRecord[]
+            return
+        }
+
+        const personalSettingOrder: Partial<Record<SettingKey, number>> = {
+            [Settings.UI_LANGUAGE]: 0,
+            [Settings.CONTENT_DEFAULT_LANGUAGE]: 1
+        }
+
+        records.value = [...filtered].sort((left, right) => {
+            const priorityDifference = (personalSettingOrder[left.key] ?? 10) - (personalSettingOrder[right.key] ?? 10)
+            if (priorityDifference !== 0) return priorityDifference
+
+            const leftLabel = te('settings_enum.' + left.key) ? t('settings_enum.' + left.key) : left.description || ''
+            const rightLabel = te('settings_enum.' + right.key) ? t('settings_enum.' + right.key) : right.description || ''
+            return leftLabel.localeCompare(rightLabel, locale.value)
+        })
     }
 
     const validateValue = (item: SettingsRecord, value: string): string => {
@@ -368,9 +418,78 @@
 </script>
 
 <style scoped>
+    .settings-search-row {
+        margin-bottom: 0.25rem;
+    }
+
+    .settings-table--personal {
+        overflow: hidden;
+        border: 1px solid var(--review-panel-border);
+        border-radius: 5px;
+        background: rgb(var(--v-theme-surface));
+        box-shadow: 0 4px 14px rgba(16, 43, 67, 0.1);
+    }
+
+    .settings-table--personal :deep(thead) {
+        background: rgba(var(--v-theme-surface-variant), 0.42);
+    }
+
+    .settings-table--personal :deep(th) {
+        height: 44px;
+        font-weight: 700;
+    }
+
+    .settings-table--personal :deep(td) {
+        height: 66px;
+        padding-block: 0.55rem;
+        border-bottom-color: var(--review-list-border) !important;
+    }
+
+    .settings-table--personal :deep(td:last-child) {
+        width: 42%;
+    }
+
+    .settings-table--personal :deep(.v-select) {
+        width: min(100%, 330px);
+    }
+
+    .setting-label {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .setting-label__icon {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        place-items: center;
+        border: 1px solid rgba(var(--v-theme-primary), 0.2);
+        border-radius: 4px;
+        background: rgba(var(--v-theme-primary), 0.08);
+        color: rgb(var(--v-theme-primary));
+    }
+
+    .setting-label__text {
+        min-width: 0;
+        font-weight: 550;
+    }
+
     .wrap-text-cell {
         white-space: normal;
         word-wrap: break-word;
         word-break: break-word;
+    }
+
+    @media (max-width: 700px) {
+        .settings-table--personal :deep(td:last-child) {
+            width: 48%;
+        }
+
+        .setting-label {
+            gap: 0.5rem;
+        }
     }
 </style>

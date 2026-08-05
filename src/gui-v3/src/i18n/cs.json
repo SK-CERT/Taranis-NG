@@ -139,7 +139,10 @@
         "my_assets": "Aktiva"
     },
     "dashboard": {
+        "subtitle": "Pracovní prostor pro operativní zpravodajství",
+        "refresh": "Obnovit dashboard",
         "assess": {
+            "trending": "Aktuální trendy",
             "tagcloud": "Mrak štítků pro shromážděné novinky",
             "total": "novinek celkem"
         },
@@ -160,6 +163,7 @@
             "total": "publikací celkem"
         },
         "about": {
+            "system": "Systém",
             "title": "O aplikaci",
             "version": "Verze",
             "commit": "Commit",

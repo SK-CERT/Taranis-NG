@@ -139,7 +139,10 @@
         "my_assets": "Mijn bedrijfsmiddelen"
     },
     "dashboard": {
+        "subtitle": "Werkruimte voor operationele inlichtingen",
+        "refresh": "Dashboard vernieuwen",
         "assess": {
+            "trending": "Actuele inlichtingentrends",
             "tagcloud": "Tagwolk voor de laatst verzamelde nieuwsitems",
             "total": "nieuwsitems in totaal"
         },
@@ -160,6 +163,7 @@
             "total": "producten in totaal"
         },
         "about": {
+            "system": "Systeem",
             "title": "Over",
             "version": "Versie",
             "commit": "Commit",

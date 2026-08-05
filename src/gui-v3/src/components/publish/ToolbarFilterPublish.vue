@@ -44,6 +44,7 @@
         flat
         color="surface"
         density="compact"
+        class="publish-action-bar"
     >
         <ToolbarGroup
             ref="toolbarGroup"
@@ -193,3 +194,14 @@
         emitFilter()
     })
 </script>
+
+<style scoped>
+    .publish-action-bar {
+        border-top: 1px solid rgba(var(--v-theme-outline), 0.2);
+    }
+
+    .publish-action-bar :deep(.v-btn) {
+        border-radius: 3px;
+        box-shadow: none;
+    }
+</style>

@@ -1,151 +1,109 @@
 <template>
-    <v-container
-        fluid
-        class="py-0"
-    >
-        <!-- Main Toolbar: Title and Search -->
-        <v-toolbar
-            flat
-            color="surface"
-            density="compact"
-        >
-            <v-row align="center">
-                <v-col
-                    cols="12"
-                    md="3"
-                >
-                    <div class="text-h6">
-                        {{ t(title) }}
-                    </div>
-                </v-col>
-                <v-col
-                    cols="6"
-                    md="4"
-                >
-                    <!-- Underlined, label-less variant used by the content toolbars
-                         (Assess / Analyze / Publish); preserves the existing look. -->
-                    <SearchField
-                        v-model="localFilter.search"
-                        :label="''"
-                        variant="underlined"
-                        clearable
-                        @update:model-value="handleSearch"
-                    />
-                </v-col>
-                <v-col
-                    cols="12"
-                    md="5"
-                    style="display: flex; justify-content: flex-end; align-items: center"
-                >
-                    <AddNewButton
-                        v-if="showAddButton"
-                        label="common.add_btn"
-                        @click="emit('add-new')"
-                    />
-                    <slot
-                        v-else
-                        name="addbutton"
-                    />
-                </v-col>
-            </v-row>
-        </v-toolbar>
+    <section class="toolbar-filter">
+        <header class="toolbar-filter__header">
+            <div class="toolbar-filter__heading">
+                <h1 class="toolbar-filter__title">{{ t(title) }}</h1>
+            </div>
 
-        <v-divider />
-
-        <!-- Filter Toolbar -->
-        <v-toolbar
-            flat
-            color="surface"
-            density="compact"
-        >
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%">
-                <!-- Day Range Filters (optional) -->
-                <div
-                    v-if="showDayRanges"
-                    style="display: flex; gap: 4px; flex-wrap: wrap"
-                >
-                    <v-chip
-                        v-for="day in typedDayRanges"
-                        :key="day.value"
-                        :color="localFilter.range === day.value ? 'primary' : 'default'"
-                        :variant="localFilter.range === day.value ? 'flat' : 'outlined'"
-                        size="small"
-                        :title="t(day.tooltip)"
-                        @click="handleRangeChange(day.value)"
-                    >
-                        {{ t(day.label) }}
-                    </v-chip>
-                </div>
-
-                <v-divider
-                    v-if="showDayRanges && (hasCustomFilters || showSort)"
-                    vertical
+            <div class="toolbar-filter__search">
+                <SearchField
+                    v-model="localFilter.search"
+                    :label="''"
+                    variant="outlined"
+                    clearable
+                    @update:model-value="handleSearch"
                 />
+            </div>
 
-                <!-- Custom Filters Slot -->
+            <div class="toolbar-filter__primary-action">
+                <AddNewButton
+                    v-if="showAddButton"
+                    :label="addButtonLabel"
+                    @click="emit('add-new')"
+                />
+                <slot
+                    v-else
+                    name="addbutton"
+                />
+            </div>
+        </header>
+
+        <div class="toolbar-filter__controls">
+            <div
+                v-if="showDayRanges"
+                class="toolbar-filter__ranges"
+            >
+                <v-chip
+                    v-for="day in typedDayRanges"
+                    :key="day.value"
+                    :color="localFilter.range === day.value ? 'primary' : 'default'"
+                    :variant="localFilter.range === day.value ? 'tonal' : 'text'"
+                    size="small"
+                    :title="t(day.tooltip)"
+                    @click="handleRangeChange(day.value)"
+                >
+                    {{ t(day.label) }}
+                </v-chip>
+            </div>
+
+            <div
+                v-if="showDayRanges && (hasCustomFilters || showSort)"
+                class="toolbar-filter__separator"
+            />
+
+            <div class="toolbar-filter__custom">
                 <slot
                     name="custom-filters"
                     :filter="localFilter"
                     :emit-filter="emitFilter"
                 />
-
-                <div
-                    v-if="hasCustomFilters && showSort"
-                    style="flex-grow: 1"
-                />
-
-                <!-- Sort Buttons (optional) -->
-                <div
-                    v-if="showSort"
-                    style="display: flex; gap: 4px; flex-wrap: wrap"
-                >
-                    <slot
-                        name="sort-buttons"
-                        :filter="localFilter"
-                        :emit-filter="emitFilter"
-                        :toggle-date-sort="toggleDateSort"
-                    >
-                        <!-- Default: Single date sort toggle button -->
-                        <v-chip
-                            :color="localFilter.sort === 'DATE_DESC' || localFilter.sort === 'DATE_ASC' ? 'primary' : 'default'"
-                            :variant="localFilter.sort === 'DATE_DESC' || localFilter.sort === 'DATE_ASC' ? 'flat' : 'outlined'"
-                            size="small"
-                            :title="dateSortTooltip"
-                            @click="toggleDateSort"
-                        >
-                            <v-icon start>
-                                {{ ICONS.CLOCK }}
-                            </v-icon>
-                            <v-icon>{{ dateSortIcon }}</v-icon>
-                        </v-chip>
-                    </slot>
-                </div>
             </div>
-        </v-toolbar>
 
-        <v-divider />
-
-        <!-- Count Information Toolbar (Total and Selected) -->
-        <v-toolbar
-            flat
-            color="surface"
-            density="compact"
-        >
-            <span class="text-caption text-medium-emphasis">
-                {{ $t('toolbar_filter.total_count') }}: <strong>{{ totalCount }}</strong>
-                <span v-if="currentlyShowingCount !== undefined">
-                    ({{ t('toolbar_filter.currently_showing') }}: <strong>{{ currentlyShowingCount }}</strong
-                    >)
-                </span>
-                <span
-                    v-if="showSelectedCount"
-                    class="text-caption text-medium-emphasis"
+            <div
+                v-if="showSort"
+                class="toolbar-filter__sort"
+            >
+                <slot
+                    name="sort-buttons"
+                    :filter="localFilter"
+                    :emit-filter="emitFilter"
+                    :toggle-date-sort="toggleDateSort"
                 >
-                    {{ $t('toolbar_filter.selected_count') }}: <strong>{{ selectedCount }}</strong>
-                </span>
+                    <v-chip
+                        color="primary"
+                        variant="flat"
+                        size="small"
+                        :title="dateSortTooltip"
+                        @click="toggleDateSort"
+                    >
+                        <v-icon start>{{ ICONS.CLOCK }}</v-icon>
+                        <v-icon>{{ dateSortIcon }}</v-icon>
+                    </v-chip>
+                </slot>
+            </div>
+        </div>
+
+        <footer class="toolbar-filter__summary">
+            <span class="toolbar-filter__metric">
+                {{ t(totalCountTitle) }}
+                <strong>{{ totalCount }}</strong>
             </span>
-        </v-toolbar>
-    </v-container>
+            <span
+                v-if="currentlyShowingCount !== undefined"
+                class="toolbar-filter__metric"
+            >
+                {{ t('toolbar_filter.currently_showing') }}
+                <strong>{{ currentlyShowingCount }}</strong>
+            </span>
+            <span
+                v-if="showSelectedCount"
+                class="toolbar-filter__metric toolbar-filter__metric--selected"
+            >
+                {{ t('toolbar_filter.selected_count') }}
+                <strong>{{ selectedCount }}</strong>
+            </span>
+        </footer>
+    </section>
 </template>
 
 <script setup lang="ts">
@@ -172,6 +130,14 @@
         title: {
             type: String,
             required: true
+        },
+        totalCountTitle: {
+            type: String,
+            default: 'toolbar_filter.total_count'
+        },
+        addButtonLabel: {
+            type: String,
+            default: 'common.add_btn'
         },
         showAddButton: {
             type: Boolean,
@@ -301,8 +267,163 @@
 </script>
 
 <style scoped>
-    /* Ensures horizontal scrolling for filters on small screens */
-    .v-toolbar :deep(.v-toolbar__content) {
-        overflow-x: auto;
+    .toolbar-filter {
+        width: 100%;
+    }
+
+    .toolbar-filter__header {
+        display: grid;
+        grid-template-columns: minmax(12rem, 0.7fr) minmax(18rem, 1fr) auto;
+        align-items: center;
+        gap: clamp(0.65rem, 1.2vw, 1.2rem);
+        min-height: 58px;
+        padding: 0.5rem 0.8rem;
+    }
+
+    .toolbar-filter__heading {
+        min-width: 0;
+    }
+
+    .toolbar-filter__title {
+        overflow: hidden;
+        margin: 0;
+        color: rgb(var(--v-theme-on-surface));
+        font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .toolbar-filter__search {
+        min-width: 0;
+    }
+
+    .toolbar-filter__search :deep(.v-input__details) {
+        display: none;
+    }
+
+    .toolbar-filter__search :deep(.v-field) {
+        border-radius: 3px;
+        background: rgba(var(--v-theme-surface-variant), 0.6);
+    }
+
+    .toolbar-filter__primary-action {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: max-content;
+    }
+
+    .toolbar-filter__controls {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-height: 40px;
+        padding: 0.3rem 0.8rem;
+        border-top: 1px solid rgba(var(--v-theme-outline), 0.22);
+        background: var(--filter-controls-bg);
+    }
+
+    .toolbar-filter__ranges,
+    .toolbar-filter__custom,
+    .toolbar-filter__sort {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-filter__ranges {
+        min-width: 0;
+    }
+
+    .toolbar-filter__sort {
+        margin-inline-start: auto;
+    }
+
+    .toolbar-filter__separator {
+        width: 1px;
+        height: 24px;
+        flex: 0 0 auto;
+        background: rgba(var(--v-theme-outline), 0.4);
+    }
+
+    .toolbar-filter__controls :deep(.v-chip) {
+        border-radius: 3px;
+        font-weight: 600;
+    }
+
+    .toolbar-filter__summary {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-height: 28px;
+        padding: 0.25rem 0.8rem;
+        border-top: 1px solid rgba(var(--v-theme-outline), 0.18);
+    }
+
+    .toolbar-filter__metric {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: rgba(var(--v-theme-on-surface), 0.62);
+        font-size: 0.75rem;
+    }
+
+    .toolbar-filter__metric + .toolbar-filter__metric::before {
+        width: 3px;
+        height: 3px;
+        margin-inline-end: 0.25rem;
+        border-radius: 50%;
+        background: rgba(var(--v-theme-on-surface), 0.35);
+        content: '';
+    }
+
+    .toolbar-filter__metric strong {
+        color: rgb(var(--v-theme-on-surface));
+        font-size: 0.82rem;
+    }
+
+    .toolbar-filter__metric--selected strong {
+        color: rgb(var(--v-theme-primary));
+    }
+
+    @media (max-width: 900px) {
+        .toolbar-filter__header {
+            grid-template-columns: 1fr auto;
+        }
+
+        .toolbar-filter__search {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+    }
+
+    @media (max-width: 620px) {
+        .toolbar-filter__header {
+            gap: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        .toolbar-filter__controls {
+            align-items: flex-start;
+            padding: 0.3rem 0.5rem;
+            overflow-x: auto;
+        }
+
+        .toolbar-filter__ranges {
+            flex-wrap: nowrap;
+        }
+
+        .toolbar-filter__custom {
+            flex-wrap: nowrap;
+        }
+
+        .toolbar-filter__summary {
+            flex-wrap: wrap;
+            padding-inline: 0.5rem;
+        }
     }
 </style>

@@ -139,7 +139,10 @@
         "my_assets": "我的资产"
     },
     "dashboard": {
+        "subtitle": "运营情报工作区",
+        "refresh": "刷新仪表板",
         "assess": {
+            "trending": "热门情报趋势",
             "tagcloud": "最新采集新闻条目的标签云",
             "total": "新闻条目总数"
         },
@@ -160,6 +163,7 @@
             "total": "产品总数"
         },
         "about": {
+            "system": "系统",
             "title": "关于",
             "version": "版本",
             "commit": "提交",

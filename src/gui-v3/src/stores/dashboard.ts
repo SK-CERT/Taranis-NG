@@ -2,6 +2,11 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { getDashboardData } from '@/api/dashboard'
 
+type DailyNewsItemCount = {
+    date: string
+    count: number
+}
+
 type DashboardData = {
     total_news_items: number
     total_products: number
@@ -10,6 +15,7 @@ type DashboardData = {
     product_states: Record<string, unknown>
     total_database_items: number
     latest_collected: string
+    news_items_by_day: DailyNewsItemCount[]
     tag_cloud: unknown[]
     [key: string]: unknown
 }
@@ -32,6 +38,20 @@ const normalizeTagCloud = (value: unknown): unknown[] => {
     return []
 }
 
+const normalizeDailyNewsItems = (value: unknown): DailyNewsItemCount[] => {
+    if (!Array.isArray(value)) return []
+
+    return value
+        .map((entry) => {
+            const item = asObject(entry)
+            return {
+                date: asString(item['date']),
+                count: asNumber(item['count'])
+            }
+        })
+        .filter((entry) => entry.date)
+}
+
 const toDashboardData = (value: unknown): DashboardData => {
     const source = asObject(value)
     return {
@@ -42,6 +62,7 @@ const toDashboardData = (value: unknown): DashboardData => {
         product_states: asObject(source['product_states']),
         total_database_items: asNumber(source['total_database_items']),
         latest_collected: asString(source['latest_collected']),
+        news_items_by_day: normalizeDailyNewsItems(source['news_items_by_day']),
         tag_cloud: normalizeTagCloud(source['tag_cloud'])
     }
 }
@@ -54,6 +75,7 @@ const emptyDashboardData = (): DashboardData => ({
     product_states: {},
     total_database_items: 0,
     latest_collected: '',
+    news_items_by_day: [],
     tag_cloud: []
 })
 

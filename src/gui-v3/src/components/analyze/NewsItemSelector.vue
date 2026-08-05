@@ -45,14 +45,16 @@
                     <!-- Right Content Area: Toolbar + Items -->
                     <div class="selector-main">
                         <!-- Toolbar Filter -->
-                        <ToolbarFilterAssess
-                            ref="toolbarFilter"
-                            :analyze_selector="true"
-                            :total_count_title="'assess.total_count'"
-                            @update-filter="handleFilterUpdate"
-                        />
+                        <div class="selector-filter-panel">
+                            <ToolbarFilterAssess
+                                ref="toolbarFilter"
+                                :analyze_selector="true"
+                                :total_count_title="'assess.total_count'"
+                                @update-filter="handleFilterUpdate"
+                            />
+                        </div>
 
-                        <div class="selector-results bg-background">
+                        <div class="selector-results">
                             <!-- Content Data -->
                             <ContentDataAssess
                                 ref="contentData"
@@ -596,7 +598,18 @@
         min-height: 0;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
+        gap: 0.7rem;
+        padding: 0.65rem;
+        background: var(--review-workspace);
         overflow: hidden;
+    }
+
+    .selector-filter-panel,
+    .selector-results {
+        overflow: hidden;
+        border: 2px solid var(--review-panel-border);
+        border-radius: 4px;
+        background: var(--review-list-row);
     }
 
     .selector-results {

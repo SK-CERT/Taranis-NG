@@ -21,15 +21,15 @@
         <v-hover v-slot="{ isHovering, props: hoverProps }">
             <v-card
                 v-bind="hoverProps"
-                class="card-item mb-2 flex-grow-1"
+                class="base-card card-item mb-1 flex-grow-1"
                 :class="cardClass"
-                :elevation="isHovering ? 12 : 2"
+                :elevation="0"
                 :color="cardColor"
                 tabindex="0"
                 :data-id="cardId"
                 @click="handleCardClick"
             >
-                <v-card-text class="pa-2">
+                <v-card-text class="base-card__body">
                     <!-- Content slot -->
                     <div>
                         <slot
@@ -39,7 +39,7 @@
                     </div>
                     <!-- Actions slot (always visible if multiselect is not active) -->
                     <div
-                        v-if="!multiSelectActive"
+                        v-if="!multiSelectActive && slots['actions']"
                         class="d-flex ga-1 mt-2 justify-end"
                     >
                         <slot name="actions" />
@@ -51,7 +51,9 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, watch } from 'vue'
+    import { ref, watch, useSlots } from 'vue'
+
+    const slots = useSlots()
 
     const props = defineProps({
         cardId: {
@@ -125,10 +127,25 @@
     }
 
     .card-item {
-        transition: all 0.2s ease-in-out;
+        overflow: hidden;
+        border: 1px solid rgba(var(--v-theme-outline), 0.26);
+        border-radius: 4px;
+        transition:
+            border-color 0.18s ease,
+            background-color 0.18s ease,
+            box-shadow 0.18s ease;
         cursor: pointer;
         width: 100%;
         flex: 1 1 0;
+    }
+
+    .card-item:hover {
+        border-color: rgba(var(--v-theme-primary), 0.42);
+        background: rgba(var(--v-theme-primary), 0.035);
+    }
+
+    .base-card__body {
+        padding: 0.55rem 0.7rem !important;
     }
 </style>
 
@@ -153,5 +170,51 @@
     .card-list-leave-active {
         position: absolute;
         width: 100%;
+    }
+
+    .review-list__row {
+        position: relative;
+        margin-bottom: 0 !important;
+        border-color: var(--review-list-border) !important;
+        border-inline-width: 0 !important;
+        border-bottom-width: 0 !important;
+        border-radius: 0 !important;
+        background: var(--review-list-row) !important;
+        box-shadow: none !important;
+    }
+
+    .review-list__row::after {
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        border: 1px solid transparent;
+        border-radius: inherit;
+        content: '';
+        pointer-events: none;
+    }
+
+    .review-list__row:hover::after,
+    .review-list__row:focus-visible::after {
+        border-color: rgba(var(--v-theme-primary), 0.52);
+    }
+
+    .review-list__row:hover,
+    .review-list__row:focus-visible {
+        background: var(--review-list-row-hover) !important;
+    }
+
+    .assess-list > :first-child .review-list__row,
+    .analyze-list > :first-child .review-list__row,
+    .publish-list > :first-child .review-list__row {
+        border-start-start-radius: 4px !important;
+        border-start-end-radius: 4px !important;
+    }
+
+    .assess-list > :last-child .review-list__row,
+    .analyze-list > :last-child .review-list__row,
+    .publish-list > :last-child .review-list__row {
+        border-bottom-width: 1px !important;
+        border-end-start-radius: 4px !important;
+        border-end-end-radius: 4px !important;
     }
 </style>

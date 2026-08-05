@@ -1,7 +1,7 @@
 <template>
     <v-container
         fluid
-        class="pa-2"
+        class="pa-0"
     >
         <!-- Scrolling back up to the top brings in whatever was collected in the meantime. -->
         <div v-intersect="onTopIntersect" />
@@ -28,7 +28,7 @@
         <!-- News Items Cards -->
         <div
             ref="listRef"
-            class="card-list w-100"
+            class="card-list assess-list w-100"
         >
             <component
                 :is="currentCard"
@@ -191,6 +191,7 @@
     const { t } = useI18n()
     const route = useRoute()
     const assessStore = useAssessStore()
+    const searchQuery = Array.isArray(route.query['search']) ? route.query['search'][0] : route.query['search']
 
     const news_items_data = ref<NewsItem[]>([])
 
@@ -242,7 +243,7 @@
     let sseRefreshTimer: ReturnType<typeof setTimeout> | undefined
     let lastSelfRefresh = 0
     const filter = ref<FilterState>({
-        search: '',
+        search: searchQuery || '',
         range: 'ALL',
         read: false,
         important: 'ALL',
@@ -553,8 +554,20 @@
     }
 
     const updateFilter = (newFilter: Partial<FilterState>): void => {
-        filter.value = { ...filter.value, ...newFilter }
-        updateData(false, false)
+        const oldFilter = filter.value
+        const mergedFilter = { ...oldFilter, ...newFilter }
+        const dataFilterChanged =
+            oldFilter.search !== mergedFilter.search ||
+            oldFilter.range !== mergedFilter.range ||
+            oldFilter.read !== mergedFilter.read ||
+            oldFilter.important !== mergedFilter.important ||
+            oldFilter.relevant !== mergedFilter.relevant ||
+            oldFilter.sort !== mergedFilter.sort
+
+        filter.value = mergedFilter
+        if (dataFilterChanged) {
+            updateData(false, false)
+        }
     }
 
     const handleNewsItemsUpdated = (): void => {

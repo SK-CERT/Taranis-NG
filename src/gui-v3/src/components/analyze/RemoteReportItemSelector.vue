@@ -18,7 +18,10 @@
             fullscreen
             persistent
         >
-            <v-card flat>
+            <v-card
+                flat
+                class="selector-layout"
+            >
                 <!-- Fixed Toolbar -->
                 <v-toolbar
                     color="primary"
@@ -40,7 +43,7 @@
                 </v-toolbar>
 
                 <!-- Main Content Row -->
-                <v-row class="mt-12">
+                <v-row class="selector-body">
                     <!-- Left Sidebar: Groups -->
                     <v-col
                         cols="auto"
@@ -74,26 +77,24 @@
                     </v-col>
 
                     <!-- Main content: Filter toolbar + ContentDataAnalyze -->
-                    <v-col class="flex-grow-1 pa-0">
-                        <div
-                            class="bg-surface pa-3"
-                            style="position: sticky; top: 0; z-index: 100"
-                        >
+                    <v-col class="selector-main flex-grow-1 pa-0">
+                        <div class="selector-filter-panel">
                             <ToolbarFilterAnalyze
                                 ref="toolbarFilter"
                                 :show-group-toolbar="false"
                                 @update-filter="updateFilter"
                             />
                         </div>
-                        <ContentDataAnalyze
-                            ref="contentData"
-                            :show-remove-action="false"
-                            :remote-reports="true"
-                            card-item="CardAnalyze"
-                            class="bg-background"
-                            @show-remote-report-item-detail="showReportItemDetail"
-                            @new-data-loaded="handleNewDataLoaded"
-                        />
+                        <div class="selector-results">
+                            <ContentDataAnalyze
+                                ref="contentData"
+                                :show-remove-action="false"
+                                :remote-reports="true"
+                                card-item="CardAnalyze"
+                                @show-remote-report-item-detail="showReportItemDetail"
+                                @new-data-loaded="handleNewDataLoaded"
+                            />
+                        </div>
                     </v-col>
                 </v-row>
             </v-card>
@@ -395,6 +396,43 @@
     .selected-items-container {
         padding: 0;
         margin: 0;
-        background: white;
+        background: rgb(var(--v-theme-surface));
+    }
+
+    .selector-layout {
+        height: 100vh;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+    }
+
+    .selector-body {
+        min-height: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .selector-main {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 0.7rem;
+        padding: 0.65rem !important;
+        background: var(--review-workspace);
+        overflow: hidden;
+    }
+
+    .selector-filter-panel,
+    .selector-results {
+        overflow: hidden;
+        border: 2px solid var(--review-panel-border);
+        border-radius: 4px;
+        background: var(--review-list-row);
+    }
+
+    .selector-results {
+        min-height: 0;
+        overflow-y: auto;
     }
 </style>

@@ -36,22 +36,23 @@
                         </v-btn>
                     </v-toolbar>
 
-                    <ToolbarFilterAnalyze
-                        ref="toolbarFilter"
-                        :show-group-toolbar="false"
-                        @update-filter="updateFilter"
-                    />
+                    <div class="selector-filter-panel">
+                        <ToolbarFilterAnalyze
+                            ref="toolbarFilter"
+                            :show-group-toolbar="false"
+                            @update-filter="updateFilter"
+                        />
+                    </div>
                 </div>
 
                 <!-- Main Content (scrollable area) -->
-                <div class="flex-grow-1 overflow-y-auto">
+                <div class="selector-results flex-grow-1 overflow-y-auto">
                     <ContentDataAnalyze
                         ref="contentData"
                         :show-remove-action="false"
                         :disable-actions="true"
                         :selection="value"
                         card-item="CardAnalyze"
-                        class="bg-background"
                         @show-report-item-detail="showReportItemDetail"
                         @new-data-loaded="handleNewDataLoaded"
                         @update-showing-count="handleUpdateShowingCount"
@@ -398,3 +399,23 @@
         openSelector
     })
 </script>
+
+<style scoped>
+    .selector-filter-panel,
+    .selector-results {
+        overflow: hidden;
+        margin: 0.65rem;
+        border: 2px solid var(--review-panel-border);
+        border-radius: 4px;
+        background: var(--review-list-row);
+    }
+
+    .selector-results {
+        min-height: 0;
+        margin-top: 0;
+    }
+
+    :deep(.v-dialog .v-card) {
+        background: var(--review-workspace);
+    }
+</style>

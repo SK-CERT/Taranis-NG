@@ -5,6 +5,7 @@
             :show-selection-checkbox="true"
             :preselected="preselected"
             :card-color="selectedColor"
+            card-class="review-list__row"
             :class="{ 'read-item': card.read }"
             :card-id="card.id"
             @card-click="showDetail"

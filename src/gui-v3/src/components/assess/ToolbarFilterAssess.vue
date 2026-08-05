@@ -147,6 +147,7 @@
 <script setup lang="ts">
     import { ref, computed, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import { useRoute } from 'vue-router'
     import { useAssessStore } from '@/stores/assess'
     import BaseToolbarFilter from '@/components/common/BaseToolbarFilter.vue'
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
@@ -188,13 +189,15 @@
     const emit = defineEmits(['update-filter', 'update-data-count', 'update-data', 'add-new'])
 
     const { t } = useI18n()
+    const route = useRoute()
     const assessStore = useAssessStore()
     const baseFilter = ref<any>(null)
     const toolbarGroup = ref<any>(null)
+    const searchQuery = Array.isArray(route.query['search']) ? route.query['search'][0] : route.query['search']
 
     // Filter state with three-state values: "ALL", true, false
     const filter = ref<AssessToolbarFilter>({
-        search: '',
+        search: searchQuery || '',
         range: 'ALL',
         read: false,
         important: 'ALL',

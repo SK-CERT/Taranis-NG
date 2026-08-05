@@ -4,21 +4,23 @@
         :data-theme="theme.global.name.value"
     >
         <!-- Main Menu (top bar) - only shown when authenticated -->
-        <MainMenu v-if="isAuth" />
+        <MainMenu
+            v-if="isAuth"
+            :show-nav-toggle="showNavigation"
+        />
 
         <!-- Side navigation drawer - only shown when authenticated -->
         <v-navigation-drawer
-            v-if="isAuth"
+            v-if="showNavigation"
             v-model="navVisible"
-            width="100"
-            rail
-            rail-width="100"
+            width="160"
             color="cx-drawer-bg"
+            class="app-navigation"
         >
             <router-view name="nav" />
         </v-navigation-drawer>
 
-        <v-main>
+        <v-main :class="{ 'configuration-view': isConfigurationRoute }">
             <router-view />
         </v-main>
 
@@ -31,6 +33,7 @@
     import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
+    import { useRoute } from 'vue-router'
     import { useAuthStore } from '@/stores/auth'
     import { useUserStore } from '@/stores/user'
     import { useSettingsStore } from '@/stores/settings'
@@ -42,6 +45,7 @@
 
     const { locale } = useI18n()
     const theme = useTheme()
+    const route = useRoute()
     const authStore = useAuthStore()
     const userStore = useUserStore()
     const settingsStore = useSettingsStore()
@@ -49,6 +53,8 @@
 
     const navVisible = ref(true)
     const isAuth = computed(() => authStore.isAuthenticated)
+    const showNavigation = computed(() => isAuth.value && route.name !== 'publish' && route.name !== 'dashboard')
+    const isConfigurationRoute = computed(() => route.path === '/config' || route.path.startsWith('/config/'))
 
     // Watch theme changes and apply dark-mode/light-mode classes to HTML element.
     // These override the prefers-color-scheme CSS fallback once the user's preference is known.
@@ -292,14 +298,23 @@
 
     /* Global styles */
     .taranis {
-        font-family: 'Roboto', sans-serif;
+        font-family:
+            'Roboto',
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            sans-serif;
         height: 100vh;
+        letter-spacing: 0.005em;
+        background: rgb(var(--v-theme-background));
     }
 
     .v-main {
         height: 100%;
         display: flex;
         flex-direction: column;
+        background: rgb(var(--v-theme-background));
     }
 
     .v-main__wrap {
@@ -311,6 +326,16 @@
 
     .cx-drawer-bg {
         background-color: var(--color-drawer-bg) !important;
+    }
+
+    .app-navigation {
+        border-right: 1px solid rgba(var(--v-theme-outline), 0.5) !important;
+        background: var(--color-drawer-bg) !important;
+        box-shadow: 2px 0 7px rgba(20, 42, 68, 0.08);
+    }
+
+    .app-navigation .v-navigation-drawer__content {
+        padding: 8px 7px;
     }
 
     /* Filled (flat/elevated) colored buttons should use their themed on-color for the
@@ -363,6 +388,39 @@
         background-color: rgb(var(--v-theme-on-surface)) !important;
     }
 
+    .v-navigation-drawer .v-list {
+        padding: 0;
+        background: transparent;
+    }
+
+    .v-navigation-drawer .v-list-subheader {
+        min-height: 36px;
+        padding-inline: 12px;
+        color: rgb(var(--v-theme-on-surface));
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        opacity: 0.52;
+        text-transform: uppercase;
+    }
+
+    .v-navigation-drawer .v-list-item {
+        min-height: 38px;
+        margin-bottom: 3px;
+        border-radius: 3px;
+    }
+
+    .v-navigation-drawer .v-list-item--active {
+        background: rgba(var(--v-theme-primary), 0.16);
+        box-shadow: inset 3px 0 rgb(var(--v-theme-primary));
+    }
+
+    @media (max-width: 900px) {
+        .app-navigation {
+            width: 152px !important;
+        }
+    }
+
     /* Selected tab: primary text and icon. */
     .v-tab.v-tab--selected,
     .v-tab.v-tab--selected .v-icon {
@@ -372,5 +430,64 @@
     /* Selected tab slider bar (its background defaults to a faint on-surface grey). */
     .v-tab.v-tab--selected .v-tab__slider {
         background-color: rgb(var(--v-theme-primary)) !important;
+    }
+
+    /* Configuration is an operational workspace: keep tables dense enough to scan
+       without changing the more generous spacing of edit forms and dialogs. */
+    .configuration-view .v-data-table .v-data-table__th {
+        height: 36px !important;
+        padding-inline: 10px !important;
+        font-size: 0.74rem;
+    }
+
+    .configuration-view .v-data-table .v-data-table__td {
+        height: 40px !important;
+        padding: 4px 10px !important;
+    }
+
+    .configuration-view .v-data-table thead tr {
+        height: 36px !important;
+    }
+
+    .configuration-view .v-data-table tbody tr {
+        height: 40px !important;
+    }
+
+    .configuration-view .v-data-table .v-btn--icon {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+    }
+
+    .configuration-view .v-data-table .v-btn--icon .v-icon {
+        font-size: 20px !important;
+    }
+
+    .configuration-view .v-data-table .v-input,
+    .configuration-view .v-data-table .v-field {
+        --v-input-control-height: 32px;
+    }
+
+    .configuration-view .v-data-table,
+    .settings-table {
+        overflow: hidden;
+        border: 2px solid var(--review-panel-border) !important;
+        border-radius: 4px;
+        box-shadow: none !important;
+    }
+
+    .configuration-view .v-data-table thead,
+    .settings-table thead {
+        background: var(--filter-controls-bg);
+    }
+
+    .configuration-view .v-data-table tbody tr,
+    .settings-table tbody tr {
+        background: var(--review-list-row);
+    }
+
+    .configuration-view .v-data-table tbody tr:hover,
+    .settings-table tbody tr:hover {
+        background: var(--review-list-row-hover);
     }
 </style>

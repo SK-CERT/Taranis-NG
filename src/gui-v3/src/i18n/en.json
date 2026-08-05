@@ -139,7 +139,10 @@
         "my_assets": "My Assets"
     },
     "dashboard": {
+        "subtitle": "Your operational intelligence workspace",
+        "refresh": "Refresh dashboard",
         "assess": {
+            "trending": "Trending intelligence",
             "tagcloud": "Tagcloud for latest collected news items",
             "total": "news items in total"
         },
@@ -160,6 +163,7 @@
             "total": "products in total"
         },
         "about": {
+            "system": "System",
             "title": "About",
             "version": "Version",
             "commit": "Commit",

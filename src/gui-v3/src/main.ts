@@ -79,12 +79,12 @@ const vuetify = createVuetify({
         themes: {
             light: {
                 colors: {
-                    'background': '#ECEEF4',
-                    'surface': '#FAFAFA',
-                    'surface-variant': '#F0F0F0',
-                    'on-surface': '#212121',
-                    'outline': '#C7C7C7',
-                    'primary': '#4092DD',
+                    'background': '#F2F5F9',
+                    'surface': '#FFFFFF',
+                    'surface-variant': '#EAF0F6',
+                    'on-surface': '#172333',
+                    'outline': '#B8C5D2',
+                    'primary': '#176FB5',
                     'on-primary': '#FFFFFF',
                     'secondary': '#00677F',
                     'on-secondary': '#FFFFFF',
@@ -103,12 +103,12 @@ const vuetify = createVuetify({
             },
             dark: {
                 colors: {
-                    'background': '#121212',
-                    'surface': '#212121',
-                    'surface-variant': '#2D2D2D',
-                    'on-surface': '#E1E2E7',
-                    'outline': '#4A4A4A',
-                    'primary': '#4092DD',
+                    'background': '#0D1621',
+                    'surface': '#152230',
+                    'surface-variant': '#203040',
+                    'on-surface': '#E8EEF5',
+                    'outline': '#526273',
+                    'primary': '#58A7E8',
                     'on-primary': '#FFFFFF',
                     'secondary': '#64D4F8',
                     'on-secondary': '#003543',
