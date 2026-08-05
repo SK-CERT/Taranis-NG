@@ -1,6 +1,39 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import WordCloud from '@/components/dashboard/WordCloud.vue'
+
+vi.mock('d3-cloud', () => ({
+    default: () => {
+        let words: Array<Record<string, unknown>> = []
+        let endLayout: (placedWords: Array<Record<string, unknown>>) => void = () => undefined
+
+        const layout = {
+            size: () => layout,
+            words: (value: Array<Record<string, unknown>>) => {
+                words = value
+                return layout
+            },
+            padding: () => layout,
+            rotate: () => layout,
+            font: () => layout,
+            fontWeight: () => layout,
+            fontSize: () => layout,
+            spiral: () => layout,
+            random: () => layout,
+            on: (event: string, callback: (placedWords: Array<Record<string, unknown>>) => void) => {
+                if (event === 'end') endLayout = callback
+                return layout
+            },
+            start: () => {
+                endLayout(words.map((word, index) => ({ ...word, x: index * 10, y: index * 5 })))
+                return layout
+            },
+            stop: () => layout
+        }
+
+        return layout
+    }
+}))
 
 const data = [
     { word: 'minor', word_quantity: 2 },
@@ -9,7 +42,7 @@ const data = [
 ]
 
 describe('WordCloud', () => {
-    it('renders every valid word in relevance order without a scrolling region', () => {
+    it('renders every valid word in relevance order without a scrolling region', async () => {
         const wrapper = mount(WordCloud, {
             props: { data },
             global: {
@@ -20,12 +53,19 @@ describe('WordCloud', () => {
             }
         })
 
-        expect(wrapper.findAll('.word-cloud-item').map((item) => item.text())).toEqual(['major', 'middle', 'minor'])
-        expect(wrapper.find('.word-cloud-container').attributes('role')).toBe('list')
+        await vi.waitFor(() => expect(wrapper.findAll('.word-cloud-item')).toHaveLength(3))
+
+        expect(wrapper.findAll('.word-cloud-item').map((item) => item.attributes('aria-label'))).toEqual([
+            'Search: major (20)',
+            'Search: middle (8)',
+            'Search: minor (2)'
+        ])
+        expect(wrapper.find('.word-cloud').attributes('role')).toBe('group')
         expect(wrapper.find('.word-cloud-container').attributes('style')).toBeUndefined()
+        wrapper.unmount()
     })
 
-    it('uses stable colors and scales frequent words more prominently', () => {
+    it('uses stable colors and scales frequent words more prominently', async () => {
         const wrapper = mount(WordCloud, {
             props: {
                 data,
@@ -41,17 +81,17 @@ describe('WordCloud', () => {
             }
         })
 
+        await vi.waitFor(() => expect(wrapper.findAll('.word-cloud-item')).toHaveLength(3))
+
         const words = wrapper.findAll('.word-cloud-item')
-        expect(words).toHaveLength(3)
         const majorWord = words[0]!
         const minorWord = words[2]!
-        const majorStyle = majorWord.attributes('style') ?? ''
-        const minorStyle = minorWord.attributes('style') ?? ''
 
-        expect(majorStyle).toContain('font-weight: 700')
-        expect(minorStyle).toContain('font-weight: 450')
-        expect(majorStyle).toBe(majorWord.attributes('style'))
-        expect(['#123456', '#abcdef'].some((color) => majorStyle.includes(color))).toBe(true)
+        expect(majorWord.attributes('font-weight')).toBe('700')
+        expect(minorWord.attributes('font-weight')).toBe('450')
+        expect(Number(majorWord.attributes('font-size'))).toBeGreaterThan(Number(minorWord.attributes('font-size')))
+        expect(['#123456', '#abcdef']).toContain(majorWord.attributes('fill'))
+        wrapper.unmount()
     })
 
     it('shows the supplied empty message when there are no valid words', () => {
@@ -69,6 +109,8 @@ describe('WordCloud', () => {
         })
 
         expect(wrapper.text()).toContain('Nothing collected yet')
-        expect(wrapper.find('.word-cloud-container').exists()).toBe(false)
+        expect(wrapper.find('.word-cloud').exists()).toBe(false)
+        expect(wrapper.find('.word-cloud-empty').exists()).toBe(true)
+        wrapper.unmount()
     })
 })
