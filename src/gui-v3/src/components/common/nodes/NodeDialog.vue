@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t(`${config.i18nPrefix}.edit`) : t(`${config.i18nPrefix}.add_new`)"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -166,10 +168,12 @@
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission(`${config.value.permissionPrefix}_CREATE` as PermissionKey))
+    const canSave = computed(() => checkPermission(`${config.value.permissionPrefix}_${isEdit.value ? 'UPDATE' : 'CREATE'}` as PermissionKey))
 
     // Persists the form. Returns true on success so the unsaved-changes guard can
     // decide whether to close the dialog (it closes only on a successful save).
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

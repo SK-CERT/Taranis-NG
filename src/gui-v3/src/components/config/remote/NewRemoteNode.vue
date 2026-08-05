@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('remote.nodes.edit') : t('remote.nodes.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -275,6 +277,7 @@
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_REMOTE_NODE_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_REMOTE_NODE_UPDATE' : 'CONFIG_REMOTE_NODE_CREATE'))
 
     // Connecting needs a persisted node id (GET /remote-nodes/{id}/connect), so the
     // button is only offered once the node exists (edit mode) and is enabled.
@@ -298,6 +301,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

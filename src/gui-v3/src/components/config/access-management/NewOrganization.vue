@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('access_management.organizations.edit') : t('access_management.organizations.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -175,9 +177,11 @@
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_ORGANIZATION_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_ORGANIZATION_UPDATE' : 'CONFIG_ORGANIZATION_CREATE'))
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

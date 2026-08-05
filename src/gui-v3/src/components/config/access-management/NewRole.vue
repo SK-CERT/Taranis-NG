@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('access_management.roles.edit') : t('access_management.roles.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -33,7 +35,7 @@
                         density="comfortable"
                         class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                     />
 
                     <v-textarea
@@ -176,7 +178,7 @@
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_ROLE_CREATE'))
-    const canUpdate = computed(() => checkPermission('CONFIG_ROLE_UPDATE') || !isEdit.value)
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_ROLE_UPDATE' : 'CONFIG_ROLE_CREATE'))
 
     const loadPermissions = async (): Promise<void> => {
         loadingPermissions.value = true
@@ -194,6 +196,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

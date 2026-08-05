@@ -60,6 +60,8 @@
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { ICONS } from '@/config/ui-constants'
+    import { useAuth } from '@/composables/useAuth'
+    import type { PermissionKey } from '@/types/permissions'
 
     // Import available card components
     import CardCompact from '@/components/common/CardCompact.vue'
@@ -102,6 +104,7 @@
     const emit = defineEmits(['delete', 'edit', 'refresh'])
 
     const { t } = useI18n()
+    const { checkPermission } = useAuth()
 
     // Map of card component names to actual components
     const cardComponents: Record<string, any> = {
@@ -117,6 +120,7 @@
     const typedItems = computed<CardItem[]>(() => props.items as CardItem[])
 
     const handleDelete = (item: CardItem): void => {
+        if (!props.deletePermission || !checkPermission(props.deletePermission as PermissionKey)) return
         emit('delete', item)
     }
 

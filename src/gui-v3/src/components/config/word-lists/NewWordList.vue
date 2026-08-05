@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('word_lists.edit') : t('word_lists.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-row>
@@ -68,7 +70,7 @@
                         :add-title="t('word_lists.add_category')"
                         :edit-title="t('word_lists.edit_category')"
                         :no-data-text="t('word_lists.no_categories')"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                         dialog-max-width="900"
                     >
                         <template #item.name="{ item }">
@@ -255,6 +257,7 @@
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_WORD_LIST_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_WORD_LIST_UPDATE' : 'CONFIG_WORD_LIST_CREATE'))
 
     const categoryHeaders: HeaderEntry[] = [
         { title: t('word_lists.name'), key: 'name', sortable: false },
@@ -312,6 +315,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     const persist = async (): Promise<boolean> => {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

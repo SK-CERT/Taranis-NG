@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('reports.types.edit') : t('reports.types.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -53,7 +55,7 @@
                         </h3>
                         <v-spacer />
                         <AddNewButton
-                            :disabled="saving"
+                            :disabled="saving || !canSave"
                             @click="addGroup"
                         />
                     </div>
@@ -72,19 +74,19 @@
                             <ActionButton
                                 icon="mdi-arrow-up-bold"
                                 :title="t('common.up')"
-                                :disabled="saving"
+                                :disabled="saving || !canSave"
                                 @click="moveGroup(index, -1)"
                             />
                             <ActionButton
                                 icon="mdi-arrow-down-bold"
                                 :title="t('common.down')"
-                                :disabled="saving"
+                                :disabled="saving || !canSave"
                                 @click="moveGroup(index, 1)"
                             />
                             <ActionButton
                                 action="delete"
                                 :title="t('common.delete')"
-                                :disabled="saving"
+                                :disabled="saving || !canSave"
                                 @click="deleteGroup(index)"
                             />
                         </v-toolbar>
@@ -96,7 +98,7 @@
                                 variant="outlined"
                                 density="comfortable"
                                 class="mb-3"
-                                :disabled="saving"
+                                :disabled="saving || !canSave"
                             />
                             <v-textarea
                                 v-model="group.description"
@@ -120,7 +122,7 @@
                                 v-model="group.attribute_group_items"
                                 :attribute-templates="attributeTemplates"
                                 :ai-providers="aiProviders"
-                                :disabled="saving"
+                                :disabled="saving || !canSave"
                             />
                         </v-card-text>
                     </v-card>
@@ -252,6 +254,7 @@
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_REPORT_TYPE_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_REPORT_TYPE_UPDATE' : 'CONFIG_REPORT_TYPE_CREATE'))
 
     const notify = (type: 'success' | 'error', loc: string): void => {
         window.dispatchEvent(new CustomEvent('notification', { detail: { type, loc } }))
@@ -353,6 +356,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

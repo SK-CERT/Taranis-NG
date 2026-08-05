@@ -19,6 +19,7 @@
                 :title="isEdit ? t('publishers.presets.edit') : t('publishers.presets.add_new')"
                 :saving="saving"
                 :save-disabled="!selectedPublisher"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -26,6 +27,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-select
@@ -253,6 +255,7 @@
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_PUBLISHER_PRESET_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_PUBLISHER_PRESET_UPDATE' : 'CONFIG_PUBLISHER_PRESET_CREATE'))
 
     // Watch for edit item changes
     watch(
@@ -377,6 +380,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     const persist = async (): Promise<boolean> => {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 
