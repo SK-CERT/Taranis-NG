@@ -297,7 +297,7 @@
     import { getAllUserProductTypes, getAllUserPublishersPresets } from '@/api/user'
     import { getEntityTypeStates } from '@/api/state'
     import { useAuth } from '@/composables/useAuth'
-    import { openInNewTabWithoutOpener } from '@/utils/window'
+    import { navigateReservedTabOrCurrentWindow, openBlankTabWithoutOpener } from '@/utils/window'
     import StateSelector from '@/components/common/StateSelector.vue'
     import ConfirmationDialog from '@/components/common/dialogs/ConfirmationDialog.vue'
     import ReportItemSelector from '@/components/publish/ReportItemSelector.vue'
@@ -657,20 +657,28 @@
     }
 
     async function handlePreview(event?: MouseEvent): Promise<void> {
-        const { valid } = (await formRef.value?.validate?.()) || { valid: false }
-        if (!valid) return
-
-        prepareProduct()
+        // Reserve the tab before validation or the API request yields. Waiting
+        // until either promise resolves loses browser user activation and may
+        // cause the preview to be blocked as an unsolicited popup.
+        const previewWindow = openBlankTabWithoutOpener()
+        const ctrl = Boolean(event?.ctrlKey)
 
         try {
-            const ctrl = Boolean(event && event.ctrlKey)
+            const { valid } = (await formRef.value?.validate?.()) || { valid: false }
+            if (!valid) {
+                previewWindow?.close()
+                return
+            }
+
+            prepareProduct()
             const response = await previewProduct(product.value, ctrl, authStore.jwt)
             const token = response.data.token
 
             const apiBase = import.meta.env.VITE_APP_TARANIS_NG_CORE_API || '/api/v1'
             const previewUrl = `${apiBase}/publish/products/preview/${token}`
-            openInNewTabWithoutOpener(previewUrl)
+            navigateReservedTabOrCurrentWindow(previewWindow, previewUrl)
         } catch (error: unknown) {
+            previewWindow?.close()
             console.error('Preview failed:', error)
             showError.value = true
         }
@@ -767,7 +775,8 @@
     // Expose methods for parent components
     defineExpose({
         openDialog,
-        openEditDialog
+        openEditDialog,
+        handlePreview
     })
 </script>
 
