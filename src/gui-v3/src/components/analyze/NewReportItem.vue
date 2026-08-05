@@ -426,6 +426,7 @@
     import { ICONS } from '@/config/ui-constants'
     import { useAnalyzeStore } from '@/stores/analyze'
     import { useSettingsStore } from '@/stores/settings'
+    import { useUserStore } from '@/stores/user'
     import { Settings } from '@/types/settings'
 
     import {
@@ -490,6 +491,7 @@
     const { checkPermission, getUserId } = useAuth()
     const analyzeStore = useAnalyzeStore()
     const settingsStore = useSettingsStore()
+    const userStore = useUserStore()
 
     // Refs
     const formRef = ref<FormRef | null>(null)
@@ -501,7 +503,6 @@
     const modify = ref<boolean>(true)
     const overlay = ref<boolean>(false)
     const showCloseConfirmation = ref<boolean>(false)
-    const verticalView = ref<boolean>(false)
     const show_validation_error = ref<boolean>(false)
     const show_error = ref<boolean>(false)
     const key_timeout = ref<any>(null)
@@ -561,6 +562,11 @@
     })
 
     const spellcheck = computed(() => settingsStore.getSettingBoolean(Settings.SPELLCHECK, true))
+
+    const verticalView = computed<boolean>({
+        get: () => userStore.verticalView,
+        set: (value) => userStore.setVerticalView(value)
+    })
 
     // Methods
     const initializeNewReportItem = (newsItemAggregates = []) => {
