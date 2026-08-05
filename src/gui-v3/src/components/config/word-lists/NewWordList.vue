@@ -111,7 +111,10 @@
                                 :hint="t('word_lists.link_hint')"
                             />
 
-                            <WordListCsvImport v-model="item.entries" />
+                            <WordListCsvImport
+                                v-model="item.entries"
+                                :source-url="item.link"
+                            />
 
                             <EditableEntityTable
                                 v-model="item.entries"
