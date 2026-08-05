@@ -9,7 +9,8 @@ const mockRoute = {
     params: {
         groupId: 'all',
         scope: 'local'
-    }
+    },
+    query: {}
 }
 
 const mockAssessStore = {

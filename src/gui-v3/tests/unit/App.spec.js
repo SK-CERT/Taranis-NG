@@ -37,7 +37,8 @@ const mockSettingsStore = {
 }
 
 vi.mock('vue-router', () => ({
-    useRouter: () => ({ push: vi.fn() })
+    useRouter: () => ({ push: vi.fn() }),
+    useRoute: () => ({ name: 'assess', path: '/assess' })
 }))
 
 vi.mock('@/composables/useSSE', () => ({

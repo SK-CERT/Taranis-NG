@@ -15,7 +15,8 @@ const mockRoute = {
     params: {
         groupId: 'all',
         scope: 'local'
-    }
+    },
+    query: {}
 }
 
 const makeItems = (count, offset = 0) =>
