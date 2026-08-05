@@ -170,7 +170,11 @@ The first-workflow completion check does not require large enrichment downloads
 or a real publication destination:
 
 - Configure and populate a stop-word list for the language of collected
-  content before evaluating tag-cloud quality.
+  content before evaluating tag-cloud quality. The source checkout includes
+  GUI-importable language files under `resources/wordlists/`. From the
+  `docker/` directory, find them under `../resources/wordlists/`. They are
+  operator-side CSV resources and do not belong in a container path such as
+  `/app`.
 - Import CVE, CWE, and CPE dictionaries when the related analysis fields are
   needed; they can be large and are maintained separately from the application
   schema.

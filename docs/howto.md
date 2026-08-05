@@ -39,14 +39,27 @@ A fresh database may not contain an active default stop-word list. Confirm that
 the expected list exists, has the correct language and URL, and contains words
 before relying on the tag cloud.
 
+The source distribution provides GUI-importable language files under
+`resources/wordlists/*_complete.csv`. Each UTF-8, semicolon-delimited file has
+the `value;description` header expected by **Import from CSV** and represents
+one language category. See `resources/wordlists/README.md` for the complete
+category-to-file mapping.
+
+These are operator-side files in the source checkout. Do not copy them into the
+Core container's `/app` directory. When running Compose commands from
+`docker/`, find them under `../resources/wordlists/`.
+
 1. Visit Configuration -> Word Lists.
-2. Open the intended word list, or create one if no suitable default exists.
-3. Configure a reviewed word-list URL for the language of the collected content.
-4. Under Words, click `Download from URL`.
-5. Check whether the CSV file has a header or not, then click `Download from URL`. Choose which column has the value and description.
-6. Optionally, you can check `Delete existing words` option to remove any previous words in the list.
-7. Finally, if you are satisfied with the configuration, click `Import`.
-8. The word list will be imported and you can now save it, to be applied.
+2. Open the intended word list, or create `Multilingual tag-cloud stop words`.
+3. Enable `Use for stop words` so the saved entries filter the tag cloud.
+4. Add a category for each required language, using the category names in the
+   word-list resource guide.
+5. Under the category's Words table, click `Import from CSV` and select the
+   matching `*_complete.csv` file.
+6. Leave `File has header` enabled for the supplied files. The named `value`
+   and `description` columns are detected automatically; then click `Import`.
+7. Optionally select `Delete existing words` when replacing that category.
+8. Repeat for the other language categories and save the word list.
 
 # <a id="_toc5"></a>Management script - configure accounts, roles, nodes and dictionaries via commandline
 
