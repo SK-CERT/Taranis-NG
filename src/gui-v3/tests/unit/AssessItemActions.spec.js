@@ -15,7 +15,7 @@ vi.mock('@/composables/useAuth', () => ({
 
 const mountActions = (item) =>
     mountWithPlugins(AssessItemActions, {
-        props: { item, showCounts: true },
+        props: { item: { modify: true, ...item }, showCounts: true },
         global: { stubs: { ConfirmationDialog: true, ActionButton: true } }
     })
 
@@ -108,6 +108,48 @@ describe('AssessItemActions delete confirmation', () => {
 
         try {
             expect(confirmationMessage(wrapper)).toBe('')
+        } finally {
+            wrapper.unmount()
+        }
+    })
+})
+
+describe('AssessItemActions item restrictions', () => {
+    it('keeps read-only child items viewable without showing mutating actions', () => {
+        const wrapper = mountWithPlugins(AssessItemActions, {
+            props: {
+                item: {
+                    id: 1,
+                    entityType: 'news_item',
+                    title: 'Read only',
+                    modify: false,
+                    link: 'https://example.test/item'
+                },
+                showCreateReport: true
+            },
+            global: { stubs: { ConfirmationDialog: true, ActionButton: true } }
+        })
+
+        try {
+            expect(wrapper.find(`[data-action="OPEN"]`).exists()).toBe(true)
+            expect(wrapper.find(`[data-action="CREATE-REPORT"]`).exists()).toBe(true)
+            expect(wrapper.find(`[data-action="LIKE"]`).exists()).toBe(false)
+            expect(wrapper.find(`[data-action="READ"]`).exists()).toBe(false)
+            expect(wrapper.findComponent({ name: 'ActionButton' }).exists()).toBe(false)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('does not require a child ACL flag on aggregate actions', () => {
+        const wrapper = mountWithPlugins(AssessItemActions, {
+            props: { item: { id: 2, title: 'Aggregate' } },
+            global: { stubs: { ConfirmationDialog: true, ActionButton: true } }
+        })
+
+        try {
+            expect(wrapper.find(`[data-action="LIKE"]`).exists()).toBe(true)
+            expect(wrapper.findComponent({ name: 'ActionButton' }).exists()).toBe(true)
         } finally {
             wrapper.unmount()
         }

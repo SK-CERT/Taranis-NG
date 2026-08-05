@@ -6,7 +6,7 @@ import AssessView from '@/views/users/AssessView.vue'
 import AddNewsItemDialog from '@/components/assess/AddNewsItemDialog.vue'
 
 const authState = vi.hoisted(() => ({
-    allowed: true,
+    permissions: new Set(),
     checkPermission: vi.fn()
 }))
 
@@ -117,12 +117,12 @@ function mountManualEntryDialog() {
 describe('manual news entry permissions', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        authState.allowed = true
-        authState.checkPermission.mockImplementation(() => authState.allowed)
+        authState.permissions = new Set(['ASSESS_ACCESS', 'ASSESS_CREATE'])
+        authState.checkPermission.mockImplementation((permission) => authState.permissions.has(permission))
     })
 
     it('does not expose manual entry or load its sources without ASSESS_CREATE', async () => {
-        authState.allowed = false
+        authState.permissions.clear()
         const assessApi = await import('@/api/assess')
         const wrapper = await mountAssessView()
 
@@ -141,7 +141,7 @@ describe('manual news entry permissions', () => {
     })
 
     it('does not render the dialog without ASSESS_CREATE', () => {
-        authState.allowed = false
+        authState.permissions.clear()
         const wrapper = mountManualEntryDialog()
 
         expect(wrapper.findComponent({ name: 'VDialog' }).exists()).toBe(false)
@@ -152,11 +152,20 @@ describe('manual news entry permissions', () => {
         const wrapper = mountManualEntryDialog()
         const toolbar = wrapper.findComponent({ name: 'DialogToolbar' })
 
-        authState.allowed = false
+        authState.permissions.clear()
         toolbar.vm.$emit('save')
         await flushPromises()
 
         expect(assessApi.addNewsItem).not.toHaveBeenCalled()
         expect(wrapper.emitted('update:modelValue')).toContainEqual([false])
+    })
+
+    it('keeps the manual-entry dialog available without rendering Assess data for create-only users', async () => {
+        authState.permissions = new Set(['ASSESS_CREATE'])
+        const wrapper = await mountAssessView()
+
+        expect(wrapper.findComponent({ name: 'AddNewsItemDialog' }).exists()).toBe(true)
+        expect(wrapper.find('.add-news-item-button').exists()).toBe(true)
+        expect(wrapper.findComponent({ name: 'ContentDataAssess' }).exists()).toBe(false)
     })
 })

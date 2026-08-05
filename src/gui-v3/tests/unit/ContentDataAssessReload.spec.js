@@ -3,6 +3,18 @@ import { flushPromises } from '@vue/test-utils'
 import { mountWithPlugins } from '../helpers/mount-helpers'
 import ContentDataAssess from '@/components/assess/ContentDataAssess.vue'
 
+const permissionState = vi.hoisted(() => ({ allowed: true }))
+const assessApiMocks = vi.hoisted(() => ({ deleteNewsItem: vi.fn() }))
+
+vi.mock('@/composables/useAuth', () => ({
+    useAuth: () => ({ checkPermission: () => permissionState.allowed })
+}))
+
+vi.mock('@/api/assess', async () => {
+    const actual = await vi.importActual('@/api/assess')
+    return { ...actual, deleteNewsItem: assessApiMocks.deleteNewsItem }
+})
+
 /**
  * Acting on a card (star, like, read, ...) reloads the whole list from offset 0, and the
  * server echoes an SSE event back that reloads it again. If those loads apply each other's
@@ -54,7 +66,7 @@ vi.mock('@/stores/assess', () => ({
 }))
 
 const commonStubs = {
-    CardAssess: { template: '<div class="card-assess-stub" />', props: ['card'] },
+    CardAssess: { name: 'CardAssess', template: '<div class="card-assess-stub" />', props: ['card'] },
     CardCompact: { template: '<div class="card-compact-stub" />', props: ['card'] },
     NewsItemDetailDialog: true,
     ReportsListDialog: true,
@@ -98,6 +110,8 @@ const deferredPage = (items, total_count = 60) => {
 describe('ContentDataAssess list reloads', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        permissionState.allowed = true
+        assessApiMocks.deleteNewsItem.mockResolvedValue({})
 
         mockRoute.params.groupId = 'all'
         // The old code read the list off this shared store ref after awaiting, rather than off
@@ -135,6 +149,26 @@ describe('ContentDataAssess list reloads', () => {
             // is marked read - instead of sliding the whole list down the viewport.
             expect(idsOf(wrapper.vm.news_items_data)).toEqual(idsOf(makeItems(20)))
             expect(wrapper.findAll('.card-assess-stub')).toHaveLength(before)
+        } finally {
+            wrapper.unmount()
+        }
+    })
+
+    it('deletes only child items that carry modify access', async () => {
+        const wrapper = mountAssess()
+
+        try {
+            await flushPromises()
+            const card = wrapper.findComponent({ name: 'CardAssess' })
+
+            card.vm.$emit('delete-item', { id: 41, entityType: 'news_item', modify: false })
+            await flushPromises()
+            expect(assessApiMocks.deleteNewsItem).not.toHaveBeenCalled()
+
+            card.vm.$emit('delete-item', { id: 42, entityType: 'news_item', modify: true })
+            await flushPromises()
+            expect(assessApiMocks.deleteNewsItem).toHaveBeenCalledOnce()
+            expect(assessApiMocks.deleteNewsItem).toHaveBeenCalledWith('all', 42)
         } finally {
             wrapper.unmount()
         }
