@@ -64,7 +64,7 @@
                         variant="outlined"
                         density="comfortable"
                         :type="showApiKey ? 'text' : 'password'"
-                        :rules="config.apiKeyRequired ? [(v) => !!v || t('error.required')] : []"
+                        :rules="config.apiKeyRequired ? [(v) => isNonBlankNodeApiKey(v) || t('error.required')] : []"
                         :append-inner-icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
                         :disabled="saving"
                         @click:append-inner="showApiKey = !showApiKey"
@@ -113,7 +113,7 @@
     import { useAuth } from '@/composables/useAuth'
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import type { PermissionKey } from '@/types/permissions'
-    import { NODE_TYPES, type NodeType } from './nodeTypes'
+    import { isNonBlankNodeApiKey, NODE_TYPES, type NodeType } from './nodeTypes'
 
     type NodeItem = {
         id: string | number | null

@@ -102,6 +102,7 @@
                                 density="comfortable"
                                 :disabled="saving"
                                 :placeholder="param.default_value"
+                                :rules="dynamicParameterRules(param, t('error.required'))"
                             >
                                 <template
                                     v-if="param.description"
@@ -156,6 +157,7 @@
     import { useUnsavedChanges } from '@/composables/useUnsavedChanges'
     import { useAuth } from '@/composables/useAuth'
     import { createNewBotPreset, updateBotPreset, getAllBotsNodes } from '@/api/config'
+    import { dynamicParameterRules } from '@/utils/dynamicParameterValidation'
 
     type PresetParameter = {
         id?: string | number
@@ -163,6 +165,7 @@
         name?: string
         description?: string
         default_value?: string
+        required?: boolean
         [key: string]: unknown
     }
 
