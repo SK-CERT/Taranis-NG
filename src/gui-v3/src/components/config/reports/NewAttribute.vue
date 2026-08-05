@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('reports.attributes.edit') : t('reports.attributes.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -33,7 +35,7 @@
                         density="comfortable"
                         class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                     />
 
                     <v-textarea
@@ -43,7 +45,7 @@
                         density="comfortable"
                         rows="3"
                         class="mb-3"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                     />
 
                     <v-row>
@@ -118,7 +120,8 @@
                         :add-title="t('reports.attributes.add_constant')"
                         :edit-title="t('reports.attributes.edit_constant')"
                         :saving="constantSaving"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
+                        :allow-delete="canDeleteConstants"
                         dialog-max-width="500"
                         @update:options="onConstantsOptions"
                         @save="onConstantSave"
@@ -131,14 +134,14 @@
                                 variant="outlined"
                                 density="comfortable"
                                 class="mb-3"
-                                :disabled="constantSaving"
+                                :disabled="constantSaving || !canSave"
                             />
                             <v-text-field
                                 v-model="item.description"
                                 :label="t('reports.attributes.description')"
                                 variant="outlined"
                                 density="comfortable"
-                                :disabled="constantSaving"
+                                :disabled="constantSaving || !canSave"
                             />
                         </template>
                     </EditableEntityTable>
@@ -307,6 +310,9 @@
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_ATTRIBUTE_CREATE'))
+    const canUpdate = computed(() => checkPermission('CONFIG_ATTRIBUTE_UPDATE'))
+    const canSave = computed(() => (isEdit.value ? canUpdate.value : canCreate.value))
+    const canDeleteConstants = computed(() => canSave.value && (!isEdit.value || checkPermission('CONFIG_ATTRIBUTE_DELETE')))
 
     // --- Attribute constants (enums) ---
     const constants = ref<AttributeConstant[]>([])
@@ -415,6 +421,7 @@
     }
 
     const onConstantDelete = async (constant: AttributeConstant): Promise<void> => {
+        if (!canDeleteConstants.value) return
         try {
             if (isEdit.value && localItem.value.id !== null) {
                 await deleteAttributeEnum(localItem.value.id, constant.id)
@@ -431,6 +438,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

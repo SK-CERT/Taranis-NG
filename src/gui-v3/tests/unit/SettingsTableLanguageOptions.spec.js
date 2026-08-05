@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import SettingsTable from '@/components/config/SettingsTable.vue'
 
 const { settingsStore } = vi.hoisted(() => ({
@@ -56,18 +57,25 @@ const SelectStub = defineComponent({
     template: '<div class="select-stub" />'
 })
 
-const passthroughStub = { template: '<div><slot /></div>' }
+const passthroughStub = (name) =>
+    defineComponent({
+        name,
+        template: '<div><slot /></div>'
+    })
 
 function mountTable() {
+    const pinia = createPinia()
+    setActivePinia(pinia)
     return mount(SettingsTable, {
         props: { globalSetting: false },
         global: {
+            plugins: [pinia],
             stubs: {
-                VContainer: passthroughStub,
-                VCard: passthroughStub,
-                VCardText: passthroughStub,
-                VRow: passthroughStub,
-                VCol: passthroughStub,
+                VContainer: passthroughStub('VContainer'),
+                VCard: passthroughStub('VCard'),
+                VCardText: passthroughStub('VCardText'),
+                VRow: passthroughStub('VRow'),
+                VCol: passthroughStub('VCol'),
                 VDataTable: DataTableStub,
                 VSelect: SelectStub,
                 SearchField: true,

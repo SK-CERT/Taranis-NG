@@ -48,6 +48,7 @@
                         @click="handleEdit(asAttributeItem(item))"
                     />
                     <ActionButton
+                        v-if="canDelete"
                         action="delete"
                         :title="t('common.delete')"
                         @click="handleDelete(asAttributeItem(item))"
@@ -59,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, onMounted, nextTick } from 'vue'
+    import { computed, ref, onMounted, nextTick } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useConfigStore } from '@/stores/config'
     import { deleteAttribute } from '@/api/config'
@@ -67,6 +68,7 @@
     import NewAttribute from '@/components/config/reports/NewAttribute.vue'
     import ActionButton from '@/components/common/buttons/ActionButton.vue'
     import SearchField from '@/components/common/SearchField.vue'
+    import { useAuth } from '@/composables/useAuth'
 
     // Representative icon per attribute type.
     const TYPE_ICONS: Record<string, string> = {
@@ -105,6 +107,8 @@
 
     const { t } = useI18n()
     const configStore = useConfigStore()
+    const { checkPermission } = useAuth()
+    const canDelete = computed(() => checkPermission('CONFIG_ATTRIBUTE_DELETE'))
 
     const search = ref('')
     const loading = ref(false)
@@ -138,6 +142,7 @@
     }
 
     const handleDelete = async (item: AttributeItem): Promise<void> => {
+        if (!canDelete.value) return
         try {
             await deleteAttribute(item)
             await loadData()

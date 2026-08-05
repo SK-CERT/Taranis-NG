@@ -14,7 +14,7 @@
                 class="flex-grow-0"
             />
             <div
-                v-if="!disabled"
+                v-if="canAdd"
                 class="ms-3"
             >
                 <AddNewButton @click="openDialog()" />
@@ -41,26 +41,26 @@
 
             <template #item.actions="{ item, index }">
                 <ActionButton
-                    v-if="reorderable && !disabled"
+                    v-if="reorderable && canEdit"
                     icon="mdi-arrow-up-bold"
                     :title="t('common.up')"
                     @click="move(index, -1)"
                 />
                 <ActionButton
-                    v-if="reorderable && !disabled"
+                    v-if="reorderable && canEdit"
                     icon="mdi-arrow-down-bold"
                     :title="t('common.down')"
                     @click="move(index, 1)"
                 />
                 <ActionButton
-                    v-if="!disabled"
+                    v-if="canEdit"
                     action="edit"
                     :title="t('common.edit')"
                     class="mr-1"
                     @click="openDialog(item as Row, index)"
                 />
                 <ActionButton
-                    v-if="!disabled"
+                    v-if="canDelete"
                     action="delete"
                     :title="t('common.delete')"
                     @click="remove(item as Row, index)"
@@ -88,12 +88,14 @@
                 :title="editedIndex === -1 ? addTitle : editTitle"
                 :saving="saving"
                 :save-disabled="saveDisabled"
+                :show-save="editedIndex === -1 ? canAdd : canEdit"
                 @cancel="requestClose"
                 @save="save"
             />
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="editedIndex === -1 ? !canAdd : !canEdit"
                     @submit.prevent="save"
                 >
                     <!-- Caller supplies the edit fields, bound to the working copy. -->
@@ -149,6 +151,10 @@
             editTitle: string
             dialogMaxWidth?: string | number
             disabled?: boolean
+            /** Fine-grained row permissions; `disabled` still overrides all three. */
+            allowAdd?: boolean
+            allowEdit?: boolean
+            allowDelete?: boolean
             reorderable?: boolean
             searchable?: boolean
             noDataText?: string
@@ -166,6 +172,9 @@
         {
             dialogMaxWidth: 600,
             disabled: false,
+            allowAdd: true,
+            allowEdit: true,
+            allowDelete: true,
             reorderable: false,
             searchable: false,
             noDataText: '',
@@ -202,6 +211,9 @@
     const editedItem = ref(props.defaultItem()) as Ref<Row>
 
     const rows = computed<Row[]>(() => (props.server ? (props.items ?? []) : model.value))
+    const canAdd = computed(() => !props.disabled && props.allowAdd)
+    const canEdit = computed(() => !props.disabled && props.allowEdit)
+    const canDelete = computed(() => !props.disabled && props.allowDelete)
 
     // Forward every "item.*"/cell slot the caller passes, except the actions column
     // (which this component renders) and the form slot (used by the dialog).
@@ -233,6 +245,7 @@
     })
 
     const openDialog = (item?: Row, index = -1): void => {
+        if (index === -1 ? !canAdd.value : !canEdit.value) return
         editedIndex.value = index
         editedItem.value = item ? ({ ...item } as Row) : props.defaultItem()
         formRef.value?.resetValidation?.()
@@ -257,6 +270,7 @@
     }
 
     const save = async (): Promise<void> => {
+        if (editedIndex.value === -1 ? !canAdd.value : !canEdit.value) return
         const result = await formRef.value?.validate()
         if (result && !result.valid) {
             return
@@ -281,6 +295,7 @@
     }
 
     const remove = (item: Row, index: number): void => {
+        if (!canDelete.value) return
         if (props.server) {
             emit('delete', item, index)
             return
@@ -292,6 +307,7 @@
     }
 
     const move = (index: number, offset: number): void => {
+        if (!canEdit.value) return
         const target = index + offset
         const list = [...model.value]
         if (target < 0 || target >= list.length) {

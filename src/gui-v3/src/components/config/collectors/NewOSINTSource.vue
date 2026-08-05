@@ -18,7 +18,8 @@
             <DialogToolbar
                 :title="isEdit ? t('collectors.sources.edit') : t('collectors.sources.add_new')"
                 :saving="saving"
-                :save-disabled="!selectedCollector || !canUpdate"
+                :save-disabled="!selectedCollector"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -26,6 +27,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-select
@@ -38,7 +40,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || loadingNodes || !canUpdate"
+                        :disabled="isEdit || saving || loadingNodes || !canSave"
                         :loading="loadingNodes"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
@@ -54,7 +56,7 @@
                         variant="outlined"
                         density="comfortable"
                         class="mb-3"
-                        :disabled="isEdit || saving || !canUpdate"
+                        :disabled="isEdit || saving || !canSave"
                         :rules="[(v) => !!v || t('error.required')]"
                     />
 
@@ -66,7 +68,7 @@
                         density="comfortable"
                         class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving || !canUpdate"
+                        :disabled="saving || !canSave"
                     />
 
                     <v-textarea
@@ -77,7 +79,7 @@
                         density="comfortable"
                         rows="3"
                         class="mb-3"
-                        :disabled="saving || !canUpdate"
+                        :disabled="saving || !canSave"
                     />
 
                     <div v-if="selectedCollector && selectedCollector.parameters && selectedCollector.parameters.length > 0">
@@ -95,7 +97,7 @@
                                 :type="typeof param.key === 'string' && param.key.includes('PASSWORD') ? 'password' : 'text'"
                                 variant="outlined"
                                 density="comfortable"
-                                :disabled="saving || !canUpdate"
+                                :disabled="saving || !canSave"
                                 :placeholder="String(param.default_value ?? '')"
                             >
                                 <template
@@ -122,7 +124,7 @@
                             :items="osintSourceGroupItems"
                             :headers="groupHeaders"
                             :loading="loadingGroups"
-                            :disabled="saving || !canUpdate"
+                            :disabled="saving || !canSave"
                         >
                             <template #header-append>
                                 <NewOSINTSourceGroup @saved="handleGroupSaved" />
@@ -135,7 +137,7 @@
                             :items="wordListItems"
                             :headers="wordListHeaders"
                             :loading="loadingWordLists"
-                            :disabled="saving || !canUpdate"
+                            :disabled="saving || !canSave"
                         />
                     </div>
                 </v-form>
@@ -311,7 +313,7 @@
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_CREATE'))
-    const canUpdate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_UPDATE') || !isEdit.value)
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_OSINT_SOURCE_UPDATE' : 'CONFIG_OSINT_SOURCE_CREATE'))
 
     const wordListItems = computed(() => configStore.wordLists.items as IdItem[])
     const osintSourceGroupItems = computed(() => {
@@ -442,6 +444,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

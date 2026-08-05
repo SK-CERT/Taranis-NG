@@ -352,9 +352,7 @@
         props.card?.product_type_name != null ? t('nav_menu.report_items') : t('card_item.aggregated_items')
     )
     const completedReportsCount = computed(() => Number(props.card?.completed_reports_count ?? 0))
-    const inProgressReportsCount = computed(() =>
-        Math.max(0, Number(props.card?.in_reports_count ?? 0) - completedReportsCount.value)
-    )
+    const inProgressReportsCount = computed(() => Math.max(0, Number(props.card?.in_reports_count ?? 0) - completedReportsCount.value))
     const stateLabel = computed(() => {
         const label = props.card?.state?.display_name || props.card?.state?.name || ''
         const key = `workflow.states.${label}`
@@ -404,10 +402,12 @@
     }
 
     const showDeleteDialog = (): void => {
+        if (!canDelete.value || isProtected.value) return
         deleteDialog.value = true
     }
 
     const handleDelete = (): void => {
+        if (!canDelete.value || isProtected.value) return
         deleteDialog.value = false
         emit('delete', props.card as CardData)
     }

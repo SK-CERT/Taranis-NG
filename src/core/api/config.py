@@ -50,7 +50,6 @@ from model import (
 from model.news_item import NewsItemAggregate
 from model.permission import Permission
 from model.state import StateDefinition, StateEntityType
-
 from shared.schema.ai_provider import AiProviderSchema
 from shared.schema.data_provider import DataProviderSchema
 from shared.schema.role import PermissionSchema
@@ -1276,7 +1275,7 @@ class RemoteAccessResource(Resource):
 class RemoteNodesResource(Resource):
     """Remote nodes API endpoint."""
 
-    @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
+    @auth_required("CONFIG_REMOTE_NODE_ACCESS")
     def get(self) -> tuple[str, dict]:
         """Get all remote nodes.
 
@@ -1286,7 +1285,7 @@ class RemoteNodesResource(Resource):
         search = request.args.get("search")
         return remote.RemoteNode.get_all_json(search)
 
-    @auth_required("CONFIG_REMOTE_ACCESS_CREATE")
+    @auth_required("CONFIG_REMOTE_NODE_CREATE")
     def post(self) -> tuple[dict, HTTPStatus] | None:
         """Create a remote node.
 
@@ -1304,7 +1303,7 @@ class RemoteNodesResource(Resource):
 class RemoteNodeResource(Resource):
     """Remote node API endpoint."""
 
-    @auth_required("CONFIG_REMOTE_ACCESS_UPDATE")
+    @auth_required("CONFIG_REMOTE_NODE_UPDATE")
     def put(self, remote_node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Update a remote node.
 
@@ -1321,7 +1320,7 @@ class RemoteNodeResource(Resource):
             log_manager.store_data_error_activity(get_user_from_jwt(), msg, ex)
             return {"error": msg}, HTTPStatus.BAD_REQUEST
 
-    @auth_required("CONFIG_REMOTE_ACCESS_DELETE")
+    @auth_required("CONFIG_REMOTE_NODE_DELETE")
     def delete(self, remote_node_id: int) -> tuple[dict, HTTPStatus] | None:
         """Delete a remote node.
 
@@ -1342,7 +1341,7 @@ class RemoteNodeResource(Resource):
 class RemoteNodeConnectResource(Resource):
     """Remote node connect API endpoint."""
 
-    @auth_required("CONFIG_REMOTE_ACCESS_ACCESS")
+    @auth_required("CONFIG_REMOTE_NODE_UPDATE")
     def get(self, remote_node_id: int) -> tuple[dict, HTTPStatus]:
         """Connect to a remote node.
 

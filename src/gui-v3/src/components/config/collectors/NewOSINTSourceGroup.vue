@@ -17,7 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('collectors.groups.edit') : t('collectors.groups.add_new')"
                 :saving="saving"
-                :show-save="!isReadOnly"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -25,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -34,7 +35,7 @@
                         density="comfortable"
                         class="mb-3"
                         :rules="[(v) => !!v || t('error.required')]"
-                        :disabled="saving || isReadOnly"
+                        :disabled="saving || !canSave"
                     />
 
                     <v-textarea
@@ -44,7 +45,7 @@
                         density="comfortable"
                         rows="3"
                         class="mb-3"
-                        :disabled="saving || isReadOnly"
+                        :disabled="saving || !canSave"
                     />
 
                     <!-- OSINT sources that belong to this group -->
@@ -54,7 +55,7 @@
                         :items="sourceItems"
                         :headers="sourceHeaders"
                         :loading="loadingSources"
-                        :disabled="saving || isReadOnly"
+                        :disabled="saving || !canSave"
                     />
                 </v-form>
 
@@ -161,9 +162,12 @@
     const localItem = ref<OSINTSourceGroupItem>({ ...defaultItem })
     const isEdit = computed(() => !!localItem.value.id)
     // The default group cannot be modified (backend forbids it): open it as a read-only view.
-    const isReadOnly = computed(() => localItem.value.default === true)
-
     const canCreate = computed(() => checkPermission('CONFIG_OSINT_SOURCE_GROUP_CREATE'))
+    const canSave = computed(
+        () =>
+            localItem.value.default !== true &&
+            checkPermission(isEdit.value ? 'CONFIG_OSINT_SOURCE_GROUP_UPDATE' : 'CONFIG_OSINT_SOURCE_GROUP_CREATE')
+    )
 
     onMounted(async () => {
         // Load all sources so they can be assigned to the group.
@@ -179,6 +183,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

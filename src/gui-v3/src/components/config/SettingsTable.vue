@@ -42,6 +42,7 @@
                             color="primary"
                             hide-details
                             density="compact"
+                            :disabled="!canEditSettings"
                             @update:model-value="(val) => updateSetting(item, val ? 'true' : 'false')"
                         />
                     </template>
@@ -57,6 +58,7 @@
                             density="compact"
                             hide-details
                             :prepend-inner-icon="getSelectIcon(item)"
+                            :disabled="!canEditSettings"
                             @update:model-value="(val) => updateSetting(item, val)"
                         />
                     </template>
@@ -66,7 +68,7 @@
                         <v-chip
                             :color="getColor(item.value, item.default_val)"
                             label
-                            clickable
+                            :clickable="canEditSettings"
                             @click="openEditDialog(item)"
                         >
                             {{ item.value }}
@@ -126,6 +128,7 @@
                     {{ t('common.cancel') }}
                 </v-btn>
                 <v-btn
+                    v-if="canEditSettings"
                     color="primary"
                     variant="text"
                     @click="saveEdit"
@@ -141,6 +144,7 @@
     import { ref, computed, onMounted, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useTheme } from 'vuetify'
+    import { useAuth } from '@/composables/useAuth'
     import { useSettingsStore } from '@/stores/settings'
     import { supportedLocales } from '@/i18n'
     import { Settings, type SettingKey } from '@/types/settings'
@@ -181,6 +185,7 @@
 
     const { t, te, locale } = useI18n()
     const theme = useTheme()
+    const { checkPermission } = useAuth()
     const settingsStore = useSettingsStore()
 
     const applyTheme = (themeName: string): void => {
@@ -197,6 +202,7 @@
     const editDialog = ref(false)
     const editValue = ref('')
     const editItem = ref<SettingsRecord | null>(null)
+    const canEditSettings = computed(() => !props.globalSetting || checkPermission('CONFIG_SETTINGS_UPDATE'))
 
     const maxCharsRule = (value: string | null | undefined): true | string => !value || value.length <= 150 || 'Input too long!'
 
@@ -356,6 +362,7 @@
     }
 
     const updateSetting = async (item: SettingsRecord, value: string): Promise<void> => {
+        if (!canEditSettings.value) return
         try {
             const validatedValue = validateValue(item, value)
             const settingData = {
@@ -391,12 +398,14 @@
     }
 
     const openEditDialog = (item: SettingsRecord): void => {
+        if (!canEditSettings.value) return
         editItem.value = item
         editValue.value = item.value
         editDialog.value = true
     }
 
     const saveEdit = (): void => {
+        if (!canEditSettings.value) return
         if (editItem.value && editValue.value !== null) {
             updateSetting(editItem.value, editValue.value)
         }

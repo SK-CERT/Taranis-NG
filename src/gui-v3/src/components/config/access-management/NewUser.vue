@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('access_management.users.edit') : t('access_management.users.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-row>
@@ -88,7 +90,7 @@
                         :items="organizations"
                         :headers="orgHeaders"
                         :loading="loadingOrganizations"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                     />
 
                     <!-- Roles Selection -->
@@ -98,7 +100,7 @@
                         :items="roles"
                         :headers="roleHeaders"
                         :loading="loadingRoles"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                     />
 
                     <!-- Permissions Selection -->
@@ -108,7 +110,7 @@
                         :items="permissions"
                         :headers="permissionHeaders"
                         :loading="loadingPermissions"
-                        :disabled="saving"
+                        :disabled="saving || !canSave"
                     />
 
                     <v-alert
@@ -239,6 +241,7 @@
 
     const isEdit = computed(() => !!localItem.value.id)
     const canCreate = computed(() => checkPermission('CONFIG_USER_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_USER_UPDATE' : 'CONFIG_USER_CREATE'))
 
     const passwordRules = computed(() => {
         if (isEdit.value) {
@@ -360,6 +363,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     const persist = async (): Promise<boolean> => {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 

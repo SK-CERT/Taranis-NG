@@ -17,6 +17,7 @@
             <DialogToolbar
                 :title="isEdit ? t('access_management.acls.edit') : t('access_management.acls.add_new')"
                 :saving="saving"
+                :show-save="canSave"
                 @cancel="requestClose"
                 @save="saveAndClose"
             />
@@ -24,6 +25,7 @@
             <v-card-text>
                 <v-form
                     ref="formRef"
+                    :disabled="!canSave"
                     @submit.prevent="saveAndClose"
                 >
                     <v-text-field
@@ -106,7 +108,7 @@
                         :items="users"
                         :headers="userHeaders"
                         :loading="loadingRecipients"
-                        :disabled="saving || localItem.everyone"
+                        :disabled="saving || !canSave || localItem.everyone"
                     />
 
                     <EntitySelectTable
@@ -115,7 +117,7 @@
                         :items="roles"
                         :headers="roleHeaders"
                         :loading="loadingRecipients"
-                        :disabled="saving || localItem.everyone"
+                        :disabled="saving || !canSave || localItem.everyone"
                     />
                 </v-form>
 
@@ -266,6 +268,7 @@
     const isEdit = computed(() => !!localItem.value.id)
 
     const canCreate = computed(() => checkPermission('CONFIG_ACL_CREATE'))
+    const canSave = computed(() => checkPermission(isEdit.value ? 'CONFIG_ACL_UPDATE' : 'CONFIG_ACL_CREATE'))
 
     // Recipients (users / roles) the ACL is granted to.
     const users = ref<UserOption[]>([])
@@ -385,6 +388,7 @@
 
     // Persists the form. Returns true on success so the guard can decide whether to close.
     async function persist(): Promise<boolean> {
+        if (!canSave.value) return false
         showValidationError.value = false
         showError.value = false
 
