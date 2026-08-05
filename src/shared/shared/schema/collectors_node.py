@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from shared.schema.collectors_node import CollectorsNode
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, validate
 
 from shared.schema.collector import CollectorSchema
 from shared.schema.presentation import PresentationSchema
@@ -60,7 +60,7 @@ class CollectorsNodeSchema(Schema):
     name = fields.Str()
     description = fields.Str()
     api_url = fields.Str()
-    api_key = fields.Str()
+    api_key = fields.Str(required=True, validate=validate.Regexp(r".*\S"))
     collectors = fields.List(fields.Nested(CollectorSchema))
     status = fields.Str(dump_only=True)
     created = fields.DateTime("%d.%m.%Y - %H:%M", dump_only=True)
