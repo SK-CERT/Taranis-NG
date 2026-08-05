@@ -19,6 +19,58 @@
             />
         </v-col>
         <v-col
+            v-if="hasProvenance"
+            cols="auto"
+            class="attribute-provenance"
+        >
+            <v-menu location="bottom end">
+                <template #activator="{ props: menuProps }">
+                    <v-btn
+                        v-bind="menuProps"
+                        class="attribute-provenance__activator"
+                        :icon="ICONS.CLOCK"
+                        variant="text"
+                        density="compact"
+                        size="x-small"
+                        :aria-label="provenanceLabel"
+                    />
+                </template>
+                <v-card
+                    class="attribute-provenance__details"
+                    variant="outlined"
+                >
+                    <v-card-text class="pa-3">
+                        <div
+                            v-if="lastUpdated"
+                            class="attribute-provenance__row"
+                        >
+                            <v-icon
+                                :icon="ICONS.CLOCK"
+                                size="small"
+                            />
+                            <span>
+                                <strong>{{ t('drop_zone.last_updated') }}:</strong>
+                                {{ lastUpdated }}
+                            </span>
+                        </div>
+                        <div
+                            v-if="modifiedBy"
+                            class="attribute-provenance__row"
+                        >
+                            <v-icon
+                                :icon="ICONS.ACCOUNT"
+                                size="small"
+                            />
+                            <span>
+                                <strong>{{ t('settings.updated_by') }}:</strong>
+                                {{ modifiedBy }}
+                            </span>
+                        </div>
+                    </v-card-text>
+                </v-card>
+            </v-menu>
+        </v-col>
+        <v-col
             v-if="!embedDelete"
             cols="auto"
         >
@@ -48,7 +100,11 @@
             embedDelete?: boolean
             valIndex: number
             occurrence?: number | null | undefined
-            values: Array<Record<string, unknown>>
+            values: Array<{
+                user?: { name?: unknown } | string | null
+                last_updated?: unknown
+                [key: string]: unknown
+            }>
         }>(),
         {
             delButton: false,
@@ -63,6 +119,28 @@
 
     const { t } = useI18n()
 
+    const currentValue = computed(() => props.values[props.valIndex])
+
+    const lastUpdated = computed(() => {
+        const value = currentValue.value?.last_updated
+        return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : ''
+    })
+
+    const modifiedBy = computed(() => {
+        const user = currentValue.value?.user
+        const name = typeof user === 'string' ? user : user?.name
+        return typeof name === 'string' || typeof name === 'number' ? String(name).trim() : ''
+    })
+
+    const hasProvenance = computed(() => Boolean(lastUpdated.value || modifiedBy.value))
+
+    const provenanceLabel = computed(() => {
+        const details: string[] = []
+        if (lastUpdated.value) details.push(`${t('drop_zone.last_updated')}: ${lastUpdated.value}`)
+        if (modifiedBy.value) details.push(`${t('settings.updated_by')}: ${modifiedBy.value}`)
+        return details.join('; ')
+    })
+
     const delButtonVisible = computed(() => {
         // The attribute group's min_occurrence is the only floor: with a minimum of 0 even
         // the last value can be deleted, leaving the attribute empty.
@@ -76,3 +154,30 @@
         emit('del-value')
     }
 </script>
+
+<style scoped>
+    .attribute-provenance {
+        align-self: center;
+        padding-inline: 0;
+    }
+
+    .attribute-provenance__activator {
+        color: rgb(var(--v-theme-on-surface-variant));
+    }
+
+    .attribute-provenance__details {
+        min-width: 14rem;
+        max-width: min(24rem, calc(100vw - 2rem));
+        background: rgb(var(--v-theme-surface));
+    }
+
+    .attribute-provenance__row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .attribute-provenance__row + .attribute-provenance__row {
+        margin-top: 0.5rem;
+    }
+</style>
