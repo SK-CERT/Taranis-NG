@@ -71,13 +71,13 @@
             <!-- Relevance sort button (Assess-specific) -->
             <v-chip
                 size="small"
-                :color="filter.sort === 'RELEVANCE_DESC' ? 'primary' : 'default'"
-                :variant="filter.sort === 'RELEVANCE_DESC' ? 'flat' : 'outlined'"
-                :title="t('assess.tooltip.sort.relevance.descending')"
+                :color="filter.sort === 'RELEVANCE_DESC' || filter.sort === 'RELEVANCE_ASC' ? 'primary' : 'default'"
+                :variant="filter.sort === 'RELEVANCE_DESC' || filter.sort === 'RELEVANCE_ASC' ? 'flat' : 'outlined'"
+                :title="relevanceSortTooltip"
                 @click="toggleRelevanceSort"
             >
                 <v-icon start>mdi-thumb-up</v-icon>
-                <v-icon>mdi-arrow-down</v-icon>
+                <v-icon>{{ relevanceSortIcon }}</v-icon>
             </v-chip>
         </template>
     </BaseToolbarFilter>
@@ -145,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed, watch, onMounted } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { useRoute } from 'vue-router'
     import { useAssessStore } from '@/stores/assess'
@@ -153,6 +153,32 @@
     import ToolbarGroup from '@/components/common/ToolbarGroup.vue'
 
     type ThreeStateFilter = 'ALL' | boolean
+
+    const DISPLAY_PREFERENCE_KEYS = {
+        hideReviews: 'review-hide',
+        hideSourceLinks: 'source-link-hide',
+        hideWordlist: 'word-list-hide',
+        compactMode: 'taranis.assess.compact-mode'
+    } as const
+
+    const readStoredBoolean = (key: string, fallback: boolean): boolean => {
+        try {
+            const value = localStorage.getItem(key)
+            if (value === 'true') return true
+            if (value === 'false') return false
+        } catch {
+            // Storage can be unavailable in privacy-restricted browser contexts.
+        }
+        return fallback
+    }
+
+    const storeBoolean = (key: string, value: boolean): void => {
+        try {
+            localStorage.setItem(key, String(value))
+        } catch {
+            // The display control should remain usable even if persistence is unavailable.
+        }
+    }
 
     type AssessToolbarFilter = {
         search: string
@@ -205,10 +231,11 @@
         sort: 'DATE_DESC'
     })
 
-    const compactMode = ref(false)
-    const hideReviews = ref(false)
-    const hideSourceLinks = ref(false)
-    const highlightWordlist = ref(false)
+    const compactMode = ref(readStoredBoolean(DISPLAY_PREFERENCE_KEYS.compactMode, false))
+    const hideReviews = ref(readStoredBoolean(DISPLAY_PREFERENCE_KEYS.hideReviews, false))
+    const hideSourceLinks = ref(readStoredBoolean(DISPLAY_PREFERENCE_KEYS.hideSourceLinks, false))
+    // Vue 2 stores the inverse (whether highlighting is hidden), so retain that key and meaning.
+    const highlightWordlist = ref(!readStoredBoolean(DISPLAY_PREFERENCE_KEYS.hideWordlist, false))
     const totalCount = ref(0)
     const currentlyShowingCount = ref(0)
     const selectedCount = ref(0)
@@ -253,11 +280,21 @@
     })
 
     const dateSortIcon = computed(() => {
-        return filter.value.sort === 'DATE_DESC' ? 'mdi-arrow-down' : 'mdi-arrow-up'
+        return filter.value.sort === 'DATE_ASC' ? 'mdi-arrow-up' : 'mdi-arrow-down'
     })
 
     const dateSortTooltip = computed(() => {
-        return filter.value.sort === 'DATE_DESC' ? t('assess.tooltip.sort.date.descending') : t('assess.tooltip.sort.date.ascending')
+        return filter.value.sort === 'DATE_ASC' ? t('assess.tooltip.sort.date.ascending') : t('assess.tooltip.sort.date.descending')
+    })
+
+    const relevanceSortIcon = computed(() => {
+        return filter.value.sort === 'RELEVANCE_ASC' ? 'mdi-arrow-up' : 'mdi-arrow-down'
+    })
+
+    const relevanceSortTooltip = computed(() => {
+        return filter.value.sort === 'RELEVANCE_ASC'
+            ? t('assess.tooltip.sort.relevance.ascending')
+            : t('assess.tooltip.sort.relevance.descending')
     })
 
     // Handle filter updates from base component
@@ -280,9 +317,8 @@
     }
 
     const toggleRelevanceSort = (): void => {
-        // Toggle between RELEVANCE_DESC and default DATE_DESC
         if (filter.value.sort === 'RELEVANCE_DESC') {
-            filter.value.sort = 'DATE_DESC'
+            filter.value.sort = 'RELEVANCE_ASC'
         } else {
             filter.value.sort = 'RELEVANCE_DESC'
         }
@@ -291,21 +327,25 @@
 
     const toggleCompactMode = (): void => {
         compactMode.value = !compactMode.value
+        storeBoolean(DISPLAY_PREFERENCE_KEYS.compactMode, compactMode.value)
         emitFilter()
     }
 
     const toggleHideReviews = (): void => {
         hideReviews.value = !hideReviews.value
+        storeBoolean(DISPLAY_PREFERENCE_KEYS.hideReviews, hideReviews.value)
         emitFilter()
     }
 
     const toggleHideSourceLinks = (): void => {
         hideSourceLinks.value = !hideSourceLinks.value
+        storeBoolean(DISPLAY_PREFERENCE_KEYS.hideSourceLinks, hideSourceLinks.value)
         emitFilter()
     }
 
     const toggleHighlightWordlist = (): void => {
         highlightWordlist.value = !highlightWordlist.value
+        storeBoolean(DISPLAY_PREFERENCE_KEYS.hideWordlist, !highlightWordlist.value)
         emitFilter()
     }
 
@@ -343,6 +383,9 @@
         },
         { deep: true }
     )
+
+    // Apply restored preferences before the user interacts with any filter control.
+    onMounted(() => emitFilter())
 
     // Expose methods for parent component
     defineExpose({
